@@ -20,6 +20,7 @@ export function Onboarding({ userId, onDone }: { userId: number; onDone: () => v
   const [companies, setCompanies] = useState<MyDataCompany[]>([]);
   const [picked, setPicked] = useState<Set<number>>(new Set());
   const pressTimer = useRef<number | null>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
 
   // 금융사 선택 단계 진입 시 목록 로드
   useEffect(() => {
@@ -27,6 +28,9 @@ export function Onboarding({ userId, onDone }: { userId: number; onDone: () => v
       api.mydataCompanies().then(setCompanies).catch((e) => setErr(String(e)));
     }
   }, [step, companies.length]);
+
+  // 단계 전환 시 새 화면 제목으로 초점 이동 (KWCAG 4.1.3 — 보조기술이 화면 변화를 인지)
+  useEffect(() => { headingRef.current?.focus(); }, [step]);
 
   function finish() {
     try { localStorage.setItem('mydata_onboarded', 'true'); } catch { /* noop */ }
@@ -93,7 +97,7 @@ export function Onboarding({ userId, onDone }: { userId: number; onDone: () => v
   }
 
   return (
-    <div className="onb">
+    <main className="onb" aria-label="마이데이터 연결 온보딩">
       <div className="onb-card">
         {step !== 'start' && step !== 'loading' && (
           <div className="onb-steps" aria-hidden="true">
@@ -107,14 +111,15 @@ export function Onboarding({ userId, onDone }: { userId: number; onDone: () => v
 
         {step === 'start' && (
           <div className="onb-start">
-            <button type="button" className="onb-logo"
+            {/* 로고 = 장식(aria-hidden) + 숨은 테스트용 롱프레스 건너뛰기. 키보드 초점에서 제외해 혼동을 막는다. */}
+            <div className="onb-logo"
               onPointerDown={startSkip} onPointerUp={cancelSkip} onPointerLeave={cancelSkip}
-              aria-label="시작 로고">
+              aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M3 17l5-5 4 3 6-7" /><path d="M14 8h4v4" />
               </svg>
-            </button>
-            <h1>소비·저축 어드바이저</h1>
+            </div>
+            <h1 ref={headingRef} tabIndex={-1}>소비·저축 어드바이저</h1>
             <p className="muted">마이데이터를 연결하면 카드 사용내역을 한 곳에서 보고,<br />줄인 만큼 모이는 걸 보여드려요.</p>
             <button type="button" className="btn btn-primary onb-cta" disabled={busy}
               onClick={() => setStep('terms')}>마이데이터 연결하고 시작하기</button>
@@ -124,7 +129,7 @@ export function Onboarding({ userId, onDone }: { userId: number; onDone: () => v
 
         {step === 'terms' && (
           <div className="onb-body">
-            <h2>이용약관 확인</h2>
+            <h1 ref={headingRef} tabIndex={-1} className="onb-h">이용약관 확인</h1>
             <p className="muted small">본 서비스는 학습용 프로토타입이며, 표시되는 금융상품은 모두 더미입니다.
               마이데이터로 불러오는 카드·소비내역은 <b>가상 데이터</b>이고, 본인인증 CI는 실 신용정보가 아닌 <b>가상 생성값</b>입니다.</p>
             <label className="onb-check">
@@ -138,7 +143,7 @@ export function Onboarding({ userId, onDone }: { userId: number; onDone: () => v
 
         {step === 'auth' && (
           <div className="onb-body">
-            <h2>본인인증</h2>
+            <h1 ref={headingRef} tabIndex={-1} className="onb-h">본인인증</h1>
             <p className="muted small">입력한 신원으로 <b>가상 CI</b>를 만들어 마이데이터에 회원이 있는지 확인해요. (실 SMS 발송 없음)</p>
             <div className="onb-form">
               <label className="field"><span>이름</span>
@@ -158,7 +163,7 @@ export function Onboarding({ userId, onDone }: { userId: number; onDone: () => v
 
         {step === 'company' && (
           <div className="onb-body">
-            <h2>연결할 카드사를 선택하세요</h2>
+            <h1 ref={headingRef} tabIndex={-1} className="onb-h">연결할 카드사를 선택하세요</h1>
             <p className="muted small">선택한 카드사의 카드·소비내역을 마이데이터로 불러옵니다.</p>
             <div className="onb-companies">
               {companies.map((c) => (
@@ -180,11 +185,11 @@ export function Onboarding({ userId, onDone }: { userId: number; onDone: () => v
         {step === 'loading' && (
           <div className="onb-start">
             <div className="loading-bar" role="status" aria-label="마이데이터 불러오는 중" />
-            <h2>마이데이터를 불러오고 있어요</h2>
+            <h1 ref={headingRef} tabIndex={-1}>마이데이터를 불러오고 있어요</h1>
             <p className="muted">카드와 소비내역을 정리하는 중… 잠시만요.</p>
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }
