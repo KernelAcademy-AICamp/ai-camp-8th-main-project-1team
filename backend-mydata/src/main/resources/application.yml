@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: finntech-mydata
+  profiles:
+    default: h2
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+
+# 본체(8080)와 다른 포트로 마이데이터 제공자 서버를 띄운다.
+server:
+  port: 8082
+
+mydata:
+  seed:
+    # 결정론 더미 생성 시드 (규칙 3: 재현성). 같은 시드+기준일이면 항상 같은 데이터.
+    enabled: true
+    seed: 20260721
+    # 결제내역 생성 기준일(이 날짜로부터 과거 N일). now()를 직접 읽지 않아 재현 가능.
+    reference-date: 2026-07-21
+    payment-window-days: 120
+    users: 12
+    cards-per-user-min: 3
+    cards-per-user-max: 6
+    payments-per-card-min: 20
+    payments-per-card-max: 60
+
+---
+spring:
+  config:
+    activate:
+      on-profile: h2
+  datasource:
+    # 본체와 분리된 별도 파일 DB. AUTO_SERVER로 외부 SQL 셸 접속 허용(시연·디버깅).
+    url: jdbc:h2:file:./data/mydata;DB_CLOSE_DELAY=-1;MODE=MySQL;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+---
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${MYDATA_DB_NAME:finntech_mydata}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USER:finntech}
+    password: ${DB_PASSWORD:finntech}

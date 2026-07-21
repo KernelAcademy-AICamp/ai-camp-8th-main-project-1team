@@ -1,0 +1,57 @@
+# 8/7 중간 데모는 로컬(H2)로 한다 — 배포 실패가 시연 실패가 되면 안 된다 (D-03).
+# 이 파일은 2단계(8/8~8/25) EC2+RDS 이전을 위한 준비물이다.
+# Docker가 설치되지 않은 환경에서는 backend를 H2 프로파일로 직접 실행하면 된다.
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: finntech-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpw
+      MYSQL_DATABASE: finntech
+      MYSQL_USER: finntech
+      MYSQL_PASSWORD: finntech
+      TZ: Asia/Seoul
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpw"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+    container_name: finntech-backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: finntech
+      DB_USER: finntech
+      DB_PASSWORD: finntech
+      # 비워두면 고정 템플릿으로 폴백한다 (D-02 포기 순서 1번)
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      # 일반 API로 DUMMY_SEED가 생성되면 안 된다 (문서 §5-2 ④).
+      # 시연용으로 잠깐 켜야 하면 FINNTECH_DEV_SEED_ENABLED=true 를 환경변수로 넘긴다.
+      FINNTECH_DEV_SEED_ENABLED: "${FINNTECH_DEV_SEED_ENABLED:-false}"
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: finntech-frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  mysql-data:

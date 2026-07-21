@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    # 테스트는 인메모리. 파일 DB를 쓰면 이전 실행 데이터가 남아 재현성 검증이 오염된다.
+    url: jdbc:h2:mem:finntech-test;DB_CLOSE_DELAY=-1;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+
+finntech:
+  dev:
+    seed-enabled: true
+  gemini:
+    # 테스트에서는 외부 호출을 하지 않는다 — 템플릿 폴백 경로를 검증한다.
+    api-key: ""

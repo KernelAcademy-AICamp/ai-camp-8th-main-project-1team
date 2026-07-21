@@ -1,0 +1,31 @@
+# ── 빌드 산출물 ──
+backend/target/
+backend-mydata/target/
+frontend/dist/
+frontend/node_modules/
+
+# ── 로컬 DB (H2 파일) ──
+backend/data/
+backend-mydata/data/
+*.mv.db
+*.trace.db
+
+# ── 내부 문서(업로드 제외, CLAUDE.md 규칙) ──
+_archive/
+
+# ── 파이썬/가상환경 ──
+.venv/
+__pycache__/
+*.pyc
+
+# ── OS/IDE ──
+.DS_Store
+.vscode/
+.idea/
+*.iml
+
+# ── Claude Code 개인 로컬 설정 ──
+.claude/settings.local.json
+
+# ── 로그·임시 ──
+*.log

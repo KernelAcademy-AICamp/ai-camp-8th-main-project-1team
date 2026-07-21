@@ -1,0 +1,149 @@
+spring:
+  application:
+    name: finntech-backend
+  # 기본 프로파일은 H2. Docker/MySQL이 준비되면 --spring.profiles.active=mysql 로 전환한다.
+  profiles:
+    default: h2
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+        # enum을 네이티브 ENUM 대신 VARCHAR로 매핑한다. 네이티브 ENUM은 값 추가 시
+        # ddl-auto=update가 기존 컬럼을 갱신하지 못해 새 enum 값(MYDATA 등)에서 깨진다(§13, H2/Hibernate 7).
+        type:
+          prefer_native_enum_types: false
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+finntech:
+  dev:
+    # 개발/관리자 전용 시드 엔드포인트. 운영 프로파일에서는 반드시 false.
+    seed-enabled: true
+  gemini:
+    # 비워두면 고정 템플릿 문장으로 폴백한다 (D-02 포기 순서 1번).
+    api-key: ${GEMINI_API_KEY:}
+    model: gemini-2.0-flash
+    base-url: https://generativelanguage.googleapis.com
+
+  # ---- 마이데이터 서버 연동 (§13) ------------------------------------------
+  # 별도 프로세스 backend-mydata(8082)를 RestClient로 호출한다. reference-date는 마이데이터 시드의
+  # payment 생성 기준일과 맞춰 '이번 달' 실적을 계산한다(재현성).
+  mydata:
+    base-url: ${MYDATA_BASE_URL:http://localhost:8082}
+    reference-date: 2026-07-21
+
+  # ---- 통장 비교 (정보성) — 실 예·적금 금리 비교 -----------------------------
+  # 금소법: '단순 정보제공 + 판매목적 아님 + 무제휴/무광고 + 가입 편의 미제공'이면 중개업 아님
+  # (금융위·금감원 유권해석 2022.6.15, 금융소비자정책과). 화면은 정보성이며 가입은 각 금융사에서.
+  # 데이터는 네이버페이 저축상품 목록 API(비공식) — 차단·실패 시 더미로 자동 폴백한다(참조: reference/test.py).
+  savings-compare:
+    enabled: true
+    base-url: https://new-m.pay.naver.com
+    path: /savings/api/v1/productList
+    referer: https://new-m.pay.naver.com/savings/list/saving
+    # test.py 기본 조건: 적금(1003)/은행(BA)/기본금리순/6개월/3만원
+    product-type-code: "1003"
+    company-group-code: BA
+    sort-type: INTEREST_RATE
+    # 통장 비교 섹션의 기본 기간(개월). 목표별 추천은 계획 개월수를 6·12·24 버킷으로 매핑해 각각 조회한다.
+    default-period: 6
+    deposit-amount: "30000"
+    max-pages: 8
+    default-limit: 8
+    cache-ttl-minutes: 30
+    # 가입 자격이 제한돼 일반 사용자가 담기 어려운 통장을 상품명으로 제외한다.
+    exclude-keywords: [간부, 청년, 장병, 미소, 청약]
+
+  # 감사로그 계층 3 — RFC 3161 TSA 앵커링
+  tsa:
+    # 기본 false. 외부 네트워크에 의존하므로 시연 직전에 켜서 앵커를 만들어 둔다.
+    # 앵커링 실패는 서비스 장애가 아니며, 배치는 PENDING으로 남아 재시도된다.
+    enabled: ${TSA_ENABLED:false}
+    url: https://freetsa.org/tsr
+    # 공개 TSA는 연속 호출 시 15초 이상 간격을 요구한다 (문서 §5-4 구현 함정 3).
+    request-delay-millis: 15000
+    timeout-seconds: 20
+
+  # ---- 분석 임계치 ----------------------------------------------------------
+  # 전부 설정값이다. 페르소나(D-09) 확정 시 이 블록만 갈아끼우면 된다 (문서 §8 설계 제약 2).
+  analysis:
+    overspending:
+      # 카테고리 지출 ÷ 전체 지출 > 0.30 → 과소비
+      ratio-threshold: 0.30
+    fds:
+      # Modified Z-score 임계. 잠정값 — 페르소나 확정 후 "100건 중 3~5건"으로 재역산한다.
+      modified-z-threshold: 3.5
+      min-samples-per-category: 10
+      evaluation-window-months: 1
+      baseline-window-months: 3
+      night-start-hour: 0
+      night-end-hour: 6
+      night-amount-multiplier: 2.0
+      new-category-max-baseline-count: 2
+      frequency-multiplier: 2.0
+    volatility:
+      window-months: 6
+      min-months: 3
+      cv-cap: 0.6
+    confirmation:
+      # ESTIMATED → CONFIRMED: 건수 AND 기간 (건수만 보면 하루 몰아쓰기로 통과한다)
+      min-records: 30
+      min-days: 14
+    score:
+      savings-weight: 0.4
+      stability-weight: 0.3
+      planned-weight: 0.3
+      grade-a: 85
+      grade-b: 70
+      grade-c: 50
+    matching:
+      period-weight: 0.3
+      risk-weight: 0.3
+      category-weight: 0.4
+      top-n: 3
+      neutral-category-fit: 0.5
+      near-miss-top-rank: 3
+
+---
+spring:
+  config:
+    activate:
+      on-profile: h2
+  datasource:
+    # AUTO_SERVER=TRUE — 앱이 떠 있는 상태에서 별도 SQL 셸로 접속할 수 있게 한다.
+    # 감사로그 변조 시연(운영자가 DB를 직접 UPDATE)을 실제로 보여주려면 이 옵션이 필요하다.
+    url: jdbc:h2:file:./data/finntech;DB_CLOSE_DELAY=-1;MODE=MySQL;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+---
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:finntech}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USER:finntech}
+    password: ${DB_PASSWORD:finntech}
+
+finntech:
+  dev:
+    # 운영 프로파일은 기본이 안전해야 한다. 공유 블록의 true를 덮어쓴다 (문서 §5-2 ④).
+    # 일반 API로 DUMMY_SEED가 생성되면 더미/실데이터 분리가 무너진다.
+    seed-enabled: ${FINNTECH_DEV_SEED_ENABLED:false}
