@@ -16,9 +16,19 @@ server:
   port: 8082
 
 mydata:
+  # 조회 커트오프(§13-11): 결제일 ≤ now 만 반환한다. 미래 날짜로 미리 생성해둔 결제는
+  # now가 그 시점을 지나면 등장해 '실시간 연동'처럼 보인다.
+  #   reference(기본) = 시드 기준일의 하루 끝 → 현재 데이터 전부 노출·결정론적
+  #   system          = 실시간(LocalDateTime.now())
+  #   <ISO datetime>  = 그 시각으로 고정(데모 시간여행), 예: 2026-08-01T00:00:00
+  now: reference
+
   seed:
     # 결정론 더미 생성 시드 (규칙 3: 재현성). 같은 시드+기준일이면 항상 같은 데이터.
     enabled: true
+    # keep(기본) = 데이터 있으면 건너뜀. replace = 기존 사용자·카드·결제를 지우고 새로 생성(페르소나 교체 대비, §13-11).
+    # 카탈로그(카드사·상품·혜택)는 두 경우 모두 재사용(없을 때만 생성).
+    mode: keep
     seed: 20260721
     # 결제내역 생성 기준일(이 날짜로부터 과거 N일). now()를 직접 읽지 않아 재현 가능.
     reference-date: 2026-07-21
@@ -28,6 +38,14 @@ mydata:
     cards-per-user-max: 6
     payments-per-card-min: 20
     payments-per-card-max: 60
+
+  # 향후 Faker 대량 생성 계획(§13-11) — 준비용 스펙 자리. 현재 미구현·미실행(데이터 추가 안 함).
+  # 실제 생성은 외부 Faker 파이프라인이 이 값을 참고해 페르소나별 프로파일 + 과거~미래 결제를 만들어 DB에 적재한다.
+  generation:
+    enabled: false
+    target-count: 11000000
+    future-window-days: 90        # 미래 결제를 며칠치까지 미리 생성해둘지
+    personas: [절약형, 균형형, 과소비형, 구독과다형, 외식형]
 
 ---
 spring:

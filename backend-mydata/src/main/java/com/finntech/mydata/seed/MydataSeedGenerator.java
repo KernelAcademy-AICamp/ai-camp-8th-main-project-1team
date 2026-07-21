@@ -38,6 +38,8 @@ public class MydataSeedGenerator implements CommandLineRunner {
     private final CardProductRepository productRepo;
 
     private final boolean enabled;
+    private final String mode;
+    private final boolean generationEnabled;
     private final long seed;
     private final LocalDate referenceDate;
     private final int windowDays;
@@ -48,6 +50,8 @@ public class MydataSeedGenerator implements CommandLineRunner {
                                MyDataPaymentRepository paymentRepo, CardCompanyRepository companyRepo,
                                CardProductRepository productRepo,
                                @Value("${mydata.seed.enabled:true}") boolean enabled,
+                               @Value("${mydata.seed.mode:keep}") String mode,
+                               @Value("${mydata.generation.enabled:false}") boolean generationEnabled,
                                @Value("${mydata.seed.seed:20260721}") long seed,
                                @Value("${mydata.seed.reference-date:2026-07-21}") String referenceDate,
                                @Value("${mydata.seed.payment-window-days:120}") int windowDays,
@@ -62,6 +66,8 @@ public class MydataSeedGenerator implements CommandLineRunner {
         this.companyRepo = companyRepo;
         this.productRepo = productRepo;
         this.enabled = enabled;
+        this.mode = mode;
+        this.generationEnabled = generationEnabled;
         this.seed = seed;
         this.referenceDate = LocalDate.parse(referenceDate);
         this.windowDays = windowDays;
@@ -76,29 +82,43 @@ public class MydataSeedGenerator implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         if (!enabled) return;
-        if (companyRepo.count() > 0) {
-            log.info("마이데이터 시드 존재 — 생성 건너뜀 (users={})", userRepo.count());
+        // 향후 페르소나 대량 생성(§13-11)이 켜지면 내장 시드는 데이터를 만들지 않는다(외부 파이프라인이 소유).
+        if (generationEnabled) {
+            log.info("페르소나 생성 모드(mydata.generation.enabled=true) — 내장 시드 건너뜀");
             return;
         }
         Random rnd = new Random(seed);
 
-        // 1) 카드사 + 카드 상품 + 혜택
-        Map<String, CardCompany> companies = new LinkedHashMap<>();
-        for (String name : Catalog.COMPANIES) {
-            companies.put(name, companyRepo.save(new CardCompany(name, "/img/company/" + name + ".png")));
-        }
-        List<CardProduct> products = new ArrayList<>();
-        for (Catalog.CardDef cardDef : Catalog.CARD_DEFS) {
-            CardProduct product = new CardProduct(cardDef.name(), "/img/card/" + cardDef.name() + ".png",
-                    cardDef.color(), companies.get(cardDef.company()));
-            for (Catalog.BenefitDef benefitDef : cardDef.benefits()) {
-                product.addBenefit(new CardBenefit(product, benefitDef.category1(), benefitDef.percent(),
-                        benefitDef.perfStart(), benefitDef.perfEnd(), benefitDef.monthlyLimit()));
+        // 1) 카탈로그(카드사·카드상품·혜택) — 없을 때만 생성. 페르소나를 바꿔도 카탈로그는 재사용.
+        if (companyRepo.count() == 0) {
+            Map<String, CardCompany> companies = new LinkedHashMap<>();
+            for (String name : Catalog.COMPANIES) {
+                companies.put(name, companyRepo.save(new CardCompany(name, "/img/company/" + name + ".png")));
             }
-            products.add(productRepo.save(product));
+            for (Catalog.CardDef cardDef : Catalog.CARD_DEFS) {
+                CardProduct product = new CardProduct(cardDef.name(), "/img/card/" + cardDef.name() + ".png",
+                        cardDef.color(), companies.get(cardDef.company()));
+                for (Catalog.BenefitDef benefitDef : cardDef.benefits()) {
+                    product.addBenefit(new CardBenefit(product, benefitDef.category1(), benefitDef.percent(),
+                            benefitDef.perfStart(), benefitDef.perfEnd(), benefitDef.monthlyLimit()));
+                }
+                productRepo.save(product);
+            }
+        }
+        List<CardProduct> products = productRepo.findAllByOrderByCodeAsc();
+
+        // 2) 사용자 데이터 — replace면 기존을 지우고 새로(페르소나 교체 대비), keep이고 이미 있으면 건너뜀.
+        if ("replace".equalsIgnoreCase(mode)) {
+            paymentRepo.deleteAllInBatch();
+            cardRepo.deleteAllInBatch();
+            userRepo.deleteAllInBatch();
+            log.info("replace 모드 — 기존 마이데이터 사용자·카드·결제 삭제 후 재생성");
+        } else if (userRepo.count() > 0) {
+            log.info("마이데이터 시드 존재 — 생성 건너뜀 (users={})", userRepo.count());
+            return;
         }
 
-        // 2) 사용자 → 카드 → 결제내역
+        // 3) 사용자 → 카드 → 결제내역
         int paymentCounter = 0;
         List<String> demoIdentities = new ArrayList<>();
         for (int userIndex = 0; userIndex < users; userIndex++) {
@@ -144,7 +164,7 @@ public class MydataSeedGenerator implements CommandLineRunner {
             }
         }
         log.info("마이데이터 시드 생성 완료 — 카드사 {}, 카드상품 {}, 사용자 {}, 결제 {}건",
-                companies.size(), products.size(), users, paymentCounter);
+                companyRepo.count(), products.size(), users, paymentCounter);
         log.info("데모용 신원(앞 3명, 본체 본인인증 입력용): {}", demoIdentities);
     }
 

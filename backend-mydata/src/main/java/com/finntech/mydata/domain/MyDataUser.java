@@ -25,6 +25,13 @@ public class MyDataUser {
     @Column(name = "mydata_user_phone_number", nullable = false, length = 20)
     private String phoneNumber;
 
+    /**
+     * 페르소나 라벨 — 향후 Faker 대량 생성(§13-11) 시 사용자별 소비 성향을 태그하기 위한 자리.
+     * 현재 시드 데이터는 null이며, 대량 생성 파이프라인이 채운다.
+     */
+    @Column(name = "mydata_user_persona", length = 40)
+    private String persona;
+
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<MyDataCard> cards = new ArrayList<>();
 
@@ -41,5 +48,7 @@ public class MyDataUser {
     public String getName() { return name; }
     public String getSocialNumber() { return socialNumber; }
     public String getPhoneNumber() { return phoneNumber; }
+    public String getPersona() { return persona; }
+    public void setPersona(String persona) { this.persona = persona; }
     public List<MyDataCard> getCards() { return cards; }
 }

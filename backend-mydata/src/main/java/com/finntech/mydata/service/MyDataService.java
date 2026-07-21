@@ -3,15 +3,21 @@ package com.finntech.mydata.service;
 import com.finntech.mydata.domain.*;
 import com.finntech.mydata.dto.MyDataDtos.*;
 import com.finntech.mydata.repository.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * 마이데이터 조회 서비스 — 본체가 요청한 사용자(CI)+카드사의 카드·결제내역을 DTO로 조립한다.
  * 인증은 없다(내부 서버-투-서버 신뢰).
+ *
+ * <p><b>현재시각 커트오프(§13-11)</b>: 조회는 {@code 결제일 ≤ now}만 반환한다. 미래 날짜로 미리 생성해둔 결제는
+ * now가 그 시점을 지나면 자동으로 등장해 '실시간 연동'처럼 보인다. now는 {@code mydata.now}로 정한다
+ * (기본 {@code reference}=시드 기준일 끝 → 현재 데이터 전부 노출·결정론적, {@code system}=실시간, 또는 ISO datetime).
  */
 @Service
 public class MyDataService {
@@ -20,13 +26,29 @@ public class MyDataService {
     private final MyDataCardRepository cardRepository;
     private final MyDataPaymentRepository paymentRepository;
     private final CardCompanyRepository companyRepository;
+    private final String nowSetting;
+    private final LocalDate referenceDate;
 
     public MyDataService(MyDataUserRepository userRepository, MyDataCardRepository cardRepository,
-                         MyDataPaymentRepository paymentRepository, CardCompanyRepository companyRepository) {
+                         MyDataPaymentRepository paymentRepository, CardCompanyRepository companyRepository,
+                         @Value("${mydata.now:reference}") String nowSetting,
+                         @Value("${mydata.seed.reference-date:2026-07-21}") String referenceDate) {
         this.userRepository = userRepository;
         this.cardRepository = cardRepository;
         this.paymentRepository = paymentRepository;
         this.companyRepository = companyRepository;
+        this.nowSetting = nowSetting;
+        this.referenceDate = LocalDate.parse(referenceDate);
+    }
+
+    /**
+     * 조회 커트오프 시각. {@code reference}=시드 기준일의 하루 끝(현재 데이터 전부 노출),
+     * {@code system}=실시간, 그 외는 ISO datetime으로 파싱(데모 시간 고정).
+     */
+    private LocalDateTime cutoff() {
+        if ("system".equalsIgnoreCase(nowSetting)) return LocalDateTime.now();
+        if ("reference".equalsIgnoreCase(nowSetting)) return referenceDate.atTime(23, 59, 59);
+        return LocalDateTime.parse(nowSetting);
     }
 
     /** 존재 확인 — 본인인증 후 본체가 "이 CI가 마이데이터에 있는 회원인가"를 묻는다. */
@@ -41,19 +63,21 @@ public class MyDataService {
         return companyRepository.findAllByOrderByIdAsc().stream().map(this::toCompanyView).toList();
     }
 
-    /** 전체 조회 — 사용자의 특정 카드사 카드 + 결제내역 전부. */
+    /** 전체 조회 — 사용자의 특정 카드사 카드 + (현재시각까지의) 결제내역. */
     @Transactional(readOnly = true)
     public List<CardView> findCards(Long companyId, String userId) {
+        LocalDateTime now = cutoff();
         return cardRepository.findByUserAndCompany(userId, companyId).stream()
-                .map(card -> toCardView(card, paymentRepository.findByCard(card.getId())))
+                .map(card -> toCardView(card, paymentRepository.findByCardUpTo(card.getId(), now)))
                 .toList();
     }
 
-    /** 증분 조회 — 마지막 동기화 이후의 결제만. */
+    /** 증분 조회 — 마지막 동기화 이후 ~ 현재시각까지의 결제만. */
     @Transactional(readOnly = true)
     public List<CardView> findCardsSince(Long companyId, String userId, LocalDateTime lastRenewalTime) {
+        LocalDateTime now = cutoff();
         return cardRepository.findByUserAndCompany(userId, companyId).stream()
-                .map(card -> toCardView(card, paymentRepository.findByCardAfter(card.getId(), lastRenewalTime)))
+                .map(card -> toCardView(card, paymentRepository.findByCardBetween(card.getId(), lastRenewalTime, now)))
                 .toList();
     }
 
