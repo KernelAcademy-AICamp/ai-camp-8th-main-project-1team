@@ -120,9 +120,25 @@ public class MyDataLinkService {
                         new UserCardCompany(userId, companyId, companyName, linkTime, linkTime));
             }
         }
+        // 입출금 통장의 월급을 앱 사용자 월급(=예산)으로 반영(§13-11 경제 모델). 통장 없으면 기존값 유지.
+        MyDataResponses.AccountView account = myDataClient.findAccount(ci);
+        if (account != null && account.salary() > 0) {
+            user.setMonthlyIncome(BigDecimal.valueOf(account.salary()));
+            userRepository.save(user);
+        }
         log.info("마이데이터 연동 완료 — userId={} 카드사 {}개, 카드 {}장, 결제 {}건 적재",
                 userId, companyIds.size(), cardCount, paymentCount);
         return new LinkResult(cardCount, paymentCount);
+    }
+
+    /** 입출금 통장 조회(§13-11) — 프론트 통장 화면용. 사용자의 CI로 제공자에 프록시. */
+    @Transactional(readOnly = true)
+    public MyDataResponses.AccountView account(Long userId) {
+        AppUser user = userRepository.findById(userId).orElseThrow(
+                () -> new IllegalArgumentException("user " + userId + " not found"));
+        String ci = user.getCi();
+        if (ci == null || ci.isBlank()) return null;
+        return myDataClient.findAccount(ci);
     }
 
     /**

@@ -124,7 +124,9 @@ body {
 .theme-toggle:hover { border-color: var(--border-strong); color: var(--ink); }
 .theme-toggle svg { width: 18px; height: 18px; }
 
-.wrap { max-width: 1040px; margin: 0 auto; padding: 28px 24px 72px; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 28px 24px 72px; overflow-x: clip; }
+/* flex/grid 자식이 컨테이너를 넘겨 버튼·내용이 화면 밖으로 삐져나오지 않게(모바일 폭) */
+.wrap .section { min-width: 0; }
 
 /* ---- 공통 카드 ---------------------------------------------------------- */
 .card {

@@ -28,4 +28,11 @@ public final class MyDataDtos {
     /** 카드 1장 + 그 카드의 상품정보·소유자·결제내역 전체 — 본체가 UserCard/UserPayment로 영속화. */
     public record CardView(String cardId, LocalDate expirationDate, int prevMonthAmount,
                            CardProductView cardProduct, UserView user, List<PaymentView> payments) {}
+
+    /** 입출금 통장 1건(§13-11 경제 모델) — 은행·상품·계좌·월급·잔액 + 최근 입출금 내역(월급 입금 + 카드 출금). */
+    public record AccountView(String accountNumber, String bank, String product, String salaryPayer,
+                              int salary, int payday, long balance, List<AccountTxnView> transactions) {}
+
+    /** 통장 입출금 1건. type = DEPOSIT(월급 입금) | WITHDRAWAL(카드 출금). amount는 부호 없는 절대액. */
+    public record AccountTxnView(LocalDateTime date, String type, long amount, String description) {}
 }

@@ -51,7 +51,7 @@ mydata:
     mode: keep
     seed: 20260721
     # 결제내역 생성 기준일(이 날짜로부터 과거 N일). now()를 직접 읽지 않아 재현 가능.
-    reference-date: 2026-07-21
+    reference-date: 2026-07-23   # 데모 기준일=오늘(앱 사용 시점 07-23). 커트오프(mydata.now=reference)가 이 날 끝까지 노출.
     payment-window-days: 120
     users: 12
     cards-per-user-min: 3

@@ -1,6 +1,7 @@
 package com.finntech.mydata.repository;
 
 import com.finntech.mydata.domain.MyDataPayment;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,4 +27,15 @@ public interface MyDataPaymentRepository extends JpaRepository<MyDataPayment, St
     List<MyDataPayment> findByCardBetween(@Param("cardId") String cardId,
                                           @Param("after") LocalDateTime after,
                                           @Param("now") LocalDateTime now);
+
+    /** 통장(§13-11): 사용자의 모든 카드 결제 합계(≤now) — 잔액 = 초기잔액 + 월급입금 − 이 합계. */
+    @Query("select coalesce(sum(p.amount),0) from MyDataPayment p "
+            + "where p.card.user.id = :userId and p.paymentDate <= :now")
+    long sumByUserUpTo(@Param("userId") String userId, @Param("now") LocalDateTime now);
+
+    /** 통장 입출금 내역용: 사용자의 최근 카드 결제(≤now, 최신순). Pageable로 상위 N개만 로드. */
+    @Query("select p from MyDataPayment p "
+            + "where p.card.user.id = :userId and p.paymentDate <= :now order by p.paymentDate desc")
+    List<MyDataPayment> findByUserUpTo(@Param("userId") String userId, @Param("now") LocalDateTime now,
+                                       Pageable pageable);
 }

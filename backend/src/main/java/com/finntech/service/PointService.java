@@ -151,7 +151,8 @@ public class PointService {
             goals.add(new GoalView(g.getId(), g.getName(), g.getEmoji(), scale(g.getTargetAmount()),
                     scale(balance), scale(projected), progress, g.isPriority(),
                     milestoneViews(g.getId(), balance), g.getDeadlineDays(), fundedDays,
-                    cuts, scale(monthlySaving), planMonths));
+                    cuts, scale(monthlySaving), planMonths,
+                    g.getAccountBank(), g.getAccountProduct(), g.getAccountNumber()));
             totalSavings = totalSavings.add(balance);
             totalTarget = totalTarget.add(g.getTargetAmount());
         }
@@ -294,8 +295,12 @@ public class PointService {
     @Transactional
     public PointSnapshot createGoal(AppUser user, String name, String emoji, BigDecimal target, LocalDateTime now) {
         int order = (int) goalRepository.countByUserId(user.getId());
-        goalRepository.save(new SavingsGoal(user.getId(), name, emoji == null ? "🎯" : emoji,
-                target == null ? BigDecimal.ZERO : target, order, false));
+        SavingsGoal g = new SavingsGoal(user.getId(), name, emoji == null ? "🎯" : emoji,
+                target == null ? BigDecimal.ZERO : target, order, false);
+        // 이 목표를 위한 자유입출금통장 발급(§13-11) — 목표에 모으는 돈을 담는 계좌.
+        AccountCatalog.Account acct = AccountCatalog.random();
+        g.setAccount(acct.bank(), acct.product(), acct.accountNumber());
+        goalRepository.save(g);
         return build(user, now, null, BigDecimal.ZERO, null);
     }
 
@@ -707,7 +712,9 @@ public class PointService {
                            /** 그 소비들의 월 절약액 */
                            BigDecimal planMonthlySaving,
                            /** 그 절약액으로 이 목표를 달성하는 개월수 (계획 없으면 0) */
-                           int planMonths) {}
+                           int planMonths,
+                           /** 이 목표의 자유입출금통장(§13-11) — 은행·통장명·계좌번호 */
+                           String accountBank, String accountProduct, String accountNumber) {}
 
     /** 계획에서 '줄일 수 있는' 습관 소비 후보 — 카테고리별 월평균. */
     public record CutOption(String categoryCode, String displayName, BigDecimal monthlyAmount) {}

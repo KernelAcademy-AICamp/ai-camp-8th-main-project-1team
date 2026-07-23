@@ -42,6 +42,50 @@ public class GenerationRunner implements ApplicationRunner {
             "mydata_payment_discretionary_score, mydata_payment_location_address, " +
             "mydata_payment_location_lat, mydata_payment_location_lng) " +
             "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    private static final String ACCOUNT_SQL = "INSERT INTO mydata_account " +
+            "(mydata_account_id, mydata_user_id, mydata_account_bank, mydata_account_product, " +
+            "mydata_account_salary_payer, mydata_account_opened_date, mydata_account_salary, " +
+            "mydata_account_payday, mydata_account_initial_balance) VALUES (?,?,?,?,?,?,?,?,?)";
+
+    /** 입출금 통장 카탈로그(§13-11) — {은행, 상품명, 계좌번호형식('#'=랜덤숫자)}. 금융결제원 CMS 자리수 참조. */
+    // 계좌번호 형식 — 금융결제원 CMS 계좌번호체계(2026.05.08)의 은행별 '보통예금' 행에 맞춘다.
+    // 리터럴 숫자 = 과목코드(보통)·단축코드(PDF 지정), '#' = 랜덤숫자(점번호·일련번호·검증번호).
+    // 예) 우리 SYYY-…: 단축S=1·과목YYY=006 → 1006 / 신한 YYY-…: 과목 100 / 농협 YYY-…: 과목 301.
+    // (수협·케이뱅크는 PDF가 보통 과목코드를 지정·검증하지 않음 → 과목 자리도 랜덤.)
+    private static final String[][] ACCOUNTS = {
+        {"한국산업은행", "KDB Hi 입출금통장", "013-####-####-###"},
+        {"NH농협은행", "NH주거래우대통장", "301-####-####-##"},
+        {"NH농협은행", "NH1934우대통장", "351-####-####-##"},
+        {"신한은행", "신한 주거래 미래설계통장", "100-###-######"},
+        {"우리은행", "우월한 월급 통장", "1006-###-######"},
+        {"우리은행", "WON통장", "1006-###-######"},
+        {"우리은행", "우리 SUPER주거래 통장", "1006-###-######"},
+        {"SC제일은행", "내월급통장", "###-10-######"},
+        {"SC제일은행", "제일EZ통장", "###-10-######"},
+        {"SC제일은행", "SC제일Hi통장", "###-10-######"},
+        {"하나은행", "달달 하나 통장", "105-######-###05"},
+        {"하나은행", "원픽 통장", "110-######-###05"},
+        {"IBK기업은행", "IBK중기근로자급여파킹통장", "001-01-#######"},
+        {"IBK기업은행", "IBK주거래생활금융통장", "001-01-#######"},
+        {"IBK기업은행", "IBK간편한통장", "001-01-#######"},
+        {"KB국민은행", "KB스타통장", "400401-##-######"},
+        {"KB국민은행", "KB모임금고", "272701-##-######"},
+        {"Sh수협은행", "Sh평생주거래우대통장", "101#-####-####"},
+        {"Sh수협은행", "Sh내가만든통장", "201#-####-####"},
+        {"Sh수협은행", "잇딴주머니통장", "101#-####-####"},
+        {"iM뱅크", "iM스마트통장", "505-##-######-#"},
+        {"BNK부산은행", "마!이통장", "101-####-####-##"},
+        {"광주은행", "매일이자Wa파킹통장", "112-10##-######"},
+        {"광주은행", "365파킹통장", "112-10##-######"},
+        {"제주은행", "J간편한통장", "700-###-######"},
+        {"전북은행", "JB 언택트 통장", "###-02-######-#"},
+        {"전북은행", "씨드모아 통장", "###-13-######-#"},
+        {"BNK경남은행", "BNK파킹통장", "###-07-######-#"},
+        {"케이뱅크", "생활통장", "100-1##-######"},
+        {"케이뱅크", "사장님통장", "100-2##-######"},
+        {"카카오뱅크", "카카오뱅크 통장", "3333-##-#######"},
+        {"토스뱅크", "토스뱅크 통장", "100#-####-####"},
+    };
 
     private final JdbcTemplate jdbc;
     private final PopulationBuilder population;
@@ -80,7 +124,10 @@ public class GenerationRunner implements ApplicationRunner {
         for (GeneratedUser u : users) {
             insertUser(u);
             List<String> cardIds = insertCards(u, cardCodes);
-            payTotal += insertPayments(u, cardIds);
+            List<GenTxn> txns = simulator.simulate(u, u.startDate().plusDays(props.getHistoryDays()));
+            EconomyPlan econ = planEconomy(u, txns);          // 월급·지출률·금액 스케일·통장 산출
+            payTotal += insertPayments(u, cardIds, txns, econ.scale());
+            insertAccount(u, econ);
             if (++done % 2000 == 0) {
                 log.info("[generation] {}/{}명, 결제 {}건 ({}s)",
                         done, users.size(), payTotal, (System.currentTimeMillis() - t0) / 1000);
@@ -227,21 +274,104 @@ public class GenerationRunner implements ApplicationRunner {
         return ids;
     }
 
-    private long insertPayments(GeneratedUser u, List<String> cardIds) {
-        LocalDate end = u.startDate().plusDays(props.getHistoryDays());
-        List<GenTxn> txns = simulator.simulate(u, end);
+    /** 결제 적재 — 금액에 통장 보정 스케일을 곱해(월지출≈월급×지출률) 다시 스냅한 뒤 배치 삽입. */
+    private long insertPayments(GeneratedUser u, List<String> cardIds, List<GenTxn> txns, double scale) {
+        Random ar = GenSeed.rng(u.userSeed(), 91);   // 금액 스냅용(결정론)
         List<Object[]> batch = new ArrayList<>(txns.size());
         int seq = 0;
         for (GenTxn t : txns) {
             String payId = "g" + u.id().substring(0, 16) + "-" + (seq++);
             String cardId = cardIds.get(Math.min(t.cardSlot(), cardIds.size() - 1));
+            int amount = DailyActivitySimulator.snapAmount(
+                    Math.max(100, (int) Math.round(t.amount() * scale)), ar);
             batch.add(new Object[]{
                     payId, cardId, Timestamp.valueOf(t.date()), t.category1(), t.category2(),
-                    t.amount(), t.merchant(), 0, t.channel(), t.productName(), t.productPrice(),
+                    amount, t.merchant(), 0, t.channel(), t.productName(), t.productPrice(),
                     t.quantity(), t.wasteLabel(), t.discretionaryScore(), t.address(), t.lat(), t.lon()
             });
         }
         jdbc.batchUpdate(PAY_SQL, batch);
         return batch.size();
+    }
+
+    // ── 통장·월급·지출 보정(§13-11 경제 모델) ──────────────────────────────
+    /** 월급 입금처 회사 목록(부가통신사업자, generation/companies.txt) — 최초 1회 로드. */
+    private List<String> companies;
+
+    private List<String> companies() {
+        if (companies == null) {
+            try (var in = getClass().getResourceAsStream("/generation/companies.txt")) {
+                companies = new java.io.BufferedReader(new java.io.InputStreamReader(
+                        java.util.Objects.requireNonNull(in), java.nio.charset.StandardCharsets.UTF_8))
+                        .lines().map(String::trim).filter(s -> !s.isEmpty()).toList();
+            } catch (Exception e) {
+                log.warn("[generation] companies.txt 로드 실패 → 기본값 사용: {}", e.getMessage());
+                companies = List.of("(주)핀테크", "주식회사 데모컴퍼니");
+            }
+        }
+        return companies;
+    }
+
+    /** {계좌번호, 은행, 상품, 월급입금처, 월급, 월급날, 초기잔액, 금액스케일}. */
+    private record EconomyPlan(String accountNumber, String bank, String product, String salaryPayer,
+                               int salary, int payday, long initialBalance, double scale) {}
+
+    /**
+     * 월급·지출률로 카드 지출을 현실화한다.
+     *  - 월급 = 페르소나 기준액 × 개인편차, 10만원 단위, [210만(최저임금), 1200만] 클램프.
+     *  - 지출률 = 0.55 + 낭비율×1.5 (낭비 적으면 <1: 흑자, 많으면 >1: 적자).
+     *  - 목표 총지출 = 월급 × 지출률 × 개월수 → 원지출 대비 스케일. → 필수지출<월급, 낭비가 지출을 월급 위로.
+     */
+    private EconomyPlan planEconomy(GeneratedUser u, List<GenTxn> txns) {
+        Random r = GenSeed.rng(u.userSeed(), 90);
+        long raw = 0, waste = 0;
+        for (GenTxn t : txns) { raw += t.amount(); if ("WASTE".equals(t.wasteLabel())) waste += t.amount(); }
+        double wasteRatio = raw > 0 ? (double) waste / raw : 0.0;
+
+        // 월급 = 페르소나 기준액 × 개인편차. 대부분 통상 수준(0.7~1.6배)이되, 8%는 고소득(추가 1.6~2.8배).
+        // 10만원 단위, [210만(최저임금)~1200만] 클램프 → 최저임금~고소득까지 넓은 현실 분포.
+        int base = baseSalary(u.variant().baseName());
+        double f = GenSeed.uniform(r, 0.7, 1.6);
+        if (r.nextDouble() < 0.08) f *= GenSeed.uniform(r, 1.6, 2.8);   // 소수의 고소득자
+        int salary = (int) Math.min(12_000_000L, Math.max(2_100_000L,
+                Math.round(base * f / 100_000.0) * 100_000L));
+        double spendRatio = Math.max(0.5, Math.min(1.5, 0.55 + wasteRatio * 1.5));
+        double months = Math.max(1.0, props.getHistoryDays() / 30.0);
+        double targetTotal = (double) salary * spendRatio * months;
+        double scale = raw > 0 ? targetTotal / raw : 1.0;
+
+        int payday = 1 + r.nextInt(28);
+        long initialBalance = Math.round(salary * GenSeed.uniform(r, 0.3, 12.0) / 100_000.0) * 100_000L;
+        String[] a = ACCOUNTS[r.nextInt(ACCOUNTS.length)];
+        String accountNumber = fillAccountNumber(a[2], r);
+        List<String> cos = companies();
+        String payer = cos.get(r.nextInt(cos.size()));   // 월급 입금처(회사명) 랜덤
+        return new EconomyPlan(accountNumber, a[0], a[1], payer, salary, payday, initialBalance, scale);
+    }
+
+    private static int baseSalary(String persona) {
+        return switch (persona) {   // 통상 노동자 수준(2025 중위 ~282만·평균 ~350만)에 페르소나별 소폭 차등
+            case "절약형" -> 2_600_000;
+            case "균형형" -> 3_200_000;
+            case "과소비형" -> 3_900_000;
+            case "구독과다형" -> 3_400_000;
+            case "외식형" -> 3_600_000;
+            default -> 3_200_000;
+        };
+    }
+
+    /** 계좌번호 형식('#'=랜덤숫자)을 채운다. */
+    private static String fillAccountNumber(String format, Random r) {
+        StringBuilder sb = new StringBuilder(format.length());
+        for (int i = 0; i < format.length(); i++) {
+            char c = format.charAt(i);
+            sb.append(c == '#' ? (char) ('0' + r.nextInt(10)) : c);
+        }
+        return sb.toString();
+    }
+
+    private void insertAccount(GeneratedUser u, EconomyPlan e) {
+        jdbc.update(ACCOUNT_SQL, e.accountNumber(), u.id(), e.bank(), e.product(), e.salaryPayer(),
+                Date.valueOf(u.startDate()), e.salary(), e.payday(), e.initialBalance());
     }
 }

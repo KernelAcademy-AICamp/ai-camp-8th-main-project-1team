@@ -29,4 +29,10 @@ public final class MyDataResponses {
 
     // 데이터 최소화(W7-2): 제공자가 주민번호·전화번호를 응답에 싣지 않는다(본체 미사용). 격리가 뚫려도 PII 미유출.
     public record UserView(String id, String name) {}
+
+    /** 입출금 통장(§13-11) — 은행·계좌·월급·잔액 + 최근 입출금 내역. */
+    public record AccountView(String accountNumber, String bank, String product, String salaryPayer,
+                              int salary, int payday, long balance, List<AccountTxnView> transactions) {}
+
+    public record AccountTxnView(LocalDateTime date, String type, long amount, String description) {}
 }

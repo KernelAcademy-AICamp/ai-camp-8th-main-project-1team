@@ -36,8 +36,7 @@ public class ScoreService {
     public ScoreResult score(AppUser user, AnalysisResult analysis) {
         AnalysisProperties.Score cfg = props.getScore();
 
-        int elapsedMonths = Math.max(1, analysis.monthlySpend().size());
-        double savingsProgress = savingsProgress(user, analysis, elapsedMonths);
+        double savingsProgress = savingsRate(user, analysis);
         // 계획소비비율 항을 ML '필수 소비 비율'로 대체(W8 다운스트림) — 마이데이터 연동 시. 미연동/모델없음이면 규칙 planned로 폴백.
         double plannedRatio = wasteScoringService.summarize(user.getId())
                 .map(WasteScoringService.MlSummary::essentialRatio)
@@ -74,20 +73,20 @@ public class ScoreService {
      * 누적저축액 = Σ(월소득 − 월지출), 음수 월은 0으로 본다.
      * 목표선 = 목표금액 × 경과월/목표월.
      */
-    private double savingsProgress(AppUser user, AnalysisResult analysis, int elapsedMonths) {
-        BigDecimal accumulated = BigDecimal.ZERO;
-        for (BigDecimal monthSpend : analysis.monthlySpend().values()) {
-            BigDecimal saved = user.getMonthlyIncome().subtract(monthSpend);
-            if (saved.signum() > 0) accumulated = accumulated.add(saved);
-        }
-        if (user.getGoalAmount().signum() <= 0 || user.getGoalMonths() <= 0) return 0.0;
-
-        BigDecimal target = user.getGoalAmount()
-                .multiply(BigDecimal.valueOf(Math.min(elapsedMonths, user.getGoalMonths())))
-                .divide(BigDecimal.valueOf(user.getGoalMonths()), 10, RoundingMode.HALF_UP);
-        if (target.signum() <= 0) return 0.0;
-
-        return Stats.clamp(accumulated.divide(target, 10, RoundingMode.HALF_UP).doubleValue(), 0.0, 1.0);
+    /**
+     * 저축률(§13-11 경제 모델) = 1 − 통상 월지출 / 월급. 흑자(지출&lt;월급)면 +, 적자면 0.
+     * 통상 월지출 = 월별 지출의 <b>중앙값</b> — 가입 말일 사용자의 부분 시작월(결제 1건) 왜곡을 배제한다.
+     * 저축 20%를 만점(1.0)으로 매핑(한국 가계 저축률 참고). 월급·자료 없으면 0.
+     */
+    private double savingsRate(AppUser user, AnalysisResult analysis) {
+        BigDecimal income = user.getMonthlyIncome();
+        if (income == null || income.signum() <= 0 || analysis.monthlySpend().isEmpty()) return 0.0;
+        java.util.List<BigDecimal> months = new java.util.ArrayList<>(analysis.monthlySpend().values());
+        java.util.Collections.sort(months);
+        BigDecimal median = months.get(months.size() / 2);   // 중앙값(부분월 아웃라이어 배제)
+        double rate = 1.0 - median.doubleValue() / income.doubleValue();
+        // 저축률 -0.20(20% 적자)→0, 손익분기(0)→0.5, +0.20(20% 저축)→1.0. 흑자↑·적자↓를 완만히 반영.
+        return Stats.clamp((rate + 0.20) / 0.40, 0.0, 1.0);
     }
 
     private String grade(int score) {

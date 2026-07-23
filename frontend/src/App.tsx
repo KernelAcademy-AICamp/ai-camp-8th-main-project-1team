@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   api, catLabel,
   type AlertResponse, type ReportResponse,
-  type ScoreResponse, type VerifyResponse, type DataSourceMode, type GoalRecommendation,
-  type MyCard, type WasteJudgment,
+  type ScoreResponse, type DataSourceMode, type GoalRecommendation,
+  type MyCard, type WasteJudgment, type MyAccount, type MyPaymentHistory,
 } from './api';
 import { ConsumptionPanel } from './ConsumptionPanel';
 import { SurveyPanel } from './SurveyPanel';
@@ -156,8 +156,10 @@ export default function App() {
   const [goalRecs, setGoalRecs] = useState<GoalRecommendation[]>([]);
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [score, setScore] = useState<ScoreResponse | null>(null);
-  const [audit, setAudit] = useState<VerifyResponse | null>(null);
   const [myCards, setMyCards] = useState<MyCard[]>([]);
+  const [account, setAccount] = useState<MyAccount | null>(null);
+  const [acctFull, setAcctFull] = useState(false);              // 통장 내역 확대(월별 전체)
+  const [acctPays, setAcctPays] = useState<MyPaymentHistory[] | null>(null);
   const [waste, setWaste] = useState<WasteJudgment[] | null>(null);
   const [linking, setLinking] = useState(false);
   // 연결된 앱 사용자(생성 사람마다 별도 userId) + 선택된 생성 CI — 사람 교체 연결용
@@ -172,10 +174,12 @@ export default function App() {
   // 개발용 — 수동 소비 추가(엔진 반응 확인) 폼
   const [devCat, setDevCat] = useState('식비');
   const [devAmt, setDevAmt] = useState('');
+  const [devWhen, setDevWhen] = useState(() => {
+    const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16); // 기본 '지금'(로컬), 미래로 바꾸면 그 시점 이후에 반영되는 소비를 테스트
+  });
   const [devMsg, setDevMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [anchoring, setAnchoring] = useState(false);
-  const [anchorMsg, setAnchorMsg] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('home');
   const [theme, setTheme] = useState<'light' | 'dark'>(
     () => (typeof localStorage !== 'undefined' && localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'),
@@ -196,17 +200,17 @@ export default function App() {
 
   async function loadMyData() {
     try { setMyCards(await api.myCards(userId)); } catch { /* 미연동이면 빈 배열 */ }
+    void api.account(userId).then(setAccount).catch(() => setAccount(null));
   }
 
   async function loadAll() {
     setLoading(true);
     setError(null);
     try {
-      const [a, rp, s, v] = await Promise.all([
-        api.alerts(userId), api.report(userId),
-        api.score(userId), api.verifyAudit(),
+      const [a, rp, s] = await Promise.all([
+        api.alerts(userId), api.report(userId), api.score(userId),
       ]);
-      setAlerts(a); setReport(rp); setScore(s); setAudit(v);
+      setAlerts(a); setReport(rp); setScore(s);
       void loadMyData();
       // 거래별 ML 낭비/필수 판정(§W8) — 데모 백엔드에만 있을 수 있어 방어적으로 조회
       void api.mlWaste(userId).then(setWaste).catch(() => setWaste(null));
@@ -261,6 +265,15 @@ export default function App() {
     void linkCi(u.ci);
   }
 
+  // 통장 내역 확대 — 월별 전체를 보려면 전체 결제(출금)를 불러와 통장 입금(월급)과 합친다.
+  async function toggleAccount() {
+    const next = !acctFull;
+    setAcctFull(next);
+    if (next && acctPays === null) {
+      try { setAcctPays(await api.allPayments(userId, 8)); } catch { setAcctPays([]); }
+    }
+  }
+
   // 개발용 — 현재 사용자에게 소비를 수동 추가하고 재계산(마이데이터 위에 사용자 입력이 얹혀 엔진이 반응하는지 확인)
   async function addDevConsumption() {
     const amt = Math.round(Number(devAmt));
@@ -269,7 +282,7 @@ export default function App() {
     try {
       await api.addConsumption({
         userId, categoryCode: devCat, amount: amt,
-        occurredAt: new Date().toISOString().slice(0, 19), planned: false,
+        occurredAt: devWhen.length === 16 ? devWhen + ':00' : devWhen, planned: false,
       });
       setDevAmt('');
       setDevMsg(`${devCat} ${amt.toLocaleString('ko-KR')}원 추가 — 점수·리포트 재계산됨`);
@@ -279,20 +292,6 @@ export default function App() {
     }
   }
 
-  async function anchor() {
-    setAnchoring(true);
-    try {
-      const r = await api.anchorAudit();
-      setAnchorMsg(r.tsaEnabled
-        ? `앵커링 ${r.anchored}건 성공 / ${r.failed}건 실패`
-        : 'TSA가 꺼져 있습니다 — TSA_ENABLED=true 로 서버를 띄우면 외부 시각 증명이 붙습니다.');
-      await loadAll();
-    } catch (e) {
-      setAnchorMsg(e instanceof Error ? e.message : String(e));
-    } finally {
-      setAnchoring(false);
-    }
-  }
 
   // 온보딩 미완료면 온보딩 화면만 (진입 필수)
   if (!onboarded) {
@@ -414,6 +413,9 @@ export default function App() {
                     <input type="number" inputMode="numeric" min={0} value={devAmt}
                       onChange={(e) => setDevAmt(e.target.value)} placeholder="금액(원)"
                       aria-label="금액" style={{ width: 120, padding: '6px 8px' }} />
+                    <input type="datetime-local" value={devWhen} onChange={(e) => setDevWhen(e.target.value)}
+                      aria-label="반영 시점(미래로 두면 그 시점 이후 반영 테스트)" title="반영 시점 — 미래로 두면 그 시점 이후에 반영되는 소비를 테스트"
+                      style={{ padding: '6px 8px' }} />
                     <button type="button" className="btn btn-ghost btn-sm"
                       onClick={() => void addDevConsumption()} disabled={loading}>추가 후 재계산</button>
                     {devMsg && <span className="muted small" role="status">· {devMsg}</span>}
@@ -441,6 +443,88 @@ export default function App() {
                 </div>
               )}
             </section>
+
+            {/* 입출금 통장(§13-11 경제 모델) — 카드=출금, 매달 월급=입금, 잔액=쓸 수 있는 돈 */}
+            {account && (
+              <section className="section card card-pad" aria-labelledby="h-account">
+                <div className="section-head" style={{ marginBottom: 8 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+                    <h2 id="h-account">내 통장</h2><span className="badge-aux">마이데이터</span>
+                  </span>
+                </div>
+                <div className="md-summary" style={{ marginBottom: 10 }}>
+                  <div className="md-stat"><span className="md-l">잔액</span>
+                    <b className="md-v" style={{ color: account.balance < 0 ? 'var(--bad, #dc2626)' : undefined }}>{won(account.balance)}</b></div>
+                  <div className="md-stat"><span className="md-l">월급</span><b className="md-v sav">{won(account.salary)}</b></div>
+                </div>
+                <p className="muted small" style={{ marginTop: 0 }}>
+                  {account.bank} · {account.product} · <span style={{ fontVariantNumeric: 'tabular-nums' }}>{account.accountNumber}</span><br />
+                  매월 {account.payday}일 · <b>{account.salaryPayer}</b>에서 급여 입금
+                </p>
+                {(() => {
+                  // 통합 내역: 기본은 통장 응답(월급 입금 전부 + 최근 출금), 확대 시 전체 결제(출금)+월급 입금.
+                  type T = { date: string; type: 'DEPOSIT' | 'WITHDRAWAL'; amount: number; desc: string };
+                  const base: T[] = acctFull && acctPays
+                    ? [
+                        ...account.transactions.filter((t) => t.type === 'DEPOSIT')
+                          .map((t) => ({ date: t.date, type: 'DEPOSIT' as const, amount: t.amount, desc: t.description })),
+                        ...acctPays.map((p) => ({ date: p.date, type: 'WITHDRAWAL' as const, amount: p.amount,
+                          desc: p.merchantName ?? p.category2 ?? p.category1 })),
+                      ]
+                    : account.transactions.map((t) => ({ date: t.date, type: t.type, amount: t.amount, desc: t.description }));
+                  base.sort((a, b) => b.date.localeCompare(a.date));
+                  // 각 건 남은 잔액 — 현재 잔액에서 최신→과거로 역산.
+                  let bal = account.balance;
+                  const rows = base.map((t) => { const after = bal; bal -= t.type === 'DEPOSIT' ? t.amount : -t.amount; return { ...t, after }; });
+                  const Row = (t: T & { after: number }, i: number) => (
+                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 2px', fontSize: '.85rem' }}>
+                      <span className="muted" style={{ width: 42, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                        {t.date.slice(5, 10).replace('-', '.')}</span>
+                      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {t.desc}</span>
+                      <span style={{ width: 88, flexShrink: 0, textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums',
+                        color: t.type === 'DEPOSIT' ? 'var(--good, #16a34a)' : undefined }}>
+                        {t.type === 'DEPOSIT' ? '+' : '−'}{won(t.amount)}</span>
+                      <span className="muted" style={{ width: 88, flexShrink: 0, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                        잔액 {won(t.after)}</span>
+                    </li>
+                  );
+                  const ulStyle = { listStyle: 'none' as const, margin: 0, padding: 0, display: 'flex', flexDirection: 'column' as const, gap: 2 };
+                  let body;
+                  if (!acctFull) {
+                    body = <ul style={{ ...ulStyle, marginTop: 8 }}>{rows.slice(0, 6).map(Row)}</ul>;
+                  } else {
+                    const byMonth: Record<string, (T & { after: number })[]> = {};
+                    for (const t of rows) (byMonth[t.date.slice(0, 7)] ??= []).push(t);
+                    const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
+                    body = (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+                        {months.map((m) => {
+                          const [y, mo] = m.split('-');
+                          return (
+                            <div key={m}>
+                              <div style={{ padding: '2px 0 4px', borderBottom: '1px solid var(--line, #e5e5e5)', marginBottom: 4 }}>
+                                <b>{y}년 {mo}월</b> <span className="muted small">· {byMonth[m].length}건</span>
+                              </div>
+                              <ul style={ulStyle}>{byMonth[m].map(Row)}</ul>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  }
+                  return (
+                    <>
+                      {body}
+                      <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 10 }}
+                        onClick={() => void toggleAccount()}>
+                        {acctFull ? '접기' : '월별 전체 입출금 보기'}
+                      </button>
+                    </>
+                  );
+                })()}
+              </section>
+            )}
 
             <ImpulseSaverPanel key={userId} userId={userId} />
 
@@ -611,48 +695,6 @@ export default function App() {
         {tab === 'more' && (
           <div className="view">
             <ConsumptionPanel key={userId} userId={userId} onChanged={() => void loadAll()} />
-
-            <section className="section card card-pad" aria-labelledby="h-trust">
-              <div className="trust-head">
-                <span className="seal" aria-hidden="true">{Icon.shield}</span>
-                <div>
-                  <div className="section-head" style={{ marginBottom: 2 }}><h2 id="h-trust">데이터 무결성 보증</h2></div>
-                  <span className="hint small">모든 처리 기록은 해시체인 + Merkle 트리로 봉인돼, 누가 몰래 고치면 즉시 드러납니다</span>
-                </div>
-              </div>
-              {audit && (
-                <>
-                  <div style={{ marginTop: 16 }}>
-                    <span className={`verdict ${audit.valid ? 'ok' : 'broken'}`}>
-                      {audit.valid ? Icon.check : Icon.alert}
-                      {audit.valid ? '검증 통과 — 변조 없음' : `변조 감지 — ${audit.firstBrokenSeq}번 기록에서 체인이 깨짐`}
-                    </span>
-                  </div>
-                  <div className="trust-stats">
-                    <div className="tstat"><div className="tv num">{audit.entryCount}</div><div className="tl">기록 엔트리</div></div>
-                    <div className="tstat"><div className="tv num">{audit.batchCount}</div><div className="tl">Merkle 배치</div></div>
-                    <div className={`tstat ${audit.anchoredBatchCount === 0 ? 'pending' : 'anchored'}`}>
-                      <div className="tv num">{audit.anchoredBatchCount}/{audit.batchCount}</div><div className="tl">외부 TSA 앵커</div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                    <button type="button" className="btn btn-primary btn-sm" onClick={() => void anchor()} disabled={anchoring}>
-                      {anchoring ? '앵커링 중… (요청 간 15초 지연)' : '외부 TSA에 시각 앵커링'}
-                    </button>
-                    {anchorMsg && <span className="muted small" role="status">{anchorMsg}</span>}
-                  </div>
-                  {audit.anchoredBatchCount === 0 && (
-                    <div className="trust-note">
-                      아직 외부 앵커가 없습니다. 해시체인만으로는 <strong>운영자가 DB를 통째로 재생성하는 공격</strong>을 막지 못해요 —
-                      외부 TSA에 앵커링하면 이 공격까지 막습니다.
-                    </div>
-                  )}
-                  {audit.problems.length > 0 && (
-                    <ul className="problems">{audit.problems.map((p, i) => <li key={i}>{p}</li>)}</ul>
-                  )}
-                </>
-              )}
-            </section>
 
             <SurveyPanel userId={userId} />
           </div>

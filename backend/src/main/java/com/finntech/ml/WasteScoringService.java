@@ -24,6 +24,9 @@ import java.util.Map;
 @Service
 public class WasteScoringService {
 
+    /** '알 수 없는 PG 결제'의 category2. ML은 이를 낭비/필수로 판단하지 않고(사용자가 직접 결정), 학습에서도 제외한다(§13-11). */
+    private static final String UNCLASSIFIED = "미분류";
+
     private final SpendingClassifier classifier;
     private final UserPaymentRepository userPaymentRepository;
     private final UserSpendingOverrideRepository overrideRepository;
@@ -54,7 +57,7 @@ public class WasteScoringService {
         }
         List<WasteJudgment> out = new ArrayList<>(payments.size());
         for (UserPayment p : payments) {
-            if (p.getCategory2() == null) continue;
+            if (p.getCategory2() == null || UNCLASSIFIED.equals(p.getCategory2())) continue; // 미분류(unknown-pg)는 판정 안 함
             Map<String, Object> feats = WasteFeatureExtractor.features(
                     p.getCategory2(), p.getAmount(), p.getPaymentDate(), stats);
             double prob = classifier.wasteProbability(feats);
@@ -91,7 +94,7 @@ public class WasteScoringService {
         long essentialAmt = 0, totalAmt = 0;
         Map<String, long[]> byCat1 = new java.util.TreeMap<>(); // category1 -> [낭비금액, 총금액]
         for (UserPayment p : payments) {
-            if (p.getCategory2() == null) continue;
+            if (p.getCategory2() == null || UNCLASSIFIED.equals(p.getCategory2())) continue; // 미분류(unknown-pg) 집계 제외
             boolean waste = overrides.containsKey(p.getCategory2())
                     ? overrides.get(p.getCategory2())
                     : classifier.wasteProbability(WasteFeatureExtractor.features(

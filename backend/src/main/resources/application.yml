@@ -43,7 +43,7 @@ finntech:
   # payment 생성 기준일과 맞춰 '이번 달' 실적을 계산한다(재현성).
   mydata:
     base-url: ${MYDATA_BASE_URL:http://localhost:8082}
-    reference-date: 2026-07-21
+    reference-date: 2026-07-23   # 데모 기준일=오늘(앱 사용 시점 07-23). 마이데이터 커트오프와 일치시켜 '이번 달' 실적이 어긋나지 않게.
     # 서버간 인증(W7-2): 마이데이터 호출에 X-MyData-Token으로 실어 보낼 공유 시크릿. env MYDATA_SHARED_SECRET.
     # 미설정이면 헤더 미부착(dev 통과). 운영에선 양 모듈에 동일 값 주입.
     shared-secret: ${MYDATA_SHARED_SECRET:}
@@ -103,7 +103,9 @@ finntech:
       frequency-multiplier: 2.0
     volatility:
       min-months: 3
-      cv-cap: 0.6
+      # 안정성 = clamp(1 - 월지출CV/cv-cap). 재생성 데이터는 시작월이 부분월(가입 말일)이라 CV가 과대계상돼(≈0.59)
+      # 예전 0.6에선 stability가 0으로 뭉개져 전원 C/D로 몰렸다 → 1.5로 완화해 필수비율 높은 사용자는 A/B 도달(§13-11).
+      cv-cap: 1.5
     confirmation:
       # ESTIMATED → CONFIRMED: 건수 AND 기간 (건수만 보면 하루 몰아쓰기로 통과한다)
       min-records: 30

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, catLabel, type CategoryView, type ImpulseSnapshot } from './api';
+import { api, catLabel, type ImpulseSnapshot } from './api';
 import { GiftBox } from './GiftBox';
 
 const won = (n: number) => Math.round(n).toLocaleString('ko-KR') + '원';
@@ -11,21 +11,16 @@ const won = (n: number) => Math.round(n).toLocaleString('ko-KR') + '원';
  */
 export function ImpulseSaverPanel({ userId }: { userId: number }) {
   const [snap, setSnap] = useState<ImpulseSnapshot | null>(null);
-  const [cats, setCats] = useState<CategoryView[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [actionKey, setActionKey] = useState(0);
 
-  const [spendCat, setSpendCat] = useState('');
-  const [spendAmt, setSpendAmt] = useState('');
   const [csv, setCsv] = useState('');
   const [uploading, setUploading] = useState(false);
 
   async function load() {
     try {
-      const [s, c] = await Promise.all([api.impulse(userId), api.categories()]);
-      setSnap(s); setCats(c);
-      if (c.length && !spendCat) setSpendCat(c[0].code);
+      setSnap(await api.impulse(userId));
     } catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
   }
   useEffect(() => { void load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -106,26 +101,7 @@ export function ImpulseSaverPanel({ userId }: { userId: number }) {
           )}
         </div>
 
-        {/* ② 충동소비 기록 (균열) */}
-        <div className="pts-section">
-          <h3>충동소비를 했어요 <span className="muted tiny">— 이것만 기록하면 절약통이 그만큼 깨져요</span></h3>
-          <form className="spend-form" onSubmit={(e) => {
-            e.preventDefault();
-            if (!spendAmt) return;
-            void run(api.impulseSpend(userId, spendCat, Number(spendAmt))).then((s) => { if (s) setSpendAmt(''); });
-          }}>
-            <label className="sr-only" htmlFor="imp-cat">카테고리</label>
-            <select id="imp-cat" value={spendCat} onChange={(e) => setSpendCat(e.target.value)}>
-              {cats.map((c) => <option key={c.code} value={c.code}>{c.displayName}</option>)}
-            </select>
-            <label className="sr-only" htmlFor="imp-amt">금액</label>
-            <input id="imp-amt" type="number" min={1} placeholder="금액" value={spendAmt}
-              onChange={(e) => setSpendAmt(e.target.value)} />
-            <button className="btn btn-ghost btn-sm" type="submit">충동소비 기록</button>
-          </form>
-        </div>
-
-        {/* ③ 다음달 카드내역 재업로드 → 재검증 */}
+        {/* 다음달 카드내역 재업로드 → 재검증 */}
         <div className="pts-section">
           <h3>다음달 카드내역으로 재검증 <span className="muted tiny">— 충동소비가 실제로 줄었는지 확인해요</span></h3>
           <p className="muted small" style={{ marginTop: 0 }}>

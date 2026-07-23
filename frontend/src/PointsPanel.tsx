@@ -276,6 +276,11 @@ export function PointsPanel({ userId, onChanged }: { userId: number; onChanged?:
                   <b>{won(g.balance)}</b> / {man(g.targetAmount)} · {Math.round(g.progress * 100)}%
                   {g.fundedDays > 0 && <span className="goal-days">🗓 {g.fundedDays}일 앞당겨짐</span>}
                 </div>
+                {g.accountNumber && (
+                  <div className="muted small" style={{ marginTop: 4 }}>
+                    🏦 {g.accountBank} {g.accountProduct} · <span style={{ fontVariantNumeric: 'tabular-nums' }}>{g.accountNumber}</span> <span className="muted">(자유입출금)</span>
+                  </div>
+                )}
 
                 {g.milestones.length > 0 && (
                   <div className="ms-row">
@@ -429,20 +434,9 @@ export function PointsPanel({ userId, onChanged }: { userId: number; onChanged?:
           </div>
         )}
 
-        {/* 액션: 살 뻔했다 · 소비했다 */}
+        {/* 소비 기록 */}
         <div className="pts-section">
-          <h3>지금 살 뻔했나요? <span className="muted tiny">— 참으면 바로 목표에 저축돼요</span></h3>
-          <div className="avoid-chips">
-            {snap.suggestions.map((s) => (
-              <button type="button" key={s.categoryCode} className="avoid-chip"
-                onClick={() => void run(api.avoid(userId, s.categoryCode, s.typicalAmount))}>
-                <span className="ac-cat">{catLabel(s.categoryCode, s.displayName)}</span>
-                <span className="ac-amt">{won(s.typicalAmount)} 참기</span>
-              </button>
-            ))}
-          </div>
-
-          <h3 style={{ marginTop: 16 }}>소비했어요 <span className="muted tiny">— 솔직하게 기록만 해도 충분해요</span></h3>
+          <h3>소비했어요 <span className="muted tiny">— 솔직하게 기록만 해도 충분해요</span></h3>
           <form className="spend-form" onSubmit={(e) => {
             e.preventDefault();
             if (!spendAmt) return;

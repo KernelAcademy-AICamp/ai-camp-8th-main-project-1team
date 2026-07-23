@@ -1,6 +1,7 @@
 package com.finntech.mydata.web;
 
 import com.finntech.mydata.dto.ApiResponse;
+import com.finntech.mydata.dto.MyDataDtos.AccountView;
 import com.finntech.mydata.dto.MyDataDtos.CardView;
 import com.finntech.mydata.service.MyDataService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -43,5 +44,11 @@ public class MyDataController {
     @GetMapping("/ci/{userCi}")
     public ApiResponse<Boolean> checkUser(@PathVariable String userCi) {
         return ApiResponse.ok(myDataService.userExists(userCi));
+    }
+
+    /** 입출금 통장 조회(§13-11) — 은행·계좌·월급·잔액 + 최근 입출금 내역. 계좌 없으면 data=null. */
+    @GetMapping("/account")
+    public ApiResponse<AccountView> getAccount(@RequestParam String userId) {
+        return ApiResponse.ok(myDataService.findAccount(userId).orElse(null));
     }
 }

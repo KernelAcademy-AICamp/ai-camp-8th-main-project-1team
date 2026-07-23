@@ -156,6 +156,10 @@ export interface GoalView {
   planMonthlySaving: number;
   /** 그 절약액으로 이 목표 달성 개월수 (계획 없으면 0) */
   planMonths: number;
+  /** 이 목표의 자유입출금통장(§13-11) — 은행·통장명·계좌번호 (기존 목표는 null) */
+  accountBank: string | null;
+  accountProduct: string | null;
+  accountNumber: string | null;
 }
 /** 계획에서 줄일 수 있는 습관 소비 후보 (카테고리별 월평균) */
 export interface CutOption {
@@ -342,6 +346,18 @@ export interface MyPaymentHistory {
   cardColor: string | null;
   companyName: string | null;
 }
+/** 입출금 통장(§13-11 경제 모델) — 은행·계좌·월급·잔액 + 최근 입출금 내역. */
+export interface MyAccountTxn { date: string; type: 'DEPOSIT' | 'WITHDRAWAL'; amount: number; description: string; }
+export interface MyAccount {
+  accountNumber: string;
+  bank: string;
+  product: string;
+  salaryPayer: string;
+  salary: number;
+  payday: number;
+  balance: number;
+  transactions: MyAccountTxn[];
+}
 /** 결제별 ML 낭비/필수 판정 + '왜' (§W8, /api/ml/waste). ML은 규칙 FDS와 달리 긴 이력 없이도 거래별 판정. */
 export interface WasteJudgment {
   paymentId: string;
@@ -511,6 +527,8 @@ export const api = {
   /** 결제내역 모아보기 — 카드 구분 없이 최근 N개월(기본 6) 전체 결제, 실카드명 포함(§13-11). */
   allPayments: (userId: number, months = 6) =>
     get<MyPaymentHistory[]>(`/api/mydata/payments?userId=${userId}&months=${months}`),
+  /** 입출금 통장(§13-11 경제 모델) — 은행·계좌번호·통장명·월급·잔액 + 입출금 내역. 통장 없으면 null. */
+  account: (userId: number) => get<MyAccount | null>(`/api/mydata/account?userId=${userId}`),
   /** 실시간 증분 동기화(§13-11, W2) — 마지막 동기화 이후 새 결제만 당겨온다. */
   syncMyData: (userId: number) =>
     post<{ newPayments: number }>(`/api/mydata/sync?userId=${userId}`),

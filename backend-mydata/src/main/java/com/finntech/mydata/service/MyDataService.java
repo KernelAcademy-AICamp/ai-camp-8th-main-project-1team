@@ -26,6 +26,7 @@ public class MyDataService {
     private final MyDataCardRepository cardRepository;
     private final MyDataPaymentRepository paymentRepository;
     private final CardCompanyRepository companyRepository;
+    private final MyDataAccountRepository accountRepository;
     private final String nowSetting;
     private final LocalDate referenceDate;
     /** 전체 조회 하한(W4-3): 0=무제한(현행), N>0이면 최근 N개월만 반환해 대량 사용자 응답 폭주를 막는다. */
@@ -33,6 +34,7 @@ public class MyDataService {
 
     public MyDataService(MyDataUserRepository userRepository, MyDataCardRepository cardRepository,
                          MyDataPaymentRepository paymentRepository, CardCompanyRepository companyRepository,
+                         MyDataAccountRepository accountRepository,
                          @Value("${mydata.now:reference}") String nowSetting,
                          @Value("${mydata.seed.reference-date:2026-07-21}") String referenceDate,
                          @Value("${mydata.query.months-floor:0}") int monthsFloor) {
@@ -40,9 +42,48 @@ public class MyDataService {
         this.cardRepository = cardRepository;
         this.paymentRepository = paymentRepository;
         this.companyRepository = companyRepository;
+        this.accountRepository = accountRepository;
         this.nowSetting = nowSetting;
         this.referenceDate = LocalDate.parse(referenceDate);
         this.monthsFloor = monthsFloor;
+    }
+
+    /**
+     * 입출금 통장 조회(§13-11 경제 모델). 잔액은 저장하지 않고 계산한다:
+     *   잔액 = 초기잔액 + 월급 × (개설~now 월급날 수) − Σ(카드결제 ≤ now).
+     * 입출금 내역 = 월급 입금(월급날) + 최근 카드 출금, 최신순 상위 40.
+     */
+    @Transactional(readOnly = true)
+    public java.util.Optional<AccountView> findAccount(String userId) {
+        return accountRepository.findByUser_Id(userId).map(a -> {
+            LocalDateTime now = cutoff();
+            long withdrawn = paymentRepository.sumByUserUpTo(userId, now);
+            List<AccountTxnView> deposits = salaryDeposits(a, now);
+            long balance = a.getInitialBalance() + (long) a.getSalary() * deposits.size() - withdrawn;
+
+            // 입출금 내역 = 월급 입금 전부(월 1회라 적음) + 최근 카드 출금 40건. 입금이 잦은 출금에 밀려 잘리지
+            // 않도록 둘 다 보존해 최신순 정렬(프론트가 입금·출금을 함께 보여준다).
+            List<AccountTxnView> txns = new java.util.ArrayList<>(deposits);
+            for (MyDataPayment p : paymentRepository.findByUserUpTo(
+                    userId, now, org.springframework.data.domain.PageRequest.of(0, 40))) {
+                txns.add(new AccountTxnView(p.getPaymentDate(), "WITHDRAWAL", p.getAmount(), p.getMerchantName()));
+            }
+            txns.sort(java.util.Comparator.comparing(AccountTxnView::date).reversed());
+            return new AccountView(a.getAccountNumber(), a.getBank(), a.getProduct(), a.getSalaryPayer(),
+                    a.getSalary(), a.getPayday(), balance, txns);
+        });
+    }
+
+    /** 개설일 이후 매달 월급날(payday≤28)에 입금된 월급 내역(≤now). 잔액 계산과 내역 표시에 공용. */
+    private List<AccountTxnView> salaryDeposits(MyDataAccount a, LocalDateTime now) {
+        List<AccountTxnView> out = new java.util.ArrayList<>();
+        LocalDate d = a.getOpenedDate().withDayOfMonth(a.getPayday());
+        if (d.isBefore(a.getOpenedDate())) d = d.plusMonths(1);
+        String desc = a.getSalaryPayer() + " 급여";
+        for (; !d.atTime(9, 0).isAfter(now); d = d.plusMonths(1)) {
+            out.add(new AccountTxnView(d.atTime(9, 0), "DEPOSIT", a.getSalary(), desc));
+        }
+        return out;
     }
 
     /**

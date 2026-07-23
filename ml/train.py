@@ -81,8 +81,8 @@ gbm.fit(Xtr_g,ytr); results.append(evaluate("GBM(HGB)",gbm.predict_proba(Xte_g)[
 log("EBM(프로덕션, 순수 GAM)")
 from interpret.glassbox import ExplainableBoostingClassifier
 ebm=ExplainableBoostingClassifier(feature_names=FEATS,feature_types=["nominal"]+["continuous"]*(len(FEATS)-1),
-        interactions=0,max_bins=256,outer_bags=2,random_state=0,n_jobs=-1)
-_n=min(len(Xtr),1_200_000)  # 속도: 순수 가법(GAM) 형상함수는 대량표본에서 안정 → TRAIN 서브샘플(지표 거의 동일·결정론)
+        interactions=0,max_bins=256,outer_bags=1,max_rounds=2000,random_state=0,n_jobs=1)  # n_jobs=1: 교착 회피 / outer_bags=1·max_rounds·서브샘플 축소로 신속 학습
+_n=min(len(Xtr),120_000)  # 속도: 순수 가법(GAM) 형상함수는 대량표본에서 안정 → TRAIN 서브샘플(지표 거의 동일·결정론)
 _idx=np.random.RandomState(0).permutation(len(Xtr))[:_n]
 log(f"EBM 학습표본 {_n:,}행(서브샘플)")
 ebm.fit(Xtr.iloc[_idx],ytr[_idx]); ebm_proba=ebm.predict_proba(Xte)[:,1]; results.append(evaluate("EBM",ebm_proba))

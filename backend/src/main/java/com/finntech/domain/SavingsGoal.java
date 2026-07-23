@@ -50,6 +50,14 @@ public class SavingsGoal {
     @Column(name = "plan_cut_categories", length = 400)
     private String planCutCategories;
 
+    // 이 목표를 위한 '자유입출금통장'(§13-11) — 목표에 모으는 돈을 담는 계좌(은행·통장명·계좌번호). 생성 시 발급.
+    @Column(name = "account_bank", length = 40)
+    private String accountBank;
+    @Column(name = "account_product", length = 60)
+    private String accountProduct;
+    @Column(name = "account_number", length = 32)
+    private String accountNumber;
+
     protected SavingsGoal() {}
 
     public SavingsGoal(Long userId, String name, String emoji, BigDecimal targetAmount,
@@ -78,4 +86,10 @@ public class SavingsGoal {
     public void setDeadlineDays(int v) { this.deadlineDays = v; }
     public String getPlanCutCategories() { return planCutCategories; }
     public void setPlanCutCategories(String v) { this.planCutCategories = v; }
+    public String getAccountBank() { return accountBank; }
+    public String getAccountProduct() { return accountProduct; }
+    public String getAccountNumber() { return accountNumber; }
+    public void setAccount(String bank, String product, String number) {
+        this.accountBank = bank; this.accountProduct = product; this.accountNumber = number;
+    }
 }

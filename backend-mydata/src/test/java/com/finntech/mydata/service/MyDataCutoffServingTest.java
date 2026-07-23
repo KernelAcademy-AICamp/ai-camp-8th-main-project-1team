@@ -40,13 +40,14 @@ class MyDataCutoffServingTest {
     @Autowired MyDataCardRepository cardRepository;
     @Autowired MyDataPaymentRepository paymentRepository;
     @Autowired CardCompanyRepository companyRepository;
+    @Autowired com.finntech.mydata.repository.MyDataAccountRepository accountRepository;
 
     private static final LocalDateTime EARLY = LocalDateTime.parse("2026-07-21T23:59:59"); // 시드 기준일 끝
     private static final LocalDateTime LATE  = LocalDateTime.parse("2026-12-31T23:59:59"); // 미래로 전진
 
     private MyDataService serviceAt(LocalDateTime now) {
         return new MyDataService(userRepository, cardRepository, paymentRepository, companyRepository,
-                now.toString(), "2026-07-21", 0);
+                accountRepository, now.toString(), "2026-07-21", 0);
     }
 
     private int totalPayments(List<CardView> cards) {

@@ -39,6 +39,15 @@ public class MyDataClient {
         return response == null ? List.of() : response.data();
     }
 
+    /** 입출금 통장 조회(§13-11) — 은행·계좌·월급·잔액 + 입출금 내역. 계좌 없으면 null. */
+    public AccountView findAccount(String ci) {
+        Envelope<AccountView> response = client.get()
+                .uri(builder -> builder.path("/bank/mydata/account").queryParam("userId", ci).build())
+                .retrieve()
+                .body(new ParameterizedTypeReference<Envelope<AccountView>>() {});
+        return response == null ? null : response.data();
+    }
+
     /** 전체 조회 — 사용자(CI)의 카드사 카드 + 결제내역 전부. */
     public List<CardView> findCards(Long companyId, String ci) {
         Envelope<List<CardView>> response = client.get()
