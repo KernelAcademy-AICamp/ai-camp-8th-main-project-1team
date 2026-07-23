@@ -5,6 +5,7 @@ import com.finntech.domain.AppUser;
 import com.finntech.domain.Enums;
 import com.finntech.engine.AnalysisResult;
 import com.finntech.engine.Stats;
+import com.finntech.ml.WasteScoringService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -25,9 +26,11 @@ import java.math.RoundingMode;
 public class ScoreService {
 
     private final AnalysisProperties props;
+    private final WasteScoringService wasteScoringService;
 
-    public ScoreService(AnalysisProperties props) {
+    public ScoreService(AnalysisProperties props, WasteScoringService wasteScoringService) {
         this.props = props;
+        this.wasteScoringService = wasteScoringService;
     }
 
     public ScoreResult score(AppUser user, AnalysisResult analysis) {
@@ -35,9 +38,12 @@ public class ScoreService {
 
         int elapsedMonths = Math.max(1, analysis.monthlySpend().size());
         double savingsProgress = savingsProgress(user, analysis, elapsedMonths);
-        double plannedRatio = analysis.totalSpend().signum() == 0 ? 0.0
-                : analysis.plannedAmount()
-                    .divide(analysis.totalSpend(), 10, RoundingMode.HALF_UP).doubleValue();
+        // 계획소비비율 항을 ML '필수 소비 비율'로 대체(W8 다운스트림) — 마이데이터 연동 시. 미연동/모델없음이면 규칙 planned로 폴백.
+        double plannedRatio = wasteScoringService.summarize(user.getId())
+                .map(WasteScoringService.MlSummary::essentialRatio)
+                .orElseGet(() -> analysis.totalSpend().signum() == 0 ? 0.0
+                        : analysis.plannedAmount()
+                            .divide(analysis.totalSpend(), 10, RoundingMode.HALF_UP).doubleValue());
 
         // 변동성을 측정하지 못했으면 안정성 항을 <b>빼고 남은 가중치를 정규화</b>한다.
         // 측정 불가를 0(=안정성 만점)으로 취급하면 기록이 적을수록 점수가 높아지는 역설이 생긴다.

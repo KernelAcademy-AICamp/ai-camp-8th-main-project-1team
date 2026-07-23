@@ -5,6 +5,7 @@ import com.finntech.service.AuthService.VerifyResult;
 import com.finntech.service.MyDataLinkService;
 import com.finntech.service.MyDataLinkService.LinkResult;
 import com.finntech.service.MyDataLinkService.MyCardView;
+import com.finntech.service.MyDataLinkService.PaymentHistoryRow;
 import com.finntech.service.MyDataLinkService.PaymentRow;
 import com.finntech.service.MyDataResponses.CompanyView;
 import org.springframework.web.bind.annotation.*;
@@ -56,6 +57,19 @@ public class MyDataController {
     @GetMapping("/cards/{cardSerial}/payments")
     public List<PaymentRow> cardPayments(@PathVariable String cardSerial, @RequestParam Long userId) {
         return linkService.cardPayments(userId, cardSerial);
+    }
+
+    /** 결제내역 모아보기(§13-11) — 카드 구분 없이 최근 N개월(기본 6) 결제를 최신순으로, 실카드명 포함. */
+    @GetMapping("/payments")
+    public List<PaymentHistoryRow> payments(@RequestParam Long userId,
+                                            @RequestParam(defaultValue = "6") int months) {
+        return linkService.allPayments(userId, months);
+    }
+
+    /** 실시간 증분 동기화(§13-11, W2) — 마지막 동기화 이후 새 결제만 당겨온다(마이데이터 now 전진 시 미래 결제 등장). */
+    @PostMapping("/sync")
+    public MyDataLinkService.SyncResult sync(@RequestParam Long userId) {
+        return linkService.renew(userId);
     }
 
     public record VerifyRequest(Long userId, String name, String social7, String phone) {}

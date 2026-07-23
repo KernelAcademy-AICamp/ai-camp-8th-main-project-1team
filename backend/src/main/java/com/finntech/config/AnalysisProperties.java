@@ -72,13 +72,11 @@ public class AnalysisProperties {
 
     /** 장기 변동성 (문서 §4 원칙 2) — 전체 보유 기간 월별 총지출의 변동계수 */
     public static class Volatility {
-        private int windowMonths = 6;
+        // (W1 처분) window-months는 엔진이 전 기간을 읽어 참조자가 0이던 미사용 키 → 제거.
         private int minMonths = 3;
         /** 안정성 = clamp(1 − CV / cvCap, 0, 1) */
         private double cvCap = 0.6;
 
-        public int getWindowMonths() { return windowMonths; }
-        public void setWindowMonths(int v) { this.windowMonths = v; }
         public int getMinMonths() { return minMonths; }
         public void setMinMonths(int v) { this.minMonths = v; }
         public double getCvCap() { return cvCap; }

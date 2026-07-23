@@ -4,6 +4,7 @@ import com.finntech.config.AnalysisProperties;
 import com.finntech.domain.Enums;
 import com.finntech.engine.AnalysisResult;
 import com.finntech.domain.AppUser;
+import com.finntech.ml.WasteScoringService;
 import com.finntech.service.ScoreService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,9 +12,13 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * 적대적 리뷰 회귀 테스트 — <b>기록을 적게 할수록 점수가 높아지는 역설</b>을 막는다.
@@ -24,7 +29,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class ScoreFairnessTest {
 
     private static final AnalysisProperties PROPS = new AnalysisProperties();
-    private static final ScoreService SERVICE = new ScoreService(PROPS);
+    private static final ScoreService SERVICE = new ScoreService(PROPS, noMlScoring());
+
+    /** 규칙 기반 점수만 테스트 — ML 요약 비움(마이데이터 미연동) → 규칙 planned로 폴백. */
+    private static WasteScoringService noMlScoring() {
+        WasteScoringService ws = mock(WasteScoringService.class);
+        when(ws.summarize(any())).thenReturn(Optional.empty());
+        return ws;
+    }
 
     private static AppUser user() {
         return new AppUser("t", new BigDecimal("3000000"), new BigDecimal("3000000"), 6);

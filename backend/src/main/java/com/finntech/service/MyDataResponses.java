@@ -27,5 +27,6 @@ public final class MyDataResponses {
     public record CardView(String cardId, LocalDate expirationDate, int prevMonthAmount,
                            CardProductView cardProduct, UserView user, List<PaymentView> payments) {}
 
-    public record UserView(String id, String name, String socialNumber, String phoneNumber) {}
+    // 데이터 최소화(W7-2): 제공자가 주민번호·전화번호를 응답에 싣지 않는다(본체 미사용). 격리가 뚫려도 PII 미유출.
+    public record UserView(String id, String name) {}
 }

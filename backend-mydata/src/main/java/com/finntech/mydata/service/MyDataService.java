@@ -28,17 +28,21 @@ public class MyDataService {
     private final CardCompanyRepository companyRepository;
     private final String nowSetting;
     private final LocalDate referenceDate;
+    /** 전체 조회 하한(W4-3): 0=무제한(현행), N>0이면 최근 N개월만 반환해 대량 사용자 응답 폭주를 막는다. */
+    private final int monthsFloor;
 
     public MyDataService(MyDataUserRepository userRepository, MyDataCardRepository cardRepository,
                          MyDataPaymentRepository paymentRepository, CardCompanyRepository companyRepository,
                          @Value("${mydata.now:reference}") String nowSetting,
-                         @Value("${mydata.seed.reference-date:2026-07-21}") String referenceDate) {
+                         @Value("${mydata.seed.reference-date:2026-07-21}") String referenceDate,
+                         @Value("${mydata.query.months-floor:0}") int monthsFloor) {
         this.userRepository = userRepository;
         this.cardRepository = cardRepository;
         this.paymentRepository = paymentRepository;
         this.companyRepository = companyRepository;
         this.nowSetting = nowSetting;
         this.referenceDate = LocalDate.parse(referenceDate);
+        this.monthsFloor = monthsFloor;
     }
 
     /**
@@ -68,8 +72,15 @@ public class MyDataService {
     public List<CardView> findCards(Long companyId, String userId) {
         LocalDateTime now = cutoff();
         return cardRepository.findByUserAndCompany(userId, companyId).stream()
-                .map(card -> toCardView(card, paymentRepository.findByCardUpTo(card.getId(), now)))
+                .map(card -> toCardView(card, paymentsUpTo(card.getId(), now)))
                 .toList();
+    }
+
+    /** 전체 조회의 결제 fetch — 하한(months-floor) 설정 시 최근 N개월만, 아니면 전체(현행). */
+    private List<MyDataPayment> paymentsUpTo(String cardId, LocalDateTime now) {
+        return monthsFloor > 0
+                ? paymentRepository.findByCardBetween(cardId, now.minusMonths(monthsFloor), now)
+                : paymentRepository.findByCardUpTo(cardId, now);
     }
 
     /** 증분 조회 — 마지막 동기화 이후 ~ 현재시각까지의 결제만. */
@@ -106,7 +117,8 @@ public class MyDataService {
     }
 
     private UserView toUserView(MyDataUser user) {
-        return new UserView(user.getId(), user.getName(), user.getSocialNumber(), user.getPhoneNumber());
+        // 주민번호·전화번호는 서빙 응답에 싣지 않는다(데이터 최소화, W7-2). 저장은 하되 노출만 차단.
+        return new UserView(user.getId(), user.getName());
     }
 
     private PaymentView toPaymentView(MyDataPayment payment, Long cardCode) {

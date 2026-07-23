@@ -3,9 +3,11 @@ import { api, type MyDataCompany } from './api';
 
 /**
  * 마이데이터 온보딩 (§13-6). 진입 필수: 약관 → 가상 본인인증 → 금융사 선택 → 적재.
- * 숨은 간편 건너뛰기: 시작 화면 로고를 길게 누르면 데모 신원으로 자동 인증·연동 후 진입(테스트용).
+ * 데모 경로(§13-11 엔드투엔드): 생성 마이데이터(11M)의 SERVICE 사용자 CI를 직접 연결한다 —
+ * 생성 CI는 GenSeed 해시라 정상 verify(Ci.of)로 못 맞추므로, 데모에선 CI 주입으로 링크만 재현한다.
+ * 숨은 간편 건너뛰기: 시작 화면 로고를 길게 누르면 그 데모 신원으로 전 카드사 자동 연동 후 진입.
  */
-const DEMO = { name: '김민준', social7: '0101073', phone: '01096962005' };
+const DEMO_CI = (import.meta.env.VITE_DEMO_CI as string | undefined) ?? '';
 
 type Step = 'start' | 'terms' | 'auth' | 'company' | 'loading';
 
@@ -19,6 +21,7 @@ export function Onboarding({ userId, onDone }: { userId: number; onDone: () => v
   const [busy, setBusy] = useState(false);
   const [companies, setCompanies] = useState<MyDataCompany[]>([]);
   const [picked, setPicked] = useState<Set<number>>(new Set());
+  const [demo, setDemo] = useState(false);
   const pressTimer = useRef<number | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
@@ -40,7 +43,9 @@ export function Onboarding({ userId, onDone }: { userId: number; onDone: () => v
   async function link(companyIds: number[]) {
     setStep('loading'); setErr(null);
     try {
-      await api.mydataLink(userId, companyIds);
+      // 데모: 생성 CI 직접 연결(가상 인증 우회) / 일반: 정상 마이데이터 링크
+      if (demo && DEMO_CI) await api.linkSynthetic(DEMO_CI, companyIds);
+      else await api.mydataLink(userId, companyIds);
       finish();
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
@@ -48,14 +53,14 @@ export function Onboarding({ userId, onDone }: { userId: number; onDone: () => v
     }
   }
 
-  // 숨은 건너뛰기: 로고 롱프레스 → 데모 신원 자동 인증+전 카드사 연동
+  // 숨은 건너뛰기: 로고 롱프레스 → 생성 마이데이터 CI로 전 카드사 자동 연동
   function startSkip() {
     pressTimer.current = window.setTimeout(async () => {
       setBusy(true);
       try {
-        await api.verify(userId, DEMO.name, DEMO.social7, DEMO.phone);
         const list = await api.mydataCompanies();
-        await api.mydataLink(userId, list.map((c) => c.id));
+        if (DEMO_CI) await api.linkSynthetic(DEMO_CI, list.map((c) => c.id));
+        else await api.mydataLink(userId, list.map((c) => c.id));
         finish();
       } catch (e) {
         setErr(e instanceof Error ? e.message : String(e));
@@ -72,7 +77,7 @@ export function Onboarding({ userId, onDone }: { userId: number; onDone: () => v
     try {
       const result = await api.verify(userId, name.trim(), social7.trim(), phone.trim());
       if (!result.existsInMyData) {
-        setErr('마이데이터에 없는 신원이에요. 아래 “데모 신원으로 채우기”를 눌러 진행해 보세요.');
+        setErr('마이데이터에 없는 신원이에요. 아래 “생성 마이데이터로 연결 (데모)”로 진행해 보세요.');
         setBusy(false);
         return;
       }
@@ -82,10 +87,6 @@ export function Onboarding({ userId, onDone }: { userId: number; onDone: () => v
     } finally {
       setBusy(false);
     }
-  }
-
-  function useDemoIdentity() {
-    setName(DEMO.name); setSocial7(DEMO.social7); setPhone(DEMO.phone); setErr(null);
   }
 
   function toggle(id: number) {
@@ -154,7 +155,10 @@ export function Onboarding({ userId, onDone }: { userId: number; onDone: () => v
                 <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01012345678" inputMode="numeric" /></label>
             </div>
             <div className="onb-actions">
-              <button type="button" className="btn btn-ghost btn-sm" onClick={useDemoIdentity}>데모 신원으로 채우기</button>
+              <button type="button" className="btn btn-ghost btn-sm"
+                onClick={() => { setDemo(true); setErr(null); setStep('company'); }}>
+                생성 마이데이터로 연결 (데모)
+              </button>
               <button type="button" className="btn btn-primary onb-cta" disabled={busy || !name || !social7 || !phone}
                 onClick={() => void verify()}>{busy ? '확인 중…' : '인증하고 다음'}</button>
             </div>

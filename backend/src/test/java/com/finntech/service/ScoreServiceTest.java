@@ -4,16 +4,28 @@ import com.finntech.config.AnalysisProperties;
 import com.finntech.domain.AppUser;
 import com.finntech.domain.Enums;
 import com.finntech.engine.AnalysisResult;
+import com.finntech.ml.WasteScoringService;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ScoreServiceTest {
+
+    /** 규칙 기반 점수만 테스트 — ML 요약은 비워(마이데이터 미연동 상황) 규칙 planned로 폴백. */
+    private static WasteScoringService noMlScoring() {
+        WasteScoringService ws = mock(WasteScoringService.class);
+        when(ws.summarize(any())).thenReturn(Optional.empty());
+        return ws;
+    }
 
     @Test
     void scoresAreComputedAndGradedForMeasuredData() {
@@ -22,7 +34,7 @@ class ScoreServiceTest {
         props.getScore().setStabilityWeight(0.3);
         props.getScore().setPlannedWeight(0.3);
         props.getVolatility().setCvCap(0.6);
-        ScoreService service = new ScoreService(props);
+        ScoreService service = new ScoreService(props, noMlScoring());
 
         AppUser user = new AppUser("alice", new BigDecimal("5000"), new BigDecimal("12000"), 12);
 
@@ -57,7 +69,7 @@ class ScoreServiceTest {
         props.getScore().setSavingsWeight(0.5);
         props.getScore().setStabilityWeight(0.3);
         props.getScore().setPlannedWeight(0.2);
-        ScoreService service = new ScoreService(props);
+        ScoreService service = new ScoreService(props, noMlScoring());
 
         AppUser user = new AppUser("alice", new BigDecimal("5000"), new BigDecimal("12000"), 12);
 

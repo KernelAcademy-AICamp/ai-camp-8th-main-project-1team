@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  api, RULE_LABEL, catLabel,
+  api, catLabel,
   type AlertResponse, type ReportResponse,
   type ScoreResponse, type VerifyResponse, type DataSourceMode, type GoalRecommendation,
-  type MyCard,
+  type MyCard, type WasteJudgment,
 } from './api';
 import { ConsumptionPanel } from './ConsumptionPanel';
 import { SurveyPanel } from './SurveyPanel';
@@ -12,9 +12,12 @@ import { ImpulseSaverPanel } from './ImpulseSaverPanel';
 import { Onboarding } from './Onboarding';
 import { MyCardPanel } from './MyCardPanel';
 import { DonutChart, DonutLegend, BarChart } from './Charts';
+import { DEMO_USERS } from './demoUsers';
 import './App.css';
 
-const USER_ID = 1;
+// 데모 생성 CI(.env.local). 있으면 온보딩 이후에도 홈에서 사람 교체 연결·재연동 가능(파기·재시작 복구).
+const DEMO_CI = (import.meta.env.VITE_DEMO_CI as string | undefined) ?? '';
+const PERSONA_ORDER = ['절약형', '균형형', '과소비형', '구독과다형', '외식형'];
 const won = (n: number) => n.toLocaleString('ko-KR') + '원';
 const wonShort = (n: number) =>
   n >= 10000 ? `${(n / 10000).toLocaleString('ko-KR', { maximumFractionDigits: 1 })}만원` : won(n);
@@ -155,6 +158,16 @@ export default function App() {
   const [score, setScore] = useState<ScoreResponse | null>(null);
   const [audit, setAudit] = useState<VerifyResponse | null>(null);
   const [myCards, setMyCards] = useState<MyCard[]>([]);
+  const [waste, setWaste] = useState<WasteJudgment[] | null>(null);
+  const [linking, setLinking] = useState(false);
+  // 연결된 앱 사용자(생성 사람마다 별도 userId) + 선택된 생성 CI — 사람 교체 연결용
+  const [userId, setUserId] = useState<number>(() => {
+    const v = typeof localStorage !== 'undefined' ? Number(localStorage.getItem('demo_user_id')) : NaN;
+    return v > 0 ? v : 1;
+  });
+  const [selectedCi, setSelectedCi] = useState<string>(
+    () => (typeof localStorage !== 'undefined' && localStorage.getItem('demo_ci')) || DEMO_CI,
+  );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [anchoring, setAnchoring] = useState(false);
@@ -178,7 +191,7 @@ export default function App() {
   }, [tab]);
 
   async function loadMyData() {
-    try { setMyCards(await api.myCards(USER_ID)); } catch { /* 미연동이면 빈 배열 */ }
+    try { setMyCards(await api.myCards(userId)); } catch { /* 미연동이면 빈 배열 */ }
   }
 
   async function loadAll() {
@@ -186,18 +199,20 @@ export default function App() {
     setError(null);
     try {
       const [a, rp, s, v] = await Promise.all([
-        api.alerts(USER_ID), api.report(USER_ID),
-        api.score(USER_ID), api.verifyAudit(),
+        api.alerts(userId), api.report(userId),
+        api.score(userId), api.verifyAudit(),
       ]);
       setAlerts(a); setReport(rp); setScore(s); setAudit(v);
       void loadMyData();
+      // 거래별 ML 낭비/필수 판정(§W8) — 데모 백엔드에만 있을 수 있어 방어적으로 조회
+      void api.mlWaste(userId).then(setWaste).catch(() => setWaste(null));
 
-      void api.goalRecommendations(USER_ID).then((gr) => {
+      void api.goalRecommendations(userId).then((gr) => {
         setGoalRecs(gr);
-        void api.track('recommend_view', USER_ID, { itemCount: gr.length });
+        void api.track('recommend_view', userId, { itemCount: gr.length });
       }).catch(() => undefined);
-      void api.track('report_view', USER_ID);
-      void api.track('alert_view', USER_ID, { alertCount: a.items.length });
+      void api.track('report_view', userId);
+      void api.track('alert_view', userId, { alertCount: a.items.length });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -205,11 +220,34 @@ export default function App() {
     }
   }
 
-  useEffect(() => { if (onboarded) void loadAll(); }, [onboarded]);
+  // userId가 바뀌면(사람 교체) 그 사용자로 재로딩. 최초 온보딩 완료 시에도 로딩.
+  useEffect(() => { if (onboarded) void loadAll(); }, [onboarded, userId]);
 
   async function rescan() {
-    try { await api.rescan(USER_ID); await loadAll(); }
+    try { await api.rescan(userId); await loadAll(); }
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
+  }
+
+  // 데모: 생성 마이데이터의 '다른 사람' CI로 교체 연결 → 그 사람 데이터 재적재.
+  // 반환 userId로 전환(사람마다 별도 앱 사용자) → useEffect가 그 사용자로 재로딩.
+  // 동의 철회 파기·백엔드 재시작으로 비어도 온보딩 없이 여기서 복구한다.
+  async function linkCi(ci: string) {
+    if (!ci) return;
+    setLinking(true); setError(null);
+    try {
+      const r = await api.linkSynthetic(ci, [9001]);
+      setSelectedCi(ci);
+      try {
+        localStorage.setItem('demo_ci', ci);
+        localStorage.setItem('demo_user_id', String(r.userId));
+      } catch { /* noop */ }
+      if (r.userId !== userId) setUserId(r.userId); // 아래 effect가 재로딩
+      else await loadAll();                          // 같은 사용자면 수동 재로딩
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLinking(false);
+    }
   }
 
   async function anchor() {
@@ -229,10 +267,15 @@ export default function App() {
 
   // 온보딩 미완료면 온보딩 화면만 (진입 필수)
   if (!onboarded) {
-    return <Onboarding userId={USER_ID} onDone={() => setOnboarded(true)} />;
+    return <Onboarding userId={userId} onDone={() => setOnboarded(true)} />;
   }
 
   const hitCount = alerts?.items.length ?? 0;
+  // ML 낭비/필수 판정 — 낭비로 판정된 결제 + '주의(임계 아래지만 확률 높은 순)'
+  const wasteHits = waste ? waste.filter((j) => j.waste) : [];
+  const wasteWatch = waste
+    ? waste.filter((j) => !j.waste).sort((a, b) => b.wasteProbability - a.wasteProbability).slice(0, 4)
+    : [];
   const maxPct = Math.max(
     1, ...(report ? [...report.positive, ...report.negative].map((l) => l.spendPercent) : [1]),
   );
@@ -275,7 +318,7 @@ export default function App() {
           <div className="error" role="alert">
             <strong>데이터를 불러오지 못했어요</strong>
             <code>{error}</code>
-            <p>백엔드(8080)와 마이데이터 서버(8082)가 실행 중인지 확인해 주세요.</p>
+            <p>백엔드·마이데이터 서버가 실행 중인지 확인해 주세요(데모: 백엔드 8090 · 마이데이터 8083).</p>
           </div>
         )}
         {loading && <div className="loading-bar" role="status" aria-label="불러오는 중" />}
@@ -290,16 +333,59 @@ export default function App() {
 
             <section className="section card card-pad" aria-labelledby="h-home-md">
               <div className="section-head" style={{ marginBottom: 10 }}>
-                <h2 id="h-home-md">이번 달 요약</h2><span className="badge-aux">마이데이터</span>
+                <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+                  <h2 id="h-home-md">이번 달 요약</h2><span className="badge-aux">마이데이터</span>
+                </span>
+                {DEMO_CI && (
+                  <button type="button" className="btn btn-ghost btn-sm"
+                    onClick={() => void linkCi(selectedCi)} disabled={linking}>
+                    {linking ? '연결 중…' : '다시 연결'}
+                  </button>
+                )}
               </div>
-              <div className="md-summary">
-                <div className="md-stat"><span className="md-l">이번 달 사용</span><b className="md-v">{won(monthSpend)}</b></div>
-                <div className="md-stat"><span className="md-l">받은 혜택</span><b className="md-v sav">{won(monthBenefit)}</b></div>
-                <div className="md-stat"><span className="md-l">연결 카드</span><b className="md-v">{myCards.length}장</b></div>
-              </div>
+
+              {DEMO_CI && (
+                <label className="field" style={{ marginBottom: 14 }}>
+                  <span>연결된 사람 — 다른 사람 마이데이터로 교체</span>
+                  <select value={selectedCi} disabled={linking}
+                    onChange={(e) => void linkCi(e.target.value)}
+                    aria-label="연결할 생성 마이데이터 사용자 선택">
+                    {PERSONA_ORDER.map((persona) => {
+                      const users = DEMO_USERS.filter((u) => u.persona === persona);
+                      return users.length ? (
+                        <optgroup key={persona} label={persona}>
+                          {users.map((u) => (
+                            <option key={u.ci} value={u.ci}>{u.name} · 결제 {u.visible}건</option>
+                          ))}
+                        </optgroup>
+                      ) : null;
+                    })}
+                  </select>
+                </label>
+              )}
+
+              {myCards.length > 0 ? (
+                <div className="md-summary">
+                  <div className="md-stat"><span className="md-l">이번 달 사용</span><b className="md-v">{won(monthSpend)}</b></div>
+                  <div className="md-stat"><span className="md-l">받은 혜택</span><b className="md-v sav">{won(monthBenefit)}</b></div>
+                  <div className="md-stat"><span className="md-l">연결 카드</span><b className="md-v">{myCards.length}장</b></div>
+                </div>
+              ) : (
+                <div className="md-empty">
+                  <p className="muted small" style={{ marginTop: 0 }}>
+                    연결된 카드가 없어요. {DEMO_CI ? '위에서 사람을 고르면 그 사람의 생성 마이데이터를 불러옵니다.' : '마이데이터를 연결해 주세요.'}
+                  </p>
+                  {DEMO_CI && (
+                    <button type="button" className="btn btn-primary btn-sm"
+                      onClick={() => void linkCi(selectedCi)} disabled={linking}>
+                      {linking ? '불러오는 중…' : '생성 마이데이터 불러오기'}
+                    </button>
+                  )}
+                </div>
+              )}
             </section>
 
-            <ImpulseSaverPanel userId={USER_ID} />
+            <ImpulseSaverPanel key={userId} userId={userId} />
 
             <section className="section card card-pad" aria-labelledby="h-home-score">
               <div className="section-head" style={{ marginBottom: 14 }}>
@@ -312,7 +398,7 @@ export default function App() {
                   <div className="factors" style={{ marginTop: 0 }}>
                     <Factor label="저축 진행률" value={score.breakdown.savingsProgress} />
                     <Factor label="소비 안정성" value={score.breakdown.stability} />
-                    <Factor label="계획 소비" value={score.breakdown.plannedRatio} />
+                    <Factor label="필수 소비 비율" value={score.breakdown.plannedRatio} />
                   </div>
                 </div>
               ) : <p className="muted">불러오는 중…</p>}
@@ -321,7 +407,7 @@ export default function App() {
         )}
 
         {/* ── 내 카드 ── */}
-        {tab === 'card' && <MyCardPanel userId={USER_ID} />}
+        {tab === 'card' && <MyCardPanel key={userId} userId={userId} />}
 
         {/* ── 내 소비 (차트 + 리포트 + 추천 + 이상소비) ── */}
         {tab === 'spend' && (
@@ -378,7 +464,7 @@ export default function App() {
               <div className="rec-grid">
                 {goalRecs.map((g) => (
                   <button type="button" className="product" key={g.goalId}
-                    onClick={() => void api.track('product_click', USER_ID, { goalId: g.goalId })}
+                    onClick={() => void api.track('product_click', userId, { goalId: g.goalId })}
                     aria-label={g.productName
                       ? `${g.goalName} 추천 통장 ${g.company} ${g.productName}, 기본금리 ${g.baseRate.toFixed(2)}%, ${g.periodMonths}개월`
                       : `${g.goalName} 추천 준비 중`}>
@@ -399,30 +485,60 @@ export default function App() {
 
             <section className="section card card-pad" aria-labelledby="h-alert">
               <div className="section-head" style={{ marginBottom: 8 }}>
-                <h2 id="h-alert">이상 소비 감지 <span className="badge-aux">부가</span></h2>
+                <h2 id="h-alert">이상 소비 감지 <span className="badge-aux">AI 판정</span></h2>
                 <button type="button" className="btn btn-ghost btn-sm" onClick={() => void rescan()}>다시 검사</button>
               </div>
               <p className="muted small" style={{ marginTop: 0 }}>
-                평소 패턴에서 크게 벗어난 결제를 잡아요.
-                {alerts && ` 최근 ${alerts.evaluatedCount}건 중 ${hitCount}건 발견.`}
+                AI가 결제마다 ‘낭비 vs 필수’를 판정해요. 심야·과다 결제를 <b>왜 낭비인지</b>와 함께 짚어줘요.
+                {waste && ` 결제 ${waste.length}건 중 낭비 ${wasteHits.length}건.`}
               </p>
-              {hitCount > 0 ? (
+              {wasteHits.length > 0 ? (
                 <ul className="alert-grid">
-                  {alerts?.items.map((a) => (
-                    <li className="alert-card" key={a.alertId}>
+                  {wasteHits.map((j) => (
+                    <li className="alert-card" key={j.paymentId}>
                       <div className="a-top">
-                        <span className="a-cat">{catLabel(a.categoryCode)}</span>
-                        <span className="a-amt">{won(a.amount)}</span>
+                        <span className="a-cat">{j.category2 ?? '기타'}</span>
+                        <span className="a-amt">{won(j.amount)}</span>
                       </div>
-                      <div className="a-when">🕐 {a.occurredAt.replace('T', ' ').slice(0, 16)}</div>
+                      <div className="a-when">🕐 {j.date.replace('T', ' ').slice(0, 16)}</div>
                       <div className="a-rules">
-                        {a.matchedRules.map((r) => <span className="chip" key={r}>{RULE_LABEL[r] ?? r}</span>)}
-                        <span className="chip z">평소보다 {a.deviationScore.toFixed(1)}σ</span>
+                        <span className="chip" style={{ background: 'var(--bad)', color: '#fff' }}>낭비</span>
+                        <span className="chip">{j.explanation}</span>
+                        <span className="chip z">낭비 확률 {Math.round(j.wasteProbability * 100)}%</span>
                       </div>
                     </li>
                   ))}
                 </ul>
-              ) : <p className="muted small">지금은 이상 소비가 없어요. 👍</p>}
+              ) : waste ? (
+                <p className="muted small">지금은 낭비로 판정된 소비가 없어요. 👍</p>
+              ) : <p className="muted small">불러오는 중…</p>}
+
+              {wasteWatch.length > 0 && (
+                <>
+                  <div className="chart-sub">주의 깊게 볼 소비 · 낭비 확률 높은 순</div>
+                  <ul className="alert-grid">
+                    {wasteWatch.map((j) => (
+                      <li className="alert-card" key={j.paymentId}>
+                        <div className="a-top">
+                          <span className="a-cat">{j.category2 ?? '기타'}</span>
+                          <span className="a-amt">{won(j.amount)}</span>
+                        </div>
+                        <div className="a-when">🕐 {j.date.replace('T', ' ').slice(0, 16)}</div>
+                        <div className="a-rules">
+                          <span className="chip">{j.explanation}</span>
+                          <span className="chip z">낭비 확률 {Math.round(j.wasteProbability * 100)}%</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+
+              <p className="muted small" style={{ marginTop: 12 }}>
+                규칙 기반 통계 탐지(baseline)
+                {alerts ? `는 최근 ${alerts.evaluatedCount}건을 평가해 ${hitCount}건을 찾았어요` : ''}.
+                긴 이력이 있어야 발화해 신규 연동 직후엔 조용해요 — 그래서 거래별 AI 판정이 먼저 잡아요.
+              </p>
             </section>
           </div>
         )}
@@ -430,14 +546,14 @@ export default function App() {
         {/* ── 혜택·저축 (게임화 저축·목표·통장비교·고민목록) ── */}
         {tab === 'save' && (
           <div className="view">
-            <PointsPanel userId={USER_ID} onChanged={() => void loadAll()} />
+            <PointsPanel key={userId} userId={userId} onChanged={() => void loadAll()} />
           </div>
         )}
 
         {/* ── 더보기 (기록 + 안심 + 설문) ── */}
         {tab === 'more' && (
           <div className="view">
-            <ConsumptionPanel userId={USER_ID} onChanged={() => void loadAll()} />
+            <ConsumptionPanel key={userId} userId={userId} onChanged={() => void loadAll()} />
 
             <section className="section card card-pad" aria-labelledby="h-trust">
               <div className="trust-head">
@@ -481,7 +597,7 @@ export default function App() {
               )}
             </section>
 
-            <SurveyPanel userId={USER_ID} />
+            <SurveyPanel userId={userId} />
           </div>
         )}
 

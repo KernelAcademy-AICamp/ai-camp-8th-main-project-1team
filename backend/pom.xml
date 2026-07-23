@@ -68,6 +68,22 @@
 			<artifactId>mysql-connector-j</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+
+		<!-- 운영 MySQL 스키마 소유자(H2→MySQL 전환, Phase 6). h2 프로파일은 비활성(ddl-auto=update 유지),
+		     mysql 프로파일만 flyway+validate. Spring Boot 4는 자동설정이 기술별 모듈이라
+		     spring-boot-flyway가 있어야 flyway-core가 실제로 작동한다(mydata와 동일 근본원인). -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-mysql</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator-test</artifactId>

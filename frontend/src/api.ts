@@ -329,6 +329,32 @@ export interface MyPayment {
   merchantName: string | null;
   receivedBenefit: number;
 }
+/** 결제내역 모아보기 1건(§13-11) — 결제 정보 + 어느 카드(실카드명·색·카드사)인지. */
+export interface MyPaymentHistory {
+  paymentId: string;
+  date: string;
+  category1: string;
+  category2: string | null;
+  amount: number;
+  merchantName: string | null;
+  receivedBenefit: number;
+  cardName: string | null;
+  cardColor: string | null;
+  companyName: string | null;
+}
+/** 결제별 ML 낭비/필수 판정 + '왜' (§W8, /api/ml/waste). ML은 규칙 FDS와 달리 긴 이력 없이도 거래별 판정. */
+export interface WasteJudgment {
+  paymentId: string;
+  category2: string | null;
+  amount: number;
+  date: string;
+  /** 낭비 확률 0~1 (해석가능 EBM). */
+  wasteProbability: number;
+  /** 임계 초과 = 낭비 판정. */
+  waste: boolean;
+  /** '왜' — 기여 특징(심야·과다 등) 또는 개인화 사유. */
+  explanation: string;
+}
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`);
@@ -482,6 +508,24 @@ export const api = {
   myCards: (userId: number) => get<MyCard[]>(`/api/mydata/cards?userId=${userId}`),
   cardPayments: (userId: number, serial: string) =>
     get<MyPayment[]>(`/api/mydata/cards/${encodeURIComponent(serial)}/payments?userId=${userId}`),
+  /** 결제내역 모아보기 — 카드 구분 없이 최근 N개월(기본 6) 전체 결제, 실카드명 포함(§13-11). */
+  allPayments: (userId: number, months = 6) =>
+    get<MyPaymentHistory[]>(`/api/mydata/payments?userId=${userId}&months=${months}`),
+  /** 실시간 증분 동기화(§13-11, W2) — 마지막 동기화 이후 새 결제만 당겨온다. */
+  syncMyData: (userId: number) =>
+    post<{ newPayments: number }>(`/api/mydata/sync?userId=${userId}`),
+
+  /** 결제별 ML 낭비/필수 판정 + '왜' (§W8). 규칙 FDS(alerts)와 병존하는 주 판정. */
+  mlWaste: (userId: number) => get<WasteJudgment[]>(`/api/ml/waste/${userId}`),
+
+  /**
+   * [dev·데모 전용] 생성 마이데이터 CI를 직접 연결한다(가상 인증 우회, §13-11 엔드투엔드).
+   * 생성 CI는 GenSeed 해시라 정상 verify(Ci.of)로 못 맞추므로 데모에선 CI를 직접 주입해 링크만 재현한다.
+   * 반환 userId로 사용자 화면을 연다(신규 인메모리 백엔드에선 1).
+   */
+  linkSynthetic: (ci: string, companyIds: number[]) =>
+    post<{ userId: number; ci: string; cardCount: number; paymentCount: number }>(
+      '/api/dev/link-synthetic', { ci, companyIds }),
 };
 
 /** 룰 코드 → 사람이 읽는 문구. 화면에서만 쓰는 표시용 매핑이다. */

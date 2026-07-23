@@ -13,8 +13,10 @@ import com.finntech.repository.ImpulseSaverStateRepository;
 import com.finntech.repository.PointEventRepository;
 import com.finntech.repository.ReportRepository;
 import com.finntech.repository.SavingsGoalRepository;
+import com.finntech.repository.UserCardCompanyRepository;
 import com.finntech.repository.UserCardRepository;
 import com.finntech.repository.UserPaymentRepository;
+import com.finntech.repository.UserSpendingOverrideRepository;
 import com.finntech.repository.WishlistItemRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +61,8 @@ public class PrivacyService {
     private final ImpulseSaverStateRepository impulseStateRepository;
     private final UserCardRepository userCardRepository;
     private final UserPaymentRepository userPaymentRepository;
+    private final UserCardCompanyRepository userCardCompanyRepository;
+    private final UserSpendingOverrideRepository overrideRepository;
     private final AuditService auditService;
     private final int retentionDays;
 
@@ -74,6 +78,8 @@ public class PrivacyService {
                           ImpulseSaverStateRepository impulseStateRepository,
                           UserCardRepository userCardRepository,
                           UserPaymentRepository userPaymentRepository,
+                          UserCardCompanyRepository userCardCompanyRepository,
+                          UserSpendingOverrideRepository overrideRepository,
                           AuditService auditService,
                           @Value("${finntech.privacy.retention-days:90}") int retentionDays) {
         this.userRepository = userRepository;
@@ -88,6 +94,8 @@ public class PrivacyService {
         this.impulseStateRepository = impulseStateRepository;
         this.userCardRepository = userCardRepository;
         this.userPaymentRepository = userPaymentRepository;
+        this.userCardCompanyRepository = userCardCompanyRepository;
+        this.overrideRepository = overrideRepository;
         this.auditService = auditService;
         this.retentionDays = retentionDays;
     }
@@ -116,8 +124,11 @@ public class PrivacyService {
     }
 
     /**
-     * 보유기간(3개월)이 지난 <b>USER_INPUT</b>을 파기한다.
+     * 보유기간(3개월)이 지난 <b>USER_INPUT</b>을 파기한다(주기 자동 파기).
      * DUMMY_SEED는 개인정보가 아니므로 대상이 아니다.
+     * <p><b>MYDATA(연동 데이터)는 주기 자동 파기 대상이 아니다</b>(정책 결정, W7-5d) — 마이데이터로 불러온
+     * 카드·결제는 "삭제 요청·동의 철회 시까지 보유"하고 그때 {@link #eraseUserData}로 즉시 파기한다.
+     * 방침 3조와 정합. (자동 파기로 바꾸려면 {@code findBySourceAndOccurredAtBefore}에 MYDATA 소스를 추가하고 보존일 키를 신설.)
      */
     @Transactional
     public PurgeReport purgeExpired(LocalDateTime now) {
@@ -202,6 +213,8 @@ public class PrivacyService {
         // 마이데이터 연동 데이터(불러온 카드·결제)와 CI·전화번호도 개인정보이므로 함께 파기한다(§13).
         userCardRepository.deleteByUserId(userId);
         userPaymentRepository.deleteByUserId(userId);
+        userCardCompanyRepository.deleteByUserId(userId);   // 연동 카드사·동기화 기록도 파기(W2)
+        overrideRepository.deleteByUserId(userId);   // 개인화 override도 파기(W8-5)
         userRepository.findById(userId).ifPresent(user -> { user.setCi(null); userRepository.save(user); });
 
         if (mine.isEmpty()) return 0;
@@ -228,14 +241,17 @@ public class PrivacyService {
                 List.of(
                         new Clause("1. 수집 항목",
                                 "소비 카테고리, 금액, 날짜, 계획소비 여부 (4개 항목)\n"
-                                        + "※ 실명·이메일·연락처·계좌번호·카드번호·주민등록번호는 수집하지 않으며, "
-                                        + "입력 화면에 해당 항목의 입력란 자체가 없습니다. 계정은 닉네임 기반 익명 계정입니다."),
+                                        + "※ 실명·이메일·연락처·계좌번호·카드번호는 수집하지 않으며, 계정은 닉네임 기반 익명 계정입니다.\n"
+                                        + "※ 마이데이터(가상) 연동 시 본인인증 신원(이름·주민등록번호 앞 7자리·휴대폰번호)은 "
+                                        + "가상 CI 계산에만 쓰고 원문은 저장하지 않습니다(전화번호 미저장). CI는 실 NICE 인증값이 아닌 "
+                                        + "가상 생성값이며, 불러온 카드·결제내역과 함께 삭제권 대상입니다."),
                         new Clause("2. 수집 목적",
                                 "소비 패턴 분석·소비건전성지수·절약 리포트·(더미)금융상품 추천·이상소비 탐지 (본 서비스 내에서만 이용).\n"
                                         + "외부 AI에는 개인을 식별할 수 없는 집계 수치만 전달되며, 광고·마케팅·AI 학습에 이용하지 않습니다."),
                         new Clause("3. 보유 및 이용 기간",
-                                "입력일로부터 " + (retentionDays / 30) + "개월. 기간 경과 시 매일 배치로 자동 파기하며, "
-                                        + "동의 철회·삭제 요청 시 즉시 파기합니다. 프로젝트 종료 시 전량 파기합니다."),
+                                "직접 입력한 소비내역은 입력일로부터 " + (retentionDays / 30) + "개월. 기간 경과 시 매일 배치로 자동 파기합니다.\n"
+                                        + "마이데이터로 불러온 카드·결제내역과 CI는 주기 자동 파기 대상이 아니라 "
+                                        + "삭제 요청·동의 철회 시까지 보유하며, 그때 즉시 파기합니다. 프로젝트 종료 시 전량 파기합니다."),
                         new Clause("4. 파기 절차 및 방법",
                                 "보유기간이 지난 기록은 배치 작업으로 삭제하며, 해당 소비내역에서 파생된 이상소비 경고·리포트 캐시도 "
                                         + "함께 삭제합니다. 삭제 사실은 감사로그에 기록되어 사후 검증이 가능합니다."),
@@ -247,7 +263,8 @@ public class PrivacyService {
                                         + "예시(더미) 데이터는 개인정보가 아니므로 열람·삭제 대상에서 제외됩니다."),
                         new Clause("7. 동의 거부권 · 해당 없는 항목",
                                 "동의를 거부할 수 있으며, 이 경우 예시 데이터 기반 데모 모드로 이용 가능합니다.\n"
-                                        + "본 서비스는 위치정보·쿠키·결제·송금 기능이 없어 관련 개인정보를 처리하지 않습니다.")
+                                        + "본 서비스는 쿠키·결제·송금 기능이 없습니다. 마이데이터로 불러온 결제내역에는 가맹점 위치(더미 좌표)가 "
+                                        + "포함되나 이는 합성 데이터이며, 실 사용자의 위치정보는 수집하지 않습니다.")
                 ),
                 "본 서비스는 학습용 포트폴리오 프로토타입이며 실제 금융거래·결제·송금 기능을 제공하지 않고, "
                         + "표시되는 금융상품은 실재하지 않는 더미 상품입니다. 방침 전문: legal/privacy-policy.md");
@@ -262,11 +279,13 @@ public class PrivacyService {
                 "소비·저축 어드바이저 이용약관",
                 List.of(
                         new Clause("제4조 (이용계약)",
-                                "닉네임 익명 계정으로 이용하며 본인인증·실명·이메일·비밀번호를 요구하지 않습니다. "
-                                        + "미동의 시에도 데모 모드로 모든 기능을 이용할 수 있습니다."),
+                                "닉네임 익명 계정으로 이용하며 실명·이메일·비밀번호를 요구하지 않습니다. "
+                                        + "마이데이터 연동을 위한 가상 본인인증은 마이데이터 시뮬레이션 연동 확인 목적이며 "
+                                        + "금융 라이선스 본인확인 서비스가 아닙니다. 미동의 시에도 데모 모드로 모든 기능을 이용할 수 있습니다."),
                         new Clause("제8조 (금융 자문·중개가 아님)",
                                 "표시되는 금융상품은 실재하지 않는 더미 상품이며 실제 계약·수수료가 발생하지 않아 "
-                                        + "금융소비자보호법상 판매·중개·자문에 해당하지 않습니다. 결제·송금·계좌연동을 제공하지 않습니다."),
+                                        + "금융소비자보호법상 판매·중개·자문에 해당하지 않습니다. 실제 결제·송금·계좌연동을 제공하지 않으며, "
+                                        + "마이데이터 연동은 가상 제공자에 대한 조회 시뮬레이션입니다."),
                         new Clause("제10조 (책임의 제한)",
                                 "학습용 프로토타입으로 무료 제공되며 데이터의 영구 보존을 보증하지 않습니다. "
                                         + "추천·리포트·알림은 참고자료이며 실제 금융 의사결정의 근거로 사용해서는 안 됩니다.")

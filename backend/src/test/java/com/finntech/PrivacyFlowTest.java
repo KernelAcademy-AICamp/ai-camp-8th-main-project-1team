@@ -9,6 +9,9 @@ import com.finntech.engine.AnalysisEngine;
 import com.finntech.repository.*;
 import com.finntech.domain.Alert;
 import com.finntech.domain.Report;
+import com.finntech.domain.UserCard;
+import com.finntech.domain.UserPayment;
+import com.finntech.domain.UserSpendingOverride;
 import com.finntech.service.PrivacyService;
 import com.finntech.service.ReportService;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +46,9 @@ class PrivacyFlowTest {
     @Autowired ReportService reportService;
     @Autowired AlertRepository alertRepository;
     @Autowired ReportRepository reportRepository;
+    @Autowired UserCardRepository userCardRepository;
+    @Autowired UserPaymentRepository userPaymentRepository;
+    @Autowired UserSpendingOverrideRepository overrideRepository;
 
     private AppUser user;
     private Category category;
@@ -128,6 +134,31 @@ class PrivacyFlowTest {
         assertEquals(0, privacyService.exportUserData(user.getId()).size());
         assertEquals(1, consumptionRepository.findAllForUser(user.getId()).size(),
                 "더미 시드는 삭제 대상이 아니다");
+    }
+
+    @Test
+    @DisplayName("§13 W7-5b — 삭제 요청은 CI를 null로 만들고 마이데이터 연동물(카드·결제·투영·개인화)까지 지운다")
+    void erasureNullsCiAndCascadesMydata() {
+        privacyService.setConsent(user.getId(), true, NOW);
+        Long uid = user.getId();
+        user.setCi("test-ci-abc123");
+        userRepository.save(user);
+        userCardRepository.save(new UserCard(uid, "1111-2222-3333-4444", 9101L,
+                "삼성 taptap O", "#1428A0", "삼성카드", 500000, 300000, 300000));
+        userPaymentRepository.save(new UserPayment("p-erase-1", uid, "1111-2222-3333-4444", 9101L,
+                NOW.minusDays(1), "온라인", "카페", 5000, "이디야커피", 0));
+        consumptionRepository.save(new Consumption(uid, category, new BigDecimal("5000"),
+                NOW.minusDays(1), false, Enums.DataSource.MYDATA));
+        overrideRepository.save(new UserSpendingOverride(uid, "카페", false, NOW));
+
+        privacyService.eraseUserData(uid, NOW);
+
+        assertNull(userRepository.findById(uid).orElseThrow().getCi(), "삭제 후 CI가 null이어야 한다");
+        assertEquals(0, userCardRepository.findByUserIdOrderByIdAsc(uid).size(), "연동 카드 0");
+        assertEquals(0, userPaymentRepository.findByUserIdOrderByPaymentDateDesc(uid).size(), "연동 결제 0");
+        assertEquals(0, overrideRepository.findByUserId(uid).size(), "개인화 override 0");
+        assertEquals(0, consumptionRepository.findAllForUser(uid).stream()
+                .filter(c -> c.getSource() == Enums.DataSource.MYDATA).count(), "MYDATA 소비 투영 0");
     }
 
     @Test

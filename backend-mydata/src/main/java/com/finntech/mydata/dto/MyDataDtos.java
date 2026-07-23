@@ -11,7 +11,8 @@ import java.util.List;
 public final class MyDataDtos {
     private MyDataDtos() {}
 
-    public record UserView(String id, String name, String socialNumber, String phoneNumber) {}
+    // 데이터 최소화(W7-2): 주민번호·전화번호는 응답에 싣지 않는다(본체 미소비). 격리가 뚫려도 PII 미유출.
+    public record UserView(String id, String name) {}
 
     public record CompanyView(Long id, String name, String imgUrl) {}
 

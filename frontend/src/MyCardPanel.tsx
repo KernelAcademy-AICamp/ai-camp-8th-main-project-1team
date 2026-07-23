@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, catLabel, type MyCard, type MyPayment } from './api';
+import { api, catLabel, type MyCard, type MyPayment, type MyPaymentHistory } from './api';
 
 const won = (n: number) => Math.round(n).toLocaleString('ko-KR') + '원';
 const man = (n: number) => `${Math.round((n / 10000) * 10) / 10}만`;
@@ -10,10 +10,27 @@ export function MyCardPanel({ userId }: { userId: number }) {
   const [err, setErr] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const [payments, setPayments] = useState<Record<string, MyPayment[]>>({});
+  const [history, setHistory] = useState<MyPaymentHistory[] | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
 
   useEffect(() => {
     api.myCards(userId).then(setCards).catch((e) => setErr(String(e)));
+    api.allPayments(userId, 6).then(setHistory).catch(() => setHistory([]));
   }, [userId]);
+
+  async function doSync() {
+    setSyncing(true); setSyncMsg(null);
+    try {
+      const r = await api.syncMyData(userId);
+      setSyncMsg(r.newPayments > 0 ? `새 결제 ${r.newPayments}건을 불러왔어요` : '이미 최신 상태예요');
+      if (r.newPayments > 0) setHistory(await api.allPayments(userId, 6));
+    } catch (e) {
+      setSyncMsg(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   async function toggle(serial: string) {
     if (open === serial) { setOpen(null); return; }
@@ -28,6 +45,11 @@ export function MyCardPanel({ userId }: { userId: number }) {
 
   if (err) return <section className="section card card-pad"><div className="error" role="alert"><code>{err}</code></div></section>;
   if (!cards) return <section className="section card card-pad"><div className="loading-bar" role="status" aria-label="불러오는 중" /></section>;
+
+  // 결제내역 모아보기 — 최근 6개월, 월별 그룹(최신월 먼저)
+  const byMonth: Record<string, MyPaymentHistory[]> = {};
+  for (const p of history ?? []) (byMonth[p.date.slice(0, 7)] ??= []).push(p);
+  const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
 
   return (
     <div className="view">
@@ -86,6 +108,63 @@ export function MyCardPanel({ userId }: { userId: number }) {
                       </ul>
                     )}
                   </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* 결제내역 모아보기 — 전 카드 최근 6개월(§13-11) */}
+      <section className="section card card-pad" aria-labelledby="h-hist">
+        <div className="section-head" style={{ marginBottom: 6 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+            <h2 id="h-hist">결제내역 모아보기</h2><span className="badge-aux">최근 6개월 · 전 카드</span>
+          </span>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => void doSync()} disabled={syncing}>
+            {syncing ? '동기화 중…' : '동기화'}
+          </button>
+        </div>
+        <p className="muted small" style={{ marginTop: 0 }}>
+          연결한 모든 카드의 최근 6개월 결제를 한 곳에서 봐요.{history ? ` 총 ${history.length.toLocaleString('ko-KR')}건.` : ''}
+          {syncMsg && <span style={{ marginLeft: 8 }} role="status">· {syncMsg}</span>}
+        </p>
+        {history === null ? (
+          <div className="loading-bar" role="status" aria-label="불러오는 중" />
+        ) : history.length === 0 ? (
+          <p className="muted small">불러온 결제내역이 없어요.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {months.map((m) => {
+              const rows = byMonth[m];
+              const total = rows.reduce((s, p) => s + p.amount, 0);
+              const [y, mo] = m.split('-');
+              return (
+                <div key={m}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+                    padding: '4px 0 6px', borderBottom: '1px solid var(--line, #e5e5e5)', marginBottom: 6 }}>
+                    <b>{y}년 {mo}월</b>
+                    <span className="muted small">{rows.length}건 · {won(total)}</span>
+                  </div>
+                  <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {rows.map((p) => (
+                      <li key={p.paymentId} style={{ display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '5px 2px', fontSize: '.86rem' }}>
+                        <span className="muted" style={{ width: 42, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                          {p.date.slice(5, 10).replace('-', '.')}</span>
+                        <span style={{ width: 60, flexShrink: 0 }}>{catLabel(p.category2 ?? p.category1)}</span>
+                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {p.merchantName}</span>
+                        {p.cardName && (
+                          <span style={{ flexShrink: 0, fontSize: '.72rem', padding: '1px 6px', borderRadius: 999,
+                            border: `1px solid ${p.cardColor || '#ccc'}`, color: p.cardColor || '#666' }}>
+                            {p.cardName}</span>
+                        )}
+                        <span style={{ width: 78, flexShrink: 0, textAlign: 'right', fontWeight: 600,
+                          fontVariantNumeric: 'tabular-nums' }}>{won(p.amount)}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               );
             })}

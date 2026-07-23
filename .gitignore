@@ -27,5 +27,16 @@ __pycache__/
 # ── Claude Code 개인 로컬 설정 ──
 .claude/settings.local.json
 
+# ── 시크릿·환경변수 (W7-3) — .env는 커밋 금지, .env.example만 커밋 ──
+.env
+.env.*
+!.env.example
+
+# ── 참조 원본 데이터(대용량, 카탈로그 빌드 입력 — 코드 아님. GitHub 100MB 초과분 포함) ──
+# reference/*.md 문서(launch_plan·mydata_catalog 등)는 커밋한다. 원본 CSV/XLSX/geo만 제외.
+reference/*.csv
+reference/*.xlsx
+reference/geo/
+
 # ── 로그·임시 ──
 *.log

@@ -1,0 +1,96 @@
+{
+ "results": [
+  {
+   "model": "Logistic",
+   "pr_auc": 0.4066,
+   "roc_auc": 0.7751,
+   "brier": 0.1137,
+   "threshold": 0.235,
+   "precision": 0.402,
+   "recall": 0.507,
+   "f1": 0.448
+  },
+  {
+   "model": "GBM(HGB)",
+   "pr_auc": 0.4617,
+   "roc_auc": 0.8065,
+   "brier": 0.1071,
+   "threshold": 0.246,
+   "precision": 0.465,
+   "recall": 0.523,
+   "f1": 0.492
+  },
+  {
+   "model": "EBM",
+   "pr_auc": 0.4377,
+   "roc_auc": 0.7945,
+   "brier": 0.1102,
+   "threshold": 0.233,
+   "precision": 0.44,
+   "recall": 0.516,
+   "f1": 0.475
+  }
+ ],
+ "n_train": 6354744,
+ "n_test": 1580488,
+ "features": [
+  "cat2",
+  "log_amount",
+  "hour_sin",
+  "hour_cos",
+  "night",
+  "dow_sin",
+  "dow_cos",
+  "weekend",
+  "amt_vs_typical",
+  "user_mean_log_amount",
+  "user_disc_ratio"
+ ],
+ "waste_rate_test": 0.15880981064076413,
+ "global_importance": [
+  {
+   "feature": "cat2",
+   "importance": 0.8889
+  },
+  {
+   "feature": "log_amount",
+   "importance": 0.4738
+  },
+  {
+   "feature": "user_disc_ratio",
+   "importance": 0.3273
+  },
+  {
+   "feature": "night",
+   "importance": 0.3001
+  },
+  {
+   "feature": "user_mean_log_amount",
+   "importance": 0.2221
+  },
+  {
+   "feature": "amt_vs_typical",
+   "importance": 0.0364
+  },
+  {
+   "feature": "hour_sin",
+   "importance": 0.0264
+  },
+  {
+   "feature": "hour_cos",
+   "importance": 0.0227
+  },
+  {
+   "feature": "weekend",
+   "importance": 0.0007
+  },
+  {
+   "feature": "dow_cos",
+   "importance": 0.0005
+  },
+  {
+   "feature": "dow_sin",
+   "importance": 0.0004
+  }
+ ]
+}

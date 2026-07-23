@@ -32,6 +32,14 @@ public class MyDataUser {
     @Column(name = "mydata_user_persona", length = 40)
     private String persona;
 
+    /**
+     * 데이터 분리 파티션(과적합 방지, W1·W8 요구11): TRAIN / VAL / TEST / SERVICE.
+     * 사용자 단위 disjoint 배분 — 앱은 SERVICE만 시연(학습 데이터로 데모하지 않는다).
+     * 현재 12명 시드는 null(전량 서빙). 대량 생성 파이프라인이 채운다.
+     */
+    @Column(name = "mydata_user_data_split", length = 10)
+    private String dataSplit;
+
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<MyDataCard> cards = new ArrayList<>();
 
@@ -50,5 +58,7 @@ public class MyDataUser {
     public String getPhoneNumber() { return phoneNumber; }
     public String getPersona() { return persona; }
     public void setPersona(String persona) { this.persona = persona; }
+    public String getDataSplit() { return dataSplit; }
+    public void setDataSplit(String dataSplit) { this.dataSplit = dataSplit; }
     public List<MyDataCard> getCards() { return cards; }
 }

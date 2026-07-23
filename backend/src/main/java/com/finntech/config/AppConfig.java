@@ -22,13 +22,19 @@ public class AppConfig {
         return Clock.systemDefaultZone();
     }
 
+    /**
+     * CORS 허용 오리진은 프로퍼티로 뺀다(W7-3). 운영은 env로 도메인 주입, 동일 오리진(nginx 프록시)
+     * 배포 시엔 교차 출처가 사라져 사실상 무의미해진다. 기본값은 로컬 프론트(vite).
+     */
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
+    public WebMvcConfigurer corsConfigurer(
+            @org.springframework.beans.factory.annotation.Value(
+                    "${finntech.cors.allowed-origins:http://localhost:5173,http://127.0.0.1:5173}") String[] allowedOrigins) {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+                        .allowedOrigins(allowedOrigins)
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS");
             }
         };

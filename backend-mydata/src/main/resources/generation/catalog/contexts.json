@@ -1,0 +1,473 @@
+{
+"_note": "category2(43) → 7대분류 매핑 + 방문빈도·재량성 + 상호소스. merchantSource: INDEPENDENT(실상호풀)/BRAND(브랜드+동+점 합성)/MIXED(둘다)/ONLINE(플랫폼)/OPERATOR(교통·통행 운영사). 페르소나가 이 위에 개인 가중치를 얹는다.",
+"contexts": [
+{
+"category2": "한식",
+"category1": "식비",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.95,
+"discretionaryBase": 0.25,
+"merchantSource": "MIXED"
+},
+{
+"category2": "분식",
+"category1": "식비",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.8,
+"discretionaryBase": 0.45,
+"merchantSource": "MIXED"
+},
+{
+"category2": "중식",
+"category1": "식비",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.62,
+"discretionaryBase": 0.4,
+"merchantSource": "MIXED"
+},
+{
+"category2": "일식",
+"category1": "식비",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.55,
+"discretionaryBase": 0.55,
+"merchantSource": "MIXED"
+},
+{
+"category2": "횟집",
+"category1": "식비",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.3,
+"discretionaryBase": 0.6,
+"merchantSource": "INDEPENDENT"
+},
+{
+"category2": "양식",
+"category1": "식비",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.55,
+"discretionaryBase": 0.55,
+"merchantSource": "MIXED"
+},
+{
+"category2": "고기구이",
+"category1": "식비",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.55,
+"discretionaryBase": 0.5,
+"merchantSource": "INDEPENDENT"
+},
+{
+"category2": "치킨",
+"category1": "식비",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.7,
+"discretionaryBase": 0.6,
+"merchantSource": "MIXED"
+},
+{
+"category2": "피자",
+"category1": "식비",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.45,
+"discretionaryBase": 0.6,
+"merchantSource": "BRAND"
+},
+{
+"category2": "야식",
+"category1": "식비",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.35,
+"discretionaryBase": 0.75,
+"merchantSource": "BRAND"
+},
+{
+"category2": "패스트푸드",
+"category1": "식비",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.72,
+"discretionaryBase": 0.55,
+"merchantSource": "BRAND"
+},
+{
+"category2": "뷔페",
+"category1": "식비",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.18,
+"discretionaryBase": 0.7,
+"merchantSource": "MIXED"
+},
+{
+"category2": "아시안",
+"category1": "식비",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.42,
+"discretionaryBase": 0.55,
+"merchantSource": "INDEPENDENT"
+},
+{
+"category2": "휴게음식",
+"category1": "식비",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.14,
+"discretionaryBase": 0.55,
+"merchantSource": "BRAND"
+},
+{
+"category2": "카페",
+"category1": "카페/간식",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.9,
+"discretionaryBase": 0.5,
+"merchantSource": "MIXED"
+},
+{
+"category2": "베이커리",
+"category1": "카페/간식",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.55,
+"discretionaryBase": 0.5,
+"merchantSource": "BRAND"
+},
+{
+"category2": "편의점",
+"category1": "편의점",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.92,
+"discretionaryBase": 0.45,
+"merchantSource": "BRAND"
+},
+{
+"category2": "대형마트",
+"category1": "쇼핑",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.62,
+"discretionaryBase": 0.3,
+"merchantSource": "BRAND"
+},
+{
+"category2": "드럭스토어",
+"category1": "쇼핑",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.42,
+"discretionaryBase": 0.6,
+"merchantSource": "BRAND"
+},
+{
+"category2": "생활잡화",
+"category1": "쇼핑",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.4,
+"discretionaryBase": 0.45,
+"merchantSource": "BRAND"
+},
+{
+"category2": "화장품",
+"category1": "쇼핑",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.35,
+"discretionaryBase": 0.65,
+"merchantSource": "BRAND"
+},
+{
+"category2": "의류패션",
+"category1": "쇼핑",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.4,
+"discretionaryBase": 0.65,
+"merchantSource": "BRAND"
+},
+{
+"category2": "백화점",
+"category1": "쇼핑",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.22,
+"discretionaryBase": 0.75,
+"merchantSource": "BRAND"
+},
+{
+"category2": "미용실",
+"category1": "생활",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.4,
+"discretionaryBase": 0.55,
+"merchantSource": "MIXED"
+},
+{
+"category2": "약국",
+"category1": "생활",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.45,
+"discretionaryBase": 0.1,
+"merchantSource": "MIXED"
+},
+{
+"category2": "주유소",
+"category1": "생활",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.45,
+"discretionaryBase": 0.2,
+"merchantSource": "MIXED"
+},
+{
+"category2": "통행료",
+"category1": "생활",
+"channel": "OFFLINE",
+"locationType": "ROUTE",
+"frequencyWeight": 0.18,
+"discretionaryBase": 0.15,
+"merchantSource": "OPERATOR"
+},
+{
+"category2": "공과금",
+"category1": "생활",
+"channel": "ONLINE",
+"locationType": "NONE",
+"frequencyWeight": 0.5,
+"discretionaryBase": 0.1,
+"merchantSource": "ONLINE"
+},
+{
+"category2": "영화",
+"category1": "여가",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.3,
+"discretionaryBase": 0.65,
+"merchantSource": "BRAND"
+},
+{
+"category2": "헬스장",
+"category1": "여가",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.32,
+"discretionaryBase": 0.5,
+"merchantSource": "INDEPENDENT"
+},
+{
+"category2": "놀이공원",
+"category1": "여가",
+"channel": "OFFLINE",
+"locationType": "VENUE_CLUSTER",
+"frequencyWeight": 0.1,
+"discretionaryBase": 0.8,
+"merchantSource": "BRAND"
+},
+{
+"category2": "키즈카페",
+"category1": "여가",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.12,
+"discretionaryBase": 0.6,
+"merchantSource": "INDEPENDENT"
+},
+{
+"category2": "이커머스",
+"category1": "온라인",
+"channel": "ONLINE",
+"locationType": "NONE",
+"frequencyWeight": 0.88,
+"discretionaryBase": 0.6,
+"merchantSource": "ONLINE"
+},
+{
+"category2": "배달",
+"category1": "온라인",
+"channel": "ONLINE",
+"locationType": "NONE",
+"frequencyWeight": 0.72,
+"discretionaryBase": 0.7,
+"merchantSource": "ONLINE"
+},
+{
+"category2": "스트리밍",
+"category1": "온라인",
+"channel": "ONLINE",
+"locationType": "NONE",
+"frequencyWeight": 0.55,
+"discretionaryBase": 0.65,
+"merchantSource": "ONLINE"
+},
+{
+"category2": "간편결제",
+"category1": "온라인",
+"channel": "ONLINE",
+"locationType": "NONE",
+"frequencyWeight": 0.6,
+"discretionaryBase": 0.55,
+"merchantSource": "ONLINE"
+},
+{
+"category2": "통신비",
+"category1": "온라인",
+"channel": "ONLINE",
+"locationType": "NONE",
+"frequencyWeight": 0.5,
+"discretionaryBase": 0.15,
+"merchantSource": "ONLINE"
+},
+{
+"category2": "대중교통",
+"category1": "온라인",
+"channel": "OFFLINE",
+"locationType": "ROUTE",
+"frequencyWeight": 0.85,
+"discretionaryBase": 0.05,
+"merchantSource": "OPERATOR"
+},
+{
+"category2": "택시",
+"category1": "온라인",
+"channel": "OFFLINE",
+"locationType": "ROUTE",
+"frequencyWeight": 0.35,
+"discretionaryBase": 0.55,
+"merchantSource": "OPERATOR"
+},
+{
+"category2": "철도",
+"category1": "온라인",
+"channel": "OFFLINE",
+"locationType": "ROUTE",
+"frequencyWeight": 0.14,
+"discretionaryBase": 0.35,
+"merchantSource": "OPERATOR"
+},
+{
+"category2": "항공",
+"category1": "온라인",
+"channel": "OFFLINE",
+"locationType": "ROUTE",
+"frequencyWeight": 0.08,
+"discretionaryBase": 0.55,
+"merchantSource": "OPERATOR"
+},
+{
+"category2": "고속버스",
+"category1": "온라인",
+"channel": "OFFLINE",
+"locationType": "ROUTE",
+"frequencyWeight": 0.12,
+"discretionaryBase": 0.3,
+"merchantSource": "OPERATOR"
+},
+{
+"category2": "렌터카",
+"category1": "온라인",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.1,
+"discretionaryBase": 0.55,
+"merchantSource": "BRAND"
+},
+{
+"category2": "공연전시",
+"category1": "여가",
+"channel": "ONLINE",
+"locationType": "NONE",
+"frequencyWeight": 0.1,
+"discretionaryBase": 0.7,
+"merchantSource": "ONLINE"
+},
+{
+"category2": "여행숙박",
+"category1": "여가",
+"channel": "ONLINE",
+"locationType": "POI",
+"frequencyWeight": 0.12,
+"discretionaryBase": 0.7,
+"merchantSource": "ONLINE"
+},
+{
+"category2": "반려동물",
+"category1": "생활",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.18,
+"discretionaryBase": 0.4,
+"merchantSource": "MIXED"
+},
+{
+"category2": "디지털가전",
+"category1": "쇼핑",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.15,
+"discretionaryBase": 0.65,
+"merchantSource": "BRAND"
+},
+{
+"category2": "스포츠레저",
+"category1": "여가",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.16,
+"discretionaryBase": 0.6,
+"merchantSource": "BRAND"
+},
+{
+"category2": "아웃도어캠핑",
+"category1": "여가",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.08,
+"discretionaryBase": 0.7,
+"merchantSource": "MIXED"
+},
+{
+"category2": "서점문구",
+"category1": "쇼핑",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.2,
+"discretionaryBase": 0.45,
+"merchantSource": "BRAND"
+},
+{
+"category2": "키즈육아",
+"category1": "쇼핑",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.14,
+"discretionaryBase": 0.35,
+"merchantSource": "BRAND"
+},
+{
+"category2": "취미공예",
+"category1": "여가",
+"channel": "OFFLINE",
+"locationType": "POI",
+"frequencyWeight": 0.1,
+"discretionaryBase": 0.65,
+"merchantSource": "MIXED"
+}
+]
+}

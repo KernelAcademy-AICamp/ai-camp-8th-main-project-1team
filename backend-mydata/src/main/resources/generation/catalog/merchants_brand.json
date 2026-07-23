@@ -1,0 +1,2189 @@
+{
+"_note": "브랜드/플랫폼 풀. branchable=True면 name+동+'점' 합성(가끔 forms 변형으로 명세서 노이즈). forms=실 카드명세서 표기 변형(법인명·오타·영문 등). channel=ONLINE/OFFLINE.",
+"byCategory2": {
+"편의점": [
+{
+"name": "GS25",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"지에스25",
+"GS25"
+]
+},
+{
+"name": "CU",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"씨유",
+"CU"
+]
+},
+{
+"name": "세븐일레븐",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"세븐일레븐",
+"7-ELEVEN"
+]
+},
+{
+"name": "이마트24",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"이마트24",
+"emart24"
+]
+},
+{
+"name": "미니스톱",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"카페": [
+{
+"name": "스타벅스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"(주)스타벅스코리아",
+"스타벅스"
+]
+},
+{
+"name": "투썸플레이스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"투썸플레이스",
+"투썸"
+]
+},
+{
+"name": "메가엠지씨커피",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"메가엠지씨커피",
+"메가커피"
+]
+},
+{
+"name": "컴포즈커피",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "이디야커피",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"이디야",
+"이디야커피"
+]
+},
+{
+"name": "빽다방",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "커피빈",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"커피빈",
+"커피빈코리아"
+]
+},
+{
+"name": "할리스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "공차",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "폴바셋",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "파스쿠찌",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "탐앤탐스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "더벤티",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "매머드커피",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "카페드롭탑",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "가비양",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "셀렉토커피",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "커피에반하다",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"베이커리": [
+{
+"name": "파리바게뜨",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"파리바게뜨",
+"파리바케뜨",
+"파리크라상"
+]
+},
+{
+"name": "뚜레쥬르",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"뚜레쥬르",
+"뚜레주르"
+]
+},
+{
+"name": "던킨",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"던킨",
+"던킨도너츠"
+]
+},
+{
+"name": "성심당",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "김영모과자점",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "노티드",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"패스트푸드": [
+{
+"name": "맥도날드",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"맥도날드",
+"한국맥도날드"
+]
+},
+{
+"name": "롯데리아",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "버거킹",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "맘스터치",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "KFC",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"KFC",
+"케이에프씨"
+]
+},
+{
+"name": "써브웨이",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "노브랜드버거",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "프랭크버거",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "이삭토스트",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "한솥도시락",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "본죽",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "김밥천국",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"치킨": [
+{
+"name": "교촌치킨",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"교촌치킨",
+"교촌"
+]
+},
+{
+"name": "BBQ",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"BBQ",
+"비비큐",
+"제너시스비비큐"
+]
+},
+{
+"name": "BHC",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"BHC",
+"비에이치씨"
+]
+},
+{
+"name": "굽네치킨",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "네네치킨",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "처갓집양념치킨",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "페리카나",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "호식이두마리치킨",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "60계치킨",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "자담치킨",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "푸라닭",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "또래오래",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "멕시카나",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "노랑통닭",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "바른치킨",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"피자": [
+{
+"name": "도미노피자",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "피자헛",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "미스터피자",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "파파존스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "피자스쿨",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "피자마루",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "반올림피자",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "7번가피자",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "피자알볼로",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"야식": [
+{
+"name": "원할머니보쌈족발",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "장충동왕족발",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "족발야시장",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "더맛있는족발보쌈",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "소문난왕족발",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"대형마트": [
+{
+"name": "이마트",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"이마트",
+"(주)이마트"
+]
+},
+{
+"name": "홈플러스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "롯데마트",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "코스트코",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"코스트코",
+"코스트코코리아"
+]
+},
+{
+"name": "트레이더스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "이마트에브리데이",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "롯데슈퍼",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "GS더프레시",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "홈플러스익스프레스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "노브랜드",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "하나로마트",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"하나로마트",
+"농협하나로마트"
+]
+},
+{
+"name": "메가마트",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"드럭스토어": [
+{
+"name": "올리브영",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"올리브영",
+"CJ올리브영"
+]
+},
+{
+"name": "롭스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "랄라블라",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"생활잡화": [
+{
+"name": "다이소",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"다이소",
+"아성다이소"
+]
+},
+{
+"name": "아트박스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "모닝글로리",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "노브랜드",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"화장품": [
+{
+"name": "이니스프리",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "아리따움",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "더페이스샵",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "미샤",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "네이처리퍼블릭",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "토니모리",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "에뛰드",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"의류패션": [
+{
+"name": "유니클로",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "자라",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"자라",
+"ZARA"
+]
+},
+{
+"name": "에이치앤엠",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"에이치앤엠",
+"H&M"
+]
+},
+{
+"name": "스파오",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "탑텐",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "지오다노",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "에잇세컨즈",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "나이키",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"나이키",
+"나이키코리아"
+]
+},
+{
+"name": "아디다스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "데상트",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"백화점": [
+{
+"name": "롯데백화점",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "신세계백화점",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "현대백화점",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "갤러리아백화점",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "AK플라자",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "NC백화점",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"영화": [
+{
+"name": "CGV",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"CGV",
+"씨지브이",
+"CJCGV"
+]
+},
+{
+"name": "롯데시네마",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "메가박스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "씨네Q",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"헬스장": [
+{
+"name": "애니타임피트니스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "스포애니",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "커브스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "바디프로필짐",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"놀이공원": [
+{
+"name": "에버랜드",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "롯데월드",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "서울랜드",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "서울대공원",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "어린이대공원",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "캐리비안베이",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"미용실": [
+{
+"name": "박승철헤어스투디오",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "이철헤어커커",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "준오헤어",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "리안헤어",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "블루클럽",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "가위손",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"주유소": [
+{
+"name": "SK에너지",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"SK에너지",
+"SK네트웍스"
+]
+},
+{
+"name": "GS칼텍스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "S-OIL",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"S-OIL",
+"에쓰오일"
+]
+},
+{
+"name": "현대오일뱅크",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"현대오일뱅크",
+"현대오일뱅크(주)"
+]
+},
+{
+"name": "알뜰주유소",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"이커머스": [
+{
+"name": "쿠팡",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"쿠팡",
+"쿠팡(주)",
+"COUPANG"
+]
+},
+{
+"name": "네이버쇼핑",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"네이버페이",
+"네이버쇼핑",
+"스마트스토어"
+]
+},
+{
+"name": "G마켓",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"G마켓",
+"지마켓"
+]
+},
+{
+"name": "11번가",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "SSG닷컴",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"SSG.COM",
+"쓱닷컴"
+]
+},
+{
+"name": "옥션",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "위메프",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "티몬",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "인터파크",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "마켓컬리",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"마켓컬리",
+"컬리"
+]
+},
+{
+"name": "오늘의집",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "무신사",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "지그재그",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "에이블리",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "알리익스프레스",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"알리익스프레스",
+"ALIEXPRESS"
+]
+},
+{
+"name": "테무",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"테무",
+"TEMU"
+]
+},
+{
+"name": "아마존",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"AMAZON",
+"아마존"
+]
+}
+],
+"배달": [
+{
+"name": "배달의민족",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"배달의민족",
+"우아한형제들",
+"우아한형제들(배민)"
+]
+},
+{
+"name": "쿠팡이츠",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"쿠팡이츠",
+"COUPANG EATS"
+]
+},
+{
+"name": "요기요",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"요기요",
+"위대한상상"
+]
+},
+{
+"name": "땡겨요",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+}
+],
+"스트리밍": [
+{
+"name": "넷플릭스",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"넷플릭스",
+"NETFLIX.COM",
+"넷플릭스서비시스코리아"
+]
+},
+{
+"name": "유튜브프리미엄",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"GOOGLE*YOUTUBEPREMIUM",
+"유튜브프리미엄",
+"구글"
+]
+},
+{
+"name": "디즈니플러스",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"디즈니플러스",
+"DISNEY PLUS"
+]
+},
+{
+"name": "티빙",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "웨이브",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "왓챠",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "쿠팡플레이",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "라프텔",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "애플티비플러스",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "멜론",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"멜론",
+"MELON",
+"카카오"
+]
+},
+{
+"name": "지니뮤직",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "스포티파이",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"SPOTIFY",
+"스포티파이"
+]
+},
+{
+"name": "벅스",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "플로",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "밀리의서재",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "리디",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "윌라",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "챗지피티플러스",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"CHATGPT SUBSCRIPTION",
+"OPENAI"
+]
+}
+],
+"간편결제": [
+{
+"name": "카카오페이",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "네이버페이",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "토스",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"토스",
+"비바리퍼블리카"
+]
+},
+{
+"name": "삼성페이",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "페이코",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "애플앱스토어",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"APPLE.COM/BILL",
+"앱스토어"
+]
+},
+{
+"name": "구글플레이",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"GOOGLE PLAY",
+"구글플레이"
+]
+},
+{
+"name": "원스토어",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+}
+],
+"통신비": [
+{
+"name": "SK텔레콤",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"SK텔레콤",
+"(주)에스케이텔레콤",
+"SKT"
+]
+},
+{
+"name": "KT",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"KT",
+"(주)케이티",
+"케이티"
+]
+},
+{
+"name": "LG유플러스",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"LG유플러스",
+"LGU+",
+"엘지유플러스"
+]
+},
+{
+"name": "KT엠모바일",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "SK세븐모바일",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "U+유모바일",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "헬로모바일",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+}
+],
+"공과금": [
+{
+"name": "한국전력공사",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"한국전력공사",
+"한전"
+]
+},
+{
+"name": "서울도시가스",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "삼천리",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "코원에너지서비스",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "서울시상수도사업본부",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "아파트관리비",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+}
+],
+"대중교통": [
+{
+"name": "티머니",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": [
+"티머니",
+"(주)티머니",
+"TMONEY"
+]
+},
+{
+"name": "캐시비",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": [
+"캐시비",
+"로카모빌리티"
+]
+},
+{
+"name": "서울교통공사",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "지하철",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "시내버스",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "마을버스",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"택시": [
+{
+"name": "카카오T",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": [
+"카카오T",
+"카카오모빌리티"
+]
+},
+{
+"name": "우티",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": [
+"우티",
+"UT"
+]
+},
+{
+"name": "티머니택시",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": [
+"티머니택시",
+"T-money택시"
+]
+},
+{
+"name": "개인택시",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "온다택시",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "이비카드",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"철도": [
+{
+"name": "한국철도공사",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": [
+"한국철도공사",
+"코레일",
+"KTX(한국철도공사)",
+"레츠코레일"
+]
+},
+{
+"name": "SR",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": [
+"SR",
+"수서고속철도",
+"SRT"
+]
+}
+],
+"항공": [
+{
+"name": "대한항공",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": [
+"대한항공",
+"(주)대한항공"
+]
+},
+{
+"name": "아시아나항공",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": [
+"아시아나항공",
+"(주)아시아나"
+]
+},
+{
+"name": "제주항공",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "진에어",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "티웨이항공",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "에어부산",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "에어서울",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"고속버스": [
+{
+"name": "코버스",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": [
+"코버스",
+"고속버스통합"
+]
+},
+{
+"name": "센트럴시티",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "이지티켓",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"통행료": [
+{
+"name": "한국도로공사",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": [
+"한국도로공사",
+"고속도로통행료",
+"하이패스"
+]
+},
+{
+"name": "서울시설공단",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"렌터카": [
+{
+"name": "롯데렌터카",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "SK렌터카",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "쏘카",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "그린카",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "AJ렌터카",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"약국": [
+{
+"name": "온누리약국",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "대웅약국",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "메디팜",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"휴게음식": [
+{
+"name": "휴게소",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"공연전시": [
+{
+"name": "인터파크티켓",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "예스24공연",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "멜론티켓",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "티켓링크",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "NOL",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"NOL",
+"놀유니버스",
+"인터파크"
+]
+},
+{
+"name": "예술의전당",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "세종문화회관",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "블루스퀘어",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "샤롯데씨어터",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "LG아트센터",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"여행숙박": [
+{
+"name": "야놀자",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "여기어때",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "아고다",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"아고다",
+"AGODA"
+]
+},
+{
+"name": "부킹닷컴",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"부킹닷컴",
+"BOOKING.COM"
+]
+},
+{
+"name": "호텔스컴바인",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "트립닷컴",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"트립닷컴",
+"TRIP.COM"
+]
+},
+{
+"name": "에어비앤비",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"에어비앤비",
+"AIRBNB"
+]
+},
+{
+"name": "하나투어",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "모두투어",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "인터파크투어",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+}
+],
+"반려동물": [
+{
+"name": "동물병원",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "펫프렌즈",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "어바웃펫",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "펫박스",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "바잇미",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "롯데마트펫가든",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "이리온",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "코코스퀘어",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"디지털가전": [
+{
+"name": "하이마트",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"하이마트",
+"롯데하이마트"
+]
+},
+{
+"name": "삼성디지털프라자",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "LG베스트샵",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "애플",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"APPLE.COM",
+"애플"
+]
+},
+{
+"name": "전자랜드",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "컴퓨존",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "다나와",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "스팀",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"STEAM",
+"스팀"
+]
+},
+{
+"name": "플레이스테이션스토어",
+"branchable": false,
+"channel": "ONLINE",
+"forms": [
+"PLAYSTATION",
+"플레이스테이션스토어"
+]
+},
+{
+"name": "닌텐도",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+}
+],
+"스포츠레저": [
+{
+"name": "골프존",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "데카트론",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "스포츠몬스터",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "나이키",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "아디다스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "뉴발란스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "클라이밍파크",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "볼링장",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "스크린야구",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "풋살파크",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"아웃도어캠핑": [
+{
+"name": "코베아",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "스노우피크",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "헬리녹스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "네파",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "K2",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "블랙야크",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "아이더",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "감성캠핑",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "캠핑장",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"서점문구": [
+{
+"name": "교보문고",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": [
+"교보문고",
+"교보"
+]
+},
+{
+"name": "영풍문고",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "예스24",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "알라딘",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "반디앤루니스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "핫트랙스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "모나미스토어",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "아트박스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+}
+],
+"키즈육아": [
+{
+"name": "아가방",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "토이저러스",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "짐보리",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "해피랜드",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "포래즈",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "블루독베이비",
+"branchable": true,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "맘스타운",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+}
+],
+"취미공예": [
+{
+"name": "낙원악기상가",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "호비스",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+},
+{
+"name": "화방",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "문화센터",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "공방",
+"branchable": false,
+"channel": "OFFLINE",
+"forms": []
+},
+{
+"name": "텐바이텐",
+"branchable": false,
+"channel": "ONLINE",
+"forms": []
+}
+]
+}
+}

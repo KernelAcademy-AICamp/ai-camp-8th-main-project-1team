@@ -5,6 +5,7 @@ import tools.jackson.databind.ObjectMapper;
 import com.finntech.domain.Enums;
 import com.finntech.domain.Report;
 import com.finntech.engine.AnalysisResult;
+import com.finntech.ml.WasteScoringService;
 import com.finntech.repository.ReportRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +33,13 @@ public class ReportService {
 
     private final ReportRepository reportRepository;
     private final ObjectMapper objectMapper;
+    private final WasteScoringService wasteScoringService;
 
-    public ReportService(ReportRepository reportRepository, ObjectMapper objectMapper) {
+    public ReportService(ReportRepository reportRepository, ObjectMapper objectMapper,
+                         WasteScoringService wasteScoringService) {
         this.reportRepository = reportRepository;
         this.objectMapper = objectMapper;
+        this.wasteScoringService = wasteScoringService;
     }
 
     /**
@@ -47,8 +51,11 @@ public class ReportService {
     @Transactional
     public ReportBody buildCached(Long userId, String period, AnalysisResult analysis,
                                   LocalDateTime at) {
+        // 부정 카테고리 판정 소스: 마이데이터 연동 시 ML 낭비(과반) 카테고리, 아니면 규칙 overspending(W8 다운스트림).
+        java.util.Set<String> mlWaste = wasteScoringService.summarize(userId)
+                .map(WasteScoringService.MlSummary::wasteCategories).orElse(null);
         if (!analysis.isConfirmed()) {
-            return build(analysis);
+            return build(analysis, mlWaste);
         }
         Optional<Report> cached = reportRepository.findByUserIdAndPeriod(userId, period);
         if (cached.isPresent()) {
@@ -60,7 +67,7 @@ public class ReportService {
                 reportRepository.delete(cached.get());
             }
         }
-        ReportBody body = build(analysis);
+        ReportBody body = build(analysis, mlWaste);
         try {
             reportRepository.save(new Report(userId, period, objectMapper.writeValueAsString(body), at));
         } catch (Exception e) {
@@ -87,6 +94,14 @@ public class ReportService {
     }
 
     public ReportBody build(AnalysisResult analysis) {
+        return build(analysis, null);
+    }
+
+    /**
+     * @param mlWasteCategories ML이 낭비로 판정한 category1 집합(W8). null이면 규칙 overspending으로 폴백.
+     *                          마이데이터 연동 사용자는 ML 판정이, 그 외에는 규칙 기준이 '줄이면 좋은 소비'를 정한다.
+     */
+    public ReportBody build(AnalysisResult analysis, java.util.Set<String> mlWasteCategories) {
         List<Line> good = new ArrayList<>();
         List<Line> bad = new ArrayList<>();
 
@@ -94,7 +109,10 @@ public class ReportService {
             AnalysisResult.CategoryStat s = e.getValue();
             Line line = new Line(s.categoryCode(), s.displayName(), s.totalAmount(),
                     Math.round(s.spendRatio() * 1000.0) / 10.0, s.count());
-            if (analysis.overspendingCategories().contains(s.categoryCode())) {
+            boolean isBad = mlWasteCategories != null
+                    ? mlWasteCategories.contains(s.categoryCode())
+                    : analysis.overspendingCategories().contains(s.categoryCode());
+            if (isBad) {
                 bad.add(line);
             } else {
                 good.add(line);
