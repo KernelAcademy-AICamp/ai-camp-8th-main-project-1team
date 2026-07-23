@@ -169,6 +169,10 @@ export default function App() {
     () => (typeof localStorage !== 'undefined' && localStorage.getItem('demo_ci')) || DEMO_CI,
   );
   const [error, setError] = useState<string | null>(null);
+  // 개발용 — 수동 소비 추가(엔진 반응 확인) 폼
+  const [devCat, setDevCat] = useState('식비');
+  const [devAmt, setDevAmt] = useState('');
+  const [devMsg, setDevMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [anchoring, setAnchoring] = useState(false);
   const [anchorMsg, setAnchorMsg] = useState<string | null>(null);
@@ -247,6 +251,31 @@ export default function App() {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLinking(false);
+    }
+  }
+
+  // 개발용 — 200명 테스트 사용자 중 무작위 한 명으로 교체 연결
+  function randomSwitch() {
+    if (linking || DEMO_USERS.length === 0) return;
+    const u = DEMO_USERS[Math.floor(Math.random() * DEMO_USERS.length)];
+    void linkCi(u.ci);
+  }
+
+  // 개발용 — 현재 사용자에게 소비를 수동 추가하고 재계산(마이데이터 위에 사용자 입력이 얹혀 엔진이 반응하는지 확인)
+  async function addDevConsumption() {
+    const amt = Math.round(Number(devAmt));
+    if (!amt || amt <= 0) { setDevMsg('금액을 입력하세요'); return; }
+    setDevMsg('추가 중…');
+    try {
+      await api.addConsumption({
+        userId, categoryCode: devCat, amount: amt,
+        occurredAt: new Date().toISOString().slice(0, 19), planned: false,
+      });
+      setDevAmt('');
+      setDevMsg(`${devCat} ${amt.toLocaleString('ko-KR')}원 추가 — 점수·리포트 재계산됨`);
+      await loadAll();
+    } catch (e) {
+      setDevMsg(e instanceof Error ? e.message : String(e));
     }
   }
 
@@ -337,10 +366,16 @@ export default function App() {
                   <h2 id="h-home-md">이번 달 요약</h2><span className="badge-aux">마이데이터</span>
                 </span>
                 {DEMO_CI && (
-                  <button type="button" className="btn btn-ghost btn-sm"
-                    onClick={() => void linkCi(selectedCi)} disabled={linking}>
-                    {linking ? '연결 중…' : '다시 연결'}
-                  </button>
+                  <span style={{ display: 'inline-flex', gap: 6 }}>
+                    <button type="button" className="btn btn-ghost btn-sm"
+                      onClick={randomSwitch} disabled={linking} title="200명 중 무작위로 한 명 연결">
+                      🎲 랜덤 전환
+                    </button>
+                    <button type="button" className="btn btn-ghost btn-sm"
+                      onClick={() => void linkCi(selectedCi)} disabled={linking}>
+                      {linking ? '연결 중…' : '다시 연결'}
+                    </button>
+                  </span>
                 )}
               </div>
 
@@ -362,6 +397,28 @@ export default function App() {
                     })}
                   </select>
                 </label>
+              )}
+
+              {DEMO_CI && (
+                <details style={{ marginBottom: 12 }}>
+                  <summary className="muted small" style={{ cursor: 'pointer' }}>
+                    🧪 개발용 — 소비 수동 추가 후 재계산(엔진 반응 확인)
+                  </summary>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <select value={devCat} onChange={(e) => setDevCat(e.target.value)}
+                      aria-label="소비 카테고리" style={{ padding: '6px 8px' }}>
+                      {['식비', '카페/간식', '편의점', '쇼핑', '생활', '여가', '온라인', '대중교통', '통신비', '배달'].map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <input type="number" inputMode="numeric" min={0} value={devAmt}
+                      onChange={(e) => setDevAmt(e.target.value)} placeholder="금액(원)"
+                      aria-label="금액" style={{ width: 120, padding: '6px 8px' }} />
+                    <button type="button" className="btn btn-ghost btn-sm"
+                      onClick={() => void addDevConsumption()} disabled={loading}>추가 후 재계산</button>
+                    {devMsg && <span className="muted small" role="status">· {devMsg}</span>}
+                  </div>
+                </details>
               )}
 
               {myCards.length > 0 ? (

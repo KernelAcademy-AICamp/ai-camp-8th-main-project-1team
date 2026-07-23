@@ -27,8 +27,12 @@ public final class PersonaExpander {
     }
 
     private static PersonaVariant one(PersonaProfile base, int variantIndex, Random r) {
-        long monthly = Math.round(base.monthlyTotalMean() * GenSeed.jitter(r, 0.12));
-        int txPerMonth = Math.max(5, (int) Math.round(base.txPerMonthMean() * GenSeed.jitter(r, 0.12)));
+        // 예산 비례(§13-11): 결제 건수는 개인 예산에 비례한다 — '돈이 많은 사람이 더 자주 결제'.
+        // 예산 지터 인자를 결제 건수에도 곱해(상관) 같은 페르소나 안에서도 예산 큰 사람의 건수가 많아지게 하고,
+        // 작은 독립 노이즈(0.06)만 추가로 흔든다. (페르소나 간 비례는 personas.json txPerMonth∝예산으로 반영.)
+        double budgetJitter = GenSeed.jitter(r, 0.12);
+        long monthly = Math.round(base.monthlyTotalMean() * budgetJitter);
+        int txPerMonth = Math.max(5, (int) Math.round(base.txPerMonthMean() * budgetJitter * GenSeed.jitter(r, 0.06)));
         double online = clamp01(base.onlineRatio() + r.nextGaussian() * 0.05);
         double planned = clamp01(base.plannedRatio() + r.nextGaussian() * 0.05);
         double impulsivity = Math.max(0.1, base.impulsivity() * GenSeed.jitter(r, 0.10));

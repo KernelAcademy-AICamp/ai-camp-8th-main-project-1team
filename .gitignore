@@ -36,6 +36,7 @@ __pycache__/
 # reference/*.md 문서(launch_plan·mydata_catalog 등)는 커밋한다. 원본 CSV/XLSX/geo만 제외.
 reference/*.csv
 reference/*.xlsx
+reference/*.html
 reference/geo/
 
 # ── 로그·임시 ──

@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         // history-days=280로 사용자당 결제가 많아 target/perUser가 사용자 수를 정한다(estimateUserCount).
         // data_split 4종(train/val/test/service)이 사용자별 확률 배정이므로, 충분한 사용자 수를 확보하려면
         // target을 넉넉히(≈12명↑) 준다 — 소규모면 split 종류가 2종으로 줄어 검증이 흔들린다(§13-11).
-        "mydata.generation.target-count=24000"
+        "mydata.generation.target-count=45000"   // 빈도 상향(예산비례)으로 사용자당 결제가 많아져 target을 올려 사용자 수(≈20명↑) 확보
 })
 class GenerationEndToEndTest {
 

@@ -63,7 +63,9 @@ mydata:
   # 실제 생성은 외부 Faker 파이프라인이 이 값을 참고해 페르소나별 프로파일 + 과거~미래 결제를 만들어 DB에 적재한다.
   generation:
     enabled: false
-    target-count: 11000000
+    # §13-11 개선: 결제 빈도 상향(하루 3건+) 후 total은 target-count 상한이 정한다. 사용자 수를 줄여
+    # 재생성·재학습을 빠르게 — target 2M ÷ 사용자당 ~1,500건 ≈ 1,330명(시작일 62일 → 하루 ~21명).
+    target-count: 2000000
     # now(=mydata.now, 2026-07-21) 기준 미래 생성 일수.
     future-window-days: 120
     # 각 사용자 이력 시뮬레이션 일수(§13-11 개선). 커트오프(07-21) 이전 ~6개월 이력을 확보하려면
@@ -93,7 +95,7 @@ mydata:
       day:                            # 날별 급증/급감
         cheat-day-prob: 0.05          # 갑자기 많이 쓰는 날 확률
         cheat-day-multiplier: [2.0, 5.0]
-        quiet-day-prob: 0.25          # 거의 안 쓰는 날 확률
+        quiet-day-prob: 0.15          # 거의 안 쓰는 날 확률(§13-11: 0.25→0.15, 하루 최소 ~3건 빈도 확보)
       amount:                         # 거래별 흔들림
         sigma-log: [0.20, 0.30]       # 카테고리 내 금액 산포(≤0.30 캡)
         out-of-profile-prob: 0.08     # 프로파일 밖 지출 확률
@@ -121,6 +123,8 @@ mydata:
         delivery-overuse-weight: 0.40 # 0.25→0.40 배달 과다
         subscription-leak-weight: 0.45 # 0.30→0.45 구독 누수
     # 데이터 분리(과적합 방지, 요구11): 사용자 단위 disjoint 배분(합=1.0). 앱은 service만 시연.
+    # 데이터 분리(과적합 방지, 요구11): 사용자 단위 disjoint 배분(합=1.0). 앱은 service만 시연.
+    # 테스트 사용자는 ~10명이면 충분하므로 SERVICE 0.10(≈133명)로 원복 — train은 EBM 서브샘플(1.2M) 확보에 충분.
     split-ratios:
       train: 0.60
       val: 0.15

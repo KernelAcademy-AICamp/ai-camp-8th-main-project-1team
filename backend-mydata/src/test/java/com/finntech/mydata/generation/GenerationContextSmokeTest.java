@@ -28,7 +28,7 @@ class GenerationContextSmokeTest {
                 + props.getSplitRatios().getTest() + props.getSplitRatios().getService();
         assertThat(sum).isEqualTo(1.0);
         assertThat(props.isEnabled()).isFalse();       // 생성 스위치 off (자리만)
-        assertThat(props.getTargetCount()).isEqualTo(11_000_000L);
+        assertThat(props.getTargetCount()).isEqualTo(2_000_000L);   // §13-11: 사용자 수 축소로 재생성 고속화
         // 시작일 조건(매일 단위, 커트오프 07-21 기준 ~6개월 전부터 2025-12-15~2026-02-15) 바인딩 (§13-11)
         assertThat(props.getStartDate().getFrom()).isEqualTo(java.time.LocalDate.of(2025, 12, 15));
         assertThat(props.getStartDate().getTo()).isEqualTo(java.time.LocalDate.of(2026, 2, 15));
