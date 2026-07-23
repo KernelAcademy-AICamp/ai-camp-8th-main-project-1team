@@ -235,7 +235,7 @@ export default function App() {
     if (!ci) return;
     setLinking(true); setError(null);
     try {
-      const r = await api.linkSynthetic(ci, [9001]);
+      const r = await api.linkSynthetic(ci, []); // 전 카드사 연동(생성 카드는 7개 실카드사에 분산, §13-11) — 빈 배열이면 백엔드가 모든 카드사를 연결
       setSelectedCi(ci);
       try {
         localStorage.setItem('demo_ci', ci);
