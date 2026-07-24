@@ -74,6 +74,10 @@ public class MyDataPayment {
     @Column(name = "mydata_payment_location_lng")
     private Double locationLng;
 
+    /** 가맹점 사업자등록번호 10자리(신원에서 결정론 파생, W?-가맹점정보). 사용자는 이 번호로 가맹점 주소를 조회한다. */
+    @Column(name = "mydata_payment_business_number", length = 10)
+    private String businessNumber;
+
     protected MyDataPayment() {}
 
     public MyDataPayment(String id, MyDataCard card, LocalDateTime paymentDate,
@@ -116,4 +120,6 @@ public class MyDataPayment {
     public void setLocationLat(Double locationLat) { this.locationLat = locationLat; }
     public Double getLocationLng() { return locationLng; }
     public void setLocationLng(Double locationLng) { this.locationLng = locationLng; }
+    public String getBusinessNumber() { return businessNumber; }
+    public void setBusinessNumber(String businessNumber) { this.businessNumber = businessNumber; }
 }

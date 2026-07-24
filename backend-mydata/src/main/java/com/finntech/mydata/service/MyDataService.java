@@ -27,6 +27,7 @@ public class MyDataService {
     private final MyDataPaymentRepository paymentRepository;
     private final CardCompanyRepository companyRepository;
     private final MyDataAccountRepository accountRepository;
+    private final MyDataMerchantRepository merchantRepository;
     private final String nowSetting;
     private final LocalDate referenceDate;
     /** 전체 조회 하한(W4-3): 0=무제한(현행), N>0이면 최근 N개월만 반환해 대량 사용자 응답 폭주를 막는다. */
@@ -34,7 +35,7 @@ public class MyDataService {
 
     public MyDataService(MyDataUserRepository userRepository, MyDataCardRepository cardRepository,
                          MyDataPaymentRepository paymentRepository, CardCompanyRepository companyRepository,
-                         MyDataAccountRepository accountRepository,
+                         MyDataAccountRepository accountRepository, MyDataMerchantRepository merchantRepository,
                          @Value("${mydata.now:reference}") String nowSetting,
                          @Value("${mydata.seed.reference-date:2026-07-21}") String referenceDate,
                          @Value("${mydata.query.months-floor:0}") int monthsFloor) {
@@ -43,6 +44,7 @@ public class MyDataService {
         this.paymentRepository = paymentRepository;
         this.companyRepository = companyRepository;
         this.accountRepository = accountRepository;
+        this.merchantRepository = merchantRepository;
         this.nowSetting = nowSetting;
         this.referenceDate = LocalDate.parse(referenceDate);
         this.monthsFloor = monthsFloor;
@@ -100,6 +102,14 @@ public class MyDataService {
     @Transactional(readOnly = true)
     public boolean userExists(String ci) {
         return userRepository.existsById(ci);
+    }
+
+    /** 가맹점 조회(번호→주소) — 사용자가 결제의 사업자번호로 가맹점명·지번주소를 조회한다. 없으면 empty. */
+    @Transactional(readOnly = true)
+    public java.util.Optional<MerchantView> findMerchant(String businessNumber) {
+        return merchantRepository.findById(businessNumber).map(m ->
+                new MerchantView(m.getBusinessNumber(), m.getMerchantName(), m.getAddress(),
+                        m.getLat(), m.getLng(), m.isOnline()));
     }
 
     /** 카드사 목록(연동 기관 선택용). */
@@ -165,6 +175,6 @@ public class MyDataService {
     private PaymentView toPaymentView(MyDataPayment payment, Long cardCode) {
         return new PaymentView(payment.getId(), payment.getPaymentDate(), payment.getCategory1(),
                 payment.getCategory2(), payment.getAmount(), payment.getMerchantName(),
-                payment.getReceivedBenefitAmount(), cardCode);
+                payment.getReceivedBenefitAmount(), cardCode, payment.getBusinessNumber());
     }
 }

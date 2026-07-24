@@ -23,7 +23,8 @@ public final class MyDataDtos {
                                   CompanyView company, List<BenefitView> benefits) {}
 
     public record PaymentView(String id, LocalDateTime date, String category1, String category2,
-                              int amount, String merchantName, int receivedBenefitAmount, Long cardCode) {}
+                              int amount, String merchantName, int receivedBenefitAmount, Long cardCode,
+                              String businessNumber) {}
 
     /** 카드 1장 + 그 카드의 상품정보·소유자·결제내역 전체 — 본체가 UserCard/UserPayment로 영속화. */
     public record CardView(String cardId, LocalDate expirationDate, int prevMonthAmount,
@@ -35,4 +36,8 @@ public final class MyDataDtos {
 
     /** 통장 입출금 1건. type = DEPOSIT(월급 입금) | WITHDRAWAL(카드 출금). amount는 부호 없는 절대액. */
     public record AccountTxnView(LocalDateTime date, String type, long amount, String description) {}
+
+    /** 가맹점 조회(번호→주소) — 사용자가 결제에 실린 사업자번호로 가맹점명·지번주소를 조회한다. */
+    public record MerchantView(String businessNumber, String merchantName, String address,
+                               Double lat, Double lng, boolean online) {}
 }

@@ -22,7 +22,7 @@ class GenerationContextSmokeTest {
     @Autowired CatalogLoader catalogLoader;
 
     @Test
-    void 설정바인딩과_카탈로그가_정상() {
+    void configBindingAndCatalogLoad() {
         // split 비율 합 = 1.0 (요구11)
         double sum = props.getSplitRatios().getTrain() + props.getSplitRatios().getVal()
                 + props.getSplitRatios().getTest() + props.getSplitRatios().getService();

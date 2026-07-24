@@ -7,6 +7,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +23,9 @@ class DailyActivitySimulatorTest {
     private final CatalogLoader loader = new CatalogLoader(mapper);
     private final GenerationProperties props = new GenerationProperties();
     private final DailyActivitySimulator sim = new DailyActivitySimulator(
-            new CatalogSampler(loader), new WasteLabeler(props), loader, props);
+            new CatalogSampler(loader, new MerchantRegistry(
+                    props.getSeed(), loader.regions(), props.getAddress().getBubunProb())),
+            new WasteLabeler(props), loader, props);
     private final List<GeneratedUser> users = new PopulationBuilder(loader, props).build(20260721L, 500);
 
     private GeneratedUser first(String persona) {
@@ -30,7 +33,7 @@ class DailyActivitySimulatorTest {
     }
 
     @Test
-    void 거래가_결정론으로_온오프라인_실데이터로_생성된다() {
+    void transactionsGeneratedDeterministicallyOnAndOffline() {
         GeneratedUser u = first("과소비형");
         LocalDate end = u.startDate().plusDays(120);
         List<GenTxn> txns = sim.simulate(u, end);
@@ -39,16 +42,17 @@ class DailyActivitySimulatorTest {
         assertThat(sim.simulate(u, end)).hasSameSizeAs(txns);        // 결정론
         assertThat(txns).allMatch(t -> t.amount() > 0);
         assertThat(txns).allMatch(t -> t.wasteLabel().equals("WASTE") || t.wasteLabel().equals("ESSENTIAL"));
-        // 온라인=위치 null, 오프라인=위치 있음
-        assertThat(txns).anyMatch(t -> t.channel().equals("ONLINE") && t.lat() == null);
+        // 온라인=전국 본사 위치, 오프라인=앵커 동 위치 — 이제 둘 다 위치·사업자번호가 있다
+        assertThat(txns).anyMatch(t -> t.channel().equals("ONLINE") && t.lat() != null);
         assertThat(txns).anyMatch(t -> t.channel().equals("OFFLINE") && t.lat() != null);
+        assertThat(txns).allMatch(t -> BusinessNumberGenerator.isValid(t.businessNumber()));
         // 취미(과소비형: 여행·문화공연·패션쇼핑) 카테고리 등장
         assertThat(txns).anyMatch(t -> Set.of("여행숙박", "공연전시", "의류패션", "백화점", "화장품", "드럭스토어")
                 .contains(t.category2()));
     }
 
     @Test
-    void 서비스효과로_낭비율이_시간에_따라_하강한다() {
+    void wasteRatioDeclinesOverTimeFromServiceEffect() {
         long earlyW = 0, earlyN = 0, lateW = 0, lateN = 0;
         List<GeneratedUser> over = users.stream()
                 .filter(u -> u.variant().baseName().equals("과소비형")).limit(60).toList();
@@ -65,7 +69,33 @@ class DailyActivitySimulatorTest {
     }
 
     @Test
-    void 방문빈도가_카테고리믹스를_대체로_따른다() {
+    void mobilityReflectsTravelAndAdjacentDong() {
+        boolean sawTravel = false, sawAdjacent = false;
+        for (GeneratedUser u : users.subList(0, 60)) {
+            String homeSido = u.home().sido(), homeSigungu = u.home().sigungu(), homeDong = u.home().dong();
+            Set<String> dongsInHomeSigungu = new HashSet<>();
+            for (GenTxn t : sim.simulate(u, u.startDate().plusDays(120))) {
+                if (!"OFFLINE".equals(t.channel()) || t.address() == null) continue;
+                String[] p = t.address().split(" ");
+                if (p.length < 3) continue;
+                if (!p[0].equals(homeSido)) sawTravel = true;                        // 다른 시도 = 여행
+                if (p[0].equals(homeSido) && p[1].equals(homeSigungu)) dongsInHomeSigungu.add(p[2]);
+            }
+            if (dongsInHomeSigungu.stream().anyMatch(d -> !d.equals(homeDong))) sawAdjacent = true;
+            if (sawTravel && sawAdjacent) break;
+        }
+        assertThat(sawTravel).as("먼 지역(다른 시도) 여행 결제가 나타나야 한다").isTrue();
+        assertThat(sawAdjacent).as("같은 시군구의 인접 동 결제가 나타나야 한다").isTrue();
+
+        // 동선(주소)도 결정론이어야 한다 — 같은 사용자 재실행 시 주소 시퀀스 동일
+        GeneratedUser u0 = users.get(0);
+        LocalDate end0 = u0.startDate().plusDays(60);
+        assertThat(sim.simulate(u0, end0).stream().map(GenTxn::address).toList())
+                .isEqualTo(sim.simulate(u0, end0).stream().map(GenTxn::address).toList());
+    }
+
+    @Test
+    void visitFrequencyRoughlyFollowsCategoryMix() {
         // 방문가중(mix/평균가)은 '방문 빈도'가 카테고리믹스를 따르게 한다. 절대 지출총액은
         // heavy-tail(여행·공연 같은 고액 여가 결제 소수)이 지배할 수 있으므로, 페르소나 지배성은
         // '빈도'로 검증한다(외식형=식비를 가장 자주 결제). (§13-11: 금액 스냅과 무관하게 성립)

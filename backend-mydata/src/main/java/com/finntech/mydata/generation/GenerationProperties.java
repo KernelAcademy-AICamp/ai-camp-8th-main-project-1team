@@ -69,6 +69,40 @@ public class GenerationProperties {
     /** 카탈로그 리소스 경로(classpath). */
     private String catalogPath = "classpath:generation/catalog/";
 
+    /** 정리 CSV(가맹점명·사업자번호·주소) 출력 경로. 비우면 CSV를 쓰지 않는다. */
+    private String merchantCsvPath = "";
+
+    /** 가맹점 주소(지번)·동선 조건. */
+    private Address address = new Address();
+
+    /**
+     * 가맹점 지번주소·사용자 동선 조건. 가맹점은 신원(이름+동)에서 결정론적으로 번호·주소를 파생하고,
+     * 사용자는 집/직장/인접동/여행 앵커로 이동한다. 값은 튜닝 대상(잠정).
+     */
+    public static class Address {
+        /** 지번 부번 존재 확률(없으면 본번만). */
+        private double bubunProb = 0.35;
+        /** 평일에 인접 동(같은 시군구)에서 결제할 확률 — 집/직장 정확 동 대신. */
+        private double adjacentDongProb = 0.25;
+        /** 원거리 출장/여행 주기(주) 범위 — 이 간격마다 여행일이 발생. */
+        private int[] travelIntervalWeeks = {1, 12};
+        /** 여행 1회당 지속일 범위. */
+        private int[] travelDurationDays = {1, 2};
+        /** 직장인의 '직장 시간대'(점심~저녁) 시(hour) 경계 [start,end) — 이 구간 평일엔 직장 앵커. */
+        private int[] workHours = {11, 20};
+
+        public double getBubunProb() { return bubunProb; }
+        public void setBubunProb(double v) { this.bubunProb = v; }
+        public double getAdjacentDongProb() { return adjacentDongProb; }
+        public void setAdjacentDongProb(double v) { this.adjacentDongProb = v; }
+        public int[] getTravelIntervalWeeks() { return travelIntervalWeeks; }
+        public void setTravelIntervalWeeks(int[] v) { this.travelIntervalWeeks = v; }
+        public int[] getTravelDurationDays() { return travelDurationDays; }
+        public void setTravelDurationDays(int[] v) { this.travelDurationDays = v; }
+        public int[] getWorkHours() { return workHours; }
+        public void setWorkHours(int[] v) { this.workHours = v; }
+    }
+
     /** 시작일 구간(매일 단위 분리). 사용자 결정: 2026-07-01 ~ 2026-09-01. */
     public static class StartDate {
         private LocalDate from = LocalDate.parse("2026-07-01");
@@ -276,4 +310,8 @@ public class GenerationProperties {
     public void setSplitRatios(SplitRatios splitRatios) { this.splitRatios = splitRatios; }
     public String getCatalogPath() { return catalogPath; }
     public void setCatalogPath(String catalogPath) { this.catalogPath = catalogPath; }
+    public String getMerchantCsvPath() { return merchantCsvPath; }
+    public void setMerchantCsvPath(String merchantCsvPath) { this.merchantCsvPath = merchantCsvPath; }
+    public Address getAddress() { return address; }
+    public void setAddress(Address address) { this.address = address; }
 }

@@ -40,8 +40,8 @@ public class GenerationRunner implements ApplicationRunner {
             "mydata_payment_received_benefit_amount, mydata_payment_channel, mydata_payment_product_name, " +
             "mydata_payment_product_price, mydata_payment_quantity, mydata_payment_waste_label, " +
             "mydata_payment_discretionary_score, mydata_payment_location_address, " +
-            "mydata_payment_location_lat, mydata_payment_location_lng) " +
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            "mydata_payment_location_lat, mydata_payment_location_lng, mydata_payment_business_number) " +
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     private static final String ACCOUNT_SQL = "INSERT INTO mydata_account " +
             "(mydata_account_id, mydata_user_id, mydata_account_bank, mydata_account_product, " +
             "mydata_account_salary_payer, mydata_account_opened_date, mydata_account_salary, " +
@@ -135,7 +135,63 @@ public class GenerationRunner implements ApplicationRunner {
         }
         log.info("[generation] 완료 — 사용자 {}명 · 결제 {}건 · {}s",
                 users.size(), payTotal, (System.currentTimeMillis() - t0) / 1000);
+        populateMerchants();
         logSummary();
+    }
+
+    /**
+     * 고유 가맹점 집계 — 결제에서 사업자번호 DISTINCT로 {가맹점명·지번주소·좌표}를 뽑아 mydata_merchant에 채운다.
+     * 번호·주소·좌표는 신원에서 결정론 파생돼 사업자번호당 상수라, 대표 표시명(MIN)만 골라도 일관된다.
+     * 사용자의 '번호→주소' 조회와 정리 CSV의 소스.
+     */
+    private void populateMerchants() {
+        jdbc.update("DELETE FROM mydata_merchant");
+        int n = jdbc.update(
+                "INSERT INTO mydata_merchant (business_number, merchant_name, address, lat, lng, online) " +
+                "SELECT mydata_payment_business_number, MIN(mydata_payment_merchant_name), " +
+                "MIN(mydata_payment_location_address), MIN(mydata_payment_location_lat), " +
+                "MIN(mydata_payment_location_lng), " +
+                "MAX(CASE WHEN mydata_payment_channel = 'ONLINE' THEN 1 ELSE 0 END) " +
+                "FROM mydata_payment WHERE mydata_payment_business_number IS NOT NULL " +
+                "GROUP BY mydata_payment_business_number");
+        log.info("[generation] 고유 가맹점 {}건 집계 → mydata_merchant", n);
+        if (!props.getMerchantCsvPath().isBlank()) writeMerchantCsv(props.getMerchantCsvPath());
+    }
+
+    /** 정리 CSV(가맹점명·사업자등록번호·주소·온라인) 작성 — mydata_merchant를 스트리밍해 쓴다. */
+    private void writeMerchantCsv(String path) {
+        try {
+            java.nio.file.Path out = java.nio.file.Path.of(path);
+            if (out.getParent() != null) java.nio.file.Files.createDirectories(out.getParent());
+            java.io.BufferedWriter w = java.nio.file.Files.newBufferedWriter(
+                    out, java.nio.charset.StandardCharsets.UTF_8);
+            w.write("가맹점명,사업자등록번호,주소,온라인\n");
+            int[] cnt = {0};
+            jdbc.query("SELECT merchant_name, business_number, address, online FROM mydata_merchant " +
+                    "ORDER BY business_number", (RowCallbackHandler) rs -> {
+                try {
+                    String biz = rs.getString("business_number");
+                    String bizFmt = (biz != null && biz.length() == 10)
+                            ? biz.substring(0, 3) + "-" + biz.substring(3, 5) + "-" + biz.substring(5) : biz;
+                    w.write(csvField(rs.getString("merchant_name")) + "," + bizFmt + ","
+                            + csvField(rs.getString("address")) + "," + (rs.getBoolean("online") ? "Y" : "N") + "\n");
+                    cnt[0]++;
+                } catch (java.io.IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            w.close();
+            log.info("[generation] 정리 CSV {}건 → {}", cnt[0], path);
+        } catch (Exception e) {
+            log.warn("[generation] 정리 CSV 작성 실패: {}", e.getMessage());
+        }
+    }
+
+    /** CSV 필드 이스케이프(콤마·따옴표 포함 시 큰따옴표로 감싸고 내부 따옴표는 중복). */
+    private static String csvField(String s) {
+        if (s == null) return "";
+        return (s.contains(",") || s.contains("\"") || s.contains("\n"))
+                ? "\"" + s.replace("\"", "\"\"") + "\"" : s;
     }
 
     /** 생성 후 분포 리포트(검증용) — 로그로 페르소나·낭비율·채널·표본을 남긴다. */
@@ -287,7 +343,8 @@ public class GenerationRunner implements ApplicationRunner {
             batch.add(new Object[]{
                     payId, cardId, Timestamp.valueOf(t.date()), t.category1(), t.category2(),
                     amount, t.merchant(), 0, t.channel(), t.productName(), t.productPrice(),
-                    t.quantity(), t.wasteLabel(), t.discretionaryScore(), t.address(), t.lat(), t.lon()
+                    t.quantity(), t.wasteLabel(), t.discretionaryScore(), t.address(), t.lat(), t.lon(),
+                    t.businessNumber()
             });
         }
         jdbc.batchUpdate(PAY_SQL, batch);
