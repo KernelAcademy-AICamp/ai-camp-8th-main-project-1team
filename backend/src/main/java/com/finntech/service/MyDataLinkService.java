@@ -218,7 +218,7 @@ public class MyDataLinkService {
         return userPaymentRepository.findByUserIdAndCardSerialOrderByPaymentDateDesc(userId, cardSerial).stream()
                 .map(payment -> new PaymentRow(payment.getPaymentId(), payment.getPaymentDate(),
                         payment.getCategory1(), payment.getCategory2(), payment.getAmount(),
-                        payment.getMerchantName(), payment.getReceivedBenefit()))
+                        payment.getMerchantName(), payment.getReceivedBenefit(), payment.getBusinessNumber()))
                 .toList();
     }
 
@@ -240,7 +240,8 @@ public class MyDataLinkService {
                             payment.getMerchantName(), payment.getReceivedBenefit(),
                             card != null ? card.getCardName() : null,
                             card != null ? card.getCardColor() : null,
-                            card != null ? card.getCompanyName() : null);
+                            card != null ? card.getCompanyName() : null,
+                            payment.getBusinessNumber());
                 })
                 .toList();
     }
@@ -261,10 +262,12 @@ public class MyDataLinkService {
                              boolean requirementMet, int toRequirement, int earnedThisMonth) {}
 
     public record PaymentRow(String paymentId, java.time.LocalDateTime date, String category1,
-                             String category2, int amount, String merchantName, int receivedBenefit) {}
+                             String category2, int amount, String merchantName, int receivedBenefit,
+                             String businessNumber) {}
 
-    /** 결제내역 모아보기 1건 — 결제 정보 + 어느 카드(실카드명·색·카드사)인지. */
+    /** 결제내역 모아보기 1건 — 결제 정보 + 어느 카드(실카드명·색·카드사)인지 + 가맹점 사업자번호. */
     public record PaymentHistoryRow(String paymentId, java.time.LocalDateTime date, String category1,
                                     String category2, int amount, String merchantName, int receivedBenefit,
-                                    String cardName, String cardColor, String companyName) {}
+                                    String cardName, String cardColor, String companyName,
+                                    String businessNumber) {}
 }

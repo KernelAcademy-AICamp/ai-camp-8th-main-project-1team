@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { api, catLabel, type MyCard, type MyPayment, type MyPaymentHistory } from './api';
+import { api, catLabel, type MyCard, type MyMerchant, type MyPayment, type MyPaymentHistory } from './api';
 
 const won = (n: number) => Math.round(n).toLocaleString('ko-KR') + '원';
 const man = (n: number) => `${Math.round((n / 10000) * 10) / 10}만`;
+/** 사업자등록번호 10자리 → XXX-YY-ZZZZA 표시. */
+const bizFmt = (b: string) => (b.length === 10 ? `${b.slice(0, 3)}-${b.slice(3, 5)}-${b.slice(5)}` : b);
 
 /** 내 카드 (§13-6) — 마이데이터로 불러온 카드별 실적 진행률·받은/더 받을 혜택 + 카드 상세 결제내역. */
 export function MyCardPanel({ userId }: { userId: number }) {
@@ -13,6 +15,23 @@ export function MyCardPanel({ userId }: { userId: number }) {
   const [history, setHistory] = useState<MyPaymentHistory[] | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  // 사업자번호 → 조회한 가맹점(주소) 캐시. 'loading' = 조회 중.
+  const [merchantOf, setMerchantOf] = useState<Record<string, MyMerchant | 'loading'>>({});
+
+  async function lookupMerchant(bizno: string) {
+    if (merchantOf[bizno]) return;
+    setMerchantOf((prev) => ({ ...prev, [bizno]: 'loading' }));
+    try {
+      const m = await api.merchant(bizno);
+      setMerchantOf((prev) => {
+        const next = { ...prev };
+        if (m) next[bizno] = m; else delete next[bizno];
+        return next;
+      });
+    } catch {
+      setMerchantOf((prev) => { const next = { ...prev }; delete next[bizno]; return next; });
+    }
+  }
 
   useEffect(() => {
     api.myCards(userId).then(setCards).catch((e) => setErr(String(e)));
@@ -147,23 +166,41 @@ export function MyCardPanel({ userId }: { userId: number }) {
                     <span className="muted small">{rows.length}건 · {won(total)}</span>
                   </div>
                   <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {rows.map((p) => (
-                      <li key={p.paymentId} style={{ display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '5px 2px', fontSize: '.86rem' }}>
-                        <span className="muted" style={{ width: 42, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
-                          {p.date.slice(5, 10).replace('-', '.')}</span>
-                        <span style={{ width: 60, flexShrink: 0 }}>{catLabel(p.category2 ?? p.category1)}</span>
-                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {p.merchantName}</span>
-                        {p.cardName && (
-                          <span style={{ flexShrink: 0, fontSize: '.72rem', padding: '1px 6px', borderRadius: 999,
-                            border: `1px solid ${p.cardColor || '#ccc'}`, color: p.cardColor || '#666' }}>
-                            {p.cardName}</span>
+                    {rows.map((p) => {
+                      const m = p.businessNumber ? merchantOf[p.businessNumber] : undefined;
+                      return (
+                      <li key={p.paymentId} style={{ padding: '5px 2px', fontSize: '.86rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span className="muted" style={{ width: 42, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                            {p.date.slice(5, 10).replace('-', '.')}</span>
+                          <span style={{ width: 60, flexShrink: 0 }}>{catLabel(p.category2 ?? p.category1)}</span>
+                          <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {p.merchantName}</span>
+                          {p.cardName && (
+                            <span style={{ flexShrink: 0, fontSize: '.72rem', padding: '1px 6px', borderRadius: 999,
+                              border: `1px solid ${p.cardColor || '#ccc'}`, color: p.cardColor || '#666' }}>
+                              {p.cardName}</span>
+                          )}
+                          <span style={{ width: 78, flexShrink: 0, textAlign: 'right', fontWeight: 600,
+                            fontVariantNumeric: 'tabular-nums' }}>{won(p.amount)}</span>
+                        </div>
+                        {p.businessNumber && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 50, marginTop: 2 }}>
+                            <button type="button" className="btn btn-ghost btn-sm"
+                              style={{ padding: '0 6px', fontSize: '.7rem', fontVariantNumeric: 'tabular-nums' }}
+                              onClick={() => void lookupMerchant(p.businessNumber!)}
+                              title="사업자등록번호로 가맹점 주소 조회">
+                              사업자 {bizFmt(p.businessNumber)}
+                            </button>
+                            {m === 'loading' && <span className="muted" style={{ fontSize: '.7rem' }}>주소 조회중…</span>}
+                            {m && m !== 'loading' && (
+                              <span className="muted" style={{ fontSize: '.7rem' }}>📍 {m.address}{m.online ? ' (본사)' : ''}</span>
+                            )}
+                          </div>
                         )}
-                        <span style={{ width: 78, flexShrink: 0, textAlign: 'right', fontWeight: 600,
-                          fontVariantNumeric: 'tabular-nums' }}>{won(p.amount)}</span>
                       </li>
-                    ))}
+                      );
+                    })}
                   </ul>
                 </div>
               );

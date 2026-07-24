@@ -35,9 +35,13 @@ public class MerchantRegistry {
         this.bubunProb = bubunProb;
     }
 
-    /** 오프라인 가맹점(정규신원 = base+동) → 고정 번호·그 동의 지번주소·좌표. */
+    /**
+     * 오프라인 가맹점(정규신원 = base + 전체 행정구역) → 고정 번호·그 동의 지번주소·좌표.
+     * <b>신원 키는 시도+시군구+동 전체</b>를 쓴다 — 동 이름만 쓰면 '중앙동'처럼 전국 중복 동명 때문에
+     * 서로 다른 도시의 같은 상호가 같은 사업자번호를 받으면서 주소는 달라지는 중복배정이 생긴다.
+     */
     public Merchant resolveOffline(String canonicalBase, String canonicalName, RegionEntry region) {
-        String key = canonicalBase + "|" + region.dong();
+        String key = canonicalBase + "|" + region.sido() + " " + region.sigungu() + " " + region.dong();
         String biz = MerchantMinter.businessNumber(masterSeed, key);
         MerchantMinter.Jibun jibun = MerchantMinter.jibun(masterSeed, key, bubunProb);
         String addr = MerchantMinter.address(region, jibun);
