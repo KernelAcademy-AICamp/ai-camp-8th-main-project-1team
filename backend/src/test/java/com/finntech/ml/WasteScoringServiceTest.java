@@ -27,7 +27,7 @@ class WasteScoringServiceTest {
     @Autowired UserSpendingOverrideRepository overrideRepository;
 
     private UserPayment pay(String id, long uid, String c1, String c2, int amt, LocalDateTime when) {
-        return new UserPayment(id, uid, "0000-0000-0000-0001", 1L, when, c1, c2, amt, "가맹점", 0);
+        return new UserPayment(id, uid, "0000-0000-0000-0001", 1L, when, c1, c2, amt, "가맹점", 0, null);
     }
 
     @Test
@@ -57,7 +57,7 @@ class WasteScoringServiceTest {
     }
 
     @Test
-    void 개인화_override가_ML판정을_덮어쓴다() {
+    void personalOverrideBeatsMlJudgment() {
         assumeTrue(wasteScoringService.modelReady(), "모델 미배치 → skip");
         long uid = 990002L;
         userPaymentRepository.deleteByUserId(uid);

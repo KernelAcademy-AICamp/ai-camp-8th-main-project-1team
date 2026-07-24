@@ -78,6 +78,12 @@ public class MyDataController {
         return linkService.account(userId);
     }
 
+    /** 가맹점 조회(번호→주소) — 결제에 실린 사업자번호로 가맹점명·지번주소를 조회. 없으면 null. */
+    @GetMapping("/merchant/{businessNumber}")
+    public com.finntech.service.MyDataResponses.MerchantView merchant(@PathVariable String businessNumber) {
+        return linkService.merchant(businessNumber);
+    }
+
     public record VerifyRequest(Long userId, String name, String social7, String phone) {}
     public record LinkRequest(Long userId, List<Long> companyIds) {}
 }

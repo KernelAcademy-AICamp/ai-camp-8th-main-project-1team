@@ -14,11 +14,11 @@ class WasteFeatureExtractorTest {
 
     private UserPayment pay(String cat2, int amount, LocalDateTime when) {
         return new UserPayment("p" + amount + when, 1L, "0000-0000-0000-0001", 1L, when,
-                cat2.equals("카페") ? "카페/간식" : cat2, cat2, amount, "가맹점", 0);
+                cat2.equals("카페") ? "카페/간식" : cat2, cat2, amount, "가맹점", 0, null);
     }
 
     @Test
-    void 사용자_집계가_정의대로_계산된다() {
+    void userStatsComputedAsDefined() {
         var payments = List.of(
                 pay("카페", 5000, LocalDateTime.of(2026, 7, 10, 14, 0)),
                 pay("카페", 7000, LocalDateTime.of(2026, 7, 11, 15, 0)),
@@ -31,7 +31,7 @@ class WasteFeatureExtractorTest {
     }
 
     @Test
-    void 거래_특징이_학습과_동일_키_값으로_생성된다() {
+    void transactionFeaturesMatchTrainingKeysAndValues() {
         var payments = List.of(
                 pay("카페", 5000, LocalDateTime.of(2026, 7, 10, 14, 0)),
                 pay("카페", 7000, LocalDateTime.of(2026, 7, 11, 15, 0)));
