@@ -26,9 +26,11 @@ public class CatalogSampler {
     private final Map<String, List<BrandEntry>> brands;
     private final Map<String, List<ProductEntry>> products;
     private final Map<String, List<String>> independents;
+    private final MerchantRegistry registry;
 
     @SuppressWarnings("unchecked")
-    public CatalogSampler(CatalogLoader catalog) {
+    public CatalogSampler(CatalogLoader catalog, MerchantRegistry registry) {
+        this.registry = registry;
         this.brands = catalog.brands();
         this.products = catalog.products();
         this.independents = (Map<String, List<String>>) catalog.independents().get("namePoolByCategory2");
@@ -60,13 +62,18 @@ public class CatalogSampler {
         return cats.get(cats.size() - 1);
     }
 
-    /** 가맹점 해석 결과: 상호·채널·위치(온라인 null). */
-    public record ResolvedMerchant(String name, String channel, Double lat, Double lon, String address) {}
+    /** 가맹점 해석 결과: 표시상호(명세서 표기)·채널·고정 좌표·지번주소·사업자등록번호. */
+    public record ResolvedMerchant(String name, String channel, Double lat, Double lon,
+                                   String address, String businessNumber) {}
 
     /** 상품 해석 결과: 품목명·단가·재량성. */
     public record ResolvedProduct(String name, int unitPrice, double discretionary) {}
 
-    /** category2 + 앵커 행정동(오프라인 위치) → 가맹점. anchor는 온라인이면 무시. */
+    /**
+     * category2 + 앵커 행정동 → 가맹점. 표시상호(display, 명세서 표기 노이즈 포함)와 정규신원(base+동)을 분리해,
+     * 사업자번호·주소·좌표는 신원에서 결정론 파생({@link MerchantRegistry})한다 → 같은 점포는 항상 같은 번호·주소.
+     * 온라인이거나 앵커가 없으면 전국 본사(HQ) 결제로 처리.
+     */
     public ResolvedMerchant resolveMerchant(String category2, RegionEntry anchor, Random r) {
         CatalogContext ctx = ctxByCat2.get(category2);
         String source = ctx == null ? "INDEPENDENT" : ctx.merchantSource();
@@ -76,24 +83,36 @@ public class CatalogSampler {
             case "MIXED" -> r.nextBoolean();
             default -> false; // INDEPENDENT
         };
-        String name;
+
+        String base;         // 정규 신원의 이름 부분(정식 브랜드명 또는 독립상호)
+        String display;      // 결제 명세서 표시상호(forms 노이즈·동점 포함 가능)
+        boolean branchable = false;
         if (useBrand && hasBrands(category2)) {
-            name = brandName(category2, anchor, r);
+            BrandEntry b = pick(brands.get(category2), r);
+            base = b.name();
+            branchable = b.branchable();
+            display = displayName(b, branchable, anchor, r);
         } else if (hasIndependents(category2)) {
-            name = pick(independents.get(category2), r);
+            base = pick(independents.get(category2), r);
+            display = base;
         } else if (hasBrands(category2)) {
-            name = brandName(category2, anchor, r);
+            BrandEntry b = pick(brands.get(category2), r);
+            base = b.name();
+            branchable = b.branchable();
+            display = displayName(b, branchable, anchor, r);
         } else {
-            name = category2; // 최후 폴백
+            base = category2;   // 최후 폴백
+            display = category2;
         }
+
         boolean online = "ONLINE".equals(channel);
         if (online || anchor == null) {
-            return new ResolvedMerchant(name, channel, null, null, null);
+            Merchant m = registry.resolveOnline(base, base);   // 온라인 정규명 = base(전국 HQ)
+            return new ResolvedMerchant(display, channel, m.lat(), m.lon(), m.address(), m.businessNumber());
         }
-        double lat = anchor.lat() + r.nextGaussian() * 0.012;   // ~1km 지터
-        double lon = anchor.lon() + r.nextGaussian() * 0.012;
-        String address = anchor.sido() + " " + anchor.sigungu() + " " + anchor.dong();
-        return new ResolvedMerchant(name, channel, round5(lat), round5(lon), address);
+        String canonicalName = branchable ? base + " " + anchor.dong() + "점" : base;
+        Merchant m = registry.resolveOffline(base, canonicalName, anchor);
+        return new ResolvedMerchant(display, channel, m.lat(), m.lon(), m.address(), m.businessNumber());
     }
 
     /** category2 → 상품(품목·단가·재량성). 단가는 [저,고] 균등. */
@@ -109,17 +128,18 @@ public class CatalogSampler {
     private boolean hasBrands(String c) { List<BrandEntry> b = brands.get(c); return b != null && !b.isEmpty(); }
     private boolean hasIndependents(String c) { List<String> i = independents.get(c); return i != null && !i.isEmpty(); }
 
-    /** 브랜드 상호: branchable면 "브랜드 {동}점"(앵커 동), 아니면 표기 변형(forms) 중 택. */
-    private String brandName(String category2, RegionEntry anchor, Random r) {
-        BrandEntry b = pick(brands.get(category2), r);
-        if (b.branchable() && anchor != null) {
-            String base = (!b.forms().isEmpty() && r.nextDouble() < 0.25) ? pick(b.forms(), r) : b.name();
-            return base + " " + anchor.dong() + "점";
+    /**
+     * 결제 명세서 표시상호: branchable면 "브랜드 {동}점"(앵커 동), 아니면 표기 변형(forms) 중 택.
+     * <b>표시상호만</b> 흔들고(명세서 노이즈 재현), 사업자번호·주소는 정식 base+동에서 파생하므로 같은 점포는 일관.
+     */
+    private String displayName(BrandEntry b, boolean branchable, RegionEntry anchor, Random r) {
+        if (branchable && anchor != null) {
+            String shown = (!b.forms().isEmpty() && r.nextDouble() < 0.25) ? pick(b.forms(), r) : b.name();
+            return shown + " " + anchor.dong() + "점";
         }
         if (!b.forms().isEmpty() && r.nextDouble() < 0.35) return pick(b.forms(), r);
         return b.name();
     }
 
     private static <T> T pick(List<T> list, Random r) { return list.get(r.nextInt(list.size())); }
-    private static double round5(double v) { return Math.round(v * 1e5) / 1e5; }
 }

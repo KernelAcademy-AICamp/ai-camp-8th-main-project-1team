@@ -4,6 +4,9 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
+		<!-- 4.0.x 최신 패치에 고정. 4.1.0은 임베디드 H2 자동설정의 Hibernate Dialect 판정이 바뀌어
+		     (h2 dev 프로파일은 datasource url 미지정 → 임베디드 자동구성 의존) 컨텍스트 로딩이 깨진다
+		     ("Unable to determine Dialect without JDBC metadata"). 마이그레이션 전까지 4.0.7 유지. -->
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>4.0.7</version>
 		<relativePath/> <!-- lookup parent from repository -->

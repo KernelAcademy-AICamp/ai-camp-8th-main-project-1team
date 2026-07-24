@@ -41,13 +41,14 @@ class MyDataCutoffServingTest {
     @Autowired MyDataPaymentRepository paymentRepository;
     @Autowired CardCompanyRepository companyRepository;
     @Autowired com.finntech.mydata.repository.MyDataAccountRepository accountRepository;
+    @Autowired com.finntech.mydata.repository.MyDataMerchantRepository merchantRepository;
 
     private static final LocalDateTime EARLY = LocalDateTime.parse("2026-07-21T23:59:59"); // 시드 기준일 끝
     private static final LocalDateTime LATE  = LocalDateTime.parse("2026-12-31T23:59:59"); // 미래로 전진
 
     private MyDataService serviceAt(LocalDateTime now) {
         return new MyDataService(userRepository, cardRepository, paymentRepository, companyRepository,
-                accountRepository, now.toString(), "2026-07-21", 0);
+                accountRepository, merchantRepository, now.toString(), "2026-07-21", 0);
     }
 
     private int totalPayments(List<CardView> cards) {
@@ -56,7 +57,7 @@ class MyDataCutoffServingTest {
 
     @Test
     @Transactional  // 수동 생성 서비스는 @Transactional 프록시가 없어 지연로딩 세션을 테스트가 연다.
-    void 커트오프는_미래결제를_now_전진_시에만_노출한다() {
+    void cutoffExposesFuturePaymentsOnlyAsNowAdvances() {
         // 카드를 가진 (userId, companyId) 한 쌍을 실제 데이터에서 고른다.
         Object[] pick = findUserWithCards();
         String userId = (String) pick[0];

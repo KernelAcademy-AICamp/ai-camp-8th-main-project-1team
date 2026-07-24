@@ -3,6 +3,7 @@ package com.finntech.mydata.web;
 import com.finntech.mydata.dto.ApiResponse;
 import com.finntech.mydata.dto.MyDataDtos.AccountView;
 import com.finntech.mydata.dto.MyDataDtos.CardView;
+import com.finntech.mydata.dto.MyDataDtos.MerchantView;
 import com.finntech.mydata.service.MyDataService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -50,5 +51,11 @@ public class MyDataController {
     @GetMapping("/account")
     public ApiResponse<AccountView> getAccount(@RequestParam String userId) {
         return ApiResponse.ok(myDataService.findAccount(userId).orElse(null));
+    }
+
+    /** 가맹점 조회(번호→주소) — 사용자가 결제의 사업자번호로 가맹점명·지번주소를 조회. 없으면 data=null. */
+    @GetMapping("/merchant/{businessNumber}")
+    public ApiResponse<MerchantView> getMerchant(@PathVariable String businessNumber) {
+        return ApiResponse.ok(myDataService.findMerchant(businessNumber).orElse(null));
     }
 }

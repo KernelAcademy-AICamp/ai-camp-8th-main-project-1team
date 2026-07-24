@@ -4,6 +4,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
+		<!-- 4.0.x 최신 패치에 고정. 4.1.0은 임베디드 H2 자동설정의 Hibernate Dialect 판정 변경으로
+		     h2 프로파일 컨텍스트 로딩이 깨진다(backend와 동일 근본원인). 마이그레이션 전까지 4.0.7 유지. -->
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>4.0.7</version>
 		<relativePath/>
@@ -52,7 +54,7 @@
 		<dependency>
 			<groupId>net.datafaker</groupId>
 			<artifactId>datafaker</artifactId>
-			<version>2.4.2</version>
+			<version>2.7.0</version>
 		</dependency>
 		<!-- 스키마 마이그레이션(11M 그릇). h2 프로파일은 비활성(ddl-auto 유지), mysql 프로파일만 활성.
 		     Spring Boot 4는 자동설정을 기술별 모듈로 분리 → Flyway 통합 모듈(spring-boot-flyway)이

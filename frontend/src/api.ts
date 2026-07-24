@@ -332,6 +332,8 @@ export interface MyPayment {
   amount: number;
   merchantName: string | null;
   receivedBenefit: number;
+  /** 가맹점 사업자등록번호(10자리). 이 번호로 가맹점 주소를 조회한다. */
+  businessNumber: string | null;
 }
 /** 결제내역 모아보기 1건(§13-11) — 결제 정보 + 어느 카드(실카드명·색·카드사)인지. */
 export interface MyPaymentHistory {
@@ -345,6 +347,17 @@ export interface MyPaymentHistory {
   cardName: string | null;
   cardColor: string | null;
   companyName: string | null;
+  /** 가맹점 사업자등록번호(10자리). */
+  businessNumber: string | null;
+}
+/** 가맹점 조회(번호→주소) — 사업자번호로 가맹점명·지번주소를 얻는다(§13). */
+export interface MyMerchant {
+  businessNumber: string;
+  merchantName: string | null;
+  address: string | null;
+  lat: number | null;
+  lng: number | null;
+  online: boolean;
 }
 /** 입출금 통장(§13-11 경제 모델) — 은행·계좌·월급·잔액 + 최근 입출금 내역. */
 export interface MyAccountTxn { date: string; type: 'DEPOSIT' | 'WITHDRAWAL'; amount: number; description: string; }
@@ -529,6 +542,9 @@ export const api = {
     get<MyPaymentHistory[]>(`/api/mydata/payments?userId=${userId}&months=${months}`),
   /** 입출금 통장(§13-11 경제 모델) — 은행·계좌번호·통장명·월급·잔액 + 입출금 내역. 통장 없으면 null. */
   account: (userId: number) => get<MyAccount | null>(`/api/mydata/account?userId=${userId}`),
+  /** 가맹점 조회(번호→주소) — 결제에 실린 사업자번호로 가맹점명·지번주소를 조회한다(§13). 없으면 null. */
+  merchant: (businessNumber: string) =>
+    get<MyMerchant | null>(`/api/mydata/merchant/${encodeURIComponent(businessNumber)}`),
   /** 실시간 증분 동기화(§13-11, W2) — 마지막 동기화 이후 새 결제만 당겨온다. */
   syncMyData: (userId: number) =>
     post<{ newPayments: number }>(`/api/mydata/sync?userId=${userId}`),
