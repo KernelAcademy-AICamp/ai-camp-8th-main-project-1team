@@ -11,6 +11,7 @@ import { PointsPanel } from './PointsPanel';
 import { ImpulseSaverPanel } from './ImpulseSaverPanel';
 import { Onboarding } from './Onboarding';
 import { MyCardPanel } from './MyCardPanel';
+import { ConsumptionAnalysisPanel } from './ConsumptionAnalysisPanel';
 import { DonutChart, DonutLegend, BarChart } from './Charts';
 import { DEMO_USERS } from './demoUsers';
 import './App.css';
@@ -553,6 +554,8 @@ export default function App() {
         {/* ── 내 소비 (차트 + 리포트 + 추천 + 이상소비) ── */}
         {tab === 'spend' && (
           <div className="view">
+            {/* 소비 분석 ②③④⑤ — 이상소비지수·절약후보·반복결제·패턴 */}
+            <ConsumptionAnalysisPanel key={userId} userId={userId} />
             <section className="section card card-pad" aria-labelledby="h-donut">
               <div className="section-head" style={{ marginBottom: 12 }}>
                 <h2 id="h-donut">카테고리별 소비</h2>

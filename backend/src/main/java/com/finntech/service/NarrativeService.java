@@ -1,6 +1,8 @@
 package com.finntech.service;
 
 import com.finntech.engine.AnalysisResult;
+import com.finntech.engine.CutCandidate;
+import com.finntech.engine.UserProfile;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -79,6 +81,45 @@ public class NarrativeService {
         return callGemini(prompt, template);
     }
 
+    /** 절약 후보(⑤) 권유 문장. 개별 결제가 아니라 category2 집계치만 전달. */
+    public Narrative explainCutCandidate(CutCandidate c) {
+        String template = cutCandidateTemplate(c);
+        if (!aiEnabled()) return new Narrative(template, "TEMPLATE");
+
+        String prompt = """
+                아래는 이미 계산이 끝난 '줄일 수 있는 소비' 후보입니다.
+                숫자를 새로 만들거나 바꾸지 말고, 주어진 숫자만 사용해 1~2문장으로 부드럽게 권유하세요.
+                가입 권유나 강요 없이, 실천 아이디어를 한 가지 곁들이세요.
+
+                카테고리: %s
+                유형: %s (제거가능=전액 절감 / 최적화가능=과한 부분만 절감)
+                최근 지출: %s원
+                예상 절감액: %s원
+                """.formatted(c.category2(), c.type(),
+                String.format("%,d", c.monthlySpend()), String.format("%,d", c.estimatedSaving()));
+
+        return callGemini(prompt, template);
+    }
+
+    /** 소비 프로필(④) 요약 문장. 이상소비지수와 성분별 기여점수 등 집계치만 전달. */
+    public Narrative summarizeProfile(UserProfile p) {
+        String template = profileTemplate(p);
+        if (!aiEnabled()) return new Narrative(template, "TEMPLATE");
+
+        String prompt = """
+                아래는 이미 계산이 끝난 소비 프로필 집계치입니다.
+                점수를 바꾸지 말고, 주어진 숫자만 사용해 2~3문장으로 요약하세요.
+                겁주지 말고, 어떤 요인이 큰지와 다음 한 걸음을 제안하세요.
+
+                이상소비지수: %d/100
+                성분별 기여점수: %s
+                고정 반복결제 수: %d
+                습관성(루틴) 소비 수: %d
+                """.formatted(p.abnormalityIndex(), p.contributionPoints(), p.fixedCount(), p.routineCount());
+
+        return callGemini(prompt, template);
+    }
+
     private Narrative callGemini(String prompt, String fallback) {
         try {
             Map<?, ?> response = restClient.post()
@@ -123,6 +164,20 @@ public class NarrativeService {
         return "이번 기간 총 " + total + "원을 쓰셨습니다. "
                 + top.displayName() + " 지출이 전체의 " + top.spendPercent()
                 + "%로 가장 큰 비중을 차지했습니다. 이 항목부터 줄여보는 건 어떨까요?";
+    }
+
+    /** 절약 후보 폴백 문장 — 코드가 만든 근거({@code reason})를 그대로 쓴다(원칙 1). */
+    private String cutCandidateTemplate(CutCandidate c) {
+        return c.reason() + " 이 항목부터 조금씩 줄여보는 건 어떨까요?";
+    }
+
+    /** 프로필 폴백 문장 — 최대 기여 성분과 반복결제 수를 사실대로 전한다. */
+    private String profileTemplate(UserProfile p) {
+        String topFactor = p.contributionPoints().entrySet().stream()
+                .max(java.util.Map.Entry.comparingByValue())
+                .map(java.util.Map.Entry::getKey).orElse("특이 요인 없음");
+        return "이상소비지수는 " + p.abnormalityIndex() + "점입니다. 가장 큰 요인은 '" + topFactor
+                + "'이고, 고정 반복결제 " + p.fixedCount() + "건·습관성 소비 " + p.routineCount() + "건이 확인됐어요.";
     }
 
     /** 소수점과 자릿수 구분 없이 그대로 내보내면 "13310544.00원"처럼 읽히지 않는다. */
