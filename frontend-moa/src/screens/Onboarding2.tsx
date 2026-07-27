@@ -53,7 +53,7 @@ export function Onboarding2() {
                     <span>{c.reason}</span>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <b style={{ color: 'var(--green)', fontSize: 15 }}>−{won(c.monthlyAmount)}</b>
+                    <b style={{ color: 'var(--green)', fontSize: 15 }}>−{won(c.monthlySpend)}</b>
                     <div style={{ fontSize: 11, color: 'var(--t3)' }}>최대(100%)</div>
                   </div>
                 </div>

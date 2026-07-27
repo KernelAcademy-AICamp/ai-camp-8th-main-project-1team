@@ -23,7 +23,7 @@ export function buildKeepFromDraft(
 ): KeepState {
   const byName = new Map(candidates.map((c) => [c.category2, c]))
   const categories: KeepCategory[] = cutCats.map((name) => {
-    const base = byName.get(name)?.monthlyAmount ?? 100_000
+    const base = byName.get(name)?.monthlySpend ?? 100_000
     const icon = iconFor(name)
     return {
       key: name, name, icon, iconBg: bgFor(icon),

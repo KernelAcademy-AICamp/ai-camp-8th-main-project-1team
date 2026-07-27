@@ -109,20 +109,20 @@ export function mockAnalysis(): AnalysisSummary {
       topCategory1: '배달·외식',
     },
     recurring: [
-      { merchantName: '넷플릭스', category2: '구독·OTT', amount: 13_500, type: 'FIXED', dayOfMonth: 17 },
-      { merchantName: 'SKT 통신요금', category2: '통신', amount: 55_000, type: 'FIXED', dayOfMonth: 25 },
-      { merchantName: '배달의민족', category2: '배달·외식', amount: 210_000, type: 'ROUTINE', dayOfMonth: null },
-      { merchantName: '스타벅스', category2: '카페·간식', amount: 72_000, type: 'ROUTINE', dayOfMonth: null },
+      { merchantName: '넷플릭스', category2: '구독·OTT', representativeAmount: 13_500, type: 'FIXED', periodDays: 30, nextExpected: '2026-08-17' },
+      { merchantName: 'SKT 통신요금', category2: '통신', representativeAmount: 55_000, type: 'FIXED', periodDays: 30, nextExpected: '2026-08-25' },
+      { merchantName: '배달의민족', category2: '배달·외식', representativeAmount: 210_000, type: 'ROUTINE', periodDays: null, nextExpected: null },
+      { merchantName: '스타벅스', category2: '카페·간식', representativeAmount: 72_000, type: 'ROUTINE', periodDays: null, nextExpected: null },
     ],
     pattern: {
       amountByDayOfWeek: { MONDAY: 32000, TUESDAY: 28000, WEDNESDAY: 30000, THURSDAY: 41000, FRIDAY: 88000, SATURDAY: 64000, SUNDAY: 47000 },
       amountByDaypart: { 아침: 18000, 점심: 61000, 저녁: 96000, 심야: 74000 },
     },
     cutCandidates: [
-      { category2: '배달·외식', type: 'OPTIMIZABLE', monthlyAmount: 250_000, estimatedSaving: 125_000, reason: '금요일 밤에 배달이 몰려요' },
-      { category2: '카페·간식', type: 'OPTIMIZABLE', monthlyAmount: 80_000, estimatedSaving: 40_000, reason: '거의 매일 카페를 이용해요' },
-      { category2: '택시', type: 'REMOVABLE', monthlyAmount: 60_000, estimatedSaving: 30_000, reason: '심야 택시가 잦아요' },
-      { category2: '편의점', type: 'OPTIMIZABLE', monthlyAmount: 50_000, estimatedSaving: 20_000, reason: '습관적 편의점 결제가 보여요' },
+      { category2: '배달·외식', type: 'OPTIMIZABLE', monthlySpend: 250_000, estimatedSaving: 125_000, reason: '금요일 밤에 배달이 몰려요' },
+      { category2: '카페·간식', type: 'OPTIMIZABLE', monthlySpend: 80_000, estimatedSaving: 40_000, reason: '거의 매일 카페를 이용해요' },
+      { category2: '택시', type: 'REMOVABLE', monthlySpend: 60_000, estimatedSaving: 30_000, reason: '심야 택시가 잦아요' },
+      { category2: '편의점', type: 'OPTIMIZABLE', monthlySpend: 50_000, estimatedSaving: 20_000, reason: '습관적 편의점 결제가 보여요' },
     ],
   }
 }
