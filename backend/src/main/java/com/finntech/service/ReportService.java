@@ -34,12 +34,14 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final ObjectMapper objectMapper;
     private final WasteScoringService wasteScoringService;
+    private final ReportCacheWriter cacheWriter;
 
     public ReportService(ReportRepository reportRepository, ObjectMapper objectMapper,
-                         WasteScoringService wasteScoringService) {
+                         WasteScoringService wasteScoringService, ReportCacheWriter cacheWriter) {
         this.reportRepository = reportRepository;
         this.objectMapper = objectMapper;
         this.wasteScoringService = wasteScoringService;
+        this.cacheWriter = cacheWriter;
     }
 
     /**
@@ -68,10 +70,23 @@ public class ReportService {
             }
         }
         ReportBody body = build(analysis, mlWaste);
+
+        String json;
         try {
-            reportRepository.save(new Report(userId, period, objectMapper.writeValueAsString(body), at));
+            json = objectMapper.writeValueAsString(body);
         } catch (Exception e) {
-            log.warn("리포트 캐시 저장 실패 — 응답에는 영향 없음: {}", e.toString());
+            log.warn("리포트 캐시 직렬화 실패 — 응답에는 영향 없음: {}", e.toString());
+            return body;
+        }
+        // 저장은 별도 트랜잭션(REQUIRES_NEW)에 맡기고, 실패는 여기서 접는다.
+        // 이 트랜잭션 안에서 직접 save하면 unique 충돌 시 여기가 rollback-only로 마킹돼
+        // 예외를 삼켜도 커밋에서 500이 난다(ReportCacheWriter 주석 참고).
+        try {
+            cacheWriter.write(userId, period, json, at);
+        } catch (RuntimeException race) {
+            // 같은 (userId, period)를 먼저 저장한 요청이 있다 — 정상 경쟁이다.
+            // 두 요청의 본문은 같은 계산 결과라, 진 쪽이 응답을 못 줄 이유가 없다.
+            log.debug("리포트 캐시 저장 생략(경쟁): userId={} period={}", userId, period);
         }
         return body;
     }
