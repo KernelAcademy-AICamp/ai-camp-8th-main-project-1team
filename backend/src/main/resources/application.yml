@@ -124,6 +124,35 @@ finntech:
       top-n: 3
       neutral-category-fit: 0.5
       near-miss-top-rank: 3
+    # 시간대 버킷(아침/점심/저녁/심야) — 반복결제 루틴형(②)·소비패턴(③) 공유 단일 정의.
+    # 심야[23,4]는 ML 피처(WasteFeatureExtractor.night)와 값만 일치(코드 독립). 아침/점심/저녁은 5~22시 분할(튜닝값).
+    daypart:
+      night-start: 23
+      night-end: 4
+      morning-end: 11   # 아침 (4,11)
+      lunch-end: 17     # 점심 [11,17), 저녁 [17,23)
+    # 반복결제 탐지(②) — 고정형/루틴형 임계(잠정, 튜닝 예정).
+    recurring:
+      fixed-min-count: 3
+      fixed-cv-max: 0.05
+      weekly-interval-days: [6, 8]
+      monthly-interval-days: [27, 33]
+      routine-window-days: 28
+      routine-appear-ratio: 0.25
+      routine-min-days: 3
+      routine-dispersion-max: 0.35
+    # 절약후보(⑤) — 낭비형 임계 + 3등급 카테고리(category2 매칭). 보호는 ML ESSENTIAL과 독립.
+    cut-candidate:
+      waste-ratio-threshold: 0.5
+      removable: [카페, 배달, 스트리밍, 백화점, 면세점, 간편결제]
+      optimizable: [한식, 중식, 일식, 양식, 분식, 대중교통, 택시]
+      protected-categories: [공과금, 통신비, 약국, 보험]
+    # 이상소비지수(④) — 4성분 해석가능 가중합(합=1 권장). 지수=100×Σ(weight×성분[0,1]).
+    profile:
+      waste-weight: 0.4          # 낭비비율(제거가능 지출/총지출)
+      concentration-weight: 0.25 # 과소비집중(최대 category1 비율)
+      volatility-weight: 0.15    # 지출변동성(월지출 CV/cvCap)
+      night-impulse-weight: 0.2  # 심야+루틴낭비 비중
 
 ---
 spring:

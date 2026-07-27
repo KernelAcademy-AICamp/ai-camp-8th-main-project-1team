@@ -425,6 +425,66 @@ export interface ConsumptionInput {
   planned: boolean;
 }
 
+// ── 소비 분석(②③④⑤) ──
+export interface AnalysisProfile {
+  abnormalityIndex: number;          // 이상소비지수 0~100
+  wasteRatio: number;
+  concentrationRatio: number;
+  volatility: number;
+  nightImpulseRatio: number;
+  contributionPoints: Record<string, number>; // 낭비/집중/변동/심야충동 → 기여점수(합=지수)
+  totalSpend: number;
+  topCategory1: string | null;
+  fixedCount: number;
+  routineCount: number;
+  peak: { dayOfWeek: string; daypart: string; amount: number } | null;
+}
+export interface RecurringPayment {
+  type: 'FIXED' | 'ROUTINE';
+  category2: string;
+  merchantName: string | null;
+  businessNumber: string | null;
+  daypart: string | null;
+  representativeAmount: number;
+  periodDays: number | null;
+  nextExpected: string | null;
+  occurrenceDays: number;
+  perWeekFrequency: number;
+}
+export interface SpendingPattern {
+  amountByDayOfWeek: Record<string, number>;
+  amountByDaypart: Record<string, number>;
+  countByCell: Record<string, number>;
+  peak: { dayOfWeek: string; daypart: string; amount: number } | null;
+}
+export interface CutCandidate {
+  category2: string;
+  type: 'REMOVABLE' | 'OPTIMIZABLE';
+  monthlySpend: number;
+  estimatedSaving: number;
+  reason: string;
+}
+export interface AnalysisSummary {
+  profile: AnalysisProfile;
+  recurring: RecurringPayment[];
+  pattern: SpendingPattern;
+  cutCandidates: CutCandidate[];
+}
+export interface CutSelection {
+  id: number;
+  userId: number;
+  category2: string;
+  type: 'REMOVABLE' | 'OPTIMIZABLE';
+  targetSaving: number;
+  baselineSpend: number;
+  selectedAt: string;
+  status: 'ACTIVE' | 'VERIFIED';
+  verifiedAt: string | null;
+  actualSpend: number | null;
+  improved: boolean | null;
+}
+export interface Narrative { text: string; source: string; }
+
 export const api = {
   recommend: (userId: number) => get<RecommendResponse>(`/api/products/recommend?userId=${userId}`),
   alerts: (userId: number) => get<AlertResponse>(`/api/alert/list?userId=${userId}`),
@@ -560,6 +620,20 @@ export const api = {
   linkSynthetic: (ci: string, companyIds: number[]) =>
     post<{ userId: number; ci: string; cardCount: number; paymentCount: number }>(
       '/api/dev/link-synthetic', { ci, companyIds }),
+
+  /* ── 소비 분석(②③④⑤) — 판단은 서버 엔진(결정론), 문장은 온디맨드 LLM ── */
+  analysis: (userId: number, days = 90) =>
+    get<AnalysisSummary>(`/api/analysis?userId=${userId}&days=${days}`),
+  profileNarrative: (userId: number, days = 90) =>
+    get<Narrative>(`/api/analysis/profile/narrative?userId=${userId}&days=${days}`),
+  explainCut: (userId: number, category2: string, days = 90) =>
+    get<Narrative>(`/api/analysis/cut/explain?userId=${userId}&category2=${encodeURIComponent(category2)}&days=${days}`),
+  chooseCut: (userId: number, category2: string, days = 90) =>
+    post<CutSelection>(`/api/analysis/cut/choose?userId=${userId}&category2=${encodeURIComponent(category2)}&days=${days}`),
+  verifyCut: (userId: number, days = 90) =>
+    post<CutSelection[]>(`/api/analysis/cut/verify?userId=${userId}&days=${days}`),
+  cutHistory: (userId: number) =>
+    get<CutSelection[]>(`/api/analysis/cut/history?userId=${userId}`),
 };
 
 /** 룰 코드 → 사람이 읽는 문구. 화면에서만 쓰는 표시용 매핑이다. */
