@@ -13,7 +13,7 @@ class SavingsCompareServiceTest {
     private static final List<String> EXCLUDE = List.of("간부", "청년", "장병", "미소", "청약");
 
     @Test
-    void 자격제한_키워드가_든_통장은_제외된다() {
+    void accountsWithRestrictedKeywordsAreExcluded() {
         List<Account> all = List.of(
                 new Account("우리은행", "Npay 우리 적금", 4.50, 4.50),
                 new Account("KB국민은행", "KB장병내일준비적금", 4.00, 9.50),   // 장병 → 제외
@@ -30,7 +30,7 @@ class SavingsCompareServiceTest {
     }
 
     @Test
-    void 기본금리_내림차순으로_정렬된다() {
+    void sortedByBaseRateDescending() {
         List<Account> all = List.of(
                 new Account("A", "낮은적금", 2.0, 2.0),
                 new Account("B", "높은적금", 4.5, 4.5),
@@ -43,7 +43,7 @@ class SavingsCompareServiceTest {
     }
 
     @Test
-    void 기본금리_동률이면_최고금리로_가른다() {
+    void tieOnBaseRateBrokenByMaxRate() {
         List<Account> all = List.of(
                 new Account("A", "동률낮은최고", 3.5, 3.5),
                 new Account("B", "동률높은최고", 3.5, 4.2));

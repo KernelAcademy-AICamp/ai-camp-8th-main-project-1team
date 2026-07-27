@@ -59,6 +59,15 @@ public class MyDataClient {
         return response == null ? List.of() : response.data();
     }
 
+    /** 가맹점 조회(번호→주소) — 사용자가 결제의 사업자번호로 가맹점명·지번주소를 조회. 없으면 null. */
+    public MerchantView findMerchant(String businessNumber) {
+        Envelope<MerchantView> response = client.get()
+                .uri("/bank/mydata/merchant/{businessNumber}", businessNumber)
+                .retrieve()
+                .body(new ParameterizedTypeReference<Envelope<MerchantView>>() {});
+        return response == null ? null : response.data();
+    }
+
     /** 증분 조회 — 마지막 동기화 이후 결제만. */
     public List<CardView> findCardsSince(Long companyId, String ci, LocalDateTime lastRenewalTime) {
         Envelope<List<CardView>> response = client.get()

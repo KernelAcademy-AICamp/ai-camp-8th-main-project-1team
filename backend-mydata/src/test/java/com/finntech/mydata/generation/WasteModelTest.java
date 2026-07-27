@@ -35,7 +35,7 @@ class WasteModelTest {
     }
 
     @Test
-    void 필수무대는_낭비_아님_재량충동은_낭비_취미는_보호() {
+    void essentialNotWasteDiscretionaryImpulseWasteHobbyProtected() {
         var v = overspender();
         // 1) 생존필수(대형마트) → 거의 낭비 아님
         assertThat(wasteCount("대형마트", 20000, 20000, 14, true, false, v, 1.0)).isLessThan(80);
@@ -50,7 +50,7 @@ class WasteModelTest {
     }
 
     @Test
-    void 곡선은_시작높음_하강_반등한다() {
+    void curveStartsHighDeclinesThenRebounds() {
         var p = new WasteCurve.Params(1.4, 0.4, 30, 0.9, 0.2, false);
         double t0 = WasteCurve.factor(p, 0);
         double t30 = WasteCurve.factor(p, 30);

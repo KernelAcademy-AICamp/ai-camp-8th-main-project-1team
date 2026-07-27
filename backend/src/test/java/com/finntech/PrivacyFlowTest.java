@@ -146,7 +146,7 @@ class PrivacyFlowTest {
         userCardRepository.save(new UserCard(uid, "1111-2222-3333-4444", 9101L,
                 "삼성 taptap O", "#1428A0", "삼성카드", 500000, 300000, 300000));
         userPaymentRepository.save(new UserPayment("p-erase-1", uid, "1111-2222-3333-4444", 9101L,
-                NOW.minusDays(1), "온라인", "카페", 5000, "이디야커피", 0));
+                NOW.minusDays(1), "온라인", "카페", 5000, "이디야커피", 0, "2088612340"));
         consumptionRepository.save(new Consumption(uid, category, new BigDecimal("5000"),
                 NOW.minusDays(1), false, Enums.DataSource.MYDATA));
         overrideRepository.save(new UserSpendingOverride(uid, "카페", false, NOW));

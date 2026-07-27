@@ -104,7 +104,8 @@ public class MyDataLinkService {
                 for (PaymentView payment : card.payments()) {
                     userPaymentRepository.save(new UserPayment(payment.id(), userId, card.cardId(),
                             payment.cardCode(), payment.date(), payment.category1(), payment.category2(),
-                            payment.amount(), payment.merchantName(), payment.receivedBenefitAmount()));
+                            payment.amount(), payment.merchantName(), payment.receivedBenefitAmount(),
+                            payment.businessNumber()));
                     // 기존 엔진 재사용을 위한 투영 — category1(대분류)을 카테고리 코드로 그대로 쓴다(온디맨드 생성, 원칙 4).
                     Category category = categoryRepository.findByCode(payment.category1())
                             .orElseGet(() -> categoryRepository.save(
@@ -129,6 +130,12 @@ public class MyDataLinkService {
         log.info("마이데이터 연동 완료 — userId={} 카드사 {}개, 카드 {}장, 결제 {}건 적재",
                 userId, companyIds.size(), cardCount, paymentCount);
         return new LinkResult(cardCount, paymentCount);
+    }
+
+    /** 가맹점 조회(번호→주소) — 결제에 실린 사업자번호로 가맹점명·지번주소를 제공자에서 조회(프록시). 없으면 null. */
+    @Transactional(readOnly = true)
+    public MyDataResponses.MerchantView merchant(String businessNumber) {
+        return myDataClient.findMerchant(businessNumber);
     }
 
     /** 입출금 통장 조회(§13-11) — 프론트 통장 화면용. 사용자의 CI로 제공자에 프록시. */
@@ -164,7 +171,8 @@ public class MyDataLinkService {
                     if (userPaymentRepository.existsById(payment.id())) continue; // 멱등
                     userPaymentRepository.save(new UserPayment(payment.id(), userId, card.cardId(),
                             payment.cardCode(), payment.date(), payment.category1(), payment.category2(),
-                            payment.amount(), payment.merchantName(), payment.receivedBenefitAmount()));
+                            payment.amount(), payment.merchantName(), payment.receivedBenefitAmount(),
+                            payment.businessNumber()));
                     Category category = categoryRepository.findByCode(payment.category1())
                             .orElseGet(() -> categoryRepository.save(
                                     new Category(payment.category1(), payment.category1())));
@@ -210,7 +218,7 @@ public class MyDataLinkService {
         return userPaymentRepository.findByUserIdAndCardSerialOrderByPaymentDateDesc(userId, cardSerial).stream()
                 .map(payment -> new PaymentRow(payment.getPaymentId(), payment.getPaymentDate(),
                         payment.getCategory1(), payment.getCategory2(), payment.getAmount(),
-                        payment.getMerchantName(), payment.getReceivedBenefit()))
+                        payment.getMerchantName(), payment.getReceivedBenefit(), payment.getBusinessNumber()))
                 .toList();
     }
 
@@ -232,7 +240,8 @@ public class MyDataLinkService {
                             payment.getMerchantName(), payment.getReceivedBenefit(),
                             card != null ? card.getCardName() : null,
                             card != null ? card.getCardColor() : null,
-                            card != null ? card.getCompanyName() : null);
+                            card != null ? card.getCompanyName() : null,
+                            payment.getBusinessNumber());
                 })
                 .toList();
     }
@@ -253,10 +262,12 @@ public class MyDataLinkService {
                              boolean requirementMet, int toRequirement, int earnedThisMonth) {}
 
     public record PaymentRow(String paymentId, java.time.LocalDateTime date, String category1,
-                             String category2, int amount, String merchantName, int receivedBenefit) {}
+                             String category2, int amount, String merchantName, int receivedBenefit,
+                             String businessNumber) {}
 
-    /** 결제내역 모아보기 1건 — 결제 정보 + 어느 카드(실카드명·색·카드사)인지. */
+    /** 결제내역 모아보기 1건 — 결제 정보 + 어느 카드(실카드명·색·카드사)인지 + 가맹점 사업자번호. */
     public record PaymentHistoryRow(String paymentId, java.time.LocalDateTime date, String category1,
                                     String category2, int amount, String merchantName, int receivedBenefit,
-                                    String cardName, String cardColor, String companyName) {}
+                                    String cardName, String cardColor, String companyName,
+                                    String businessNumber) {}
 }

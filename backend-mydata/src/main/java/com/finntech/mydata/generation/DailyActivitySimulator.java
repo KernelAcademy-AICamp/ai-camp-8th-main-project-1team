@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -35,6 +36,8 @@ public class DailyActivitySimulator {
     private final WasteLabeler labeler;
     private final GenerationProperties props;
     private final Map<String, List<String>> hobbySignature = new LinkedHashMap<>();
+    private final List<RegionEntry> allRegions;                              // 여행지 표본 풀(전국)
+    private final Map<String, List<RegionEntry>> sigunguIndex = new LinkedHashMap<>(); // 시군구 → 동 목록(인접동)
 
     public DailyActivitySimulator(CatalogSampler sampler, WasteLabeler labeler,
                                   CatalogLoader catalog, GenerationProperties props) {
@@ -42,6 +45,10 @@ public class DailyActivitySimulator {
         this.labeler = labeler;
         this.props = props;
         for (var h : catalog.hobbies()) hobbySignature.put(h.type(), h.signatureCategories());
+        this.allRegions = catalog.regions();
+        for (RegionEntry rg : allRegions) {
+            sigunguIndex.computeIfAbsent(rg.sido() + "|" + rg.sigungu(), k -> new ArrayList<>()).add(rg);
+        }
     }
 
     /** 사용자 u의 [startDate, genEnd] 결제 목록(결정론). */
@@ -71,6 +78,7 @@ public class DailyActivitySimulator {
 
         double baseDaily = v.txPerMonthMean() / 30.0;
         var day = props.getRandomness().getDay();
+        Map<LocalDate, RegionEntry> travel = buildTravelSchedule(u, genEnd);   // 여행/출장 일정(결정론)
 
         long span = ChronoUnit.DAYS.between(u.startDate(), genEnd);
         for (long d = 0; d <= span; d++) {
@@ -90,7 +98,7 @@ public class DailyActivitySimulator {
                     ? GenSeed.uniform(r, day.getCheatDayMultiplier()[0], day.getCheatDayMultiplier()[1]) : 1.0;
             int n = (int) Math.round(baseDaily * factor * cheat * GenSeed.jitter(r, 0.3));
             for (int i = 0; i < n; i++) {
-                out.add(oneTxn(u, v, date, cf, hobbyCats, visitW, wsum, cheat > 1.0, r));
+                out.add(oneTxn(u, v, date, cf, hobbyCats, visitW, wsum, cheat > 1.0, travel, r));
             }
         }
         return out;
@@ -98,7 +106,7 @@ public class DailyActivitySimulator {
 
     private GenTxn oneTxn(GeneratedUser u, PersonaVariant v, LocalDate date, double cf,
                           Set<String> hobbyCats, Map<String, Double> visitW, double wsum,
-                          boolean cheatDay, Random r) {
+                          boolean cheatDay, Map<LocalDate, RegionEntry> travel, Random r) {
         // 카테고리 선택: 취미 주입 / 프로파일 밖 / 일반
         String cat1, cat2;
         var amt = props.getRandomness().getAmount();
@@ -114,7 +122,9 @@ public class DailyActivitySimulator {
         }
         if (cat2 == null) { cat1 = "식비"; cat2 = "한식"; }
 
-        RegionEntry anchor = anchor(u, v, date, r);
+        // 시간대를 먼저 뽑아 앵커(집/직장/인접동/여행지)를 시간대별로 결정한다.
+        int hour = sampleHour(v, r);
+        RegionEntry anchor = anchor(u, date, hour, travel, r);
         ResolvedMerchant m = sampler.resolveMerchant(cat2, anchor, r);
         ResolvedProduct p = sampler.resolveProduct(cat2, r);
 
@@ -122,7 +132,6 @@ public class DailyActivitySimulator {
         double sigma = GenSeed.uniform(r, amt.getSigmaLog()[0], amt.getSigmaLog()[1]);
         int amount = snapAmount(Math.max(500, (int) Math.round(p.unitPrice() * qty * GenSeed.jitter(r, sigma))), r);
 
-        int hour = sampleHour(v, r);
         LocalDateTime when = date.atTime(hour, r.nextInt(60));
         boolean planned = RECURRING.contains(cat2) || r.nextDouble() < v.plannedRatio();
         boolean hobbyMatch = hobbyCats.contains(cat2);
@@ -132,7 +141,8 @@ public class DailyActivitySimulator {
 
         var lab = labeler.label(cat2, amount, typical, hour, planned, hobbyMatch, deliveryOveruse, subLeak, v, cf, r);
         return new GenTxn(r.nextInt(u.cardCount()), when, cat1, cat2, amount, m.name(), m.channel(),
-                p.name(), p.unitPrice(), qty, lab.label(), round4(lab.pWaste()), m.address(), m.lat(), m.lon());
+                p.name(), p.unitPrice(), qty, lab.label(), round4(lab.pWaste()),
+                m.address(), m.lat(), m.lon(), m.businessNumber());
     }
 
     private GenTxn subscriptionTxn(GeneratedUser u, PersonaVariant v, LocalDate date, double cf, Random r) {
@@ -144,7 +154,8 @@ public class DailyActivitySimulator {
         boolean leak = r.nextDouble() < 0.2 * v.subscriptionLeakMult();
         var lab = labeler.label(cat2, amount, p.unitPrice(), hour, true, false, false, leak, v, cf, r);
         return new GenTxn(r.nextInt(u.cardCount()), date.atTime(hour, 0), "온라인", cat2, amount,
-                m.name(), "ONLINE", p.name(), p.unitPrice(), 1, lab.label(), round4(lab.pWaste()), null, null, null);
+                m.name(), "ONLINE", p.name(), p.unitPrice(), 1, lab.label(), round4(lab.pWaste()),
+                m.address(), m.lat(), m.lon(), m.businessNumber());
     }
 
     /**
@@ -164,12 +175,59 @@ public class DailyActivitySimulator {
         return Math.max(unit, snapped);                            // 1원 단위 없음(최소 단위 이상)
     }
 
-    // ── 앵커(집/직장/이동) ──
-    private RegionEntry anchor(GeneratedUser u, PersonaVariant v, LocalDate date, Random r) {
+    // ── 앵커(집/직장/인접동/여행지) — 시간대·요일·이동 반영 ──
+
+    /**
+     * 결제 위치 앵커.
+     *  - 여행일이면 여행지(먼 지역).
+     *  - 직장인(work≠null) 평일 점심~저녁(workHours 구간)이면 직장, 그 외(아침·밤·주말·무직)면 집.
+     *  - 어느 경우든 확률적으로 같은 시군구의 인접 동으로 이동할 수 있다.
+     */
+    private RegionEntry anchor(GeneratedUser u, LocalDate date, int hour,
+                              Map<LocalDate, RegionEntry> travel, Random r) {
+        RegionEntry dest = travel.get(date);
+        if (dest != null) return maybeAdjacent(dest, r);                 // 여행 중
+        int[] work = props.getAddress().getWorkHours();
         boolean weekday = date.getDayOfWeek().getValue() <= 5;
-        if (u.work() != null && weekday && r.nextDouble() < 0.45) return u.work();   // 통근 낮
-        if (v.wideMovement() && r.nextDouble() < 0.15) return u.home();               // (여행지는 orchestrator 확장 여지)
-        return u.home();
+        boolean atWork = u.work() != null && weekday && hour >= work[0] && hour < work[1];
+        return maybeAdjacent(atWork ? u.work() : u.home(), r);
+    }
+
+    /** 확률적으로 같은 시군구의 다른 동(인접 동)으로 이동. 후보 없으면 그대로. */
+    private RegionEntry maybeAdjacent(RegionEntry base, Random r) {
+        if (r.nextDouble() >= props.getAddress().getAdjacentDongProb()) return base;
+        List<RegionEntry> sib = sigunguIndex.get(base.sido() + "|" + base.sigungu());
+        if (sib == null || sib.size() <= 1) return base;
+        return sib.get(r.nextInt(sib.size()));
+    }
+
+    /** 사용자별 여행/출장 일정(결정론) — 1~12주 간격마다 1~2일씩 먼 지역. userSeed 파생 RNG로 격리. */
+    private Map<LocalDate, RegionEntry> buildTravelSchedule(GeneratedUser u, LocalDate genEnd) {
+        var addr = props.getAddress();
+        int[] iv = addr.getTravelIntervalWeeks(), du = addr.getTravelDurationDays();
+        Random tr = GenSeed.rng(u.userSeed(), 55);
+        Map<LocalDate, RegionEntry> map = new HashMap<>();
+        LocalDate cursor = u.startDate().plusWeeks(GenSeed.uniformInt(tr, iv[0], iv[1]));
+        while (!cursor.isAfter(genEnd)) {
+            RegionEntry destination = farRegion(u.home(), tr);
+            int dur = GenSeed.uniformInt(tr, du[0], du[1]);
+            for (int d = 0; d < dur; d++) {
+                LocalDate day = cursor.plusDays(d);
+                if (day.isAfter(genEnd)) break;
+                map.put(day, destination);
+            }
+            cursor = cursor.plusDays(dur).plusWeeks(GenSeed.uniformInt(tr, iv[0], iv[1]));
+        }
+        return map;
+    }
+
+    /** 집과 다른 시도(먼 지역)를 결정론적으로 뽑는다. 8회 내 못 찾으면 전국에서 임의. */
+    private RegionEntry farRegion(RegionEntry home, Random tr) {
+        for (int attempt = 0; attempt < 8; attempt++) {
+            RegionEntry cand = allRegions.get(tr.nextInt(allRegions.size()));
+            if (!cand.sido().equals(home.sido())) return cand;
+        }
+        return allRegions.get(tr.nextInt(allRegions.size()));
     }
 
     private WasteCurve.Params sampleCurve(PersonaVariant v, Random r) {

@@ -22,7 +22,8 @@ public final class MyDataResponses {
                                   CompanyView company, List<BenefitView> benefits) {}
 
     public record PaymentView(String id, LocalDateTime date, String category1, String category2,
-                              int amount, String merchantName, int receivedBenefitAmount, Long cardCode) {}
+                              int amount, String merchantName, int receivedBenefitAmount, Long cardCode,
+                              String businessNumber) {}
 
     public record CardView(String cardId, LocalDate expirationDate, int prevMonthAmount,
                            CardProductView cardProduct, UserView user, List<PaymentView> payments) {}
@@ -35,4 +36,8 @@ public final class MyDataResponses {
                               int salary, int payday, long balance, List<AccountTxnView> transactions) {}
 
     public record AccountTxnView(LocalDateTime date, String type, long amount, String description) {}
+
+    /** 가맹점 조회(번호→주소) 응답 — mydata의 MerchantView와 필드명 일치. */
+    public record MerchantView(String businessNumber, String merchantName, String address,
+                               Double lat, Double lng, boolean online) {}
 }

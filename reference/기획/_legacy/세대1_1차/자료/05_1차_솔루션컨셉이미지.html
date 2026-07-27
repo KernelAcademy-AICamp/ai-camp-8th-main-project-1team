@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>쌍토끼클럽 · 솔루션 컨셉 최종</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#15171c;--muted:#687080;--line:#e7e9ef;--purple:#6557e8;--purple2:#edeaff;--orange:#ff7448;--green:#159c72;--yellow:#fff5cf;--red:#d94b63}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.65;word-break:keep-all}.page{width:min(1040px,calc(100% - 28px));margin:auto;padding:28px 0 80px}.hero{padding:42px;border-radius:28px;color:#fff;background:linear-gradient(135deg,#2a275f,#6557e8);box-shadow:0 20px 60px rgba(41,36,99,.18)}.eyebrow{display:inline-block;padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.14);font-size:13px;font-weight:800}.hero h1{margin:18px 0 14px;font-size:clamp(38px,7vw,68px);line-height:1.05;letter-spacing:-.05em}.hero p{max-width:780px;margin:0;color:rgba(255,255,255,.85);font-size:18px}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}.meta span{padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.11);font-size:13px}.card{margin-top:22px;padding:32px;border:1px solid var(--line);border-radius:24px;background:var(--card);box-shadow:0 10px 30px rgba(20,23,28,.05)}.head{display:flex;gap:14px;align-items:flex-start;margin-bottom:22px}.num{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border-radius:12px;background:var(--purple);color:#fff;font-weight:900}.head h2{margin:0;font-size:29px;line-height:1.25;letter-spacing:-.035em}.head p{margin:5px 0 0;color:var(--muted)}.big{padding:28px;border-radius:20px;background:var(--purple2);font-size:21px;font-weight:760;line-height:1.55}.big strong{color:#4537ce}.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:stretch}.step{padding:20px 16px;border-radius:16px;background:#fafafd;border:1px solid var(--line);text-align:center;font-weight:750}.arrow{display:none}.quote{margin:18px 0 0;padding:20px;border-radius:16px;background:#161821;color:#fff;font-size:21px;font-weight:800;text-align:center}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.mini{padding:20px;border:1px solid var(--line);border-radius:17px;background:#fafafd}.mini h3{margin:0 0 8px;font-size:18px}.mini p{margin:0;color:var(--muted)}.rule{display:grid;grid-template-columns:48px 1fr;gap:14px;padding:18px 0;border-bottom:1px solid var(--line)}.rule:last-child{border-bottom:0}.icon{display:grid;place-items:center;width:44px;height:44px;border-radius:13px;background:var(--purple2);font-size:22px}.rule h3{margin:0 0 4px;font-size:18px}.rule p{margin:0;color:var(--muted)}.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px}.compare .mini:first-child{border-top:4px solid var(--orange)}.compare .mini:last-child{border-top:4px solid var(--purple)}.stage{display:flex;gap:14px;align-items:flex-start;padding:18px;border-radius:16px;background:#fafafd;border:1px solid var(--line);margin-top:12px}.badge{flex:0 0 auto;padding:6px 10px;border-radius:999px;background:var(--purple2);color:#493bd1;font-weight:850;font-size:13px}.stage h3{margin:0 0 4px}.stage p{margin:0;color:var(--muted)}.questions{counter-reset:q}.q{counter-increment:q;padding:22px;border-radius:17px;background:#fafafd;border:1px solid var(--line)}.q:before{content:counter(q);display:grid;place-items:center;width:32px;height:32px;margin-bottom:12px;border-radius:10px;background:var(--purple);color:white;font-weight:900}.q h3{margin:0 0 8px;font-size:19px}.q p{margin:0;color:var(--muted)}.warning{padding:20px;border-radius:17px;background:#fff7e7;border:1px solid #f3dfaa}.warning strong{display:block;margin-bottom:6px}.checklist{margin:0;padding:0;list-style:none}.checklist li{position:relative;padding:14px 0 14px 34px;border-bottom:1px solid var(--line)}.checklist li:last-child{border-bottom:0}.checklist li:before{content:"✓";position:absolute;left:0;top:14px;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#e8f8f1;color:var(--green);font-weight:900}.small{font-size:14px;color:var(--muted)}
+.summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.summary-item{padding:20px;border:1px solid var(--line);border-radius:17px;background:#fafafd}.summary-item.wide{grid-column:1/-1}.summary-item .label{display:block;margin-bottom:7px;color:#493bd1;font-size:13px;font-weight:900}.summary-item h3{margin:0 0 8px;font-size:20px}.summary-item p{margin:0;color:var(--muted)}.journey{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.journey .node{padding:17px 12px;border:1px solid var(--line);border-radius:15px;background:#fafafd;text-align:center}.journey .node strong{display:block;margin-bottom:5px;font-size:14px}.journey .node span{display:block;color:var(--muted);font-size:13px;line-height:1.4}.fit{display:grid;grid-template-columns:1fr 1fr;gap:14px}.fit .mini.good{border-top:4px solid var(--green)}.fit .mini.risk{border-top:4px solid var(--red)}.metric{padding:17px;border-radius:15px;background:#fafafd;border:1px solid var(--line)}.metric strong{display:block;margin-bottom:5px}.metric span{color:var(--muted);font-size:14px}@media(max-width:900px){.journey{grid-template-columns:1fr 1fr}.summary-grid,.fit{grid-template-columns:1fr}.summary-item.wide{grid-column:auto}}
+@media(max-width:760px){.page{width:min(100% - 20px,1040px);padding-top:10px}.hero,.card{padding:24px;border-radius:20px}.hero h1{font-size:42px}.flow,.grid2,.grid3,.compare{grid-template-columns:1fr}.step{text-align:left}.head h2{font-size:25px}.big{font-size:18px}.quote{font-size:18px}.rule{grid-template-columns:40px 1fr}.icon{width:38px;height:38px}}
+@media print{body{background:#fff}.page{width:100%;padding:0}.hero,.card{box-shadow:none;break-inside:avoid}.card{margin-top:12px}}
+</style>
+</head>
+<body>
+<main class="page">
+<section class="hero">
+  <span class="eyebrow">Phase 2 · Solution Concept</span>
+  <h1>참은 소비를<br>내 목표로 바꾼다</h1>
+  <p>충동 소비를 억지로 막는 대신, 돈을 쓰지 않은 순간을 “도쿄 여행 +3%”처럼 보여줘서 참는 행동 자체가 보상이 되게 만든다.</p>
+  <div class="meta"><span>프로젝트 · 쌍토끼클럽</span><span>작성일 · 2026-07-21</span><span>상태 · 최종 흐름 반영본</span></div>
+</section>
+
+<section class="card">
+  <div class="head"><div class="num">0</div><div><h2>우리가 만들고 싶은 것</h2><p>한 문장으로 먼저 이해하기</p></div></div>
+  <div class="big">사람이 충동구매를 참으면, 그 순간을 바로 <strong>“도쿄 여행 +3%”</strong> 또는 <strong>“맥북까지 15,000원 가까워짐”</strong>으로 바꿔 보여준다.</div>
+  <div class="quote">“안 썼다”가 아니라 “내가 원하는 걸 조금 샀다”</div>
+  <p class="small" style="margin-top:16px">처음부터 자동 감지를 만들지는 않는다. MVP에서는 사람이 직접 기록하거나, 운영자가 알림을 보내는 Wizard-of-Oz 방식으로 먼저 반응을 확인한다.</p>
+</section>
+
+<section class="card">
+  <div class="head"><div class="num">A</div><div><h2>프로젝트 한눈에 보기</h2><p>회의·제출·발표에서 그대로 쓸 수 있는 핵심 정의</p></div></div>
+  <div class="summary-grid">
+    <div class="summary-item"><span class="label">프로젝트명</span><h3>쌍토끼클럽</h3><p>참은 소비를 목표 달성과 금융상품 선택으로 이어주는 AI 절약 서비스</p></div>
+    <div class="summary-item"><span class="label">한 문장 정의</span><h3>누구를 위한 무엇인가</h3><p>감정과 보상 심리로 충동 소비를 반복하는 사용자를 위해, 카드 사용내역과 ‘참았음’ 기록을 함께 분석해 절약 성과를 보여주고 목표에 맞는 금융상품을 추천하는 서비스</p></div>
+    <div class="summary-item wide"><span class="label">해결하려는 문제</span><h3>사용자는 돈을 쓴 뒤에야 소비 규모를 깨닫고, 무엇을 줄여야 할지 판단하기 어렵다</h3><p>충동을 참아도 성취감이 남지 않아 다시 소비로 돌아가기 쉽고, 기존 금융 서비스는 결제 후 분석에 집중해 소비 직전의 감정과 행동 변화까지 연결하지 못한다.</p></div>
+    <div class="summary-item"><span class="label">타깃 사용자</span><h3>월 2회 이상 충동 소비 후 후회하는 20~30대</h3><p>배달·쇼핑·택시·구독 등에서 감정 소비를 반복하고, 절약 목표는 있지만 가계부를 오래 쓰지 못하며, 맥북·여행처럼 구체적인 소비 목표가 있는 사람</p></div>
+    <div class="summary-item"><span class="label">솔루션 가설</span><h3>절약을 ‘통제’가 아니라 ‘획득’으로 느끼게 하면 행동이 이어진다</h3><p>카드 내역으로 실제 소비를 보여주고, 참은 순간을 목표 진척으로 즉시 바꾸며, 그 목표에 맞는 상품까지 연결하면 사용자는 절약을 손실이 아니라 원하는 것을 얻는 과정으로 받아들일 것이다.</p></div>
+    <div class="summary-item wide"><span class="label">핵심 기능 3개</span><h3>① AI 소비·절약 리포트 ② 참았음 기록과 목표 진척 ③ 목표 기반 금융상품 Top 3 추천</h3><p>카드 내역 업로드 → 소비 패턴 분석 → 참은 순간 확인 → 목표 진척 → 추천 이유가 포함된 상품 비교까지 하나의 흐름으로 제공한다.</p></div>
+    <div class="summary-item wide"><span class="label">6주 성공 기준</span><h3>사용자가 실제로 이해하고, 반응하고, 선택하는지 측정</h3><p>카드내역 업로드 완료율 70% 이상 · 리포트 이해도 평균 4/5 이상 · 참았음 기록 의향 60% 이상 · 목표 진척이 동기부여 된다는 응답 60% 이상 · 상품 Top 3 중 1개 이상 클릭률 40% 이상 · 모의 가입 의향 평균 3.5/5 이상</p></div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="head"><div class="num">B</div><div><h2>최종 유저 플로우</h2><p>우리만의 차별성과 커리큘럼 필수기능을 한 흐름에 연결</p></div></div>
+  <div class="journey">
+    <div class="node"><strong>1. 카드내역 업로드</strong><span>사용자가 직접 금융 데이터를 넣는다</span></div>
+    <div class="node"><strong>2. 소비 패턴 분석</strong><span>AI가 배달·쇼핑·구독 등을 분류한다</span></div>
+    <div class="node"><strong>3. 절약 리포트</strong><span>잘한 소비와 주의할 소비를 보여준다</span></div>
+    <div class="node"><strong>4. 참았음 확인</strong><span>직접 기록하거나 알림에 예·아니오로 답한다</span></div>
+    <div class="node"><strong>5. 목표 진척</strong><span>도쿄 여행 +3%처럼 즉시 바뀐다</span></div>
+    <div class="node"><strong>6. 상품 Top 3</strong><span>목표 기간·금액에 맞는 상품을 비교한다</span></div>
+    <div class="node"><strong>7. 추천 이유</strong><span>왜 이 상품이 맞는지 AI가 설명한다</span></div>
+  </div>
+  <div class="quote">카드내역 + 참았음 + 목표 데이터 → 설명 가능한 개인화 추천</div>
+</section>
+
+<section class="card">
+  <div class="head"><div class="num">C</div><div><h2>커리큘럼과 어떻게 맞물리는가</h2><p>제품은 바꾸지 않고, 필수 산출물을 흐름 안에 회수한다</p></div></div>
+  <div class="fit">
+    <div class="mini good"><h3>커리큘럼 1순위</h3><p><strong>소비 패턴 분석 + 금융상품 추천</strong><br>카드내역을 분석하고, 더미 상품 5개 이상에서 Top 3를 추천한다. 추천 이유와 클릭률·가입 의향도 함께 측정한다.</p></div>
+    <div class="mini good"><h3>커리큘럼 2순위</h3><p><strong>AI 절약 리포트</strong><br>실제 지출과 참았음 데이터를 함께 사용해 긍정 신호와 주의 신호를 보여준다. 분류 기준표와 리포트 만족도를 남긴다.</p></div>
+    <div class="mini"><h3>우리의 차별점</h3><p><strong>참았음 → 목표 진척</strong><br>기존 서비스처럼 결제 후 분석에서 끝나지 않고, 소비 직전의 행동 변화를 보상으로 바꾼다.</p></div>
+    <div class="mini risk"><h3>주의할 점</h3><p><strong>상품 추천이 주인공이 되면 안 된다</strong><br>상품 추천은 절약 행동의 다음 단계이자 출구다. 앞에 세우면 평범한 금융 비교 서비스가 된다.</p></div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="head"><div class="num">1</div><div><h2>왜 이 문제를 골랐을까?</h2><p>소비 문제를 시간 순서로 나눠보니 답이 보였다</p></div></div>
+  <div class="flow">
+    <div class="step">사고 싶어진다</div><div class="step">결제한다</div><div class="step">내역을 본다</div><div class="step">후회한다</div><div class="step">다시 절약한다</div>
+  </div>
+  <div class="grid2" style="margin-top:18px">
+    <div class="mini"><h3>이미 경쟁이 센 구간</h3><p>토스와 뱅크샐러드는 결제 후 내역 확인과 분석을 이미 잘하고 있다.</p></div>
+    <div class="mini"><h3>우리가 들어갈 구간</h3><p>우리는 돈을 쓰기 직전의 충동을 잡고, 그 순간을 보상으로 바꾸는 데 집중한다.</p></div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="head"><div class="num">2</div><div><h2>사용자는 이렇게 경험한다</h2><p>제품 설명보다 실제 행동 흐름으로 보기</p></div></div>
+  <div class="grid3">
+    <div class="mini"><h3>① 사고 싶다</h3><p>스트레스를 받아 배달이나 쇼핑을 할 뻔한다.</p></div>
+    <div class="mini"><h3>② 참는다</h3><p>결제하지 않고 앱의 질문에 답한다.</p></div>
+    <div class="mini"><h3>③ 목표가 오른다</h3><p>“도쿄 여행 68%”처럼 바로 진척을 확인한다.</p></div>
+  </div>
+  <div class="quote">참음 → 확인 → 목표 진척 → 획득감</div>
+</section>
+
+<section class="card">
+  <div class="head"><div class="num">3</div><div><h2>우리가 절대 지킬 것</h2><p>이 규칙이 깨지면 평범한 저금통이 된다</p></div></div>
+  <div class="rule"><div class="icon">⚡</div><div><h3>참은 순간에만 목표가 오른다</h3><p>일반 잔액이 늘어서 %가 오르면 토스 저금통과 달라질 이유가 없다.</p></div></div>
+  <div class="rule"><div class="icon">⬆️</div><div><h3>한 번 오른 진척은 떨어지지 않는다</h3><p>못 참았다고 68%가 65%가 되면 사용자는 벌 받는 느낌을 받는다.</p></div></div>
+  <div class="rule"><div class="icon">🎯</div><div><h3>목표에는 반드시 이름이 있다</h3><p>“절약”이 아니라 “도쿄 여행”, “맥북”, “부모님 선물”처럼 구체적으로 보여준다.</p></div></div>
+  <div class="rule"><div class="icon">👆</div><div><h3>마지막 확인은 사용자가 한다</h3><p>자동화가 늘어나도 “참은 걸로 기록할까요?”라는 한 번의 선택은 남긴다.</p></div></div>
+  <div class="rule"><div class="icon">🎁</div><div><h3>참는 행동 자체가 보상이 되어야 한다</h3><p>절약을 잔소리나 통제로 느끼게 하지 않고, 원하는 것을 얻는 과정처럼 느끼게 만든다.</p></div></div>
+</section>
+
+<section class="card">
+  <div class="head"><div class="num">4</div><div><h2>참았다는 걸 어떻게 알까?</h2><p>돈을 쓰면 기록이 남지만, 안 쓴 행동은 흔적이 없다</p></div></div>
+  <div class="compare">
+    <div class="mini"><h3>사람에게 물어보기</h3><p><strong>좋은 점:</strong> 실제로 참았는지 정확하다<br><strong>불편한 점:</strong> 매번 기록하기 귀찮다</p></div>
+    <div class="mini"><h3>데이터로 먼저 추정하기</h3><p><strong>좋은 점:</strong> 사용자가 거의 움직이지 않아도 된다<br><strong>불편한 점:</strong> 정말 참은 건지 단순히 살 일이 없었던 건지 틀릴 수 있다</p></div>
+  </div>
+  <div class="stage"><span class="badge">Stage 1</span><div><h3>처음에는 직접 기록</h3><p>사용자가 버튼을 누르거나 답장한다. 우리는 어떤 순간에 기록하는지 배운다.</p></div></div>
+  <div class="stage"><span class="badge">Stage 2</span><div><h3>나중에는 먼저 물어보기</h3><p>소비 패턴을 보고 “오늘 배달 참으셨나요?”라고 묻고, 사용자가 예·아니오로 확인한다.</p></div></div>
+  <div class="stage"><span class="badge">Stage 3</span><div><h3>마지막에는 대부분 자동 처리</h3><p>패턴이 충분히 쌓이면 사용자는 가끔만 확인한다.</p></div></div>
+</section>
+
+<section class="card">
+  <div class="head"><div class="num">5</div><div><h2>이번 MVP에서 진짜 알고 싶은 것</h2><p>기능을 많이 만드는 대신, 위험한 가정을 먼저 확인한다</p></div></div>
+  <div class="grid2 questions">
+    <div class="q"><h3>사람은 참은 순간을 기록할까?</h3><p>스스로 앱을 열어 기록할지, 누가 물어봐야 답할지 본다.</p></div>
+    <div class="q"><h3>목표 진척이 기쁠까, 부담일까?</h3><p>“도쿄 여행 68%”가 뿌듯함인지 죄책감인지 확인한다.</p></div>
+    <div class="q"><h3>진짜 돈을 옮기지 않아도 절약한 느낌이 날까?</h3><p>화면에서만 숫자가 올라가도 충분한지 본다.</p></div>
+    <div class="q"><h3>충동이 줄어들까, 잠시 미뤄질 뿐일까?</h3><p>획득감이 실제 소비 행동을 바꾸는지 확인한다.</p></div>
+  </div>
+  <div class="warning" style="margin-top:18px"><strong>MVP에서는 자동 감지를 만들지 않는다</strong>운영자가 알림을 보내는 Wizard-of-Oz 방식과 직접 기록 버튼을 함께 써서 감지+확인 경험을 검증한다. 다만 카드내역 업로드, 절약 리포트, 상품 Top 3 결과 화면은 실제 클릭 가능한 형태로 만든다.</div>
+  <div class="grid3" style="margin-top:14px">
+    <div class="metric"><strong>행동 지표</strong><span>업로드 완료율, 참았음 기록률, 추천 클릭률</span></div>
+    <div class="metric"><strong>인식 지표</strong><span>리포트 이해도, 목표 진척 동기 점수</span></div>
+    <div class="metric"><strong>의향 지표</strong><span>재사용 의향, 모의 상품 가입 의향</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="head"><div class="num">6</div><div><h2>넘지 말아야 할 선</h2><p>규제와 제품 정체성을 동시에 지키는 기준</p></div></div>
+  <div class="grid2">
+    <div class="mini"><h3>✅ MVP에서 할 수 있는 것</h3><p>사용자 직접 입력, 거래내역 업로드, 가짜 감지 알림, 목표 진척 시각화, 정보성 상품 비교</p></div>
+    <div class="mini"><h3>❌ 지금 하면 안 되는 것</h3><p>은행·카드 자동 수집, 실제 자동 이체, 상품 가입 대행, 계약 체결, 수수료 수취</p></div>
+  </div>
+  <div class="warning" style="margin-top:18px"><strong>가장 위험한 안티패턴</strong>“또 돈 썼네요” 같은 감시·잔소리 톤. 알림은 드물게 보내고, 사용자가 잘한 순간을 축하하는 방식으로만 사용한다.</div>
+</section>
+
+<section class="card">
+  <div class="head"><div class="num">7</div><div><h2>다음에 할 일</h2><p>바로 실행할 수 있는 순서</p></div></div>
+  <ul class="checklist">
+    <li>인터뷰 대상자를 고르기 위한 스크리너 만들기</li>
+    <li>네 가지 핵심 질문을 인터뷰 질문과 목업 반응 테스트로 바꾸기</li>
+    <li>직접 기록 버튼과 “참은 걸로 기록할까요?” 알림 목업 만들기</li>
+    <li>위시리스트 상품을 “안 삼”으로 바꾸는 흐름 테스트하기</li>
+    <li>카드내역 업로드 → 리포트 → 목표 진척 → 상품 Top 3까지 클릭 프로토타입으로 연결하기</li>
+    <li>더미 금융상품 5개 이상과 추천 매칭 로직표 만들기</li>
+    <li>챌린저스·습관 트래커 등 비슷한 제품의 참여율과 리텐션 조사하기</li>
+  </ul>
+</section>
+</main>
+</body>
+</html>

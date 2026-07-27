@@ -24,7 +24,7 @@ class ModelParityTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void 자바_스코어러가_파이썬_EBM과_일치한다() throws Exception {
+    void javaScorerMatchesPythonEbm() throws Exception {
         SpendingClassifier clf = new SpendingClassifier(mapper);
         assumeTrue(clf.isReady(), "ml/ebm_model.json 미배치 → skip");
 

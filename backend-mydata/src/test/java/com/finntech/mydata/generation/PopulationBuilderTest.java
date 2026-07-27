@@ -20,7 +20,7 @@ class PopulationBuilderTest {
             new PopulationBuilder(new CatalogLoader(mapper), new GenerationProperties());
 
     @Test
-    void 인구가_비중_시작일_지역_분리에_맞게_결정론_생성된다() {
+    void populationGeneratedDeterministicallyByShareStartDateRegionSplit() {
         List<GeneratedUser> users = pb.build(20260721L, 2000);
         assertThat(users).hasSize(2000);
 

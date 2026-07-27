@@ -39,5 +39,8 @@ reference/*.xlsx
 reference/*.html
 reference/geo/
 
+# ── 정리 CSV: 합본은 282MB(GitHub 100MB 초과)라 제외. 분할본(merchants-part*.csv, <50MB)만 커밋 ──
+backend-mydata/generated/merchants.csv
+
 # ── 로그·임시 ──
 *.log

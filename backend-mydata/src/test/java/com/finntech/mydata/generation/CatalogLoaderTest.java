@@ -23,7 +23,7 @@ class CatalogLoaderTest {
     private final CatalogLoader loader = new CatalogLoader(mapper);
 
     @Test
-    void 맥락은_기존_7대분류로만_매핑된다() {
+    void contextsMapToSevenTopCategoriesOnly() {
         List<CatalogContext> ctx = loader.contexts();
         assertThat(ctx).hasSizeGreaterThanOrEqualTo(40);
         assertThat(ctx).allSatisfy(c -> {
@@ -35,7 +35,7 @@ class CatalogLoaderTest {
     }
 
     @Test
-    void 상품은_대규모_실메뉴이고_가격_재량성이_유효하다() {
+    void productsAreLargeRealMenuWithValidPriceAndDiscretionary() {
         Map<String, List<ProductEntry>> products = loader.products();
         int total = products.values().stream().mapToInt(List::size).sum();
         assertThat(total).isGreaterThanOrEqualTo(400);   // 구 149 → 대폭 확대
@@ -50,7 +50,7 @@ class CatalogLoaderTest {
     }
 
     @Test
-    void 브랜드는_실명이고_온라인은_지점합성_안한다() {
+    void brandsAreRealNamesAndOnlineHasNoBranchSynthesis() {
         Map<String, List<BrandEntry>> brands = loader.brands();
         int total = brands.values().stream().mapToInt(List::size).sum();
         assertThat(total).isGreaterThanOrEqualTo(200);
@@ -63,7 +63,7 @@ class CatalogLoaderTest {
     }
 
     @Test
-    void 기본_페르소나_5종이_정합적이다() {
+    void fiveBasePersonasAreConsistent() {
         var personas = loader.personas();
         assertThat(personas).hasSize(5);
         assertThat(personas).extracting(p -> p.name())
@@ -86,7 +86,7 @@ class CatalogLoaderTest {
     }
 
     @Test
-    void 취미_성향은_전용_카테고리로_명백히_드러난다() {
+    void hobbySignaturesShowThroughDedicatedCategories() {
         // 취미 taxonomy: 12종, 각 취미가 드러나는 category2 매핑
         var hobbies = loader.hobbies();
         assertThat(hobbies).hasSizeGreaterThanOrEqualTo(10);
@@ -102,7 +102,7 @@ class CatalogLoaderTest {
     }
 
     @Test
-    void 전국_행정동_실좌표와_인구가중이_유효하다() {
+    void nationwideDongsHaveValidCoordsAndPopulationWeights() {
         List<RegionEntry> regions = loader.regions();
         assertThat(regions).hasSizeGreaterThanOrEqualTo(3000);       // 전국 ~3,495 행정동
         assertThat(regions).allSatisfy(r -> {
@@ -119,7 +119,7 @@ class CatalogLoaderTest {
     }
 
     @Test
-    void 소상공인은_실상호_대규모_풀이다() {
+    void independentsAreLargeRealNamePool() {
         @SuppressWarnings("unchecked")
         Map<String, Object> pool = (Map<String, Object>) loader.independents().get("namePoolByCategory2");
         int total = pool.values().stream().mapToInt(v -> ((List<?>) v).size()).sum();

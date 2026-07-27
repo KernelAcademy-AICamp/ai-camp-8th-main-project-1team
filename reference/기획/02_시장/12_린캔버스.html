@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOA 린 캔버스 · 근거 원장</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#131A20;
+  --ink-2:#49555E;
+  --ink-3:#7C878E;
+  --paper:#E5E9E2;
+  --card:#FCFCFA;
+  --line:#C4CBC1;
+  --line-soft:#DDE2D9;
+
+  --ev-4:#1F6B4F;   /* 근거 있음 */
+  --ev-3:#2B5A8A;   /* 기획 확정 */
+  --ev-2:#8E6410;   /* 가설 */
+  --ev-1:#8A8F88;   /* 미확인 */
+  --stamp:#A93226;
+
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --disp:'Gothic A1','Pretendard',sans-serif;
+  --body:'Pretendard',system-ui,sans-serif;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:15px;
+  line-height:1.72;
+  word-break:keep-all;
+  background-image:
+    linear-gradient(var(--line-soft) 1px,transparent 1px),
+    linear-gradient(90deg,var(--line-soft) 1px,transparent 1px);
+  background-size:44px 44px;
+  background-position:-1px -1px;
+}
+.wrap{max-width:1220px;margin:0 auto;padding:0 22px 96px}
+
+/* ---------- 공통 타이포 ---------- */
+.eyebrow{
+  font-family:var(--mono);font-size:11px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+}
+h1,h2,h3,h4{font-family:var(--disp);font-weight:900;letter-spacing:-.02em;margin:0}
+p{margin:0 0 .9em}
+p:last-child{margin-bottom:0}
+a{color:var(--ev-3)}
+
+/* ---------- 헤더 ---------- */
+header{padding:64px 0 34px}
+.rule{height:1px;background:var(--ink);opacity:.85}
+.rule-thin{height:1px;background:var(--line)}
+h1{
+  font-size:clamp(38px,7.2vw,74px);line-height:.98;margin:18px 0 0;
+}
+h1 .sub{display:block;font-size:clamp(15px,2.4vw,22px);font-weight:700;
+  letter-spacing:-.01em;color:var(--ink-2);margin-top:14px}
+.head-meta{
+  display:flex;flex-wrap:wrap;gap:10px 28px;align-items:baseline;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--ink-3);
+  margin-bottom:6px;
+}
+.lede{
+  max-width:62ch;margin-top:26px;font-size:16.5px;color:var(--ink-2);
+  border-left:3px solid var(--ink);padding-left:18px;
+}
+
+/* ---------- 근거 등급 범례 ---------- */
+.legend{
+  margin:38px 0 0;display:grid;gap:0;
+  grid-template-columns:repeat(4,1fr);
+  border:1px solid var(--line);background:var(--card);
+}
+.legend div{padding:14px 16px 16px;border-right:1px solid var(--line-soft)}
+.legend div:last-child{border-right:0}
+.legend b{display:block;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.04em;margin-bottom:4px}
+.legend small{font-size:12.5px;color:var(--ink-3);line-height:1.5;display:block}
+
+/* 신호 막대 — 근거 강도를 서수로 표기 */
+.meter{display:inline-flex;gap:2.5px;vertical-align:-1px;margin-right:7px}
+.meter i{display:block;width:5px;height:11px;background:currentColor;opacity:.16}
+.meter i.on{opacity:1}
+.lv4{color:var(--ev-4)} .lv3{color:var(--ev-3)} .lv2{color:var(--ev-2)} .lv1{color:var(--ev-1)}
+
+.badge{
+  display:inline-flex;align-items:center;font-family:var(--mono);
+  font-size:10.5px;font-weight:600;letter-spacing:.06em;
+  padding:3px 8px 3px 7px;border:1px solid currentColor;border-radius:2px;
+  white-space:nowrap;
+}
+.badge span{color:var(--ink)}
+
+/* ---------- 캔버스 그리드 ---------- */
+.canvas-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:74px 0 16px;flex-wrap:wrap}
+h2{font-size:clamp(24px,3.6vw,34px)}
+.canvas{
+  display:grid;gap:1px;background:var(--line);
+  border:1px solid var(--line);
+  grid-template-columns:repeat(5,1fr);
+  grid-template-areas:
+    "prob sol  uvp  adv  cust"
+    "prob met  uvp  chan cust"
+    "cost cost cost rev  rev";
+}
+.cell{
+  background:var(--card);padding:18px 18px 20px;min-height:210px;
+  display:flex;flex-direction:column;position:relative;
+}
+.c-prob{grid-area:prob} .c-sol{grid-area:sol} .c-met{grid-area:met}
+.c-uvp{grid-area:uvp} .c-adv{grid-area:adv} .c-chan{grid-area:chan}
+.c-cust{grid-area:cust} .c-cost{grid-area:cost} .c-rev{grid-area:rev}
+.c-cost,.c-rev{min-height:170px}
+
+.cell .num{
+  font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-3);
+  letter-spacing:.1em;display:block;margin-bottom:2px;
+}
+.cell h3{font-size:18px;letter-spacing:-.01em;margin-bottom:12px}
+.cell ul{margin:0;padding-left:0;list-style:none;flex:1}
+.cell li{
+  font-size:13.5px;line-height:1.6;color:var(--ink-2);
+  padding:7px 0 7px 13px;border-top:1px solid var(--line-soft);position:relative;
+}
+.cell li:first-child{border-top:0;padding-top:0}
+.cell li::before{content:"";position:absolute;left:0;top:14px;width:5px;height:1px;background:var(--ink-3)}
+.cell li:first-child::before{top:8px}
+.cell .foot{margin-top:14px}
+
+/* 미확인 셀 — 채워지지 않은 영역으로 보이게 */
+.cell.blank{
+  background:
+    repeating-linear-gradient(-45deg,transparent 0 9px,rgba(138,143,136,.14) 9px 10px),
+    var(--card);
+}
+.cell.blank .stamp{
+  margin:auto 0;padding:14px 0;text-align:left;
+}
+.cell.blank .stamp b{
+  font-family:var(--disp);font-size:30px;font-weight:900;letter-spacing:-.02em;
+  color:var(--stamp);display:block;line-height:1;
+}
+.cell.blank .stamp small{
+  display:block;font-size:12.5px;color:var(--ink-2);margin-top:9px;max-width:26ch;line-height:1.55;
+}
+.c-uvp{background:var(--ink);color:var(--card)}
+.c-uvp h3,.c-uvp .num{color:var(--card)}
+.c-uvp .num{opacity:.6}
+.c-uvp .quote{
+  font-family:var(--disp);font-weight:700;font-size:19px;line-height:1.45;
+  letter-spacing:-.02em;margin:4px 0 16px;
+}
+.c-uvp li{color:rgba(252,252,250,.78);border-color:rgba(252,252,250,.16)}
+.c-uvp li::before{background:rgba(252,252,250,.5)}
+.c-uvp .badge span{color:var(--card)}
+
+/* ---------- 상세 섹션 ---------- */
+section.detail{margin-top:80px}
+.sec-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.sec-head h3{font-size:clamp(20px,2.8vw,26px)}
+.sec-head .num{font-family:var(--mono);font-size:13px;color:var(--ink-3);font-weight:600}
+section.detail > .rule-thin{margin:14px 0 24px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:34px}
+.block-note{max-width:66ch}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--card)}
+th,td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line-soft);vertical-align:top;line-height:1.55}
+th{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;
+  color:var(--ink-3);text-transform:uppercase;border-bottom:1px solid var(--ink)}
+td:first-child{font-weight:600;color:var(--ink)}
+tr:last-child td{border-bottom:0}
+.tbl-wrap{border:1px solid var(--line);overflow-x:auto}
+.num-cell{text-align:right;font-family:var(--mono)}
+
+pre{
+  background:var(--ink);color:#DDE4DE;font-family:var(--mono);font-size:12.5px;
+  line-height:1.85;padding:18px 20px;overflow-x:auto;margin:0;border-radius:2px;
+}
+pre b{color:#8FD3B4;font-weight:500}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0}
+.chip{
+  font-size:12.5px;padding:5px 11px;background:var(--card);
+  border:1px solid var(--line);color:var(--ink-2);
+}
+.chip b{color:var(--ink);font-weight:600}
+
+ul.plain{margin:0;padding-left:18px;color:var(--ink-2);font-size:14px}
+ul.plain li{margin-bottom:5px}
+
+/* 상태 리스트 */
+.states{list-style:none;margin:0;padding:0}
+.states li{
+  display:flex;gap:12px;align-items:flex-start;padding:9px 0;
+  border-bottom:1px solid var(--line-soft);font-size:13.5px;color:var(--ink-2);
+}
+.states li:last-child{border-bottom:0}
+.states .tag{flex:0 0 auto;padding-top:1px}
+
+/* ---------- 리스크 표 ---------- */
+.pri{
+  font-family:var(--mono);font-weight:600;font-size:12px;letter-spacing:.06em;
+  padding:2px 7px;border-radius:2px;color:var(--card);
+}
+.p0{background:var(--stamp)} .p1{background:var(--ev-2)} .p2{background:var(--ink-3)}
+
+/* ---------- 말할 수 있는 것 / 없는 것 ---------- */
+.ledger{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.ledger > div{background:var(--card);padding:24px 22px}
+.ledger .no{background:var(--ink);color:var(--card)}
+.ledger h4{font-size:17px;margin-bottom:14px}
+.ledger .no h4{color:var(--card)}
+.ledger ol{margin:0;padding-left:20px;font-size:14px;color:var(--ink-2)}
+.ledger .no ol{color:rgba(252,252,250,.8)}
+.ledger li{margin-bottom:8px;padding-left:2px}
+
+/* ---------- 결론 ---------- */
+.conclude{margin-top:80px;border-top:2px solid var(--ink);padding-top:30px}
+.conclude .two{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:24px}
+.conclude .two > div{
+  border:1px solid var(--ink);padding:22px 20px;background:var(--card);
+}
+.conclude .two .q{
+  font-family:var(--mono);font-size:12px;font-weight:600;color:var(--stamp);
+  letter-spacing:.1em;display:block;margin-bottom:9px;
+}
+.conclude .two p{font-family:var(--disp);font-weight:700;font-size:17px;line-height:1.5;letter-spacing:-.01em}
+footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-3);
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* ---------- 반응형 ---------- */
+@media (max-width:960px){
+  .canvas{grid-template-columns:1fr 1fr;
+    grid-template-areas:
+      "prob prob"
+      "sol  met"
+      "uvp  uvp"
+      "adv  chan"
+      "cust cust"
+      "cost cost"
+      "rev  rev";}
+  .cols,.ledger,.conclude .two{grid-template-columns:1fr}
+  .legend{grid-template-columns:1fr 1fr}
+  .legend div:nth-child(2){border-right:0}
+  .legend div:nth-child(1),.legend div:nth-child(2){border-bottom:1px solid var(--line-soft)}
+}
+@media (max-width:620px){
+  .canvas{grid-template-columns:1fr;
+    grid-template-areas:"prob" "sol" "met" "uvp" "adv" "chan" "cust" "cost" "rev";}
+  .legend{grid-template-columns:1fr}
+  .legend div{border-right:0;border-bottom:1px solid var(--line-soft)}
+  .cell{min-height:0}
+  header{padding-top:40px}
+}
+
+/* 접근성 */
+a:focus-visible,summary:focus-visible{outline:2px solid var(--ev-3);outline-offset:3px}
+@media print{body{background:#fff}.wrap{max-width:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="rule"></div>
+  <div class="head-meta" style="margin-top:14px">
+    <span>MOA / LEAN CANVAS</span>
+    <span>v. 프로토타입 단계</span>
+    <span>9개 블록 중 <b style="color:var(--stamp)">3개 미확인</b></span>
+  </div>
+  <h1>지킨 돈,<br>한 숫자로.
+    <span class="sub">줄일 수 있는 소비만 골라, 지킨 돈을 한 숫자와 한 캐릭터로 이어가는 절약 동반자</span>
+  </h1>
+  <p class="lede">이 캔버스는 사업 모델을 채우기 위한 문서가 아니라, <b>무엇이 확인됐고 무엇이 아직 비어 있는지</b> 구분하기 위한 원장입니다. 근거가 없는 칸은 그럴듯하게 채우지 않고 비워 뒀습니다.</p>
+
+  <div class="legend" aria-label="근거 표시 기준">
+    <div>
+      <b class="lv4"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>근거 있음</b>
+      <small>내부 리서치, 공식 통계, 경쟁사 공식 기능 또는 실제 사용자 반응에서 확인</small>
+    </div>
+    <div>
+      <b class="lv3"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>기획 확정</b>
+      <small>PRD상 만들기로 결정했으나 고객 효과는 아직 검증되지 않음</small>
+    </div>
+    <div>
+      <b class="lv2"><span class="meter"><i class="on"></i><i class="on"></i><i></i><i></i></span>가설</b>
+      <small>인터뷰·프로토타입·출시 데이터로 확인해야 하는 판단</small>
+    </div>
+    <div>
+      <b class="lv1"><span class="meter"><i class="on"></i><i></i><i></i><i></i></span>미확인</b>
+      <small>현재 문서에 판단할 근거가 없음. 임의로 채우지 않음</small>
+    </div>
+  </div>
+  <p class="lede" style="border-color:var(--ev-2);margin-top:22px;font-size:14px">
+    <b>근거 있음</b>도 시장 전체를 대표한다는 뜻은 아닙니다. 현재 문제 근거는 문헌과 온라인 발화 중심의 정성 탐색이며, 실제 타깃 고객 인터뷰와 정량 검증은 아직 완료되지 않았습니다.
+  </p>
+</header>
+
+<!-- ============ 캔버스 ============ -->
+<div class="canvas-head">
+  <h2>한눈에 보는 린 캔버스</h2>
+  <span class="eyebrow">9 blocks · 근거 강도 표기</span>
+</div>
+
+<div class="canvas">
+
+  <div class="cell c-prob">
+    <span class="num">① PROBLEM</span>
+    <h3>문제</h3>
+    <ul>
+      <li>스트레스와 보상 심리로 충동 소비를 반복하고 뒤늦게 후회한다</li>
+      <li>소비 내역을 봐도 무엇부터 줄여야 할지 판단하지 못한다</li>
+      <li>이번 달 절약이 얼마나 진행됐는지 월말 전에 체감하지 못한다</li>
+      <li><b>기존 대안</b> — 자산관리 앱, 예산 앱, AI 재무 코칭, 엑셀, 종이 가계부, 별도 통장 이체</li>
+    </ul>
+    <div class="foot">
+      <span class="badge lv4"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span>정성 근거 있음 · 발생률 미확인</span></span>
+    </div>
+  </div>
+
+  <div class="cell c-sol">
+    <span class="num">④ SOLUTION</span>
+    <h3>해결책</h3>
+    <ul>
+      <li>AI가 절약 후보와 근거를 제안</li>
+      <li>사용자가 카테고리·강도를 직접 선택</li>
+      <li>한도 초과분만 지킬 돈에서 차감</li>
+      <li>월중 한 숫자 확인 · 월말 캐릭터 성장</li>
+    </ul>
+    <div class="foot">
+      <span class="badge lv3"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span>설계 확정 · 효과 미확인</span></span>
+    </div>
+  </div>
+
+  <div class="cell c-met">
+    <span class="num">⑧ KEY METRICS</span>
+    <h3>핵심 지표</h3>
+    <ul>
+      <li>온보딩 완주 · 모델 이해</li>
+      <li>자동 반영 성공 · 오분류 수정</li>
+      <li>월말 성장 확인 · 다음 달 재시작</li>
+      <li>북극성 지표와 기준값은 아직 없음</li>
+    </ul>
+    <div class="foot">
+      <span class="badge lv3"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span>후보 확정 · 실측값 미확인</span></span>
+    </div>
+  </div>
+
+  <div class="cell c-uvp">
+    <span class="num">③ UNIQUE VALUE PROPOSITION</span>
+    <h3>고유 가치 제안</h3>
+    <p class="quote">줄일 수 있는 소비만 골라, 지킨 돈을 한 숫자와 한 캐릭터로 이어간다.</p>
+    <ul>
+      <li><b>선택권</b> — AI는 후보와 이유만 제안, 결정은 사용자</li>
+      <li><b>단순성</b> — 내부 한도는 숨기고 지키는 금액 하나만</li>
+      <li><b>부분 절감</b> — 카테고리 금지 대신 초과분만 차감</li>
+      <li><b>비난 없음</b> — 지출을 실패로 만들지 않고 캐릭터도 퇴화하지 않음</li>
+    </ul>
+    <div class="foot">
+      <span class="badge lv2"><span class="meter"><i class="on"></i><i class="on"></i><i></i><i></i></span><span>가치 제안 가설</span></span>
+    </div>
+  </div>
+
+  <div class="cell c-adv blank">
+    <span class="num">⑨ UNFAIR ADVANTAGE</span>
+    <h3>불공정 우위</h3>
+    <div class="stamp">
+      <b>미확인</b>
+      <small>부분 절감 공식·한 숫자·캐릭터는 모두 복제 가능한 기획과 UX 규칙입니다. 방어 가능한 자산은 아직 없습니다.</small>
+    </div>
+  </div>
+
+  <div class="cell c-chan blank">
+    <span class="num">⑤ CHANNELS</span>
+    <h3>채널</h3>
+    <div class="stamp">
+      <b>미확인</b>
+      <small>유입 경로, 제휴, 전환율, 고객획득비용 어느 것도 확인된 근거가 없습니다.</small>
+    </div>
+  </div>
+
+  <div class="cell c-cust">
+    <span class="num">② CUSTOMER SEGMENTS</span>
+    <h3>고객군</h3>
+    <ul>
+      <li>스트레스성 배달·쇼핑·택시 소비 후 후회하는 20–30대 직장인</li>
+      <li>가계부·금융 앱을 써봤지만 행동 변화로 이어지지 않은 절약 지망생</li>
+      <li><b>초기 수용자</b> — 위 조건을 대부분 가진 25–39세 직장인</li>
+    </ul>
+    <div class="foot">
+      <span class="badge lv2"><span class="meter"><i class="on"></i><i class="on"></i><i></i><i></i></span><span>초기 타깃 가설</span></span>
+    </div>
+  </div>
+
+  <div class="cell c-cost">
+    <span class="num">⑦ COST STRUCTURE</span>
+    <h3>비용 구조</h3>
+    <ul>
+      <li>프로토타입 개발, 더미 데이터 서버, AI 처리, 저장, 캐릭터 제작, 사용성 검증</li>
+      <li>실연동 전환 시 개인정보·보안·금융 규제·운영·고객지원 부담 추가</li>
+      <li>금액, 고정비, 사용자당 변동비는 아직 산정되지 않음</li>
+    </ul>
+    <div class="foot">
+      <span class="badge lv2"><span class="meter"><i class="on"></i><i class="on"></i><i></i><i></i></span><span>항목만 부분 확인 · 금액 미확인</span></span>
+    </div>
+  </div>
+
+  <div class="cell c-rev blank">
+    <span class="num">⑥ REVENUE STREAMS</span>
+    <h3>수익원</h3>
+    <div class="stamp">
+      <b>미확인</b>
+      <small>누가, 얼마를, 어떤 방식으로 내는지 정해지지 않았습니다. 금융상품은 판매·중개 없이 정보성 비교만 하므로 수수료로 계산할 근거도 없습니다. 가격이 없어 금액 기준 TAM·SAM·SOM과 매출 전망도 만들 수 없습니다.</small>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ 상세 ============ -->
+
+<section class="detail">
+  <div class="sec-head"><span class="num">①</span><h3>문제</h3>
+    <span class="badge lv4"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span>정성 근거 있음</span></span></div>
+  <div class="rule-thin"></div>
+
+  <div class="cols">
+    <div>
+      <p class="block-note"><b>보조 문제.</b> 전체 소비를 평가하거나 반복 경고하는 서비스는 잔소리·감시로 느껴집니다. 자동 분류가 틀리거나 수정하기 어려우면 서비스 전체를 믿지 않게 됩니다. 월 단위·카테고리 중심 예산은 변동 지출을 충분히 설명하지 못할 수 있습니다.</p>
+      <ul class="states" style="margin-top:16px">
+        <li><span class="tag badge lv4"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span>근거</span></span> 문헌과 온라인 발화에서 충동 소비, 늦은 인지, 절감 기준 부족, 중간 성과 부재가 반복 확인됨</li>
+        <li><span class="tag badge lv4"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span>근거</span></span> 경쟁사 사용자 반응에서 연동 지연·누락·중복·경직된 월 예산 문제 관찰</li>
+        <li><span class="tag badge lv1"><span class="meter"><i class="on"></i><i></i><i></i><i></i></span><span>미확인</span></span> 실제 20–30대 직장인 중 각 문제의 발생 비율</li>
+        <li><span class="tag badge lv1"><span class="meter"><i class="on"></i><i></i><i></i><i></i></span><span>미확인</span></span> 세 문제 중 무엇이 실제 결제·지속 사용을 만드는 최우선 문제인지</li>
+      </ul>
+    </div>
+    <div class="tbl-wrap" style="align-self:start">
+      <table>
+        <thead><tr><th>기존 대안</th><th>현재 역할</th><th>남는 공백</th></tr></thead>
+        <tbody>
+          <tr><td>토스·뱅크샐러드</td><td>거래와 카테고리별 소비 확인</td><td>분석이 다음 행동 기준으로 이어지는지 미확인</td></tr>
+          <tr><td>Rocket Money·PocketGuard</td><td>자동 연동, 월 예산, 가용 금액</td><td>동기화 신뢰, 카테고리 복잡성, 고정 월 예산 불만</td></tr>
+          <tr><td>Cleo</td><td>대화형 조언과 행동 개입</td><td>구독·현금 선지급 이해관계가 조언 신뢰를 해칠 수 있음</td></tr>
+          <tr><td>엑셀·구글시트</td><td>기준과 계산을 직접 통제</td><td>입력·유지 부담, 신규 거래 자동 반영 없음</td></tr>
+          <tr><td>메모·종이 가계부</td><td>빠른 자기 기록</td><td>자동 집계·상태 계산·월간 지속 구조 없음</td></tr>
+          <tr><td>별도 통장 이체</td><td>지킬 돈을 실제로 분리</td><td>시작 부담과 중도 수정 부담</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="detail">
+  <div class="sec-head"><span class="num">②</span><h3>고객군</h3>
+    <span class="badge lv2"><span class="meter"><i class="on"></i><i class="on"></i><i></i><i></i></span><span>초기 타깃 가설</span></span></div>
+  <div class="rule-thin"></div>
+
+  <div class="cols">
+    <div>
+      <p class="block-note"><b>고객이 원하는 진전.</b> 내가 지키기로 한 돈이 지금 얼마나 보호되고 있는지 확인하면서, 반드시 지키고 싶은 소비는 건드리지 않고 소비를 조정하고 싶다.</p>
+      <p class="eyebrow" style="margin:22px 0 10px">초기 수용자 조건 · 25–39세 직장인</p>
+      <div class="chips">
+        <span class="chip"><b>01</b> 최근 3개월 안에 충동 소비 후 후회</span>
+        <span class="chip"><b>02</b> 가계부·절약 앱 사용 경험, 현재는 비활성</span>
+        <span class="chip"><b>03</b> 절약 시도를 한 달 이상 유지 실패</span>
+        <span class="chip"><b>04</b> 무엇부터 줄일지 모름</span>
+      </div>
+      <ul class="states" style="margin-top:20px">
+        <li><span class="tag badge lv1"><span class="meter"><i class="on"></i><i></i><i></i><i></i></span><span>미확인</span></span> 금융 데이터 연결 의향, 반복 사용 의향, 결제 의향</li>
+        <li><span class="tag badge lv1"><span class="meter"><i class="on"></i><i></i><i></i><i></i></span><span>미확인</span></span> 페르소나의 소득·카드 사용액·앱 이용 행태가 실제 고객군을 대표하는지</li>
+      </ul>
+    </div>
+    <div class="tbl-wrap" style="align-self:start">
+      <table>
+        <thead><tr><th>범위</th><th class="num-cell">규모</th><th>근거 상태</th></tr></thead>
+        <tbody>
+          <tr><td>연령 기준 TAM</td><td class="num-cell">약 1,226만 명</td><td>2026년 6월 국내 20–39세 주민등록 인구</td></tr>
+          <tr><td>조건 적용 SAM</td><td class="num-cell">약 119만 명</td><td>취업자 수에 임금근로자 비율과 문제 적합률 적용한 추정</td></tr>
+          <tr><td>프로토타입 SOM</td><td class="num-cell">100–300명</td><td>모집·완료율 가정, 월간 완료 30–90명</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="detail">
+  <div class="sec-head"><span class="num">④</span><h3>해결책</h3>
+    <span class="badge lv3"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span>설계 확정 · 효과 미확인</span></span></div>
+  <div class="rule-thin"></div>
+
+  <div class="cols">
+    <div>
+      <p class="eyebrow" style="margin-bottom:10px">1차 MVP 흐름</p>
+      <pre>더미 마이데이터로 과거 3개월 소비 분석
+  ↓ AI가 줄여볼 카테고리와 근거 제안
+  ↓ 사용자가 1–2개 카테고리와 강도 선택
+  ↓ 이번 달 <b>지킬 돈</b> 확정
+  ↓ 신규 거래 시뮬레이션 자동 반영
+  ↓ 사용 한도 이내에서는 침묵
+  ↓ 한도 초과분만 지킬 돈에서 차감
+  ↓ 오분류·취소·환불 시 재계산
+  ↓ 월말 최종 <b>지킨 돈</b> 확정
+  ↓ 캐릭터 누적 성장과 새 챕터</pre>
+    </div>
+    <div>
+      <p class="eyebrow" style="margin-bottom:10px">계산 규칙</p>
+      <pre><b>사용 한도</b> = 기준 소비 × (1 − 절약 강도)
+<b>지킬 돈</b>  = 기준 소비 × 절약 강도
+<b>지킨 돈</b>  = max( 지킬 돈 − max(누적 소비 − 사용 한도, 0), 0 )</pre>
+      <p class="eyebrow" style="margin:24px 0 10px">현재 구현 경계</p>
+      <ul class="plain">
+        <li>실제 개인신용정보와 실제 자금은 다루지 않음</li>
+        <li>더미 서버와 신규 거래 시뮬레이션 사용</li>
+        <li>계좌 개설·이체, 푸시 알림, OS 위젯은 범위 밖</li>
+        <li>금융상품은 정보성 비교만, 판매·중개·가입 대행 없음</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="detail">
+  <div class="sec-head"><span class="num">⑧</span><h3>핵심 지표</h3>
+    <span class="badge lv3"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span>후보 확정 · 기준값 미확인</span></span></div>
+  <div class="rule-thin"></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>단계</th><th>지표</th><th>현재 상태</th></tr></thead>
+      <tbody>
+        <tr><td>진입</td><td>온보딩 완주율</td><td>정의 있음 · 실측값 미확인</td></tr>
+        <tr><td>선택</td><td>카테고리 선택 완료율</td><td>정의 있음 · 실측값 미확인</td></tr>
+        <tr><td>추천</td><td>AI 추천 카테고리·권장 강도 수용률</td><td>정의 있음 · 실측값 미확인</td></tr>
+        <tr><td>이해</td><td>지킬 돈 의미 이해 · 차감 이유 설명 가능</td><td>목표 80% · 근거와 실측값 미확인</td></tr>
+        <tr><td>신뢰</td><td>거래 자동 반영 성공률 · 오분류 수정률</td><td>정의 있음 · 실측값 미확인</td></tr>
+        <tr><td>행동</td><td>같은 카테고리의 다음 소비 변화</td><td>측정 제안 · 실측값 미확인</td></tr>
+        <tr><td>월말</td><td>월말 성장 확인률</td><td>정의 있음 · 실측값 미확인</td></tr>
+        <tr><td>지속</td><td>다음 달 챕터 시작률 · 2개월 누적 성장 유지율</td><td>측정 방식 일부 미정</td></tr>
+        <tr><td>감정</td><td>비난·감시·강압으로 느낀 비율</td><td>측정 제안 · 실측값 미확인</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="block-note" style="margin-top:18px"><b>평균 지킨 돈만 핵심 지표로 쓰지 않습니다.</b> 필요한 소비까지 줄인 결과를 성공으로 오판할 수 있어 통제감·이해·신뢰·지속을 함께 봅니다. 하나의 북극성 지표, 최소 효과 크기, 더미 데이터의 일반화 기준, 리텐션 코호트 기준은 아직 정하지 못했습니다.</p>
+</section>
+
+<!-- ============ 리스크 ============ -->
+<section class="detail">
+  <div class="sec-head"><h3>가장 위험한 미확인 가설</h3>
+    <span class="eyebrow">틀렸을 때 무엇이 무너지는가</span></div>
+  <div class="rule-thin"></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>우선</th><th>미확인 가설</th><th>틀렸을 때 영향</th><th>확인 방법</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pri p0">P0</span></td><td>타깃 고객이 <b>무엇을 줄일지 모름</b>과 <b>중간 성과 부재</b>를 주요 문제로 느낀다</td><td>문제–고객 적합성 붕괴</td><td>25–39세 조건부 실제 인터뷰</td></tr>
+        <tr><td><span class="pri p0">P0</span></td><td><b>지킬 돈</b>을 잔액·예산·저축액과 혼동하지 않는다</td><td>핵심 가치 이해 실패</td><td>계산 예시 포함 프로토타입 테스트</td></tr>
+        <tr><td><span class="pri p0">P0</span></td><td>자동 분석이 틀려도 수정 후 신뢰가 회복된다</td><td>한 숫자 전체에 대한 불신</td><td>오분류·누락·중복 시나리오 테스트</td></tr>
+        <tr><td><span class="pri p0">P0</span></td><td>거래 후 상태 확인이 같은 달의 다음 소비를 바꾼다</td><td>행동 변화 효과 부재</td><td>반복 거래 시나리오와 후속 인터뷰</td></tr>
+        <tr><td><span class="pri p1">P1</span></td><td>월말에만 성장해도 캐릭터가 재방문 동기를 만든다</td><td>게이미피케이션 가치 약화</td><td>캐릭터 유무·월중 반응 유무 비교</td></tr>
+        <tr><td><span class="pri p1">P1</span></td><td>필요한 소비가 선택 카테고리 안에 있어도 부분 절감만으로 존중받는다고 느낀다</td><td>고객 원칙과 계산 충돌</td><td>야근 배달·필수 택시 사례 테스트</td></tr>
+        <tr><td><span class="pri p1">P1</span></td><td>사용자가 금융 데이터를 연결할 의향이 있다</td><td>실제 출시 활성화 실패</td><td>연결 의향·이탈 이유 인터뷰</td></tr>
+        <tr><td><span class="pri p1">P1</span></td><td>다음 달 챕터를 다시 시작한다</td><td>월간 제품의 리텐션 실패</td><td>한 달 이상 종단 테스트</td></tr>
+        <tr><td><span class="pri p2">P2</span></td><td>지속적으로 고객을 데려올 채널이 있다</td><td>성장 불가</td><td><b style="color:var(--stamp)">미확인 — 채널 탐색 필요</b></td></tr>
+        <tr><td><span class="pri p2">P2</span></td><td>누군가 이 서비스에 돈을 낼 의향이 있다</td><td>사업 지속 불가</td><td><b style="color:var(--stamp)">미확인 — 지불의향 조사 필요</b></td></tr>
+        <tr><td><span class="pri p2">P2</span></td><td>복제하기 어려운 우위를 축적할 수 있다</td><td>경쟁 방어력 부재</td><td><b style="color:var(--stamp)">미확인 — 검증 방법 미정</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 말할 수 있는 것 / 없는 것 ============ -->
+<section class="detail">
+  <div class="sec-head"><h3>현재 캔버스로 말할 수 있는 것과 없는 것</h3></div>
+  <div class="rule-thin"></div>
+  <div class="ledger">
+    <div>
+      <h4>말할 수 있는 것</h4>
+      <ol>
+        <li>MOA가 해결하려는 문제 패턴은 정성 리서치에서 반복 관찰됐다.</li>
+        <li>사용자가 선택한 소비의 지킬 돈을 부분 절감 방식으로 추적하는 제품 구조가 설계됐다.</li>
+        <li>기존 예산 앱에서 자동 연동 신뢰와 복잡한 월 예산 문제가 반복 관찰됐다.</li>
+        <li>현재 MVP는 실제 금융 서비스가 아니라 더미 데이터를 이용한 포트폴리오 프로토타입이다.</li>
+      </ol>
+    </div>
+    <div class="no">
+      <h4>아직 말할 수 없는 것</h4>
+      <ol>
+        <li>타깃 고객이 MOA를 실제로 필요로 하고 반복 사용할 것이다.</li>
+        <li>MOA가 충동구매를 사전에 막는다.</li>
+        <li>캐릭터가 리텐션을 높인다.</li>
+        <li>AI 분석이 경쟁사보다 정확하다.</li>
+        <li>1년 안에 특정 가입자·매출을 달성한다.</li>
+        <li>검증된 유입 채널이나 수익모델이 있다.</li>
+        <li>복제하기 어려운 불공정 우위가 있다.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 결론 ============ -->
+<section class="conclude">
+  <span class="eyebrow">캔버스 결론</span>
+  <p class="block-note" style="margin-top:14px;font-size:16px">
+    현재 MOA는 <b>문제–고객–해결책</b>에 대한 구체적인 가설과 이를 시험할 MVP 설계까지는 갖췄습니다. 반면 <b>채널–수익원–불공정 우위</b>는 근거가 없어 미확인이고, 비용 구조와 핵심 지표도 항목만 정의됐을 뿐 실제 값이 없습니다. 그래서 지금 할 일은 사업 모델을 그럴듯하게 채우는 것이 아니라, 다음 두 가지를 먼저 확인하는 것입니다.
+  </p>
+  <div class="two">
+    <div>
+      <span class="q">확인 과제 01</span>
+      <p>타깃 고객이 지킬 돈 한 숫자 + 부분 절감 + 비난 없는 성장을 이해하고, 실제로 다음 소비를 조정하는가.</p>
+    </div>
+    <div>
+      <span class="q">확인 과제 02</span>
+      <p>한 달 뒤에도 다시 챕터를 시작할 만큼 가치가 남는가.</p>
+    </div>
+  </div>
+  <p class="block-note" style="margin-top:22px;color:var(--ink-2)">이 두 가설이 확인되기 전까지 채널 효율, 유료화, 매출, 불공정 우위를 확정 사실처럼 사용하지 않습니다.</p>
+</section>
+
+<footer>
+  <span>MOA · LEAN CANVAS</span>
+  <span>근거 있음 · 기획 확정 · 가설 · 미확인</span>
+</footer>
+
+</div>
+</body>
+</html>

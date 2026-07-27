@@ -44,11 +44,15 @@ public class UserPayment {
     @Column(name = "received_benefit", nullable = false)
     private int receivedBenefit;
 
+    /** 가맹점 사업자등록번호 10자리(마이데이터에서 전달). 사용자는 이 번호로 가맹점 주소를 조회한다(§13). */
+    @Column(name = "business_number", length = 10)
+    private String businessNumber;
+
     protected UserPayment() {}
 
     public UserPayment(String paymentId, Long userId, String cardSerial, Long cardCode,
                        LocalDateTime paymentDate, String category1, String category2,
-                       int amount, String merchantName, int receivedBenefit) {
+                       int amount, String merchantName, int receivedBenefit, String businessNumber) {
         this.paymentId = paymentId;
         this.userId = userId;
         this.cardSerial = cardSerial;
@@ -59,6 +63,7 @@ public class UserPayment {
         this.amount = amount;
         this.merchantName = merchantName;
         this.receivedBenefit = receivedBenefit;
+        this.businessNumber = businessNumber;
     }
 
     public String getPaymentId() { return paymentId; }
@@ -71,4 +76,5 @@ public class UserPayment {
     public int getAmount() { return amount; }
     public String getMerchantName() { return merchantName; }
     public int getReceivedBenefit() { return receivedBenefit; }
+    public String getBusinessNumber() { return businessNumber; }
 }
