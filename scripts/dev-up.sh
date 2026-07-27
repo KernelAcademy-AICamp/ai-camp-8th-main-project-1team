@@ -4,6 +4,20 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# 시크릿 로드 — .env는 커밋하지 않는다(.gitignore). 팀 공유는 저장소가 아닌 별도 채널로.
+# 형식은 `export` 없는 KEY=VALUE 한 줄씩(.env.example 참고).
+# 이미 셸에 있는 값을 우선한다 — `FSS_API_KEY=xxx ./scripts/dev-up.sh`로 1회성 덮어쓰기가 되게 하려는 것.
+# 그냥 `source`하면 .env의 빈 값이 셸 값을 덮어써 키가 조용히 사라진다.
+if [ -f .env ]; then
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in ''|'#'*) continue ;; *=*) ;; *) continue ;; esac
+    key="${line%%=*}"
+    [ -n "${!key:-}" ] && continue
+    export "$key=${line#*=}"
+  done < .env
+  echo "[0/4] .env 로드 완료"
+fi
+
 API="${API:-http://localhost:8080}"
 
 echo "[1/4] 백엔드 빌드"

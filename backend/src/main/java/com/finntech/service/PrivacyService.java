@@ -220,7 +220,11 @@ public class PrivacyService {
         userCardCompanyRepository.deleteByUserId(userId);   // 연동 카드사·동기화 기록도 파기(W2)
         overrideRepository.deleteByUserId(userId);   // 개인화 override도 파기(W8-5)
         cutSelectionRepository.deleteByUserId(userId);   // 절약후보 선택추적(⑤)도 소비결정 정보이므로 파기
-        userRepository.findById(userId).ifPresent(user -> { user.setCi(null); userRepository.save(user); });
+        userRepository.findById(userId).ifPresent(user -> {
+            user.setCi(null);
+            user.setBirthYear(null);   // 본인인증에서 파생한 출생연도도 개인정보다 — 함께 파기한다.
+            userRepository.save(user);
+        });
 
         if (mine.isEmpty()) return 0;
         consumptionRepository.deleteAll(mine);
@@ -245,13 +249,17 @@ public class PrivacyService {
                 "소비내역 기록 기능 개인정보 처리방침",
                 List.of(
                         new Clause("1. 수집 항목",
-                                "소비 카테고리, 금액, 날짜, 계획소비 여부 (4개 항목)\n"
+                                "소비 카테고리, 금액, 날짜, 계획소비 여부, 출생연도(마이데이터 연동 시) (5개 항목)\n"
                                         + "※ 실명·이메일·연락처·계좌번호·카드번호는 수집하지 않으며, 계정은 닉네임 기반 익명 계정입니다.\n"
                                         + "※ 마이데이터(가상) 연동 시 본인인증 신원(이름·주민등록번호 앞 7자리·휴대폰번호)은 "
                                         + "가상 CI 계산에만 쓰고 원문은 저장하지 않습니다(전화번호 미저장). CI는 실 NICE 인증값이 아닌 "
-                                        + "가상 생성값이며, 불러온 카드·결제내역과 함께 삭제권 대상입니다."),
+                                        + "가상 생성값이며, 불러온 카드·결제내역과 함께 삭제권 대상입니다.\n"
+                                        + "※ 출생연도는 주민등록번호 앞 7자리에서 연도만 파생해 저장하며(월·일·성별 미저장), "
+                                        + "금융상품 비교에서 나이 자격 조건을 맞춰 보는 용도로만 씁니다. CI와 함께 삭제권 대상입니다."),
                         new Clause("2. 수집 목적",
-                                "소비 패턴 분석·소비건전성지수·절약 리포트·(더미)금융상품 추천·이상소비 탐지 (본 서비스 내에서만 이용).\n"
+                                "소비 패턴 분석·소비건전성지수·절약 리포트·금융상품 비교·이상소비 탐지 (본 서비스 내에서만 이용).\n"
+                                        + "출생연도는 나이 자격 조건 확인에만 씁니다. 직업·소득자격·병역·가족관계는 알지 못하므로 "
+                                        + "그런 자격이 필요한 상품(군 장병·공무원·기초생활수급자·자녀 조건 등)은 비교 대상에서 제외합니다.\n"
                                         + "외부 AI에는 개인을 식별할 수 없는 집계 수치만 전달되며, 광고·마케팅·AI 학습에 이용하지 않습니다."),
                         new Clause("3. 보유 및 이용 기간",
                                 "직접 입력한 소비내역은 입력일로부터 " + (retentionDays / 30) + "개월. 기간 경과 시 매일 배치로 자동 파기합니다.\n"
