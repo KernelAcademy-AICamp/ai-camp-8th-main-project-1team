@@ -9,7 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.time.Clock;
 
 @Configuration
-@EnableConfigurationProperties(AnalysisProperties.class)
+@EnableConfigurationProperties({AnalysisProperties.class, com.finntech.guardian.GuardianProperties.class})
 public class AppConfig {
 
     /**
