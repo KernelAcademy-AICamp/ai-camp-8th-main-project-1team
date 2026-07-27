@@ -84,6 +84,49 @@ finntech:
     request-delay-millis: 15000
     timeout-seconds: 20
 
+  # ---- 지킴이 Agent 임계치 (지킴이 Agent 설계서 v1.2) -------------------------
+  # 설계서는 "임계값을 DB에 넣지 말고 깃으로 버전 관리하라"고 요구하고, 이 저장소는 "임계치는 전부
+  # application.yml"(마스터 §4 원칙 4)을 요구한다. yml도 깃 안에 있으므로 둘 다 만족한다.
+  # 케이스의 '구조'(우선순위·톤·쿨다운)는 값이 아니라 로직이라 GuardianRules.java에 남는다.
+  guardian:
+    # 한도의 이 비율을 넘으면 AT_RISK + C3 발화
+    at-risk-ratio: 0.80
+    # 부분 달성 하한. 5주차 인터뷰로 검증할 가정값이다(설계서 §8).
+    partial-unlock-threshold: 0.70
+    # 이 신뢰도 미만이면 집계하지 않고 C7로 되묻는다 — 분류 전에는 판정할 수 없다.
+    category-confidence-threshold: 0.70
+    # 이번 주 같은 카테고리 결제가 이 건수에 이르면 C2(패턴 지적)
+    repeat-weekly-count: 3
+    # 단건 이 금액 미만은 잔돈 버킷으로 모은다(개별 알림 대신)
+    micro-tx-threshold: 5000
+    # 잔돈 버킷 합계가 이 금액을 넘으면 C8을 하루 1회
+    micro-bucket-trigger: 12000
+    # 되돌리기 유예. 낙관적 판정(D1-A)의 안전판이다.
+    undo-window-hours: 24
+    default-duration-days: 30
+    notification:
+      # 거래성 1 + 시간성 1. 이 예산을 넘으면 C13으로 침묵한다.
+      daily-push-limit: 2
+      night-start-hour: 22
+      night-end-hour: 8
+      # 게임 이벤트는 푸시하지 않는다 — 홈 미개봉 뱃지 + 앱 안 모달로만(설계서 §4.1)
+      game-events-use-push: false
+    point:
+      # 미션 30 + 위기 방어 20 + 라벨링 최대 50(25건) = 주간 상한 100
+      weekly-mission: 30
+      risk-defense: 20
+      labeling: 2
+      monthly-complete: 100
+      weekly-cap: 100
+      # 완주는 장기 보상이라 주간 상한과 별도로 지급한다
+      monthly-exempt-from-cap: true
+      # 출석·로그인 보상은 없다. 포인트는 절약 행동의 증명이어야 한다.
+      attendance-reward: 0
+    shop:
+      object: 30
+      furniture: 150
+      wall-floor: 400
+
   # ---- 분석 임계치 ----------------------------------------------------------
   # 전부 설정값이다. 페르소나(D-09) 확정 시 이 블록만 갈아끼우면 된다 (문서 §8 설계 제약 2).
   analysis:
