@@ -1,0 +1,19 @@
+name: Require deploy checklist
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+    branches: [main]
+
+jobs:
+  checklist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || '';
+            const unchecked = (body.match(/^\s*- \[ \]/gm) || []).length;
+            if (unchecked > 0) {
+              core.setFailed(`배포 체크리스트 미완료 항목 ${unchecked}개. 본문에서 모두 체크한 뒤 다시 시도하세요.`);
+            }
