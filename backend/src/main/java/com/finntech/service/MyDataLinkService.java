@@ -204,12 +204,18 @@ public class MyDataLinkService {
      */
     @Transactional(readOnly = true)
     public MyDataResponses.AccountView account(Long userId) {
+        return account(userId, 1);
+    }
+
+    /** @param months 최근 N개월(당월 포함) — 화면의 '이전 6개월 보기'가 7을 보낸다. */
+    @Transactional(readOnly = true)
+    public MyDataResponses.AccountView account(Long userId, int months) {
         AppUser user = userRepository.findById(userId).orElseThrow(
                 () -> new IllegalArgumentException("user " + userId + " not found"));
         if (!userBankRepository.existsByUserId(userId)) return null;
         String ci = user.getCi();
         if (ci == null || ci.isBlank()) return null;
-        return myDataClient.findAccount(ci);
+        return myDataClient.findAccount(ci, months);
     }
 
     /**

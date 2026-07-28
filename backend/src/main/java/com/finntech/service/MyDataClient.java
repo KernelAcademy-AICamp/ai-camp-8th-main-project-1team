@@ -41,8 +41,14 @@ public class MyDataClient {
 
     /** 입출금 통장 조회(§13-11) — 은행·계좌·월급·잔액 + 입출금 내역. 계좌 없으면 null. */
     public AccountView findAccount(String ci) {
+        return findAccount(ci, 1);
+    }
+
+    /** @param months 최근 N개월(당월 포함). 통장 화면의 '이전 6개월 보기'가 7을 보낸다. */
+    public AccountView findAccount(String ci, int months) {
         Envelope<AccountView> response = client.get()
-                .uri(builder -> builder.path("/bank/mydata/account").queryParam("userId", ci).build())
+                .uri(builder -> builder.path("/bank/mydata/account")
+                        .queryParam("userId", ci).queryParam("months", months).build())
                 .retrieve()
                 .body(new ParameterizedTypeReference<Envelope<AccountView>>() {});
         return response == null ? null : response.data();

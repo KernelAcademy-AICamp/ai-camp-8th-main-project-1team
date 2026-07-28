@@ -41,7 +41,21 @@ public final class MyDataDtos {
                               int salary, int payday, long balance, List<AccountTxnView> transactions) {}
 
     /** 통장 입출금 1건. type = DEPOSIT(월급 입금) | WITHDRAWAL(카드 출금). amount는 부호 없는 절대액. */
-    public record AccountTxnView(LocalDateTime date, String type, long amount, String description) {}
+    /**
+     * 통장 거래 한 줄. {@code balanceAfter}는 <b>이 거래 직후의 잔액</b>이다.
+     * +/− 금액만 있으면 "그래서 지금 얼마인가"를 사용자가 암산해야 한다 — 통장을 보는 이유가 그건데.
+     */
+    /**
+     * 통장 거래 한 줄 — 실제 통장의 두 칸 구조를 따른다.
+     *
+     * <ul>
+     *   <li>{@code description}(적요) — 거래 상대나 성격. 예: {@code 뚜레쥬르 병영1동점}, {@code 이자입금}, {@code 김민준}
+     *   <li>{@code note}(비고) — 취급점이나 채널. 예: {@code KB체크}, {@code BNK경남은행본부}, {@code 전자금융이체}
+     *   <li>{@code balanceAfter} — 이 거래 직후의 잔액
+     * </ul>
+     */
+    public record AccountTxnView(LocalDateTime date, String type, long amount, String description,
+                                 String note, long balanceAfter) {}
 
     /** 가맹점 조회(번호→주소) — 사용자가 결제에 실린 사업자번호로 가맹점명·지번주소를 조회한다. */
     public record MerchantView(String businessNumber, String merchantName, String address,
