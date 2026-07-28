@@ -64,11 +64,15 @@ public class MyDataService {
             LocalDateTime now = cutoff();
             long withdrawn = paymentRepository.sumByUserUpTo(userId, now);
             List<AccountTxnView> deposits = salaryDeposits(a, now);
-            long balance = a.getInitialBalance() + (long) a.getSalary() * deposits.size() - withdrawn;
+            List<AccountTxnView> interest = interestAndTax(a, userId, now);
+            long net = interest.stream()
+                    .mapToLong(t -> "DEPOSIT".equals(t.type()) ? t.amount() : -t.amount()).sum();
+            long balance = a.getInitialBalance() + (long) a.getSalary() * deposits.size() + net - withdrawn;
 
-            // 입출금 내역 = 월급 입금 전부(월 1회라 적음) + 최근 카드 출금 40건. 입금이 잦은 출금에 밀려 잘리지
-            // 않도록 둘 다 보존해 최신순 정렬(프론트가 입금·출금을 함께 보여준다).
+            // 입출금 내역 = 월급 입금 + 이자·이자소득세 + 최근 카드 출금 40건. 입금이 잦은 출금에 밀려 잘리지
+            // 않도록 앞의 둘은 보존해 최신순 정렬(프론트가 입금·출금을 함께 보여준다).
             List<AccountTxnView> txns = new java.util.ArrayList<>(deposits);
+            txns.addAll(interest);
             for (MyDataPayment p : paymentRepository.findByUserUpTo(
                     userId, now, org.springframework.data.domain.PageRequest.of(0, 40))) {
                 txns.add(new AccountTxnView(p.getPaymentDate(), "WITHDRAWAL", p.getAmount(), p.getMerchantName()));
@@ -77,6 +81,68 @@ public class MyDataService {
             return new AccountView(a.getAccountNumber(), a.getBank(), a.getProduct(), a.getSalaryPayer(),
                     a.getSalary(), a.getPayday(), balance, txns);
         });
+    }
+
+    /** 이자소득세 15.4% — 소득세 14% + 지방소득세 1.4%. 원천징수라 입금 직후 빠진다. */
+    private static final double INTEREST_TAX_RATE = 0.154;
+    /** 연이율 범위. 입출금 통장이라 낮다(정기예금이 아니다). */
+    private static final double RATE_MIN = 0.001, RATE_MAX = 0.020;
+
+    /**
+     * 계좌별 연이율 — 계좌번호 해시에서 0.1~2.0% 사이로 뽑는다.
+     *
+     * <p>난수를 그때그때 뽑지 않는 이유는 재현성이다(마스터 §4 원칙 3). 같은 계좌는 언제 조회해도
+     * 같은 이율이어야 잔액이 흔들리지 않는다. 계좌번호는 불변이므로 시드로 적당하다.
+     */
+    private static double annualRate(MyDataAccount a) {
+        int h = a.getAccountNumber().hashCode();
+        double unit = (h & 0x7fffffff) / (double) Integer.MAX_VALUE;   // [0,1)
+        return RATE_MIN + unit * (RATE_MAX - RATE_MIN);
+    }
+
+    /**
+     * 매달 이자 입금과 그 직후의 이자소득세 출금을 만든다(≤now).
+     *
+     * <p><b>저장하지 않고 계산한다.</b> 월급 입금과 같은 방식이다 — 통장 거래는 행으로 쌓아둔 것이
+     * 아니라 개설일·월급·결제내역에서 유도된다. 그래서 이자를 넣는 데 마이데이터 재생성이 필요 없다.
+     *
+     * <p>이자는 <b>그 시점 실잔액</b>에 붙는다. 많이 쓴 달은 잔액이 낮아 이자도 적다 — "안 쓰면
+     * 더 붙는다"가 숫자로 드러나야 소비 조언 앱의 서사가 산다. 그래서 월별 출금을 한 번에 받아
+     * 시간순으로 걸으며 잔액을 굴린다(매달 합계를 따로 묻지 않는다).
+     */
+    private List<AccountTxnView> interestAndTax(MyDataAccount a, String userId, LocalDateTime now) {
+        java.util.Map<java.time.YearMonth, Long> outByMonth = new java.util.HashMap<>();
+        for (Object[] row : paymentRepository.sumByUserPerMonth(userId, now)) {
+            outByMonth.merge(java.time.YearMonth.of(((Number) row[0]).intValue(), ((Number) row[1]).intValue()),
+                    ((Number) row[2]).longValue(), Long::sum);
+        }
+
+        double rate = annualRate(a);
+        // 이자일은 개설일의 '일'을 따른다(말일 보정). 월급날과 겹치지 않게 시각만 다르게 둔다.
+        int day = Math.min(a.getOpenedDate().getDayOfMonth(), 28);
+        LocalDate d = a.getOpenedDate().withDayOfMonth(day);
+        if (!d.isAfter(a.getOpenedDate())) d = d.plusMonths(1);   // 개설 당월은 이자 없음
+
+        long balance = a.getInitialBalance();
+        LocalDate salaryDay = a.getOpenedDate().withDayOfMonth(Math.min(a.getPayday(), 28));
+        if (salaryDay.isBefore(a.getOpenedDate())) salaryDay = salaryDay.plusMonths(1);
+
+        List<AccountTxnView> out = new java.util.ArrayList<>();
+        for (; !d.atTime(0, 5).isAfter(now); d = d.plusMonths(1)) {
+            java.time.YearMonth ym = java.time.YearMonth.from(d);
+            // 이 달의 이자일 이전에 들어온 월급과 나간 카드결제를 잔액에 반영한다.
+            for (; !salaryDay.isAfter(d); salaryDay = salaryDay.plusMonths(1)) balance += a.getSalary();
+            balance -= outByMonth.getOrDefault(ym.minusMonths(1), 0L);
+
+            long interest = Math.max(0, (long) (Math.max(0, balance) * rate / 12.0));
+            if (interest <= 0) continue;
+            long tax = (long) (interest * INTEREST_TAX_RATE);
+            out.add(new AccountTxnView(d.atTime(0, 5), "DEPOSIT", interest,
+                    String.format("이자 (연 %.2f%%)", rate * 100)));
+            if (tax > 0) out.add(new AccountTxnView(d.atTime(0, 6), "WITHDRAWAL", tax, "이자소득세"));
+            balance += interest - tax;
+        }
+        return out;
     }
 
     /** 개설일 이후 매달 월급날(payday≤28)에 입금된 월급 내역(≤now). 잔액 계산과 내역 표시에 공용. */
@@ -113,6 +179,32 @@ public class MyDataService {
         return merchantRepository.findById(businessNumber).map(m ->
                 new MerchantView(m.getBusinessNumber(), m.getMerchantName(), m.getAddress(),
                         m.getLat(), m.getLng(), m.isOnline()));
+    }
+
+    /** 연동 가능 은행 목록(자산연결 화면용). id는 이름순 순번이라 조회마다 같다. */
+    @Transactional(readOnly = true)
+    public List<BankView> findBanks() {
+        List<String> names = accountRepository.findDistinctBanks();
+        List<BankView> out = new java.util.ArrayList<>(names.size());
+        for (int i = 0; i < names.size(); i++) out.add(new BankView((long) (i + 1), names.get(i)));
+        return out;
+    }
+
+    /**
+     * 고른 은행들에 있는 사용자의 계좌. 실제 마이데이터처럼 <b>있는 것만</b> 내려준다 —
+     * 계좌가 없는 은행을 골랐다면 빈 목록이다(그것이 정확한 답이다).
+     */
+    @Transactional(readOnly = true)
+    public List<AccountView> findAccountsByBanks(String userId, List<Long> bankIds) {
+        List<String> all = accountRepository.findDistinctBanks();
+        List<String> picked = bankIds.stream()
+                .filter(id -> id != null && id >= 1 && id <= all.size())
+                .map(id -> all.get((int) (id - 1))).toList();
+        if (picked.isEmpty()) return List.of();
+        // 사용자당 계좌가 1개라 목록이라도 0~1건이다. 상세(잔액·내역)는 findAccount가 계산한다.
+        return accountRepository.findByUserAndBanks(userId, picked).isEmpty()
+                ? List.of()
+                : findAccount(userId).map(List::of).orElse(List.of());
     }
 
     /** 카드사 목록(연동 기관 선택용). */

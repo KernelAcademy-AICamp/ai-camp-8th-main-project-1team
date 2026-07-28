@@ -17,6 +17,8 @@ export function MyConnections() {
   const { reload: reloadGuardian } = useGuardian();
   const cards = useAsync(() => api.myCards(userId), [userId]);
   const companies = useAsync(() => api.mydataCompanies().catch(() => []), []);
+  const banks = useAsync(() => api.mydataBanks().catch(() => []), []);
+  const myBanks = useAsync(() => api.myBanks(userId).catch(() => []), [userId]);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
@@ -47,10 +49,13 @@ export function MyConnections() {
     setBusy('link'); setMsg(null); setError(null);
     try {
       const ids = (companies.data ?? []).map((c) => c.id);
-      const r = await api.mydataLink(userId, ids);
+      const bankIds = (banks.data ?? []).map((b) => b.id);
+      const r = await api.mydataLink(userId, ids, bankIds);
       resetAutoSyncThrottle(); // 방금 새로 연결했다 — 자동 동기화가 스로틀에 걸려 쉬면 안 된다
-      setMsg(`카드 ${r.cardCount}장 · 결제 ${r.paymentCount.toLocaleString('ko-KR')}건을 불러왔어요`);
+      setMsg(`카드 ${r.cardCount}장 · 결제 ${r.paymentCount.toLocaleString('ko-KR')}건`
+        + `${r.bankCount > 0 ? ` · 통장 ${r.bankCount}개` : ''}를 불러왔어요`);
       cards.reload();
+      myBanks.reload();
       await reloadGuardian();
     } catch (e) { setError(e); } finally { setBusy(null); }
   }
@@ -60,7 +65,7 @@ export function MyConnections() {
       <AppBar onBack={back} title="연결 관리" />
       <Scroll><div className="pad" style={{ paddingTop: 12 }}>
         <p className="h-sub" style={{ margin: '0 0 12px' }}>
-          카드 이용내역·승인내역만 가져와요. 결제·송금 권한은 포함되지 않아요.
+          카드 이용내역·승인내역과 입출금 통장만 가져와요. 결제·송금 권한은 포함되지 않아요.
         </p>
 
         <ErrorBox error={cards.error ?? error} onRetry={cards.reload} />
@@ -82,6 +87,24 @@ export function MyConnections() {
             );
           })}
         </div>
+
+        {(myBanks.data ?? []).length > 0 && (
+          <>
+            <SectionTitle aux={`${myBanks.data!.length}곳`}>연결된 은행</SectionTitle>
+            <div className="card" style={{ padding: '6px 18px' }}>
+              {myBanks.data!.map((b) => {
+                const br = brandOf(b.bankName);
+                return (
+                  <div className="list-item" key={b.id} style={{ padding: '13px 0', borderBottom: '1px solid var(--bg)' }}>
+                    <span className="inst-logo" style={{ background: br.bg, color: br.fg ?? '#fff' }} aria-hidden="true">{br.label}</span>
+                    <div className="tx"><b>{b.bankName}</b><span>입출금 통장 연결됨</span></div>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => go('r-account')}>보기</button>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button type="button" className="btn btn-primary btn-sm" style={{ flex: 1 }}

@@ -35,6 +35,7 @@ public class MyDataLinkService {
     private final ConsumptionRepository consumptionRepository;
     private final CategoryRepository categoryRepository;
     private final UserCardCompanyRepository userCardCompanyRepository;
+    private final UserBankRepository userBankRepository;
     private final ReportRepository reportRepository;
     private final java.time.Clock clock;
     /** 고정 기준일. null이면 {@link #referenceDate()}가 주입된 시계를 따른다. */
@@ -43,7 +44,8 @@ public class MyDataLinkService {
     public MyDataLinkService(MyDataClient myDataClient, AppUserRepository userRepository,
                              UserCardRepository userCardRepository, UserPaymentRepository userPaymentRepository,
                              ConsumptionRepository consumptionRepository, CategoryRepository categoryRepository,
-                             UserCardCompanyRepository userCardCompanyRepository, ReportRepository reportRepository,
+                             UserCardCompanyRepository userCardCompanyRepository,
+                             UserBankRepository userBankRepository, ReportRepository reportRepository,
                              java.time.Clock clock,
                              @Value("${finntech.mydata.reference-date:}") String referenceDate) {
         this.myDataClient = myDataClient;
@@ -53,6 +55,7 @@ public class MyDataLinkService {
         this.consumptionRepository = consumptionRepository;
         this.categoryRepository = categoryRepository;
         this.userCardCompanyRepository = userCardCompanyRepository;
+        this.userBankRepository = userBankRepository;
         this.reportRepository = reportRepository;
         this.clock = clock;
         this.fixedReferenceDate = (referenceDate == null || referenceDate.isBlank())
@@ -82,6 +85,18 @@ public class MyDataLinkService {
      */
     @Transactional
     public LinkResult linkCardCompanies(Long userId, List<Long> companyIds) {
+        return linkCardCompanies(userId, companyIds, List.of());
+    }
+
+    /**
+     * 카드사와 은행을 함께 연동한다(§13 자산연결).
+     *
+     * <p>은행 쪽은 <b>고른 은행에 계좌가 있을 때만</b> 연동 기록을 남긴다 — 실제 마이데이터가
+     * 그렇게 동작한다(체크한 기관에 자산이 없으면 아무것도 내려오지 않는다). 계좌의 잔액·내역은
+     * 저장하지 않는다. 조회 시점에 계산되는 값이라 저장하면 즉시 낡는다.
+     */
+    @Transactional
+    public LinkResult linkCardCompanies(Long userId, List<Long> companyIds, List<Long> bankIds) {
         AppUser user = userRepository.findById(userId).orElseThrow(
                 () -> new IllegalArgumentException("user " + userId + " not found"));
         String ci = user.getCi();
@@ -98,6 +113,7 @@ public class MyDataLinkService {
         userPaymentRepository.deleteByUserId(userId);
         consumptionRepository.deleteByUserIdAndSource(userId, Enums.DataSource.MYDATA);
         userCardCompanyRepository.deleteByUserId(userId);
+        userBankRepository.deleteByUserId(userId);
         reportRepository.deleteByUserId(userId);   // 판정 소스(ML)·데이터가 바뀌므로 리포트 캐시 무효화
 
         LocalDate today = referenceDate();
@@ -148,15 +164,29 @@ public class MyDataLinkService {
                         new UserCardCompany(userId, companyId, companyName, linkTime, since));
             }
         }
+        // 은행 — 고른 은행에 계좌가 있을 때만 연동 기록을 남긴다. 없으면 아무것도 남기지 않는 것이
+        // 정확한 답이다(실제 마이데이터도 자산이 없는 기관에서는 아무것도 내려주지 않는다).
+        int bankCount = 0;
+        if (bankIds != null && !bankIds.isEmpty()) {
+            List<BankView> banks = myDataClient.findBanks();
+            for (MyDataResponses.AccountView acc : myDataClient.findAccountsByBanks(ci, bankIds)) {
+                Long bankId = banks.stream()
+                        .filter(b -> b.name().equals(acc.bank())).map(BankView::id).findFirst().orElse(null);
+                if (bankId == null) continue;   // 제공자 목록에 없는 은행 — 남길 id가 없다
+                userBankRepository.save(new UserBank(userId, bankId, acc.bank(), linkTime));
+                bankCount++;
+            }
+        }
+
         // 입출금 통장의 월급을 앱 사용자 월급(=예산)으로 반영(§13-11 경제 모델). 통장 없으면 기존값 유지.
         MyDataResponses.AccountView account = myDataClient.findAccount(ci);
         if (account != null && account.salary() > 0) {
             user.setMonthlyIncome(BigDecimal.valueOf(account.salary()));
             userRepository.save(user);
         }
-        log.info("마이데이터 연동 완료 — userId={} 카드사 {}개, 카드 {}장, 결제 {}건 적재",
-                userId, companyIds.size(), cardCount, paymentCount);
-        return new LinkResult(cardCount, paymentCount);
+        log.info("마이데이터 연동 완료 — userId={} 카드사 {}개, 카드 {}장, 결제 {}건, 은행 {}곳 적재",
+                userId, companyIds.size(), cardCount, paymentCount, bankCount);
+        return new LinkResult(cardCount, paymentCount, bankCount);
     }
 
     /** 가맹점 조회(번호→주소) — 결제에 실린 사업자번호로 가맹점명·지번주소를 제공자에서 조회(프록시). 없으면 null. */
@@ -165,11 +195,18 @@ public class MyDataLinkService {
         return myDataClient.findMerchant(businessNumber);
     }
 
-    /** 입출금 통장 조회(§13-11) — 프론트 통장 화면용. 사용자의 CI로 제공자에 프록시. */
+    /**
+     * 입출금 통장 조회(§13-11) — 프론트 통장 화면용. 사용자의 CI로 제공자에 프록시한다.
+     *
+     * <p><b>은행을 연동한 사용자에게만 준다.</b> 연동하지 않았는데 통장이 보이면 연결이라는 절차가
+     * 의미를 잃는다(카드만 고른 사람에게 통장이 딸려 나오면 안 된다). 잔액·내역은 저장하지 않고
+     * 매번 계산해 받는다 — 결제가 들어올 때마다 값이 바뀌므로 저장하면 즉시 낡는다.
+     */
     @Transactional(readOnly = true)
     public MyDataResponses.AccountView account(Long userId) {
         AppUser user = userRepository.findById(userId).orElseThrow(
                 () -> new IllegalArgumentException("user " + userId + " not found"));
+        if (!userBankRepository.existsByUserId(userId)) return null;
         String ci = user.getCi();
         if (ci == null || ci.isBlank()) return null;
         return myDataClient.findAccount(ci);
@@ -284,7 +321,19 @@ public class MyDataLinkService {
                 .orElse(0);
     }
 
-    public record LinkResult(int cardCount, int paymentCount) {}
+    /** 연동 가능 은행 목록(프록시) — 자산연결 화면용. */
+    @Transactional(readOnly = true)
+    public List<BankView> banks() {
+        return myDataClient.findBanks();
+    }
+
+    /** 연동한 은행 목록 — '연결 관리' 화면이 카드사와 함께 보여준다. */
+    @Transactional(readOnly = true)
+    public List<UserBank> linkedBanks(Long userId) {
+        return userBankRepository.findByUserIdOrderByBankIdAsc(userId);
+    }
+
+    public record LinkResult(int cardCount, int paymentCount, int bankCount) {}
 
     public record MyCardView(String serialNumber, Long cardCode, String cardName, String cardColor,
                              String companyName, int requirement, int currentPerformance,

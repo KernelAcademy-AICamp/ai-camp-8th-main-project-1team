@@ -3,9 +3,12 @@
  * 하단 2칸 버튼: [한 번에 연결하기](전체) · [기관 직접 선택](체크한 것만)
  * → 전송요구 동의(시트) → 통합인증(시트) → `/api/mydata/link` → 소비분석.
  *
- * 카드사 목록은 더미 마이데이터 제공자가 실제로 내려주는 것(`/api/mydata/companies`)으로 갈아끼운다.
- * 나머지 업권은 목록만 보여주고 선택은 막는다 — 제공자가 서빙하지 않는 업권을 고를 수 있게 두면
- * 화면의 id와 서버의 id가 어긋난 채 연결 요청이 나간다.
+ * 카드사·은행 목록은 더미 마이데이터 제공자가 실제로 내려주는 것(`/api/mydata/companies`,
+ * `/api/mydata/banks`)으로 갈아끼운다. 나머지 업권은 목록만 보여주고 선택은 막는다 —
+ * 제공자가 서빙하지 않는 업권을 고를 수 있게 두면 화면의 id와 서버의 id가 어긋난 채 요청이 나간다.
+ *
+ * 카드사 id와 은행 id는 각자 1부터 시작하는 별개 체계라, 화면에서는 은행에 오프셋을 얹어 섞이지
+ * 않게 하고 보낼 때 되돌린다(`splitPicked`). 은행은 고른 곳에 계좌가 있을 때만 실제로 연동된다.
  */
 import { useMemo, useState } from 'react';
 import { AppBar, ProgressBar, Cta, Scroll, Screen, ErrorBox } from '../components/ui';
@@ -13,7 +16,7 @@ import { Sheet } from '../components/Sheet';
 import { useSession } from '../state/session';
 import { useAsync } from '../state/useAsync';
 import { api } from '../lib/api';
-import { mergeCompanies, type Inst, type InstCategory } from '../lib/institutions';
+import { mergeInstitutions, splitPicked, type Inst, type InstCategory } from '../lib/institutions';
 
 const PROVIDERS = [
   { name: '카카오톡', bg: '#FFCD00', fg: '#3c1e1e', label: 'K', desc: '카카오 지갑 인증서' },
@@ -40,6 +43,7 @@ function Check({ state }: { state: 'all' | 'some' | 'none' }) {
 export function Connect() {
   const { go, back, userId, setLinked } = useSession();
   const companies = useAsync(() => api.mydataCompanies().catch(() => []), []);
+  const banks = useAsync(() => api.mydataBanks().catch(() => []), []);
   const [picked, setPicked] = useState<Set<number>>(new Set());
   const [transferOpen, setTransferOpen] = useState(false);
   const [easyOpen, setEasyOpen] = useState(false);
@@ -47,8 +51,8 @@ export function Connect() {
   const [error, setError] = useState<unknown>(null);
 
   const groups: InstCategory[] = useMemo(
-    () => mergeCompanies(companies.data ?? []),
-    [companies.data],
+    () => mergeInstitutions(companies.data ?? [], banks.data ?? []),
+    [companies.data, banks.data],
   );
   const selectableIds = useMemo(
     () => groups.filter((g) => g.available).flatMap((g) => g.items.map((i) => i.id)),
@@ -86,7 +90,9 @@ export function Connect() {
     setWaiting(name); setError(null);
     const ids = picked.size ? [...picked] : selectableIds;
     try {
-      await api.mydataLink(userId, ids);
+      // 화면은 카드사·은행을 한 집합에 담는다. 서버가 아는 두 체계로 되돌려 보낸다.
+      const { companyIds, bankIds } = splitPicked(ids);
+      await api.mydataLink(userId, companyIds, bankIds);
       setLinked(true);
       setEasyOpen(false);
       go('loading');
