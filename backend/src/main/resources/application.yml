@@ -71,23 +71,38 @@ finntech:
   # ---- 통장 비교 (정보성) — 실 예·적금 금리 비교 -----------------------------
   # 금소법: '단순 정보제공 + 판매목적 아님 + 무제휴/무광고 + 가입 편의 미제공'이면 중개업 아님
   # (금융위·금감원 유권해석 2022.6.15, 금융소비자정책과). 화면은 정보성이며 가입은 각 금융사에서.
-  # 데이터는 네이버페이 저축상품 목록 API(비공식) — 차단·실패 시 더미로 자동 폴백한다(참조: reference/test.py).
+  # 출처: 금감원 오픈API(공식) → 실패·키 미설정 시 더미 폴백.
+  # 2026-07-24 네이버페이 비공식 API에서 전환. 공식이라 차단 위험이 없고 적립방식·가입제한 필드가 더 온다.
+  # (파킹통장은 금감원 API에 없다. 상품군을 넓힐 때 네이버페이를 보조 출처로 재도입한다.)
   savings-compare:
     enabled: true
-    base-url: https://new-m.pay.naver.com
-    path: /savings/api/v1/productList
-    referer: https://new-m.pay.naver.com/savings/list/saving
-    # test.py 기본 조건: 적금(1003)/은행(BA)/기본금리순/6개월/3만원
-    product-type-code: "1003"
-    company-group-code: BA
-    sort-type: INTEREST_RATE
-    # 통장 비교 섹션의 기본 기간(개월). 목표별 추천은 계획 개월수를 6·12·24 버킷으로 매핑해 각각 조회한다.
-    default-period: 6
-    deposit-amount: "30000"
+
+    # ── 금감원 금융상품통합비교공시 오픈API ──
+    # 호출: {base-url}{path}/{service-name}.json?auth=&topFinGrpNo=&pageNo=
+    #   서비스명: savingProductsSearch(적금) · depositProductsSearch(정기예금) · annuitySavingProductsSearch(연금저축)
+    #   응답: baseList(상품 설명, 금리 없음) + optionList(기간·방식별 금리, 상품명 없음) 2단 → 상품키로 조인한다.
+    fss:
+      # 32자리 인증키. 비우면 외부를 아예 안 때리고 더미로 간다. 값은 .env(커밋 금지)에서 주입.
+      auth: ${FSS_API_KEY:}
+      # ★ https 필수 — http로 부르면 307로 튕긴다.
+      base-url: https://finlife.fss.or.kr
+      path: /finlifeapi
+      service-name: savingProductsSearch
+      # ★ UA 필수 — 없으면 WAF가 상태코드도 없이 연결을 끊는다(curl 52 Empty reply).
+      user-agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      # 권역코드: 020000 은행 · 030300 저축은행 · 050000 보험 · 060000 금융투자
+      top-fin-grp-no: "020000"
+      # MOA의 '지킨 돈'은 매달 금액이 달라져 정액적립식과 맞지 않는다. 실측상 금리 손해도 없다.
+      reserve-type: 자유적립식
+
+    # 통장 비교 섹션의 기본 기간(개월). 목표별 추천은 계획 개월수를 6·12·24·36 버킷으로 매핑해 각각 조회한다.
+    default-period: 12
     max-pages: 8
     default-limit: 8
     cache-ttl-minutes: 30
     # 가입 자격이 제한돼 일반 사용자가 담기 어려운 통장을 상품명으로 제외한다.
+    # join_deny=3(일부 제한)도 함께 제외하지만, 은행 신고가 부실해 아동·청년 전용이 1(제한없음)로 올라오기도 한다.
+    # 자연어(join_member·spcl_cnd)에 묻힌 자격은 후속 LLM 사전 라벨링에서 구조화한다.
     exclude-keywords: [간부, 청년, 장병, 미소, 청약]
 
   # 감사로그 계층 3 — RFC 3161 TSA 앵커링

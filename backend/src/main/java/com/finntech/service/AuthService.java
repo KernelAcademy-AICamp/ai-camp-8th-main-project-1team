@@ -30,9 +30,30 @@ public class AuthService {
         // 전화번호는 CI 계산에만 쓰고 저장하지 않는다(현 스텁 '전화번호 실수집 없음', §13-2).
         String ci = Ci.of(name, social7, phone);
         user.setCi(ci);
+        // 금융상품의 나이 자격 판정에 쓸 출생연도만 남긴다. 월·일과 성별세대코드는 여기서 버려진다.
+        user.setBirthYear(birthYearOf(social7));
         userRepository.save(user);
         boolean existsInMyData = myDataClient.checkCi(ci);
         return new VerifyResult(ci, true, existsInMyData);
+    }
+
+    /**
+     * 주민번호 앞 7자리(YYMMDD + 성별세대코드)에서 <b>출생연도만</b> 뽑는다. 형식이 어긋나면 null.
+     * 성별세대코드가 세기를 정한다 — 1·2·5·6=1900년대, 3·4·7·8=2000년대, 9·0=1800년대.
+     * 성별은 쓰지 않으므로 버린다. 순수 함수라 단위 테스트로 검증한다.
+     */
+    static Integer birthYearOf(String social7) {
+        if (social7 == null) return null;
+        String s = social7.trim();
+        if (s.length() != 7 || !s.chars().allMatch(Character::isDigit)) return null;
+        int century = switch (s.charAt(6)) {
+            case '1', '2', '5', '6' -> 1900;
+            case '3', '4', '7', '8' -> 2000;
+            case '9', '0' -> 1800;
+            default -> -1;
+        };
+        if (century < 0) return null;
+        return century + Integer.parseInt(s.substring(0, 2));
     }
 
     /** verified 는 항상 true(가상 인증). existsInMyData=false면 마이데이터에 없는 신원이다. */

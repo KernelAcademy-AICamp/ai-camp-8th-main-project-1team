@@ -43,6 +43,15 @@ public class AppUser {
     @Column(length = 64)
     private String ci;
 
+    /**
+     * 출생연도 (예: 1995). 본인인증의 주민번호 앞 7자리에서 <b>연도만</b> 파생한다 — 월·일은 버린다.
+     * 용도는 하나뿐이다: 금융상품의 나이 자격(`만 19세~만 34세` 등)을 맞춰 보는 것.
+     * 우리가 아는 정보가 나이뿐이므로 장병·공무원·조합원처럼 신분이 필요한 상품은 애초에 추천하지 않는다.
+     * 미연동이면 null이며, 삭제권 행사 시 CI와 함께 파기한다.
+     */
+    @Column(name = "birth_year")
+    private Integer birthYear;
+
     protected AppUser() {}
 
     public AppUser(String nickname, BigDecimal monthlyIncome, BigDecimal goalAmount, Integer goalMonths) {
@@ -64,4 +73,6 @@ public class AppUser {
     public void setConsentGiven(boolean v) { this.consentGiven = v; }
     public String getCi() { return ci; }
     public void setCi(String v) { this.ci = v; }
+    public Integer getBirthYear() { return birthYear; }
+    public void setBirthYear(Integer v) { this.birthYear = v; }
 }
