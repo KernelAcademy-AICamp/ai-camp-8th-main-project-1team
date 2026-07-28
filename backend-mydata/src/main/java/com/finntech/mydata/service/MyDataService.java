@@ -45,8 +45,11 @@ public class MyDataService {
         this.companyRepository = companyRepository;
         this.accountRepository = accountRepository;
         this.merchantRepository = merchantRepository;
-        this.nowSetting = nowSetting;
-        this.referenceDate = LocalDate.parse(referenceDate);
+        // 빈 문자열은 '미설정'으로 본다. env(MYDATA_NOW=)가 비어 있으면 Spring은 yml의 기본값이 아니라
+        // 빈 문자열을 넘긴다 — 이걸 그대로 parse하면 기동 후 조회에서 DateTimeParseException으로 터진다.
+        this.nowSetting = (nowSetting == null || nowSetting.isBlank()) ? "system" : nowSetting.trim();
+        this.referenceDate = LocalDate.parse(
+                (referenceDate == null || referenceDate.isBlank()) ? "2026-07-21" : referenceDate.trim());
         this.monthsFloor = monthsFloor;
     }
 
