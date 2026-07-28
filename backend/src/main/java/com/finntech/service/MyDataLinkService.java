@@ -102,11 +102,13 @@ public class MyDataLinkService {
 
         LocalDate today = referenceDate();
         YearMonth referenceMonth = YearMonth.from(today);
-        LocalDateTime linkTime = today.atTime(23, 59, 59); // 이후 결제는 다음 동기화에서 증분 등장(W2)
+        LocalDateTime linkTime = LocalDateTime.now(clock);
         int cardCount = 0, paymentCount = 0;
 
         for (Long companyId : companyIds) {
             String companyName = null;
+            // 이 카드사에서 실제로 받아온 마지막 결제 시각. 다음 증분의 기준선이 된다.
+            LocalDateTime lastPayment = null;
             for (CardView card : myDataClient.findCards(companyId, ci)) {
                 companyName = card.cardProduct().company().name();
                 int requirement = requirementOf(card);
@@ -132,11 +134,18 @@ public class MyDataLinkService {
                             BigDecimal.valueOf(payment.amount()), payment.date(), false,
                             Enums.DataSource.MYDATA));
                     paymentCount++;
+                    if (lastPayment == null || payment.date().isAfter(lastPayment)) lastPayment = payment.date();
                 }
             }
             if (companyName != null) { // 카드가 있던 카드사만 연동 기록(다음 동기화 증분 기준)
+                // 증분 기준선은 '실제로 받아온 마지막 결제 시각'이어야 한다.
+                // 예전에는 연동한 날의 23:59:59로 앞질러 찍었는데, 마이데이터 서버는 커트오프(지금)까지만
+                // 주므로 연동 시점부터 자정까지의 결제가 기준선 뒤로 밀려 영영 안 들어왔다.
+                // 오전에 연동하면 그날 낮 결제가 통째로 사라지고, 지킴이 차감·판정도 그만큼 비었다.
+                // 결제가 하나도 없던 카드사는 넉넉히 과거로 잡아 다음 증분이 무엇이든 집어오게 한다(멱등).
+                LocalDateTime since = lastPayment != null ? lastPayment : today.minusMonths(12).atStartOfDay();
                 userCardCompanyRepository.save(
-                        new UserCardCompany(userId, companyId, companyName, linkTime, linkTime));
+                        new UserCardCompany(userId, companyId, companyName, linkTime, since));
             }
         }
         // 입출금 통장의 월급을 앱 사용자 월급(=예산)으로 반영(§13-11 경제 모델). 통장 없으면 기존값 유지.
@@ -204,7 +213,9 @@ public class MyDataLinkService {
             userCardCompanyRepository.save(link);
         }
         if (added > 0) reportRepository.deleteByUserId(userId); // 새 결제 반영 위해 리포트 캐시 무효화
-        log.info("마이데이터 증분 동기화 — userId={} 신규 결제 {}건", userId, added);
+        // 자동 동기화 배치가 5분마다 이 메서드를 부른다. 대부분 0건이라 INFO로 남기면 로그가 그것만으로 찬다.
+        if (added > 0) log.info("마이데이터 증분 동기화 — userId={} 신규 결제 {}건", userId, added);
+        else log.debug("마이데이터 증분 동기화 — userId={} 신규 결제 없음", userId);
         return new SyncResult(added);
     }
 

@@ -11,6 +11,7 @@ import {
   createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode,
 } from 'react';
 import { ApiError, api, type GuardianHome } from '../lib/api';
+import { autoSyncMyData } from './autoSync';
 import { useSession } from './session';
 
 interface GuardianState {
@@ -63,6 +64,22 @@ export function GuardianProvider({ children }: { children: ReactNode }) {
     void load();
     return () => { alive.current = false; };
   }, [load]);
+
+  // 앱을 열 때(그리고 다른 탭에 갔다 돌아올 때) 마이데이터에서 새 결제를 당겨온다.
+  // load()와 달리 await하지 않는다 — 외부 서버 왕복을 기다리면 첫 화면이 그만큼 늦게 뜬다.
+  // 새 결제가 있을 때만 다시 불러 화면이 공연히 깜빡이지 않게 한다.
+  useEffect(() => {
+    if (!linked) return;
+    const pull = () => {
+      void autoSyncMyData(userId).then((n) => {
+        if (n > 0 && alive.current) void load();
+      });
+    };
+    pull();
+    const onVisible = () => { if (document.visibilityState === 'visible') pull(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [userId, linked, load]);
 
   const value = useMemo<GuardianState>(() => ({
     home, noChallenge, loading, error, reload: load,

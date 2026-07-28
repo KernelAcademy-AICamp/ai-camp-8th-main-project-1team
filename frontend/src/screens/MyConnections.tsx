@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { AppBar, Scroll, Screen, ErrorBox, Loading, Empty, SectionTitle } from '../components/ui';
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
+import { resetAutoSyncThrottle } from '../state/autoSync';
 import { useAsync } from '../state/useAsync';
 import { api } from '../lib/api';
 import { brandOf } from '../lib/institutions';
@@ -47,6 +48,7 @@ export function MyConnections() {
     try {
       const ids = (companies.data ?? []).map((c) => c.id);
       const r = await api.mydataLink(userId, ids);
+      resetAutoSyncThrottle(); // 방금 새로 연결했다 — 자동 동기화가 스로틀에 걸려 쉬면 안 된다
       setMsg(`카드 ${r.cardCount}장 · 결제 ${r.paymentCount.toLocaleString('ko-KR')}건을 불러왔어요`);
       cards.reload();
       await reloadGuardian();

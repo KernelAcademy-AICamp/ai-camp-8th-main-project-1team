@@ -3,10 +3,11 @@
  * 결제에 실린 사업자등록번호로 가맹점 주소를 눌러서 조회할 수 있다(§13).
  * 상단 '동기화'는 마이데이터에서 새 결제를 당겨오고 지킴이 원장에도 반영한다.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AppBar, Scroll, Screen, ErrorBox, Loading, Empty } from '../components/ui';
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
+import { autoSyncMyData } from '../state/autoSync';
 import { useAsync } from '../state/useAsync';
 import { api, catLabel, type MyMerchant } from '../lib/api';
 import { won, shortDate, monthLabel } from '../lib/format';
@@ -32,6 +33,18 @@ export function Transactions() {
       total: byMonth[m].reduce((s, p) => s + p.amount, 0),
     }));
   }, [payments.data]);
+
+  // 화면에 들어오면 새 결제를 조용히 당겨온다. 목록을 먼저 그리고 결과가 오면 그때 다시 부른다 —
+  // 상단 '동기화' 버튼은 결과 문구가 필요한 수동 경로라 그대로 둔다.
+  useEffect(() => {
+    let alive = true;
+    void autoSyncMyData(userId).then((n) => {
+      if (n > 0 && alive) { payments.reload(); void reloadGuardian(); }
+    });
+    return () => { alive = false; };
+    // payments.reload는 useAsync가 매 렌더 새로 만들 수 있어 의존성에 넣지 않는다(진입당 한 번).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   async function lookupMerchant(bizno: string) {
     if (merchantOf[bizno]) return;
