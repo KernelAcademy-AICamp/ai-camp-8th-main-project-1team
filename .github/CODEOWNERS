@@ -1,0 +1,10 @@
+# 리뷰 요청이 자동으로 가게 한다. 승인을 필수로 걸지는 않았으므로 이 파일은 '차단'이 아니라
+# '알림'이다 — main으로 무엇이 올라가는지 모르고 지나가는 일을 줄이는 것이 목적이다.
+#
+# 배포를 직접 바꾸는 경로는 따로 적어 둔다. 이 경로가 바뀌면 무엇이 어떻게 나가는지가 바뀐다.
+* @Wolharang
+
+/.github/                @Wolharang
+/deploy/                 @Wolharang
+/scripts/deploy-server.sh @Wolharang
+/docker-compose.prod.yml @Wolharang

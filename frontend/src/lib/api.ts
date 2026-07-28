@@ -693,9 +693,20 @@ export const api = {
   deleteWishlist: (userId: number, itemId: number) =>
     del<PointSnapshot>(`/api/points/wishlist/${itemId}?userId=${userId}`),
 
-  /** 통장 비교 (정보성) — 자격 제한 제외 후 금리순. 판매·중개 아님. */
-  compareSavings: (limit?: number) =>
-    get<SavingsCompare>(`/api/savings/compare${limit ? `?limit=${limit}` : ''}`),
+  /**
+   * 통장 비교 (정보성) — 자격 제한 제외 후 금리순. 판매·중개 아님.
+   *
+   * `userId`를 보내면 서버가 그 사용자의 출생연도로 **나이 자격까지 맞춰** 거른다.
+   * 안 보내면 서버는 나이 조건을 따지지 않는다 — 즉 보내지 않으면 자격 필터가 절반만 도는 셈이라,
+   * 로그인 상태에서는 항상 함께 보낸다.
+   */
+  compareSavings: (limit?: number, userId?: number) => {
+    const q = new URLSearchParams();
+    if (limit) q.set('limit', String(limit));
+    if (userId) q.set('userId', String(userId));
+    const s = q.toString();
+    return get<SavingsCompare>(`/api/savings/compare${s ? `?${s}` : ''}`);
+  },
 
   /* ── 충동예산 절약통 ── */
   impulse: (userId: number) => get<ImpulseSnapshot>(`/api/impulse?userId=${userId}`),

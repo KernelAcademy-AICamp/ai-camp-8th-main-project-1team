@@ -29,13 +29,26 @@ export const TAB_SCREENS = ['home', 'report', 'my'] as const;
 export type TabId = (typeof TAB_SCREENS)[number];
 export const isTab = (s: ScreenId): s is TabId => (TAB_SCREENS as readonly string[]).includes(s);
 
-const ALL_SCREENS: ScreenId[] = [
+/**
+ * 주소(#)로 복원할 수 있는 화면. **ScreenId와 하나도 빠짐없이 같아야 한다.**
+ *
+ * 빠지면 조용히 망가진다 — 화면 이동은 되는데(직접 setScreen) 새로고침이나 링크로 들어올 때만
+ * {@link hashScreen}이 못 알아보고 홈으로 튕긴다. 실제로 `r-account`(내 통장)가 메뉴와 라우터에는
+ * 있는데 여기만 빠져 있었고, 그래서 통장을 보다 새로고침하면 홈으로 돌아갔다.
+ * 아래 위성 타입이 그 누락을 컴파일 단계에서 잡는다.
+ */
+const ALL_SCREENS = [
   'splash', 'auth', 'connect', 'loading', 'ob1', 'ob2', 'ob3', 'done',
   'home', 'report', 'my', 'myroom', 'notifications', 'transactions',
-  'r-analysis', 'r-spending', 'r-cards', 'r-waste', 'r-savings',
+  'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings',
   'm-impulse', 'm-goals', 'm-connections', 'm-record', 'm-policy', 'm-survey', 'm-demo',
-];
-const isScreen = (v: string): v is ScreenId => (ALL_SCREENS as string[]).includes(v);
+] as const;
+
+// 하나라도 빠지면 여기서 타입 오류가 난다(빠진 ScreenId가 never에 배정되지 못한다).
+type _AllScreensCoverEveryScreenId = ScreenId extends (typeof ALL_SCREENS)[number] ? true : never;
+const _screenCoverage: _AllScreensCoverEveryScreenId = true;
+void _screenCoverage;
+const isScreen = (v: string): v is ScreenId => (ALL_SCREENS as readonly string[]).includes(v);
 
 /** 각 화면이 속한 탭 — 하단 탭의 현재 위치 표시에 쓴다. */
 export function tabOf(screen: ScreenId): TabId | null {

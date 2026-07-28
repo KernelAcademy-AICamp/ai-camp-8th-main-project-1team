@@ -3,6 +3,7 @@ package com.finntech.service;
 import com.finntech.audit.Hashing;
 import com.finntech.domain.ProductEligibility;
 import com.finntech.repository.ProductEligibilityRepository;
+import com.finntech.util.HttpClients;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -64,6 +66,21 @@ public class EligibilityLabelService {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    /**
+     * 한 요청에서 허용하는 LLM 호출 수.
+     *
+     * <p>없을 때 무슨 일이 벌어지나: 라벨이 비어 있는 첫 요청(배포 직후·자격 문구가 대거 바뀐 날)에
+     * 상품 수만큼 <b>순차로</b> LLM을 부른다. 금감원 적금은 페이지당 수십 개이고 최대 8페이지라
+     * 수백 회가 되며, 그동안 {@code @Transactional}이 열려 있어 DB 커넥션 하나를 계속 붙잡는다.
+     * 동시에 두세 명만 들어와도 커넥션 풀이 마르고, 그 시점부터는 통장 비교와 무관한 화면까지 죽는다.
+     * 이 저장소는 같은 모양('첫 접근 동시요청')을 리포트 캐시에서 이미 한 번 겪었다.
+     *
+     * <p>그래서 한 요청은 정해진 만큼만 승급시키고 나머지는 규칙 파서로 답한 뒤 <b>저장하지 않는다</b>.
+     * 다음 요청이 그다음 몫을 이어받아, 화면을 세워 두지 않고도 몇 번의 조회에 걸쳐 전부 채워진다.
+     * 5회 × 최대 5초 = 최악 25초로 유계다.
+     */
+    private static final int MAX_LLM_CALLS_PER_REQUEST = 5;
+
     private final ProductEligibilityRepository repository;
     private final String apiKey;
     private final String model;
@@ -79,7 +96,10 @@ public class EligibilityLabelService {
         this.repository = repository;
         this.apiKey = apiKey;
         this.model = model;
-        this.restClient = RestClient.builder().baseUrl(baseUrl).build();
+        // LLM은 사용자 요청 안에서 불린다 — 금감원(8초)보다 짧게 잡는다. 늦으면 규칙 파서가 대신한다.
+        this.restClient = RestClient.builder().baseUrl(baseUrl)
+                .requestFactory(HttpClients.factory(Duration.ofSeconds(3), Duration.ofSeconds(5)))
+                .build();
         this.clock = clock;
     }
 
@@ -109,6 +129,7 @@ public class EligibilityLabelService {
         }
 
         LocalDateTime now = LocalDateTime.now(clock);
+        int llmBudget = MAX_LLM_CALLS_PER_REQUEST;
         for (Map.Entry<String, String> p : products.entrySet()) {
             String key = p.getKey();
             String joinMember = p.getValue();
@@ -120,6 +141,15 @@ public class EligibilityLabelService {
                 out.put(key, toRecord(saved));
                 continue;
             }
+
+            // 예산을 다 쓰면 이번 요청에서는 규칙 파서로 판정하고 저장하지 않는다.
+            // 저장하지 않는 것이 핵심이다 — 규칙 결과를 저장해 버리면 해시가 맞아떨어져
+            // **다음 요청에서도 영영 LLM으로 승급되지 않는다.**
+            if (llmBudget <= 0) {
+                out.put(key, ruleParse(joinMember));
+                continue;
+            }
+            llmBudget--;
 
             Eligibility fresh = judge(joinMember);
             if (saved == null) {

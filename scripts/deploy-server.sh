@@ -21,6 +21,8 @@ git config --global --add safe.directory "$APP" 2>/dev/null || true
 
 echo "=== 이전 상태 ==="
 git log --oneline -1
+# 되돌아갈 곳을 **정렬 전에** 잡아 둔다. reset --hard 뒤에는 이 값을 알 방법이 없다.
+PREV=$(git rev-parse HEAD)
 DRIFT=$(git status --porcelain | head -20)
 [ -n "$DRIFT" ] && { echo "  버려질 서버 로컬 변경:"; echo "$DRIFT" | sed 's/^/    /'; } || echo "  드리프트 없음"
 
@@ -40,19 +42,57 @@ CO=(docker compose
     -f docker-compose.prod.large.yml
     --profile local-db --env-file "$ENVFILE")
 
+# 4서비스가 healthy가 될 때까지 기다린다. 성공 0 / 실패 1 — **판정을 호출자에게 넘긴다.**
+# 예전에는 이 루프가 60회를 다 돌고도 그냥 다음 줄로 넘어갔다. 기동에 실패한 채로 스모크를
+# 지나 "배포 완료"까지 찍혔고, 운영이 502인 동안 아무도 몰랐다(V8 사고).
+wait_healthy() {
+  for i in $(seq 1 60); do
+    n=$("${CO[@]}" ps --format '{{.Status}}' | grep -c healthy || true)
+    [ "$n" -ge 4 ] && { echo "  4서비스 healthy (${i}회차)"; return 0; }
+    sleep 5
+  done
+  echo "  healthy 대기 초과(5분)"
+  "${CO[@]}" ps --format 'table {{.Service}}\t{{.Status}}'
+  return 1
+}
+
+# 되돌린다. 새 코드가 기동하지 못하면 **운영을 그 상태로 두지 않는다** — 배포를 빨간불로
+# 만드는 것만으로는 서비스가 돌아오지 않기 때문이다. 이전 커밋은 방금 전까지 돌던 것이므로
+# 다시 뜨는 것이 거의 확실하고, 되돌린 뒤에도 실패하면 사람이 붙어야 하는 상황이다.
+#
+# **한계를 분명히 해 둔다: 되돌아가는 것은 코드뿐이고 스키마는 그대로다.**
+# Flyway는 앞으로만 간다. 컬럼이 늘어난 정도는 옛 코드도 `validate`를 통과하지만
+# (엔티티가 요구하는 것이 스키마에 있기만 하면 된다), 컬럼을 **지우는** 마이그레이션이
+# 한 번 돌면 옛 코드는 없는 컬럼을 찾다가 죽어 롤백해도 살아나지 않는다.
+# 그래서 그런 마이그레이션은 guard-main이 PR 단계에서 막는다.
+rollback() {
+  echo "=== 롤백: $PREV 로 되돌린다 ==="
+  git reset -q --hard "$PREV"
+  git clean -qfd
+  "${CO[@]}" up -d --build || true
+  if wait_healthy; then
+    echo "  롤백 성공 — 운영은 이전 커밋($(git log --oneline -1))으로 돌아왔다"
+  else
+    echo "  ::롤백까지 실패했다. 서버에 직접 붙어야 한다.::"
+  fi
+  exit 1
+}
+
 echo "=== 재빌드·기동 ==="
-"${CO[@]}" up -d --build
+if ! "${CO[@]}" up -d --build; then
+  echo "  빌드·기동 명령 자체가 실패했다"
+  rollback
+fi
 
 echo "=== healthy 대기 ==="
-for i in $(seq 1 60); do
-  n=$("${CO[@]}" ps --format '{{.Status}}' | grep -c healthy || true)
-  [ "$n" -ge 4 ] && { echo "  4서비스 healthy (${i}회차)"; break; }
-  sleep 5
-done
+wait_healthy || rollback
 "${CO[@]}" ps --format 'table {{.Service}}\t{{.Status}}'
 
 echo "=== 스모크 ==="
 # 도메인으로 돌린다 — 인증서·프록시·CORS까지 실제 경로를 지난다.
-BASE="${SMOKE_BASE:-https://moaa.kro.kr}" HOST="${SMOKE_HOST:-moaa.kro.kr}" bash scripts/smoke.sh
+if ! BASE="${SMOKE_BASE:-https://moaa.kro.kr}" HOST="${SMOKE_HOST:-moaa.kro.kr}" bash scripts/smoke.sh; then
+  echo "  스모크 실패"
+  rollback
+fi
 
 echo "=== 배포 완료: $(git log --oneline -1) ==="
