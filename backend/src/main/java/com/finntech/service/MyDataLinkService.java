@@ -138,7 +138,8 @@ public class MyDataLinkService {
                 cardCount++;
 
                 for (PaymentView payment : card.payments()) {
-                    userPaymentRepository.save(new UserPayment(payment.id(), userId, card.cardId(),
+                    userPaymentRepository.save(new UserPayment(
+                            UserPayment.rowId(userId, payment.id()), userId, card.cardId(),
                             payment.cardCode(), payment.date(), payment.category1(), payment.category2(),
                             payment.amount(), payment.merchantName(), payment.receivedBenefitAmount(),
                             payment.businessNumber()));
@@ -238,8 +239,10 @@ public class MyDataLinkService {
             LocalDateTime maxDate = since;
             for (CardView card : myDataClient.findCardsSince(link.getCompanyId(), ci, since)) {
                 for (PaymentView payment : card.payments()) {
-                    if (userPaymentRepository.existsById(payment.id())) continue; // 멱등
-                    userPaymentRepository.save(new UserPayment(payment.id(), userId, card.cardId(),
+                    // 멱등 — 계정별 키로 확인한다. 제공자 id로 보면 남의 행을 내 것으로 착각한다.
+                    if (userPaymentRepository.existsById(UserPayment.rowId(userId, payment.id()))) continue;
+                    userPaymentRepository.save(new UserPayment(
+                            UserPayment.rowId(userId, payment.id()), userId, card.cardId(),
                             payment.cardCode(), payment.date(), payment.category1(), payment.category2(),
                             payment.amount(), payment.merchantName(), payment.receivedBenefitAmount(),
                             payment.businessNumber()));

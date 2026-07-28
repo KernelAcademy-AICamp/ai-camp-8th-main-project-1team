@@ -1,14 +1,21 @@
-# PR이 운영을 멈출 수 있는지 미리 밟아 본다.
+# 묻는 것은 하나다 — **이 커밋이 main에 올라가면 AWS 서버가 멈추는가.**
 #
-# 왜 필요한가: 테스트는 H2로 돈다. H2에서는 Flyway가 스키마를 소유하지 않아
-# **마이그레이션이 빠져도 초록불이 뜬다.** 실제로 두 번 같은 사고가 났다.
+# 이 저장소에서 운영이 멈춘 사고는 전부 '기동 실패'였고, 두 번 다 테스트는 초록불이었다.
+# 테스트가 H2로 돌아 Flyway가 스키마를 소유하지 않기 때문이다 — 마이그레이션이 빠져도
+# 드러날 자리가 없다(V6 지킴이, V8 birth_year·product_eligibility).
 #
-#   V6 — 지킴이 엔티티 9종만 올라가고 마이그레이션 누락 → 운영 기동 실패
-#   V8 — birth_year 컬럼·product_eligibility 테이블 누락 → 운영 502, 약 15분
+# 그래서 검사를 늘리는 대신 **운영이 하는 일을 그대로 한다.**
 #
-# 두 번 다 테스트는 전부 통과했다. 잡을 수 없는 검사를 늘리는 대신, **운영과 같은 조건으로
-# 실제 기동해 본다.** MySQL 위에서 Flyway가 돌고 ddl-auto=validate가 도는 순간
-# 스키마가 어긋나면 컨테이너가 healthy가 되지 못하고, 이 워크플로가 빨간불이 된다.
+#   1단계  지금 운영에 떠 있는 것(=base)을 먼저 띄운다   → DB가 출시된 스키마 상태가 된다
+#   2단계  볼륨을 지우지 않고 이 커밋으로 갈아끼운다      → Flyway가 '증분'으로만 적용된다
+#   3단계  스모크를 돌린다                                → 엔드포인트가 실제로 응답하는가
+#
+# 2단계가 핵심이다. 빈 DB에 V1부터 새로 적용하면 **통과하지만 운영에서는 실패하는** 마이그레이션이
+# 있다(기존 행이 있는 테이블에 NOT NULL 컬럼 추가 등). 운영은 언제나 이미 적용된 DB 위에
+# 증분으로 올라가므로, 그 경로를 그대로 밟아야 같은 답이 나온다.
+#
+# 한계(정직하게): CI의 DB에는 운영 데이터가 없다. 데이터에 의존해 실패하는 것
+# (중복 값이 있는 컬럼에 UNIQUE 추가 등)은 여기서 잡히지 않는다.
 name: CI
 
 on:
@@ -22,8 +29,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # 운영과 같은 파일을 쓴다. 개발 스택(docker-compose.yml)은 포트·프로파일·메모리 한도가 달라
+  # 여기서 통과해도 운영에서 죽을 수 있다.
+  CO: -f docker-compose.prod.yml -f docker-compose.prod.local-db.yml -f docker-compose.prod.large.yml --profile local-db --env-file deploy/ci.env
+
 jobs:
-  # 단위·통합 테스트(H2). 로직 회귀를 잡는다 — 스키마 누락은 아래 boot가 잡는다.
   test:
     name: 테스트
     runs-on: ubuntu-latest
@@ -43,65 +54,74 @@ jobs:
         working-directory: ${{ matrix.module }}
         run: ./mvnw -B test
 
-  # 운영과 같은 방식으로 실제로 띄워 본다. 이 저장소에서 '깨진 배포'는 거의 전부
-  # 기동 단계에서 죽는 형태였으므로, 기동이 되는지가 가장 값싼 최종 방어선이다.
-  boot:
-    name: 운영 조건 기동
+  outage:
+    name: 운영 중지 검사
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # 개발 스택을 쓴다 — 컨테이너 이미지(Dockerfile), nginx.conf, MySQL 초기화 스크립트,
-      # Flyway, validate가 모두 한 번에 지나간다. 운영 스택과 이미지가 같다.
-      - name: 스택 빌드·기동
-        env:
-          MYDATA_SHARED_SECRET: ci-shared-secret
-        run: docker compose up -d --build
-
-      - name: 백엔드 기동 확인
+      # 시크릿이 아니다 — CI 안에서만 살고 끝난다. 운영 값은 서버의 /opt/finntech/.env 에 있다.
+      - name: CI용 환경파일
         run: |
-          # /api/mydata/companies 는 DB를 실제로 읽는다 — 커넥션·스키마까지 지난 뒤에야 200이 된다.
-          for i in $(seq 1 90); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/mydata/companies || true)
-            [ "$code" = "200" ] && { echo "본체 기동 확인 (${i}회차)"; exit 0; }
-            sleep 5
-          done
-          echo "::error::본체가 기동하지 못했습니다. 아래 로그에서 원인을 확인하세요."
-          exit 1
+          cat > deploy/ci.env <<'EOF'
+          MYSQL_ROOT_PASSWORD=ci-root
+          DB_NAME=finntech
+          DB_USER=finntech
+          DB_PASSWORD=ci-pass
+          DB_HOST=mysql
+          DB_PORT=3306
+          MYDATA_DB_NAME=finntech_mydata
+          MYDATA_SHARED_SECRET=ci-shared-secret
+          CORS_ALLOWED_ORIGINS=http://127.0.0.1:5173
+          TSA_ENABLED=false
+          FINNTECH_DEV_SEED_ENABLED=false
+          GEMINI_API_KEY=
+          FSS_API_KEY=
+          EOF
 
-      - name: 마이데이터 제공자 기동 확인
+      # 비교 기준점. PR이면 병합될 대상(base), develop 푸시면 직전 커밋이 '지금 떠 있는 것'이다.
+      - name: 기준 커밋 확인
+        id: base
         run: |
-          for i in $(seq 1 60); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8082/actuator/health || true)
-            [ "$code" = "200" ] && { echo "제공자 기동 확인 (${i}회차)"; exit 0; }
-            sleep 5
-          done
-          echo "::error::마이데이터 제공자가 기동하지 못했습니다."
-          exit 1
+          BASE='${{ github.event.pull_request.base.sha }}'
+          [ -n "$BASE" ] || BASE=$(git rev-parse HEAD~1 2>/dev/null || echo "")
+          echo "sha=$BASE" >> "$GITHUB_OUTPUT"
+          [ -n "$BASE" ] && echo "기준 $(git log --oneline -1 "$BASE")" || echo "기준 없음 — 1단계를 건너뛴다"
 
-      - name: 프론트(nginx) 확인
+      # ── 1단계 ── 지금 운영 상태를 재현한다. DB 볼륨이 '출시된 스키마'까지 올라간다.
+      - name: 1단계 · 기준 커밋으로 기동
+        if: steps.base.outputs.sha != ''
         run: |
-          # nginx.conf 문법 오류는 빌드가 아니라 기동에서 드러난다.
-          for i in $(seq 1 30); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173/ || true)
-            [ "$code" = "200" ] && { echo "프론트 기동 확인 (${i}회차)"; exit 0; }
-            sleep 3
-          done
-          echo "::error::프론트가 기동하지 못했습니다."
-          exit 1
+          git checkout --quiet --detach '${{ steps.base.outputs.sha }}'
+          git checkout --quiet '${{ github.sha }}' -- deploy/ci.env 2>/dev/null || true
+          docker compose $CO up -d --build
+          ./.github/wait-healthy.sh 4 || { echo "::warning::기준 커밋도 기동하지 못했다 — 비교 기준을 세울 수 없어 1단계를 넘긴다"; }
+          docker compose $CO ps
 
-      # 실패했을 때 원인을 바로 볼 수 있어야 한다 — 로그가 없으면 재현부터 다시 해야 한다.
+      # ── 2단계 ── 볼륨을 지우지 않고 갈아끼운다. Flyway는 여기서 '증분'으로만 돈다.
+      - name: 2단계 · 이 커밋으로 갈아끼우기
+        run: |
+          git checkout --quiet --force '${{ github.sha }}'
+          docker compose $CO up -d --build
+          ./.github/wait-healthy.sh 4
+
+      # ── 3단계 ── 실제로 응답하는가. 배포 후 서버에서 돌리는 것과 같은 스크립트다.
+      - name: 3단계 · 스모크
+        run: BASE=http://127.0.0.1:5173 HOST=127.0.0.1 bash scripts/smoke.sh
+
       - name: 실패 시 로그
         if: failure()
         run: |
-          docker compose ps -a
+          docker compose $CO ps -a || true
           for s in backend backend-mydata frontend mysql; do
             echo "::group::$s"
-            docker compose logs --tail 120 "$s" 2>&1 | tail -120
+            docker compose $CO logs --tail 150 "$s" 2>&1 | tail -150 || true
             echo "::endgroup::"
           done
 
       - name: 정리
         if: always()
-        run: docker compose down -v
+        run: docker compose $CO down -v || true

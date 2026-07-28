@@ -1,5 +1,6 @@
 package com.finntech.service;
 
+import com.finntech.util.HttpClients;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -117,7 +118,9 @@ public class SavingsCompareService {
         this.defaultLimit = defaultLimit;
         this.cacheTtlMinutes = cacheTtlMinutes;
         this.excludeKeywords = excludeKeywords == null ? List.of() : List.copyOf(excludeKeywords);
-        this.client = RestClient.builder().baseUrl(baseUrl).build();
+        this.client = RestClient.builder().baseUrl(baseUrl)
+                .requestFactory(HttpClients.factory(Duration.ofSeconds(3), Duration.ofSeconds(8)))
+                .build();
         this.clock = clock;
     }
 

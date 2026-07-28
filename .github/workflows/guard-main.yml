@@ -55,14 +55,19 @@ jobs:
             // ── 2. 배포 체크리스트 ──────────────────────────────────────────────────
             // 템플릿 표식을 요구한다. '체크박스가 없으면 0개라 통과'하던 허점을 막는 핵심이다.
             const MARKER = '<!-- deploy-checklist -->';
+            // 템플릿의 항목 수. 몇 개만 남기고 잘라내는 우회를 막으려고 **개수도 함께** 본다.
+            // 템플릿을 늘리거나 줄이면 이 값도 같이 옮긴다.
+            const MIN_ITEMS = 22;
             const boxes = body.match(/^\s*- \[( |x|X)\]/gm) || [];
             const unchecked = boxes.filter((b) => !/[xX]/.test(b)).length;
             if (!body.includes(MARKER)) {
               fail.push(
                 '**배포 체크리스트가 없습니다.** PR 본문을 `.github/pull_request_template.md` ' +
                 '내용으로 채우세요(표식 주석까지 그대로).');
-            } else if (boxes.length === 0) {
-              fail.push('**체크리스트 항목이 하나도 없습니다.** 템플릿이 훼손된 것 같습니다.');
+            } else if (boxes.length < MIN_ITEMS) {
+              fail.push(
+                `**체크리스트 항목이 ${boxes.length}개뿐입니다** (${MIN_ITEMS}개여야 합니다). ` +
+                '템플릿의 항목을 지우지 마세요 — 해당 없는 항목도 "해당 없음을 확인했다"는 뜻으로 체크합니다.');
             } else if (unchecked > 0) {
               fail.push(`**체크리스트 미완료 ${unchecked}개.** 전부 확인하고 체크한 뒤 다시 시도하세요.`);
             }
@@ -75,15 +80,43 @@ jobs:
             });
             const paths = files.map((f) => f.filename);
             const touchedEntity = paths.some((p) => /backend\/src\/main\/java\/.*\/domain\//.test(p));
-            const touchedMigration = paths.some((p) => /db\/migration\/V\d+__/.test(p));
-            if (touchedEntity && !touchedMigration) {
+            const migrations = files.filter((f) => /db\/migration\/V\d+__/.test(f.filename));
+            if (touchedEntity && migrations.length === 0) {
               fail.push(
                 '**엔티티를 바꿨는데 Flyway 마이그레이션이 없습니다.**\n' +
                 '  운영은 `ddl-auto=validate`라 스키마가 어긋나면 기동 자체가 막힙니다(V6·V8 전례).\n' +
                 '  컬럼·테이블 추가가 아니라면 이 PR 본문에 그 이유를 적고 다시 실행하세요.');
             }
 
-            // ── 4. 배포 경로 변경 ──────────────────────────────────────────────────
+            // 이미 적용된 마이그레이션을 고치면 운영의 체크섬과 어긋나 **Flyway가 기동을 거부한다.**
+            // 새 파일 추가(added)만 안전하다.
+            const edited = migrations.filter((f) => f.status !== 'added');
+            if (edited.length > 0) {
+              fail.push(
+                '**이미 적용된 마이그레이션을 수정했습니다** — 운영 DB에 기록된 체크섬과 어긋나 ' +
+                'Flyway가 기동을 거부합니다.\n' +
+                edited.map((f) => `  - \`${f.filename}\` (${f.status})`).join('\n') +
+                '\n  되돌리고 새 번호로 파일을 추가하세요.');
+            }
+
+            // ── 4. 되돌릴 수 있는가 ────────────────────────────────────────────────
+            // 배포가 실패하면 deploy-server.sh가 이전 커밋으로 되돌린다. 그런데 되돌아가는 것은
+            // **코드뿐이고 스키마는 그대로다.** 컬럼을 지우는 마이그레이션이 한 번 돌면 옛 코드는
+            // 없는 컬럼을 찾다가 죽어, 롤백해도 서버가 살아나지 않는다.
+            const DESTRUCTIVE = /\b(drop\s+(table|column|index)|rename\s+(table|column)|truncate)\b/i;
+            const destructive = [];
+            for (const f of migrations) {
+              if (f.patch && DESTRUCTIVE.test(f.patch)) destructive.push(f.filename);
+            }
+            if (destructive.length > 0) {
+              fail.push(
+                '**되돌릴 수 없는 마이그레이션입니다** (drop/rename/truncate).\n' +
+                destructive.map((p) => `  - \`${p}\``).join('\n') +
+                '\n  배포 실패 시 자동 롤백은 **코드만** 되돌립니다 — 스키마는 그대로라 옛 코드가 뜨지 못합니다.\n' +
+                '  지우는 대신 두고 쓰지 않거나, 두 번에 나눠 내보내세요(먼저 코드에서 사용 제거 → 다음 배포에서 컬럼 제거).');
+            }
+
+            // ── 5. 배포 경로 변경 ──────────────────────────────────────────────────
             // 워크플로·배포 스크립트·컴포즈는 '무엇이 어떻게 나가는지' 자체를 바꾼다.
             // 막지는 않되, 무엇이 바뀌었는지 PR에 반드시 드러나게 한다.
             const SENSITIVE = /^(\.github\/workflows\/|deploy\/|scripts\/deploy-|docker-compose)/;
