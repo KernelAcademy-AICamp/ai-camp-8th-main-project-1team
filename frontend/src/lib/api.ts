@@ -325,7 +325,17 @@ export interface MyMerchant {
   online: boolean;
 }
 /** 입출금 통장(§13-11 경제 모델). */
-export interface MyAccountTxn { date: string; type: 'DEPOSIT' | 'WITHDRAWAL'; amount: number; description: string }
+export interface MyAccountTxn {
+  date: string;
+  type: 'DEPOSIT' | 'WITHDRAWAL';
+  amount: number;
+  /** 적요 — 거래 상대나 성격. 예: 뚜레쥬르 병영1동점 · 이자입금 · 김민준 */
+  description: string;
+  /** 비고 — 취급점이나 채널. 예: KB국민카드 · BNK경남은행본부 · 전자금융이체 */
+  note: string;
+  /** 이 거래 직후의 잔액. 서버가 전체 이력 기준으로 굴려 준다. */
+  balanceAfter: number;
+}
 export interface MyAccount {
   accountNumber: string;
   bank: string;
@@ -710,7 +720,9 @@ export const api = {
     get<MyPayment[]>(`/api/mydata/cards/${encodeURIComponent(serial)}/payments?userId=${userId}`),
   allPayments: (userId: number, months = 6) =>
     get<MyPaymentHistory[]>(`/api/mydata/payments?userId=${userId}&months=${months}`),
-  account: (userId: number) => get<MyAccount | null>(`/api/mydata/account?userId=${userId}`),
+  /** @param months 최근 N개월(당월 포함). 1=이번 달, 7=이번 달+이전 6개월. */
+  account: (userId: number, months = 1) =>
+    get<MyAccount | null>(`/api/mydata/account?userId=${userId}&months=${months}`),
   merchant: (businessNumber: string) =>
     get<MyMerchant | null>(`/api/mydata/merchant/${encodeURIComponent(businessNumber)}`),
   syncMyData: (userId: number) =>
