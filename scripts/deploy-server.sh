@@ -26,9 +26,12 @@ DRIFT=$(git status --porcelain | head -20)
 
 echo "=== $BRANCH 로 정렬 ==="
 git fetch --quiet origin "$BRANCH"
-git checkout -q -B "$BRANCH" "origin/$BRANCH"
-git reset -q --hard "origin/$BRANCH"
+# 순서가 중요하다. checkout을 먼저 하면 "local changes would be overwritten"으로 **막힌다** —
+# 정렬하려는 대상이 바로 그 로컬 변경인데도 그렇다. 먼저 버리고 나서 브랜치를 옮긴다.
+# (첫 배포에서 실제로 밟았다: checkout이 중단되고 브랜치 이름만 예전 것으로 남았다.)
+git reset -q --hard FETCH_HEAD
 git clean -qfd                                    # 추적 밖 잔재도 지운다(빌드 산출물·손댄 파일)
+git checkout -q -B "$BRANCH" "origin/$BRANCH"
 git log --oneline -1
 
 CO=(docker compose
