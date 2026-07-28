@@ -48,6 +48,7 @@ class MyDataLinkServiceTest {
         ConsumptionRepository consumptions = mock(ConsumptionRepository.class);
         CategoryRepository categories = mock(CategoryRepository.class);
         UserCardCompanyRepository links = mock(UserCardCompanyRepository.class);
+        UserBankRepository bankLinks = mock(UserBankRepository.class);
         ReportRepository reports = mock(ReportRepository.class);
 
         AppUser user = mock(AppUser.class);
@@ -65,7 +66,8 @@ class MyDataLinkServiceTest {
                 LocalDateTime.of(2026, 7, 28, 14, 0).atZone(ZoneId.systemDefault()).toInstant(),
                 ZoneId.systemDefault());
 
-        new MyDataLinkService(client, users, cards, payments, consumptions, categories, links, reports, clock, "")
+        new MyDataLinkService(client, users, cards, payments, consumptions, categories, links,
+                mock(UserBankRepository.class), reports, clock, "")
                 .linkCardCompanies(1L, List.of(9007L));
 
         ArgumentCaptor<UserCardCompany> saved = ArgumentCaptor.forClass(UserCardCompany.class);
@@ -94,7 +96,7 @@ class MyDataLinkServiceTest {
 
         new MyDataLinkService(client, users, mock(UserCardRepository.class), mock(UserPaymentRepository.class),
                 mock(ConsumptionRepository.class), mock(CategoryRepository.class), links,
-                mock(ReportRepository.class), clock, "")
+                mock(UserBankRepository.class), mock(ReportRepository.class), clock, "")
                 .linkCardCompanies(1L, List.of(9007L));
 
         ArgumentCaptor<UserCardCompany> saved = ArgumentCaptor.forClass(UserCardCompany.class);

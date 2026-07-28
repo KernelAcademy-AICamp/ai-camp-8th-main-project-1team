@@ -66,7 +66,10 @@ public class DevLinkController {
         List<Long> companyIds = (req.companyIds() == null || req.companyIds().isEmpty())
                 ? myDataLinkService.companies().stream().map(c -> c.id()).toList()
                 : req.companyIds();
-        LinkResult result = myDataLinkService.linkCardCompanies(user.getId(), companyIds);
+        // 은행도 전부 건다 — 데모 진입에서 통장이 비어 보이면 화면의 절반이 죽는다.
+        // 계좌가 없는 은행은 서버가 알아서 걸러낸다(연동 기록이 남지 않는다).
+        List<Long> bankIds = myDataLinkService.banks().stream().map(b -> b.id()).toList();
+        LinkResult result = myDataLinkService.linkCardCompanies(user.getId(), companyIds, bankIds);
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("userId", user.getId());

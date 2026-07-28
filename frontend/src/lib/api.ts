@@ -272,7 +272,11 @@ export interface ImpulseSnapshot {
 /** 가상 본인인증 결과. verified는 항상 true(가상), existsInMyData=false면 마이데이터에 없는 신원. */
 export interface VerifyResult { ci: string; verified: boolean; existsInMyData: boolean }
 export interface MyDataCompany { id: number; name: string; imgUrl: string }
-export interface MyDataLinkResult { cardCount: number; paymentCount: number }
+export interface MyDataLinkResult { cardCount: number; paymentCount: number; bankCount: number }
+/** 연동 가능 은행. id는 제공자가 이름순으로 매긴 순번이라 조회마다 같다. */
+export interface MyDataBank { id: number; name: string }
+/** 내가 연동한 은행. */
+export interface MyLinkedBank { id: number; bankId: number; bankName: string; linkedAt: string }
 /** 내 카드 — 실적 진행률 + 이번달 받은 혜택. */
 export interface MyCard {
   serialNumber: string;
@@ -696,8 +700,11 @@ export const api = {
   verify: (userId: number, name: string, social7: string, phone: string) =>
     post<VerifyResult>('/api/mydata/verify', { userId, name, social7, phone }),
   mydataCompanies: () => get<MyDataCompany[]>('/api/mydata/companies'),
-  mydataLink: (userId: number, companyIds: number[]) =>
-    post<MyDataLinkResult>('/api/mydata/link', { userId, companyIds }),
+  mydataBanks: () => get<MyDataBank[]>('/api/mydata/banks'),
+  myBanks: (userId: number) => get<MyLinkedBank[]>(`/api/mydata/my-banks?userId=${userId}`),
+  /** 카드사와 은행을 함께 연동한다. 은행은 계좌가 있는 곳만 실제로 붙는다. */
+  mydataLink: (userId: number, companyIds: number[], bankIds: number[] = []) =>
+    post<MyDataLinkResult>('/api/mydata/link', { userId, companyIds, bankIds }),
   myCards: (userId: number) => get<MyCard[]>(`/api/mydata/cards?userId=${userId}`),
   cardPayments: (userId: number, serial: string) =>
     get<MyPayment[]>(`/api/mydata/cards/${encodeURIComponent(serial)}/payments?userId=${userId}`),

@@ -21,7 +21,7 @@ export type ScreenId =
   // 홈 하위
   | 'myroom' | 'notifications' | 'transactions'
   // 리포트 하위
-  | 'r-analysis' | 'r-spending' | 'r-cards' | 'r-waste' | 'r-savings'
+  | 'r-analysis' | 'r-spending' | 'r-cards' | 'r-account' | 'r-waste' | 'r-savings'
   // 마이 하위
   | 'm-impulse' | 'm-goals' | 'm-connections' | 'm-record' | 'm-policy' | 'm-survey' | 'm-demo';
 

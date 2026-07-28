@@ -16,6 +16,12 @@ public final class MyDataDtos {
 
     public record CompanyView(Long id, String name, String imgUrl) {}
 
+    /**
+     * 연동 가능 은행. 은행에는 카드사 같은 카탈로그 테이블이 없어 계좌에 있는 은행명을
+     * 이름순으로 세운 <b>순번</b>을 id로 준다 — 데이터가 결정론이라 id도 결정론이다.
+     */
+    public record BankView(Long id, String name) {}
+
     public record BenefitView(String category1Name, int discountPercent,
                               int performanceStart, int performanceEnd, int monthlyLimit) {}
 
