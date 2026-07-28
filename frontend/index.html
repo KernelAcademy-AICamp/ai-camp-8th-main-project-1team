@@ -6,8 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="MOA — 지킴이와 함께 이번 달 지킬 돈을 정하고 끝까지 지켜가는 소비 관리 서비스 (학습용 프로토타입, 더미 데이터)" />
     <meta name="theme-color" content="#3182F6" />
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    <!-- 폰트는 번들이다(public/fonts). 앱(웹뷰)은 오프라인·첫 실행에도 같은 글꼴이어야 하고,
+         CDN에 의존하면 그 순간 시스템 글꼴로 떨어져 디자인이 달라진다. @font-face는 tokens.css. -->
+    <link rel="preload" href="/fonts/PretendardVariable.subset.woff2" as="font" type="font/woff2" crossorigin />
     <title>MOA · 지킴이와 함께</title>
   </head>
   <body>

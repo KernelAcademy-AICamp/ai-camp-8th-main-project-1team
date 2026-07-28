@@ -49,8 +49,11 @@ finntech:
     shared-secret: ${MYDATA_SHARED_SECRET:}
 
   # ---- CORS (W7-3) — 허용 오리진은 프로퍼티. 운영은 env 주입(동일 오리진 배포 시 무의미). --------------
+  # 뒤 3개는 앱(Capacitor) 웹뷰의 오리진이다. 웹 자산이 기기 안에서 서빙되므로 브라우저와 달리
+  # 오리진이 도메인이 아니고, 플랫폼·설정에 따라 셋 중 하나가 된다(안드로이드 http/https,
+  # iOS capacitor). 어느 것이 될지 빌드 설정에 달려 있어 셋을 함께 연다.
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,capacitor://localhost,https://localhost,http://localhost}
 
   # ---- 통장 비교 (정보성) — 실 예·적금 금리 비교 -----------------------------
   # 금소법: '단순 정보제공 + 판매목적 아님 + 무제휴/무광고 + 가입 편의 미제공'이면 중개업 아님
