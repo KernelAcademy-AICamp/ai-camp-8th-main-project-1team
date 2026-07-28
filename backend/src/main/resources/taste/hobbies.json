@@ -1,0 +1,93 @@
+{
+ "_note": "취미 성향 taxonomy. 사용자에게 1~3개 취미 배정 → 그 취미의 signatureCategories에서 '가끔·명백히' 지출을 주입해 성향이 마이데이터에서 식별되게 한다. 일상 지출(식당·편의점·교통)과 구분되는 취미 신호.",
+ "hobbies": [
+  {
+   "type": "문화공연",
+   "signatureCategories": [
+    "공연전시"
+   ]
+  },
+  {
+   "type": "여행",
+   "signatureCategories": [
+    "여행숙박",
+    "항공",
+    "철도",
+    "렌터카",
+    "고속버스"
+   ]
+  },
+  {
+   "type": "반려동물",
+   "signatureCategories": [
+    "반려동물"
+   ]
+  },
+  {
+   "type": "디지털게임",
+   "signatureCategories": [
+    "디지털가전",
+    "간편결제",
+    "스트리밍"
+   ]
+  },
+  {
+   "type": "패션쇼핑",
+   "signatureCategories": [
+    "의류패션",
+    "백화점",
+    "화장품",
+    "드럭스토어"
+   ]
+  },
+  {
+   "type": "스포츠레저",
+   "signatureCategories": [
+    "스포츠레저",
+    "헬스장"
+   ]
+  },
+  {
+   "type": "아웃도어캠핑",
+   "signatureCategories": [
+    "아웃도어캠핑"
+   ]
+  },
+  {
+   "type": "독서문화",
+   "signatureCategories": [
+    "서점문구"
+   ]
+  },
+  {
+   "type": "키즈육아",
+   "signatureCategories": [
+    "키즈육아",
+    "키즈카페"
+   ]
+  },
+  {
+   "type": "취미공예",
+   "signatureCategories": [
+    "취미공예"
+   ]
+  },
+  {
+   "type": "미식탐방",
+   "signatureCategories": [
+    "일식",
+    "양식",
+    "고기구이",
+    "뷔페",
+    "아시안"
+   ]
+  },
+  {
+   "type": "영화관람",
+   "signatureCategories": [
+    "영화",
+    "스트리밍"
+   ]
+  }
+ ]
+}

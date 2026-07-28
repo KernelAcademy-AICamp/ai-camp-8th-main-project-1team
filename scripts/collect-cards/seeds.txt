@@ -1,0 +1,62 @@
+# 수집할 카드 상품 페이지 URL — 한 줄에 하나. '#'로 시작하면 주석.
+#
+# 목록 페이지를 긁지 않고 URL을 사람이 채우는 이유
+#   1) 신한카드 목록 페이지(/pconts/html/card/main/main.html)는 직접 요청 시 404다.
+#   2) 필요한 건 20~30건이지 전수가 아니다. 수집량을 최소로 두는 편이 안전하다.
+#
+# URL 얻는 법: 브라우저에서 카드 상품을 열고 주소창을 복사해 아래에 붙인다.
+#   형식 예) https://www.shinhancard.com/pconts/html/card/apply/credit/{상품ID}.html
+#
+# robots.txt 조사 결과 (2026-07-28, User-agent:* 기준)
+#
+#   신한카드     Allow: /pconts/html/card/ · /pconts/html/benefit/   ✅ 수집
+#   KB국민카드   Allow: /CRD/ · /SVC/ · /FNC/                        ✅ 수집
+#   우리카드     /dcpc/ 는 허용(Disallow는 /dcmw/ 에만)               ⚠️ 허용이나 수집 불가
+#   삼성카드     Disallow: /                                         ❌ 전면 금지 — 넣지 말 것
+#   현대카드     User-agent:* 그룹 없음(검색봇 11종만 화이트리스트)    ⚠️ 판단 보류
+#   하나카드     User-agent:* 그룹 없음(검색봇 3종만)                 ⚠️ 판단 보류
+#   롯데·NH·BC   응답 없음 / 리다이렉트                               ❓ 미확인
+#
+#   여신금융협회 카드다모아는 데이터 API가 403이라 대상에서 제외한다.
+#
+# fetch.py가 매번 robots.txt를 다시 확인하므로, 금지된 URL을 넣어도 받지 않고 건너뛴다.
+# 위 표는 참고용이고 최종 판단은 코드가 한다.
+
+# ── 신한카드 (검증 완료) ──────────────────────────────
+https://www.shinhancard.com/pconts/html/card/apply/credit/1227020_2207.html
+https://www.shinhancard.com/pconts/html/card/apply/credit/1229296_2207.html
+https://www.shinhancard.com/pconts/html/card/apply/credit/1223978_2207.html
+https://www.shinhancard.com/pconts/html/card/apply/credit/1228407_2207.html
+https://www.shinhancard.com/pconts/html/card/apply/credit/1188430_2207.html
+https://www.shinhancard.com/pconts/html/card/apply/credit/1187943_2207.html
+https://www.shinhancard.com/pconts/html/card/apply/credit/1195589_2207.html
+https://www.shinhancard.com/pconts/html/card/apply/credit/1187933_2207.html
+https://www.shinhancard.com/pconts/html/card/apply/credit/1235111_2207.html
+https://www.shinhancard.com/pconts/html/card/apply/check/1231009_2206.html
+
+# ── KB국민카드: 수집은 되나 파서 보류 (2026-07-28) ──
+#
+# robots 허용이고 HTML도 받아진다. 그런데 페이지에 **다른 카드의 배너 혜택이 함께 실려**
+# 있어서, 페이지 전체를 훑는 방식으로는 남의 카드 혜택이 섞인다. 실제로 서로 다른 두 카드에서
+# 같은 문장("OTT 50%, APP 30%, 여가 20%…")이 추출됐다.
+# extract.py의 PARSERS에서 뺐다. 원문 HTML은 out/raw/에 남으니 파서만 고치면 이어서 할 수 있다.
+#
+# https://m.kbcard.com/CRD/DVIEW/MCAMCXHIACRC0002?mainCC=b&allianceCode=09923
+# https://m.kbcard.com/CRD/DVIEW/MCAMCXHIACRC0002?cooperationcode=09298&mainCC=a
+
+# ── 우리카드: robots는 허용인데 수집 불가 (2026-07-28 조사) ──
+#
+# /dcpc/ 는 robots.txt가 허용하고 HTTP 200도 나온다. 카드 상세 URL 형식도 확인했다.
+#   https://pc.wooricard.com/dcpc/yh1/crd/crd01/H1CRD101S02.do?cdPrdCd=224909
+#
+# 그런데 본문이 JS로 그려져 정적 HTML에는 마케팅 카피만 있다.
+#   뽑히는 것    "카드의정석 시즌 2는 1.2% 할인이 기본!" · "2.0% SUPER Benefit"
+#   없는 것      카테고리별 할인율 · 실적구간 · 월한도 · 연회비 · 상품설명서 PDF
+#   cdPrdCd 를 바꿔도 응답 크기가 같다 = 서버가 상품별로 다른 HTML을 주지 않는다.
+#
+# 카드다모아(403 차단)와는 성격이 다르다. 여기는 허용된 범위라 헤드리스 브라우저를 써도
+# 기술적 조치 우회가 아니다. 다만 playwright 의존성이 붙고 카드사마다 렌더링이 달라
+# 유지비가 느는데 얻는 건 카드사 하나뿐이라 **보류**한다.
+# 카탈로그를 크게 넓혀야 할 때 헤드리스를 한 번에 도입하는 편이 낫다.
+
+# ── 아래에 계속 추가 ──────────────────────────────────
