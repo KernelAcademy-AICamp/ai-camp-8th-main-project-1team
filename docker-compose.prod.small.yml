@@ -1,0 +1,30 @@
+# 2GB 인스턴스(t4g.small·t3.small)용 메모리 한도 오버레이.
+#
+#   docker compose -f docker-compose.prod.yml -f docker-compose.prod.local-db.yml \
+#     -f docker-compose.prod.small.yml --profile local-db --env-file deploy/.env up -d
+#
+# 왜 별도 파일인가: 무료 플랜은 기동 가능한 인스턴스 타입을 6개로 제한한다
+# (m7i-flex.large 8GB / c7i-flex.large 4GB / t3·t4g.small 2GB / t3·t4g.micro 1GB).
+# 이 중 크레딧이 오래 가는 것은 2GB짜리뿐이라(월 $22~26 vs 4GB $77), 2GB에 맞춘 한도를
+# 따로 둔다. 4GB 이상으로 갈 여지를 남기려고 본 파일의 한도를 덮어쓰지 않고 겹쳐 쓴다.
+#
+# 합계 1.55 GB. 2 GB에서 OS·Docker 데몬 몫으로 약 0.45 GB를 남긴다.
+# 스왑 2 GB를 반드시 함께 잡는다 — 한도가 빠듯해 순간 피크를 흡수할 곳이 필요하다.
+services:
+  mysql:
+    # 버퍼풀을 512M → 256M로 줄인다. 6.17 GB를 캐시하지 못하는 것은 어느 쪽이나 같고,
+    # 조회가 전부 인덱스를 타므로 시연 트래픽에서는 콜드 캐시 첫 응답만 느리다.
+    command: >
+      --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=256M
+      --performance-schema=OFF
+    mem_limit: 640m
+
+  backend-mydata:
+    mem_limit: 384m           # 힙 ≈ 230m
+
+  backend:
+    mem_limit: 512m           # 힙 ≈ 307m
+
+  frontend:
+    mem_limit: 64m
