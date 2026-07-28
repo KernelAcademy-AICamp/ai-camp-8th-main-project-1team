@@ -1,0 +1,112 @@
+package com.finntech.guardian.repository;
+
+import com.finntech.guardian.domain.GuardianEnums.TxState;
+import com.finntech.guardian.domain.GuardianTransaction;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * 조회는 전부 결정론적 정렬을 강제한다 (마스터 §4 원칙 3).
+ *
+ * <p>상태는 JPQL 리터럴이 아니라 <b>파라미터로</b> 넘긴다 — 중첩 enum({@code GuardianEnums.TxState})의
+ * 정규화 이름은 JPQL 파서마다 해석이 갈려 H2/MySQL 어느 한쪽에서 깨질 수 있다.
+ * 기본값을 {@code default} 메서드로 감싸 호출부는 상태를 신경 쓰지 않는다.
+ */
+public interface GuardianTransactionRepository extends JpaRepository<GuardianTransaction, Long> {
+
+    @Query("select t from GuardianTransaction t where t.challengeId = :challengeId "
+            + "order by t.occurredAt asc, t.id asc")
+    List<GuardianTransaction> findByChallenge(@Param("challengeId") Long challengeId);
+
+    @Query("select t from GuardianTransaction t where t.userId = :userId "
+            + "order by t.receivedAt desc, t.id desc")
+    List<GuardianTransaction> findByUserRecent(@Param("userId") Long userId);
+
+    @Query("select coalesce(sum(t.amount), 0) from GuardianTransaction t "
+            + "where t.challengeId = :challengeId and t.state = :state")
+    long sumByState(@Param("challengeId") Long challengeId, @Param("state") TxState state);
+
+    /** 집계된 거래의 합. 되돌려진 건은 상태가 바뀌므로 자동으로 빠진다. */
+    default long sumCounted(Long challengeId) {
+        return sumByState(challengeId, TxState.COUNTED);
+    }
+
+    @Query("select t from GuardianTransaction t where t.challengeId = :challengeId "
+            + "and t.state = :state and t.countedDate = :date order by t.occurredAt asc, t.id asc")
+    List<GuardianTransaction> findByChallengeAndCountedDate(@Param("challengeId") Long challengeId,
+                                                            @Param("state") TxState state,
+                                                            @Param("date") LocalDate date);
+
+    default List<GuardianTransaction> findCountedOn(Long challengeId, LocalDate date) {
+        return findByChallengeAndCountedDate(challengeId, TxState.COUNTED, date);
+    }
+
+    @Query("select coalesce(sum(t.amount), 0) from GuardianTransaction t "
+            + "where t.challengeId = :challengeId and t.countedDate <= :date and t.state = :state")
+    long sumUntil(@Param("challengeId") Long challengeId, @Param("date") LocalDate date,
+                  @Param("state") TxState state);
+
+    /** 집계 대상 날짜까지의 누적 — 일 판정은 '그날까지'를 봐야 페이스가 맞는다. */
+    default long sumCountedUntil(Long challengeId, LocalDate date) {
+        return sumUntil(challengeId, date, TxState.COUNTED);
+    }
+
+    @Query("select count(t) from GuardianTransaction t where t.challengeId = :challengeId "
+            + "and t.category = :category and t.state = :state")
+    int countByCategoryAndState(@Param("challengeId") Long challengeId, @Param("category") String category,
+                                @Param("state") TxState state);
+
+    default int countCountedByCategory(Long challengeId, String category) {
+        return countByCategoryAndState(challengeId, category, TxState.COUNTED);
+    }
+
+    @Query("select count(t) from GuardianTransaction t where t.challengeId = :challengeId "
+            + "and t.category = :category and t.state = :state "
+            + "and t.countedDate >= :from and t.countedDate <= :to")
+    int countByCategoryInRange(@Param("challengeId") Long challengeId, @Param("category") String category,
+                               @Param("state") TxState state,
+                               @Param("from") LocalDate from, @Param("to") LocalDate to);
+
+    default int countCountedByCategoryInRange(Long challengeId, String category, LocalDate from, LocalDate to) {
+        return countByCategoryInRange(challengeId, category, TxState.COUNTED, from, to);
+    }
+
+    @Query("select coalesce(sum(t.amount), 0) from GuardianTransaction t "
+            + "where t.challengeId = :challengeId and t.countedDate = :date "
+            + "and t.micro = true and t.state = :state")
+    long sumMicroOnDateAndState(@Param("challengeId") Long challengeId, @Param("date") LocalDate date,
+                                @Param("state") TxState state);
+
+    /** 오늘 잔돈 버킷 합계 — C8 판정용. */
+    default long sumMicroOnDate(Long challengeId, LocalDate date) {
+        return sumMicroOnDateAndState(challengeId, date, TxState.COUNTED);
+    }
+
+    @Query("select t from GuardianTransaction t where t.challengeId = :challengeId "
+            + "and t.state = :state and t.undoDeadline <= :at order by t.id asc")
+    List<GuardianTransaction> findByStateAndUndoDeadlineBefore(@Param("challengeId") Long challengeId,
+                                                               @Param("state") TxState state,
+                                                               @Param("at") LocalDateTime at);
+
+    /** 되돌리기 유예가 끝난 거래 — 배치가 여기서 판정을 확정한다. */
+    default List<GuardianTransaction> findExpiredUndo(Long challengeId, LocalDateTime at) {
+        return findByStateAndUndoDeadlineBefore(challengeId, TxState.COUNTED, at);
+    }
+
+    @Query("select t from GuardianTransaction t where t.challengeId = :challengeId "
+            + "and t.state = :state order by t.id asc")
+    List<GuardianTransaction> findByChallengeAndState(@Param("challengeId") Long challengeId,
+                                                      @Param("state") TxState state);
+
+    default List<GuardianTransaction> findPendingCategory(Long challengeId) {
+        return findByChallengeAndState(challengeId, TxState.PENDING_CATEGORY);
+    }
+
+    /** 마이데이터 투영에서 이미 끌어온 소비인가 — 중복 적재 방지. */
+    boolean existsByUserIdAndSourceConsumptionId(Long userId, Long sourceConsumptionId);
+}

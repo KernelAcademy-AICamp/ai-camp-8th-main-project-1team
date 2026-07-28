@@ -36,13 +36,16 @@ public class MyDataLinkService {
     private final CategoryRepository categoryRepository;
     private final UserCardCompanyRepository userCardCompanyRepository;
     private final ReportRepository reportRepository;
-    private final LocalDate referenceDate;
+    private final java.time.Clock clock;
+    /** 고정 기준일. null이면 {@link #referenceDate()}가 주입된 시계를 따른다. */
+    private final LocalDate fixedReferenceDate;
 
     public MyDataLinkService(MyDataClient myDataClient, AppUserRepository userRepository,
                              UserCardRepository userCardRepository, UserPaymentRepository userPaymentRepository,
                              ConsumptionRepository consumptionRepository, CategoryRepository categoryRepository,
                              UserCardCompanyRepository userCardCompanyRepository, ReportRepository reportRepository,
-                             @Value("${finntech.mydata.reference-date:2026-07-21}") String referenceDate) {
+                             java.time.Clock clock,
+                             @Value("${finntech.mydata.reference-date:}") String referenceDate) {
         this.myDataClient = myDataClient;
         this.userRepository = userRepository;
         this.userCardRepository = userCardRepository;
@@ -51,7 +54,21 @@ public class MyDataLinkService {
         this.categoryRepository = categoryRepository;
         this.userCardCompanyRepository = userCardCompanyRepository;
         this.reportRepository = reportRepository;
-        this.referenceDate = LocalDate.parse(referenceDate);
+        this.clock = clock;
+        this.fixedReferenceDate = (referenceDate == null || referenceDate.isBlank())
+                ? null : LocalDate.parse(referenceDate.trim());
+    }
+
+    /**
+     * 링크·월집계의 기준이 되는 '오늘'.
+     *
+     * <p>비워 두면 주입된 {@link java.time.Clock}(= 시스템 단일 시간 출처, {@code finntech.demo.today}로
+     * 고정 가능)을 따른다. 예전에는 이 값이 상수로 박혀 있어, 분석·지킴이는 실시간으로 앞서가는데
+     * 링크 기준일만 과거에 멈춰 있었다 — 오늘 시작한 챌린지에 넣을 소비가 0건이 되는 원인이었다.
+     * 값을 넣으면 그 날짜로 고정되지만, 그때는 {@code mydata.now}도 같이 고정해야 한다(짝이다).
+     */
+    private LocalDate referenceDate() {
+        return fixedReferenceDate != null ? fixedReferenceDate : LocalDate.now(clock);
     }
 
     /** 카드사 목록(연동 기관 선택용). */
@@ -83,12 +100,15 @@ public class MyDataLinkService {
         userCardCompanyRepository.deleteByUserId(userId);
         reportRepository.deleteByUserId(userId);   // 판정 소스(ML)·데이터가 바뀌므로 리포트 캐시 무효화
 
-        YearMonth referenceMonth = YearMonth.from(referenceDate);
-        LocalDateTime linkTime = referenceDate.atTime(23, 59, 59); // 이후 결제는 다음 동기화에서 증분 등장(W2)
+        LocalDate today = referenceDate();
+        YearMonth referenceMonth = YearMonth.from(today);
+        LocalDateTime linkTime = LocalDateTime.now(clock);
         int cardCount = 0, paymentCount = 0;
 
         for (Long companyId : companyIds) {
             String companyName = null;
+            // 이 카드사에서 실제로 받아온 마지막 결제 시각. 다음 증분의 기준선이 된다.
+            LocalDateTime lastPayment = null;
             for (CardView card : myDataClient.findCards(companyId, ci)) {
                 companyName = card.cardProduct().company().name();
                 int requirement = requirementOf(card);
@@ -114,11 +134,18 @@ public class MyDataLinkService {
                             BigDecimal.valueOf(payment.amount()), payment.date(), false,
                             Enums.DataSource.MYDATA));
                     paymentCount++;
+                    if (lastPayment == null || payment.date().isAfter(lastPayment)) lastPayment = payment.date();
                 }
             }
             if (companyName != null) { // 카드가 있던 카드사만 연동 기록(다음 동기화 증분 기준)
+                // 증분 기준선은 '실제로 받아온 마지막 결제 시각'이어야 한다.
+                // 예전에는 연동한 날의 23:59:59로 앞질러 찍었는데, 마이데이터 서버는 커트오프(지금)까지만
+                // 주므로 연동 시점부터 자정까지의 결제가 기준선 뒤로 밀려 영영 안 들어왔다.
+                // 오전에 연동하면 그날 낮 결제가 통째로 사라지고, 지킴이 차감·판정도 그만큼 비었다.
+                // 결제가 하나도 없던 카드사는 넉넉히 과거로 잡아 다음 증분이 무엇이든 집어오게 한다(멱등).
+                LocalDateTime since = lastPayment != null ? lastPayment : today.minusMonths(12).atStartOfDay();
                 userCardCompanyRepository.save(
-                        new UserCardCompany(userId, companyId, companyName, linkTime, linkTime));
+                        new UserCardCompany(userId, companyId, companyName, linkTime, since));
             }
         }
         // 입출금 통장의 월급을 앱 사용자 월급(=예산)으로 반영(§13-11 경제 모델). 통장 없으면 기존값 유지.
@@ -186,7 +213,9 @@ public class MyDataLinkService {
             userCardCompanyRepository.save(link);
         }
         if (added > 0) reportRepository.deleteByUserId(userId); // 새 결제 반영 위해 리포트 캐시 무효화
-        log.info("마이데이터 증분 동기화 — userId={} 신규 결제 {}건", userId, added);
+        // 자동 동기화 배치가 5분마다 이 메서드를 부른다. 대부분 0건이라 INFO로 남기면 로그가 그것만으로 찬다.
+        if (added > 0) log.info("마이데이터 증분 동기화 — userId={} 신규 결제 {}건", userId, added);
+        else log.debug("마이데이터 증분 동기화 — userId={} 신규 결제 없음", userId);
         return new SyncResult(added);
     }
 
@@ -195,7 +224,7 @@ public class MyDataLinkService {
     /** '내 카드' 화면 — 카드별 실적 진행률 + 이번달 받은 혜택. */
     @Transactional(readOnly = true)
     public List<MyCardView> myCards(Long userId) {
-        YearMonth referenceMonth = YearMonth.from(referenceDate);
+        YearMonth referenceMonth = YearMonth.from(referenceDate());
         List<MyCardView> views = new ArrayList<>();
         for (UserCard card : userCardRepository.findByUserIdOrderByIdAsc(userId)) {
             int earnedThisMonth = userPaymentRepository
@@ -228,7 +257,7 @@ public class MyDataLinkService {
      */
     @Transactional(readOnly = true)
     public List<PaymentHistoryRow> allPayments(Long userId, int monthsBack) {
-        LocalDateTime from = referenceDate.minusMonths(monthsBack).atStartOfDay();
+        LocalDateTime from = referenceDate().minusMonths(monthsBack).atStartOfDay();
         Map<String, UserCard> bySerial = userCardRepository.findByUserIdOrderByIdAsc(userId).stream()
                 .collect(Collectors.toMap(UserCard::getSerialNumber, c -> c, (a, b) -> a));
         return userPaymentRepository.findByUserIdOrderByPaymentDateDesc(userId).stream()

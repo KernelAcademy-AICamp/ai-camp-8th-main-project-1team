@@ -40,7 +40,7 @@ export function Onboarding1() {
               <div className="list-item">
                 <span className="ic" style={{ background: bgFor(iconFor(c.category2)) }}><Icon id={iconFor(c.category2)} /></span>
                 <div className="tx"><b>{c.category2}</b><span>{c.reason}</span></div>
-                <span className="amt">월 {won(c.monthlyAmount)}</span>
+                <span className="amt">월 {won(c.monthlySpend)}</span>
               </div>
               {i < a.cutCandidates.length - 1 && <div className="divider" />}
             </div>
@@ -59,7 +59,7 @@ export function Onboarding1() {
             <div className="chips">
               {fixed.map((f) => (
                 <span key={f.merchantName} className="chip" style={{ cursor: 'default' }}>
-                  {f.merchantName} · {won(f.amount)}
+                  {f.merchantName} · {won(f.representativeAmount)}
                 </span>
               ))}
             </div>

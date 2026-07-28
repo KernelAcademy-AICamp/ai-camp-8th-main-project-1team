@@ -46,5 +46,5 @@ export function Scroll({ children }: { children: ReactNode }) {
   return <div className="scroll">{children}</div>
 }
 
-const won = (n: number) => n.toLocaleString('ko-KR') + '원'
+const won = (n?: number | null) => (n ?? 0).toLocaleString('ko-KR') + '원'
 export { won }

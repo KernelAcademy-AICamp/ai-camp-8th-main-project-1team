@@ -1,726 +1,99 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import {
-  api, catLabel,
-  type AlertResponse, type ReportResponse,
-  type ScoreResponse, type DataSourceMode, type GoalRecommendation,
-  type MyCard, type WasteJudgment, type MyAccount, type MyPaymentHistory,
-} from './api';
-import { ConsumptionPanel } from './ConsumptionPanel';
-import { SurveyPanel } from './SurveyPanel';
-import { PointsPanel } from './PointsPanel';
-import { ImpulseSaverPanel } from './ImpulseSaverPanel';
-import { Onboarding } from './Onboarding';
-import { MyCardPanel } from './MyCardPanel';
-import { ConsumptionAnalysisPanel } from './ConsumptionAnalysisPanel';
-import { DonutChart, DonutLegend, BarChart } from './Charts';
-import { DEMO_USERS } from './demoUsers';
-import './App.css';
+/**
+ * 앱 셸 — 화면 레지스트리 + 진입 분기 + 하단 탭.
+ *
+ * 목업(frontend-moa)의 개발 보드(폰 목업 + 검정 버튼 4개)는 걷어냈다. 어느 화면을 처음 보여줄지는
+ * 이제 버튼이 아니라 **상태**가 정한다:
+ *   연결 안 함        → 최초 온보딩(스플래시부터)
+ *   연결됨·챌린지 없음 → 이번 챌린지 정하기(ob1~ob3)  ← IA의 '월초 인터럽트'와 같은 자리
+ *   연결됨·챌린지 있음 → 홈
+ */
+import { useEffect, type ComponentType } from 'react';
+import { IconSprite } from './components/Icons';
+import { BottomTab } from './components/BottomTab';
+import { SessionProvider, useSession, tabOf, type ScreenId } from './state/session';
+import { GuardianProvider } from './state/guardian';
 
-// 데모 생성 CI(.env.local). 있으면 온보딩 이후에도 홈에서 사람 교체 연결·재연동 가능(파기·재시작 복구).
-const DEMO_CI = (import.meta.env.VITE_DEMO_CI as string | undefined) ?? '';
-const PERSONA_ORDER = ['절약형', '균형형', '과소비형', '구독과다형', '외식형'];
-const won = (n: number) => n.toLocaleString('ko-KR') + '원';
-const wonShort = (n: number) =>
-  n >= 10000 ? `${(n / 10000).toLocaleString('ko-KR', { maximumFractionDigits: 1 })}만원` : won(n);
-const pct = (v: number) => `${Math.round(v * 100)}%`;
-const GRADE_VAR: Record<string, string> = { A: 'var(--good)', B: 'var(--brand)', C: 'var(--warn)', D: 'var(--bad)' };
+import { Splash } from './screens/Splash';
+import { Auth } from './screens/Auth';
+import { Connect } from './screens/Connect';
+import { Loading } from './screens/Loading';
+import { Onboarding1 } from './screens/Onboarding1';
+import { Onboarding2 } from './screens/Onboarding2';
+import { Onboarding3 } from './screens/Onboarding3';
+import { Done } from './screens/Done';
+import { Home } from './screens/Home';
+import { Myroom } from './screens/Myroom';
+import { Notifications } from './screens/Notifications';
+import { Transactions } from './screens/Transactions';
+import { Report } from './screens/Report';
+import { ReportSpending } from './screens/ReportSpending';
+import { ReportAnalysis } from './screens/ReportAnalysis';
+import { ReportCards } from './screens/ReportCards';
+import { ReportWaste } from './screens/ReportWaste';
+import { ReportSavings } from './screens/ReportSavings';
+import { My } from './screens/My';
+import { MyImpulse } from './screens/MyImpulse';
+import { MyGoals } from './screens/MyGoals';
+import { MyConnections } from './screens/MyConnections';
+import { MyRecord } from './screens/MyRecord';
+import { MyPolicy } from './screens/MyPolicy';
+import { MySurvey } from './screens/MySurvey';
+import { MyDemo } from './screens/MyDemo';
 
-type Tab = 'home' | 'card' | 'spend' | 'save' | 'more';
+/** 최초 온보딩(마이데이터 연결 전)에만 열리는 화면. */
+const LINK_FLOW: ScreenId[] = ['splash', 'auth', 'connect'];
+/** 이번 챌린지를 정하는 흐름 — 이 화면들에서는 하단 탭을 감춘다(중간에 빠져나가면 흐름이 끊긴다). */
+const SETUP_FLOW: ScreenId[] = ['loading', 'ob1', 'ob2', 'ob3', 'done'];
 
-/* ── 아이콘 (인라인 SVG) — 장식용이므로 aria-hidden ─────────────────── */
-const Icon = {
-  logo: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 17l5-5 4 3 6-7" /><path d="M14 8h4v4" />
-    </svg>
-  ),
-  sun: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-    </svg>
-  ),
-  moon: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
-    </svg>
-  ),
-  shield: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" /><path d="M9 12l2 2 4-4" />
-    </svg>
-  ),
-  alert: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 9v4M12 17h.01" /><path d="M10.3 3.9L2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
-    </svg>
-  ),
-  check: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M20 6L9 17l-5-5" />
-    </svg>
-  ),
-  /* 하단 탭 아이콘 */
-  home: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 10.5L12 3l9 7.5" /><path d="M5 9.5V20h14V9.5" /><path d="M9.5 20v-6h5v6" />
-    </svg>
-  ),
-  card: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="2.5" y="5" width="19" height="14" rx="2.5" /><path d="M2.5 9.5h19M6 15h4" />
-    </svg>
-  ),
-  chart: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 20V10M10 20V4M16 20v-7M4 20h16" />
-    </svg>
-  ),
-  save: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 8a8 5 0 0 0 16 0 8 5 0 0 0-16 0z" /><path d="M4 8v6a8 5 0 0 0 16 0V8" /><path d="M12 11v3" />
-    </svg>
-  ),
-  more: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" />
-    </svg>
-  ),
+const SCREENS: Record<ScreenId, ComponentType> = {
+  splash: Splash, auth: Auth, connect: Connect, loading: Loading,
+  ob1: Onboarding1, ob2: Onboarding2, ob3: Onboarding3, done: Done,
+  home: Home, report: Report, my: My,
+  myroom: Myroom, notifications: Notifications, transactions: Transactions,
+  'r-spending': ReportSpending, 'r-analysis': ReportAnalysis, 'r-cards': ReportCards,
+  'r-waste': ReportWaste, 'r-savings': ReportSavings,
+  'm-impulse': MyImpulse, 'm-goals': MyGoals, 'm-connections': MyConnections,
+  'm-record': MyRecord, 'm-policy': MyPolicy, 'm-survey': MySurvey, 'm-demo': MyDemo,
 };
 
-const TABS: { id: Tab; label: string; icon: ReactNode }[] = [
-  { id: 'home', label: '홈', icon: Icon.home },
-  { id: 'card', label: '내 카드', icon: Icon.card },
-  { id: 'spend', label: '내 소비', icon: Icon.chart },
-  { id: 'save', label: '혜택·저축', icon: Icon.save },
-  { id: 'more', label: '더보기', icon: Icon.more },
-];
+function ScreenHost() {
+  const { screen, linked, go } = useSession();
 
-/* ── 추정/확정 배지 (문서 §5-2 ②) ──────────────────────────────── */
-function ModeBadge({ mode, reason }: { mode?: DataSourceMode; reason?: string | null }) {
-  if (!mode) return null;
-  const confirmed = mode === 'CONFIRMED';
-  return (
-    <span className={`mode ${confirmed ? 'mode-confirmed' : 'mode-estimated'}`}>
-      <span className="dot" aria-hidden="true" />
-      {confirmed ? '실제 소비 데이터' : '참고용 추정치'}
-      {reason && <span className="mode-reason">· {reason}</span>}
-    </span>
-  );
-}
+  /**
+   * 강제 이동은 딱 하나뿐이다 — 마이데이터 연결 전에는 연결 흐름 밖으로 못 나가고, 연결 뒤에는 홈으로 온다.
+   * 챌린지가 없을 때 온보딩으로 **밀어내지 않는** 이유: 지킴이 API가 없거나 실패해도 리포트·마이는 멀쩡히
+   * 동작해야 하고, 챌린지 정하기는 홈의 시작 카드에서 사용자가 눌러서 들어가는 편이 빠져나오기도 쉽다.
+   */
+  useEffect(() => {
+    if (!linked) {
+      if (!LINK_FLOW.includes(screen)) go('splash');
+    } else if (LINK_FLOW.includes(screen)) {
+      go('home');
+    }
+  }, [linked, screen, go]);
 
-/* ── 점수 게이지 ──────────────────────────────────────────────── */
-function ScoreGauge({ score, grade }: { score: number; grade: string }) {
-  const r = 42, C = 2 * Math.PI * r;
-  const offset = C * (1 - Math.max(0, Math.min(100, score)) / 100);
-  return (
-    <div className="gauge" role="img" aria-label={`소비 건강 점수 ${score}점, ${grade}등급`}>
-      <svg viewBox="0 0 100 100" aria-hidden="true">
-        <circle className="track" cx="50" cy="50" r={r} strokeWidth="9" />
-        <circle className="prog" cx="50" cy="50" r={r} strokeWidth="9"
-          strokeDasharray={C} strokeDashoffset={offset} style={{ stroke: GRADE_VAR[grade] ?? 'var(--brand)' }} />
-      </svg>
-      <div className="center" aria-hidden="true">
-        <div className="g-score">{score}<small>점</small></div>
-        <div className={`g-grade pill-bg grade-${grade}`}>{grade}등급</div>
-      </div>
-    </div>
-  );
-}
+  const Current = SCREENS[screen] ?? Home;
+  const tab = tabOf(screen);
+  const showTab = linked && tab !== null && !SETUP_FLOW.includes(screen);
 
-function Factor({ label, value }: { label: string; value: number }) {
   return (
-    <div className="factor">
-      <span className="f-label">{label}</span>
-      <span className="f-track" aria-hidden="true"><span className="f-fill" style={{ width: pct(Math.min(1, value)) }} /></span>
-      <span className="f-val">{pct(value)}</span>
-    </div>
-  );
-}
-
-/* ── 카테고리 소비 막대 ──────────────────────────────────────── */
-function CatBar({ code, name, amount, spendPercent, max, tone }:
-  { code: string; name: string; amount: number; spendPercent: number; max: number; tone: 'pos' | 'neg' }) {
-  return (
-    <div className={`catbar ${tone}`}>
-      <span className="c-name">{catLabel(code, name)}</span>
-      <span className="c-track" aria-hidden="true"><span className="c-fill" style={{ width: `${Math.max(6, (spendPercent / max) * 100)}%` }} /></span>
-      <span className="c-meta"><b>{spendPercent}%</b> · {wonShort(amount)}</span>
-    </div>
+    <>
+      <Current />
+      {showTab && <BottomTab />}
+    </>
   );
 }
 
 export default function App() {
-  const [onboarded, setOnboarded] = useState<boolean>(
-    () => typeof localStorage !== 'undefined' && localStorage.getItem('mydata_onboarded') === 'true',
-  );
-  const [alerts, setAlerts] = useState<AlertResponse | null>(null);
-  const [goalRecs, setGoalRecs] = useState<GoalRecommendation[]>([]);
-  const [report, setReport] = useState<ReportResponse | null>(null);
-  const [score, setScore] = useState<ScoreResponse | null>(null);
-  const [myCards, setMyCards] = useState<MyCard[]>([]);
-  const [account, setAccount] = useState<MyAccount | null>(null);
-  const [acctFull, setAcctFull] = useState(false);              // 통장 내역 확대(월별 전체)
-  const [acctPays, setAcctPays] = useState<MyPaymentHistory[] | null>(null);
-  const [waste, setWaste] = useState<WasteJudgment[] | null>(null);
-  const [linking, setLinking] = useState(false);
-  // 연결된 앱 사용자(생성 사람마다 별도 userId) + 선택된 생성 CI — 사람 교체 연결용
-  const [userId, setUserId] = useState<number>(() => {
-    const v = typeof localStorage !== 'undefined' ? Number(localStorage.getItem('demo_user_id')) : NaN;
-    return v > 0 ? v : 1;
-  });
-  const [selectedCi, setSelectedCi] = useState<string>(
-    () => (typeof localStorage !== 'undefined' && localStorage.getItem('demo_ci')) || DEMO_CI,
-  );
-  const [error, setError] = useState<string | null>(null);
-  // 개발용 — 수동 소비 추가(엔진 반응 확인) 폼
-  const [devCat, setDevCat] = useState('식비');
-  const [devAmt, setDevAmt] = useState('');
-  const [devWhen, setDevWhen] = useState(() => {
-    const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    return d.toISOString().slice(0, 16); // 기본 '지금'(로컬), 미래로 바꾸면 그 시점 이후에 반영되는 소비를 테스트
-  });
-  const [devMsg, setDevMsg] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<Tab>('home');
-  const [theme, setTheme] = useState<'light' | 'dark'>(
-    () => (typeof localStorage !== 'undefined' && localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'),
-  );
-  const mainRef = useRef<HTMLElement>(null);
-  const mounted = useRef(false);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    try { localStorage.setItem('theme', theme); } catch { /* noop */ }
-  }, [theme]);
-
-  useEffect(() => {
-    if (!mounted.current) { mounted.current = true; return; }
-    window.scrollTo({ top: 0 });
-    mainRef.current?.focus();
-  }, [tab]);
-
-  async function loadMyData() {
-    try { setMyCards(await api.myCards(userId)); } catch { /* 미연동이면 빈 배열 */ }
-    void api.account(userId).then(setAccount).catch(() => setAccount(null));
-  }
-
-  async function loadAll() {
-    setLoading(true);
-    setError(null);
-    try {
-      const [a, rp, s] = await Promise.all([
-        api.alerts(userId), api.report(userId), api.score(userId),
-      ]);
-      setAlerts(a); setReport(rp); setScore(s);
-      void loadMyData();
-      // 거래별 ML 낭비/필수 판정(§W8) — 데모 백엔드에만 있을 수 있어 방어적으로 조회
-      void api.mlWaste(userId).then(setWaste).catch(() => setWaste(null));
-
-      void api.goalRecommendations(userId).then((gr) => {
-        setGoalRecs(gr);
-        void api.track('recommend_view', userId, { itemCount: gr.length });
-      }).catch(() => undefined);
-      void api.track('report_view', userId);
-      void api.track('alert_view', userId, { alertCount: a.items.length });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // userId가 바뀌면(사람 교체) 그 사용자로 재로딩. 최초 온보딩 완료 시에도 로딩.
-  useEffect(() => { if (onboarded) void loadAll(); }, [onboarded, userId]);
-
-  async function rescan() {
-    try { await api.rescan(userId); await loadAll(); }
-    catch (e) { setError(e instanceof Error ? e.message : String(e)); }
-  }
-
-  // 데모: 생성 마이데이터의 '다른 사람' CI로 교체 연결 → 그 사람 데이터 재적재.
-  // 반환 userId로 전환(사람마다 별도 앱 사용자) → useEffect가 그 사용자로 재로딩.
-  // 동의 철회 파기·백엔드 재시작으로 비어도 온보딩 없이 여기서 복구한다.
-  async function linkCi(ci: string) {
-    if (!ci) return;
-    setLinking(true); setError(null);
-    try {
-      const r = await api.linkSynthetic(ci, []); // 전 카드사 연동(생성 카드는 7개 실카드사에 분산, §13-11) — 빈 배열이면 백엔드가 모든 카드사를 연결
-      setSelectedCi(ci);
-      try {
-        localStorage.setItem('demo_ci', ci);
-        localStorage.setItem('demo_user_id', String(r.userId));
-      } catch { /* noop */ }
-      if (r.userId !== userId) setUserId(r.userId); // 아래 effect가 재로딩
-      else await loadAll();                          // 같은 사용자면 수동 재로딩
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLinking(false);
-    }
-  }
-
-  // 개발용 — 200명 테스트 사용자 중 무작위 한 명으로 교체 연결
-  function randomSwitch() {
-    if (linking || DEMO_USERS.length === 0) return;
-    const u = DEMO_USERS[Math.floor(Math.random() * DEMO_USERS.length)];
-    void linkCi(u.ci);
-  }
-
-  // 통장 내역 확대 — 월별 전체를 보려면 전체 결제(출금)를 불러와 통장 입금(월급)과 합친다.
-  async function toggleAccount() {
-    const next = !acctFull;
-    setAcctFull(next);
-    if (next && acctPays === null) {
-      try { setAcctPays(await api.allPayments(userId, 8)); } catch { setAcctPays([]); }
-    }
-  }
-
-  // 개발용 — 현재 사용자에게 소비를 수동 추가하고 재계산(마이데이터 위에 사용자 입력이 얹혀 엔진이 반응하는지 확인)
-  async function addDevConsumption() {
-    const amt = Math.round(Number(devAmt));
-    if (!amt || amt <= 0) { setDevMsg('금액을 입력하세요'); return; }
-    setDevMsg('추가 중…');
-    try {
-      await api.addConsumption({
-        userId, categoryCode: devCat, amount: amt,
-        occurredAt: devWhen.length === 16 ? devWhen + ':00' : devWhen, planned: false,
-      });
-      setDevAmt('');
-      setDevMsg(`${devCat} ${amt.toLocaleString('ko-KR')}원 추가 — 점수·리포트 재계산됨`);
-      await loadAll();
-    } catch (e) {
-      setDevMsg(e instanceof Error ? e.message : String(e));
-    }
-  }
-
-
-  // 온보딩 미완료면 온보딩 화면만 (진입 필수)
-  if (!onboarded) {
-    return <Onboarding userId={userId} onDone={() => setOnboarded(true)} />;
-  }
-
-  const hitCount = alerts?.items.length ?? 0;
-  // ML 낭비/필수 판정 — 낭비로 판정된 결제 + '주의(임계 아래지만 확률 높은 순)'
-  const wasteHits = waste ? waste.filter((j) => j.waste) : [];
-  const wasteWatch = waste
-    ? waste.filter((j) => !j.waste).sort((a, b) => b.wasteProbability - a.wasteProbability).slice(0, 4)
-    : [];
-  const maxPct = Math.max(
-    1, ...(report ? [...report.positive, ...report.negative].map((l) => l.spendPercent) : [1]),
-  );
-  const months = report ? Object.entries(report.monthlySpend).sort(([a], [b]) => a.localeCompare(b)) : [];
-
-  // 마이데이터 이번달 요약
-  const monthSpend = myCards.reduce((sum, c) => sum + c.currentPerformance, 0);
-  const monthBenefit = myCards.reduce((sum, c) => sum + c.earnedThisMonth, 0);
-
-  // 도넛 슬라이스: 리포트 카테고리(양·음) 합쳐 금액순
-  const donutSlices = report
-    ? [...report.negative, ...report.positive]
-        .map((l) => ({ label: catLabel(l.categoryCode, l.displayName), value: l.amount }))
-        .sort((a, b) => b.value - a.value)
-    : [];
-
   return (
-    <div className="app">
-      <a href="#main" className="skip-link">본문 바로가기</a>
-
-      <header className="topbar">
-        <div className="topbar-in">
-          <div className="brand">
-            <span className="logo" aria-hidden="true">{Icon.logo}</span>
-            <span className="name">소비·저축 어드바이저<small>줄인 만큼 모이는 걸 보여주는 도우미</small></span>
-          </div>
-          <span className="spacer" />
-          <span className="dummy-badge">더미 · 학습용</span>
-          <button type="button" className="theme-toggle" onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-            aria-label={theme === 'dark' ? '밝은 테마로 전환' : '어두운 테마로 전환'} title={theme === 'dark' ? '밝은 테마로' : '어두운 테마로'}>
-            {theme === 'dark' ? Icon.sun : Icon.moon}
-          </button>
+    <SessionProvider>
+      <GuardianProvider>
+        <IconSprite />
+        <a href="#main" className="skip-link">본문 바로가기</a>
+        <div className="app">
+          <ScreenHost />
         </div>
-      </header>
-
-      <main id="main" className="wrap" ref={mainRef} tabIndex={-1} aria-label="주요 콘텐츠">
-        <h1 className="sr-only">소비·저축 어드바이저 — {TABS.find((t) => t.id === tab)?.label} 화면</h1>
-
-        {error && (
-          <div className="error" role="alert">
-            <strong>데이터를 불러오지 못했어요</strong>
-            <code>{error}</code>
-            <p>백엔드·마이데이터 서버가 실행 중인지 확인해 주세요(데모: 백엔드 8090 · 마이데이터 8083).</p>
-          </div>
-        )}
-        {loading && <div className="loading-bar" role="status" aria-label="불러오는 중" />}
-
-        {/* ── 홈 ── */}
-        {tab === 'home' && (
-          <div className="view">
-            <div className="greet-row">
-              <p className="hero-greet">안녕하세요 👋</p>
-              <p className="greet-sub">이번 달 소비와 받은 혜택을 한눈에. 줄인 만큼은 <b>절약통에 저절로 쌓여요</b>.</p>
-            </div>
-
-            <section className="section card card-pad" aria-labelledby="h-home-md">
-              <div className="section-head" style={{ marginBottom: 10 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
-                  <h2 id="h-home-md">이번 달 요약</h2><span className="badge-aux">마이데이터</span>
-                </span>
-                {DEMO_CI && (
-                  <span style={{ display: 'inline-flex', gap: 6 }}>
-                    <button type="button" className="btn btn-ghost btn-sm"
-                      onClick={randomSwitch} disabled={linking} title="200명 중 무작위로 한 명 연결">
-                      🎲 랜덤 전환
-                    </button>
-                    <button type="button" className="btn btn-ghost btn-sm"
-                      onClick={() => void linkCi(selectedCi)} disabled={linking}>
-                      {linking ? '연결 중…' : '다시 연결'}
-                    </button>
-                  </span>
-                )}
-              </div>
-
-              {DEMO_CI && (
-                <label className="field" style={{ marginBottom: 14 }}>
-                  <span>연결된 사람 — 다른 사람 마이데이터로 교체</span>
-                  <select value={selectedCi} disabled={linking}
-                    onChange={(e) => void linkCi(e.target.value)}
-                    aria-label="연결할 생성 마이데이터 사용자 선택">
-                    {PERSONA_ORDER.map((persona) => {
-                      const users = DEMO_USERS.filter((u) => u.persona === persona);
-                      return users.length ? (
-                        <optgroup key={persona} label={persona}>
-                          {users.map((u) => (
-                            <option key={u.ci} value={u.ci}>{u.name} · 결제 {u.visible}건</option>
-                          ))}
-                        </optgroup>
-                      ) : null;
-                    })}
-                  </select>
-                </label>
-              )}
-
-              {DEMO_CI && (
-                <details style={{ marginBottom: 12 }}>
-                  <summary className="muted small" style={{ cursor: 'pointer' }}>
-                    🧪 개발용 — 소비 수동 추가 후 재계산(엔진 반응 확인)
-                  </summary>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <select value={devCat} onChange={(e) => setDevCat(e.target.value)}
-                      aria-label="소비 카테고리" style={{ padding: '6px 8px' }}>
-                      {['식비', '카페/간식', '편의점', '쇼핑', '생활', '여가', '온라인', '대중교통', '통신비', '배달'].map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                    <input type="number" inputMode="numeric" min={0} value={devAmt}
-                      onChange={(e) => setDevAmt(e.target.value)} placeholder="금액(원)"
-                      aria-label="금액" style={{ width: 120, padding: '6px 8px' }} />
-                    <input type="datetime-local" value={devWhen} onChange={(e) => setDevWhen(e.target.value)}
-                      aria-label="반영 시점(미래로 두면 그 시점 이후 반영 테스트)" title="반영 시점 — 미래로 두면 그 시점 이후에 반영되는 소비를 테스트"
-                      style={{ padding: '6px 8px' }} />
-                    <button type="button" className="btn btn-ghost btn-sm"
-                      onClick={() => void addDevConsumption()} disabled={loading}>추가 후 재계산</button>
-                    {devMsg && <span className="muted small" role="status">· {devMsg}</span>}
-                  </div>
-                </details>
-              )}
-
-              {myCards.length > 0 ? (
-                <div className="md-summary">
-                  <div className="md-stat"><span className="md-l">이번 달 사용</span><b className="md-v">{won(monthSpend)}</b></div>
-                  <div className="md-stat"><span className="md-l">받은 혜택</span><b className="md-v sav">{won(monthBenefit)}</b></div>
-                  <div className="md-stat"><span className="md-l">연결 카드</span><b className="md-v">{myCards.length}장</b></div>
-                </div>
-              ) : (
-                <div className="md-empty">
-                  <p className="muted small" style={{ marginTop: 0 }}>
-                    연결된 카드가 없어요. {DEMO_CI ? '위에서 사람을 고르면 그 사람의 생성 마이데이터를 불러옵니다.' : '마이데이터를 연결해 주세요.'}
-                  </p>
-                  {DEMO_CI && (
-                    <button type="button" className="btn btn-primary btn-sm"
-                      onClick={() => void linkCi(selectedCi)} disabled={linking}>
-                      {linking ? '불러오는 중…' : '생성 마이데이터 불러오기'}
-                    </button>
-                  )}
-                </div>
-              )}
-            </section>
-
-            {/* 입출금 통장(§13-11 경제 모델) — 카드=출금, 매달 월급=입금, 잔액=쓸 수 있는 돈 */}
-            {account && (
-              <section className="section card card-pad" aria-labelledby="h-account">
-                <div className="section-head" style={{ marginBottom: 8 }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
-                    <h2 id="h-account">내 통장</h2><span className="badge-aux">마이데이터</span>
-                  </span>
-                </div>
-                <div className="md-summary" style={{ marginBottom: 10 }}>
-                  <div className="md-stat"><span className="md-l">잔액</span>
-                    <b className="md-v" style={{ color: account.balance < 0 ? 'var(--bad, #dc2626)' : undefined }}>{won(account.balance)}</b></div>
-                  <div className="md-stat"><span className="md-l">월급</span><b className="md-v sav">{won(account.salary)}</b></div>
-                </div>
-                <p className="muted small" style={{ marginTop: 0 }}>
-                  {account.bank} · {account.product} · <span style={{ fontVariantNumeric: 'tabular-nums' }}>{account.accountNumber}</span><br />
-                  매월 {account.payday}일 · <b>{account.salaryPayer}</b>에서 급여 입금
-                </p>
-                {(() => {
-                  // 통합 내역: 기본은 통장 응답(월급 입금 전부 + 최근 출금), 확대 시 전체 결제(출금)+월급 입금.
-                  type T = { date: string; type: 'DEPOSIT' | 'WITHDRAWAL'; amount: number; desc: string };
-                  const base: T[] = acctFull && acctPays
-                    ? [
-                        ...account.transactions.filter((t) => t.type === 'DEPOSIT')
-                          .map((t) => ({ date: t.date, type: 'DEPOSIT' as const, amount: t.amount, desc: t.description })),
-                        ...acctPays.map((p) => ({ date: p.date, type: 'WITHDRAWAL' as const, amount: p.amount,
-                          desc: p.merchantName ?? p.category2 ?? p.category1 })),
-                      ]
-                    : account.transactions.map((t) => ({ date: t.date, type: t.type, amount: t.amount, desc: t.description }));
-                  base.sort((a, b) => b.date.localeCompare(a.date));
-                  // 각 건 남은 잔액 — 현재 잔액에서 최신→과거로 역산.
-                  let bal = account.balance;
-                  const rows = base.map((t) => { const after = bal; bal -= t.type === 'DEPOSIT' ? t.amount : -t.amount; return { ...t, after }; });
-                  const Row = (t: T & { after: number }, i: number) => (
-                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 2px', fontSize: '.85rem' }}>
-                      <span className="muted" style={{ width: 42, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
-                        {t.date.slice(5, 10).replace('-', '.')}</span>
-                      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {t.desc}</span>
-                      <span style={{ width: 88, flexShrink: 0, textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums',
-                        color: t.type === 'DEPOSIT' ? 'var(--good, #16a34a)' : undefined }}>
-                        {t.type === 'DEPOSIT' ? '+' : '−'}{won(t.amount)}</span>
-                      <span className="muted" style={{ width: 88, flexShrink: 0, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                        잔액 {won(t.after)}</span>
-                    </li>
-                  );
-                  const ulStyle = { listStyle: 'none' as const, margin: 0, padding: 0, display: 'flex', flexDirection: 'column' as const, gap: 2 };
-                  let body;
-                  if (!acctFull) {
-                    body = <ul style={{ ...ulStyle, marginTop: 8 }}>{rows.slice(0, 6).map(Row)}</ul>;
-                  } else {
-                    const byMonth: Record<string, (T & { after: number })[]> = {};
-                    for (const t of rows) (byMonth[t.date.slice(0, 7)] ??= []).push(t);
-                    const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
-                    body = (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
-                        {months.map((m) => {
-                          const [y, mo] = m.split('-');
-                          return (
-                            <div key={m}>
-                              <div style={{ padding: '2px 0 4px', borderBottom: '1px solid var(--line, #e5e5e5)', marginBottom: 4 }}>
-                                <b>{y}년 {mo}월</b> <span className="muted small">· {byMonth[m].length}건</span>
-                              </div>
-                              <ul style={ulStyle}>{byMonth[m].map(Row)}</ul>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  }
-                  return (
-                    <>
-                      {body}
-                      <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 10 }}
-                        onClick={() => void toggleAccount()}>
-                        {acctFull ? '접기' : '월별 전체 입출금 보기'}
-                      </button>
-                    </>
-                  );
-                })()}
-              </section>
-            )}
-
-            <ImpulseSaverPanel key={userId} userId={userId} />
-
-            <section className="section card card-pad" aria-labelledby="h-home-score">
-              <div className="section-head" style={{ marginBottom: 14 }}>
-                <h2 id="h-home-score">소비 건강 점수</h2>
-                {score && <ModeBadge mode={score.dataSourceMode} reason={score.estimationReason} />}
-              </div>
-              {score ? (
-                <div className="score-body">
-                  <ScoreGauge score={score.score} grade={score.grade} />
-                  <div className="factors" style={{ marginTop: 0 }}>
-                    <Factor label="저축 진행률" value={score.breakdown.savingsProgress} />
-                    <Factor label="소비 안정성" value={score.breakdown.stability} />
-                    <Factor label="필수 소비 비율" value={score.breakdown.plannedRatio} />
-                  </div>
-                </div>
-              ) : <p className="muted">불러오는 중…</p>}
-            </section>
-          </div>
-        )}
-
-        {/* ── 내 카드 ── */}
-        {tab === 'card' && <MyCardPanel key={userId} userId={userId} />}
-
-        {/* ── 내 소비 (차트 + 리포트 + 추천 + 이상소비) ── */}
-        {tab === 'spend' && (
-          <div className="view">
-            {/* 소비 분석 ②③④⑤ — 이상소비지수·절약후보·반복결제·패턴 */}
-            <ConsumptionAnalysisPanel key={userId} userId={userId} />
-            <section className="section card card-pad" aria-labelledby="h-donut">
-              <div className="section-head" style={{ marginBottom: 12 }}>
-                <h2 id="h-donut">카테고리별 소비</h2>
-                <ModeBadge mode={report?.dataSourceMode} reason={report?.estimationReason} />
-              </div>
-              {donutSlices.length > 0 ? (
-                <div className="donut-wrap">
-                  <DonutChart slices={donutSlices} centerLabel={report ? wonShort(report.totalSpend) : ''} />
-                  <DonutLegend slices={donutSlices} />
-                </div>
-              ) : <p className="muted small">아직 소비 데이터가 없어요.</p>}
-              {months.length > 1 && (
-                <>
-                  <div className="chart-sub">월별 지출</div>
-                  <BarChart bars={months.map(([m, v]) => ({ label: m.slice(5), value: v }))} />
-                </>
-              )}
-            </section>
-
-            <section className="section card card-pad" aria-labelledby="h-report">
-              <div className="section-head" style={{ marginBottom: 12 }}><h2 id="h-report">절약 리포트</h2></div>
-              {report && (
-                <>
-                  <div className="narrative">
-                    {report.narrative}
-                    <span className="src">{report.narrativeSource === 'AI' ? '✦ AI가 요약했어요' : '고정 템플릿'}</span>
-                  </div>
-                  <div className="catbars">
-                    {report.negative.map((l) => (
-                      <CatBar key={l.categoryCode} code={l.categoryCode} name={l.displayName}
-                        amount={l.amount} spendPercent={l.spendPercent} max={maxPct} tone="neg" />
-                    ))}
-                    {report.positive.map((l) => (
-                      <CatBar key={l.categoryCode} code={l.categoryCode} name={l.displayName}
-                        amount={l.amount} spendPercent={l.spendPercent} max={maxPct} tone="pos" />
-                    ))}
-                  </div>
-                  <div className="cat-legend">
-                    <span><i style={{ background: 'var(--bad)' }} aria-hidden="true" />줄이면 좋은 소비</span>
-                    <span><i style={{ background: 'var(--good)' }} aria-hidden="true" />잘 관리한 소비</span>
-                  </div>
-                </>
-              )}
-            </section>
-
-            <section className="section card card-pad" aria-labelledby="h-rec">
-              <div className="section-head" style={{ marginBottom: 12 }}>
-                <h2 id="h-rec">맞춤 상품 추천 <span className="badge-aux">목표별 · 정보성</span></h2>
-              </div>
-              <div className="rec-grid">
-                {goalRecs.map((g) => (
-                  <button type="button" className="product" key={g.goalId}
-                    onClick={() => void api.track('product_click', userId, { goalId: g.goalId })}
-                    aria-label={g.productName
-                      ? `${g.goalName} 추천 통장 ${g.company} ${g.productName}, 기본금리 ${g.baseRate.toFixed(2)}%, ${g.periodMonths}개월`
-                      : `${g.goalName} 추천 준비 중`}>
-                    <div className="p-top">
-                      <span className="p-rank" aria-hidden="true">{g.emoji}</span>
-                      <span className="p-name">{g.productName ? `${g.company} ${g.productName}` : '추천 준비 중'}</span>
-                      {g.productName && <span className="p-rate">{g.baseRate.toFixed(2)}%<small> 기본</small></span>}
-                    </div>
-                    <div className="p-meta">
-                      <b>{g.goalName}</b> · {g.periodMonths}개월
-                      {g.planMonths > 0 ? ` · 계획 ${g.planMonths}개월` : ' · 계획 미설정(기본 기간)'}
-                    </div>
-                  </button>
-                ))}
-                {goalRecs.length === 0 && <p className="muted small">목표를 세우면 그 기간에 맞는 통장을 찾아드려요.</p>}
-              </div>
-            </section>
-
-            <section className="section card card-pad" aria-labelledby="h-alert">
-              <div className="section-head" style={{ marginBottom: 8 }}>
-                <h2 id="h-alert">이상 소비 감지 <span className="badge-aux">AI 판정</span></h2>
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => void rescan()}>다시 검사</button>
-              </div>
-              <p className="muted small" style={{ marginTop: 0 }}>
-                AI가 결제마다 ‘낭비 vs 필수’를 판정해요. 심야·과다 결제를 <b>왜 낭비인지</b>와 함께 짚어줘요.
-                {waste && ` 결제 ${waste.length}건 중 낭비 ${wasteHits.length}건.`}
-              </p>
-              {wasteHits.length > 0 ? (
-                <ul className="alert-grid">
-                  {wasteHits.map((j) => (
-                    <li className="alert-card" key={j.paymentId}>
-                      <div className="a-top">
-                        <span className="a-cat">{j.category2 ?? '기타'}</span>
-                        <span className="a-amt">{won(j.amount)}</span>
-                      </div>
-                      <div className="a-when">🕐 {j.date.replace('T', ' ').slice(0, 16)}</div>
-                      <div className="a-rules">
-                        <span className="chip" style={{ background: 'var(--bad)', color: '#fff' }}>낭비</span>
-                        <span className="chip">{j.explanation}</span>
-                        <span className="chip z">낭비 확률 {Math.round(j.wasteProbability * 100)}%</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : waste ? (
-                <p className="muted small">지금은 낭비로 판정된 소비가 없어요. 👍</p>
-              ) : <p className="muted small">불러오는 중…</p>}
-
-              {wasteWatch.length > 0 && (
-                <>
-                  <div className="chart-sub">주의 깊게 볼 소비 · 낭비 확률 높은 순</div>
-                  <ul className="alert-grid">
-                    {wasteWatch.map((j) => (
-                      <li className="alert-card" key={j.paymentId}>
-                        <div className="a-top">
-                          <span className="a-cat">{j.category2 ?? '기타'}</span>
-                          <span className="a-amt">{won(j.amount)}</span>
-                        </div>
-                        <div className="a-when">🕐 {j.date.replace('T', ' ').slice(0, 16)}</div>
-                        <div className="a-rules">
-                          <span className="chip">{j.explanation}</span>
-                          <span className="chip z">낭비 확률 {Math.round(j.wasteProbability * 100)}%</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-
-              <p className="muted small" style={{ marginTop: 12 }}>
-                규칙 기반 통계 탐지(baseline)
-                {alerts ? `는 최근 ${alerts.evaluatedCount}건을 평가해 ${hitCount}건을 찾았어요` : ''}.
-                긴 이력이 있어야 발화해 신규 연동 직후엔 조용해요 — 그래서 거래별 AI 판정이 먼저 잡아요.
-              </p>
-            </section>
-          </div>
-        )}
-
-        {/* ── 혜택·저축 (게임화 저축·목표·통장비교·고민목록) ── */}
-        {tab === 'save' && (
-          <div className="view">
-            <PointsPanel key={userId} userId={userId} onChanged={() => void loadAll()} />
-          </div>
-        )}
-
-        {/* ── 더보기 (기록 + 안심 + 설문) ── */}
-        {tab === 'more' && (
-          <div className="view">
-            <ConsumptionPanel key={userId} userId={userId} onChanged={() => void loadAll()} />
-
-            <SurveyPanel userId={userId} />
-          </div>
-        )}
-
-        <footer className="foot">
-          <strong>더미 데이터 기반 학습용 프로토타입입니다.</strong> 실제 금융거래·결제·송금 기능을 제공하지 않으며,
-          표시되는 금융상품은 모두 <strong>실재하지 않는 더미 상품</strong>입니다. 마이데이터로 불러오는 카드·소비내역도 가상 데이터입니다.
-        </footer>
-      </main>
-
-      <nav className="tabbar" aria-label="주요 화면">
-        <div className="tabbar-in">
-          {TABS.map((t) => (
-            <button type="button" key={t.id} className="tab"
-              aria-current={tab === t.id ? 'page' : undefined}
-              onClick={() => setTab(t.id)}>
-              <span className="tab-ic" aria-hidden="true">{t.icon}</span>
-              <span className="tab-lb">{t.label}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
-    </div>
+      </GuardianProvider>
+    </SessionProvider>
   );
 }
