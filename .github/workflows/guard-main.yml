@@ -1,0 +1,117 @@
+# main으로 들어오는 PR의 문지기. main이 갱신되면 **사람 손을 거치지 않고 운영에 나간다**
+# (deploy.yml). 그래서 다른 브랜치와 같은 기준으로 둘 수 없다.
+#
+# 이전 장치가 왜 무력했나 — 실제로 두 개가 있었는데도 장애를 그대로 통과시켰다.
+#
+#   warn-prod-pr.yml          경고 '댓글'을 달 뿐 머지를 막지 못한다. 자동 생성된 PR에서는
+#                             아무도 읽지 않는다. 실제로 팀원은 develop으로 가는 줄 알았다.
+#   require-deploy-checklist  본문의 미체크 항목을 세는데, 본문에 체크박스가 **아예 없으면
+#                             0개라 통과한다.** 빈 본문이 가장 느슨한 경로였다.
+#
+# 그래서 이 워크플로는 댓글이 아니라 **실패**한다. 그리고 '없으면 통과'를 전부 뒤집어
+# '있어야 통과'로 바꿨다.
+name: Guard main
+
+on:
+  pull_request:
+    types: [opened, reopened, edited, synchronize, ready_for_review]
+    branches: [main]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  guard:
+    name: main 진입 검사
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const head = pr.head.ref;
+            const body = pr.body || '';
+            const fail = [];
+            const note = [];
+
+            // ── 1. 출처 ────────────────────────────────────────────────────────────
+            // main은 develop에서 정리된 것만 받는다. 기능 브랜치가 develop을 건너뛰고
+            // 바로 올라오면 develop에서의 통합 확인이 통째로 생략된다.
+            // hotfix/* 만 예외 — 운영이 이미 멈춰 있어 develop을 경유할 여유가 없는 경우다.
+            const okSource = head === 'develop' || head.startsWith('hotfix/');
+            if (!okSource) {
+              fail.push(
+                `**출처가 잘못됐습니다** — \`${head}\` → \`main\`.\n` +
+                '  main은 `develop` 또는 `hotfix/*` 에서만 받습니다.\n' +
+                '  기능 작업이라면 base를 `develop`으로 바꾸세요(PR 우측 상단 Edit).');
+            }
+
+            // ── 2. 배포 체크리스트 ──────────────────────────────────────────────────
+            // 템플릿 표식을 요구한다. '체크박스가 없으면 0개라 통과'하던 허점을 막는 핵심이다.
+            const MARKER = '<!-- deploy-checklist -->';
+            const boxes = body.match(/^\s*- \[( |x|X)\]/gm) || [];
+            const unchecked = boxes.filter((b) => !/[xX]/.test(b)).length;
+            if (!body.includes(MARKER)) {
+              fail.push(
+                '**배포 체크리스트가 없습니다.** PR 본문을 `.github/pull_request_template.md` ' +
+                '내용으로 채우세요(표식 주석까지 그대로).');
+            } else if (boxes.length === 0) {
+              fail.push('**체크리스트 항목이 하나도 없습니다.** 템플릿이 훼손된 것 같습니다.');
+            } else if (unchecked > 0) {
+              fail.push(`**체크리스트 미완료 ${unchecked}개.** 전부 확인하고 체크한 뒤 다시 시도하세요.`);
+            }
+
+            // ── 3. 스키마 변경 ─────────────────────────────────────────────────────
+            // 이 저장소의 운영 장애는 두 번 다 '엔티티는 바뀌었는데 마이그레이션이 없다'였다.
+            // CI의 기동 검사가 최종 방어선이지만, 사람도 한 번 보게 만든다.
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number,
+            });
+            const paths = files.map((f) => f.filename);
+            const touchedEntity = paths.some((p) => /backend\/src\/main\/java\/.*\/domain\//.test(p));
+            const touchedMigration = paths.some((p) => /db\/migration\/V\d+__/.test(p));
+            if (touchedEntity && !touchedMigration) {
+              fail.push(
+                '**엔티티를 바꿨는데 Flyway 마이그레이션이 없습니다.**\n' +
+                '  운영은 `ddl-auto=validate`라 스키마가 어긋나면 기동 자체가 막힙니다(V6·V8 전례).\n' +
+                '  컬럼·테이블 추가가 아니라면 이 PR 본문에 그 이유를 적고 다시 실행하세요.');
+            }
+
+            // ── 4. 배포 경로 변경 ──────────────────────────────────────────────────
+            // 워크플로·배포 스크립트·컴포즈는 '무엇이 어떻게 나가는지' 자체를 바꾼다.
+            // 막지는 않되, 무엇이 바뀌었는지 PR에 반드시 드러나게 한다.
+            const SENSITIVE = /^(\.github\/workflows\/|deploy\/|scripts\/deploy-|docker-compose)/;
+            const sensitive = paths.filter((p) => SENSITIVE.test(p));
+            if (sensitive.length > 0) {
+              note.push(
+                '**배포 경로가 바뀝니다** — 아래 파일이 이 PR에 포함돼 있습니다. ' +
+                '의도한 변경인지 확인하세요.\n' +
+                sensitive.map((p) => `  - \`${p}\``).join('\n'));
+            }
+
+            // ── 결과를 하나의 댓글로 갱신한다(같은 PR에 계속 쌓이지 않게) ────────────
+            const TAG = '<!-- guard-main -->';
+            const head_ = fail.length
+              ? '## 🚫 main 진입이 막혔습니다'
+              : '## ✅ main 진입 검사 통과';
+            const lines = [TAG, head_, '',
+              `\`${head}\` → \`main\` · 머지되면 **AWS로 자동 배포**됩니다.`, ''];
+            if (fail.length) lines.push('### 고쳐야 할 것', ...fail.map((f) => `- ${f}`), '');
+            if (note.length) lines.push('### 확인이 필요한 것', ...note.map((n) => `- ${n}`), '');
+            if (!fail.length) lines.push('CI(테스트·운영 조건 기동)까지 초록불인지 확인하고 머지하세요.');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo, issue_number: pr.number,
+            });
+            const mine = comments.find((c) => (c.body || '').includes(TAG));
+            const payload = { owner: context.repo.owner, repo: context.repo.repo, body: lines.join('\n') };
+            if (mine) await github.rest.issues.updateComment({ ...payload, comment_id: mine.id });
+            else await github.rest.issues.createComment({ ...payload, issue_number: pr.number });
+
+            if (fail.length) core.setFailed(fail.length + '개 항목이 main 진입 기준을 만족하지 않습니다.');
