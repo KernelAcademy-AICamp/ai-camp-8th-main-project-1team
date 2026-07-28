@@ -1,6 +1,10 @@
-# 8/7 중간 데모는 로컬(H2)로 한다 — 배포 실패가 시연 실패가 되면 안 된다 (D-03).
-# 이 파일은 2단계(8/8~8/25) EC2+RDS 이전을 위한 준비물이다.
-# Docker가 설치되지 않은 환경에서는 backend를 H2 프로파일로 직접 실행하면 된다.
+# 개발용 컨테이너 스택 — 디버깅 편의를 우선한다(포트 발행·평문 기본값).
+# 운영/총연습은 docker-compose.prod.yml 쪽이다. 그쪽은 8082·8080·3306을 아예 발행하지 않는다.
+#
+#   docker compose up -d --build
+#   → 프론트 http://localhost:5173 · 본체 :8080 · 마이데이터 :8082 · MySQL :3306
+#
+# Docker가 없는 환경에서는 scripts/ 의 로컬 실행 경로를 쓴다.
 services:
   mysql:
     image: mysql:8.4
@@ -16,11 +20,35 @@ services:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+      # 마이데이터 제공자 DB(finntech_mydata)까지 만들어 준다 — MYSQL_DATABASE는 하나만 받는다.
+      - ./deploy/mysql-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpw"]
       interval: 5s
       timeout: 5s
       retries: 20
+
+  # 마이데이터 제공자(§13). 개발 스택에서는 디버깅을 위해 8082를 발행한다 — 운영에서는 발행하지 않는다.
+  backend-mydata:
+    build:
+      context: ./backend-mydata
+    container_name: finntech-mydata
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      MYDATA_DB_NAME: finntech_mydata
+      DB_USER: finntech
+      DB_PASSWORD: finntech
+      # 두 모듈에 같은 값이 들어가야 본체의 /bank/** 호출이 통과한다(W7-2).
+      MYDATA_SHARED_SECRET: ${MYDATA_SHARED_SECRET:-dev-mydata-shared}
+      # 비우면 실시간이 서빙 커트오프. 고정할 땐 본체 FINNTECH_DEMO_TODAY와 같은 날짜로(§8-D).
+      MYDATA_NOW: ${MYDATA_NOW:-}
+    ports:
+      - "8082:8082"
 
   backend:
     build:
@@ -29,6 +57,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      backend-mydata:
+        condition: service_started
     environment:
       SPRING_PROFILES_ACTIVE: mysql
       DB_HOST: mysql
@@ -36,6 +66,10 @@ services:
       DB_NAME: finntech
       DB_USER: finntech
       DB_PASSWORD: finntech
+      # 서비스명 DNS — localhost로 두면 컨테이너 자기 자신을 가리켜 연동이 전부 실패한다.
+      MYDATA_BASE_URL: http://backend-mydata:8082
+      MYDATA_SHARED_SECRET: ${MYDATA_SHARED_SECRET:-dev-mydata-shared}
+      FINNTECH_DEMO_TODAY: ${FINNTECH_DEMO_TODAY:-}
       # 비워두면 고정 템플릿으로 폴백한다 (D-02 포기 순서 1번)
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       # 일반 API로 DUMMY_SEED가 생성되면 안 된다 (문서 §5-2 ④).
@@ -47,6 +81,9 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        # 개발 스택도 nginx가 /api/를 프록시하므로 상대경로면 충분하다.
+        VITE_API_BASE: ""
     container_name: finntech-frontend
     depends_on:
       - backend
