@@ -94,7 +94,9 @@ services:
       # 서비스명 DNS. 호스트나 포트를 아는 사람이 없어도 본체만 도달할 수 있다.
       MYDATA_BASE_URL: http://backend-mydata:8082
       MYDATA_SHARED_SECRET: ${MYDATA_SHARED_SECRET:?deploy/.env 에 MYDATA_SHARED_SECRET 를 넣어라}
-      # 같은 오리진으로 서빙되므로 웹에는 CORS가 필요 없다. 값은 앱(Capacitor) 웹뷰 오리진 몫이다.
+      # 앱(Capacitor) 웹뷰 오리진 + 서비스 도메인. 웹은 같은 오리진이라 원래는 CORS가 필요 없지만,
+      # 브라우저는 POST에 Origin을 붙이고 Spring은 프록시 뒤에서 스킴을 http로 보므로
+      # 도메인을 넣지 않으면 같은 오리진인데도 403이 난다(server.forward-headers-strategy와 함께 해소).
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-capacitor://localhost,https://localhost,http://localhost}
       # 일반 API로 더미 시드가 생성되면 안 된다(문서 §5-2 ④). 운영에서는 켜지 않는다.
       FINNTECH_DEV_SEED_ENABLED: "false"

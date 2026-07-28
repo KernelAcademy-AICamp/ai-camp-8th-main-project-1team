@@ -56,6 +56,16 @@ expect_ok   "/"                      "SPA 서빙"
 # 카드사 목록은 마이데이터 서버가 DB에서 읽어 주는 값이라, 200이면 사슬 전체가 이어졌다는 뜻이다.
 expect_body "/api/mydata/companies"  "name"  "본체→마이데이터 왕복 (카드사 목록)"
 
+# 브라우저는 POST에 Origin을 붙인다. curl은 안 붙이므로, Origin 없이만 확인하면
+# CORS 오판(같은 오리진인데 스킴이 달라 403)을 통과시켜 버린다 — 배포에서 실제로 놓쳤다.
+ORIGIN="${ORIGIN:-$BASE}"
+code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 \
+  -X POST "$BASE/api/mydata/verify" -H 'Content-Type: application/json' \
+  -H "Origin: $ORIGIN" \
+  -d '{"userId":1,"name":"스모크","social7":"0000000","phone":"01000000000"}' || echo 000)
+[ "$code" = "403" ] && bad "브라우저 오리진이 CORS에 막힌다 (Origin: $ORIGIN → 403)" \
+                    || ok "브라우저 오리진 허용 (POST with Origin → $code)"
+
 echo
 echo "[2/3] 닫혀 있는가"
 expect_closed 8082 "마이데이터 서버 비공개"

@@ -21,6 +21,11 @@ spring:
 
 server:
   port: 8080
+  # 리버스 프록시(nginx)가 TLS를 끊고 평문으로 넘긴다. 이 설정이 없으면 Spring은 자기 주소를
+  # http://<도메인>으로 인식해, 브라우저가 보낸 Origin(https://<도메인>)과 **스킴만 다른**
+  # 같은 오리진을 교차 오리진으로 오판하고 CORS로 403을 준다. curl은 Origin을 안 보내 통과하므로
+  # 스모크로는 잡히지 않는다 — 배포에서 실제로 밟은 함정이다.
+  forward-headers-strategy: framework
 
 management:
   endpoints:
