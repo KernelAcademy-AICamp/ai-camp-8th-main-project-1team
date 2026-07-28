@@ -104,7 +104,7 @@ export function Transactions() {
             {m.rows.map((p) => {
               const found = p.businessNumber ? merchantOf[p.businessNumber] : undefined;
               return (
-                <div key={p.paymentId} style={{ padding: '2px 0' }}>
+                <div key={p.paymentId} className="txn-item">
                   <div className="txn">
                     <span className="d">{shortDate(p.date)}</span>
                     <span className="m">{p.merchantName ?? catLabel(p.category2 ?? p.category1)}</span>
@@ -116,16 +116,17 @@ export function Transactions() {
                     <span className="a">{won(p.amount)}</span>
                   </div>
                   {p.businessNumber && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '0 0 6px 50px', flexWrap: 'wrap' }}>
-                      <button type="button" className="btn btn-ghost btn-sm"
-                        style={{ padding: '4px 8px', fontSize: 11 }}
+                    <div className="txn-biz">
+                      {/* 보이는 글자는 번호뿐이지만, 눌러서 주소를 조회하는 컨트롤이라
+                          화면낭독기에는 무엇을 하는 버튼인지 aria-label로 알려준다. */}
+                      <button type="button" className="biz-link"
                         onClick={() => void lookupMerchant(p.businessNumber!)}
-                        title="사업자등록번호로 가맹점 주소 조회">
-                        사업자 {bizFmt(p.businessNumber)}
+                        aria-label={`사업자등록번호 ${bizFmt(p.businessNumber)} — 가맹점 주소 조회`}>
+                        {bizFmt(p.businessNumber)}
                       </button>
-                      {found === 'loading' && <span className="muted small">주소 조회중…</span>}
+                      {found === 'loading' && <span className="biz-addr">주소 조회중…</span>}
                       {found && found !== 'loading' && (
-                        <span className="muted small">📍 {found.address}{found.online ? ' (본사)' : ''}</span>
+                        <span className="biz-addr">📍 {found.address}{found.online ? ' (본사)' : ''}</span>
                       )}
                     </div>
                   )}
