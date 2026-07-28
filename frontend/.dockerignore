@@ -1,0 +1,6 @@
+# node_modules는 컨테이너 안에서 npm ci로 다시 깐다(호스트 arm64 바이너리가 섞이면 깨진다).
+node_modules/
+dist/
+.git/
+.env
+.env.local
