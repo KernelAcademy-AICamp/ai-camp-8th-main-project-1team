@@ -55,14 +55,19 @@ jobs:
             // ── 2. 배포 체크리스트 ──────────────────────────────────────────────────
             // 템플릿 표식을 요구한다. '체크박스가 없으면 0개라 통과'하던 허점을 막는 핵심이다.
             const MARKER = '<!-- deploy-checklist -->';
+            // 템플릿의 항목 수. 몇 개만 남기고 잘라내는 우회를 막으려고 **개수도 함께** 본다.
+            // 템플릿을 늘리거나 줄이면 이 값도 같이 옮긴다.
+            const MIN_ITEMS = 20;
             const boxes = body.match(/^\s*- \[( |x|X)\]/gm) || [];
             const unchecked = boxes.filter((b) => !/[xX]/.test(b)).length;
             if (!body.includes(MARKER)) {
               fail.push(
                 '**배포 체크리스트가 없습니다.** PR 본문을 `.github/pull_request_template.md` ' +
                 '내용으로 채우세요(표식 주석까지 그대로).');
-            } else if (boxes.length === 0) {
-              fail.push('**체크리스트 항목이 하나도 없습니다.** 템플릿이 훼손된 것 같습니다.');
+            } else if (boxes.length < MIN_ITEMS) {
+              fail.push(
+                `**체크리스트 항목이 ${boxes.length}개뿐입니다** (${MIN_ITEMS}개여야 합니다). ` +
+                '템플릿의 항목을 지우지 마세요 — 해당 없는 항목도 "해당 없음을 확인했다"는 뜻으로 체크합니다.');
             } else if (unchecked > 0) {
               fail.push(`**체크리스트 미완료 ${unchecked}개.** 전부 확인하고 체크한 뒤 다시 시도하세요.`);
             }
