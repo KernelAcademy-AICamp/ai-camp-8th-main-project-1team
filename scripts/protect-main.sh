@@ -46,32 +46,35 @@ if [ "${1:-}" = "--show" ]; then
   api GET "/repos/$REPO" | python3 -c '
 import json,sys
 d=json.load(sys.stdin)
-print(f"  기본 브랜치      : {d.get(\"default_branch\")}   (develop 이어야 한다)")
-print(f"  자동 머지 허용    : {d.get(\"allow_auto_merge\")}   (false 여야 한다)")
-print(f"  머지 후 브랜치 삭제: {d.get(\"delete_branch_on_merge\")}")
+print("  기본 브랜치      :", d.get("default_branch"), "  (develop 이어야 한다)")
+print("  자동 머지 허용    :", d.get("allow_auto_merge"), "  (false 여야 한다)")
+print("  머지 후 브랜치 삭제:", d.get("delete_branch_on_merge"))
 '
   echo "=== main 보호 ==="
   api GET "/repos/$REPO/branches/main/protection" | python3 -c '
 import json,sys
 d=json.load(sys.stdin)
 if d.get("message"):
-    print(f"  보호 없음 — {d[\"message\"]}"); raise SystemExit
+    print("  보호 없음 —", d["message"]); raise SystemExit
 checks=(d.get("required_status_checks") or {}).get("contexts", [])
 pr=d.get("required_pull_request_reviews") or {}
-print(f"  PR 필수          : {bool(pr) or bool(d.get(\"required_pull_request_reviews\"))}")
-print(f"  필수 승인 수      : {pr.get(\"required_approving_review_count\", 0)}")
-print(f"  코드오너 승인 필수 : {pr.get(\"require_code_owner_reviews\", False)}")
-print(f"  강제 푸시 허용    : {(d.get(\"allow_force_pushes\") or {}).get(\"enabled\")}   (false 여야 한다)")
-print(f"  관리자에게도 적용  : {(d.get(\"enforce_admins\") or {}).get(\"enabled\")}   (true 여야 한다)")
-print( "  필수 검사        :")
-for c in checks: print(f"    - {c}")
+print("  PR 필수          :", bool(pr))
+print("  필수 승인 수      :", pr.get("required_approving_review_count", 0))
+print("  코드오너 승인 필수 :", pr.get("require_code_owner_reviews", False))
+print("  강제 푸시 허용    :", (d.get("allow_force_pushes") or {}).get("enabled"), "  (false 여야 한다)")
+print("  관리자에게도 적용  :", (d.get("enforce_admins") or {}).get("enabled"), "  (true 여야 한다)")
+print("  필수 검사        :")
+for c in checks: print("    -", c)
+
 '
   exit 0
 fi
 
 # 필수 상태 검사 이름 = 워크플로의 job name(한글 그대로).
 # 이름이 하나라도 어긋나면 '영원히 대기 중'이 되어 머지가 아예 막히므로, 워크플로를 고칠 때 함께 옮긴다.
-CHECKS='["main 진입 검사","운영 조건 기동","테스트 (backend)","테스트 (backend-mydata)"]'
+# 실제로 한 번 어긋났다(워크플로에서 job 이름을 '운영 조건 기동'→'운영 중지 검사'로 바꾸고 여기를 안 옮겼다).
+# 적용 전에 아래로 대조한다:  git show origin/main:.github/workflows/ci.yml | grep 'name:'
+CHECKS='["main 진입 검사","운영 중지 검사","테스트 (backend)","테스트 (backend-mydata)"]'
 
 # 필수 승인 수는 0으로 둔다 — 소수 인원이라 서로의 작업을 멈추게 하지 않기 위해서다.
 # 대신 코드오너 리뷰 요청은 자동으로 가고(CODEOWNERS), 기계가 판정할 수 있는 것은 검사가 막는다.
