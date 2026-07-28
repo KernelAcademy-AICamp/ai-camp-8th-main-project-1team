@@ -75,4 +75,45 @@ class WasteScoringServiceTest {
         wasteScoringService.setOverride(uid, "의류패션", true);
         assertThat(wasteScoringService.scoreUser(uid).get(0).waste()).isTrue();
     }
+
+    // ======================================================================
+    //  '줄이면 좋은 소비'(category1) 임계 — 설정을 따라야 한다
+    //
+    //  이 값이 코드에 0.5로 박혀 있던 동안, 낭비 비율이 40% 안팎인 절약형 사용자는 후보가 0개였다.
+    //  절약 리포트는 "쏠린 지출이 없다"고 말하고 챌린지의 '뭘 줄여볼까요?'엔 AI 추천이 하나도 안 붙었다.
+    //  다시 코드에 박으면 아래 두 테스트가 갈라지지 않는다(설계 원칙 4 — 임계치는 application.yml).
+    // ======================================================================
+
+    /** 여가 100만원 중 40만원(40%)이 낭비로 판정되는 상황을 임계만 바꿔가며 만든다. */
+    private WasteScoringService withThreshold(double threshold) {
+        SpendingClassifier classifier = org.mockito.Mockito.mock(SpendingClassifier.class);
+        org.mockito.Mockito.when(classifier.isReady()).thenReturn(true);
+        org.mockito.Mockito.when(classifier.threshold()).thenReturn(0.5);
+        // cat2가 '영화'면 낭비, '전시'면 필수.
+        org.mockito.Mockito.when(classifier.wasteProbability(org.mockito.ArgumentMatchers.anyMap()))
+                .thenAnswer(inv -> "영화".equals(((Map<?, ?>) inv.getArgument(0)).get("cat2")) ? 0.9 : 0.1);
+
+        UserPaymentRepository payments = org.mockito.Mockito.mock(UserPaymentRepository.class);
+        org.mockito.Mockito.when(payments.findByUserIdOrderByPaymentDateDesc(1L)).thenReturn(List.of(
+                pay("t1", 1L, "여가", "영화", 400_000, LocalDateTime.of(2026, 7, 20, 19, 0)),
+                pay("t2", 1L, "여가", "전시", 600_000, LocalDateTime.of(2026, 7, 21, 15, 0))));
+
+        UserSpendingOverrideRepository overrides = org.mockito.Mockito.mock(UserSpendingOverrideRepository.class);
+        org.mockito.Mockito.when(overrides.findByUserId(1L)).thenReturn(List.of());
+
+        return new WasteScoringService(classifier, payments, overrides,
+                java.time.Clock.systemDefaultZone(), threshold);
+    }
+
+    @Test
+    void 낭비비율이_임계_이상이면_줄이면_좋은_소비가_된다() {
+        var summary = withThreshold(0.35).summarize(1L).orElseThrow();
+        assertThat(summary.wasteRatioByCategory1().get("여가")).isEqualTo(0.4);
+        assertThat(summary.wasteCategories()).contains("여가");
+    }
+
+    @Test
+    void 낭비비율이_임계_미만이면_후보가_아니다() {
+        assertThat(withThreshold(0.5).summarize(1L).orElseThrow().wasteCategories()).isEmpty();
+    }
 }
