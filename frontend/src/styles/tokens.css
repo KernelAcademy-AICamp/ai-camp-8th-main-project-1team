@@ -1,6 +1,17 @@
 /* ── MOA 디자인 토큰 (frontend-moa에서 그대로 이식) ─────────────────────
    색·라운드·타이포의 단일 출처. 컴포넌트 스타일은 app.css.
    목업(frontend-moa)과 값이 100% 같아야 한다 — 여기를 고치면 디자인이 갈라진다. */
+
+/* 번들 폰트 — 가변 폰트 한 개가 45~920 굵기를 전부 덮는다(디자인은 600·700·800을 쓴다).
+   CDN 대신 번들하는 이유와 서브셋 범위는 public/fonts/README.md. */
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/PretendardVariable.subset.woff2') format('woff2-variations');
+}
+
 :root {
   /* ── 그래픽 색: 목업 값 그대로. 아이콘·진행바·씬·배지 배경에 쓴다. ── */
   --blue: #3182F6; --blue-dark: #1B64DA; --blue-weak: #E8F1FF;
