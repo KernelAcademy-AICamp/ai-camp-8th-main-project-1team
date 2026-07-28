@@ -15,7 +15,7 @@ const round1 = (n: number) => Math.round(n * 10) / 10
 export function Onboarding3() {
   const { go, back, analysis, draft, patchDraft, setKeep } = useSession()
   const a = analysis ?? mockAnalysis()
-  const baseOf = (name: string) => a.cutCandidates.find((c) => c.category2 === name)?.monthlyAmount ?? 100_000
+  const baseOf = (name: string) => a.cutCandidates.find((c) => c.category2 === name)?.monthlySpend ?? 100_000
   const inited = useRef(false)
 
   useEffect(() => {

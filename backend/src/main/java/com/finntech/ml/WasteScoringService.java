@@ -4,6 +4,7 @@ import com.finntech.domain.UserPayment;
 import com.finntech.domain.UserSpendingOverride;
 import com.finntech.repository.UserPaymentRepository;
 import com.finntech.repository.UserSpendingOverrideRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -31,13 +32,18 @@ public class WasteScoringService {
     private final UserPaymentRepository userPaymentRepository;
     private final UserSpendingOverrideRepository overrideRepository;
     private final Clock clock;
+    /** category1이 '줄이면 좋은 소비'가 되는 낭비금액 비율 하한. 설계 원칙 4 — 임계치는 application.yml. */
+    private final double wasteCategoryRatioThreshold;
 
     public WasteScoringService(SpendingClassifier classifier, UserPaymentRepository userPaymentRepository,
-                               UserSpendingOverrideRepository overrideRepository, Clock clock) {
+                               UserSpendingOverrideRepository overrideRepository, Clock clock,
+                               @Value("${finntech.ml.waste-category-ratio-threshold:0.35}")
+                               double wasteCategoryRatioThreshold) {
         this.classifier = classifier;
         this.userPaymentRepository = userPaymentRepository;
         this.overrideRepository = overrideRepository;
         this.clock = clock;
+        this.wasteCategoryRatioThreshold = wasteCategoryRatioThreshold;
     }
 
     /** 거래별 낭비 판정 + 설명. */
@@ -112,7 +118,12 @@ public class WasteScoringService {
         for (var e : byCat1.entrySet()) {
             double ratio = (double) e.getValue()[0] / e.getValue()[1];
             ratioByCat1.put(e.getKey(), ratio);
-            if (ratio >= 0.5) wasteCategories.add(e.getKey()); // 낭비가 금액의 과반 → '줄이면 좋은' 카테고리
+            // 이 카테고리에 쓴 돈 중 낭비가 차지하는 비율이 임계 이상이면 '줄이면 좋은 소비'.
+            // 예전엔 0.5(과반)가 코드에 박혀 있었는데, 실측하면 절약형 사용자는 최대 카테고리가 35~41%에
+            // 그쳐 후보가 0개가 됐다 — 절약 리포트가 "줄일 게 없다"고 하고 챌린지 추천도 비었다.
+            // 판정 소스를 규칙(전체 대비 30% 쏠림)에서 ML로 옮기며 기준이 훨씬 엄해진 것이 원인이라,
+            // 값을 application.yml로 빼고 규칙 시절과 비슷한 강도로 맞췄다(설계 원칙 4).
+            if (ratio >= wasteCategoryRatioThreshold) wasteCategories.add(e.getKey());
         }
         return java.util.Optional.of(new MlSummary((double) essentialAmt / totalAmt, wasteCategories, ratioByCat1));
     }

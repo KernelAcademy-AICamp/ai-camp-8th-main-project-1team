@@ -2,6 +2,7 @@ package com.finntech.mydata.web;
 
 import com.finntech.mydata.dto.ApiResponse;
 import com.finntech.mydata.dto.MyDataDtos.AccountView;
+import com.finntech.mydata.dto.MyDataDtos.BankView;
 import com.finntech.mydata.dto.MyDataDtos.CardView;
 import com.finntech.mydata.dto.MyDataDtos.MerchantView;
 import com.finntech.mydata.service.MyDataService;
@@ -51,6 +52,19 @@ public class MyDataController {
     @GetMapping("/account")
     public ApiResponse<AccountView> getAccount(@RequestParam String userId) {
         return ApiResponse.ok(myDataService.findAccount(userId).orElse(null));
+    }
+
+    /** 연동 가능 은행 목록 — 자산연결 화면이 고를 수 있는 은행. */
+    @GetMapping("/banks")
+    public ApiResponse<List<BankView>> getBanks() {
+        return ApiResponse.ok(myDataService.findBanks());
+    }
+
+    /** 고른 은행들에 있는 계좌(0~1건). 없으면 빈 목록 — 그 은행에 계좌가 없다는 뜻이다. */
+    @GetMapping("/accounts")
+    public ApiResponse<List<AccountView>> getAccountsByBanks(@RequestParam String userId,
+                                                             @RequestParam List<Long> bankIds) {
+        return ApiResponse.ok(myDataService.findAccountsByBanks(userId, bankIds));
     }
 
     /** 가맹점 조회(번호→주소) — 사용자가 결제의 사업자번호로 가맹점명·지번주소를 조회. 없으면 data=null. */

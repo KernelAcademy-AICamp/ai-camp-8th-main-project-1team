@@ -21,6 +21,11 @@ spring:
 
 server:
   port: 8080
+  # 리버스 프록시(nginx)가 TLS를 끊고 평문으로 넘긴다. 이 설정이 없으면 Spring은 자기 주소를
+  # http://<도메인>으로 인식해, 브라우저가 보낸 Origin(https://<도메인>)과 **스킴만 다른**
+  # 같은 오리진을 교차 오리진으로 오판하고 CORS로 403을 준다. curl은 Origin을 안 보내 통과하므로
+  # 스모크로는 잡히지 않는다 — 배포에서 실제로 밟은 함정이다.
+  forward-headers-strategy: framework
 
 management:
   endpoints:
@@ -43,14 +48,25 @@ finntech:
   # payment 생성 기준일과 맞춰 '이번 달' 실적을 계산한다(재현성).
   mydata:
     base-url: ${MYDATA_BASE_URL:http://localhost:8082}
-    reference-date: 2026-07-23   # 데모 기준일=오늘(앱 사용 시점 07-23). 마이데이터 커트오프와 일치시켜 '이번 달' 실적이 어긋나지 않게.
+    # 비우면 시스템 단일 시간 출처(AppConfig.clock)를 따른다 — 기본. 값을 넣으면 그 날짜로 고정되며,
+    # 그때는 마이데이터의 mydata.now도 같은 날짜로 고정해야 한다(짝이 어긋나면 데이터가 안 들어온다).
+    reference-date: ${FINNTECH_MYDATA_REFERENCE_DATE:}
+    # 자동 증분 동기화(배치). 끄면 화면의 '동기화' 버튼으로만 새 결제가 들어온다.
+    # 간격은 이전 실행이 끝난 뒤부터 센다(fixedDelay) — 느려져도 실행이 겹치지 않는다.
+    auto-sync:
+      enabled: ${MYDATA_AUTO_SYNC:true}
+      interval-ms: 300000        # 5분
+      initial-delay-ms: 60000    # 기동 직후엔 돌지 않게
     # 서버간 인증(W7-2): 마이데이터 호출에 X-MyData-Token으로 실어 보낼 공유 시크릿. env MYDATA_SHARED_SECRET.
     # 미설정이면 헤더 미부착(dev 통과). 운영에선 양 모듈에 동일 값 주입.
     shared-secret: ${MYDATA_SHARED_SECRET:}
 
   # ---- CORS (W7-3) — 허용 오리진은 프로퍼티. 운영은 env 주입(동일 오리진 배포 시 무의미). --------------
+  # 뒤 3개는 앱(Capacitor) 웹뷰의 오리진이다. 웹 자산이 기기 안에서 서빙되므로 브라우저와 달리
+  # 오리진이 도메인이 아니고, 플랫폼·설정에 따라 셋 중 하나가 된다(안드로이드 http/https,
+  # iOS capacitor). 어느 것이 될지 빌드 설정에 달려 있어 셋을 함께 연다.
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,capacitor://localhost,https://localhost,http://localhost}
 
   # ---- 통장 비교 (정보성) — 실 예·적금 금리 비교 -----------------------------
   # 금소법: '단순 정보제공 + 판매목적 아님 + 무제휴/무광고 + 가입 편의 미제공'이면 중개업 아님
@@ -84,7 +100,58 @@ finntech:
     request-delay-millis: 15000
     timeout-seconds: 20
 
+  # ---- 지킴이 Agent 임계치 (지킴이 Agent 설계서 v1.2) -------------------------
+  # 설계서는 "임계값을 DB에 넣지 말고 깃으로 버전 관리하라"고 요구하고, 이 저장소는 "임계치는 전부
+  # application.yml"(마스터 §4 원칙 4)을 요구한다. yml도 깃 안에 있으므로 둘 다 만족한다.
+  # 케이스의 '구조'(우선순위·톤·쿨다운)는 값이 아니라 로직이라 GuardianRules.java에 남는다.
+  guardian:
+    # 한도의 이 비율을 넘으면 AT_RISK + C3 발화
+    at-risk-ratio: 0.80
+    # 부분 달성 하한. 5주차 인터뷰로 검증할 가정값이다(설계서 §8).
+    partial-unlock-threshold: 0.70
+    # 이 신뢰도 미만이면 집계하지 않고 C7로 되묻는다 — 분류 전에는 판정할 수 없다.
+    category-confidence-threshold: 0.70
+    # 이번 주 같은 카테고리 결제가 이 건수에 이르면 C2(패턴 지적)
+    repeat-weekly-count: 3
+    # 단건 이 금액 미만은 잔돈 버킷으로 모은다(개별 알림 대신)
+    micro-tx-threshold: 5000
+    # 잔돈 버킷 합계가 이 금액을 넘으면 C8을 하루 1회
+    micro-bucket-trigger: 12000
+    # 되돌리기 유예. 낙관적 판정(D1-A)의 안전판이다.
+    undo-window-hours: 24
+    default-duration-days: 30
+    notification:
+      # 거래성 1 + 시간성 1. 이 예산을 넘으면 C13으로 침묵한다.
+      daily-push-limit: 2
+      night-start-hour: 22
+      night-end-hour: 8
+      # 게임 이벤트는 푸시하지 않는다 — 홈 미개봉 뱃지 + 앱 안 모달로만(설계서 §4.1)
+      game-events-use-push: false
+    point:
+      # 미션 30 + 위기 방어 20 + 라벨링 최대 50(25건) = 주간 상한 100
+      weekly-mission: 30
+      risk-defense: 20
+      labeling: 2
+      monthly-complete: 100
+      weekly-cap: 100
+      # 완주는 장기 보상이라 주간 상한과 별도로 지급한다
+      monthly-exempt-from-cap: true
+      # 출석·로그인 보상은 없다. 포인트는 절약 행동의 증명이어야 한다.
+      attendance-reward: 0
+    shop:
+      object: 30
+      furniture: 150
+      wall-floor: 400
+
   # ---- 분석 임계치 ----------------------------------------------------------
+  # ---- 낭비/필수 ML 판정(W8) ------------------------------------------------
+  ml:
+    # category1의 지출 중 ML이 낭비로 본 금액 비율이 이 값 이상이면 '줄이면 좋은 소비'로 올린다.
+    # (절약 리포트의 negative, 챌린지 '뭘 줄여볼까요?'의 AI 추천 후보가 여기서 나온다)
+    # 0.5(과반)로 두면 절약형 사용자는 최대 카테고리가 35~41%라 후보가 0개가 된다 — 실측 10명 중 3명.
+    # 규칙 판정 시절 기준(전체 지출 대비 30% 쏠림)과 비슷한 강도인 0.35로 맞췄다.
+    waste-category-ratio-threshold: 0.35
+
   # 전부 설정값이다. 페르소나(D-09) 확정 시 이 블록만 갈아끼우면 된다 (문서 §8 설계 제약 2).
   analysis:
     overspending:
@@ -124,6 +191,35 @@ finntech:
       top-n: 3
       neutral-category-fit: 0.5
       near-miss-top-rank: 3
+    # 시간대 버킷(아침/점심/저녁/심야) — 반복결제 루틴형(②)·소비패턴(③) 공유 단일 정의.
+    # 심야[23,4]는 ML 피처(WasteFeatureExtractor.night)와 값만 일치(코드 독립). 아침/점심/저녁은 5~22시 분할(튜닝값).
+    daypart:
+      night-start: 23
+      night-end: 4
+      morning-end: 11   # 아침 (4,11)
+      lunch-end: 17     # 점심 [11,17), 저녁 [17,23)
+    # 반복결제 탐지(②) — 고정형/루틴형 임계(잠정, 튜닝 예정).
+    recurring:
+      fixed-min-count: 3
+      fixed-cv-max: 0.05
+      weekly-interval-days: [6, 8]
+      monthly-interval-days: [27, 33]
+      routine-window-days: 28
+      routine-appear-ratio: 0.25
+      routine-min-days: 3
+      routine-dispersion-max: 0.35
+    # 절약후보(⑤) — 낭비형 임계 + 3등급 카테고리(category2 매칭). 보호는 ML ESSENTIAL과 독립.
+    cut-candidate:
+      waste-ratio-threshold: 0.5
+      removable: [카페, 배달, 스트리밍, 백화점, 면세점, 간편결제]
+      optimizable: [한식, 중식, 일식, 양식, 분식, 대중교통, 택시]
+      protected-categories: [공과금, 통신비, 약국, 보험]
+    # 이상소비지수(④) — 4성분 해석가능 가중합(합=1 권장). 지수=100×Σ(weight×성분[0,1]).
+    profile:
+      waste-weight: 0.4          # 낭비비율(제거가능 지출/총지출)
+      concentration-weight: 0.25 # 과소비집중(최대 category1 비율)
+      volatility-weight: 0.15    # 지출변동성(월지출 CV/cvCap)
+      night-impulse-weight: 0.2  # 심야+루틴낭비 비중
 
 ---
 spring:

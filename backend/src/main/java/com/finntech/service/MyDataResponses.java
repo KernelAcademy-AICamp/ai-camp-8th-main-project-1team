@@ -15,6 +15,9 @@ public final class MyDataResponses {
 
     public record CompanyView(Long id, String name, String imgUrl) {}
 
+    /** 연동 가능 은행. id는 제공자가 이름순으로 매긴 순번(결정론). */
+    public record BankView(Long id, String name) {}
+
     public record BenefitView(String category1Name, int discountPercent,
                               int performanceStart, int performanceEnd, int monthlyLimit) {}
 

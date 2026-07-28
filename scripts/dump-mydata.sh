@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# 운영 DB로 옮길 덤프를 만든다 — 로컬 MySQL → 압축 SQL 두 개(앱 원장 / 마이데이터 원장).
+#
+#   ./scripts/dump-mydata.sh                 # 기본: deploy/dump/ 에 생성
+#   OUT=/path ./scripts/dump-mydata.sh       # 출력 위치 지정
+#
+# 왜 스크립트로 두는가: 13.6M행 덤프는 옵션 하나를 빠뜨리면 복원이 몇 시간씩 걸리거나
+# 타임존이 어긋난 채 들어간다. 한 번 맞춘 옵션을 파일로 남겨 두 번째부터는 생각하지 않는다.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+OUT="${OUT:-deploy/dump}"
+MYSQL_BIN="${MYSQL_BIN:-$HOME/Downloads/mysql-local/mysql-9.7.1-macos15-arm64/bin}"
+SOCK="${SOCK:-$HOME/Downloads/mysql-local/mysql.sock}"
+DB_APP="${DB_NAME:-finntech}"
+DB_MYDATA="${MYDATA_DB_NAME:-finntech_mydata}"
+
+mkdir -p "$OUT"
+
+# --single-transaction : InnoDB를 잠그지 않고 일관된 스냅샷을 뜬다(서비스 중단 없이).
+# --quick              : 결과를 통째로 메모리에 올리지 않고 행 단위로 흘린다(13.6M행에 필수).
+# --no-tablespaces     : PROCESS 권한이 없는 계정에서도 덤프가 되게 한다(RDS 복원 계정 대비).
+# --set-gtid-purged=OFF: 소스의 GTID 상태가 목적지에 박히지 않게 한다(RDS 복원 시 거부 사유).
+# --hex-blob           : 이진 값이 문자셋 변환으로 깨지지 않게.
+# 타임존은 서버가 Asia/Seoul로 저장하고 있으므로 --tz-utc 를 쓰지 않는다 —
+# 켜면 UTC로 변환돼 들어가 결제 시각이 9시간 밀린다(커트오프·챌린지 판정이 통째로 어긋난다).
+DUMP_OPTS=(--single-transaction --quick --no-tablespaces --set-gtid-purged=OFF --hex-blob --default-character-set=utf8mb4)
+
+dump_one() {
+  local db="$1" dest="$OUT/$1.sql.gz"
+  echo "[$db] 덤프 시작"
+  "$MYSQL_BIN/mysqldump" -u root --socket="$SOCK" "${DUMP_OPTS[@]}" "$db" | gzip -1 > "$dest"
+  echo "[$db] 완료 — $(du -h "$dest" | cut -f1)  →  $dest"
+}
+
+dump_one "$DB_APP"
+dump_one "$DB_MYDATA"
+
+cat <<EOF
+
+복원(운영 서버에서):
+  gunzip -c $DB_APP.sql.gz    | mysql -h <호스트> -u <계정> -p $DB_APP
+  gunzip -c $DB_MYDATA.sql.gz | mysql -h <호스트> -u <계정> -p $DB_MYDATA
+
+주의
+  · DB 두 개는 미리 만들어져 있어야 한다(deploy/mysql-init/01-create-databases.sql 참고).
+  · 스키마는 Flyway가 소유하지만 덤프에 CREATE TABLE이 들어 있다. 빈 DB에 복원한 뒤
+    앱을 띄우면 Flyway가 이력을 보고 이미 최신임을 확인한다(flyway_schema_history도 덤프에 포함).
+  · 복원 중에는 앱을 띄우지 않는다 — 반쯤 찬 DB로 기동하면 validate가 실패한다.
+EOF

@@ -1,0 +1,8 @@
+# 빌드 컨텍스트 축소 + 로컬 산출물 유입 차단.
+# data/·*.mv.db는 H2 파일 DB다 — 이미지에 섞이면 운영 컨테이너가 로컬 데이터를 안고 뜬다.
+target/
+data/
+*.mv.db
+*.trace.db
+.git/
+.gitignore

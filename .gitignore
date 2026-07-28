@@ -39,8 +39,18 @@ reference/*.xlsx
 reference/*.html
 reference/geo/
 
+# ── 타사 앱 바이너리·역분석 자료: 공개 저장소에 올리지 않는다 ──
+# reference/*.md 는 위 정책상 커밋 대상이라, 여기서 이름으로 되돌려 빼야 한다.
+# CJpost 분석보고서에는 타사 내부 IP·비공개 엔드포인트·라이선스 식별자·API 키가 인용돼 있고
+# 문서 스스로 "외부 공유·게시하지 마십시오"라고 명시한다. APK는 타사 상용 앱 바이너리다.
+reference/*.apk
+reference/CJpost_기술구조_분석보고서.md
+
 # ── 정리 CSV: 합본은 282MB(GitHub 100MB 초과)라 제외. 분할본(merchants-part*.csv, <50MB)만 커밋 ──
 backend-mydata/generated/merchants.csv
 
 # ── 로그·임시 ──
 *.log
+
+# 운영 이전용 DB 덤프(수 GB) — 커밋 금지
+deploy/dump/

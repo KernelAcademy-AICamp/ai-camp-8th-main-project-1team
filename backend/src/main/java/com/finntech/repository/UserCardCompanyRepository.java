@@ -14,6 +14,13 @@ public interface UserCardCompanyRepository extends JpaRepository<UserCardCompany
     List<UserCardCompany> findByUserIdOrderByCompanyIdAsc(Long userId);
     Optional<UserCardCompany> findByUserIdAndCompanyId(Long userId, Long companyId);
 
+    /**
+     * 마이데이터를 연결한 사용자 id 목록(중복 제거). 자동 동기화 배치가 돌 대상이다.
+     * 정렬을 고정해 배치 로그와 재현이 흔들리지 않게 한다(마스터 §4 원칙 3).
+     */
+    @Query("select distinct u.userId from UserCardCompany u order by u.userId asc")
+    List<Long> findDistinctUserIds();
+
     /** 벌크 삭제(즉시 DML) — 재연동·파기 시 순서 보장. */
     @Modifying
     @Transactional

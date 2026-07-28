@@ -30,10 +30,13 @@ export interface AnalysisProfile {
 export interface RecurringPayment {
   merchantName: string
   category2: string | null
-  amount: number
+  /** 대표금액(원) — 중앙값. 백엔드 RecurringPayment.representativeAmount와 일치. */
+  representativeAmount: number
   /** FIXED = 고정지출(통신·구독), ROUTINE = 습관 반복 */
   type: 'FIXED' | 'ROUTINE'
-  dayOfMonth: number | null
+  /** 고정형 주기(일)·다음 예상일 — 루틴형은 null (백엔드 periodDays/nextExpected). */
+  periodDays: number | null
+  nextExpected: string | null
 }
 export interface SpendingPattern {
   amountByDayOfWeek: Record<string, number>
@@ -44,7 +47,8 @@ export interface CutCandidate {
   /** REMOVABLE = 제거가능, OPTIMIZABLE = 최적화가능 */
   type: 'REMOVABLE' | 'OPTIMIZABLE'
   estimatedSaving: number
-  monthlyAmount: number
+  /** 최근 창의 해당 category2 총 지출(원). 백엔드 CutCandidate.monthlySpend와 일치. */
+  monthlySpend: number
   reason: string
 }
 export interface AnalysisSummary {
@@ -54,7 +58,18 @@ export interface AnalysisSummary {
   cutCandidates: CutCandidate[]
 }
 export interface Narrative { text: string; source: string }
-export interface CutSelection { category2: string; monthlyAmount: number; chosenAt: string }
+/** cut/choose 응답 — 백엔드 CutCandidateSelection 직렬화 필드와 일치. */
+export interface CutSelection {
+  category2: string
+  type: 'REMOVABLE' | 'OPTIMIZABLE'
+  /** 목표 절감액(원). */
+  targetSaving: number
+  /** 선택 시점 해당 category2 창 지출(원) — 재검증 기준선. */
+  baselineSpend: number
+  /** 선택 시각 (백엔드 selectedAt). */
+  selectedAt: string
+  status: string
+}
 
 /* ── 마이데이터 (본인인증·연결) ─────────────────────────────────────── */
 export interface VerifyResult { ci: string; verified: boolean; existsInMyData: boolean }
