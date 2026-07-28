@@ -36,13 +36,16 @@ public class MyDataLinkService {
     private final CategoryRepository categoryRepository;
     private final UserCardCompanyRepository userCardCompanyRepository;
     private final ReportRepository reportRepository;
-    private final LocalDate referenceDate;
+    private final java.time.Clock clock;
+    /** 고정 기준일. null이면 {@link #referenceDate()}가 주입된 시계를 따른다. */
+    private final LocalDate fixedReferenceDate;
 
     public MyDataLinkService(MyDataClient myDataClient, AppUserRepository userRepository,
                              UserCardRepository userCardRepository, UserPaymentRepository userPaymentRepository,
                              ConsumptionRepository consumptionRepository, CategoryRepository categoryRepository,
                              UserCardCompanyRepository userCardCompanyRepository, ReportRepository reportRepository,
-                             @Value("${finntech.mydata.reference-date:2026-07-21}") String referenceDate) {
+                             java.time.Clock clock,
+                             @Value("${finntech.mydata.reference-date:}") String referenceDate) {
         this.myDataClient = myDataClient;
         this.userRepository = userRepository;
         this.userCardRepository = userCardRepository;
@@ -51,7 +54,21 @@ public class MyDataLinkService {
         this.categoryRepository = categoryRepository;
         this.userCardCompanyRepository = userCardCompanyRepository;
         this.reportRepository = reportRepository;
-        this.referenceDate = LocalDate.parse(referenceDate);
+        this.clock = clock;
+        this.fixedReferenceDate = (referenceDate == null || referenceDate.isBlank())
+                ? null : LocalDate.parse(referenceDate.trim());
+    }
+
+    /**
+     * 링크·월집계의 기준이 되는 '오늘'.
+     *
+     * <p>비워 두면 주입된 {@link java.time.Clock}(= 시스템 단일 시간 출처, {@code finntech.demo.today}로
+     * 고정 가능)을 따른다. 예전에는 이 값이 상수로 박혀 있어, 분석·지킴이는 실시간으로 앞서가는데
+     * 링크 기준일만 과거에 멈춰 있었다 — 오늘 시작한 챌린지에 넣을 소비가 0건이 되는 원인이었다.
+     * 값을 넣으면 그 날짜로 고정되지만, 그때는 {@code mydata.now}도 같이 고정해야 한다(짝이다).
+     */
+    private LocalDate referenceDate() {
+        return fixedReferenceDate != null ? fixedReferenceDate : LocalDate.now(clock);
     }
 
     /** 카드사 목록(연동 기관 선택용). */
@@ -83,8 +100,9 @@ public class MyDataLinkService {
         userCardCompanyRepository.deleteByUserId(userId);
         reportRepository.deleteByUserId(userId);   // 판정 소스(ML)·데이터가 바뀌므로 리포트 캐시 무효화
 
-        YearMonth referenceMonth = YearMonth.from(referenceDate);
-        LocalDateTime linkTime = referenceDate.atTime(23, 59, 59); // 이후 결제는 다음 동기화에서 증분 등장(W2)
+        LocalDate today = referenceDate();
+        YearMonth referenceMonth = YearMonth.from(today);
+        LocalDateTime linkTime = today.atTime(23, 59, 59); // 이후 결제는 다음 동기화에서 증분 등장(W2)
         int cardCount = 0, paymentCount = 0;
 
         for (Long companyId : companyIds) {
@@ -195,7 +213,7 @@ public class MyDataLinkService {
     /** '내 카드' 화면 — 카드별 실적 진행률 + 이번달 받은 혜택. */
     @Transactional(readOnly = true)
     public List<MyCardView> myCards(Long userId) {
-        YearMonth referenceMonth = YearMonth.from(referenceDate);
+        YearMonth referenceMonth = YearMonth.from(referenceDate());
         List<MyCardView> views = new ArrayList<>();
         for (UserCard card : userCardRepository.findByUserIdOrderByIdAsc(userId)) {
             int earnedThisMonth = userPaymentRepository
@@ -228,7 +246,7 @@ public class MyDataLinkService {
      */
     @Transactional(readOnly = true)
     public List<PaymentHistoryRow> allPayments(Long userId, int monthsBack) {
-        LocalDateTime from = referenceDate.minusMonths(monthsBack).atStartOfDay();
+        LocalDateTime from = referenceDate().minusMonths(monthsBack).atStartOfDay();
         Map<String, UserCard> bySerial = userCardRepository.findByUserIdOrderByIdAsc(userId).stream()
                 .collect(Collectors.toMap(UserCard::getSerialNumber, c -> c, (a, b) -> a));
         return userPaymentRepository.findByUserIdOrderByPaymentDateDesc(userId).stream()
