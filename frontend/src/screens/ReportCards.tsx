@@ -60,7 +60,7 @@ export function ReportCards() {
                   <div className="mc-face" style={{ background: c.cardColor || 'var(--blue-dark)' }}>
                     <span className="co">{c.companyName}</span>
                     <span className="nm">{c.cardName}</span>
-                    <span className="sn">{c.serialNumber.slice(-4)} 로 끝나는 카드</span>
+                    <span className="sn">{c.serialNumber}</span>
                   </div>
 
                   <div style={{ marginTop: 14 }}>

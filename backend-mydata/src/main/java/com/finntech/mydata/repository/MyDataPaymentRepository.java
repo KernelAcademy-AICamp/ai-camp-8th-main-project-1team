@@ -33,6 +33,14 @@ public interface MyDataPaymentRepository extends JpaRepository<MyDataPayment, St
             + "where p.card.user.id = :userId and p.paymentDate <= :now")
     long sumByUserUpTo(@Param("userId") String userId, @Param("now") LocalDateTime now);
 
+    /** 통장 내역용: 지정 구간의 카드 결제 전부(오름차순). 잔액을 시간순으로 굴려야 해서 정렬을 고정한다. */
+    @Query("select p from MyDataPayment p "
+            + "where p.card.user.id = :userId and p.paymentDate >= :from and p.paymentDate <= :now "
+            + "order by p.paymentDate asc")
+    List<MyDataPayment> findByUserBetween(@Param("userId") String userId,
+                                          @Param("from") LocalDateTime from,
+                                          @Param("now") LocalDateTime now);
+
     /**
      * 통장 이자 계산용: 사용자의 카드 결제를 <b>월별로</b> 합산(≤now).
      *

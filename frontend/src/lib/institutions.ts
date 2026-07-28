@@ -196,7 +196,7 @@ export function mergeInstitutions(
   companies: { id: number; name: string }[],
   banks: { id: number; name: string }[],
 ): InstCategory[] {
-  return INSTITUTIONS.map((c) => {
+  const merged = INSTITUTIONS.map((c) => {
     if (c.key === 'card') {
       if (companies.length === 0) return { ...c, available: false };
       return {
@@ -220,4 +220,8 @@ export function mergeInstitutions(
     }
     return c;
   });
+  // 연결되는 업권을 위로 올린다. 준비 중(선택 불가)인 업권이 먼저 보이면 실제로 연결할 수 있는
+  // 카드사·은행을 찾으려고 한참 내려가야 한다 — 화면의 첫인상이 "아직 안 되는 것들"이 된다.
+  // 업권 사이 상대 순서는 그대로 둔다(카탈로그가 정한 업권 배열을 존중).
+  return [...merged.filter((c) => c.available), ...merged.filter((c) => !c.available)];
 }

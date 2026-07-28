@@ -87,8 +87,9 @@ public class MyDataController {
 
     /** 입출금 통장(§13-11) — 은행·계좌·월급·잔액 + 최근 입출금 내역. 통장 없으면 null. */
     @GetMapping("/account")
-    public com.finntech.service.MyDataResponses.AccountView account(@RequestParam Long userId) {
-        return linkService.account(userId);
+    public com.finntech.service.MyDataResponses.AccountView account(
+            @RequestParam Long userId, @RequestParam(defaultValue = "1") int months) {
+        return linkService.account(userId, months);
     }
 
     /** 가맹점 조회(번호→주소) — 결제에 실린 사업자번호로 가맹점명·지번주소를 조회. 없으면 null. */
