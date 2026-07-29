@@ -149,13 +149,26 @@ public class CatalogSampler {
         return new ResolvedMerchant(display, channel, m.lat(), m.lon(), m.address(), m.businessNumber());
     }
 
-    /** category2 → 상품(품목·단가·재량성). 단가는 [저,고] 균등. */
+    /**
+     * category2 → 상품(품목·단가·재량성). 단가는 [저,고] 균등.
+     *
+     * <p><b>품목은 가중 추출한다.</b> 지하철은 기본요금(1,550원)이 대부분이고 거리비례 추가는
+     * 가끔이다 — 균등 추출이면 장거리 요금이 기본요금만큼 자주 나와 현실과 어긋난다.
+     * 가중치를 안 준 품목은 1.0이라 기존 동작 그대로다.
+     */
     public ResolvedProduct resolveProduct(String category2, Random r) {
         List<ProductEntry> list = products.get(category2);
         if (list == null || list.isEmpty()) return new ResolvedProduct(category2, 10000, 0.5);
-        ProductEntry p = list.get(r.nextInt(list.size()));
-        int price = GenSeed.uniformInt(r, p.priceLow(), p.priceHigh());
-        return new ResolvedProduct(p.name(), price, p.discretionary());
+        double total = 0;
+        for (ProductEntry p : list) total += p.weight();
+        ProductEntry chosen = list.get(list.size() - 1);
+        double x = r.nextDouble() * total, acc = 0;
+        for (ProductEntry p : list) {
+            acc += p.weight();
+            if (x < acc) { chosen = p; break; }
+        }
+        int price = GenSeed.uniformInt(r, chosen.priceLow(), chosen.priceHigh());
+        return new ResolvedProduct(chosen.name(), price, chosen.discretionary());
     }
 
     // ── 내부 ──

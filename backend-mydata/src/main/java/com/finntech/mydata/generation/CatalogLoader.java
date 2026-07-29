@@ -147,11 +147,14 @@ public class CatalogLoader {
             List<ProductEntry> list = new ArrayList<>();
             for (Object row : (List<?>) e.getValue()) {
                 List<?> t = (List<?>) row;
+                // 5번째 원소는 선택 — 추출 가중치다. 없으면 1.0(균등).
+                // 지하철처럼 '기본요금이 대부분이고 추가요금은 가끔'인 요금 사다리를 표현한다.
                 list.add(new ProductEntry(
                         (String) t.get(0),
                         ((Number) t.get(1)).intValue(),
                         ((Number) t.get(2)).intValue(),
-                        ((Number) t.get(3)).doubleValue()));
+                        ((Number) t.get(3)).doubleValue(),
+                        t.size() > 4 ? ((Number) t.get(4)).doubleValue() : 1.0));
             }
             out.put(e.getKey(), list);
         }

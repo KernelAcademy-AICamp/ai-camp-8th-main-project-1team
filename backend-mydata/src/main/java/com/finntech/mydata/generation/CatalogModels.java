@@ -38,7 +38,14 @@ public final class CatalogModels {
      * discretionary = 재량성(생존필수 아님) 척도이며 <b>낭비성향이 아니다</b>. 취미 상품의 높은 재량성은
      * 낭비로 직결되지 않는다(라벨러가 충동·과다 기반으로 판정, 본인 취미는 보호).
      */
-    public record ProductEntry(String name, int priceLow, int priceHigh, double discretionary) {}
+    public record ProductEntry(String name, int priceLow, int priceHigh, double discretionary,
+                               double weight) {
+
+        /** 가중치 없는 4원소 표기(대다수 품목) — 균등 추출. */
+        public ProductEntry(String name, int priceLow, int priceHigh, double discretionary) {
+            this(name, priceLow, priceHigh, discretionary, 1.0);
+        }
+    }
 
     /**
      * 브랜드/플랫폼(merchants_brand.json) 1건.

@@ -55,17 +55,21 @@ public class DailyActivitySimulator {
             sigunguIndex.computeIfAbsent(rg.sido() + "|" + rg.sigungu(), k -> new ArrayList<>()).add(rg);
         }
         // 업종별 평균 단가를 상품 카탈로그에서 실측한다(코드에 상수를 박지 않는다).
-        Map<String, long[]> acc = new LinkedHashMap<>();   // 코드 → [금액합, 품목수]
+        //
+        // **가중 평균이어야 한다.** 방문가중은 `지출비중 ÷ 평균단가`라 평균단가가 부풀면 빈도가
+        // 억눌린다. 대중교통은 지하철 1,550원이 대부분인데 '교통카드 충전(10,000~50,000)'이
+        // 균등하게 섞이면 평균이 6,500원이 되어 실제보다 4배 덜 타게 된다.
+        Map<String, double[]> acc = new LinkedHashMap<>();   // 코드 → [가중금액합, 가중치합]
         for (var c : catalog.contexts()) {
             for (var pe : sampler.productsOf(c.category2())) {
-                long[] a = acc.computeIfAbsent(c.ksicCode(), k -> new long[2]);
-                a[0] += (pe.priceLow() + pe.priceHigh()) / 2L;
-                a[1] += 1;
+                double[] a = acc.computeIfAbsent(c.ksicCode(), k -> new double[2]);
+                a[0] += (pe.priceLow() + pe.priceHigh()) / 2.0 * pe.weight();
+                a[1] += pe.weight();
             }
         }
         for (var e : acc.entrySet()) {
             if (e.getValue()[1] > 0) {
-                avgPriceByKsic.put(e.getKey(), (int) (e.getValue()[0] / e.getValue()[1]));
+                avgPriceByKsic.put(e.getKey(), (int) Math.round(e.getValue()[0] / e.getValue()[1]));
             }
         }
     }
