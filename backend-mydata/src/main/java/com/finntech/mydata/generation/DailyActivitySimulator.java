@@ -25,10 +25,15 @@ import java.util.Set;
 @Component
 public class DailyActivitySimulator {
 
-    /** 대분류 평균 결제액(원) — 카테고리믹스(지출비중)를 방문가중으로 환산할 때 사용. */
-    private static final Map<String, Integer> AVG_PRICE = Map.of(
-            "식비", 13000, "카페/간식", 6000, "편의점", 5000, "쇼핑", 45000,
-            "생활", 30000, "여가", 35000, "온라인", 25000);
+    /**
+     * 업종코드 평균 결제액(원) — 지출비중을 방문가중으로 환산할 때 쓴다(비중 ÷ 단가 ≈ 방문수).
+     *
+     * <p><b>상품 카탈로그에서 실측한다.</b> 예전에는 7대분류별 상수 7개가 코드에 박혀 있었고,
+     * 그래서 `식비` 전체가 13,000원 기준이라 아귀찜(30~45,000)은 상시 '과다'로, 화장품은
+     * 영영 과다가 아닌 것으로 판정됐다. 업종별 실제 품목가를 쓰면 그 왜곡이 사라지고,
+     * 카탈로그를 고칠 때 코드를 함께 고칠 필요도 없어진다(마스터 §4 원칙 4).
+     */
+    private final Map<String, Integer> avgPriceByKsic = new LinkedHashMap<>();
     private static final Set<String> MULTI_QTY = Set.of("편의점", "대형마트", "이커머스");
     private static final Set<String> RECURRING = Set.of("통신비", "공과금", "스트리밍");
 
@@ -49,6 +54,47 @@ public class DailyActivitySimulator {
         for (RegionEntry rg : allRegions) {
             sigunguIndex.computeIfAbsent(rg.sido() + "|" + rg.sigungu(), k -> new ArrayList<>()).add(rg);
         }
+        // 업종별 평균 단가를 상품 카탈로그에서 실측한다(코드에 상수를 박지 않는다).
+        Map<String, long[]> acc = new LinkedHashMap<>();   // 코드 → [금액합, 품목수]
+        for (var c : catalog.contexts()) {
+            for (var pe : sampler.productsOf(c.category2())) {
+                long[] a = acc.computeIfAbsent(c.ksicCode(), k -> new long[2]);
+                a[0] += (pe.priceLow() + pe.priceHigh()) / 2L;
+                a[1] += 1;
+            }
+        }
+        for (var e : acc.entrySet()) {
+            if (e.getValue()[1] > 0) {
+                avgPriceByKsic.put(e.getKey(), (int) (e.getValue()[0] / e.getValue()[1]));
+            }
+        }
+    }
+
+    /** 업종 평균 단가. 카탈로그에 품목이 없는 업종은 중간값으로 둔다. */
+    private int avgPrice(String ksicCode) {
+        return avgPriceByKsic.getOrDefault(ksicCode, 20000);
+    }
+
+    /**
+     * '평소 이 정도 쓴다'의 기준액 — 맥락의 실제 품목가 평균. 맥락에 품목이 없으면 업종 평균.
+     * 같은 업종 안에서 상대 비교가 되도록, 대분류 상수가 아니라 여기서 낸다.
+     */
+    private double typicalOf(String category2, String ksicCode) {
+        var items = sampler.productsOf(category2);
+        if (items.isEmpty()) return avgPrice(ksicCode);
+        long sum = 0;
+        for (var p : items) sum += (p.priceLow() + p.priceHigh()) / 2L;
+        return Math.max(1000.0, (double) sum / items.size());
+    }
+
+    /** 전체 업종에서 균등 추출 — '프로파일 밖' 지출용. */
+    private static String pickAny(Set<String> codes, Random r) {
+        if (codes.isEmpty()) return null;
+        int idx = r.nextInt(codes.size());
+        for (String c : codes) {
+            if (idx-- == 0) return c;
+        }
+        return null;
     }
 
     /** 사용자 u의 [startDate, genEnd] 결제 목록(결정론). */
@@ -61,13 +107,25 @@ public class DailyActivitySimulator {
         Set<String> hobbyCats = new HashSet<>();
         for (String hob : v.hobbies()) hobbyCats.addAll(hobbySignature.getOrDefault(hob, List.of()));
 
-        // 대분류 방문가중(지출비중/평균가 → 지출share≈mix)
+        // 업종코드 방문가중.
+        //
+        // 페르소나는 **중분류**(우리 소비 축)로 지출비중을 말한다 — "쇼핑에 30%". 그런데 거래는
+        // 업종코드 단위로 일어나므로, 중분류 비중을 그 중분류에 속한 업종코드들로 풀어야 한다.
+        // 배분은 맥락의 빈도가중에 비례한다(midmap.json + contexts.json).
+        // 예전에는 이 자리가 7대분류였고, 그 축이 소비 카테고리를 겸하고 있었다.
         Map<String, Double> visitW = new LinkedHashMap<>();
         double wsum = 0;
         for (var e : v.categoryMix().entrySet()) {
-            double w = e.getValue() / Math.max(1000, AVG_PRICE.getOrDefault(e.getKey(), 20000));
-            visitW.put(e.getKey(), w);
-            wsum += w;
+            List<String> codes = sampler.ksicOf(e.getKey());
+            if (codes.isEmpty()) continue;                 // 맥락이 없는 중분류는 건너뛴다
+            double freqTotal = 0;
+            for (String code : codes) freqTotal += sampler.freqOf(code);
+            for (String code : codes) {
+                double portion = freqTotal > 0 ? sampler.freqOf(code) / freqTotal : 1.0 / codes.size();
+                double w = e.getValue() * portion / Math.max(1000, avgPrice(code));
+                visitW.merge(code, w, Double::sum);
+                wsum += w;
+            }
         }
 
         // 개선 곡선 파라미터(사용자 1회 표본)
@@ -107,20 +165,24 @@ public class DailyActivitySimulator {
     private GenTxn oneTxn(GeneratedUser u, PersonaVariant v, LocalDate date, double cf,
                           Set<String> hobbyCats, Map<String, Double> visitW, double wsum,
                           boolean cheatDay, Map<LocalDate, RegionEntry> travel, Random r) {
-        // 카테고리 선택: 취미 주입 / 프로파일 밖 / 일반
-        String cat1, cat2;
+        // 업종·맥락 선택: 취미 주입 / 프로파일 밖 / 일반
+        String ksic, cat2;
         var amt = props.getRandomness().getAmount();
         if (!hobbyCats.isEmpty() && r.nextDouble() < 0.06 * v.hobbyIntensityMult()) {
             cat2 = pickFrom(hobbyCats, r);
-            cat1 = sampler.context(cat2) != null ? sampler.context(cat2).category1() : "여가";
+            var ctx = sampler.context(cat2);
+            ksic = ctx != null ? ctx.ksicCode() : null;
         } else if (r.nextDouble() < amt.getOutOfProfileProb()) {
-            cat1 = pickWeighted(visitW, wsum, r);
-            cat2 = sampler.pickCategory2(cat1, r);
+            // 프로파일 밖 지출 — 페르소나가 평소 안 쓰는 업종에서도 가끔 결제한다.
+            // 예전에는 이 분기와 아래 일반 분기의 본문이 **완전히 같아서** 난수만 소모하고
+            // 기능이 없었다. 이제 실제로 전체 업종에서 균등 추출한다.
+            ksic = pickAny(sampler.ksicCodes(), r);
+            cat2 = sampler.pickCategory2(ksic, r);
         } else {
-            cat1 = pickWeighted(visitW, wsum, r);
-            cat2 = sampler.pickCategory2(cat1, r);
+            ksic = pickWeighted(visitW, wsum, r);
+            cat2 = sampler.pickCategory2(ksic, r);
         }
-        if (cat2 == null) { cat1 = "식비"; cat2 = "한식"; }
+        if (cat2 == null) { ksic = "5611"; cat2 = "한식"; }   // 최후 폴백: 한식 음식점업
 
         // 시간대를 먼저 뽑아 앵커(집/직장/인접동/여행지)를 시간대별로 결정한다.
         int hour = sampleHour(v, r);
@@ -137,10 +199,13 @@ public class DailyActivitySimulator {
         boolean hobbyMatch = hobbyCats.contains(cat2);
         boolean deliveryOveruse = cat2.equals("배달") && r.nextDouble() < 0.3 * v.deliveryOveruseMult();
         boolean subLeak = cat2.equals("스트리밍") && r.nextDouble() < 0.2 * v.subscriptionLeakMult();
-        double typical = AVG_PRICE.getOrDefault(cat1, 20000);
+        // '과다' 판정의 기준액. 예전에는 7대분류 상수(식비 13,000원 등)를 썼는데,
+        // 그러면 아귀찜(30~45,000)은 상시 과다이고 화장품은 영영 과다가 아니게 된다.
+        // **그 맥락의 실제 단가**를 쓰면 업종 안에서 상대 비교가 된다.
+        double typical = typicalOf(cat2, ksic);
 
         var lab = labeler.label(cat2, amount, typical, hour, planned, hobbyMatch, deliveryOveruse, subLeak, v, cf, r);
-        return new GenTxn(r.nextInt(u.cardCount()), when, cat1, cat2, amount, m.name(), m.channel(),
+        return new GenTxn(r.nextInt(u.cardCount()), when, ksic, cat2, amount, m.name(), m.channel(),
                 p.name(), p.unitPrice(), qty, lab.label(), round4(lab.pWaste()),
                 m.address(), m.lat(), m.lon(), m.businessNumber());
     }

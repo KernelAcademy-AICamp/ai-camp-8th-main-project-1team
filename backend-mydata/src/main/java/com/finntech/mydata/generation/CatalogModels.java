@@ -8,7 +8,15 @@ public final class CatalogModels {
     private CatalogModels() {}
 
     /**
-     * 소비맥락(contexts.json) 1건 = category2 → 7대분류 매핑 + 빈도·재량성 가중치.
+     * 소비맥락(contexts.json) 1건 = 거래를 현실적으로 만들기 위한 '무대'.
+     *
+     * <p><b>{@code ksicCode}가 소비 카테고리를 대신한다.</b> 예전에는 여기에 {@code category1}
+     * (7대분류)이 있어 그 값이 그대로 앱의 소비 카테고리가 됐다. 그러다 보니 한 축이
+     * "가맹점 업종"과 "사용자 소비 종류"를 겸해, 지하철이 '온라인' 대분류에 들어가는 왜곡이 났다.
+     * 이제 마이데이터는 <b>업종코드만</b> 넘기고, 소비 카테고리는 앱이 결정론 1:1 표로 붙인다.
+     *
+     * @param category2         맥락 이름. 상품·가맹점 풀을 고르는 키일 뿐, 앱에는 나가지 않는다
+     * @param ksicCode          KSIC 세분류 4자리. 이 맥락의 결제가 어느 업종에서 일어나는가
      * @param frequencyWeight   하루활동 방문확률 base(0..1)
      * @param discretionaryBase <b>재량성</b> base(0..1) = "생존필수인가?" 척도(낮음=필수, 높음=재량). <b>낭비성향이
      *                          아니다</b> — 무대(필수/재량) 판정·금액 분포에만 쓰고, 낭비확률에 직접 넣지 않는다(재량≠낭비).
@@ -16,7 +24,7 @@ public final class CatalogModels {
      * @param locationType      POI|ROUTE|VENUE_CLUSTER|NONE
      */
     public record CatalogContext(
-            String category2, String category1, String channel, String locationType,
+            String category2, String ksicCode, String channel, String locationType,
             double frequencyWeight, double discretionaryBase, String merchantSource) {}
 
     /** contexts.json 최상위 래퍼. */

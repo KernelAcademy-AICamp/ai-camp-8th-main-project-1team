@@ -21,11 +21,16 @@ import java.util.Random;
 public class CatalogSampler {
 
     private final Map<String, CatalogContext> ctxByCat2 = new LinkedHashMap<>();
-    private final Map<String, List<String>> cat2ByCat1 = new LinkedHashMap<>();     // 대분류 → category2들
-    private final Map<String, double[]> cat2Cumul = new LinkedHashMap<>();          // 대분류 → 누적 freq
+    private final Map<String, List<String>> cat2ByKsic = new LinkedHashMap<>();     // 업종코드 → 맥락들
+    private final Map<String, double[]> cat2Cumul = new LinkedHashMap<>();          // 업종코드 → 누적 freq
     private final Map<String, List<BrandEntry>> brands;
     private final Map<String, List<ProductEntry>> products;
+    /** KSIC 세분류 → 실제 상호. 키가 업종코드라 맥락이 바뀌어도 풀을 다시 가를 필요가 없다. */
     private final Map<String, List<String>> independents;
+    /** 우리 중분류 → 그 중분류에 속하며 맥락이 있는 업종코드들(midmap.json). */
+    private final Map<String, List<String>> ksicByMid;
+    /** 업종코드 → 그 업종 맥락들의 빈도가중 합. 중분류 비중을 업종별로 나눌 때 쓴다. */
+    private final Map<String, Double> freqByKsic = new LinkedHashMap<>();
     private final MerchantRegistry registry;
 
     @SuppressWarnings("unchecked")
@@ -33,12 +38,14 @@ public class CatalogSampler {
         this.registry = registry;
         this.brands = catalog.brands();
         this.products = catalog.products();
-        this.independents = (Map<String, List<String>>) catalog.independents().get("namePoolByCategory2");
+        this.independents = (Map<String, List<String>>) catalog.independents().get("namePoolByKsic");
+        this.ksicByMid = (Map<String, List<String>>) catalog.midmap().get("ksicByMid");
         Map<String, List<Double>> weights = new LinkedHashMap<>();
         for (CatalogContext c : catalog.contexts()) {
             ctxByCat2.put(c.category2(), c);
-            cat2ByCat1.computeIfAbsent(c.category1(), k -> new ArrayList<>()).add(c.category2());
-            weights.computeIfAbsent(c.category1(), k -> new ArrayList<>()).add(c.frequencyWeight());
+            cat2ByKsic.computeIfAbsent(c.ksicCode(), k -> new ArrayList<>()).add(c.category2());
+            weights.computeIfAbsent(c.ksicCode(), k -> new ArrayList<>()).add(c.frequencyWeight());
+            freqByKsic.merge(c.ksicCode(), c.frequencyWeight(), Double::sum);
         }
         for (var e : weights.entrySet()) {
             List<Double> w = e.getValue();
@@ -52,11 +59,34 @@ public class CatalogSampler {
 
     public CatalogContext context(String category2) { return ctxByCat2.get(category2); }
 
-    /** 대분류(예: 식비) 안에서 방문빈도 가중으로 category2(예: 한식) 선택. */
-    public String pickCategory2(String category1, Random r) {
-        List<String> cats = cat2ByCat1.get(category1);
+    /** 업종코드 목록 — 페르소나 가중이 이 위에서 돈다. */
+    public java.util.Set<String> ksicCodes() { return cat2ByKsic.keySet(); }
+
+    /** 중분류에 속하며 <b>맥락이 존재하는</b> 업종코드들. midmap.json이 원천이다. */
+    public List<String> ksicOf(String mid) {
+        List<String> codes = ksicByMid.get(mid);
+        return codes == null ? List.of() : codes;
+    }
+
+    /** 업종코드의 빈도가중 합 — 중분류 비중을 업종별로 배분할 때 쓴다. */
+    public double freqOf(String ksicCode) { return freqByKsic.getOrDefault(ksicCode, 0.0); }
+
+    /** 맥락의 상품 목록 — 업종 평균 단가를 실측할 때 쓴다. */
+    public List<ProductEntry> productsOf(String category2) {
+        List<ProductEntry> p = products.get(category2);
+        return p == null ? List.of() : p;
+    }
+
+    /**
+     * 업종코드(예: 5611 한식 음식점업) 안에서 방문빈도 가중으로 맥락(예: 한식) 선택.
+     *
+     * <p>예전에는 대분류(7개)를 받았다. 그 축이 소비 카테고리를 겸하고 있어서, 대분류를 손대면
+     * 생성과 판정이 함께 흔들렸다. 이제 업종코드로 묶으므로 소비 카테고리는 앱이 따로 붙인다.
+     */
+    public String pickCategory2(String ksicCode, Random r) {
+        List<String> cats = cat2ByKsic.get(ksicCode);
         if (cats == null || cats.isEmpty()) return null;
-        double[] cum = cat2Cumul.get(category1);
+        double[] cum = cat2Cumul.get(ksicCode);
         double x = r.nextDouble();
         for (int i = 0; i < cum.length; i++) if (x < cum[i]) return cats.get(i);
         return cats.get(cats.size() - 1);
@@ -84,6 +114,10 @@ public class CatalogSampler {
             default -> false; // INDEPENDENT
         };
 
+        // 독립 상호는 **업종코드**로 찾는다. 상호를 분류한 근거가 인허가 업태이고,
+        // 업태는 업종코드로 정리돼 있기 때문이다(scripts/ksic/ksic-mapping.tsv).
+        String ksic = ctx == null ? null : ctx.ksicCode();
+
         String base;         // 정규 신원의 이름 부분(정식 브랜드명 또는 독립상호)
         String display;      // 결제 명세서 표시상호(forms 노이즈·동점 포함 가능)
         boolean branchable = false;
@@ -92,8 +126,8 @@ public class CatalogSampler {
             base = b.name();
             branchable = b.branchable();
             display = displayName(b, branchable, anchor, r);
-        } else if (hasIndependents(category2)) {
-            base = pick(independents.get(category2), r);
+        } else if (hasIndependents(ksic)) {
+            base = pick(independents.get(ksic), r);
             display = base;
         } else if (hasBrands(category2)) {
             BrandEntry b = pick(brands.get(category2), r);
@@ -126,7 +160,12 @@ public class CatalogSampler {
 
     // ── 내부 ──
     private boolean hasBrands(String c) { List<BrandEntry> b = brands.get(c); return b != null && !b.isEmpty(); }
-    private boolean hasIndependents(String c) { List<String> i = independents.get(c); return i != null && !i.isEmpty(); }
+    /** 업종코드로 조회한다. 맥락에 코드가 없으면(비정상) 브랜드 쪽으로 흐르게 false. */
+    private boolean hasIndependents(String ksic) {
+        if (ksic == null) return false;
+        List<String> i = independents.get(ksic);
+        return i != null && !i.isEmpty();
+    }
 
     /**
      * 결제 명세서 표시상호: branchable면 "브랜드 {동}점"(앵커 동), 아니면 표기 변형(forms) 중 택.
