@@ -39,6 +39,13 @@ class GuardianFlowTest {
     /** 고정 시각 — 오후 2시(야간 침묵에 걸리지 않는 시간대). */
     static final LocalDateTime REF = LocalDateTime.of(2026, 8, 3, 14, 0, 0);
 
+    /**
+     * 30일 챌린지의 기준 지출 — 배달 750,000원(25,000 × 10건 × 3개월)을
+     * 관측한 5·6·7월의 실제 일수(31+30+31 = 92일)로 나눈 뒤 30일을 곱한 값.
+     * 월평균(250,000원)을 그대로 쓰면 관측 달의 길이가 챌린지 예산에 새어 들어간다.
+     */
+    static final long BASELINE_30D = 750_000L * 30 / 92;   // 244,565
+
     @TestConfiguration
     static class FixedClockConfig {
         @Bean
@@ -97,10 +104,13 @@ class GuardianFlowTest {
                 List.of("GTEST_DELIVERY"), List.of(), 100_000L, "에어팟", 179_000L, 30);
         challengeId = ch.getId();
 
-        assertEquals(250_000L, ch.getBaselineAmount(), "월평균 250,000원");
+        // 기준 지출은 월평균이 아니라 **챌린지 일수로 환산한 값**이다.
+        // 배달 25,000원 × 10건 × 3개월 = 750,000원을 5·6·7월(31+30+31 = 92일)로 나눠
+        // 하루 8,152원, 30일이면 244,565원. 관측한 달이 무엇이든 같은 습관이면 같은 값이 나온다.
+        assertEquals(BASELINE_30D, ch.getBaselineAmount(), "750,000원 ÷ 92일 × 30일");
         assertEquals(100_000L, ch.getTargetSaving());
-        assertEquals(150_000L, ch.getChallengeCap(), "한도 = 기준 지출 − 지킬 돈");
-        assertEquals(0.167, ch.getBufferRatio(), 1e-9, "버퍼 = 25,000/150,000 반올림");
+        assertEquals(BASELINE_30D - 100_000L, ch.getChallengeCap(), "한도 = 기준 지출 − 지킬 돈");
+        assertEquals(0.173, ch.getBufferRatio(), 1e-9, "버퍼 = 25,000/한도 반올림");
         assertEquals(30, ch.getDaysTotal());
         assertEquals(ChallengeState.ACTIVE, ch.getState());
     }
@@ -124,14 +134,16 @@ class GuardianFlowTest {
         assertEquals(TxState.COUNTED, r.transaction().getState());
         assertEquals(REF.plusHours(24), r.transaction().getUndoDeadline());
         assertEquals(32_000L, r.snapshot().spentAmount());
-        assertEquals(118_000L, r.snapshot().remainingCap());
+        assertEquals(BASELINE_30D - 100_000L - 32_000L, r.snapshot().remainingCap());
         assertEquals(100_000L, r.snapshot().securedSaving(), "아직 지킬 돈은 온전하다");
 
         assertNotNull(r.notification());
         assertEquals("C1", r.notification().getCaseId());
         assertEquals(PhrasingMode.TENTATIVE, r.notification().getPhrasingMode(),
                 "되돌릴 수 있는 결제라 조건부 화법이어야 한다");
-        assertTrue(r.notification().getBody().contains("118,000"), "이미 계산된 숫자가 문장에 들어간다");
+        String remaining = String.format("%,d", BASELINE_30D - 100_000L - 32_000L);
+        assertTrue(r.notification().getBody().contains(remaining),
+                "이미 계산된 숫자가 문장에 들어간다 — 본문: " + r.notification().getBody());
     }
 
     @Test
@@ -222,7 +234,7 @@ class GuardianFlowTest {
         // 스냅샷이 없으면 "왜 그날 그랬지"를 나중에 답할 수 없다
         assertTrue(v.getPaceRatio() > 0, "판정 당시 페이스가 박제돼야 한다");
         assertTrue(v.getAllowedRatio() > v.getPaceRatio(), "허용선 = 페이스 + 버퍼");
-        assertEquals(v.getPaceRatio() + 0.167, v.getAllowedRatio(), 1e-9);
+        assertEquals(v.getPaceRatio() + 0.173, v.getAllowedRatio(), 1e-9);
 
         if (v.isGrantObject()) {
             assertNotNull(v.getGradeWeights());
@@ -255,6 +267,53 @@ class GuardianFlowTest {
         assertNotNull(h.items());
         assertFalse(h.grass().isEmpty(), "잔디는 판정 이력에서 나온다");
         assertTrue(h.demoMode(), "가상 시계를 밀었으므로 데모 모드");
+    }
+
+    @Test
+    @Order(101)
+    @DisplayName("종료일을 넣어도 미리 정산되지 않는다 — 1일차 완주 보상 구멍")
+    void cannotSettleEarlyByPassingEndDate() {
+        GuardianChallenge ch = challengeRepository.findById(challengeId).orElseThrow();
+
+        // 예전에는 이 한 번의 호출로 최종 정산에 들어갔다. 집계 지출이 0이면 달성률이 1.0이라
+        // (설계서 §1: 확보 절약액 = min(지킬 돈, 기준 지출 − 0) = 지킬 돈)
+        // 한 푼도 아끼지 않고 SUCCESS + 완주 100P를 받았다. 인증은 ?userId= 뿐이었다.
+        assertThrows(ResponseStatusException.class,
+                () -> batchService.runDaily(userId, ch.getEndDate()),
+                "아직 오지 않은 종료일은 판정 대상이 아니다");
+
+        assertTrue(challengeRepository.findById(challengeId).orElseThrow().isRunning(),
+                "챌린지는 그대로 진행 중이어야 한다");
+    }
+
+    @Test
+    @Order(102)
+    @DisplayName("챌린지 시작 전 날짜는 판정하지 않는다 — 없던 날에 사물이 지급되던 구멍")
+    void doesNotJudgeBeforeStart() {
+        GuardianChallenge ch = challengeRepository.findById(challengeId).orElseThrow();
+        long before = verdictRepository.count();
+
+        GuardianBatchService.BatchResult r = batchService.runDaily(userId, ch.getStartDate().minusDays(1));
+
+        assertNull(r.verdict(), "설계서 §2 — 시작 전이면 판정하지 않는다");
+        assertEquals(before, verdictRepository.count(), "판정이 저장되면 안 된다");
+    }
+
+    @Test
+    @Order(103)
+    @DisplayName("챌린지 기간 밖의 거래는 한도를 태우지 않는다")
+    void ignoresTransactionsOutsideChallengeWindow() {
+        GuardianChallenge ch = challengeRepository.findById(challengeId).orElseThrow();
+        long spentBefore = ch.getSpentAmount();
+
+        // 2년 전 결제. 예전에는 발생일을 보지 않아 이 한 건으로도 한도가 깎였다.
+        GuardianService.IngestResult r = guardianService.ingest(userId, new GuardianService.IngestCommand(
+                ch.getStartDate().minusYears(2).atTime(19, 0), "우아한형제들", "배달의민족",
+                90_000L, "5812", "GTEST_DELIVERY", 0.99, TxType.EXPENSE, true, null));
+
+        assertEquals(TxState.EXCLUDED, r.transaction().getState());
+        assertEquals(spentBefore, challengeRepository.findById(challengeId).orElseThrow().getSpentAmount(),
+                "기간 밖 거래는 집계에 들어가지 않는다");
     }
 
     @Test

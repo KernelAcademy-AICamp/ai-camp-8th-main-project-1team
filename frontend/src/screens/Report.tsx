@@ -38,7 +38,8 @@ export function Report() {
             <div className="cap">지금 지키고 있는 돈</div>
             <div className="big">{won(ch.securedSaving)}</div>
             <div className="sub">
-              지킬 돈 {won(ch.targetSaving)} 중 {pctNum(ch.achievementRate)}% 달성 · {ch.categoryLabel}
+              {/* '달성'이 아니라 '지키는 중'이다 — Home.tsx의 히어로 주석 참고. */}
+              지킬 돈 {won(ch.targetSaving)} 중 {pctNum(ch.achievementRate)}% 지키는 중 · {ch.categoryLabel}
               {ch.daysLeft > 0 ? ` · D-${ch.daysLeft}` : ''}
             </div>
           </div>

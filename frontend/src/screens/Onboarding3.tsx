@@ -55,6 +55,10 @@ export function Onboarding3() {
     draft.cutCats.length > 0 && draft.cutCats.every((n) => (draft.intensities[n] ?? DEFAULT_INTENSITY) === t.value));
   // 서버는 지킬 돈이 기준 지출보다 **작을 것**을 요구한다(한도가 0원이 되는 챌린지는 만들지 않는다).
   // 반올림 때문에 소액 카테고리에서 둘이 같아질 수 있어 한 칸 낮춰 둔다.
+  //
+  // 서버의 기준 지출은 월평균을 **챌린지 일수로 환산**한 값이라 여기 월평균과 살짝 다르다.
+  // 환산비가 가장 불리한 경우(관측 달이 전부 31일)에도 30/31 ≈ 0.968이고 강도 상한은
+  // INTENSITY_MAX(0.9)이므로, 여기서 만든 지킬 돈이 서버 기준을 넘어 400이 될 일은 없다.
   const baselineTotal = draft.cutCats.reduce((s, n) => s + baseOf(n), 0);
   const rawTotal = draft.cutCats.reduce(
     (s, n) => s + Math.round(baseOf(n) * (draft.intensities[n] ?? DEFAULT_INTENSITY)), 0);

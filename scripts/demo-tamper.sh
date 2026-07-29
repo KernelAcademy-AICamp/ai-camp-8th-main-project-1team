@@ -17,14 +17,50 @@ API="${API:-http://localhost:8080}"
 DB_URL="jdbc:h2:file:./backend/data/finntech;MODE=MySQL;AUTO_SERVER=TRUE"
 SEQ="${SEQ:-1}"
 
-H2JAR=$(find ~/.m2/repository/com/h2database -name "h2-*.jar" 2>/dev/null | head -1)
-if [[ -z "$H2JAR" ]]; then
-  echo "h2 jar를 찾을 수 없습니다. 먼저 빌드하세요: (cd backend && ./mvnw -q package -DskipTests)" >&2
-  exit 1
+# 어느 DB를 보는가 — 기본은 dev-up.sh 의 H2 파일이고, 운영·로컬 MySQL이면 DB=mysql 을 준다.
+#
+#   DB=mysql API=http://localhost:8090 ./scripts/demo-tamper.sh break         # 로컬 MySQL
+#   DB=mysql MYSQL_CMD="docker exec -i app-mysql-1 mysql -uroot -pPW" ...     # 서버(컨테이너)
+#
+# 왜 필요한가: 이 시연은 H2 전제로 쓰였는데 운영은 MySQL이다. 그대로 돌리면 UPDATE가
+# **0행에 적용되고도 조용히 통과**해, 변조가 안 됐는데 "탐지 실패"로 오해하게 된다.
+DB="${DB:-h2}"
+
+if [[ "$DB" == "mysql" ]]; then
+  # MYSQL_CMD 를 주면 그 명령을 그대로 쓴다(서버처럼 클라이언트가 컨테이너 안에 있을 때).
+  if [[ -n "${MYSQL_CMD:-}" ]]; then
+    sql() { echo "$1" | $MYSQL_CMD "${DB_NAME:-finntech}" 2>/dev/null; }
+  else
+    MYSQL_BIN="${MYSQL_BIN:-$HOME/Downloads/mysql-local/mysql-9.7.1-macos15-arm64/bin}"
+    MYSQL_SOCKET="${MYSQL_SOCKET:-$HOME/Downloads/mysql-local/mysql.sock}"
+    sql() {
+      "$MYSQL_BIN/mysql" -u "${DB_ROOT_USER:-root}" --socket="$MYSQL_SOCKET" \
+        --default-character-set=utf8mb4 -N -B "${DB_NAME:-finntech}" -e "$1"
+    }
+  fi
+else
+  H2JAR=$(find ~/.m2/repository/com/h2database -name "h2-*.jar" 2>/dev/null | head -1)
+  if [[ -z "$H2JAR" ]]; then
+    echo "h2 jar를 찾을 수 없습니다. 먼저 빌드하세요: (cd backend && ./mvnw -q package -DskipTests)" >&2
+    exit 1
+  fi
+  sql() { java -cp "$H2JAR" org.h2.tools.Shell -url "$DB_URL" -user sa -password "" -sql "$1"; }
 fi
 
-sql() { java -cp "$H2JAR" org.h2.tools.Shell -url "$DB_URL" -user sa -password "" -sql "$1"; }
-sql_value() { sql "$1" 2>/dev/null | grep -oE '^[0-9a-f]{64}' | head -1; }
+# 변조가 정말 적용됐는지 확인한다 — 0행이면 시연이 성립하지 않는다.
+#
+# ROW_COUNT()로는 못 본다. sql() 이 문장마다 새 연결을 열어서, 그 값은 세션이 달라 늘 0이다.
+# 그래서 데이터를 직접 본다. LIKE 는 기본 콜레이션이 대소문자를 구분하지 않아
+# `"userID"` 가 `"userId"` 에도 걸린다 — **BINARY 비교**여야 한다.
+assert_tampered() {
+  [[ "$DB" == "mysql" ]] || return 0
+  local n
+  n=$(sql "select count(*) from audit_log where seq = $SEQ and payload_json like binary '%\"userID\"%';" \
+        2>/dev/null | grep -oE '^[0-9]+' | head -1)
+  [[ "${n:-0}" -ge 1 ]] && return 0
+  echo "  ✗ 변조가 적용되지 않았다 — seq=$SEQ 엔트리가 없거나 다른 DB를 보고 있다" >&2
+  return 1
+}
 
 verify() {
   echo "--- /api/audit/verify ---"
@@ -43,6 +79,7 @@ case "${1:-verify}" in
   break)
     echo "[계층 1 시연] seq=$SEQ 페이로드를 직접 UPDATE"
     sql "update audit_log set payload_json = replace(payload_json, '\"userId\"', '\"userID\"') where seq = $SEQ;"
+    assert_tampered || exit 1
     verify
     ;;
   restore)
