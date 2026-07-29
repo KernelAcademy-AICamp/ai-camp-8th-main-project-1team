@@ -36,6 +36,14 @@ function Menu({ items, onGo }: { items: Item[]; onGo: (id: ScreenId) => void }) 
   );
 }
 
+/** 함께한 날수로 부르는 이름. 숫자만 있으면 그냥 카운터고, 이름이 붙어야 자란다는 느낌이 든다. */
+function tierName(days: number): string {
+  if (days >= 90) return '고참';
+  if (days >= 30) return '든든한';
+  if (days >= 7) return '새싹';
+  return '갓 만난';
+}
+
 export function My() {
   const { go, userId, resetOnboarding } = useSession();
   const { home } = useGuardian();
@@ -44,7 +52,33 @@ export function My() {
   return (
     <Screen title="마이" hasTabBar>
       <Scroll><div className="pad" style={{ paddingTop: 20 }}>
-        <p style={{ fontSize: 21, fontWeight: 800, margin: '0 0 14px' }}>마이</p>
+        <p style={{ fontSize: 22, fontWeight: 700, margin: '0 0 10px' }}>마이</p>
+
+        {/* 프로필 · 요약 (개편안 `.profile` / `.stat-row`)
+            "함께한 지 N일"은 챌린지 시작일에서 센다 — 가입일은 서버가 내려주지 않고,
+            사용자에게 의미 있는 것도 '지킴이와 함께한 날'이다. */}
+        <div className="profile">
+          <Orb size={44} bob />
+          <div>
+            <b>{ch ? '지킴이와 함께' : '반가워요'}</b>
+            <br />
+            <span>
+              {ch ? `함께한 지 ${ch.daysElapsed}일, ${tierName(ch.daysElapsed)} 지킴이` : '이번 챌린지를 정하면 시작돼요'}
+            </span>
+          </div>
+        </div>
+        <div className="stat-row">
+          <div className="stat">
+            <div className="k">진행 중 챌린지</div>
+            <div className="v">{ch ? `${ch.categories.length}개` : '0개'}</div>
+          </div>
+          <div className="stat">
+            <div className="k">보호 중인 성역</div>
+            <div className="v" style={{ color: 'var(--green)' }}>
+              {ch ? `${ch.sanctuaryCategories.length}개` : '0개'}
+            </div>
+          </div>
+        </div>
 
         {/* 지킴이 요약 — 누르면 마이룸(성장 상세)으로 */}
         <button type="button" className="strip" style={{ padding: '16px 18px' }} onClick={() => go('myroom')}>
