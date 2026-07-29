@@ -187,7 +187,10 @@ public class MyDataService {
                 for (int i = 0; i < n; i++) {
                     LocalDateTime when = d.atTime(8 + rng.nextInt(14), rng.nextInt(60));
                     if (when.isAfter(now)) continue;
-                    long amount = (3 + rng.nextInt(13)) * 10_000L;   // 30,000~150,000원
+                    // 3,000~30,000원 · 1,000원 단위. 개인이 앱으로 보내는 송금의 실제 크기다.
+                    // (단위를 10,000원으로 잘못 두면 한 건이 3~15만원이 되고, 입금은 이 합계의
+                    //  88~96%로 역산되므로 입금까지 수십만원으로 함께 부풀어 오른다.)
+                    long amount = (3 + rng.nextInt(28)) * 1_000L;
                     spent += amount;
                     outs.add(new AccountTxnView(when, "WITHDRAWAL", amount,
                             randomName(rng), CHANNELS[rng.nextInt(CHANNELS.length)], 0));
@@ -205,7 +208,9 @@ public class MyDataService {
             // 정기적인 관계(가족 송금·고정 정산)로 읽히지 않는다.
             // 비고는 급여와 같은 펌뱅킹 — 매달 같은 날 같은 사람이 보내는 정기 이체는
             // 실제로도 펌뱅킹으로 처리된다. 채널이 달마다 바뀌면 일회성 송금처럼 보인다.
-            long big = Math.min(target / 2, (30 + rng.nextInt(71)) * 10_000L); // 300,000~1,000,000원
+            // 30,000~300,000원 · 1만원 단위. 상한(target/2)에 걸리면 끝수가 남으므로 1만원 아래로 버린다
+            // — 버리지 않으면 `204,997원` 같은 값이 나와 사람이 보낸 송금으로 읽히지 않는다.
+            long big = Math.min(target / 2, (3 + rng.nextInt(28)) * 10_000L) / 10_000L * 10_000L;
             LocalDate bigDay = ym.atDay(1 + rng.nextInt(days));
             LocalDateTime bigAt = bigDay.atTime(10 + rng.nextInt(9), rng.nextInt(60));
             if (!bigDay.isBefore(a.getOpenedDate()) && !bigAt.isAfter(now) && big > 0) {
