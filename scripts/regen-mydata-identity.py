@@ -74,12 +74,53 @@ def make_identity(old_ci: str, salt: int = 0):
     rng = random.Random(int(old_ci[:16], 16) + salt)
     name = rng.choice(SURNAMES) + rng.choice(GIVEN1) + rng.choice(GIVEN2)
     birth = BIRTH_START + timedelta(days=rng.randrange(SPAN + 1))
-    # 주민번호 뒤 첫 자리: 1900년대생 1(남)/2(여), 2000년대생 3(남)/4(여)
-    gender = rng.randrange(2)
-    g = (1 if birth.year < 2000 else 3) + gender
-    social7 = f"{birth:%y%m%d}{g}"
+    social7 = social7_of(birth, rng.randrange(2))
     phone = "010" + "".join(str(rng.randrange(10)) for _ in range(8))
     return name, social7, phone, ci_of(name, social7, phone)
+
+
+def social7_of(birth: date, gender: int) -> str:
+    """주민번호 앞 7자리. 뒤 첫 자리는 1900년대생 1(남)/2(여), 2000년대생 3(남)/4(여)."""
+    return f"{birth:%y%m%d}{(1 if birth.year < 2000 else 3) + gender}"
+
+
+def birth_year_of(social7: str) -> int:
+    """앞 7자리에서 출생연도를 읽는다(성별세대코드가 세기를 정한다)."""
+    century = 1900 if social7[6] in "12" else 2000
+    return century + int(social7[:2])
+
+
+# ── 생년만 옮기는 모드 (--rebirth) ────────────────────────────────────────────
+# 타깃이 20~30대 직장인인데 생성 데이터가 1970년생까지 내려가 기획과 어긋났다.
+# 그렇다고 전체를 다시 만들면 이름·전화번호까지 바뀌어 **모든 사람의 로그인 정보가 무효**가 된다.
+# 그래서 범위 밖인 사람만, 이름·전화번호는 그대로 두고 **생년월일만** 범위 안으로 옮긴다.
+# 범위 안이던 사람은 CI가 그대로라 아무 영향이 없다.
+REBIRTH_MIN, REBIRTH_MAX = 1987, 2006
+
+
+def reborn_identity(old_ci: str, name: str, social7: str, phone: str, salt: int = 0):
+    """
+    범위 밖이면 생년월일만 새로 뽑아 돌려준다. 범위 안이면 None.
+
+    새 날짜는 **기존 CI를 시드로** 뽑으므로 로컬과 서버에서 각각 돌려도 같은 결과가 나온다
+    (마스터 §4 원칙 3). 월·일과 성별은 원래 값을 유지해 사람이 통째로 바뀐 느낌을 줄인다.
+    """
+    year = birth_year_of(social7)
+    if REBIRTH_MIN <= year <= REBIRTH_MAX:
+        return None
+    rng = random.Random(int(old_ci[16:32], 16) + salt)     # 앞 16자리는 이름 생성이 이미 썼다
+    new_year = rng.randrange(REBIRTH_MIN, REBIRTH_MAX + 1)
+    month, day = int(social7[2:4]), int(social7[4:6])
+    # 2/29 같은 날짜가 평년으로 옮겨가면 존재하지 않는다 — 하루 당긴다.
+    while True:
+        try:
+            birth = date(new_year, month, day)
+            break
+        except ValueError:
+            day -= 1
+    gender = (int(social7[6]) - 1) % 2                      # 1·3=남(0), 2·4=여(1)
+    new_s7 = social7_of(birth, gender)
+    return new_s7, ci_of(name, new_s7, phone)
 
 
 def mysql(sql: str, db: str = "", capture: bool = True):
@@ -115,24 +156,54 @@ def main():
     ap.add_argument("--apply", action="store_true", help="실제로 DB를 바꾼다")
     ap.add_argument("--dry-run", action="store_true", help="매핑만 계산하고 끝낸다")
     ap.add_argument("--samples", type=int, default=10, help="출력할 로그인 표본 수")
+    ap.add_argument("--rebirth", action="store_true",
+                    help=f"신원을 새로 만들지 않고 생년만 {REBIRTH_MIN}~{REBIRTH_MAX}년으로 옮긴다")
     args = ap.parse_args()
 
-    rows = [l.split("\t") for l in mysql(
-        "select mydata_user_id, mydata_user_persona, mydata_user_data_split "
-        "from finntech_mydata.mydata_user order by mydata_user_id"
-    ).splitlines() if l.strip()]
-    print(f"대상 사용자 {len(rows):,}명")
+    if args.rebirth:
+        rows = [l.split("\t") for l in mysql(
+            "select mydata_user_id, mydata_user_persona, mydata_user_data_split, "
+            "       mydata_user_name, substr(mydata_user_social_number,1,7), mydata_user_phone_number "
+            "from finntech_mydata.mydata_user order by mydata_user_id"
+        ).splitlines() if l.strip()]
+        print(f"전체 사용자 {len(rows):,}명 · 목표 범위 {REBIRTH_MIN}~{REBIRTH_MAX}년생")
 
-    mapping, used = [], set()
-    for old_ci, persona, split in rows:
-        salt = 0
-        while True:
-            name, social7, phone, new_ci = make_identity(old_ci, salt)
-            if new_ci not in used:
-                break
-            salt += 1          # 충돌은 사실상 없지만(전화 8자리 난수) 방어한다
-        used.add(new_ci)
-        mapping.append((old_ci, new_ci, name, social7, phone, persona, split))
+        mapping, used, kept = [], set(), 0
+        for old_ci, persona, split, name, social7, phone_disp in rows:
+            phone = phone_disp.replace("-", "")            # CI는 하이픈 없는 번호로 계산한다
+            salt = 0
+            while True:
+                out = reborn_identity(old_ci, name, social7, phone, salt)
+                if out is None:
+                    break
+                if out[1] not in used:
+                    break
+                salt += 1
+            if out is None:
+                kept += 1
+                used.add(old_ci)                           # 그대로 두는 사람도 중복 검사에 넣는다
+                continue
+            new_s7, new_ci = out
+            used.add(new_ci)
+            mapping.append((old_ci, new_ci, name, new_s7, phone, persona, split))
+        print(f"  범위 안이라 그대로 두는 사람 {kept:,}명 · 생년을 옮기는 사람 {len(mapping):,}명")
+    else:
+        rows = [l.split("\t") for l in mysql(
+            "select mydata_user_id, mydata_user_persona, mydata_user_data_split "
+            "from finntech_mydata.mydata_user order by mydata_user_id"
+        ).splitlines() if l.strip()]
+        print(f"대상 사용자 {len(rows):,}명")
+
+        mapping, used = [], set()
+        for old_ci, persona, split in rows:
+            salt = 0
+            while True:
+                name, social7, phone, new_ci = make_identity(old_ci, salt)
+                if new_ci not in used:
+                    break
+                salt += 1      # 충돌은 사실상 없지만(전화 8자리 난수) 방어한다
+            used.add(new_ci)
+            mapping.append((old_ci, new_ci, name, social7, phone, persona, split))
 
     # 자기검증 — 만든 CI가 정말 로그인 식과 일치하는가
     bad = [m for m in mapping if ci_of(m[2], m[3], m[4]) != m[1]]
@@ -185,8 +256,14 @@ def main():
           set u.mydata_user_id=m.new_ci, u.mydata_user_name=m.nm,
               u.mydata_user_social_number=concat(m.s7,'******'),
               u.mydata_user_phone_number=concat(substr(m.ph,1,3),'-',substr(m.ph,4,4),'-',substr(m.ph,8,4));
+        -- 앱 쪽은 CI와 함께 **출생연도도** 옮긴다. 본인인증 때 주민번호 앞 7자리에서 뽑아 저장한
+        -- 값이라(AuthService.birthYearOf), 신원이 바뀌면 같이 바뀌어야 한다.
+        -- 이 값이 낡으면 금융상품 나이 자격 비교가 옛 나이로 판정된다.
         update finntech.app_user a join finntech_migrate.ci_map m
-          on a.ci=m.old_ci set a.ci=m.new_ci;
+          on a.ci=m.old_ci
+          set a.ci=m.new_ci,
+              a.birth_year = (case when substr(m.s7,7,1) in ('1','2') then 1900 else 2000 end)
+                             + cast(substr(m.s7,1,2) as unsigned);
         set foreign_key_checks=1;
     """)
     print("  mydata_user · mydata_card · mydata_account · app_user 갱신")
