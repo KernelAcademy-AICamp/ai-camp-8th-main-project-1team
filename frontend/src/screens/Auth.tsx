@@ -33,23 +33,18 @@ const CARRIERS = ['SKT', 'KT', 'LG U+', '알뜰폰'];
  * 여기서는 사유에 맞는 문장을 고르기만 한다.
  */
 function failureMessage(r: VerifyResult): string {
+  const KTOA = '[한국통신사업자연합회]';
   switch (r.reason) {
+    // 번호 자체가 실존하지 않는다 — 신원 대조 이전 단계라 다른 문장을 쓴다.
     case 'UNASSIGNED_EXCHANGE':
-      return '실존하지 않는 번호예요. 가운데 4자리를 다시 확인해 주세요.';
-    case 'NAME_MISMATCH':
-      return '이 번호의 명의자와 이름이 달라요. 이름을 다시 확인해 주세요.';
-    case 'SOCIAL_MISMATCH':
-      return '이 번호의 명의자와 주민등록번호가 달라요. 앞 7자리를 다시 확인해 주세요.';
-    case 'NAME_AND_SOCIAL_MISMATCH':
-      return '이 번호의 명의자와 이름·주민등록번호가 모두 달라요.';
-    case 'PHONE_OWNED_BY_OTHER':
-      return '입력하신 휴대폰 번호가 다른 분 명의로 등록되어 있어요.';
-    case 'PHONE_MISMATCH':
-      return '등록된 휴대폰 번호와 달라요. 번호를 다시 확인해 주세요.';
+      return `${KTOA} 실존하지 않는 번호입니다. 가운데 4자리를 다시 확인해 주세요.`;
+    // 통신사만 다르다 — 무엇이 다른지 짚어줄 수 있는 유일한 경우다.
     case 'CARRIER_MISMATCH':
-      return `[한국통신사업자연합회] 입력하신 정보는 ${r.actualCarrier} 관리 대역입니다. 통신사를 다시 골라주세요.`;
+      return `${KTOA} 입력하신 정보는 ${r.actualCarrier} 관리 대역입니다. 통신사를 다시 골라주세요.`;
+    // 이름·주민번호·번호 중 무엇이 어긋나든 같은 문장으로 답한다.
+    // 어느 항목이 틀렸는지 알려주면 남의 신원을 하나씩 맞춰볼 수 있게 되기 때문이다.
     default:
-      return '입력하신 정보로 가입된 회원을 찾을 수 없어요.';
+      return `${KTOA} 신원 정보가 불일치합니다. 이름·주민등록번호·휴대폰 번호를 다시 확인해 주세요.`;
   }
 }
 
