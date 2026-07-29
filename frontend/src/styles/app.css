@@ -1,59 +1,51 @@
 /*
- * MOA 디자인 시스템 — reference/MOA_UI_0729(2).html 의 스타일을 정본으로 옮긴 것.
+ * MOA 디자인 시스템 — reference/MOA_UI_0729(2).html 의 **디자인**을 옮긴 것.
  *
- * 디자이너가 준 개편안이 곧 이 파일이다. 토큰(브랜드 그린 #00B14F·웜 크림 배경)·컴포넌트·모션을
- * 그대로 쓴다. 임의로 값을 바꾸지 않는다 — 바꿔야 하면 원본 html 부터 고친다.
+ * <b>옮긴 것과 안 옮긴 것을 가른다.</b> 개편안은 375×812 폰 프레임을 검정 배경에 늘어놓는
+ * 프로토타입이다. 색·타이포·컴포넌트 생김새·모션은 그것이 정본이지만, **레이아웃 전제는 아니다** —
+ * `.phone`(375×812 프레임)·`.notch`·`.statusbar`·개발 보드 배경은 옮기지 않았고,
+ * 화면을 프레임에 가두던 `position:absolute; inset:0`은 문서 흐름으로 되돌렸다.
+ *
+ * 이 앱은 <b>반응형 웹</b>이다. 넓은 화면에서는 본문이 가운데 열(토큰 --col: 440→520→560px)로
+ * 서고 하단 탭은 떠 있는 알약이 되며, 좁은 화면에서는 화면 전체를 쓴다.
+ * 폰 모양을 그리지 않는다 — 그건 브라우저와 기기가 할 일이다.
+ *
+ * 접근성·반응형 기반(:focus-visible·@media·명도 대비 토큰)은 styles/tokens.css 가 정본이다.
  */
-
-:root{
-  /* A안 웜 코지: 브랜드=세이지 그린, 배경=웜 크림 (변수명은 호환을 위해 유지) */
-  --blue:#00B14F; --blue-dark:#163300; --blue-weak:#E2F6D5;
-  --bg:#F8F9FA; --card:#FFFFFF; --line:#E9ECEF;
-  --t1:#0E0F0C; --t2:#454745; --t3:#868685;
-  --green:#00B14F; --green-weak:#E2F6D5;
-  --red:#D03238; --amber:#E68A2E;
-  --radius:20px; --radius-sm:12px;
-}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;}
+/* 개편안의 body는 **검정 배경에 폰 프레임을 늘어놓는 프로토타입 보드**였다
+   (`background:#0d0f12` · `display:flex` · `padding:36px`). 실제 서비스는 그 프레임이 곧 화면이다. */
 body{
-  font-family:'Pretendard','Pretendard Variable',-apple-system,sans-serif;
+  font-family:'Pretendard','Pretendard Variable',-apple-system,BlinkMacSystemFont,
+    'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   word-break:keep-all;letter-spacing:-0.04em;
-  background:#0d0f12;color:var(--t1);
-  display:flex;flex-wrap:wrap;gap:28px;justify-content:center;
-  padding:36px 20px;min-height:100vh;
+  background:var(--bg);color:var(--t1);
+  min-height:100dvh;
 }
-.board-head{width:100%;text-align:center;color:#fff;margin-bottom:4px;}
-.board-head h1{font-size:22px;margin:0 0 6px;}
-.board-head p{margin:0;color:#9aa4b2;font-size:14px;}
 
-/* ---- phone frame ---- */
-.phone{
-  width:375px;height:812px;background:var(--bg);
-  border-radius:44px;position:relative;overflow:hidden;
-  box-shadow:0 0 0 11px #1c1f24, 0 0 0 13px #2b2f36, 0 30px 60px rgba(0,0,0,.5);
-  flex:0 0 auto;
-}
-.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);
-  width:150px;height:30px;background:#1c1f24;border-radius:0 0 18px 18px;z-index:60;}
-.statusbar{position:absolute;top:0;left:0;right:0;height:48px;z-index:55;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:16px 28px 0;font-size:13px;font-weight:600;color:var(--t1);}
+/* 폰 프레임·노치·상태바(.phone/.notch/.statusbar)는 프로토타입 크롬이라 옮기지 않는다.
+   실제 서비스에서는 브라우저가 그 역할을 한다. */
 
 /* ---- screens ---- */
-.screen{position:absolute;inset:0;display:none;flex-direction:column;
-  padding-top:48px;background:var(--bg);}
-.screen.active{display:flex;}
-.scroll{flex:1;overflow-y:auto;overflow-x:hidden;}
-.scroll::-webkit-scrollbar{display:none;}
-.appbar{height:52px;display:flex;align-items:center;padding:0 8px;gap:4px;flex:0 0 auto;background:var(--bg);}
+/* 화면은 문서 흐름을 탄다. 개편안은 폰 프레임 안을 `absolute;inset:0`으로 채우고 상태바 높이만큼
+   위를 비웠지만(padding-top:48px), 실제 웹에서는 그러면 뷰포트에 갇혀 스크롤이 죽는다. */
+.screen{display:flex;flex-direction:column;min-height:100dvh;background:var(--bg);}
+/* 하단 탭이 있는 화면은 탭 높이만큼 바닥을 비운다(노치 안전영역 포함). */
+.screen.has-tabbar{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));}
+/* 목업의 .scroll = 스크롤 영역. 웹에서는 문서가 스크롤하므로 폭만 맡는다. */
+.scroll{flex:1;width:100%;}
+.appbar{position:sticky;top:0;z-index:30;height:52px;display:flex;align-items:center;gap:4px;
+  flex:0 0 auto;background:var(--bg);width:100%;max-width:var(--col);margin:0 auto;
+  padding:0 calc(var(--pad-x) - 16px);}
 .appbar .back{width:40px;height:40px;border:none;background:none;font-size:22px;color:var(--t1);cursor:pointer;border-radius:12px;}
 .appbar .back:active{background:#F1F3F5;}
 .appbar .title{font-size:16px;font-weight:600;}
 .appbar .steps{margin-left:auto;font-size:13px;color:var(--t3);padding-right:14px;font-weight:600;}
 .progress{height:4px;background:var(--line);flex:0 0 auto;}
 .progress > i{display:block;height:100%;background:var(--blue);transition:width .4s cubic-bezier(.2,.8,.2,1);}
-.pad{padding:12px 24px 28px;}
+/* 본문 열 — 개편안의 좌우 24px 여백을 반응형 폭으로 감싼다(토큰의 --col 단계). */
+.pad{width:100%;max-width:var(--col);margin:0 auto;padding:12px var(--pad-x) 28px;}
 .h-title{font-size:25px;font-weight:700;line-height:1.3;margin:20px 0 12px;}
 .h-sub{font-size:15px;color:var(--t2);line-height:1.5;margin:0 0 28px;}
 .label{font-size:12px;color:var(--t3);font-weight:700;margin:28px 0 12px;}
@@ -65,8 +57,10 @@ body{
 .btn-primary{background:var(--blue);color:#fff;}
 .btn-primary:disabled{background:#B9E4CC;color:#fff;cursor:default;}
 .btn-ghost{background:#F1F3F5;color:var(--t1);}
-.cta-fixed{position:absolute;left:0;right:0;bottom:0;padding:16px 24px 32px;
+.cta-fixed{position:fixed;left:0;right:0;bottom:0;z-index:35;
+  padding:16px var(--pad-x) calc(24px + env(safe-area-inset-bottom, 0px));
   background:linear-gradient(to top,var(--bg) 72%,transparent);}
+.cta-fixed > *{width:100%;max-width:var(--col);margin:0 auto;}
 .field{width:100%;border:none;border-bottom:2px solid var(--line);background:none;
   padding:16px 2px;font-size:19px;font-family:inherit;color:var(--t1);outline:none;transition:border-color .2s;}
 .field:focus{border-color:var(--blue);}
@@ -453,7 +447,7 @@ body{
 #isoNew{opacity:0;transform:scale(.3);transform-box:fill-box;transform-origin:50% 100%;}
 #isoNew.pop{animation:ipop .55s cubic-bezier(.2,1.4,.4,1) forwards;}
 @keyframes ipop{to{opacity:1;transform:scale(1);}}
-.iso-pop{position:absolute;left:50%;transform:translateX(-50%);bottom:32px;background:rgba(25,31,40,.88);
+.iso-pop{position:fixed;left:50%;transform:translateX(-50%);bottom:32px;background:rgba(25,31,40,.88);
   border-radius:32px;padding:8px 16px;box-shadow:0 6px 18px rgba(20,40,80,.25);
   display:none;align-items:center;gap:8px;white-space:nowrap;animation:mpop .22s cubic-bezier(.2,1.2,.4,1);}
 .iso-pop.show{display:flex;}
@@ -495,14 +489,15 @@ body{
 .buy-btn{width:100%;border:none;border-radius:12px;padding:8px 4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;background:var(--blue);color:#fff;}
 .buy-btn:disabled{background:#ECEFE7;color:var(--t3);cursor:default;}
 .buy-btn.owned{background:var(--green-weak);color:var(--green);cursor:default;}
-.mini-toast{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);background:rgba(25,31,40,.9);
+.mini-toast{position:fixed;bottom:calc(var(--tabbar-h) + 24px);left:50%;transform:translateX(-50%);background:rgba(25,31,40,.9);
   color:#fff;font-size:12px;font-weight:600;padding:12px 20px;border-radius:32px;display:none;z-index:50;white-space:nowrap;}
 .mini-toast.show{display:block;animation:mpop .22s cubic-bezier(.2,1.2,.4,1);}
 #isoSofa{opacity:0;transform:scale(.3);transform-box:fill-box;transform-origin:50% 100%;}
 #isoSofa.pop{animation:ipop .55s cubic-bezier(.2,1.4,.4,1) forwards;}
 
 /* ---- ceremony modal ---- */
-.modal-dim{position:absolute;inset:0;background:rgba(25,31,40,.55);z-index:90;display:none;align-items:center;justify-content:center;padding:32px;}
+/* 오버레이는 뷰포트를 덮어야 한다 — 개편안의 absolute는 폰 프레임 기준이었다. */
+.modal-dim{position:fixed;inset:0;background:rgba(25,31,40,.55);z-index:90;display:none;align-items:center;justify-content:center;padding:32px;}
 .modal-dim.open{display:flex;}
 .modal{background:#fff;border-radius:24px;padding:28px 24px 24px;text-align:center;width:100%;animation:mpop .35s cubic-bezier(.2,1.2,.4,1);}
 @keyframes mpop{from{transform:scale(.85);opacity:0;}to{transform:scale(1);opacity:1;}}
@@ -512,12 +507,19 @@ body{
 .modal .fine{font-size:12px;color:var(--t3);margin:12px 0 16px;}
 
 /* ---- bottom sheet ---- */
-.sheet-dim{position:absolute;inset:0;background:rgba(25,31,40,.5);z-index:80;opacity:0;pointer-events:none;transition:opacity .25s;}
+.sheet-dim{position:fixed;inset:0;background:rgba(25,31,40,.5);z-index:80;opacity:0;pointer-events:none;transition:opacity .25s;}
 .sheet-dim.open{opacity:1;pointer-events:auto;}
-.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;
-  padding:12px 24px 32px;z-index:85;transform:translateY(105%);visibility:hidden;
+/* 바텀시트 — 뷰포트 하단에 고정하고 본문 폭 안에서 가운데.
+   `left:50%`로 가운데를 잡으면 transform이 정렬(translateX)과 애니메이션(translateY)을 겸해야 해서
+   `.open{transform:none}`이 정렬까지 지운다. 그래서 정렬은 margin으로 빼고 transform은
+   애니메이션 전용으로 남긴다. */
+.sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;
+  width:100%;max-width:var(--col);background:#fff;border-radius:24px 24px 0 0;
+  padding:12px var(--pad-x) calc(32px + env(safe-area-inset-bottom, 0px));z-index:85;
+  transform:translateY(105%);visibility:hidden;
   transition:transform .32s cubic-bezier(.2,.8,.2,1), visibility 0s .32s;}
-.sheet.open{transform:none;visibility:visible;transition:transform .32s cubic-bezier(.2,.8,.2,1), visibility 0s 0s;}
+.sheet.open{transform:translateY(0);visibility:visible;
+  transition:transform .32s cubic-bezier(.2,.8,.2,1), visibility 0s 0s;}
 .sheet-handle{width:44px;height:5px;border-radius:5px;background:var(--line);margin:0 auto 16px;}
 .sheet-title{font-size:19px;font-weight:700;margin-bottom:4px;}
 .sheet-sub{font-size:14px;color:var(--t3);margin:0 0 16px;line-height:1.5;}
@@ -578,8 +580,14 @@ body{
 .excluded .ex-badge{display:inline-block;}
 
 /* ---- tabbar ---- */
-.tabbar{position:absolute;left:0;right:0;bottom:0;height:84px;background:#fff;
-  border-top:1px solid var(--line);display:flex;padding-bottom:16px;z-index:40;}
+/* 하단 탭 — 뷰포트에 고정한다(개편안은 폰 프레임 바닥에 붙였다).
+   버튼은 본문 폭 안에서만 늘어나 넓은 화면에서 아이콘이 흩어지지 않는다. */
+.tabbar{position:fixed;left:0;right:0;bottom:0;height:var(--tabbar-h);background:#fff;
+  border-top:1px solid var(--line);display:flex;justify-content:center;z-index:40;
+  padding-bottom:env(safe-area-inset-bottom, 0px);}
+/* 좁은 화면에서 탭이 화면 끝까지 흩어지지 않게 본문 폭 안으로 묶는다.
+   900px 이상에서는 아래 @media가 탭바 자체를 420px 알약으로 만들므로 이 상한이 필요 없다. */
+.tabbar > *{max-width:calc(var(--col) / 3);}
 .tabbar button{flex:1;border:none;background:none;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:4px;cursor:pointer;color:#B0B0AE;font-family:inherit;}
 .tabbar button svg{width:24px;height:24px;}
@@ -610,7 +618,7 @@ body{
 @keyframes fall{0%{transform:translateY(-30px) rotate(0);opacity:0;}12%{opacity:.9;}100%{transform:translateY(340px) rotate(340deg);opacity:0;}}
 /* ---- 숫자/영문 표시 요소는 자간 0% ---- */
 .hero .big,.gh-num,.stat .v,.rank-save,.asset b,.bank-row .right b,.list-item .amt,
-.streak-line b,.strip .meta,.sprice,.statusbar{letter-spacing:0;}
+.streak-line b,.strip .meta,.sprice{letter-spacing:0;}
 
 
 /* 도감 상세의 등급 뱃지.
@@ -861,36 +869,3 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 @media (min-width: 620px) { .acct-list { grid-template-columns: repeat(2, 1fr); } }
 
 
-/* ==========================================================================
- * 앱 셸 레이아웃 — 폰 목업을 실제 웹으로 옮긴다
- *
- * 개편안은 375×812 폰 프레임 안을 `position:absolute`로 채운다. 그 전제를 그대로 웹에 두면
- * 화면이 뷰포트에 고정돼 스크롤이 안 되고, 넓은 모니터에서 본문이 통째로 늘어진다.
- * 그래서 **디자인(색·간격·컴포넌트)은 개편안을 쓰고 배치만 문서 흐름으로** 되돌린다.
- * 본문 폭은 토큰의 --col 단계를 따른다(480/768/1200px에서 넓어진다).
- * ========================================================================== */
-
-.screen{position:static;inset:auto;display:flex;min-height:100dvh;padding-top:0;}
-.screen.active{display:flex;}
-/* 하단 탭이 있는 화면은 탭 높이만큼 바닥을 비운다(노치 안전영역 포함). */
-.screen.has-tabbar{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));}
-
-/* 목업의 .scroll = 스크롤 영역. 웹에서는 문서가 스크롤하므로 폭만 맡는다. */
-.scroll{flex:1;width:100%;overflow:visible;}
-
-/* 본문 열 — 개편안의 좌우 24px 여백을 반응형 폭으로 감싼다. */
-.pad{width:100%;max-width:var(--col);margin:0 auto;padding:12px var(--pad-x) 28px;}
-
-.appbar{position:sticky;top:0;z-index:30;width:100%;max-width:var(--col);margin:0 auto;
-  padding:0 calc(var(--pad-x) - 16px);}
-.progress{width:100%;max-width:var(--col);margin:0 auto;}
-
-/* 하단 고정 CTA·탭바는 화면 하단에 붙이고 내용은 본문 폭으로 묶는다. */
-.cta-fixed{position:fixed;left:0;right:0;bottom:0;z-index:35;padding:16px 0 calc(24px + env(safe-area-inset-bottom, 0px));}
-.cta-fixed > *{width:100%;max-width:var(--col);margin:0 auto;display:block;}
-.tabbar{position:fixed;left:0;right:0;bottom:0;height:var(--tabbar-h);padding-bottom:env(safe-area-inset-bottom, 0px);}
-
-/* 시트·모달은 화면 전체를 덮되 내용은 본문 폭 안에서. */
-.sheet-dim,.modal-dim{position:fixed;}
-.sheet{position:fixed;left:50%;transform:translateX(-50%);width:100%;max-width:var(--col);}
-.mini-toast,.iso-pop{position:fixed;}
