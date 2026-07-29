@@ -53,9 +53,13 @@ public class AuthService {
         }
 
         // ② 그 신원이 마이데이터에 있는가. 전화번호는 CI 계산에만 쓰고 저장하지 않는다(§13-2).
+        //
+        // CI는 해시라 안 맞는다는 것까지만 알려준다 — 어느 항목이 틀렸는지는 되짚을 수 없다.
+        // 그래서 제공자에 '번호로 한 번, 이름+주민번호로 한 번' 물어 항목별로 가려낸다.
         String ci = Ci.of(name, social7, phone);
-        if (!myDataClient.checkCi(ci)) {
-            return new VerifyResult(ci, false, false, Reason.NOT_FOUND.name(), null);
+        MyDataClient.IdentityMatch m = myDataClient.matchIdentity(name, social7, phone);
+        if (m == null || !m.exists()) {
+            return new VerifyResult(ci, false, false, mismatchReason(m).name(), null);
         }
 
         // ③ 고른 통신사가 그 번호의 대역과 맞는가. 알뜰폰은 3사 망을 빌려 쓰므로 따지지 않는다.
@@ -70,8 +74,49 @@ public class AuthService {
         return new VerifyResult(ci, true, true, Reason.OK.name(), actual.label());
     }
 
+    /**
+     * 셋 중 무엇이 어긋났는지 가린다.
+     *
+     * <p><b>왜 이 순서인가.</b> 번호는 사람을 특정하는 열쇠다. 번호가 남의 것이거나 등록조차
+     * 안 돼 있으면 이름·주민번호를 따질 무대가 없다. 그래서 <b>번호부터</b> 본다.
+     * 번호가 등록돼 있으면 그 명의자와 이름·주민번호를 하나씩 맞춰 본다.
+     */
+    private static Reason mismatchReason(MyDataClient.IdentityMatch m) {
+        if (m == null) return Reason.NOT_FOUND;
+
+        if (!m.phoneTaken()) {
+            // 번호가 등록돼 있지 않다. 그 이름+주민번호인 사람이 따로 있으면 '번호만 다른' 것이다.
+            return m.personFound() ? Reason.PHONE_MISMATCH : Reason.NOT_FOUND;
+        }
+        // 번호는 등록돼 있다 — 명의자와 무엇이 다른가.
+        if (!m.phoneNameOk() && !m.phoneSocialOk()) {
+            // 이름도 주민번호도 다르다. 그 이름+주민번호인 사람이 따로 있으면 '남의 번호'를 쓴 것이다.
+            return m.personFound() ? Reason.PHONE_OWNED_BY_OTHER : Reason.NAME_AND_SOCIAL_MISMATCH;
+        }
+        if (!m.phoneNameOk()) return Reason.NAME_MISMATCH;
+        return Reason.SOCIAL_MISMATCH;
+    }
+
     /** 인증 실패 사유. 화면이 사유별로 다른 문장을 띄운다. */
-    public enum Reason { OK, UNASSIGNED_EXCHANGE, NOT_FOUND, CARRIER_MISMATCH }
+    public enum Reason {
+        OK,
+        /** 배정되지 않은 국번 — 실존하지 않는 번호다. */
+        UNASSIGNED_EXCHANGE,
+        /** 번호 명의자의 이름만 다르다. */
+        NAME_MISMATCH,
+        /** 번호 명의자의 주민번호만 다르다. */
+        SOCIAL_MISMATCH,
+        /** 번호 명의자와 이름·주민번호가 모두 다르고, 그 신원은 어디에도 없다. */
+        NAME_AND_SOCIAL_MISMATCH,
+        /** 이름·주민번호는 실재하는데 그 번호가 다른 사람 명의다. */
+        PHONE_OWNED_BY_OTHER,
+        /** 이름·주민번호는 실재하는데 번호가 등록된 것과 다르다. */
+        PHONE_MISMATCH,
+        /** 셋 어느 조합으로도 찾을 수 없다. */
+        NOT_FOUND,
+        /** 신원은 맞으나 고른 통신사가 번호 대역과 다르다. */
+        CARRIER_MISMATCH
+    }
 
     /**
      * 주민번호 앞 7자리(YYMMDD + 성별세대코드)에서 <b>출생연도만</b> 뽑는다. 형식이 어긋나면 null.

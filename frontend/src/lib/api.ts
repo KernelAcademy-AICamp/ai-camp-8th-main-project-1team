@@ -275,7 +275,16 @@ export interface ImpulseSnapshot {
  * `verified`는 **네 관문을 모두 통과했을 때만** true다. 실패 사유는 `reason`이 말해 준다 —
  * 판정 표는 서버에만 있고(국번 대역표) 화면은 사유에 맞는 문장을 고르기만 한다.
  */
-export type VerifyReason = 'OK' | 'UNASSIGNED_EXCHANGE' | 'NOT_FOUND' | 'CARRIER_MISMATCH';
+export type VerifyReason =
+  | 'OK'
+  | 'UNASSIGNED_EXCHANGE'        // 배정되지 않은 국번 — 실존하지 않는 번호
+  | 'NAME_MISMATCH'              // 번호 명의자와 이름만 다름
+  | 'SOCIAL_MISMATCH'            // 번호 명의자와 주민번호만 다름
+  | 'NAME_AND_SOCIAL_MISMATCH'   // 이름·주민번호 모두 다름
+  | 'PHONE_OWNED_BY_OTHER'       // 그 번호가 다른 사람 명의
+  | 'PHONE_MISMATCH'             // 신원은 실재하나 번호가 다름
+  | 'NOT_FOUND'                  // 어느 조합으로도 못 찾음
+  | 'CARRIER_MISMATCH';          // 신원은 맞으나 통신사 대역이 다름
 export interface VerifyResult {
   ci: string | null;
   verified: boolean;

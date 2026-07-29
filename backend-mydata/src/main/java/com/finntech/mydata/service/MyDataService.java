@@ -344,6 +344,34 @@ public class MyDataService {
         return userRepository.existsById(ci);
     }
 
+    /**
+     * 신원 대조 — 본인인증이 <b>어느 항목이 틀렸는지</b> 가려내도록 조회 사실만 돌려준다.
+     *
+     * <p>CI 하나로는 "안 맞는다"까지만 알 수 있다(해시라 어느 항목이 틀렸는지 되짚을 수 없다).
+     * 그래서 번호로 한 번, 이름+주민번호로 한 번 찾아 <b>무엇이 맞고 무엇이 틀렸는지</b>를 준다.
+     * 판정과 문구 선택은 본체 몫이다.
+     */
+    @Transactional(readOnly = true)
+    public IdentityMatchView matchIdentity(String name, String social7, String phone) {
+        String normalized = normalizePhone(phone);
+        var byPhone = userRepository.findByPhoneNumber(normalized);
+        var byPerson = userRepository.findByNameAndSocial7(name, social7);
+        boolean phoneNameOk = byPhone.map(u -> u.getName().equals(name)).orElse(false);
+        boolean phoneSocialOk = byPhone
+                .map(u -> u.getSocialNumber().length() >= 7
+                        && u.getSocialNumber().substring(0, 7).equals(social7))
+                .orElse(false);
+        boolean exists = byPhone.isPresent() && phoneNameOk && phoneSocialOk;
+        return new IdentityMatchView(exists, byPhone.isPresent(), phoneNameOk, phoneSocialOk,
+                byPerson.isPresent());
+    }
+
+    /** 저장 형식은 `010-1234-5678`이다. 입력이 하이픈 없이 와도 같은 사람을 찾게 맞춘다. */
+    private static String normalizePhone(String phone) {
+        String d = phone == null ? "" : phone.replaceAll("\\D", "");
+        return d.length() == 11 ? d.substring(0, 3) + "-" + d.substring(3, 7) + "-" + d.substring(7) : phone;
+    }
+
     /** 가맹점 조회(번호→주소) — 사용자가 결제의 사업자번호로 가맹점명·지번주소를 조회한다. 없으면 empty. */
     @Transactional(readOnly = true)
     public java.util.Optional<MerchantView> findMerchant(String businessNumber) {

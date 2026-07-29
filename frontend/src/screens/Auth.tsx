@@ -36,10 +36,20 @@ function failureMessage(r: VerifyResult): string {
   switch (r.reason) {
     case 'UNASSIGNED_EXCHANGE':
       return '실존하지 않는 번호예요. 가운데 4자리를 다시 확인해 주세요.';
+    case 'NAME_MISMATCH':
+      return '이 번호의 명의자와 이름이 달라요. 이름을 다시 확인해 주세요.';
+    case 'SOCIAL_MISMATCH':
+      return '이 번호의 명의자와 주민등록번호가 달라요. 앞 7자리를 다시 확인해 주세요.';
+    case 'NAME_AND_SOCIAL_MISMATCH':
+      return '이 번호의 명의자와 이름·주민등록번호가 모두 달라요.';
+    case 'PHONE_OWNED_BY_OTHER':
+      return '입력하신 휴대폰 번호가 다른 분 명의로 등록되어 있어요.';
+    case 'PHONE_MISMATCH':
+      return '등록된 휴대폰 번호와 달라요. 번호를 다시 확인해 주세요.';
     case 'CARRIER_MISMATCH':
       return `[한국통신사업자연합회] 입력하신 정보는 ${r.actualCarrier} 관리 대역입니다. 통신사를 다시 골라주세요.`;
     default:
-      return '이름과 휴대폰 번호가 맞지 않아요. 잘못 입력하신 것 같아요.';
+      return '입력하신 정보로 가입된 회원을 찾을 수 없어요.';
   }
 }
 
@@ -71,7 +81,14 @@ export function Auth() {
   const [failure, setFailure] = useState<string | null>(null);
 
   const cur = STEPS[step];
-  const setVal = (v: string) => setVals((p) => ({ ...p, [cur.key]: v }));
+
+  /**
+   * 단계 이동은 여기 한 곳으로 모은다. 예전에는 `setStep`을 세 군데에서 직접 불러서,
+   * **뒤로 가도 실패 문구가 그대로 남았다.** 화면이 바뀌면 지난 단계의 경고는 지운다.
+   */
+  const goStep = (n: number) => { setFailure(null); setStep(n); };
+
+  const setVal = (v: string) => { setFailure(null); setVals((p) => ({ ...p, [cur.key]: v })); };
   const curVal = vals[cur.key] ?? '';
   const curOk = cur.kind === 'social'
     ? (vals.social?.length ?? 0) >= 6 && (vals.socialG?.length ?? 0) >= 1
@@ -79,16 +96,25 @@ export function Auth() {
 
   const social7 = `${vals.social ?? ''}${vals.socialG ?? ''}`;
 
-  /** 인증번호까지 마치면 서버로 신원을 보내 가상 CI를 만든다. */
-  async function verify() {
+  /**
+   * 서버에 신원을 보내 판정을 받는다. 통과하면 CI가 연결된다(서버는 통과했을 때만 저장한다).
+   *
+   * <b>인증요청 단계에서도 부른다.</b> 번호가 실존하지 않거나 통신사가 다르면 실제 인증에서는
+   * **문자 자체가 가지 않는다.** 인증번호를 받아 적은 뒤에야 "그 번호는 없습니다"라고 하는 것은
+   * 순서가 틀렸다. 그래서 `인증요청`을 누르는 그 자리에서 먼저 판정한다.
+   *
+   * @returns 통과 여부. 실패하면 사유를 화면에 띄운 채 false를 돌려준다.
+   */
+  async function requestVerify(): Promise<boolean> {
     setBusy(true); setError(null); setFailure(null);
     try {
       const result = await api.verify(
         userId, (vals.name ?? '').trim(), social7, vals.phone ?? '', vals.carrier);
-      if (!result.verified) { setFailure(failureMessage(result)); setBusy(false); return; }
-      go('connect');
+      if (!result.verified) { setFailure(failureMessage(result)); return false; }
+      return true;
     } catch (e) {
       setError(e);
+      return false;
     } finally {
       setBusy(false);
     }
@@ -109,14 +135,21 @@ export function Auth() {
     }
   }
 
-  function next() {
-    if (cur.key === 'phone' && !consented) { setConsentOpen(true); return; }
-    if (step >= STEPS.length - 1) { void verify(); return; }
-    setStep(step + 1);
+  async function next() {
+    // 인증요청 — 문자를 보내기 전에 번호가 실존하는지, 통신사가 맞는지 먼저 판정한다.
+    if (cur.key === 'phone') {
+      if (!(await requestVerify())) return;              // 실패 사유는 이 화면에 그대로 남는다
+      if (!consented) { setConsentOpen(true); return; }
+      goStep(STEPS.findIndex((x) => x.key === 'code'));
+      return;
+    }
+    // 인증완료 — 앞에서 이미 통과한 신원이므로 여기서는 연결로 넘어간다.
+    if (step >= STEPS.length - 1) { go('connect'); return; }
+    goStep(step + 1);
   }
   function confirmConsent() {
     setConsented(true); setConsentOpen(false);
-    setTimeout(() => setStep(STEPS.findIndex((s) => s.key === 'code')), 200);
+    setTimeout(() => goStep(STEPS.findIndex((s) => s.key === 'code')), 200);
   }
   const reqOk = TERMS.filter((t) => t.req).every((t) => checked.has(t.id));
   const allOn = TERMS.every((t) => checked.has(t.id));
@@ -178,7 +211,7 @@ export function Auth() {
 
   return (
     <Screen title="본인인증">
-      <AppBar onBack={step > 0 ? () => setStep(step - 1) : back} />
+      <AppBar onBack={step > 0 ? () => goStep(step - 1) : back} />
       <ProgressBar value={0.1 + step * 0.03} />
       <Scroll><div className="pad">
         <p className="h-title" style={{ whiteSpace: 'pre-line' }}>{cur.title}</p>
@@ -216,7 +249,7 @@ export function Auth() {
       </div></Scroll>
 
       <Cta>
-        <button type="button" className="btn btn-primary" disabled={!curOk || busy} onClick={next}>
+        <button type="button" className="btn btn-primary" disabled={!curOk || busy} onClick={() => void next()}>
           {busy ? '확인 중…' : cur.cta}
         </button>
       </Cta>
