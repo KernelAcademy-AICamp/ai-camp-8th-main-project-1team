@@ -81,6 +81,19 @@ class GuardianRenewalTest {
     }
 
     @Test
+    @DisplayName("확보 절약액은 목표를 넘지 않는다 — 방어율 200%가 나오면 안 된다")
+    void securedSavingNeverExceedsTarget() {
+        // 실제로 밟은 버그: 결산이 `한도 − 지출`로 확보액을 세는 바람에 아무것도 안 쓴 첫날에
+        // 방어율이 200%로 나왔다. 한도(쓸 수 있는 돈)와 목표(아껴야 할 돈)는 단위가 다르다.
+        long baseline = 667_487, target = 222_495, cap = baseline - target;
+        for (long spent : new long[]{0, 1_000, cap / 2, cap, baseline, baseline * 2}) {
+            long secured = Math.min(target, Math.max(0L, baseline - spent));
+            double rate = (double) secured / target;
+            assertThat(rate).as("지출 %d일 때 방어율", spent).isBetween(0.0, 1.0);
+        }
+    }
+
+    @Test
     @DisplayName("CSV 카테고리 파싱 — 빈 값·공백을 흘리지 않는다")
     void csvIgnoresBlanks() {
         assertThat(GuardianSettlementService.csv("배달, 카페 ,,")).containsExactly("배달", "카페");

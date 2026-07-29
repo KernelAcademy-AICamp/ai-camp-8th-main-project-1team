@@ -5,6 +5,7 @@ import com.finntech.guardian.domain.GuardianEnums.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -456,6 +457,23 @@ public class GuardianController {
     @GetMapping("/renewal")
     public GuardianSettlementService.RenewalView renewal(@RequestParam Long userId) {
         return settlementService.renewal(userId);
+    }
+
+    // ======================================================================
+    //  예외 → 응답
+    // ======================================================================
+
+    /**
+     * 사용자 잘못은 <b>400</b>으로 돌려준다 — 500은 서버가 고장났다는 뜻이다.
+     *
+     * <p>"포인트가 50P 모자라요"·"아직 챌린지가 없어요"는 전부 정상적인 거절이다. 이걸 500으로
+     * 내보내면 프론트가 "알 수 없는 오류"만 띄우고, 우리가 애써 쓴 안내 문구가 사용자에게 닿지
+     * 않는다. 실제로 상점 구매·마일스톤 청구·소품 배치가 전부 500으로 나가고 있었다.
+     */
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> badRequest(RuntimeException e) {
+        return Map.of("error", e.getMessage() == null ? "요청을 처리할 수 없어요" : e.getMessage());
     }
 
     /** 비율은 소수 넷째 자리까지 — 설계서 응답 예시와 자릿수를 맞춘다. */

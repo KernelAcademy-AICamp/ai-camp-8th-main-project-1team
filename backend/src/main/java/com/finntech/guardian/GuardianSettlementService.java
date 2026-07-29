@@ -127,7 +127,12 @@ public class GuardianSettlementService {
                 .filter(v -> v.getResult() == DailyResult.NO_SPEND_DAY
                         || v.getResult() == DailyResult.ON_PACE_DAY).count();
 
-        long secured = Math.max(0, ch.getChallengeCap() - ch.getSpentAmount());
+        // **확보 절약액은 직접 세지 않는다**(마스터 §4 원칙 2 — 서비스는 재계산하지 않는다).
+        // `한도 − 지출`로 셌더니 방어율이 200%가 나왔다: 한도(444,992)는 쓸 수 있는 돈이고
+        // 목표(222,495)는 아껴야 할 돈이라 단위가 다르다. 규칙이 쓰는 식은
+        // `min(목표, 기준지출 − 지출)`이고, 그래야 100%를 넘지 않는다.
+        long secured = Math.min(ch.getTargetSaving(),
+                Math.max(0L, ch.getBaselineAmount() - ch.getSpentAmount()));
         int points = pointEventRepository.sumAll(userId);
         int objects = (int) roomObjectRepository.findByUser(userId).stream()
                 .filter(o -> !o.getAcquiredDate().isBefore(ch.getStartDate())
