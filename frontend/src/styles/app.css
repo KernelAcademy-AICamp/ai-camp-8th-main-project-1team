@@ -839,3 +839,58 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 
 /* 화면 하단 여백 — 하단 CTA/탭에 가리지 않게. */
 .bottom-gap { height: 24px; }
+
+/* ==========================================================================
+ * 반응형 — 개편안이 놓친 부분
+ *
+ * 개편안은 고정폭 폰 목업이라 넓은 화면을 다루지 않는다. 데스크톱에서 하단 탭이 화면 전체 폭으로
+ * 늘어지지 않게 가운데 띄우고, 통장 비교 목록은 2열로 접는다. 토큰의 --col 단계와 짝이다.
+ * ========================================================================== */
+
+@media (min-width: 900px) {
+  .tabbar {
+    left: 50%; transform: translateX(-50%); right: auto; bottom: 20px;
+    width: min(var(--col), 420px); border: 1px solid var(--line); border-radius: 22px;
+    height: var(--tabbar-h); padding-bottom: 0;
+    box-shadow: 0 8px 28px rgba(25,31,40,.12);
+    overflow: hidden;
+  }
+  .screen.has-tabbar { padding-bottom: calc(var(--tabbar-h) + 32px); }
+}
+
+@media (min-width: 620px) { .acct-list { grid-template-columns: repeat(2, 1fr); } }
+
+
+/* ==========================================================================
+ * 앱 셸 레이아웃 — 폰 목업을 실제 웹으로 옮긴다
+ *
+ * 개편안은 375×812 폰 프레임 안을 `position:absolute`로 채운다. 그 전제를 그대로 웹에 두면
+ * 화면이 뷰포트에 고정돼 스크롤이 안 되고, 넓은 모니터에서 본문이 통째로 늘어진다.
+ * 그래서 **디자인(색·간격·컴포넌트)은 개편안을 쓰고 배치만 문서 흐름으로** 되돌린다.
+ * 본문 폭은 토큰의 --col 단계를 따른다(480/768/1200px에서 넓어진다).
+ * ========================================================================== */
+
+.screen{position:static;inset:auto;display:flex;min-height:100dvh;padding-top:0;}
+.screen.active{display:flex;}
+/* 하단 탭이 있는 화면은 탭 높이만큼 바닥을 비운다(노치 안전영역 포함). */
+.screen.has-tabbar{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));}
+
+/* 목업의 .scroll = 스크롤 영역. 웹에서는 문서가 스크롤하므로 폭만 맡는다. */
+.scroll{flex:1;width:100%;overflow:visible;}
+
+/* 본문 열 — 개편안의 좌우 24px 여백을 반응형 폭으로 감싼다. */
+.pad{width:100%;max-width:var(--col);margin:0 auto;padding:12px var(--pad-x) 28px;}
+
+.appbar{position:sticky;top:0;z-index:30;width:100%;max-width:var(--col);margin:0 auto;
+  padding:0 calc(var(--pad-x) - 16px);}
+.progress{width:100%;max-width:var(--col);margin:0 auto;}
+
+/* 하단 고정 CTA·탭바는 화면 하단에 붙이고 내용은 본문 폭으로 묶는다. */
+.cta-fixed{position:fixed;left:0;right:0;bottom:0;z-index:35;padding:16px 0 calc(24px + env(safe-area-inset-bottom, 0px));}
+.cta-fixed > *{width:100%;max-width:var(--col);margin:0 auto;display:block;}
+.tabbar{position:fixed;left:0;right:0;bottom:0;height:var(--tabbar-h);padding-bottom:env(safe-area-inset-bottom, 0px);}
+
+/* 시트·모달은 화면 전체를 덮되 내용은 본문 폭 안에서. */
+.sheet-dim,.modal-dim{position:fixed;}
+.sheet{position:fixed;left:50%;transform:translateX(-50%);width:100%;max-width:var(--col);}
+.mini-toast,.iso-pop{position:fixed;}
