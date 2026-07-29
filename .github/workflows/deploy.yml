@@ -1,0 +1,168 @@
+# main에 들어온 것을 운영 서버에 반영한다.
+#
+# 왜 SSH가 아니라 SSM인가: 서버에 22번을 열지 않아도 되고, 배포용 개인키를 GitHub에 보관할
+# 필요도 없다. 인증은 OIDC로 그때그때 발급되는 단기 토큰이라 **장기 자격증명이 어디에도 없다.**
+# 역할은 이 저장소의 main 브랜치에서만, 그리고 이 인스턴스에 셸 명령을 보내는 것만 할 수 있다.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+    # 서버 동작과 무관한 변경으로는 배포하지 않는다(문서·기획).
+    paths-ignore:
+      - 'reference/**'
+      - 'legal/**'
+      - '**/*.md'
+  workflow_dispatch:        # 수동 재배포
+
+concurrency:
+  group: deploy-prod        # 배포가 겹치면 서로의 빌드를 덮는다
+  cancel-in-progress: false
+
+permissions:
+  id-token: write           # OIDC 토큰 발급용 — 이것 때문에 시크릿이 필요 없다
+  contents: read
+  checks: read              # 이 커밋의 PR에서 main 진입 검사가 통과했는지 확인
+  pull-requests: read
+  issues: write             # 배포를 막았을 때 사람을 부르기 위해
+
+env:
+  AWS_REGION: ap-northeast-2
+  INSTANCE_ID: i-0caa34b2587168188
+
+jobs:
+  # 이 커밋이 '정상 경로'로 main에 들어왔는지 캐묻는다.
+  #
+  # 왜 여기가 필요한가: main 진입을 막는 것은 GitHub 설정(Ruleset)이고, 설정은 저장소 파일이
+  # 아니라 관리자만 바꿀 수 있다. 즉 **코드만으로는 진입을 통제할 수 없다.** 반면 배포는
+  # 반드시 이 워크플로 하나를 지나간다. 그래서 진입을 완전히 막지 못해도 **나가는 문**은 잠근다.
+  #
+  # 여기서 걸리는 것: main에 직접 push(PR 자체가 없다) · guard-main을 지운 PR ·
+  # develop/hotfix가 아닌 브랜치에서 온 PR · 검사가 실패한 채로 머지된 PR.
+  provenance:
+    name: 출처 검증
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            // 수동 재배포는 사람이 버튼을 누른 것이므로 통과시킨다(누가 눌렀는지는 로그에 남는다).
+            if (context.eventName === 'workflow_dispatch') {
+              core.info(`수동 재배포 — ${context.actor}`);
+              return;
+            }
+
+            const sha = context.sha;
+            const owner = context.repo.owner, repo = context.repo.repo;
+            const reasons = [];
+
+            // 이 커밋을 담은 PR을 찾는다. 머지 커밋도 스쿼시 커밋도 이 API로 잡힌다.
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner, repo, commit_sha: sha,
+            });
+            const pr = prs.find((p) => p.base.ref === 'main' && p.merged_at);
+
+            if (!pr) {
+              reasons.push('이 커밋에 연결된 **main행 PR이 없습니다.** main에 직접 push된 것으로 보입니다.');
+            } else {
+              const head = pr.head.ref;
+              if (!(head === 'develop' || head.startsWith('hotfix/'))) {
+                reasons.push(`PR #${pr.number}의 출처가 \`${head}\` 입니다 — main은 \`develop\`·\`hotfix/*\` 만 받습니다.`);
+              }
+              // guard-main이 그 PR의 head에서 실제로 성공했는지 본다.
+              // 워크플로 파일을 지운 PR은 검사가 아예 돌지 않으므로 여기서 '없음'으로 걸린다.
+              const { data: checks } = await github.rest.checks.listForRef({
+                owner, repo, ref: pr.head.sha, per_page: 100,
+              });
+              // 아직 끝나지 않았으면 **기다린다.**
+              //
+              // 처음에는 한 번 읽고 판정했는데, 머지 푸시가 배포를 곧바로 띄우는 바람에
+              // 검사가 결론을 내기 전에 읽어 `conclusion = null`로 막혔다(실제로 겪었다 —
+              // Guard main 완료 5초 뒤에 배포가 시작했다). 아직 안 끝난 것은 실패가 아니다.
+              //
+              // 같은 이름의 실행이 여러 개일 수 있다(재실행·synchronize). 아무거나 집으면 옛 결과를
+              // 볼 수 있으므로 **가장 최근에 시작한 것**을 본다.
+              const latestGuard = async () => {
+                const { data } = await github.rest.checks.listForRef({
+                  owner, repo, ref: pr.head.sha, per_page: 100,
+                });
+                return data.check_runs
+                  .filter((c) => c.name === 'main 진입 검사')
+                  .sort((a, b) => new Date(b.started_at) - new Date(a.started_at))[0];
+              };
+              let guard = await latestGuard();
+              for (let i = 0; guard && guard.status !== 'completed' && i < 40; i++) {   // 최대 10분
+                core.info(`main 진입 검사 대기 중… (${guard.status})`);
+                await new Promise((r) => setTimeout(r, 15000));
+                guard = await latestGuard();
+              }
+              if (!guard) {
+                reasons.push(`PR #${pr.number}에서 **main 진입 검사가 실행되지 않았습니다.** (워크플로가 지워졌을 수 있습니다)`);
+              } else if (guard.status !== 'completed') {
+                reasons.push(`PR #${pr.number}의 main 진입 검사가 10분 안에 끝나지 않았습니다(\`${guard.status}\`).`);
+              } else if (guard.conclusion !== 'success') {
+                reasons.push(`PR #${pr.number}의 main 진입 검사가 \`${guard.conclusion}\` 입니다.`);
+              }
+            }
+
+            if (reasons.length === 0) {
+              core.info(`정상 경로 — PR #${pr.number} (${pr.head.ref})`);
+              return;
+            }
+
+            // 배포하지 않고 사람을 부른다. 조용히 실패하면 이 게이트는 없는 것과 같다.
+            const body = [
+              '## 🚨 배포를 막았습니다', '',
+              `커밋 \`${sha.slice(0, 7)}\` 이 main에 들어왔지만 정상 경로로 보이지 않아 **운영 배포를 중단**했습니다.`,
+              '', '### 이유', ...reasons.map((r) => `- ${r}`), '',
+              '### 확인할 것',
+              '- 의도한 변경이 맞습니까? 아니라면 main을 즉시 되돌리세요.',
+              '- 맞다면 내용을 확인한 뒤 Actions에서 `deploy`를 수동 실행하세요.',
+              '', `실행: ${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`,
+            ].join('\n');
+            await github.rest.issues.create({
+              owner, repo, title: `배포 차단 — ${sha.slice(0, 7)}`, body, assignees: ['Wolharang'],
+            });
+            core.setFailed(reasons.join(' / '));
+
+  deploy:
+    needs: provenance
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: AWS 인증 (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::996270854767:role/finntech-gha-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 서버에 배포 명령 전송
+        id: send
+        run: |
+          CMD=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name AWS-RunShellScript \
+            --comment "deploy ${GITHUB_SHA::7}" \
+            --timeout-seconds 3600 \
+            --parameters 'commands=["bash /opt/finntech/app/scripts/deploy-server.sh main"]' \
+            --query 'Command.CommandId' --output text)
+          echo "cmd=$CMD" >> "$GITHUB_OUTPUT"
+          echo "명령 $CMD"
+
+      - name: 완료 대기
+        run: |
+          CMD='${{ steps.send.outputs.cmd }}'
+          for i in $(seq 1 180); do            # 최대 30분
+            S=$(aws ssm get-command-invocation --command-id "$CMD" \
+                  --instance-id "$INSTANCE_ID" --query Status --output text 2>/dev/null || echo Pending)
+            [ "$S" = "InProgress" ] || [ "$S" = "Pending" ] || break
+            sleep 10
+          done
+          aws ssm get-command-invocation --command-id "$CMD" --instance-id "$INSTANCE_ID" \
+            --query StandardOutputContent --output text
+          ERR=$(aws ssm get-command-invocation --command-id "$CMD" --instance-id "$INSTANCE_ID" \
+                  --query StandardErrorContent --output text)
+          [ -n "$ERR" ] && [ "$ERR" != "None" ] && echo "::group::stderr" && echo "$ERR" && echo "::endgroup::"
+          # 스모크가 실패하면 deploy-server.sh가 0이 아닌 코드로 끝나고 여기서 잡힌다.
+          [ "$S" = "Success" ] || { echo "::error::배포 실패 ($S)"; exit 1; }

@@ -272,7 +272,11 @@ export interface ImpulseSnapshot {
 /** 가상 본인인증 결과. verified는 항상 true(가상), existsInMyData=false면 마이데이터에 없는 신원. */
 export interface VerifyResult { ci: string; verified: boolean; existsInMyData: boolean }
 export interface MyDataCompany { id: number; name: string; imgUrl: string }
-export interface MyDataLinkResult { cardCount: number; paymentCount: number }
+export interface MyDataLinkResult { cardCount: number; paymentCount: number; bankCount: number }
+/** 연동 가능 은행. id는 제공자가 이름순으로 매긴 순번이라 조회마다 같다. */
+export interface MyDataBank { id: number; name: string }
+/** 내가 연동한 은행. */
+export interface MyLinkedBank { id: number; bankId: number; bankName: string; linkedAt: string }
 /** 내 카드 — 실적 진행률 + 이번달 받은 혜택. */
 export interface MyCard {
   serialNumber: string;
@@ -321,7 +325,17 @@ export interface MyMerchant {
   online: boolean;
 }
 /** 입출금 통장(§13-11 경제 모델). */
-export interface MyAccountTxn { date: string; type: 'DEPOSIT' | 'WITHDRAWAL'; amount: number; description: string }
+export interface MyAccountTxn {
+  date: string;
+  type: 'DEPOSIT' | 'WITHDRAWAL';
+  amount: number;
+  /** 적요 — 거래 상대나 성격. 예: 뚜레쥬르 병영1동점 · 이자입금 · 김민준 */
+  description: string;
+  /** 비고 — 취급점이나 채널. 예: KB국민카드 · BNK경남은행본부 · 전자금융이체 */
+  note: string;
+  /** 이 거래 직후의 잔액. 서버가 전체 이력 기준으로 굴려 준다. */
+  balanceAfter: number;
+}
 export interface MyAccount {
   accountNumber: string;
   bank: string;
@@ -679,9 +693,20 @@ export const api = {
   deleteWishlist: (userId: number, itemId: number) =>
     del<PointSnapshot>(`/api/points/wishlist/${itemId}?userId=${userId}`),
 
-  /** 통장 비교 (정보성) — 자격 제한 제외 후 금리순. 판매·중개 아님. */
-  compareSavings: (limit?: number) =>
-    get<SavingsCompare>(`/api/savings/compare${limit ? `?limit=${limit}` : ''}`),
+  /**
+   * 통장 비교 (정보성) — 자격 제한 제외 후 금리순. 판매·중개 아님.
+   *
+   * `userId`를 보내면 서버가 그 사용자의 출생연도로 **나이 자격까지 맞춰** 거른다.
+   * 안 보내면 서버는 나이 조건을 따지지 않는다 — 즉 보내지 않으면 자격 필터가 절반만 도는 셈이라,
+   * 로그인 상태에서는 항상 함께 보낸다.
+   */
+  compareSavings: (limit?: number, userId?: number) => {
+    const q = new URLSearchParams();
+    if (limit) q.set('limit', String(limit));
+    if (userId) q.set('userId', String(userId));
+    const s = q.toString();
+    return get<SavingsCompare>(`/api/savings/compare${s ? `?${s}` : ''}`);
+  },
 
   /* ── 충동예산 절약통 ── */
   impulse: (userId: number) => get<ImpulseSnapshot>(`/api/impulse?userId=${userId}`),
@@ -696,14 +721,19 @@ export const api = {
   verify: (userId: number, name: string, social7: string, phone: string) =>
     post<VerifyResult>('/api/mydata/verify', { userId, name, social7, phone }),
   mydataCompanies: () => get<MyDataCompany[]>('/api/mydata/companies'),
-  mydataLink: (userId: number, companyIds: number[]) =>
-    post<MyDataLinkResult>('/api/mydata/link', { userId, companyIds }),
+  mydataBanks: () => get<MyDataBank[]>('/api/mydata/banks'),
+  myBanks: (userId: number) => get<MyLinkedBank[]>(`/api/mydata/my-banks?userId=${userId}`),
+  /** 카드사와 은행을 함께 연동한다. 은행은 계좌가 있는 곳만 실제로 붙는다. */
+  mydataLink: (userId: number, companyIds: number[], bankIds: number[] = []) =>
+    post<MyDataLinkResult>('/api/mydata/link', { userId, companyIds, bankIds }),
   myCards: (userId: number) => get<MyCard[]>(`/api/mydata/cards?userId=${userId}`),
   cardPayments: (userId: number, serial: string) =>
     get<MyPayment[]>(`/api/mydata/cards/${encodeURIComponent(serial)}/payments?userId=${userId}`),
   allPayments: (userId: number, months = 6) =>
     get<MyPaymentHistory[]>(`/api/mydata/payments?userId=${userId}&months=${months}`),
-  account: (userId: number) => get<MyAccount | null>(`/api/mydata/account?userId=${userId}`),
+  /** @param months 최근 N개월(당월 포함). 1=이번 달, 7=이번 달+이전 6개월. */
+  account: (userId: number, months = 1) =>
+    get<MyAccount | null>(`/api/mydata/account?userId=${userId}&months=${months}`),
   merchant: (businessNumber: string) =>
     get<MyMerchant | null>(`/api/mydata/merchant/${encodeURIComponent(businessNumber)}`),
   syncMyData: (userId: number) =>

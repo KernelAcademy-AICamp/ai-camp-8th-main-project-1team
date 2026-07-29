@@ -14,6 +14,7 @@ import com.finntech.repository.ImpulseSaverStateRepository;
 import com.finntech.repository.PointEventRepository;
 import com.finntech.repository.ReportRepository;
 import com.finntech.repository.SavingsGoalRepository;
+import com.finntech.repository.UserBankRepository;
 import com.finntech.repository.UserCardCompanyRepository;
 import com.finntech.repository.UserCardRepository;
 import com.finntech.repository.UserPaymentRepository;
@@ -63,6 +64,7 @@ public class PrivacyService {
     private final UserCardRepository userCardRepository;
     private final UserPaymentRepository userPaymentRepository;
     private final UserCardCompanyRepository userCardCompanyRepository;
+    private final UserBankRepository userBankRepository;
     private final UserSpendingOverrideRepository overrideRepository;
     private final CutCandidateSelectionRepository cutSelectionRepository;
     private final AuditService auditService;
@@ -81,6 +83,7 @@ public class PrivacyService {
                           UserCardRepository userCardRepository,
                           UserPaymentRepository userPaymentRepository,
                           UserCardCompanyRepository userCardCompanyRepository,
+                          UserBankRepository userBankRepository,
                           UserSpendingOverrideRepository overrideRepository,
                           CutCandidateSelectionRepository cutSelectionRepository,
                           AuditService auditService,
@@ -98,6 +101,7 @@ public class PrivacyService {
         this.userCardRepository = userCardRepository;
         this.userPaymentRepository = userPaymentRepository;
         this.userCardCompanyRepository = userCardCompanyRepository;
+        this.userBankRepository = userBankRepository;
         this.overrideRepository = overrideRepository;
         this.cutSelectionRepository = cutSelectionRepository;
         this.auditService = auditService;
@@ -218,6 +222,7 @@ public class PrivacyService {
         userCardRepository.deleteByUserId(userId);
         userPaymentRepository.deleteByUserId(userId);
         userCardCompanyRepository.deleteByUserId(userId);   // 연동 카드사·동기화 기록도 파기(W2)
+        userBankRepository.deleteByUserId(userId);         // 연동 은행 기록도 함께 파기
         overrideRepository.deleteByUserId(userId);   // 개인화 override도 파기(W8-5)
         cutSelectionRepository.deleteByUserId(userId);   // 절약후보 선택추적(⑤)도 소비결정 정보이므로 파기
         userRepository.findById(userId).ifPresent(user -> {

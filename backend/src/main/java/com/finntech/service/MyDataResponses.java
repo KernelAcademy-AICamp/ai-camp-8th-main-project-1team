@@ -15,6 +15,9 @@ public final class MyDataResponses {
 
     public record CompanyView(Long id, String name, String imgUrl) {}
 
+    /** 연동 가능 은행. id는 제공자가 이름순으로 매긴 순번(결정론). */
+    public record BankView(Long id, String name) {}
+
     public record BenefitView(String category1Name, int discountPercent,
                               int performanceStart, int performanceEnd, int monthlyLimit) {}
 
@@ -35,7 +38,10 @@ public final class MyDataResponses {
     public record AccountView(String accountNumber, String bank, String product, String salaryPayer,
                               int salary, int payday, long balance, List<AccountTxnView> transactions) {}
 
-    public record AccountTxnView(LocalDateTime date, String type, long amount, String description) {}
+    /** {@code balanceAfter} = 이 거래 직후의 잔액. +/−만 있으면 "그래서 지금 얼마인가"를 사용자가 암산해야 한다. */
+    /** description=적요(상대·성격), note=비고(취급점·채널), balanceAfter=거래 직후 잔액. */
+    public record AccountTxnView(LocalDateTime date, String type, long amount, String description,
+                                 String note, long balanceAfter) {}
 
     /** 가맹점 조회(번호→주소) 응답 — mydata의 MerchantView와 필드명 일치. */
     public record MerchantView(String businessNumber, String merchantName, String address,

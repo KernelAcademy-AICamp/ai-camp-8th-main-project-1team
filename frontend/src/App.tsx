@@ -28,6 +28,7 @@ import { Transactions } from './screens/Transactions';
 import { Report } from './screens/Report';
 import { ReportSpending } from './screens/ReportSpending';
 import { ReportAnalysis } from './screens/ReportAnalysis';
+import { ReportAccount } from './screens/ReportAccount';
 import { ReportCards } from './screens/ReportCards';
 import { ReportWaste } from './screens/ReportWaste';
 import { ReportSavings } from './screens/ReportSavings';
@@ -51,6 +52,7 @@ const SCREENS: Record<ScreenId, ComponentType> = {
   home: Home, report: Report, my: My,
   myroom: Myroom, notifications: Notifications, transactions: Transactions,
   'r-spending': ReportSpending, 'r-analysis': ReportAnalysis, 'r-cards': ReportCards,
+  'r-account': ReportAccount,
   'r-waste': ReportWaste, 'r-savings': ReportSavings,
   'm-impulse': MyImpulse, 'm-goals': MyGoals, 'm-connections': MyConnections,
   'm-record': MyRecord, 'm-policy': MyPolicy, 'm-survey': MySurvey, 'm-demo': MyDemo,

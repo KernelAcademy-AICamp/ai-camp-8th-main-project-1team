@@ -35,6 +35,18 @@ public class MyDataController {
                 request.social7(), request.phone());
     }
 
+    /** 연동 가능 은행 목록 — 자산연결 화면이 카드사와 함께 보여준다. */
+    @GetMapping("/banks")
+    public List<com.finntech.service.MyDataResponses.BankView> banks() {
+        return linkService.banks();
+    }
+
+    /** 내가 연동한 은행 — '연결 관리' 화면용. */
+    @GetMapping("/my-banks")
+    public List<com.finntech.domain.UserBank> myBanks(@RequestParam Long userId) {
+        return linkService.linkedBanks(userId);
+    }
+
     /** 카드사(연동 기관) 목록. */
     @GetMapping("/companies")
     public List<CompanyView> companies() {
@@ -44,7 +56,8 @@ public class MyDataController {
     /** 카드사 연결 → 마이데이터에서 카드·결제 적재 + Consumption(MYDATA) 투영. */
     @PostMapping("/link")
     public LinkResult link(@RequestBody LinkRequest request) {
-        return linkService.linkCardCompanies(request.userId(), request.companyIds());
+        return linkService.linkCardCompanies(request.userId(), request.companyIds(),
+                request.bankIds() == null ? java.util.List.of() : request.bankIds());
     }
 
     /** 내 카드 — 카드별 실적 진행률 + 이번달 받은 혜택. */
@@ -74,8 +87,9 @@ public class MyDataController {
 
     /** 입출금 통장(§13-11) — 은행·계좌·월급·잔액 + 최근 입출금 내역. 통장 없으면 null. */
     @GetMapping("/account")
-    public com.finntech.service.MyDataResponses.AccountView account(@RequestParam Long userId) {
-        return linkService.account(userId);
+    public com.finntech.service.MyDataResponses.AccountView account(
+            @RequestParam Long userId, @RequestParam(defaultValue = "1") int months) {
+        return linkService.account(userId, months);
     }
 
     /** 가맹점 조회(번호→주소) — 결제에 실린 사업자번호로 가맹점명·지번주소를 조회. 없으면 null. */
@@ -85,5 +99,5 @@ public class MyDataController {
     }
 
     public record VerifyRequest(Long userId, String name, String social7, String phone) {}
-    public record LinkRequest(Long userId, List<Long> companyIds) {}
+    public record LinkRequest(Long userId, List<Long> companyIds, List<Long> bankIds) {}
 }

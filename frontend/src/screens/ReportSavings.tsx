@@ -12,9 +12,10 @@ import { api } from '../lib/api';
 import { won } from '../lib/format';
 
 export function ReportSavings() {
-  const { back } = useSession();
+  const { back, userId } = useSession();
   const { home } = useGuardian();
-  const compare = useAsync(() => api.compareSavings(8), []);
+  // userId를 함께 보낸다 — 서버가 출생연도로 나이 자격까지 맞춰 거른다(미연동이면 서버가 알아서 건너뛴다).
+  const compare = useAsync(() => api.compareSavings(8, userId), [userId]);
 
   const accounts = compare.data?.accounts ?? [];
   const secured = home?.challenge.securedSaving ?? 0;

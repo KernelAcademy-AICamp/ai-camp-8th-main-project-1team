@@ -41,8 +41,14 @@ public class MyDataClient {
 
     /** 입출금 통장 조회(§13-11) — 은행·계좌·월급·잔액 + 입출금 내역. 계좌 없으면 null. */
     public AccountView findAccount(String ci) {
+        return findAccount(ci, 1);
+    }
+
+    /** @param months 최근 N개월(당월 포함). 통장 화면의 '이전 6개월 보기'가 7을 보낸다. */
+    public AccountView findAccount(String ci, int months) {
         Envelope<AccountView> response = client.get()
-                .uri(builder -> builder.path("/bank/mydata/account").queryParam("userId", ci).build())
+                .uri(builder -> builder.path("/bank/mydata/account")
+                        .queryParam("userId", ci).queryParam("months", months).build())
                 .retrieve()
                 .body(new ParameterizedTypeReference<Envelope<AccountView>>() {});
         return response == null ? null : response.data();
@@ -69,6 +75,26 @@ public class MyDataClient {
     }
 
     /** 증분 조회 — 마지막 동기화 이후 결제만. */
+    /** 연동 가능 은행 목록. */
+    public List<BankView> findBanks() {
+        Envelope<List<BankView>> response = client.get()
+                .uri(builder -> builder.path("/bank/mydata/banks").build())
+                .retrieve()
+                .body(new ParameterizedTypeReference<Envelope<List<BankView>>>() {});
+        return response == null || response.data() == null ? List.of() : response.data();
+    }
+
+    /** 고른 은행들에 있는 계좌(0~1건). 계좌가 없는 은행을 골랐으면 빈 목록이다. */
+    public List<AccountView> findAccountsByBanks(String ci, List<Long> bankIds) {
+        Envelope<List<AccountView>> response = client.get()
+                .uri(builder -> builder.path("/bank/mydata/accounts")
+                        .queryParam("userId", ci)
+                        .queryParam("bankIds", bankIds).build())
+                .retrieve()
+                .body(new ParameterizedTypeReference<Envelope<List<AccountView>>>() {});
+        return response == null || response.data() == null ? List.of() : response.data();
+    }
+
     public List<CardView> findCardsSince(Long companyId, String ci, LocalDateTime lastRenewalTime) {
         Envelope<List<CardView>> response = client.get()
                 .uri(builder -> builder.path("/bank/mydata/renewal")

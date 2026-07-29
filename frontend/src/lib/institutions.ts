@@ -32,7 +32,39 @@ const CARD_BRAND: { match: RegExp; label: string; bg: string; fg?: string }[] = 
   { match: /씨티|citi/i, label: 'citi', bg: '#003B70' },
   { match: /카카오/, label: 'k', bg: '#FFCD00', fg: '#3c1e1e' },
   { match: /토스/, label: '토스', bg: '#3182F6' },
+  // 은행 — 카드사에 없는 곳만 덧붙인다(신한·KB·우리·하나·NH·카카오·토스는 위에서 걸린다).
+  { match: /IBK|기업은행/i, label: 'IBK', bg: '#004C97' },
+  { match: /SC제일/i, label: 'SC', bg: '#0F7B3E' },
+  { match: /수협/, label: '수협', bg: '#0F9BD7' },
+  { match: /광주/, label: '광주', bg: '#00857C' },
+  { match: /전북/, label: '전북', bg: '#C8102E' },
+  { match: /경남/, label: '경남', bg: '#EF3E42' },
+  { match: /부산/, label: '부산', bg: '#E6002D' },
+  { match: /제주/, label: '제주', bg: '#0067AC' },
+  { match: /케이뱅크|^K뱅크/i, label: 'K', bg: '#00C3E3' },
+  { match: /iM|대구/i, label: 'iM', bg: '#008C95' },
+  { match: /산업은행|KDB/i, label: 'KDB', bg: '#003876' },
 ];
+
+/**
+ * 은행 항목의 화면 id 오프셋.
+ *
+ * 카드사 id와 은행 id는 서로 다른 체계인데(각자 1부터 시작) 연결 화면은 하나의 선택 집합에 담는다.
+ * 그대로 두면 '카드사 3'과 '은행 3'이 같은 값이 되어 엉뚱한 기관에 연동 요청이 나간다.
+ * 화면에서만 오프셋을 얹고, 보낼 때 {@link splitPicked}로 되돌린다.
+ */
+export const BANK_ID_OFFSET = 100000;
+
+/** 화면에서 고른 id 묶음을 서버가 아는 두 체계로 되돌린다. */
+export function splitPicked(picked: Iterable<number>): { companyIds: number[]; bankIds: number[] } {
+  const companyIds: number[] = [];
+  const bankIds: number[] = [];
+  for (const id of picked) {
+    if (id >= BANK_ID_OFFSET) bankIds.push(id - BANK_ID_OFFSET);
+    else companyIds.push(id);
+  }
+  return { companyIds, bankIds };
+}
 
 /** 서버가 준 카드사 이름에 브랜드 배지를 입힌다. 못 찾으면 이름 앞 두 글자. */
 export function brandOf(name: string): { label: string; bg: string; fg?: string } {
@@ -150,17 +182,46 @@ export const INSTITUTIONS: InstCategory[] = [
  * 서버 목록이 비어 있으면(백엔드 미기동) 카탈로그를 그대로 두되 선택은 막는다.
  */
 export function mergeCompanies(companies: { id: number; name: string }[]): InstCategory[] {
-  if (companies.length === 0) {
-    return INSTITUTIONS.map((c) => (c.key === 'card' ? { ...c, available: false } : c));
-  }
-  return INSTITUTIONS.map((c) => {
-    if (c.key !== 'card') return c;
-    return {
-      ...c,
-      items: companies.map((co) => {
-        const b = brandOf(co.name);
-        return { id: co.id, name: co.name, label: b.label, bg: b.bg, fg: b.fg };
-      }),
-    };
+  return mergeInstitutions(companies, []);
+}
+
+/**
+ * 카탈로그의 카드사·은행 그룹을 **서버가 실제로 내려준 목록**으로 갈아끼운다.
+ *
+ * 카탈로그의 id는 화면용이라 서버 id와 다르고 이름도 어긋난다(카탈로그 `수협은행` vs 데이터
+ * `Sh수협은행`). 서버 목록으로 덮어야 화면이 고른 것과 서버가 받는 것이 같아진다.
+ * 목록이 비면 그 업권은 선택 불가로 남긴다 — 고를 수 있는데 연결이 안 되는 상태가 제일 나쁘다.
+ */
+export function mergeInstitutions(
+  companies: { id: number; name: string }[],
+  banks: { id: number; name: string }[],
+): InstCategory[] {
+  const merged = INSTITUTIONS.map((c) => {
+    if (c.key === 'card') {
+      if (companies.length === 0) return { ...c, available: false };
+      return {
+        ...c,
+        items: companies.map((co) => {
+          const b = brandOf(co.name);
+          return { id: co.id, name: co.name, label: b.label, bg: b.bg, fg: b.fg };
+        }),
+      };
+    }
+    if (c.key === 'bank') {
+      if (banks.length === 0) return { ...c, available: false };
+      return {
+        ...c,
+        available: true,
+        items: banks.map((bk) => {
+          const b = brandOf(bk.name);
+          return { id: BANK_ID_OFFSET + bk.id, name: bk.name, label: b.label, bg: b.bg, fg: b.fg };
+        }),
+      };
+    }
+    return c;
   });
+  // 연결되는 업권을 위로 올린다. 준비 중(선택 불가)인 업권이 먼저 보이면 실제로 연결할 수 있는
+  // 카드사·은행을 찾으려고 한참 내려가야 한다 — 화면의 첫인상이 "아직 안 되는 것들"이 된다.
+  // 업권 사이 상대 순서는 그대로 둔다(카탈로그가 정한 업권 배열을 존중).
+  return [...merged.filter((c) => c.available), ...merged.filter((c) => !c.available)];
 }

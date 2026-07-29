@@ -1,0 +1,28 @@
+# 8GB 인스턴스(m7i-flex.large)용 메모리 한도 오버레이.
+#
+#   docker compose -f docker-compose.prod.yml -f docker-compose.prod.local-db.yml \
+#     -f docker-compose.prod.large.yml --profile local-db --env-file deploy/.env up -d --build
+#
+# 왜 한도를 굳이 올리나: `-XX:MaxRAMPercentage=60`은 **컨테이너 한도**를 읽는다. 한도를 그대로 두면
+# 8GB를 사도 힙 상한은 4GB 기준 그대로라 여윳돈만 놀린다. 반대로 한도를 아예 걸지 않으면 호스트
+# 전체를 기준으로 삼아 두 JVM이 각각 4.8GB를 요구한다 — 총연습에서 실제로 확인한 함정이다.
+#
+# 합계 4.6GB. 8GB에서 OS·dockerd·페이지캐시로 약 3GB를 남긴다.
+# 페이지캐시를 넉넉히 남기는 것이 중요하다 — MySQL 버퍼풀이 못 담는 구간을 OS가 캐시해 준다.
+services:
+  mysql:
+    # 버퍼풀 1GB. 6.17GB를 전부 담지는 못하지만, 자주 닿는 인덱스와 최근 구간이 상주해
+    # 11.2M행에서도 조회가 디스크를 덜 친다(2GB 검증에서는 256M로도 18~74ms였다).
+    command: >
+      --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=1G
+    mem_limit: 2g
+
+  backend:
+    mem_limit: 1536m          # 힙 ≈ 920m. 분석 엔진·EBM 스코어러가 있어 넷 중 가장 크다.
+
+  backend-mydata:
+    mem_limit: 1g             # 힙 ≈ 614m
+
+  frontend:
+    mem_limit: 128m

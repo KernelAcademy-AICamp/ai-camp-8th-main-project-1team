@@ -51,3 +51,6 @@ backend-mydata/generated/merchants.csv
 
 # ── 로그·임시 ──
 *.log
+
+# 운영 이전용 DB 덤프(수 GB) — 커밋 금지
+deploy/dump/

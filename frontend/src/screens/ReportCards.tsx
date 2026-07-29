@@ -3,14 +3,14 @@
  * 그리고 카드별 결제내역. 판매·중개가 아니라 이미 가진 카드를 정리해 보여주는 것뿐이다.
  */
 import { useState } from 'react';
-import { AppBar, Scroll, Screen, ErrorBox, Loading, Empty, SectionTitle } from '../components/ui';
+import { AppBar, Scroll, Screen, ErrorBox, Loading, Empty } from '../components/ui';
 import { useSession } from '../state/session';
 import { useAsync } from '../state/useAsync';
 import { api, catLabel, type MyPayment } from '../lib/api';
 import { won, man, shortDate } from '../lib/format';
 
 export function ReportCards() {
-  const { back, userId } = useSession();
+  const { back, userId, go } = useSession();
   const cards = useAsync(() => api.myCards(userId), [userId]);
   const account = useAsync(() => api.account(userId).catch(() => null), [userId]);
   const [open, setOpen] = useState<string | null>(null);
@@ -60,7 +60,7 @@ export function ReportCards() {
                   <div className="mc-face" style={{ background: c.cardColor || 'var(--blue-dark)' }}>
                     <span className="co">{c.companyName}</span>
                     <span className="nm">{c.cardName}</span>
-                    <span className="sn">{c.serialNumber.slice(-4)} 로 끝나는 카드</span>
+                    <span className="sn">{c.serialNumber}</span>
                   </div>
 
                   <div style={{ marginTop: 14 }}>
@@ -106,33 +106,11 @@ export function ReportCards() {
           </>
         )}
 
-        {/* 입출금 통장(§13-11 경제 모델) — 카드=출금, 매달 월급=입금 */}
         {account.data && (
-          <>
-            <SectionTitle aux="마이데이터">내 통장</SectionTitle>
-            <div className="card">
-              <div className="asset-row" style={{ marginBottom: 12 }}>
-                <div className="asset">
-                  <b style={{ color: account.data.balance < 0 ? 'var(--red)' : undefined }}>{won(account.data.balance)}</b>
-                  <span>잔액</span>
-                </div>
-                <div className="asset"><b style={{ color: 'var(--green-t)' }}>{won(account.data.salary)}</b><span>월급</span></div>
-              </div>
-              <p className="empty" style={{ marginTop: 0 }}>
-                {account.data.bank} · {account.data.product} · <span className="num">{account.data.accountNumber}</span><br />
-                매월 {account.data.payday}일 · <b>{account.data.salaryPayer}</b>에서 급여 입금
-              </p>
-              {account.data.transactions.slice(0, 8).map((t, i) => (
-                <div className="txn" key={i}>
-                  <span className="d">{shortDate(t.date)}</span>
-                  <span className="m">{t.description}</span>
-                  <span className="a" style={{ color: t.type === 'DEPOSIT' ? 'var(--green)' : undefined }}>
-                    {t.type === 'DEPOSIT' ? '+' : '−'}{won(t.amount)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </>
+          <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', marginTop: 12 }}
+            onClick={() => go('r-account')}>
+            내 통장 보기 · 잔액 {won(account.data.balance)}
+          </button>
         )}
 
         <div className="spacer" />

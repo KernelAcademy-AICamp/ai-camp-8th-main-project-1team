@@ -1,0 +1,20 @@
+# 컨테이너 MySQL을 쓸 때만 겹쳐 쓰는 오버레이.
+#
+#   docker compose -f docker-compose.prod.yml -f docker-compose.prod.local-db.yml \
+#     --profile local-db --env-file deploy/.env up -d --build
+#
+# 왜 파일을 나눴나: `depends_on: mysql`을 본 파일에 두면 RDS로 기동할 때도 compose가
+# mysql 서비스를 끌어와 뜨지 않아야 할 컨테이너가 뜬다(작은 인스턴스에서는 그 자체가 사고다).
+# 의존 관계만 여기로 뺐다.
+services:
+  backend-mydata:
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  backend:
+    depends_on:
+      mysql:
+        condition: service_healthy
+      backend-mydata:
+        condition: service_healthy

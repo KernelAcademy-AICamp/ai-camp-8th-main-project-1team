@@ -1,0 +1,156 @@
+# 운영 스택 — 로컬 총연습과 EC2에서 같은 파일을 쓴다.
+#
+#   로컬 총연습(컨테이너 MySQL 포함):
+#     docker compose -f docker-compose.prod.yml -f docker-compose.prod.local-db.yml \
+#       --profile local-db --env-file deploy/.env up -d --build
+#
+#   외부 DB(RDS 등)를 쓸 때:
+#     deploy/.env 의 DB_HOST 를 엔드포인트로 바꾸고
+#     docker compose -f docker-compose.prod.yml --env-file deploy/.env up -d --build
+#
+# 설계 원칙 세 가지.
+#  ① 외부로 나가는 문은 프론트 nginx 하나뿐이다. `/`는 SPA, `/api/`는 backend로 프록시하므로
+#     브라우저가 보는 오리진이 하나다 — CORS가 발생할 일 자체가 없다. actuator는 `/api` 밖
+#     경로라 이 프록시로 도달할 수 없어 내부 헬스체크 전용이 자동으로 보장된다.
+#  ② 마이데이터 서버(8082)는 어디에도 발행하지 않는다. ports 없음 + internal 망(아웃바운드조차
+#     없음) + 방화벽 규칙 없음의 3중이다. 격리는 "자르지 않는 것" 목록에 있다.
+#  ③ container_name을 박지 않는다. blue-green으로 두 벌을 띄울 때 이름이 충돌해 새 쪽이 못 뜬다.
+#  ④ 서비스마다 메모리 한도를 못 박는다. Dockerfile의 -XX:MaxRAMPercentage=60은 **컨테이너 한도**를
+#     읽는데, 한도가 없으면 호스트 전체를 한도로 본다 — 4GB 인스턴스에서 JVM 두 개가 각각 2.4GB를
+#     요구해 OOM Killer가 온다. 로컬 총연습(호스트 7.7GB)에서 실제로 backend 559MiB ·
+#     mydata 445MiB까지 늘어나는 것을 확인하고 넣었다. 합계는 t3.medium(4GB) 기준으로 잡았다.
+
+x-logging: &default-logging
+  # 로그가 디스크를 채워 서버가 죽는 흔한 사고를 막는다. 작은 인스턴스일수록 중요하다.
+  driver: json-file
+  options: { max-size: "10m", max-file: "5" }
+
+services:
+  # 컨테이너 MySQL — `--profile local-db` 를 줄 때만 뜬다.
+  # RDS를 쓰는 배포에서는 이 서비스가 아예 기동되지 않아 인스턴스 메모리를 잠식하지 않는다.
+  mysql:
+    profiles: ["local-db"]
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?deploy/.env 에 MYSQL_ROOT_PASSWORD 를 넣어라}
+      MYSQL_DATABASE: ${DB_NAME:-finntech}
+      MYSQL_USER: ${DB_USER:-finntech}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?deploy/.env 에 DB_PASSWORD 를 넣어라}
+      TZ: Asia/Seoul
+    # 버퍼풀을 명시한다. 기본 128MB로는 13.6M행을 다룰 때 디스크만 읽는다.
+    # 컨테이너 한도(1g) 안에서 절반을 데이터 캐시로 준다.
+    command: >
+      --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=512M
+    mem_limit: 1g
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # 첫 기동 때 두 DB(finntech, finntech_mydata)를 만든다. 스키마는 각 모듈 Flyway 소관.
+      - ./deploy/mysql-init:/docker-entrypoint-initdb.d:ro
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    logging: *default-logging
+    restart: unless-stopped
+
+  # 마이데이터 제공자 — 완전 비공개. 본체만 서비스명으로 부른다.
+  backend-mydata:
+    build:
+      context: ./backend-mydata
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      MYDATA_DB_NAME: ${MYDATA_DB_NAME:-finntech_mydata}
+      DB_USER: ${DB_USER:-finntech}
+      DB_PASSWORD: ${DB_PASSWORD:?deploy/.env 에 DB_PASSWORD 를 넣어라}
+      MYDATA_SHARED_SECRET: ${MYDATA_SHARED_SECRET:?deploy/.env 에 MYDATA_SHARED_SECRET 를 넣어라}
+      # 비우면 실시간(system)이 서빙 커트오프가 된다. 고정할 때는 본체의 FINNTECH_DEMO_TODAY와 짝을 맞춘다(§8-D).
+      MYDATA_NOW: ${MYDATA_NOW:-}
+    mem_limit: 768m             # 힙 ≈ 460m. 조회 응답만 만들면 되는 서버라 이 정도면 충분하다.
+    networks: [internal]        # 아웃바운드 없음 — 이 서버는 밖으로 나갈 일이 없다
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    logging: *default-logging
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-finntech}
+      DB_USER: ${DB_USER:-finntech}
+      DB_PASSWORD: ${DB_PASSWORD:?deploy/.env 에 DB_PASSWORD 를 넣어라}
+      # 서비스명 DNS. 호스트나 포트를 아는 사람이 없어도 본체만 도달할 수 있다.
+      MYDATA_BASE_URL: http://backend-mydata:8082
+      MYDATA_SHARED_SECRET: ${MYDATA_SHARED_SECRET:?deploy/.env 에 MYDATA_SHARED_SECRET 를 넣어라}
+      # 앱(Capacitor) 웹뷰 오리진 + 서비스 도메인. 웹은 같은 오리진이라 원래는 CORS가 필요 없지만,
+      # 브라우저는 POST에 Origin을 붙이고 Spring은 프록시 뒤에서 스킴을 http로 보므로
+      # 도메인을 넣지 않으면 같은 오리진인데도 403이 난다(server.forward-headers-strategy와 함께 해소).
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-capacitor://localhost,https://localhost,http://localhost}
+      # 일반 API로 더미 시드가 생성되면 안 된다(문서 §5-2 ④). 운영에서는 켜지 않는다.
+      FINNTECH_DEV_SEED_ENABLED: "false"
+      # 시각 기준. 비우면 실시간. 고정할 때는 마이데이터의 MYDATA_NOW와 같은 날짜로 함께 넣는다(§8-D).
+      FINNTECH_DEMO_TODAY: ${FINNTECH_DEMO_TODAY:-}
+      FINNTECH_MYDATA_REFERENCE_DATE: ${FINNTECH_MYDATA_REFERENCE_DATE:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      TSA_ENABLED: ${TSA_ENABLED:-false}
+    mem_limit: 1280m            # 힙 ≈ 768m. 분석 엔진·EBM 스코어러가 있어 넷 중 가장 크다.
+    # internal로 마이데이터·DB에 닿고, edge로 Gemini·TSA·금리조회 아웃바운드를 유지한다.
+    networks: [internal, edge]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    depends_on:
+      backend-mydata:
+        condition: service_healthy
+    logging: *default-logging
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # 빈 문자열 → 상대경로 → 같은 오리진. localhost 폴백이 운영 번들에 박히는 것을 막는다.
+        VITE_API_BASE: ""
+    # 127.0.0.1에만 바인딩한다. 외부에서 5173으로 직접 들어오는 길은 커널 수준에서 없고,
+    # 공개는 호스트 nginx(TLS 종단)가 이 포트로 프록시하는 경로 하나뿐이다.
+    ports:
+      - "127.0.0.1:5173:80"
+    mem_limit: 128m             # 정적 파일 서빙 + 프록시. 실측 5MiB.
+    networks: [edge]
+    healthcheck:
+      # 127.0.0.1을 박아 쓴다. `localhost`는 컨테이너 안에서 ::1(IPv6)로 먼저 풀리는데
+      # nginx.conf가 `listen 80`(IPv4 전용)이라 연결이 거부된다 — 사이트는 멀쩡한데
+      # 헬스체크만 실패해 컨테이너가 영영 unhealthy로 남는다.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    depends_on:
+      backend:
+        condition: service_healthy
+    logging: *default-logging
+    restart: unless-stopped
+
+networks:
+  # internal: true — 이 망의 컨테이너는 밖으로 나가지도 못한다. DB와 마이데이터가 여기 있다.
+  internal:
+    internal: true
+  edge:
+
+volumes:
+  mysql-data:
