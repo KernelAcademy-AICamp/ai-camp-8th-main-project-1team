@@ -35,12 +35,13 @@ class SpendingClassifierGuardTest {
     @Test
     @DisplayName("모델의 cat2가 현재 체계와 전혀 안 맞으면 모델을 쓰지 않는다 — 규칙 baseline으로 간다")
     void refusesModelTrainedOnAnotherTaxonomy() {
-        // 현재 배포된 모델은 옛 소비맥락 52종으로 학습돼 있다. 새 중분류만 아는 체계에서는
+        // 배포된 모델은 우리 중분류로 학습돼 있다. 전혀 다른 체계(영문 코드)만 아는 앱에서는
         // 한 이름도 안 겹치므로 모델을 거부해야 한다.
+        //
+        // 이 검사를 '현재 모델 vs 현재 체계'로 두면 안 된다 — 재학습하면 통과해 버려서
+        // 가드가 살아 있는지 아닌지를 더는 알 수 없다. 겹칠 리 없는 체계로 시험한다.
         SpendingClassifier clf = new SpendingClassifier(mapper, categoriesOf(
-                Set.of("식비", "카페/간식", "편의점/잡화", "대형마트", "술/유흥", "쇼핑",
-                        "취미/여가", "의료", "건강/피트니스", "주거/통신", "미용",
-                        "교통/자동차", "여행/숙박", "생활", "카테고리없음")));
+                Set.of("FOOD", "CAFE", "SHOPPING", "TRANSPORT", "HOUSING", "MEDICAL")));
 
         assertThat(clf.isReady())
                 .as("체계가 다른 모델은 규칙 baseline보다 나을 것이 없다")
@@ -55,11 +56,13 @@ class SpendingClassifierGuardTest {
     }
 
     @Test
-    @DisplayName("실제 대조표로는 지금 모델이 거부된다 — 재학습 전까지 규칙 baseline")
-    void currentModelIsRejectedUntilRetrained() {
+    @DisplayName("배포된 모델이 현재 대조표와 같은 체계로 학습돼 있다")
+    void deployedModelMatchesCurrentTaxonomy() {
+        // 2026-07-30 재학습으로 cat2가 우리 중분류 15종이 되었다. 이 단언이 깨지면
+        // 데이터 체계를 바꾸고 재학습을 잊은 것이다 — 그러면 ML 판정이 통째로 규칙 baseline이 된다.
         SpendingClassifier clf = new SpendingClassifier(mapper, new IndustryCategoryMapper(mapper));
         assertThat(clf.isReady())
-                .as("ML 재학습이 끝나면 이 단언을 true로 뒤집는다(ml/README.md 4단계)")
-                .isFalse();
+                .as("모델의 cat2 이름이 현재 중분류와 겹쳐야 한다")
+                .isTrue();
     }
 }
