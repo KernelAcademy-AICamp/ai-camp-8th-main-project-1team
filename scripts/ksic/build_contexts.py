@@ -33,6 +33,19 @@ NEW = {
     'merchantSource': 'INDEPENDENT',
 }
 
+# 요금이 고시로 정해진 맥락 — 금액에 지터를 걸지 않는다.
+#
+# 지하철은 1,550원이지 1,400원이나 1,700원이 아니다. 그런데 생성기가 모든 금액에
+# 로그정규 지터(sigma 0.20~0.30)를 곱하고 100원 단위로 스냅해서, **실존하지 않는 요금**이
+# 명세서에 찍히고 있었다. 요금표(fares.json)를 products.json에 정확히 옮겨 놓고도
+# 그 값을 흔들어 버린 셈이다.
+#
+# 통신비·공과금처럼 '요금제 구간'인 것도 포함한다 — 구간 안에서 뽑되 그 값을 흔들지는 않는다.
+FIXED_TARIFF = {
+    '대중교통', '철도', '고속버스', '택시', '통행료', '항공',   # 운임 고시·미터 요금
+    '통신비', '공과금', '스트리밍',                          # 요금제·고지서
+}
+
 
 def main():
     ksic = load_ksic()
@@ -52,15 +65,21 @@ def main():
                          f'    ksic-mapping.tsv 에 줄을 추가하고 다시 실행하라.')
 
     by = {c['category2']: c for c in contexts}
-    donated = 0.0
-    for name, ratio in DONORS:
-        if name not in by:
-            raise SystemExit(f'  ✗ 빈도를 뗄 맥락이 없다: {name}')
-        before = by[name]['frequencyWeight']
-        amount = round(before * ratio, 4)
-        by[name]['frequencyWeight'] = round(before - amount, 4)
-        donated += amount
-        print(f'   {name} 빈도 {before} → {by[name]["frequencyWeight"]}  (-{amount}, {ratio:.0%})')
+    # **멱등하게 만든다.** 신설 맥락이 이미 있으면 빈도를 다시 떼지 않는다.
+    # 예전에는 이 스크립트를 두 번 돌리면 야식·치킨이 두 번 깎여 식비가 계속 줄었다.
+    already = NEW['category2'] in by
+    donated = by[NEW['category2']]['frequencyWeight'] if already else 0.0
+    if not already:
+        for name, ratio in DONORS:
+            if name not in by:
+                raise SystemExit(f'  ✗ 빈도를 뗄 맥락이 없다: {name}')
+            before = by[name]['frequencyWeight']
+            amount = round(before * ratio, 4)
+            by[name]['frequencyWeight'] = round(before - amount, 4)
+            donated += amount
+            print(f'   {name} 빈도 {before} → {by[name]["frequencyWeight"]}  (-{amount}, {ratio:.0%})')
+    else:
+        print(f'   {NEW["category2"]} 맥락이 이미 있다 — 빈도 재분배 생략(멱등)')
 
     out = []
     for c in contexts:
@@ -72,11 +91,19 @@ def main():
             'frequencyWeight': c['frequencyWeight'],
             'discretionaryBase': c['discretionaryBase'],
             'merchantSource': c['merchantSource'],
+            'fixedTariff': c['category2'] in FIXED_TARIFF,
         })
     if NEW['category2'] not in by:
         out.append({**NEW, 'ksicCode': code_of[NEW['category2']],
-                    'frequencyWeight': round(donated, 4)})
+                    'frequencyWeight': round(donated, 4),
+                    'fixedTariff': NEW['category2'] in FIXED_TARIFF})
         print(f"   {NEW['category2']} 신설 — 빈도 {round(donated, 4)}")
+
+    fixed = [c['category2'] for c in out if c['fixedTariff']]
+    missing = FIXED_TARIFF - set(fixed)
+    if missing:
+        raise SystemExit(f'  ✗ 고정요금으로 지정했는데 맥락이 없다: {sorted(missing)}')
+    print(f'   고정요금 맥락 {len(fixed)}개: {", ".join(sorted(fixed))}')
 
     out.sort(key=lambda x: (x['ksicCode'], x['category2']))   # 결정론 정렬(원칙 3)
     data = {

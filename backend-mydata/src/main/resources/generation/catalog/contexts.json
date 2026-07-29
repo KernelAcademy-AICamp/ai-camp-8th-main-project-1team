@@ -8,7 +8,8 @@
    "locationType": "NONE",
    "frequencyWeight": 0.5,
    "discretionaryBase": 0.1,
-   "merchantSource": "ONLINE"
+   "merchantSource": "ONLINE",
+   "fixedTariff": true
   },
   {
    "category2": "대형마트",
@@ -17,7 +18,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.62,
    "discretionaryBase": 0.3,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "백화점",
@@ -26,7 +28,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.22,
    "discretionaryBase": 0.75,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "드럭스토어",
@@ -35,7 +38,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.42,
    "discretionaryBase": 0.6,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "편의점",
@@ -44,7 +48,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.92,
    "discretionaryBase": 0.45,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "화장품",
@@ -53,7 +58,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.35,
    "discretionaryBase": 0.65,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "디지털가전",
@@ -62,7 +68,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.15,
    "discretionaryBase": 0.65,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "의류패션",
@@ -71,7 +78,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.4,
    "discretionaryBase": 0.65,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "생활잡화",
@@ -80,7 +88,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.4,
    "discretionaryBase": 0.45,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "키즈육아",
@@ -89,7 +98,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.14,
    "discretionaryBase": 0.35,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "서점문구",
@@ -98,7 +108,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.2,
    "discretionaryBase": 0.45,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "스포츠레저",
@@ -107,7 +118,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.16,
    "discretionaryBase": 0.6,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "아웃도어캠핑",
@@ -116,7 +128,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.08,
    "discretionaryBase": 0.7,
-   "merchantSource": "MIXED"
+   "merchantSource": "MIXED",
+   "fixedTariff": false
   },
   {
    "category2": "취미공예",
@@ -125,7 +138,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.1,
    "discretionaryBase": 0.65,
-   "merchantSource": "MIXED"
+   "merchantSource": "MIXED",
+   "fixedTariff": false
   },
   {
    "category2": "주유소",
@@ -134,7 +148,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.45,
    "discretionaryBase": 0.2,
-   "merchantSource": "MIXED"
+   "merchantSource": "MIXED",
+   "fixedTariff": false
   },
   {
    "category2": "약국",
@@ -143,7 +158,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.45,
    "discretionaryBase": 0.1,
-   "merchantSource": "MIXED"
+   "merchantSource": "MIXED",
+   "fixedTariff": false
   },
   {
    "category2": "이커머스",
@@ -152,7 +168,8 @@
    "locationType": "NONE",
    "frequencyWeight": 0.88,
    "discretionaryBase": 0.6,
-   "merchantSource": "ONLINE"
+   "merchantSource": "ONLINE",
+   "fixedTariff": false
   },
   {
    "category2": "철도",
@@ -161,7 +178,8 @@
    "locationType": "ROUTE",
    "frequencyWeight": 0.14,
    "discretionaryBase": 0.35,
-   "merchantSource": "OPERATOR"
+   "merchantSource": "OPERATOR",
+   "fixedTariff": true
   },
   {
    "category2": "대중교통",
@@ -170,7 +188,8 @@
    "locationType": "ROUTE",
    "frequencyWeight": 0.85,
    "discretionaryBase": 0.05,
-   "merchantSource": "OPERATOR"
+   "merchantSource": "OPERATOR",
+   "fixedTariff": true
   },
   {
    "category2": "고속버스",
@@ -179,7 +198,8 @@
    "locationType": "ROUTE",
    "frequencyWeight": 0.12,
    "discretionaryBase": 0.3,
-   "merchantSource": "OPERATOR"
+   "merchantSource": "OPERATOR",
+   "fixedTariff": true
   },
   {
    "category2": "택시",
@@ -188,7 +208,8 @@
    "locationType": "ROUTE",
    "frequencyWeight": 0.35,
    "discretionaryBase": 0.55,
-   "merchantSource": "OPERATOR"
+   "merchantSource": "OPERATOR",
+   "fixedTariff": true
   },
   {
    "category2": "항공",
@@ -197,7 +218,8 @@
    "locationType": "ROUTE",
    "frequencyWeight": 0.08,
    "discretionaryBase": 0.55,
-   "merchantSource": "OPERATOR"
+   "merchantSource": "OPERATOR",
+   "fixedTariff": true
   },
   {
    "category2": "통행료",
@@ -206,7 +228,8 @@
    "locationType": "ROUTE",
    "frequencyWeight": 0.18,
    "discretionaryBase": 0.15,
-   "merchantSource": "OPERATOR"
+   "merchantSource": "OPERATOR",
+   "fixedTariff": true
   },
   {
    "category2": "고기구이",
@@ -215,7 +238,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.55,
    "discretionaryBase": 0.5,
-   "merchantSource": "INDEPENDENT"
+   "merchantSource": "INDEPENDENT",
+   "fixedTariff": false
   },
   {
    "category2": "야식",
@@ -224,7 +248,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.21,
    "discretionaryBase": 0.75,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "한식",
@@ -233,7 +258,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.95,
    "discretionaryBase": 0.25,
-   "merchantSource": "MIXED"
+   "merchantSource": "MIXED",
+   "fixedTariff": false
   },
   {
    "category2": "횟집",
@@ -242,7 +268,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.3,
    "discretionaryBase": 0.6,
-   "merchantSource": "INDEPENDENT"
+   "merchantSource": "INDEPENDENT",
+   "fixedTariff": false
   },
   {
    "category2": "뷔페",
@@ -251,7 +278,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.18,
    "discretionaryBase": 0.7,
-   "merchantSource": "MIXED"
+   "merchantSource": "MIXED",
+   "fixedTariff": false
   },
   {
    "category2": "아시안",
@@ -260,7 +288,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.42,
    "discretionaryBase": 0.55,
-   "merchantSource": "INDEPENDENT"
+   "merchantSource": "INDEPENDENT",
+   "fixedTariff": false
   },
   {
    "category2": "양식",
@@ -269,7 +298,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.55,
    "discretionaryBase": 0.55,
-   "merchantSource": "MIXED"
+   "merchantSource": "MIXED",
+   "fixedTariff": false
   },
   {
    "category2": "일식",
@@ -278,7 +308,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.55,
    "discretionaryBase": 0.55,
-   "merchantSource": "MIXED"
+   "merchantSource": "MIXED",
+   "fixedTariff": false
   },
   {
    "category2": "중식",
@@ -287,7 +318,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.62,
    "discretionaryBase": 0.4,
-   "merchantSource": "MIXED"
+   "merchantSource": "MIXED",
+   "fixedTariff": false
   },
   {
    "category2": "베이커리",
@@ -296,7 +328,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.55,
    "discretionaryBase": 0.5,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "치킨",
@@ -305,7 +338,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.455,
    "discretionaryBase": 0.6,
-   "merchantSource": "MIXED"
+   "merchantSource": "MIXED",
+   "fixedTariff": false
   },
   {
    "category2": "패스트푸드",
@@ -314,7 +348,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.72,
    "discretionaryBase": 0.55,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "피자",
@@ -323,7 +358,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.45,
    "discretionaryBase": 0.6,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "배달",
@@ -332,7 +368,8 @@
    "locationType": "NONE",
    "frequencyWeight": 0.72,
    "discretionaryBase": 0.7,
-   "merchantSource": "ONLINE"
+   "merchantSource": "ONLINE",
+   "fixedTariff": false
   },
   {
    "category2": "분식",
@@ -341,7 +378,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.8,
    "discretionaryBase": 0.45,
-   "merchantSource": "MIXED"
+   "merchantSource": "MIXED",
+   "fixedTariff": false
   },
   {
    "category2": "휴게음식",
@@ -350,16 +388,18 @@
    "locationType": "POI",
    "frequencyWeight": 0.14,
    "discretionaryBase": 0.55,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "주점",
+   "ksicCode": "5621",
    "channel": "OFFLINE",
    "locationType": "POI",
+   "frequencyWeight": 0.385,
    "discretionaryBase": 0.8,
    "merchantSource": "INDEPENDENT",
-   "ksicCode": "5621",
-   "frequencyWeight": 0.385
+   "fixedTariff": false
   },
   {
    "category2": "카페",
@@ -368,7 +408,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.9,
    "discretionaryBase": 0.5,
-   "merchantSource": "MIXED"
+   "merchantSource": "MIXED",
+   "fixedTariff": false
   },
   {
    "category2": "영화",
@@ -377,7 +418,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.3,
    "discretionaryBase": 0.65,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "스트리밍",
@@ -386,7 +428,8 @@
    "locationType": "NONE",
    "frequencyWeight": 0.55,
    "discretionaryBase": 0.65,
-   "merchantSource": "ONLINE"
+   "merchantSource": "ONLINE",
+   "fixedTariff": true
   },
   {
    "category2": "통신비",
@@ -395,7 +438,8 @@
    "locationType": "NONE",
    "frequencyWeight": 0.5,
    "discretionaryBase": 0.15,
-   "merchantSource": "ONLINE"
+   "merchantSource": "ONLINE",
+   "fixedTariff": true
   },
   {
    "category2": "간편결제",
@@ -404,7 +448,8 @@
    "locationType": "NONE",
    "frequencyWeight": 0.6,
    "discretionaryBase": 0.55,
-   "merchantSource": "ONLINE"
+   "merchantSource": "ONLINE",
+   "fixedTariff": false
   },
   {
    "category2": "반려동물",
@@ -413,7 +458,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.18,
    "discretionaryBase": 0.4,
-   "merchantSource": "MIXED"
+   "merchantSource": "MIXED",
+   "fixedTariff": false
   },
   {
    "category2": "여행숙박",
@@ -422,7 +468,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.12,
    "discretionaryBase": 0.7,
-   "merchantSource": "ONLINE"
+   "merchantSource": "ONLINE",
+   "fixedTariff": false
   },
   {
    "category2": "렌터카",
@@ -431,7 +478,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.1,
    "discretionaryBase": 0.55,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "공연전시",
@@ -440,7 +488,8 @@
    "locationType": "NONE",
    "frequencyWeight": 0.1,
    "discretionaryBase": 0.7,
-   "merchantSource": "ONLINE"
+   "merchantSource": "ONLINE",
+   "fixedTariff": false
   },
   {
    "category2": "헬스장",
@@ -449,7 +498,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.32,
    "discretionaryBase": 0.5,
-   "merchantSource": "INDEPENDENT"
+   "merchantSource": "INDEPENDENT",
+   "fixedTariff": false
   },
   {
    "category2": "놀이공원",
@@ -458,7 +508,8 @@
    "locationType": "VENUE_CLUSTER",
    "frequencyWeight": 0.1,
    "discretionaryBase": 0.8,
-   "merchantSource": "BRAND"
+   "merchantSource": "BRAND",
+   "fixedTariff": false
   },
   {
    "category2": "키즈카페",
@@ -467,7 +518,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.12,
    "discretionaryBase": 0.6,
-   "merchantSource": "INDEPENDENT"
+   "merchantSource": "INDEPENDENT",
+   "fixedTariff": false
   },
   {
    "category2": "미용실",
@@ -476,7 +528,8 @@
    "locationType": "POI",
    "frequencyWeight": 0.4,
    "discretionaryBase": 0.55,
-   "merchantSource": "MIXED"
+   "merchantSource": "MIXED",
+   "fixedTariff": false
   }
  ]
 }

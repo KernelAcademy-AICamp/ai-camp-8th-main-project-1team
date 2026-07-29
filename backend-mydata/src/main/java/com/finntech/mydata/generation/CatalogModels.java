@@ -22,10 +22,13 @@ public final class CatalogModels {
      *                          아니다</b> — 무대(필수/재량) 판정·금액 분포에만 쓰고, 낭비확률에 직접 넣지 않는다(재량≠낭비).
      * @param merchantSource    INDEPENDENT|BRAND|MIXED|ONLINE|OPERATOR
      * @param locationType      POI|ROUTE|VENUE_CLUSTER|NONE
+     * @param fixedTariff       요금이 고시로 정해진 맥락(운임·요금제·고지서). true면 금액에 지터를
+     *                          걸지 않는다 — 지하철은 1,550원이지 1,400원이나 1,700원이 아니다.
      */
     public record CatalogContext(
             String category2, String ksicCode, String channel, String locationType,
-            double frequencyWeight, double discretionaryBase, String merchantSource) {}
+            double frequencyWeight, double discretionaryBase, String merchantSource,
+            boolean fixedTariff) {}
 
     /** contexts.json 최상위 래퍼. */
     public record ContextsFile(List<CatalogContext> contexts) {}

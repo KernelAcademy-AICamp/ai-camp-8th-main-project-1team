@@ -191,8 +191,18 @@ public class DailyActivitySimulator {
         ResolvedProduct p = sampler.resolveProduct(cat2, r);
 
         int qty = MULTI_QTY.contains(cat2) ? GenSeed.uniformInt(r, 1, 3) : 1;
-        double sigma = GenSeed.uniform(r, amt.getSigmaLog()[0], amt.getSigmaLog()[1]);
-        int amount = snapAmount(Math.max(500, (int) Math.round(p.unitPrice() * qty * GenSeed.jitter(r, sigma))), r);
+        // 고시요금은 흔들지 않는다. 지하철 1,550원에 로그정규 지터(sigma 0.20~0.30)를 곱하고
+        // 100원 단위로 스냅하면 850~2,800원이 나오는데, 그런 요금은 존재하지 않는다.
+        // fares.json의 실 요금을 products.json에 정확히 옮겨 놓고도 그 값을 망가뜨리고 있었다.
+        var ctx = sampler.context(cat2);
+        boolean fixed = ctx != null && ctx.fixedTariff();
+        int amount;
+        if (fixed) {
+            amount = Math.max(100, p.unitPrice() * qty);
+        } else {
+            double sigma = GenSeed.uniform(r, amt.getSigmaLog()[0], amt.getSigmaLog()[1]);
+            amount = snapAmount(Math.max(500, (int) Math.round(p.unitPrice() * qty * GenSeed.jitter(r, sigma))), r);
+        }
 
         LocalDateTime when = date.atTime(hour, r.nextInt(60));
         boolean planned = RECURRING.contains(cat2) || r.nextDouble() < v.plannedRatio();
@@ -212,13 +222,16 @@ public class DailyActivitySimulator {
 
     private GenTxn subscriptionTxn(GeneratedUser u, PersonaVariant v, LocalDate date, double cf, Random r) {
         String cat2 = "스트리밍";
+        var ctx = sampler.context(cat2);
         ResolvedMerchant m = sampler.resolveMerchant(cat2, null, r);
         ResolvedProduct p = sampler.resolveProduct(cat2, r);
-        int amount = snapAmount(p.unitPrice(), r);
+        // 구독료는 정찰가다 — 넷플릭스가 이번 달만 13,400원일 수 없다.
+        int amount = p.unitPrice();
         int hour = GenSeed.uniformInt(r, 0, 23);
         boolean leak = r.nextDouble() < 0.2 * v.subscriptionLeakMult();
         var lab = labeler.label(cat2, amount, p.unitPrice(), hour, true, false, false, leak, v, cf, r);
-        return new GenTxn(r.nextInt(u.cardCount()), date.atTime(hour, 0), "온라인", cat2, amount,
+        return new GenTxn(r.nextInt(u.cardCount()), date.atTime(hour, 0),
+                ctx != null ? ctx.ksicCode() : "6031", cat2, amount,
                 m.name(), "ONLINE", p.name(), p.unitPrice(), 1, lab.label(), round4(lab.pWaste()),
                 m.address(), m.lat(), m.lon(), m.businessNumber());
     }

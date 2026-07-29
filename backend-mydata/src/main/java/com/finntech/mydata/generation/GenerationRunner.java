@@ -92,14 +92,17 @@ public class GenerationRunner implements ApplicationRunner {
     private final DailyActivitySimulator simulator;
     private final CatalogLoader catalog;
     private final GenerationProperties props;
+    /** 고시요금 여부를 카탈로그에 물어보기 위해 필요하다(contexts.json의 fixedTariff). */
+    private final CatalogSampler sampler;
 
     public GenerationRunner(JdbcTemplate jdbc, PopulationBuilder population,
                             DailyActivitySimulator simulator, CatalogLoader catalog,
-                            GenerationProperties props) {
+                            CatalogSampler sampler, GenerationProperties props) {
         this.jdbc = jdbc;
         this.population = population;
         this.simulator = simulator;
         this.catalog = catalog;
+        this.sampler = sampler;
         this.props = props;
     }
 
@@ -330,25 +333,60 @@ public class GenerationRunner implements ApplicationRunner {
         return ids;
     }
 
-    /** 결제 적재 — 금액에 통장 보정 스케일을 곱해(월지출≈월급×지출률) 다시 스냅한 뒤 배치 삽입. */
+    /**
+     * 결제 적재 — 금액에 통장 보정 스케일을 곱해(월지출≈월급×지출률) 다시 스냅한 뒤 배치 삽입.
+     *
+     * <p><b>고시요금은 스케일에서 뺀다.</b> 지하철·KTX·통신비는 사람이 부자든 아니든 같은 값이다.
+     * 여기에 월급 기반 배율을 곱하면 실존하지 않는 요금이 명세서에 찍힌다.
+     * 대신 그만큼을 나머지 결제가 흡수해야 월지출 총합이 목표에 맞는다 — 아래에서 스케일을
+     * 다시 계산한다.
+     *
+     * <p><b>단가도 함께 배율한다.</b> 예전에는 {@code amount}에만 스케일을 곱하고
+     * {@code productPrice}는 원본을 넣어, 스키마 주석이 약속한 {@code amount ≈ 단가 × 수량}이
+     * 깨져 있었다.
+     */
     private long insertPayments(GeneratedUser u, List<String> cardIds, List<GenTxn> txns, double scale) {
         Random ar = GenSeed.rng(u.userSeed(), 91);   // 금액 스냅용(결정론)
+
+        // 고시요금분은 그대로 두고, 나머지가 목표 총액을 맞추도록 스케일을 재계산한다.
+        long fixedTotal = 0, flexTotal = 0;
+        for (GenTxn t : txns) {
+            if (isFixedTariff(t)) fixedTotal += t.amount();
+            else flexTotal += t.amount();
+        }
+        long target = Math.round((fixedTotal + flexTotal) * scale);
+        double flexScale = flexTotal > 0 ? Math.max(0.1, (target - fixedTotal) / (double) flexTotal) : 1.0;
+
         List<Object[]> batch = new ArrayList<>(txns.size());
         int seq = 0;
         for (GenTxn t : txns) {
             String payId = "g" + u.id().substring(0, 16) + "-" + (seq++);
             String cardId = cardIds.get(Math.min(t.cardSlot(), cardIds.size() - 1));
-            int amount = DailyActivitySimulator.snapAmount(
-                    Math.max(100, (int) Math.round(t.amount() * scale)), ar);
+            int amount, unitPrice;
+            if (isFixedTariff(t)) {
+                amount = t.amount();
+                unitPrice = t.productPrice();
+            } else {
+                amount = DailyActivitySimulator.snapAmount(
+                        Math.max(100, (int) Math.round(t.amount() * flexScale)), ar);
+                int qty = Math.max(1, t.quantity());
+                unitPrice = Math.max(100, amount / qty);
+            }
             batch.add(new Object[]{
-                    payId, cardId, Timestamp.valueOf(t.date()), t.category1(), t.category2(),
-                    amount, t.merchant(), 0, t.channel(), t.productName(), t.productPrice(),
+                    payId, cardId, Timestamp.valueOf(t.date()), t.ksicCode(), t.category2(),
+                    amount, t.merchant(), 0, t.channel(), t.productName(), unitPrice,
                     t.quantity(), t.wasteLabel(), t.discretionaryScore(), t.address(), t.lat(), t.lon(),
                     t.businessNumber()
             });
         }
         jdbc.batchUpdate(PAY_SQL, batch);
         return batch.size();
+    }
+
+    /** 고시요금 맥락인가 — 카탈로그가 정한다(contexts.json의 fixedTariff). */
+    private boolean isFixedTariff(GenTxn t) {
+        var ctx = sampler.context(t.category2());
+        return ctx != null && ctx.fixedTariff();
     }
 
     // ── 통장·월급·지출 보정(§13-11 경제 모델) ──────────────────────────────
