@@ -613,7 +613,10 @@ Hibernate 7이 `@Enumerated(STRING)`을 네이티브 ENUM DDL로 생성하려 �
 #### W5-6. CI/CD — GitHub Actions 최소안
 
 - `.github/workflows/ci.yml`: backend-test / mydata-test / frontend-build 3잡(외부 TSA는 `-Dtsa.live=true`일 때만이라 CI 자동 제외).
-- **팀 저장소 README.md 불가침**: 워크플로·스크립트는 README.md를 읽지도 쓰지도 커밋하지도 않는다(배지 자동 삽입 절대 금지). CI 배지가 필요하면 `README_PROJECT.md`에만 수동. CI가 커밋을 만드는 단계(포맷팅·버전 범프)는 두지 않는다.
+- **팀 저장소 README.md — 자동 수정 금지**: 워크플로·스크립트는 README.md를 읽지도 쓰지도 커밋하지도 않는다(배지 자동 삽입 절대 금지).
+  *(2026-07-29 개정: 원래는 '불가침'이었고 그래서 `README_PROJECT.md`로 분리해 뒀다. 팀원이 모두 합류해
+  사용자 지시로 두 파일을 `README.md` 하나로 통합했다 — 클래스룸 배지는 맨 위에 그대로 두고 그 아래를 채웠으며
+  `README_PROJECT.md`는 폐지했다. **자동화가 건드리지 않는다**는 규칙만 남는다.)* CI가 커밋을 만드는 단계(포맷팅·버전 범프)는 두지 않는다.
 - **CD는 수동 트리거(선택)**: `workflow_dispatch` `deploy.yml`(Secrets `EC2_HOST`/`EC2_SSH_KEY`로 ssh+deploy). main push 자동 배포는 오배포 리스크 대비 이득 없어 미채택.
 
 #### W5-7. 리허설·롤백·검증
@@ -631,7 +634,7 @@ Hibernate 7이 `@Enumerated(STRING)`을 네이티브 ENUM DDL로 생성하려 �
 
 ### W6. 품질 보증 (테스트·성능·접근성)
 
-> 현황: backend 테스트 14클래스·72개 정의(기본 실행 71 통과, TSA live 1건 조건부), **backend-mydata 테스트 0건**, 프론트 테스트 0건, KWCAG Phase 4는 온보딩·내 카드·차트만 완료. (부수 조치: 마스터 §12-7의 "37개"·§13-9의 "테스트 70"은 구버전 수치 → "72개 정의·기본 71 통과"로 갱신.)
+> 현황: backend 테스트 14클래스·72개 정의(기본 실행 71 통과, TSA live 1건 조건부), backend-mydata 테스트 38건(2026-07-29 기준), 프론트 테스트 0건, KWCAG Phase 4는 온보딩·내 카드·차트만 완료. (부수 조치: 마스터 §12-7의 "37개"·§13-9의 "테스트 70"은 구버전 수치 → "72개 정의·기본 71 통과"로 갱신.)
 
 #### W6-1. backend-mydata 테스트 신설 (G-14)
 
@@ -665,7 +668,7 @@ MySQL 프로파일에서 측정(H2로 11M은 비대표). 각 100회 반복·워�
 
 #### W6-5. 회귀 체크리스트 (릴리스마다, ≤30분)
 
-R1 `backend ./mvnw test`(72+신규) / R2 `backend-mydata ./mvnw test` / R3 TSA live(`-Dtsa.live=true`, 오프라인 스킵 기록) / R4 프론트 build+lint / R5 기동(8080 health + `:8082/actuator/health` 200 — 공유 시크릿 필터는 actuator 제외이므로 무토큰 가능; actuator 도입 전엔 card-company 200) / R6 온보딩 스모크 / R7 시드 결정론 스팟(replace 재기동→CI 동일→keep 복원) / R8 감사 변조 시연(`demo-tamper.sh break`→탐지→restore) / R9 커트오프 시간여행(과거 ISO→결제 감소→reference 복원) / R10 법무·문서 정합(legal 변경 시 policy() 일치, 구조 변경 시 tech_log·마스터). R1·R2는 항상 재실행.
+R1 `backend ./mvnw test`(현재 178) / R2 `backend-mydata ./mvnw test` / R3 TSA live(`-Dtsa.live=true`, 오프라인 스킵 기록) / R4 프론트 build+lint / R5 기동(8080 health + `:8082/actuator/health` 200 — 공유 시크릿 필터는 actuator 제외이므로 무토큰 가능; actuator 도입 전엔 card-company 200) / R6 온보딩 스모크 / R7 시드 결정론 스팟(replace 재기동→CI 동일→keep 복원) / R8 감사 변조 시연(`demo-tamper.sh break`→탐지→restore) / R9 커트오프 시간여행(과거 ISO→결제 감소→reference 복원) / R10 법무·문서 정합(legal 변경 시 policy() 일치, 구조 변경 시 tech_log·마스터). R1·R2는 항상 재실행.
 
 ---
 
@@ -706,7 +709,7 @@ R1 `backend ./mvnw test`(72+신규) / R2 `backend-mydata ./mvnw test` / R3 TSA l
 | 3 | "가입은 각 사로" 상시 노출 | 현재 폴백 note에만 → 통장 비교·목표별 섹션에 **상시 캡션** "정보 제공 목적·무제휴·가입은 각 금융사에서"(유권해석 2022.6.15의 무판매·무제휴·무가입편의를 화면이 스스로 증명) |
 | 4 | '추천' 어휘 | 실 금리 노출 섹션 제목의 '추천'을 '금리 안내'로 완화 검토(필수 아님, 논거 강화) |
 | 5 | AI 표현 고지(집계만) | 리포트 캡션에 "개별 내역이 아닌 집계 수치만 AI에 전달" 1줄 보강(선택) |
-| 6 | 마이데이터 시뮬레이션 고지 | 내 카드 탭 상단 "가상 마이데이터" 배지 추가(카드 화면 단독 유통 대비), 방침 정본에 시뮬레이션 절 신설, 배포 후 실 SMS/스텁 모드 화면·README_PROJECT.md 고지(DoD) |
+| 6 | 마이데이터 시뮬레이션 고지 | 내 카드 탭 상단 "가상 마이데이터" 배지 추가(카드 화면 단독 유통 대비), 방침 정본에 시뮬레이션 절 신설, 배포 후 실 SMS/스텁 모드 화면·README.md 고지(DoD) |
 | 7 | 학습용·비자문 | 유지 |
 | 8 | **약관 제8조 2항("본인인증 등 라이선스 기능 미제공")** | 현행 가상 인증·W3 실 SMS와 문면 충돌 — "가상/SMS 인증은 마이데이터 시뮬레이션 연동 확인 목적이며 금융 라이선스 본인확인 서비스가 아님"으로 개정(W3-4 ⑤와 동일 커밋) + 제4조에 데모 게이트 각주(W7-1) |
 
@@ -813,13 +816,13 @@ R1 `backend ./mvnw test`(72+신규) / R2 `backend-mydata ./mvnw test` / R3 TSA l
 1. **blue-green(W5-4 B안)** → A안 단순 재기동(다운타임 30초~2분 수용).
 2. **Prometheus/Grafana**(이미 선택 항목) → compose healthcheck+로그만.
 3. **CD 워크플로(deploy.yml)** → 수동 ssh 배포 유지(ci.yml 테스트 잡은 자른다는 뜻 아님).
-4. **실 SMS(W3)** → 스텁 유지 + "가상 인증 모드" 화면·README_PROJECT.md 고지(DoD 4는 "어느 쪽인지 고지"이므로 충족 가능).
+4. **실 SMS(W3)** → 스텁 유지 + "가상 인증 모드" 화면·README.md 고지(DoD 4는 "어느 쪽인지 고지"이므로 충족 가능).
 5. **ML 모델 비교(W8-2 GBM+SHAP)** → EBM 단일로 축소("정확도 상한 비교" 서사만 생략, 해석가능성·FDS 대체·개인화 유지). EBM Java 통합이 부담이면 로지스틱으로 후퇴(설명가능성 유지).
 6. **1,100만 건 풀 스케일(W1)** → **1/10 스케일(110만 건, 페르소나당 400명)로 축소** — 페르소나·낭비/필수 라벨·ML 학습·실시간 등장 서사는 전부 유지(학습셋은 오히려 검수 가능해짐). 규모는 숫자일 뿐, 서사는 구조에서 나온다.
 7. **실제 좌표·주소(W1-0 ①)** → 활동 모델(장소 유형)만 유지, 좌표·상권데이터 생략(개연성은 유지, "위치 상세"만 후퇴).
 8. **KWCAG 잔여 4탭 전수 점검(W6-4)** → 치명 위반(명도대비·키보드 함정)만 수정.
 
-**절대 자르지 않는 것**: 8082 격리(외부 비공개) / 무인증 쓰기 보호(Basic 게이트 또는 동등 수단) / 법무 정본↔`policy()/terms()` 정합 / 배포 전 RDS 스냅샷·롤백 절차 / 재현성 원칙(시드·Clock·결정론) / **ML 해석가능성(black-box 금지)·학습/서비스 데이터 분리** / 팀 README.md 불가침 / "데이터는 페르소나 확정 전까지 추가하지 않는다".
+**절대 자르지 않는 것**: 8082 격리(외부 비공개) / 무인증 쓰기 보호(Basic 게이트 또는 동등 수단) / 법무 정본↔`policy()/terms()` 정합 / 배포 전 RDS 스냅샷·롤백 절차 / 재현성 원칙(시드·Clock·결정론) / **ML 해석가능성(black-box 금지)·학습/서비스 데이터 분리** / 팀 README.md 자동 수정 금지 / "데이터는 페르소나 확정 전까지 추가하지 않는다".
 
 ## 7. 부록
 
