@@ -5,7 +5,7 @@
  * '오늘'은 브라우저 시계가 아니라 서버가 준 `asOf`다 — 데모에서 시계를 밀면 잔디도 같이 움직여야 한다.
  * 주간 미션은 백엔드에 조회 API가 없어(설계서 §9 미정), 같은 카드 모양에 잔디로 계산한 이번 주 현황을 넣었다.
  */
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Icon } from '../components/Icons';
 import { AppBar, Scroll, Screen, ErrorBox, Loading, SectionTitle } from '../components/ui';
 import { useSession } from '../state/session';
@@ -24,7 +24,6 @@ export function Myroom() {
   const { go, userId } = useSession();
   const { home, loading, error, reload } = useGuardian();
   const room = useAsync(() => api.guardian.room(userId).catch(() => ({ objects: [], slotCount: 20 })), [userId]);
-  const [decorMsg, setDecorMsg] = useState(false);
 
   const grid = useMemo(() => {
     if (!home) return { cells: [] as { date: string; level: number; day: number; today: boolean; result?: string }[], lead: 0 };
@@ -122,16 +121,24 @@ export function Myroom() {
           <div className="asset"><b>{keptDays}일</b><span>이번 챌린지</span></div>
         </div>
 
-        {/* 방 꾸미기 — 상점 구매 API는 아직 없다(설계서 §9). 버튼은 두되 상태를 솔직히 적는다. */}
-        <button type="button" className="btn btn-ghost" onClick={() => setDecorMsg((v) => !v)} aria-expanded={decorMsg}>
-          🎨 방 꾸미기
-        </button>
-        {decorMsg && (
-          <div className="pv" style={{ marginTop: 10 }}>
-            포인트로 <b>사물 30P · 가구 150P · 벽/바닥 400P</b>를 배치하는 꾸미기 화면이 곧 열려요.
-            지금은 지킨 날마다 사물이 자동으로 도착해요. 현금 결제 경로는 두지 않아요.
+        {/* 포인트샵·도감 진입 (개편안 `.entry-row`) — 방을 채우는 두 경로다.
+            포인트샵은 사서 놓고, 도감은 지켜서 받는다. */}
+        <div className="entry-row">
+          <div className="entry" role="button" tabIndex={0}
+               onClick={() => go('shop')}
+               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') go('shop'); }}>
+            <Icon id="i-coin" className="" size={24} />
+            <div><b>{items.pointBalance}P</b><span>포인트샵</span></div>
+            <em>›</em>
           </div>
-        )}
+          <div className="entry" role="button" tabIndex={0}
+               onClick={() => go('collection')}
+               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') go('collection'); }}>
+            <Icon id="i-gift" className="" size={24} />
+            <div><b>{objects.length}종</b><span>도감</span></div>
+            <em>›</em>
+          </div>
+        </div>
 
         {/* 이번 주 현황 */}
         <SectionTitle aux="지킨 날 기준">이번 주</SectionTitle>

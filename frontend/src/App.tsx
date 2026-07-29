@@ -23,6 +23,11 @@ import { Onboarding3 } from './screens/Onboarding3';
 import { Done } from './screens/Done';
 import { Home } from './screens/Home';
 import { Myroom } from './screens/Myroom';
+import { Collection } from './screens/Collection';
+import { Shop } from './screens/Shop';
+import { MonthEnd } from './screens/MonthEnd';
+import { Settle } from './screens/Settle';
+import { Renew } from './screens/Renew';
 import { Notifications } from './screens/Notifications';
 import { Transactions } from './screens/Transactions';
 import { Report } from './screens/Report';
@@ -44,13 +49,17 @@ import { MyDemo } from './screens/MyDemo';
 /** 최초 온보딩(마이데이터 연결 전)에만 열리는 화면. */
 const LINK_FLOW: ScreenId[] = ['splash', 'auth', 'connect'];
 /** 이번 챌린지를 정하는 흐름 — 이 화면들에서는 하단 탭을 감춘다(중간에 빠져나가면 흐름이 끊긴다). */
-const SETUP_FLOW: ScreenId[] = ['loading', 'ob1', 'ob2', 'ob3', 'done'];
+const SETUP_FLOW: ScreenId[] = ['loading', 'ob1', 'ob2', 'ob3', 'done',
+  // 월말 사이클도 같은 성격의 흐름이다 — 축하→결산→갱신을 중간에 끊으면 다음 달 목표가 안 정해진다.
+  'monthend', 'settle', 'renew'];
 
 const SCREENS: Record<ScreenId, ComponentType> = {
   splash: Splash, auth: Auth, connect: Connect, loading: Loading,
   ob1: Onboarding1, ob2: Onboarding2, ob3: Onboarding3, done: Done,
   home: Home, report: Report, my: My,
   myroom: Myroom, notifications: Notifications, transactions: Transactions,
+  collection: Collection, shop: Shop,
+  monthend: MonthEnd, settle: Settle, renew: Renew,
   'r-spending': ReportSpending, 'r-analysis': ReportAnalysis, 'r-cards': ReportCards,
   'r-account': ReportAccount,
   'r-waste': ReportWaste, 'r-savings': ReportSavings,

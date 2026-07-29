@@ -136,17 +136,37 @@ export function Home() {
             </span>
           </button>
 
-          {/* 히어로 — 지키는 금액과 그 비율.
-              '달성률'이라 부르면 안 된다. 이 값은 설계서 §1의 `확보 절약액 ÷ 지킬 돈`이라
-              시간 축이 없다 — 한 푼도 안 쓴 첫날에도 100%다. 완주한 것처럼 읽히던 자리라
-              "지금 지키는 중"이라는 현재 상태로 바꾸고, 며칠째인지를 옆에 붙여 진행을 드러낸다. */}
+          {/* 히어로 (개편안 `.hero-top`/`.hero-mid`) — 지킨 금액이 크게, 방어율은 반원 게이지로.
+              '달성률'이라 부르지 않는다. 이 값은 `확보 절약액 ÷ 지킬 돈`이라 시간 축이 없어
+              한 푼도 안 쓴 첫날에도 100%다 — 완주한 것처럼 읽히지 않게 '방어율'로 적고
+              며칠째인지를 D-day로 옆에 둔다.
+
+              게이지 길이는 개편안의 계산을 그대로 쓴다: 반원 호의 길이가 144.5라
+              `stroke-dashoffset = 144.5 × (1 − 비율)`이면 채운 만큼만 보인다. */}
           <div className="hero">
-            <div className="cap">지금 지키고 있어요</div>
-            <div className="big">{defense}%</div>
-            <div className="sub">
-              지킬 돈 {won(ch.targetSaving)} 중 <b>{won(ch.securedSaving)}</b>
-              {' · '}{ch.daysElapsed}/{ch.daysTotal}일째
-              {ch.daysLeft > 0 ? ` · D-${ch.daysLeft}` : ' · 마지막 날'}
+            <div className="hero-top">
+              <div className="cap">이번 달 지킨 돈</div>
+              <div className="dday">{ch.daysLeft > 0 ? `D-${ch.daysLeft}` : '마지막 날'}</div>
+            </div>
+            <div className="hero-mid">
+              <div style={{ minWidth: 0 }}>
+                <div className="keep">{won(ch.securedSaving).replace('원', '')}<em>원</em></div>
+                <div className="sub">목표 {won(ch.targetSaving)}</div>
+              </div>
+              <div className="gauge">
+                <svg viewBox="0 0 105 60" aria-hidden="true">
+                  <path className="gtrack" d="M6.5 52.5 A46 46 0 0 1 98.5 52.5" />
+                  <path
+                    className="gfill"
+                    d="M6.5 52.5 A46 46 0 0 1 98.5 52.5"
+                    style={{ strokeDashoffset: (144.5 * (1 - Math.min(100, defense) / 100)).toFixed(1) }}
+                  />
+                </svg>
+                <div className="gval"><b>{defense}%</b><small>방어율</small></div>
+              </div>
+            </div>
+            <div className="hero-tip">
+              {ch.daysElapsed}/{ch.daysTotal}일째 · {strip.remainingCapLabel}
             </div>
           </div>
 

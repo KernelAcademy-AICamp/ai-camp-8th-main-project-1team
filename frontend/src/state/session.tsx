@@ -20,6 +20,10 @@ export type ScreenId =
   | 'home' | 'report' | 'my'
   // 홈 하위
   | 'myroom' | 'notifications' | 'transactions'
+  // 마이룸 하위 — 도감·포인트샵 (개편안 s-collection·s-shop)
+  | 'collection' | 'shop'
+  // 월말 사이클 — 완료 축하 → 결산 → 다음 달 갱신 (개편안 s-monthend·s-settle·s-renew)
+  | 'monthend' | 'settle' | 'renew'
   // 리포트 하위
   | 'r-analysis' | 'r-spending' | 'r-cards' | 'r-account' | 'r-waste' | 'r-savings'
   // 마이 하위
@@ -40,6 +44,7 @@ export const isTab = (s: ScreenId): s is TabId => (TAB_SCREENS as readonly strin
 const ALL_SCREENS = [
   'splash', 'auth', 'connect', 'loading', 'ob1', 'ob2', 'ob3', 'done',
   'home', 'report', 'my', 'myroom', 'notifications', 'transactions',
+  'collection', 'shop', 'monthend', 'settle', 'renew',
   'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings',
   'm-impulse', 'm-goals', 'm-connections', 'm-record', 'm-policy', 'm-survey', 'm-demo',
 ] as const;
@@ -55,7 +60,8 @@ export function tabOf(screen: ScreenId): TabId | null {
   if (isTab(screen)) return screen;
   if (screen.startsWith('r-')) return 'report';
   if (screen.startsWith('m-')) return 'my';
-  if (screen === 'myroom' || screen === 'notifications' || screen === 'transactions') return 'home';
+  if (screen === 'myroom' || screen === 'notifications' || screen === 'transactions'
+      || screen === 'collection' || screen === 'shop') return 'home';
   return null;
 }
 

@@ -31,13 +31,19 @@ public class GuardianController {
     private final GuardianService guardianService;
     private final GuardianBatchService batchService;
     private final GuardianRewardService rewardService;
+    private final GuardianCollectionService collectionService;
+    private final GuardianSettlementService settlementService;
     private final GuardianClock clock;
 
     public GuardianController(GuardianService guardianService, GuardianBatchService batchService,
-                              GuardianRewardService rewardService, GuardianClock clock) {
+                              GuardianRewardService rewardService,
+                              GuardianCollectionService collectionService,
+                              GuardianSettlementService settlementService, GuardianClock clock) {
         this.guardianService = guardianService;
         this.batchService = batchService;
         this.rewardService = rewardService;
+        this.collectionService = collectionService;
+        this.settlementService = settlementService;
         this.clock = clock;
     }
 
@@ -367,6 +373,47 @@ public class GuardianController {
         out.put("pointEvents", r.pointEvents());
         out.put("stateTransition", r.stateTransition());
         return out;
+    }
+
+    // ======================================================================
+    //  도감 · 포인트샵 · 결산 · 갱신 (개편안 s-collection·s-shop·s-settle·s-renew)
+    // ======================================================================
+
+    /** 도감 — 모은 소품과 아직 못 모은 칸, 마일스톤 진행. */
+    @GetMapping("/collection")
+    public GuardianCollectionService.CollectionView collection(@RequestParam Long userId) {
+        return collectionService.collection(userId);
+    }
+
+    /** 마일스톤 보상 청구 — N종을 채웠을 때. 아직이면 400. */
+    @PostMapping("/collection/milestones/{count}/claim")
+    public GuardianCollectionService.CollectionView claimMilestone(@RequestParam Long userId,
+                                                                   @PathVariable int count) {
+        return collectionService.claim(userId, count);
+    }
+
+    /** 포인트샵 진열대 — 보유 여부와 살 수 있는지까지 서버가 판단해 내려준다. */
+    @GetMapping("/shop")
+    public GuardianCollectionService.ShopView shop(@RequestParam Long userId) {
+        return collectionService.shop(userId);
+    }
+
+    /** 구매 — 포인트로만. 잔액이 모자라거나 이미 가진 물건이면 400. */
+    @PostMapping("/shop/{code}/buy")
+    public GuardianCollectionService.ShopView buy(@RequestParam Long userId, @PathVariable String code) {
+        return collectionService.buy(userId, code);
+    }
+
+    /** 월간 결산 — 방어율·카테고리별 성적·지킨 날·최장 연속·포인트·소품. */
+    @GetMapping("/settlement")
+    public GuardianSettlementService.SettlementView settlement(@RequestParam Long userId) {
+        return settlementService.settle(userId);
+    }
+
+    /** 다음 달 조정안 — 지난달 실적에서 유도한다. 사용자가 그대로 쓰거나 직접 고친다. */
+    @GetMapping("/renewal")
+    public GuardianSettlementService.RenewalView renewal(@RequestParam Long userId) {
+        return settlementService.renewal(userId);
     }
 
     /** 비율은 소수 넷째 자리까지 — 설계서 응답 예시와 자릿수를 맞춘다. */

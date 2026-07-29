@@ -563,6 +563,86 @@ export interface GuardianTransactionView {
   undoDeadline: string | null;
   undoActions?: { reason: UndoReason; label: string; remaining?: number }[];
 }
+/** 도감 한 칸. owned=false면 자물쇠로 그린다(무엇이 남았는지 보여야 모을 마음이 생긴다). */
+export interface CollectionCell {
+  code: string;
+  name: string;
+  grade: 'COMMON' | 'RARE' | 'EPIC';
+  /** 프론트 SVG 심볼 키 — 그림은 프론트에 있고 서버는 어느 그림인지만 가리킨다. */
+  glyph: string;
+  story: string;
+  owned: boolean;
+  acquiredDate: string | null;
+  reason: string | null;
+}
+export interface CollectionMilestone {
+  count: number;
+  reward: 'EXEMPTION' | 'MISSION_CHANGE' | 'EPIC_DRAW';
+  label: string;
+  claimed: boolean;
+}
+export interface GuardianCollection {
+  owned: number;
+  total: number;
+  percent: number;
+  cells: CollectionCell[];
+  milestones: CollectionMilestone[];
+  next: CollectionMilestone | null;
+  exemption: number;
+  missionChange: number;
+  grassGuard: number;
+  points: number;
+}
+export interface ShopEntry {
+  code: string;
+  name: string;
+  glyph: string;
+  story: string;
+  category: 'FURNITURE' | 'BACKGROUND';
+  price: number;
+  owned: boolean;
+  /** 서버가 잔액과 대조해 판단한 값 — 화면은 이걸 믿는다. */
+  affordable: boolean;
+}
+export interface GuardianShop { points: number; items: ShopEntry[] }
+
+/** 월간 결산의 카테고리 한 줄. rate = 지켜낸 금액 / 한도. */
+export interface SettlementCategory {
+  category: string;
+  cap: number;
+  spent: number;
+  kept: number;
+  rate: number;
+}
+export interface GuardianSettlement {
+  challengeId: number;
+  startDate: string;
+  endDate: string;
+  targetSaving: number;
+  securedSaving: number;
+  defenseRate: number;
+  categories: SettlementCategory[];
+  keptDays: number;
+  bestStreak: number;
+  pointsEarned: number;
+  objectsCollected: number;
+  completionBonus: number;
+}
+/** 다음 달 조정안. action=KEEP(유지)·LOWER(하향) — 올리는 선택지는 없다. */
+export interface RenewalLine {
+  category: string;
+  currentCap: number;
+  suggestedCap: number;
+  action: 'KEEP' | 'LOWER';
+  lastRate: number;
+  reason: string;
+}
+export interface GuardianRenewal {
+  lines: RenewalLine[];
+  suggestedTargetSaving: number;
+  sanctuaries: string[];
+}
+
 export interface GuardianRoomObject {
   objectId: string;
   grade: Grade;
@@ -803,6 +883,23 @@ export const api = {
     /** 홈 한 방. 진행 중 챌린지가 없으면 404(ApiError.status===404). */
     home: (userId: number) => get<GuardianHome>(`/api/guardian/home?userId=${userId}`),
     room: (userId: number) => get<GuardianRoom>(`/api/guardian/room?userId=${userId}`),
+
+    /* ── 도감·포인트샵 (개편안 s-collection·s-shop) ── */
+    /** 도감 — 모은 칸과 못 모은 칸, 마일스톤 진행까지 서버가 계산해 준다. */
+    collection: (userId: number) =>
+      get<GuardianCollection>(`/api/guardian/collection?userId=${userId}`),
+    /** 마일스톤 보상 청구(10종 면제권·15종 미션변경권·20종 에픽뽑기). */
+    claimMilestone: (userId: number, count: number) =>
+      post<GuardianCollection>(`/api/guardian/collection/milestones/${count}/claim?userId=${userId}`, {}),
+    shop: (userId: number) => get<GuardianShop>(`/api/guardian/shop?userId=${userId}`),
+    /** 구매 — 살 수 있는지는 서버가 판단한다(프론트의 P 비교는 표시용일 뿐). */
+    buyItem: (userId: number, code: string) =>
+      post<GuardianShop>(`/api/guardian/shop/${encodeURIComponent(code)}/buy?userId=${userId}`, {}),
+
+    /* ── 월말 사이클 (개편안 s-settle·s-renew) ── */
+    settlement: (userId: number) =>
+      get<GuardianSettlement>(`/api/guardian/settlement?userId=${userId}`),
+    renewal: (userId: number) => get<GuardianRenewal>(`/api/guardian/renewal?userId=${userId}`),
     createChallenge: (userId: number, input: CreateChallengeInput) =>
       post<{ challenge: GuardianChallenge; snapshot: GuardianSnapshot }>(
         `/api/guardian/challenges?userId=${userId}`, input),
