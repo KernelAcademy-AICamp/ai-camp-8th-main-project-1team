@@ -152,29 +152,36 @@ public class GuardianSettlementService {
         List<RenewalLine> lines = new ArrayList<>();
         long total = 0;
         for (CategoryResult r : s.categories()) {
-            long suggested;
-            String action, reason;
-            if (r.rate() >= KEEP_THRESHOLD) {
-                suggested = r.cap();
-                action = "KEEP";
-                reason = "이 페이스가 딱 좋아요";
-            } else {
-                // 실제로 쓴 만큼에 여유를 얹는다. 다만 한 번에 너무 깎지는 않는다.
-                long fromActual = Math.round(r.spent() * LOWER_HEADROOM);
-                suggested = Math.max(Math.round(r.cap() * LOWER_FLOOR), fromActual);
-                suggested = Math.min(suggested, r.cap());      // 올리지는 않는다
-                suggested = Math.round(suggested / 10_000.0) * 10_000L;   // 만원 단위로 다듬는다
-                action = suggested < r.cap() ? "LOWER" : "KEEP";
-                reason = action.equals("LOWER")
-                        ? "목표가 조금 빡셌어요 — 현실에 맞게 낮췄어요"
-                        : "이 정도면 지킬 수 있어요";
-            }
-            lines.add(new RenewalLine(r.category(), r.cap(), suggested, action, r.rate(), reason));
-            total += suggested;
+            RenewalLine line = suggest(r);
+            lines.add(line);
+            total += line.suggestedCap();
         }
         // 다음 달 저금 목표 = 기준 지출 − 새 한도 합. 한도를 내렸으면 저금 목표도 함께 내려간다.
         long suggestedSaving = Math.max(0, ch.getBaselineAmount() - total);
         return new RenewalView(lines, suggestedSaving, csv(ch.getSanctuaryCategories()));
+    }
+
+    /**
+     * 카테고리 하나의 다음 달 한도를 정한다 — <b>순수 함수</b>.
+     *
+     * <p>규칙을 여기 한 곳에 모아 둔다. 잘 지켰으면 유지하고, 못 지켰으면 <b>실제로 쓴 만큼</b>에
+     * 여유를 얹어 내린다. 올리지는 않는다: 성공했다고 더 조이면 성공이 벌이 된다.
+     *
+     * <p>한 번에 너무 깎지 않는 하한({@link #LOWER_FLOOR})을 두는 이유는, 한 달 크게 무너진 사람의
+     * 목표가 반토막 나면 챌린지가 의미를 잃기 때문이다. 만원 단위로 다듬는 것은 화면에
+     * `104,500원` 같은 값이 뜨면 사람이 정한 목표로 안 읽히기 때문이다.
+     */
+    static RenewalLine suggest(CategoryResult r) {
+        if (r.rate() >= KEEP_THRESHOLD) {
+            return new RenewalLine(r.category(), r.cap(), r.cap(), "KEEP", r.rate(), "이 페이스가 딱 좋아요");
+        }
+        long fromActual = Math.round(r.spent() * LOWER_HEADROOM);
+        long suggested = Math.max(Math.round(r.cap() * LOWER_FLOOR), fromActual);
+        suggested = Math.min(suggested, r.cap());                 // 올리지는 않는다
+        suggested = Math.round(suggested / 10_000.0) * 10_000L;   // 만원 단위
+        boolean lower = suggested < r.cap();
+        return new RenewalLine(r.category(), r.cap(), suggested, lower ? "LOWER" : "KEEP", r.rate(),
+                lower ? "목표가 조금 빡셌어요 — 현실에 맞게 낮췄어요" : "이 정도면 지킬 수 있어요");
     }
 
     // ======================================================================
