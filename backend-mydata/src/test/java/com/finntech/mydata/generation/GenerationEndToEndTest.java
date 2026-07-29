@@ -120,6 +120,22 @@ class GenerationEndToEndTest {
         assertThat(count("SELECT COUNT(*) FROM mydata_account_txn "
                 + "WHERE mydata_account_txn_source<>'CARD' AND mydata_account_txn_payment_id IS NOT NULL")).isZero();
 
+        // 사본은 원본과 **같은 거래**여야 한다. 건수만 맞고 값이 어긋나면 통장과 카드내역이
+        // 서로 다른 말을 한다. 특히 금액은 월급 기반 스케일·스냅을 거친 뒤의 값을 복사해야 한다 —
+        // 원본 t.amount()를 실으면 배율이 빠져 두 값이 갈라진다.
+        String joined = "FROM mydata_account_txn t JOIN mydata_payment p "
+                + "ON p.mydata_payment_id = t.mydata_account_txn_payment_id "
+                + "WHERE t.mydata_account_txn_source='CARD' AND ";
+        assertThat(count("SELECT COUNT(*) " + joined
+                + "t.mydata_account_txn_amount <> p.mydata_payment_amount")).as("금액").isZero();
+        assertThat(count("SELECT COUNT(*) " + joined
+                + "t.mydata_account_txn_date <> p.mydata_payment_date")).as("일시").isZero();
+        assertThat(count("SELECT COUNT(*) " + joined
+                + "t.mydata_account_txn_description <> p.mydata_payment_merchant_name")).as("적요=가맹점").isZero();
+        // 카드 결제는 통장에서 언제나 나가는 돈이다.
+        assertThat(count("SELECT COUNT(*) FROM mydata_account_txn "
+                + "WHERE mydata_account_txn_source='CARD' AND mydata_account_txn_type<>'WITHDRAWAL'")).isZero();
+
         // 금액은 부호 없는 절대액이고 종류는 두 가지뿐이다.
         assertThat(count("SELECT COUNT(*) FROM mydata_account_txn WHERE mydata_account_txn_amount <= 0")).isZero();
         assertThat(count("SELECT COUNT(*) FROM mydata_account_txn "

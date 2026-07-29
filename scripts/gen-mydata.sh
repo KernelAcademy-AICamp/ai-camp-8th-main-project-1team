@@ -86,8 +86,34 @@ while kill -0 "$GEN_PID" 2>/dev/null; do
   prev="$cur"
 done
 
+# ── 3-B) 후처리까지 기다린다 ──
+# 결제 삽입이 멈춰도 생성기는 아직 끝난 게 아니다 — mydata_merchant 집계(결제 전량 스캔)와
+# 정리 CSV 쓰기가 남아 있다. 예전에는 이 대기가 없어서 아래 4단계 충돌 정리가 집계와 **동시에**
+# 돌았고, 그러면 집계가 지워질 결제를 담거나 충돌 삭제가 집계보다 먼저 끝나 가맹점 표에
+# 충돌 번호가 남았다. 결제가 1,000만을 넘으며 집계가 길어지자 실제로 겹쳤다.
+echo "[gen-mydata] 가맹점 집계·후처리 대기…"
+for _ in $(seq 1 240); do            # 최대 60분
+  grep -q '\[generation\] 고유 가맹점' /tmp/gen-mydata.log && break
+  kill -0 "$GEN_PID" 2>/dev/null || break     # 생성기가 죽었으면 더 기다릴 것이 없다
+  sleep 15
+done
+# 집계 로그가 떴어도 CSV 쓰기가 남을 수 있으니, 관련 쿼리가 완전히 빠질 때까지 한 번 더 확인한다.
+for _ in $(seq 1 60); do
+  busy="$(mysql_q "SELECT COUNT(*) FROM information_schema.processlist
+                   WHERE command<>'Sleep' AND info IS NOT NULL AND info LIKE '%mydata_merchant%';")"
+  [[ "${busy:-0}" -eq 0 ]] && break
+  sleep 5
+done
+
 # ── 4) 충돌 정리(사업자번호 → 주소 유일성 보장) ──
 # 10자리 번호 공간의 순수 해시충돌로 같은 번호가 서로 다른 주소를 갖는 건을 제거(README 규칙).
+# 정리는 사업자번호로 조인한다 — 인덱스가 없으면 1,000만 행을 통째로 훑어 사실상 끝나지 않는다
+# (실측: 8분간 0행 삭제. 인덱스를 만드니 27초 생성 + 3분 삭제로 끝났다).
+# 생성 중에는 이 인덱스가 없는 편이 낫다(삽입마다 갱신 비용) — 그래서 여기서 만든다.
+echo "[gen-mydata] 정리용 인덱스 생성…"
+mysql_q "CREATE INDEX idx_mydata_payment_bizno
+         ON mydata_payment (mydata_payment_business_number);" 2>/dev/null   || echo "  (이미 있음 — 건너뜀)"
+
 echo "[gen-mydata] 충돌 정리(다중주소 사업자번호 제거)…"
 # 통장의 카드 출금은 결제의 **사본**이다. 결제만 지우면 통장에 그 출금만 남아 둘이 갈라진다
 # — 사본을 결제ID로 묶어 두었으므로 같은 조건으로 함께 지운다.

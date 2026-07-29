@@ -35,6 +35,8 @@ public class DailyActivitySimulator {
      */
     private final Map<String, Integer> avgPriceByKsic = new LinkedHashMap<>();
     private static final Set<String> MULTI_QTY = Set.of("편의점", "대형마트", "이커머스");
+    /** MULTI_QTY 맥락의 기대 수량 — {@code uniformInt(1,3)}의 평균. 계획단가를 실제 결제액에 맞춘다. */
+    private static final double EXPECTED_MULTI_QTY = 2.0;
     private static final Set<String> RECURRING = Set.of("통신비", "공과금", "스트리밍");
 
     private final CatalogSampler sampler;
@@ -59,13 +61,35 @@ public class DailyActivitySimulator {
         // **가중 평균이어야 한다.** 방문가중은 `지출비중 ÷ 평균단가`라 평균단가가 부풀면 빈도가
         // 억눌린다. 대중교통은 지하철 1,550원이 대부분인데 '교통카드 충전(10,000~50,000)'이
         // 균등하게 섞이면 평균이 6,500원이 되어 실제보다 4배 덜 타게 된다.
-        Map<String, double[]> acc = new LinkedHashMap<>();   // 코드 → [가중금액합, 가중치합]
+        //
+        // **기대 수량을 곱해야 한다.** 편의점·대형마트·이커머스는 한 번에 1~3개를 사므로(MULTI_QTY)
+        // 결제액이 단가의 평균 2배다. 단가만 보고 방문을 배정하면 그 업종이 의도한 지출비중의
+        // 2배를 먹는다 — 실측에서 대형마트가 2.8배였다.
+        //
+        // **계산 순서가 곧 뽑기 순서여야 한다.** 실제 거래는 두 단계로 정해진다:
+        // ① pickCategory2 가 업종 안에서 맥락을 **빈도**로 뽑고 ② resolveProduct 가 그 맥락 안에서
+        // 품목을 **품목 가중치**로 뽑는다. 그러니 계획단가도 같은 순서로 — 맥락 안에서 품목 평균을
+        // 먼저 내고, 그 평균들을 맥락 빈도로 합쳐야 한다.
+        //
+        // 한 번에 (품목 가중치 × 빈도)로 섞으면 맥락의 실효 비중이 `품목수 × 빈도`가 되어,
+        // 품목이 많은 맥락이 실제보다 지배한다. 4711(대형마트 12,796원 + 백화점 261,875원)처럼
+        // 단가 차이가 20배인 업종에서 이 오차가 그대로 지출 왜곡이 된다.
+        Map<String, double[]> acc = new LinkedHashMap<>();   // 코드 → [빈도가중 금액합, 빈도합]
         for (var c : catalog.contexts()) {
-            for (var pe : sampler.productsOf(c.category2())) {
-                double[] a = acc.computeIfAbsent(c.ksicCode(), k -> new double[2]);
-                a[0] += (pe.priceLow() + pe.priceHigh()) / 2.0 * pe.weight();
-                a[1] += pe.weight();
+            var items = sampler.productsOf(c.category2());
+            if (items.isEmpty()) continue;
+            double wsumP = 0, priceSum = 0;
+            for (var pe : items) {                          // ② 맥락 안의 품목 평균
+                priceSum += (pe.priceLow() + pe.priceHigh()) / 2.0 * pe.weight();
+                wsumP += pe.weight();
             }
+            if (wsumP <= 0) continue;
+            // 편의점·대형마트·이커머스는 한 번에 1~3개를 사므로 결제액이 단가의 평균 2배다.
+            double qty = MULTI_QTY.contains(c.category2()) ? EXPECTED_MULTI_QTY : 1.0;
+            double fw = Math.max(1e-9, c.frequencyWeight());
+            double[] a = acc.computeIfAbsent(c.ksicCode(), k -> new double[2]);
+            a[0] += priceSum / wsumP * qty * fw;            // ① 맥락을 빈도로 합친다
+            a[1] += fw;
         }
         for (var e : acc.entrySet()) {
             if (e.getValue()[1] > 0) {
@@ -91,8 +115,33 @@ public class DailyActivitySimulator {
         return Math.max(1000.0, (double) sum / items.size());
     }
 
-    /** 전체 업종에서 균등 추출 — '프로파일 밖' 지출용. */
-    private static String pickAny(Set<String> codes, Random r) {
+    /**
+     * '프로파일 밖' 지출용 방문가중 — 전 업종을, <b>빈도 ÷ 단가</b>로 저울질한다.
+     *
+     * <p><b>균등 추출이면 안 된다.</b> 예전에 이 자리는 정상 경로와 본문이 같아 죽어 있었고,
+     * 되살리면서 업종을 균등하게 뽑게 했더니 여행(20만원)과 카페(4천원)가 같은 확률로 나왔다.
+     * 건수는 같아도 금액은 50배라, 결제의 8%가 지출 구조를 통째로 흔들었다 —
+     * 실측에서 교통 4.07배·여행 3.39배로 부풀고 식비는 0.54배로 눌렸다.
+     * 평소 안 가던 곳에 가더라도 사람은 비행기표보다 커피를 더 자주 산다.
+     */
+    private Map<String, Double> globalVisitW;
+    private double globalVisitSum;
+
+    private void ensureGlobalVisitWeights() {
+        if (globalVisitW != null) return;
+        Map<String, Double> w = new LinkedHashMap<>();
+        double sum = 0;
+        for (String code : sampler.ksicCodes()) {
+            double x = Math.max(1e-9, sampler.freqOf(code)) / Math.max(1000, avgPrice(code));
+            w.put(code, x);
+            sum += x;
+        }
+        globalVisitW = w;
+        globalVisitSum = sum;
+    }
+
+    /** 전체 업종에서 균등 추출 — 더 이상 쓰지 않는다(위 설명 참조). 테스트 보존용. */
+    static String pickAny(Set<String> codes, Random r) {
         if (codes.isEmpty()) return null;
         int idx = r.nextInt(codes.size());
         for (String c : codes) {
@@ -107,9 +156,23 @@ public class DailyActivitySimulator {
         Random r = new Random(u.userSeed());
         List<GenTxn> out = new ArrayList<>();
 
-        // 취미 signature 카테고리 합집합
+        // 취미 signature 카테고리 합집합.
+        //
+        // 뽑을 때는 **균등하게 고르면 안 된다.** '여행' 취미의 signature는 여행숙박(33만원)·
+        // 렌터카(16만원)·항공(12만원)·철도·고속버스인데, 균등하게 뽑으면 결제의 6%가 거의 다
+        // 고액 항목으로 나가 지출 구조가 뒤집힌다(실측 교통 3.1배·여행 3.0배). 취미가 있어도
+        // 사람은 비행기표보다 커피를 더 자주 산다 — 일반 경로와 같은 저울을 쓴다.
         Set<String> hobbyCats = new HashSet<>();
         for (String hob : v.hobbies()) hobbyCats.addAll(hobbySignature.getOrDefault(hob, List.of()));
+        Map<String, Double> hobbyW = new LinkedHashMap<>();
+        double hobbySum = 0;
+        for (String c : hobbyCats) {
+            var hc = sampler.context(c);
+            if (hc == null) continue;
+            double x = Math.max(1e-9, hc.frequencyWeight()) / Math.max(1000, avgPrice(hc.ksicCode()));
+            hobbyW.put(c, x);
+            hobbySum += x;
+        }
 
         // 업종코드 방문가중.
         //
@@ -160,27 +223,31 @@ public class DailyActivitySimulator {
                     ? GenSeed.uniform(r, day.getCheatDayMultiplier()[0], day.getCheatDayMultiplier()[1]) : 1.0;
             int n = (int) Math.round(baseDaily * factor * cheat * GenSeed.jitter(r, 0.3));
             for (int i = 0; i < n; i++) {
-                out.add(oneTxn(u, v, date, cf, hobbyCats, visitW, wsum, cheat > 1.0, travel, r));
+                out.add(oneTxn(u, v, date, cf, hobbyCats, hobbyW, hobbySum, visitW, wsum,
+                        cheat > 1.0, travel, r));
             }
         }
         return out;
     }
 
     private GenTxn oneTxn(GeneratedUser u, PersonaVariant v, LocalDate date, double cf,
-                          Set<String> hobbyCats, Map<String, Double> visitW, double wsum,
+                          Set<String> hobbyCats, Map<String, Double> hobbyW, double hobbySum,
+                          Map<String, Double> visitW, double wsum,
                           boolean cheatDay, Map<LocalDate, RegionEntry> travel, Random r) {
         // 업종·맥락 선택: 취미 주입 / 프로파일 밖 / 일반
         String ksic, cat2;
         var amt = props.getRandomness().getAmount();
-        if (!hobbyCats.isEmpty() && r.nextDouble() < 0.06 * v.hobbyIntensityMult()) {
-            cat2 = pickFrom(hobbyCats, r);
+        if (!hobbyW.isEmpty() && r.nextDouble() < 0.06 * v.hobbyIntensityMult()) {
+            cat2 = pickWeighted(hobbyW, hobbySum, r);
             var ctx = sampler.context(cat2);
             ksic = ctx != null ? ctx.ksicCode() : null;
         } else if (r.nextDouble() < amt.getOutOfProfileProb()) {
             // 프로파일 밖 지출 — 페르소나가 평소 안 쓰는 업종에서도 가끔 결제한다.
             // 예전에는 이 분기와 아래 일반 분기의 본문이 **완전히 같아서** 난수만 소모하고
-            // 기능이 없었다. 이제 실제로 전체 업종에서 균등 추출한다.
-            ksic = pickAny(sampler.ksicCodes(), r);
+            // 기능이 없었다. 이제 전 업종에서 뽑되, 아래 일반 분기와 같은 '빈도 ÷ 단가' 저울을
+            // 쓴다 — 균등하게 뽑으면 비싼 업종이 지출 구조를 흔든다(ensureGlobalVisitWeights 참조).
+            ensureGlobalVisitWeights();
+            ksic = pickWeighted(globalVisitW, globalVisitSum, r);
             cat2 = sampler.pickCategory2(ksic, r);
         } else {
             ksic = pickWeighted(visitW, wsum, r);
