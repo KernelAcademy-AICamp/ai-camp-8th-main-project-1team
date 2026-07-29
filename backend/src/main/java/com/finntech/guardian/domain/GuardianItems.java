@@ -41,6 +41,16 @@ public class GuardianItems {
     @Column(name = "auto_use_grass_guard", nullable = false)
     private boolean autoUseGrassGuard;
 
+    /**
+     * 이미 받은 도감 마일스톤(종수 CSV, 예: {@code "10,15"}).
+     *
+     * <p><b>소유 종수로는 '받았는가'를 알 수 없다.</b> 종수는 "열렸는가"만 말한다 — 그것만 보고
+     * 판정했더니 21종을 모은 사용자가 세 보상 전부 '받음'으로 표시된 채 <b>한 장도 못 받고</b>
+     * 끝났고(청구 버튼이 안 뜬다), 반대로 청구 API는 부를수록 계속 지급됐다.
+     */
+    @Column(name = "claimed_milestones", nullable = false, length = 100)
+    private String claimedMilestones = "";
+
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
@@ -88,4 +98,20 @@ public class GuardianItems {
     public boolean isAutoUseGrassGuard() { return autoUseGrassGuard; }
     public void setAutoUseGrassGuard(boolean v) { this.autoUseGrassGuard = v; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    /** 그 마일스톤을 이미 받았는가. */
+    public boolean hasClaimed(int count) {
+        for (String p : claimedMilestones.split(",")) {
+            if (p.trim().equals(String.valueOf(count))) return true;
+        }
+        return false;
+    }
+
+    /** 받았다고 표시한다. 이미 있으면 아무 일도 하지 않는다(멱등). */
+    public void markClaimed(int count, LocalDateTime now) {
+        if (hasClaimed(count)) return;
+        claimedMilestones = claimedMilestones.isEmpty()
+                ? String.valueOf(count) : claimedMilestones + "," + count;
+        updatedAt = now;
+    }
 }

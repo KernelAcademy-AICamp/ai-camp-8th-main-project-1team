@@ -24,9 +24,10 @@ import java.util.Set;
  * 들어왔는지가 함께 있어야 "7.14 위기 방어"처럼 그날의 이야기가 된다. 그래서 카탈로그(표시 정보)와
  * {@link RoomObject}(획득 사실)를 합쳐 내려보낸다.
  *
- * <p><b>마일스톤 보상은 멱등이어야 한다.</b> 도감을 열 때마다 10종째 보상을 다시 주면 안 된다.
- * 지급 여부를 따로 저장하지 않고 <b>소유 종수로 판정</b>한다 — 종수는 줄어들지 않으므로, 이미 넘어선
- * 마일스톤은 {@code claimed=true}로 나가고 청구 API가 거절한다.
+ * <p><b>'열렸는가'와 '받았는가'는 다르다.</b> 소유 종수는 마일스톤이 열렸는지만 말한다.
+ * 처음엔 종수로 지급 여부까지 판정했는데, 21종을 모은 사용자가 세 보상 전부 '받음'으로 표시된 채
+ * <b>한 장도 못 받고</b> 끝났다(화면의 청구 버튼이 뜨지 않는다). 반대로 청구 API는 종수만 보니
+ * 부를수록 계속 지급됐다. 그래서 받은 이력을 {@code GuardianItems.claimedMilestones}에 남긴다.
  */
 @Service
 public class GuardianCollectionService {
@@ -94,15 +95,16 @@ public class GuardianCollectionService {
         int total = cells.size();
         int have = (int) cells.stream().filter(Cell::owned).count();
 
+        GuardianItems it = items(userId);
         List<MilestoneView> ms = new ArrayList<>();
         for (GuardianCatalog.Milestone m : catalog.milestones()) {
-            ms.add(new MilestoneView(m.count(), m.reward(), m.label(), have >= m.count()));
+            // claimed는 **받은 이력**이다. 종수가 넘었어도 아직 안 받았으면 false여야
+            // 화면에 청구 버튼이 뜬다.
+            ms.add(new MilestoneView(m.count(), m.reward(), m.label(), it.hasClaimed(m.count())));
         }
         MilestoneView next = catalog.nextMilestone(have)
-                .map(m -> new MilestoneView(m.count(), m.reward(), m.label(), false))
+                .map(m -> new MilestoneView(m.count(), m.reward(), m.label(), it.hasClaimed(m.count())))
                 .orElse(null);
-
-        GuardianItems it = items(userId);
         return new CollectionView(have, total, total == 0 ? 0 : have * 100 / total,
                 cells, ms, next, it.getExemption(), it.getMissionChange(),
                 it.getGrassGuard(), it.getPointBalance());
@@ -173,6 +175,9 @@ public class GuardianCollectionService {
             throw new IllegalStateException(target.count() + "종을 모으면 열려요");
         }
         GuardianItems it = items(userId);
+        if (it.hasClaimed(target.count())) {
+            throw new IllegalStateException("이미 받은 보상이에요");
+        }
         LocalDateTime now = LocalDateTime.now(clock);
         switch (target.reward()) {
             case "EXEMPTION" -> it.grant(1, 0, 0, now);
@@ -180,6 +185,7 @@ public class GuardianCollectionService {
             case "EPIC_DRAW" -> it.grant(0, 1, 0, now);   // 에픽 뽑기는 잔디 보호권으로 대신 지급
             default -> throw new IllegalStateException("모르는 보상: " + target.reward());
         }
+        it.markClaimed(target.count(), now);
         itemsRepository.save(it);
         return collection(userId);
     }
