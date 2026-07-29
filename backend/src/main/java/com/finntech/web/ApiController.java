@@ -118,21 +118,30 @@ public class ApiController {
 
     // ---- 리포트 -----------------------------------------------------------
 
+    /**
+     * 소비 리포트.
+     *
+     * <p><b>특정 달을 고를 수 없다.</b> 예전에는 {@code month} 파라미터를 받았지만 엔진에
+     * 전달되지 않고 캐시 키로만 쓰였다. {@code month=2026-03}으로 불러도 숫자는 최신
+     * 전 기간 누계가 나오면서 응답에는 {@code "month":"2026-03"}이 함께 실려, 클라이언트가
+     * 3월 한 달 지출로 오독할 수 있었다({@code monthlySpend} 맵에는 다른 달 키가 다 들어 있어
+     * 스스로 모순이었다). 프론트는 이 파라미터를 보낸 적이 없으므로 그냥 없앤다.
+     *
+     * <p>본문은 <b>전 기간 집계</b>다. 달별 값이 필요하면 {@code monthlySpend}를 쓴다.
+     * 캐시 키는 조회 시점의 달이라 본문 기간과 다르며, 그래서 무효화는 사용자 단위로 한다
+     * ({@link ReportService#invalidateAll}).
+     */
     @GetMapping("/report/monthly")
-    public Map<String, Object> report(@RequestParam Long userId,
-                                      @RequestParam(required = false) String month) {
+    public Map<String, Object> report(@RequestParam Long userId) {
         user(userId);
         AnalysisResult analysis = engine.analyze(userId, now());
-        String period = (month == null || month.isBlank())
-                ? now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM"))
-                : month;
+        String period = now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM"));
         // CONFIRMED일 때만 캐시된다 — ESTIMATED를 캐시하면 "더 기록하면 정확해집니다"가 거짓말이 된다
         ReportService.ReportBody rb = reportService.buildCached(userId, period, analysis, now());
         NarrativeService.Narrative narrative = narrativeService.summarizeReport(rb, analysis);
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("userId", userId);
-        body.put("month", month);
         body.put("totalSpend", rb.totalSpend());
         body.put("positive", rb.positive());
         body.put("negative", rb.negative());

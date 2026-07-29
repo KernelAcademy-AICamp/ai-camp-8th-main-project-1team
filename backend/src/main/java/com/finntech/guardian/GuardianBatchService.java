@@ -69,15 +69,41 @@ public class GuardianBatchService {
     /**
      * 하루치 배치를 돌린다.
      *
+     * <p><b>판정 대상 날짜는 반드시 지나간 날이어야 한다.</b> 예전에는 {@code targetDate}를
+     * 그대로 믿어서, 챌린지를 만든 날 종료일을 넣어 부르면 곧장 ⑥ 최종 정산으로 들어갔다.
+     * 그때는 집계 지출이 0이라 달성률이 1.0(설계서 §1: 확보 절약액 = min(지킬 돈,
+     * 기준 지출 − 0) = 지킬 돈)이 되어, <b>한 푼도 아끼지 않고 완주 보상 100P를 받았다.</b>
+     * 인증이 {@code ?userId=} 뿐이라 누구나 부를 수 있었다.
+     *
+     * <p>시작 전 날짜도 막는다 — 설계서 §2 "아직 시작 전이면 판정하지 않는다". 예전에는
+     * 챌린지를 만든 당일 배치를 돌리면 대상이 전날(= 시작 전)이 되어, 챌린지가 존재하지도
+     * 않던 날에 무지출 판정이 나고 사물이 지급됐다.
+     *
      * @param targetDate 판정 대상 날짜. null이면 어제(=가상 시계 기준 오늘의 전날).
+     *                   미래이거나 종료일 이후면 400.
      */
     @Transactional
     public BatchResult runDaily(Long userId, LocalDate targetDate) {
         LocalDateTime now = clock.now(userId);
-        LocalDate target = targetDate == null ? now.toLocalDate().minusDays(1) : targetDate;
+        LocalDate yesterday = now.toLocalDate().minusDays(1);
+        LocalDate target = targetDate == null ? yesterday : targetDate;
 
         GuardianChallenge ch = challengeRepository.findRunning(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "진행 중인 챌린지가 없어요"));
+
+        if (target.isAfter(yesterday)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "아직 끝나지 않은 날은 판정할 수 없어요");
+        }
+        if (target.isAfter(ch.getEndDate())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "챌린지 기간이 지난 날짜예요");
+        }
+        // 시작 전이면 판정할 것이 없다. 예외가 아니라 조용히 넘긴다 — 자동 배치가 챌린지를
+        // 만든 당일에도 돌기 때문에, 여기서 던지면 정상 흐름이 매번 실패로 보인다.
+        if (target.isBefore(ch.getStartDate())) {
+            return new BatchResult(null, null, List.of(), List.of(), null);
+        }
 
         List<GuardianNotification> sent = new ArrayList<>();
         List<String> points = new ArrayList<>();
@@ -86,6 +112,11 @@ public class GuardianBatchService {
         ChallengeState transition = confirmExpiredUndos(ch, now, sent);
 
         // ② 일 판정 — 같은 날을 두 번 판정하지 않는다(멱등).
+        //
+        // 한계: 판정이 끝난 날짜에 거래가 **늦게** 도착하면(마이데이터 전송 지연 등) 그 날의
+        // 판정은 옛 집계 그대로 남는다. 무지출로 판정돼 사물이 이미 지급됐다면 되돌릴 방법이
+        // 없다 — 설계서에 보상 회수 개념이 없기 때문이다. 배치가 '어제'까지만 판정하고
+        // 자동 동기화가 5분마다 도는 현재 구성에서는 드물지만, 0은 아니다.
         Optional<DailyVerdict> existing = verdictRepository.findByChallengeIdAndVerdictDate(ch.getId(), target);
         if (existing.isPresent()) {
             return new BatchResult(existing.get(), null, sent, points, transition);
@@ -121,7 +152,10 @@ public class GuardianBatchService {
         // ④ 시간 기반 케이스.
         evaluateBatchCases(ch, target, now, sent);
 
-        // ⑤ 주간 정산 — 일요일에 미션과 위기 방어를 확정한다.
+        // ⑤ 주간 미션이 없으면 만든다. 정산(일요일)보다 **먼저** 있어야 평가할 대상이 생긴다.
+        ensureWeeklyMission(userId, ch, target, now);
+
+        // ⑤-2 주간 정산 — 일요일에 미션과 위기 방어를 확정한다.
         if (target.getDayOfWeek() == DayOfWeek.SUNDAY) {
             points.addAll(settleWeek(userId, ch, target, now));
         }
@@ -227,11 +261,56 @@ public class GuardianBatchService {
             }
         });
 
-        if (ch.getState() == ChallengeState.AT_RISK
+        if (heldTheLineAllWeek(ch, weekStart, target)
                 && rewardService.award(userId, ch.getId(), PointType.RISK_DEFENSE, target, null, now) > 0) {
             awarded.add(PointType.RISK_DEFENSE.name());
         }
         return awarded;
+    }
+
+    /**
+     * 그 주의 미션을 보장한다.
+     *
+     * <p><b>이 메서드가 없어서 주간 미션 30P가 영영 지급되지 않았다.</b> 설계서 §9는 미션 내용을
+     * "보상 계층이 정한다"는 열린 항목으로 남겨 뒀고, 판정({@link #settleWeek})만 구현돼 있었다.
+     * 그래서 {@code new WeeklyMission(...)}을 부르는 곳이 코드베이스 어디에도 없었고,
+     * {@code findCurrent}는 언제나 비어 {@code ifPresent}가 조용히 넘어갔다.
+     * 주간 상한 100P의 30%가 닫혀 있던 셈이다.
+     *
+     * <p><b>내용은 챌린지가 이미 가진 값에서만 유도한다</b> — 새 개념을 만들지 않는다.
+     * 조건은 이미 판정 코드가 있는 {@code NO_SPEND_STREAK_MIN}을 쓰고, 목표 일수는
+     * 설정값이다(원칙 4). 개입 케이스 C5("무지출 3일 연속")와 같은 결을 유지한다.
+     * 더 다양한 미션은 보상 계층이 규칙을 정할 때 조건 타입을 바꿔 끼우면 된다.
+     */
+    private void ensureWeeklyMission(Long userId, GuardianChallenge ch, LocalDate target, LocalDateTime now) {
+        LocalDate weekStart = GuardianRewardService.weekStart(target);
+        if (missionRepository.findCurrent(userId, weekStart).isPresent()) return;
+
+        int threshold = props.getWeeklyMissionNoSpendDays();
+        if (threshold <= 0) return;   // 0이면 주간 미션을 쓰지 않겠다는 뜻
+
+        missionRepository.save(new WeeklyMission(userId, ch.getId(),
+                MissionCondition.NO_SPEND_STREAK_MIN, null, threshold,
+                weekStart, weekStart.plusDays(6), now));
+    }
+
+    /**
+     * 설계서 §6의 "위기 방어(AT_RISK로 <b>한 주 버팀</b>)" 판정.
+     *
+     * <p>예전에는 일요일 <b>그 순간</b>의 상태만 봤다. 그래서 1주차 6일 만에 한도 80%를 태우고
+     * 일요일에 AT_RISK로 앉아 있던 사용자는 20P를 받고, 3주 내내 아껴 79%에서 멈춘 사용자는
+     * 못 받았다 — 파산 직전에 상을 주고 잘 지킨 사람을 빠뜨리는 정반대 판정이었다.
+     *
+     * <p>이제 그 주의 일 판정 기록을 본다. ① 한 번이라도 위험 구간에 들어갔고 ② 끝까지
+     * 초과로 넘어가지 않았을 때만 "버텼다"로 인정한다. 애초에 위험에 닿지 않은 주는
+     * 방어할 것이 없었으므로 대상이 아니다.
+     */
+    private boolean heldTheLineAllWeek(GuardianChallenge ch, LocalDate weekStart, LocalDate weekEnd) {
+        if (ch.getState() == ChallengeState.EXCEEDED) return false;
+        List<DailyVerdict> week = verdictRepository.findRange(ch.getId(), weekStart, weekEnd);
+        if (week.isEmpty()) return false;
+        // 위험 구간을 밟은 적이 있어야 '방어'다. 지출 비율이 위험 임계 이상이었던 날을 찾는다.
+        return week.stream().anyMatch(v -> v.getSpentRatio() >= props.getAtRiskRatio());
     }
 
     // ======================================================================

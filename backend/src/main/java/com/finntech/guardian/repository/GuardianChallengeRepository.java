@@ -36,4 +36,13 @@ public interface GuardianChallengeRepository extends JpaRepository<GuardianChall
             + "and c.endDate < :date order by c.id asc")
     List<GuardianChallenge> findDue(@Param("states") Collection<ChallengeState> states,
                                     @Param("date") LocalDate date);
+
+    /** 진행 중인 모든 챌린지 — 새벽 배치가 사용자별로 훑는다. */
+    @Query("select c from GuardianChallenge c where c.state in :states order by c.id asc")
+    List<GuardianChallenge> findAllByStateIn(@Param("states") Collection<ChallengeState> states);
+
+    default List<GuardianChallenge> findAllRunning() {
+        return findAllByStateIn(List.of(
+                ChallengeState.ACTIVE, ChallengeState.AT_RISK, ChallengeState.EXCEEDED));
+    }
 }
