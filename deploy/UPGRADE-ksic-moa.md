@@ -30,6 +30,21 @@ FORCE=1 bash ./scripts/gen-mydata.sh
 
 **완료 로그에서 확인할 것** — `결제 없는 통장 카드출금=0`.
 
+### 1-B. 신원 부여 — **빠뜨리면 로그인이 안 된다**
+
+```bash
+MYSQL_BIN=~/Downloads/mysql-local/.../bin MYSQL_SOCKET=~/.../mysql.sock \
+  python3 scripts/regen-mydata-identity.py --apply
+```
+
+생성기가 넣는 신원은 전원 같은 자리표시자(`과소비형_c0fc` / `900101-1000000` / `010-0000-0000`)다.
+본인인증은 `CI = SHA256(이름+주민7+전화)`로 사용자를 찾으므로, 이 상태에서는 **무엇을 입력해도
+생성 사용자에 도달할 수 없다.** 실제로 이번에 건너뛰었다가 인증이 `UNASSIGNED_EXCHANGE`(미할당
+국번)로 계속 막혔다 — 국번 검증이 자리표시자 `0000`을 정확히 걸러낸 것이라 원인을 찾기까지 돌아갔다.
+
+끝나면 출력된 로그인 표본(이름·주민7·전화)을 `frontend/.env.local`의 `VITE_DEMO_CI`와 함께
+갱신한다. 옛 CI는 새 데이터에 존재하지 않아 온보딩이 통째로 실패한다.
+
 ### 2. ML 재학습 → 모델 배치
 
 ```bash
