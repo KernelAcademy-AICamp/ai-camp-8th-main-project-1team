@@ -24,8 +24,8 @@ export type ScreenId =
   | 'collection' | 'shop'
   // 월말 사이클 — 완료 축하 → 결산 → 다음 달 갱신 (개편안 s-monthend·s-settle·s-renew)
   | 'monthend' | 'settle' | 'renew'
-  // 리포트 하위
-  | 'r-analysis' | 'r-spending' | 'r-cards' | 'r-account' | 'r-waste' | 'r-savings'
+  // 리포트 하위 — r-compare 는 개편안 s-compare(맞춤 상품 Top3)
+  | 'r-compare' | 'r-analysis' | 'r-spending' | 'r-cards' | 'r-account' | 'r-waste' | 'r-savings'
   // 마이 하위
   | 'm-impulse' | 'm-goals' | 'm-connections' | 'm-record' | 'm-policy' | 'm-survey' | 'm-demo';
 
@@ -45,7 +45,7 @@ const ALL_SCREENS = [
   'splash', 'auth', 'connect', 'loading', 'ob1', 'ob2', 'ob3', 'done',
   'home', 'report', 'my', 'myroom', 'notifications', 'transactions',
   'collection', 'shop', 'monthend', 'settle', 'renew',
-  'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings',
+  'r-compare', 'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings',
   'm-impulse', 'm-goals', 'm-connections', 'm-record', 'm-policy', 'm-survey', 'm-demo',
 ] as const;
 

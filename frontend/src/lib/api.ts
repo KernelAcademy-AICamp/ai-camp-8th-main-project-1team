@@ -490,6 +490,8 @@ export interface GuardianChallenge extends GuardianSnapshot {
   id: number;
   state: ChallengeState;
   categories: string[];
+  /** 성역 — 줄이지 않기로 한 카테고리. 소비 내역의 '성역' 필터가 이걸로 거른다. */
+  sanctuaryCategories: string[];
   baselineAmount: number;
   targetSaving: number;
   challengeCap: number;

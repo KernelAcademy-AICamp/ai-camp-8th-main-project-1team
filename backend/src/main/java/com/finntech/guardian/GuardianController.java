@@ -260,6 +260,9 @@ public class GuardianController {
         m.put("id", ch.getId());
         m.put("state", ch.getState());
         m.put("categories", ch.getCategorySet());
+        // 성역도 함께 내려준다 — 소비 내역의 '성역' 필터가 이 목록으로 거른다.
+        // 없으면 필터가 조용히 빈 결과를 내는데, 화면은 "성역 지출이 없다"로 읽어 버린다.
+        m.put("sanctuaryCategories", ch.getSanctuarySet());
         m.put("baselineAmount", ch.getBaselineAmount());
         m.put("targetSaving", ch.getTargetSaving());
         m.put("challengeCap", ch.getChallengeCap());

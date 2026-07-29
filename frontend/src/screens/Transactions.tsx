@@ -10,21 +10,64 @@ import { useGuardian } from '../state/guardian';
 import { autoSyncMyData } from '../state/autoSync';
 import { useAsync } from '../state/useAsync';
 import { api, catLabel, type MyMerchant } from '../lib/api';
+import { SpendCalendar } from '../components/SpendCalendar';
 import { won, shortDate, monthLabel } from '../lib/format';
+
+type SpendFilter = 'all' | 'disc' | 'fixed' | 'sanct';
+/** 개편안의 필터 4종. '재량'은 성역·고정지출을 뺀 나머지다 — 줄일 수 있는 것만 남긴다. */
+const SPEND_FILTERS: { key: SpendFilter; label: string }[] = [
+  { key: 'all', label: '전체' },
+  { key: 'disc', label: '재량' },
+  { key: 'fixed', label: '고정지출' },
+  { key: 'sanct', label: '성역' },
+];
+/** 고정지출로 보는 중분류 — 달마다 같은 금액이 나가 줄이기 어려운 것들. */
+const FIXED_CATEGORIES = new Set(['주거/통신']);
 
 /** 사업자등록번호 10자리 → XXX-YY-ZZZZZ 표시. */
 const bizFmt = (b: string) => (b.length === 10 ? `${b.slice(0, 3)}-${b.slice(3, 5)}-${b.slice(5)}` : b);
 
 export function Transactions() {
   const { back, userId } = useSession();
-  const { reload: reloadGuardian } = useGuardian();
+  const { home, reload: reloadGuardian } = useGuardian();
   const payments = useAsync(() => api.allPayments(userId, 6), [userId]);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
   const [merchantOf, setMerchantOf] = useState<Record<string, MyMerchant | 'loading'>>({});
+  /** 달력에서 고른 날. null이면 전체 기간. */
+  const [pickedDate, setPickedDate] = useState<string | null>(null);
+  const [filter, setFilter] = useState<SpendFilter>('all');
+
+  // 달력에 얹을 값 — 날짜별 지출 합계와 '지킨 날'.
+  // 지킨 날은 지킴이가 판정한 사실이라 여기서 다시 계산하지 않고 홈이 준 잔디를 그대로 쓴다.
+  const totalsByDate = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const p of payments.data ?? []) {
+      const d = p.date.slice(0, 10);
+      out[d] = (out[d] ?? 0) + p.amount;
+    }
+    return out;
+  }, [payments.data]);
+  const keptDates = useMemo(
+    () => new Set((home?.grass ?? [])
+      .filter((g) => g.result === 'NO_SPEND_DAY' || g.result === 'ON_PACE_DAY')
+      .map((g) => g.date)),
+    [home],
+  );
+  /** 성역·고정지출 판정에 쓸 카테고리 집합 — 챌린지가 정한 것을 그대로 본다. */
+  const sanctuary = useMemo(() => new Set(home?.challenge?.sanctuaryCategories ?? []), [home]);
 
   const months = useMemo(() => {
-    const rows = payments.data ?? [];
+    const all = payments.data ?? [];
+    const rows = all.filter((p) => {
+      if (pickedDate && p.date.slice(0, 10) !== pickedDate) return false;
+      if (filter === 'all') return true;
+      const sanct = p.category ? sanctuary.has(p.category) : false;
+      if (filter === 'sanct') return sanct;
+      const fixed = p.category ? FIXED_CATEGORIES.has(p.category) : false;
+      if (filter === 'fixed') return fixed;
+      return !sanct && !fixed;      // 재량 = 성역도 고정지출도 아닌 것
+    });
     const byMonth: Record<string, typeof rows> = {};
     for (const p of rows) (byMonth[p.date.slice(0, 7)] ??= []).push(p);
     return Object.keys(byMonth).sort((a, b) => b.localeCompare(a)).map((m) => ({
@@ -32,7 +75,7 @@ export function Transactions() {
       rows: byMonth[m].slice().sort((a, b) => b.date.localeCompare(a.date)),
       total: byMonth[m].reduce((s, p) => s + p.amount, 0),
     }));
-  }, [payments.data]);
+  }, [payments.data, pickedDate, filter, sanctuary]);
 
   // 화면에 들어오면 새 결제를 조용히 당겨온다. 목록을 먼저 그리고 결과가 오면 그때 다시 부른다 —
   // 상단 '동기화' 버튼은 결과 문구가 필요한 수동 경로라 그대로 둔다.
@@ -83,7 +126,32 @@ export function Transactions() {
           {syncing ? '동기화 중…' : '동기화'}
         </button>
       } />
+      {/* 달력 (개편안 `.cal`) — 날짜별 지출과 지킨 날. 누르면 그날만 본다. */}
+      {home && (
+        <SpendCalendar
+          today={home.asOf.slice(0, 10)}
+          totalsByDate={totalsByDate}
+          keptDates={keptDates}
+          selected={pickedDate}
+          onSelect={setPickedDate}
+        />
+      )}
       <Scroll><div className="pad" style={{ paddingTop: 12 }}>
+        {/* 필터 칩 (개편안 `.fchips`) — 성역·고정지출을 걷어내고 '내가 줄일 수 있는 것'만 보는 용도. */}
+        <div className="fchips">
+          {SPEND_FILTERS.map((f) => (
+            <button key={f.key} type="button" className={filter === f.key ? 'on' : ''}
+              aria-pressed={filter === f.key} onClick={() => setFilter(f.key)}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+        {pickedDate && (
+          <button type="button" className="btn btn-ghost btn-sm" style={{ marginBottom: 12 }}
+            onClick={() => setPickedDate(null)}>
+            {shortDate(pickedDate)}만 보는 중 · 전체 보기
+          </button>
+        )}
         <p className="h-sub" style={{ margin: '0 0 12px' }}>
           연결한 모든 카드의 최근 6개월 결제예요{total ? ` · 총 ${total.toLocaleString('ko-KR')}건` : ''}.
           {syncMsg && <span role="status" style={{ display: 'block', marginTop: 4, color: 'var(--blue-t)' }}>· {syncMsg}</span>}
