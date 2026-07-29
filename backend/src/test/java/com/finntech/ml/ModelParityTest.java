@@ -25,7 +25,12 @@ class ModelParityTest {
     @Test
     @SuppressWarnings("unchecked")
     void javaScorerMatchesPythonEbm() throws Exception {
-        SpendingClassifier clf = new SpendingClassifier(mapper);
+        // 이 테스트가 보는 것은 Java↔Python 수치 일치이지 카테고리 체계가 아니다.
+        // 체계 대조는 SpendingClassifierGuardTest 가 따로 본다.
+        SpendingClassifier clf = new SpendingClassifier(mapper,
+                new com.finntech.engine.IndustryCategoryMapper(mapper) {
+                    @Override public java.util.Set<String> midCategories() { return java.util.Set.of(); }
+                });
         assumeTrue(clf.isReady(), "ml/ebm_model.json 미배치 → skip");
 
         List<Map<String, Object>> samples;

@@ -22,10 +22,10 @@ class DailyActivitySimulatorTest {
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
     private final CatalogLoader loader = new CatalogLoader(mapper);
     private final GenerationProperties props = new GenerationProperties();
+    private final CatalogSampler sampler = new CatalogSampler(loader, new MerchantRegistry(
+            props.getSeed(), loader.regions(), props.getAddress().getBubunProb()));
     private final DailyActivitySimulator sim = new DailyActivitySimulator(
-            new CatalogSampler(loader, new MerchantRegistry(
-                    props.getSeed(), loader.regions(), props.getAddress().getBubunProb())),
-            new WasteLabeler(props), loader, props);
+            sampler, new WasteLabeler(props, sampler), loader, props);
     private final List<GeneratedUser> users = new PopulationBuilder(loader, props).build(20260721L, 500);
 
     private GeneratedUser first(String persona) {

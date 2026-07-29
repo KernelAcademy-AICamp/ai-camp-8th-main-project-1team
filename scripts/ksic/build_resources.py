@@ -23,20 +23,47 @@ BACKEND = os.path.join(ROOT, 'backend', 'src', 'main', 'resources')
 CONTEXTS = os.path.join(CATALOG, 'contexts.json')
 
 
+# 이 값 미만이면 '필수 무대'로 본다. 낭비 판정의 무대 구분에 쓰이며, 낭비확률 자체는 아니다.
+# (재량 ≠ 낭비 — 취미 지출이 재량이어도 본인 취미면 보호한다.)
+ESSENTIAL_THRESHOLD = 0.30
+
+
+def discretionary_by_mid(mid_of):
+    """중분류별 재량성 = 그 중분류 맥락들의 discretionaryBase 빈도가중 평균.
+
+    ESSENTIAL 목록이 네 곳(train.py · WasteFeatureExtractor · backend-mydata yml · WasteLabeler)에
+    **손으로 복사돼** 있었다. 한 곳만 고치면 학습과 추론의 특징이 갈라지는데 아무도 모른다.
+    이제 카탈로그가 이미 갖고 있는 재량성에서 유도한다 — 사람이 옮겨 적을 일이 없다.
+    """
+    contexts = json.load(open(CONTEXTS, encoding='utf-8'))['contexts']
+    acc = collections.defaultdict(lambda: [0.0, 0.0])
+    for c in contexts:
+        m = mid_of[c['ksicCode']]
+        w = c['frequencyWeight']
+        acc[m][0] += c['discretionaryBase'] * w
+        acc[m][1] += w
+    return {m: round(s / w, 4) for m, (s, w) in sorted(acc.items()) if w > 0}
+
+
 def main():
     rows = load_mapping()
     mid = {k: m for s, l, k, m in rows if m != 'DROP' and k != '-'}
+    disc = discretionary_by_mid(mid)
+    essential = sorted(m for m, d in disc.items() if d < ESSENTIAL_THRESHOLD)
 
     ksic_mid = {
         '_note': ('KSIC 세분류 → 우리 소비 중분류. 결정론 1:1이며 ML이 관여하지 않는다. '
                   'scripts/ksic/ksic-mapping.tsv 에서 생성한다(단일 원천). '
                   '마이데이터는 업종코드만 넘기고, 이 표로 앱이 소비 카테고리를 붙인다.'),
         'midByKsic': dict(sorted(mid.items())),
+        'discretionaryByMid': disc,
+        'essentialThreshold': ESSENTIAL_THRESHOLD,
+        'essentialCategories': essential,
     }
     for path in (os.path.join(CATALOG, 'ksic-mid.json'), os.path.join(BACKEND, 'ksic-mid.json')):
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(ksic_mid, f, ensure_ascii=False, indent=1)
-        print(f'  {os.path.relpath(path, ROOT)} — 코드 {len(mid)}개')
+        print(f'  {os.path.relpath(path, ROOT)} — 코드 {len(mid)}개 · 필수 {len(essential)}개')
 
     # 맥락이 실제로 존재하는 코드만 담는다 — 없는 중분류에 페르소나 비중을 주면 그만큼 사라진다.
     live = {c['ksicCode'] for c in json.load(open(CONTEXTS, encoding='utf-8'))['contexts']}

@@ -9,9 +9,19 @@ import json, time, pickle, bisect
 import numpy as np, pandas as pd
 from scipy.special import expit
 
-ML="/Users/paeseuteukaempeoseu/Downloads/finntech-ml"; t0=time.time()
+# 경로는 환경변수로 받는다 — 절대경로를 박으면 다른 사람이 못 돌린다.
+import os, pathlib
+ML=os.environ.get("FINNTECH_ML_DIR", str(pathlib.Path.home()/"Downloads"/"finntech-ml"))
+REPO=pathlib.Path(__file__).resolve().parent.parent
+t0=time.time()
 def log(m): print(f"[{time.time()-t0:6.1f}s] {m}", flush=True)
-ESSENTIAL={"대형마트","편의점","약국","대중교통","철도","고속버스","통신비","공과금","주유소","통행료"}
+
+# 업종코드 → 소비 중분류, 그리고 필수 중분류 — **대조표 하나에서 읽는다.**
+# 예전에는 ESSENTIAL 10개가 여기와 Java·yml에 손으로 복사돼 있어, 한 곳만 고치면
+# 학습과 추론의 user_disc_ratio가 조용히 갈라졌다.
+_KM=json.loads((REPO/"backend"/"src"/"main"/"resources"/"ksic-mid.json").read_text(encoding="utf-8"))
+KSIC2MID=_KM["midByKsic"]; ESSENTIAL=set(_KM["essentialCategories"])
+log(f"대조표 — 코드 {len(KSIC2MID)}개 · 필수 중분류 {sorted(ESSENTIAL)}")
 
 log("맵 로드")
 us=pd.read_csv(f"{ML}/user_split.tsv",sep="\t")
@@ -24,8 +34,13 @@ card2code={c:u2code[u] for c,u in zip(cu["mydata_card_id"],cu["mydata_user_id"])
 
 log("결제 로드")
 df=pd.read_csv(f"{ML}/payments.tsv",sep="\t",
-    dtype={"card_id":"string","cat2":"category","amount":"int32","label":"string"},parse_dates=["dt"])
+    dtype={"card_id":"string","ksic":"string","amount":"int32","label":"string"},parse_dates=["dt"])
 log(f"{len(df):,}행 — 매핑")
+# 제공자는 업종코드까지만 준다. 소비 카테고리는 앱이 붙이므로 학습도 같은 표를 거쳐야
+# 추론과 축이 맞는다(cat2 = 우리 소비 중분류).
+df["cat2"]=df["ksic"].map(KSIC2MID).fillna("카테고리없음").astype("category")
+df.drop(columns=["ksic"],inplace=True)
+log(f"중분류 {df['cat2'].cat.categories.size}종 — " + ", ".join(map(str,df['cat2'].cat.categories[:8])))
 df["ucode"]=df["card_id"].map(card2code).astype("int32"); df.drop(columns=["card_id"],inplace=True)
 df["split"]=split_by_code[df["ucode"].to_numpy()]
 df=df[df["split"]!="SERVICE"].copy(); df["pcode"]=pcodes[df["ucode"].to_numpy()]
@@ -38,7 +53,9 @@ df["hour_sin"]=np.sin(2*np.pi*hr/24).astype("float32"); df["hour_cos"]=np.cos(2*
 df["dow_sin"]=np.sin(2*np.pi*dow/7).astype("float32"); df["dow_cos"]=np.cos(2*np.pi*dow/7).astype("float32")
 df["night"]=((hr>=23)|(hr<=4)).astype("int8"); df["weekend"]=(dow>=5).astype("int8")
 df["is_disc"]=(~df["cat2"].isin(ESSENTIAL)).astype("int8")
-key=df["ucode"].to_numpy().astype("int64")*100+df["cat2"].cat.codes.to_numpy().astype("int64"); df["_key"]=key
+# 사용자×카테고리 키. 곱수는 카테고리 수보다 커야 사용자 간 충돌이 없다.
+_MUL=max(100,int(df["cat2"].cat.categories.size)+1)
+key=df["ucode"].to_numpy().astype("int64")*_MUL+df["cat2"].cat.codes.to_numpy().astype("int64"); df["_key"]=key
 med=df.groupby("_key")["amount"].transform("median").astype("float32")
 df["amt_vs_typical"]=(df["amount"]/med.clip(lower=1)).clip(upper=20).astype("float32")
 # 페르소나 프록시(사용자 단위 집계, 라벨 미사용 → 누수 아님)

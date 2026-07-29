@@ -18,9 +18,32 @@ import java.util.Set;
 public final class WasteFeatureExtractor {
     private WasteFeatureExtractor() {}
 
-    /** 생존필수 category2(학습과 동일) — 이 무대는 낭비 아님. 재량성=이 집합 밖. */
-    static final Set<String> ESSENTIAL = Set.of(
-            "대형마트", "편의점", "약국", "대중교통", "철도", "고속버스", "통신비", "공과금", "주유소", "통행료");
+    /**
+     * 생존필수 소비 중분류 — 이 무대는 낭비가 아니다. 재량성 = 이 집합 밖.
+     *
+     * <p><b>대조표에서 읽는다.</b> 예전에는 이 목록이 네 곳(여기 · {@code ml/train.py} ·
+     * {@code backend-mydata/application.yml} · {@code WasteLabeler})에 손으로 복사돼 있었다.
+     * 한 곳만 고치면 학습과 추론의 {@code user_disc_ratio} 특징이 갈라지는데, 크래시가 안 나서
+     * 아무도 모른다. 이제 {@code scripts/ksic}가 카탈로그의 재량성에서 유도해 한 파일에 쓴다.
+     *
+     * <p>정적 컨텍스트라 주입을 못 받아 직접 읽는다. 읽기 실패는 빈 집합 — 그러면
+     * 모든 소비가 재량으로 잡혀 {@code user_disc_ratio}가 1.0이 되지만, 예외로 죽는 것보다 낫다.
+     */
+    static final Set<String> ESSENTIAL = loadEssential();
+
+    private static Set<String> loadEssential() {
+        try (java.io.InputStream is = WasteFeatureExtractor.class
+                .getResourceAsStream("/ksic-mid.json")) {
+            if (is == null) return Set.of();
+            @SuppressWarnings("unchecked")
+            Map<String, Object> root = new tools.jackson.databind.ObjectMapper().readValue(is, Map.class);
+            @SuppressWarnings("unchecked")
+            List<String> list = (List<String>) root.get("essentialCategories");
+            return list == null ? Set.of() : Set.copyOf(list);
+        } catch (Exception e) {
+            return Set.of();
+        }
+    }
 
     /** 사용자 단위 집계(라벨 미사용 → 누수 아님): 카테고리별 중앙값 · 평균 log금액 · 재량지출 비율. */
     public record UserStats(Map<String, Double> categoryMedian, double meanLogAmount, double discRatio) {}

@@ -59,4 +59,14 @@ public class IndustryCategoryMapper {
     public int size() {
         return midByKsic.size();
     }
+
+    /**
+     * 이 체계가 내놓을 수 있는 소비 중분류 전부.
+     *
+     * <p>ML 모델이 <b>같은 체계로 학습됐는지</b> 대조할 때 쓴다. 체계를 바꾸고 재학습을 잊으면
+     * 모델의 명목 특징이 통째로 죽는데, 크래시가 안 나서 알아채기 어렵다.
+     */
+    public java.util.Set<String> midCategories() {
+        return new java.util.LinkedHashSet<>(midByKsic.values());
+    }
 }
