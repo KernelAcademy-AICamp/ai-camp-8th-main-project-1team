@@ -57,7 +57,8 @@ public class ProfileBuilder {
         Map<String, Long> byCat1 = new TreeMap<>();
         long removableSpend = 0;
         for (UserPayment p : window) {
-            byCat1.merge(p.getCategory1(), (long) p.getAmount(), Long::sum);
+            // 집계 축이 중분류다 — 대분류는 없앴다(업종과 소비종류를 겸하던 축).
+            byCat1.merge(p.getCategory2(), (long) p.getAmount(), Long::sum);
             if (removable.contains(p.getCategory2())) removableSpend += p.getAmount();
         }
         long total = byCat1.values().stream().mapToLong(Long::longValue).sum();

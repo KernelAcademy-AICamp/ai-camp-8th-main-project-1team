@@ -36,7 +36,7 @@ public class UnknownPgPaymentRunner implements ApplicationRunner {
     /** 국내 대표 PG(전자지급결제대행)사 — 가맹점 자리에 이 이름이 찍힌다. */
     private static final String[] PG = {"토스페이먼츠", "KG이니시스", "NHN KCP", "나이스페이먼츠", "다날", "헥토파이낸셜"};
     private static final String PAY_SQL = "INSERT INTO mydata_payment " +
-            "(mydata_payment_id, mydata_card_id, mydata_payment_date, mydata_payment_category1, " +
+            "(mydata_payment_id, mydata_card_id, mydata_payment_date, mydata_payment_ksic_code, " +
             "mydata_payment_category2, mydata_payment_amount, mydata_payment_merchant_name, " +
             "mydata_payment_received_benefit_amount, mydata_payment_channel, mydata_payment_product_name, " +
             "mydata_payment_product_price, mydata_payment_quantity, mydata_payment_waste_label, " +

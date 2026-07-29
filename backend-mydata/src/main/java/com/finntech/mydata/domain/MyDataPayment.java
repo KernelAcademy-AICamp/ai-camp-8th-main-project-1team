@@ -21,8 +21,9 @@ public class MyDataPayment {
     @Column(name = "mydata_payment_date", nullable = false)
     private LocalDateTime paymentDate;
 
-    @Column(name = "mydata_payment_category1", nullable = false, length = 30)
-    private String category1;
+    /** KSIC 세분류 4자리. 앱은 이 값으로 소비 카테고리를 붙인다(대조표 1:1). */
+    @Column(name = "mydata_payment_ksic_code", nullable = false, length = 8)
+    private String ksicCode;
 
     @Column(name = "mydata_payment_category2", length = 30)
     private String category2;
@@ -81,12 +82,12 @@ public class MyDataPayment {
     protected MyDataPayment() {}
 
     public MyDataPayment(String id, MyDataCard card, LocalDateTime paymentDate,
-                         String category1, String category2, int amount,
+                         String ksicCode, String category2, int amount,
                          String merchantName, int receivedBenefitAmount) {
         this.id = id;
         this.card = card;
         this.paymentDate = paymentDate;
-        this.category1 = category1;
+        this.ksicCode = ksicCode;
         this.category2 = category2;
         this.amount = amount;
         this.merchantName = merchantName;
@@ -96,7 +97,7 @@ public class MyDataPayment {
     public String getId() { return id; }
     public MyDataCard getCard() { return card; }
     public LocalDateTime getPaymentDate() { return paymentDate; }
-    public String getCategory1() { return category1; }
+    public String getKsicCode() { return ksicCode; }
     public String getCategory2() { return category2; }
     public int getAmount() { return amount; }
     public String getMerchantName() { return merchantName; }

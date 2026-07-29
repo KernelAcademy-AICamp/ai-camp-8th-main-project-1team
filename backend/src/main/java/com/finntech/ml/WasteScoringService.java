@@ -108,7 +108,8 @@ public class WasteScoringService {
             int amt = p.getAmount();
             totalAmt += amt;
             if (!waste) essentialAmt += amt;
-            long[] c = byCat1.computeIfAbsent(p.getCategory1(), k -> new long[2]);
+            // 낭비 비율을 중분류 단위로 굴린다. 판정(cat2)과 집계 축이 같아져 설명이 이어진다.
+            long[] c = byCat1.computeIfAbsent(p.getCategory2(), k -> new long[2]);
             if (waste) c[0] += amt;
             c[1] += amt;
         }

@@ -35,7 +35,7 @@ public class GenerationRunner implements ApplicationRunner {
             "(mydata_card_id, mydata_user_id, card_code, mydata_card_expiration_date, mydata_card_prev_month_amount) " +
             "VALUES (?,?,?,?,?)";
     private static final String PAY_SQL = "INSERT INTO mydata_payment " +
-            "(mydata_payment_id, mydata_card_id, mydata_payment_date, mydata_payment_category1, " +
+            "(mydata_payment_id, mydata_card_id, mydata_payment_date, mydata_payment_ksic_code, " +
             "mydata_payment_category2, mydata_payment_amount, mydata_payment_merchant_name, " +
             "mydata_payment_received_benefit_amount, mydata_payment_channel, mydata_payment_product_name, " +
             "mydata_payment_product_price, mydata_payment_quantity, mydata_payment_waste_label, " +

@@ -39,13 +39,22 @@ public final class MyDataDtos {
      */
     public record BankView(Long id, String name) {}
 
-    public record BenefitView(String category1Name, int discountPercent,
+    /** @param midCategory 혜택 대상 소비 중분류(식비·카페/간식 등). 예전에는 7대분류였다. */
+    public record BenefitView(String midCategory, int discountPercent,
                               int performanceStart, int performanceEnd, int monthlyLimit) {}
 
     public record CardProductView(Long code, String name, String imgUrl, String color,
                                   CompanyView company, List<BenefitView> benefits) {}
 
-    public record PaymentView(String id, LocalDateTime date, String category1, String category2,
+    /**
+     * 결제 1건.
+     *
+     * <p><b>소비 카테고리를 넘기지 않는다.</b> 마이데이터 제공자가 아는 것은 "이 가맹점이 무슨
+     * 업종인가"({@code ksicCode})까지고, "사용자에게 이 소비가 무엇인가"는 앱이 판단할 몫이다.
+     * 실제 마이데이터도 그렇게 동작하며, 이 경계를 지켜야 앱의 분류 품질을 검증할 수 있다.
+     * 생성 시점의 소비맥락(category2)은 제공자 DB에만 남아 학습에 쓰인다 — 낭비 라벨과 같다.
+     */
+    public record PaymentView(String id, LocalDateTime date, String ksicCode,
                               int amount, String merchantName, int receivedBenefitAmount, Long cardCode,
                               String businessNumber) {}
 

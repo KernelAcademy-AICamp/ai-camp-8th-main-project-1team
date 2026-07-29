@@ -1,5 +1,5 @@
 {
- "_note": "우리 중분류 → 그 중분류에 속하며 **맥락이 존재하는** KSIC 세분류 목록. scripts/ksic/build_midmap.py 가 ksic-mapping.tsv + contexts.json 에서 만든다. 페르소나의 categoryMix(중분류 단위 지출비중)를 업종 단위 방문가중으로 푸는 데 쓴다.",
+ "_note": "우리 중분류 → 그 중분류에 속하며 **맥락이 존재하는** KSIC 목록. scripts/ksic/build_resources.py 가 ksic-mapping.tsv + contexts.json 에서 만든다. 페르소나의 categoryMix(중분류 단위 지출비중)를 업종 단위 방문가중으로 푸는 데 쓴다.",
  "ksicByMid": {
   "주거/통신": [
    "3520",

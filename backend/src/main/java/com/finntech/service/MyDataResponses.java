@@ -18,13 +18,21 @@ public final class MyDataResponses {
     /** 연동 가능 은행. id는 제공자가 이름순으로 매긴 순번(결정론). */
     public record BankView(Long id, String name) {}
 
-    public record BenefitView(String category1Name, int discountPercent,
+    /** @param midCategory 혜택 대상 소비 중분류(식비·카페/간식 등). 예전에는 7대분류였다. */
+    public record BenefitView(String midCategory, int discountPercent,
                               int performanceStart, int performanceEnd, int monthlyLimit) {}
 
     public record CardProductView(Long code, String name, String imgUrl, String color,
                                   CompanyView company, List<BenefitView> benefits) {}
 
-    public record PaymentView(String id, LocalDateTime date, String category1, String category2,
+    /**
+     * 결제 1건 — 제공자는 <b>업종코드까지만</b> 준다.
+     *
+     * <p>"이 소비가 사용자에게 무엇인가"는 우리가 판단할 몫이다
+     * ({@link com.finntech.engine.IndustryCategoryMapper}). 제공자가 소비 카테고리를 정해 주면
+     * 앱의 분류 품질을 검증할 방법이 없고, 실제 마이데이터도 업종까지만 준다.
+     */
+    public record PaymentView(String id, LocalDateTime date, String ksicCode,
                               int amount, String merchantName, int receivedBenefitAmount, Long cardCode,
                               String businessNumber) {}
 

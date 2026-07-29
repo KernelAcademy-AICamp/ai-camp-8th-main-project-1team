@@ -453,7 +453,7 @@ public class MyDataService {
     }
 
     private BenefitView toBenefitView(CardBenefit benefit) {
-        return new BenefitView(benefit.getCategory1Name(), benefit.getDiscountPercent(),
+        return new BenefitView(benefit.getMidCategory(), benefit.getDiscountPercent(),
                 benefit.getPerformanceStart(), benefit.getPerformanceEnd(), benefit.getMonthlyLimit());
     }
 
@@ -467,8 +467,8 @@ public class MyDataService {
     }
 
     private PaymentView toPaymentView(MyDataPayment payment, Long cardCode) {
-        return new PaymentView(payment.getId(), payment.getPaymentDate(), payment.getCategory1(),
-                payment.getCategory2(), payment.getAmount(), payment.getMerchantName(),
+        return new PaymentView(payment.getId(), payment.getPaymentDate(), payment.getKsicCode(),
+                payment.getAmount(), payment.getMerchantName(),
                 payment.getReceivedBenefitAmount(), cardCode, payment.getBusinessNumber());
     }
 }
