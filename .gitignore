@@ -36,8 +36,13 @@ __pycache__/
 # reference/*.md 문서(launch_plan·mydata_catalog 등)는 커밋한다. 원본 CSV/XLSX/geo만 제외.
 reference/*.csv
 reference/*.xlsx
+reference/*.xls
 reference/*.html
 reference/geo/
+# 공공데이터 원본 묶음(심평원 병의원·약국 63MB, 목욕탕 shapefile). 상호 풀 빌드 입력이지
+# 코드가 아니다 — scripts/ksic 가 이걸 읽어 카탈로그를 만들고, 산출물만 커밋한다.
+reference/전국 병의원 및 약국 현황*/
+reference/*공간정보/
 
 # ── 타사 앱 바이너리·역분석 자료: 공개 저장소에 올리지 않는다 ──
 # reference/*.md 는 위 정책상 커밋 대상이라, 여기서 이름으로 되돌려 빼야 한다.
