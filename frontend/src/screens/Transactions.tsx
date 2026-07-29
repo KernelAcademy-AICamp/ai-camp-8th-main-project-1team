@@ -175,7 +175,13 @@ export function Transactions() {
                 <div key={p.paymentId} className="txn-item">
                   <div className="txn">
                     <span className="d">{shortDate(p.date)}</span>
-                    <span className="m">{p.merchantName ?? catLabel(p.category2 ?? p.category)}</span>
+                    <span className="m">
+                      {p.merchantName ?? catLabel(p.category2 ?? p.category)}
+                      {/* 성역·고정지출은 표시해 준다(개편안 `.sp-tag`) — 왜 이 결제가 챌린지에서
+                          빠지는지 목록에서 바로 보여야 사용자가 판정을 의심하지 않는다. */}
+                      {p.category && sanctuary.has(p.category) && <span className="sp-tag tag-sanct">성역</span>}
+                      {p.category && FIXED_CATEGORIES.has(p.category) && <span className="sp-tag tag-fixed">고정</span>}
+                    </span>
                     {p.cardName && (
                       <span className="c" style={{ border: `1px solid ${p.cardColor || 'var(--line)'}`, color: p.cardColor || 'var(--t3)', background: 'transparent' }}>
                         {p.cardName}

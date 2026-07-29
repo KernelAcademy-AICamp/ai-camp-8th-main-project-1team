@@ -613,6 +613,17 @@ body{
 .streak-line b,.strip .meta,.sprice,.statusbar{letter-spacing:0;}
 
 
+/* 도감 상세의 등급 뱃지.
+ *
+ * 개편안의 `.rar`는 `.iso-pop .rar`(어두운 팝업) 안에서만 정의돼 있고 `.r-common`도 그 배경을
+ * 전제한 밝은 회색 글자다. 흰 카드 위에 그대로 쓰면 글씨가 안 보인다 — 같은 이름을 쓰되
+ * 밝은 배경용 색을 여기서 준다. */
+.col-detail .rar{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;
+  display:inline-block;vertical-align:middle;}
+.col-detail .r-common{background:var(--bg);color:var(--t2);}
+.col-detail .r-rare{background:var(--green-weak);color:#054D28;}
+.col-detail .r-furn{background:#FFF1E0;color:#8A4B00;}
+
 /* ==========================================================================
  * 개편안에 없는 화면들 — 기존 기능 보존분
  *

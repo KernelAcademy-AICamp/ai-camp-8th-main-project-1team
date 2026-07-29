@@ -108,6 +108,10 @@ export function Myroom() {
   }
   const keptDays = home.grass.filter((g) => g.result === 'NO_SPEND_DAY' || g.result === 'ON_PACE_DAY').length;
   const gotToday = objects.some((o) => o.acquiredDate === home.asOf.slice(0, 10));
+  /** 남은 한도 비율 — 게이지를 '남은 여유'로 채우기 위한 값. 한도가 0이면 0으로 둔다. */
+  const capLeftRatio = home.challenge.challengeCap > 0
+    ? Math.max(0, Math.min(1, home.challenge.remainingCap / home.challenge.challengeCap))
+    : 0;
 
   return (
     <Screen title="마이룸" hasTabBar>
@@ -126,12 +130,28 @@ export function Myroom() {
           <div className="sc-hint">지킨 만큼 방이 채워져요 · 포인트로 아이템을 배치해요</div>
         </div>
 
-        <div className="today-line">
-          <span className="dot" aria-hidden="true" />
-          <p>
+        {/* 마이룸 히어로 (개편안 `.mr-hero`) — 연속 방어 · 오늘 진행 · 내일의 약속.
+            게이지는 한도 대비 쓴 비율이 아니라 **남은 여유**를 채운다. 다 쓰면 비고 안 쓰면 가득 차
+            "지킬수록 는다"가 눈에 보인다 — 소진율을 채우면 잘 지킨 사람의 막대가 비어 버린다. */}
+        <div className="mr-hero">
+          <div className="streakrow">
+            <Icon id="i-flame" className="" size={20} />
+            {home.strip.grassStreak > 0 ? `${home.strip.grassStreak}일 연속 방어 중` : '오늘부터 다시 시작'}
+            <small>이번 챌린지 {keptDays}일 지킴</small>
+          </div>
+          <div className="day-gauge">
+            <div className="lbl">
+              <span>{home.strip.noSpendStreak > 0 ? '오늘 무지출 진행 중' : home.challenge.categoryLabel}</span>
+              <span>{home.strip.remainingCapLabel}</span>
+            </div>
+            <div className="gbar">
+              <i style={{ width: `${Math.round(capLeftRatio * 100)}%` }} />
+            </div>
+          </div>
+          <p className="promise">
             {home.strip.noSpendStreak > 0
-              ? <><b>무지출 {home.strip.noSpendStreak}일째</b> — 자정까지 지키면 내일 아침 새 아이템이 도착해요</>
-              : <><b>{home.challenge.categoryLabel}</b>를 지켜보는 중 — 한도 안에서는 조용히 있을게요</>}
+              ? '오늘을 지키면 내일 아침, 방에 새 소품이 도착해요'
+              : '한도 안에서 쓴 날에도 소품은 와요 — 소품은 벌이 아니에요'}
           </p>
         </div>
 
