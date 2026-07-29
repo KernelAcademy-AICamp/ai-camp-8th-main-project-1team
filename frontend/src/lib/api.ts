@@ -565,6 +565,30 @@ export interface GuardianTransactionView {
   undoDeadline: string | null;
   undoActions?: { reason: UndoReason; label: string; remaining?: number }[];
 }
+/** 주간 리포트의 한 주. defenseRate = 지킨 날 ÷ 판정한 날. */
+export interface WeekPoint {
+  weekStart: string;
+  label: string;
+  keptDays: number;
+  judgedDays: number;
+  defenseRate: number;
+  current: boolean;
+}
+export interface LabelSlice { key: string; label: string; count: number; ratio: number }
+export interface WeeklyReport {
+  weekStart: string;
+  weekEnd: string;
+  weekLabel: string;
+  defenseRate: number;
+  /** 지난주 대비 증감(비율 차). 지난주 판정이 없으면 null. */
+  deltaFromLastWeek: number | null;
+  trend: WeekPoint[];
+  labels: LabelSlice[];
+  labeledCount: number;
+  exemptedAmount: number;
+  headline: string;
+}
+
 /** 도감 한 칸. owned=false면 자물쇠로 그린다(무엇이 남았는지 보여야 모을 마음이 생긴다). */
 export interface CollectionCell {
   code: string;
@@ -910,6 +934,9 @@ export const api = {
       post<GuardianShop>(`/api/guardian/shop/${encodeURIComponent(code)}/buy?userId=${userId}`, {}),
 
     /* ── 월말 사이클 (개편안 s-settle·s-renew) ── */
+    /** 주간 리포트 — weeksAgo=0 이번 주, 1 지난주. */
+    weeklyReport: (userId: number, weeksAgo = 0) =>
+      get<WeeklyReport>(`/api/guardian/report/weekly?userId=${userId}&weeksAgo=${weeksAgo}`),
     settlement: (userId: number) =>
       get<GuardianSettlement>(`/api/guardian/settlement?userId=${userId}`),
     renewal: (userId: number) => get<GuardianRenewal>(`/api/guardian/renewal?userId=${userId}`),

@@ -33,6 +33,7 @@ public class GuardianController {
     private final GuardianRewardService rewardService;
     private final GuardianCollectionService collectionService;
     private final GuardianCatalog catalog;
+    private final GuardianWeeklyReportService weeklyReportService;
     private final GuardianSettlementService settlementService;
     private final GuardianClock clock;
 
@@ -40,12 +41,14 @@ public class GuardianController {
                               GuardianRewardService rewardService,
                               GuardianCollectionService collectionService,
                               GuardianCatalog catalog,
+                              GuardianWeeklyReportService weeklyReportService,
                               GuardianSettlementService settlementService, GuardianClock clock) {
         this.guardianService = guardianService;
         this.batchService = batchService;
         this.rewardService = rewardService;
         this.collectionService = collectionService;
         this.catalog = catalog;
+        this.weeklyReportService = weeklyReportService;
         this.settlementService = settlementService;
         this.clock = clock;
     }
@@ -431,6 +434,17 @@ public class GuardianController {
 
     /** @param slot null이면 창고로 내린다. */
     public record PlaceRequest(String objectId, Integer slot) {}
+
+    /**
+     * 주간 리포트 — 이번 주 방어율·4주 추이·소비 성격.
+     *
+     * @param weeksAgo 0이면 이번 주, 1이면 지난주. 화면의 주차 네비게이션이 쓴다.
+     */
+    @GetMapping("/report/weekly")
+    public GuardianWeeklyReportService.WeeklyReport weekly(@RequestParam Long userId,
+                                                           @RequestParam(defaultValue = "0") int weeksAgo) {
+        return weeklyReportService.report(userId, weeksAgo);
+    }
 
     /** 월간 결산 — 방어율·카테고리별 성적·지킨 날·최장 연속·포인트·소품. */
     @GetMapping("/settlement")
