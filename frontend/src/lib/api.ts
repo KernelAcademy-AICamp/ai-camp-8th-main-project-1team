@@ -269,8 +269,30 @@ export interface ImpulseSnapshot {
 }
 
 /* ── 마이데이터 (§13) ─────────────────────────────────────────────────── */
-/** 가상 본인인증 결과. verified는 항상 true(가상), existsInMyData=false면 마이데이터에 없는 신원. */
-export interface VerifyResult { ci: string; verified: boolean; existsInMyData: boolean }
+/**
+ * 가상 본인인증 결과.
+ *
+ * `verified`는 **네 관문을 모두 통과했을 때만** true다. 실패 사유는 `reason`이 말해 준다 —
+ * 판정 표는 서버에만 있고(국번 대역표) 화면은 사유에 맞는 문장을 고르기만 한다.
+ */
+export type VerifyReason =
+  | 'OK'
+  | 'UNASSIGNED_EXCHANGE'        // 배정되지 않은 국번 — 실존하지 않는 번호
+  | 'NAME_MISMATCH'              // 번호 명의자와 이름만 다름
+  | 'SOCIAL_MISMATCH'            // 번호 명의자와 주민번호만 다름
+  | 'NAME_AND_SOCIAL_MISMATCH'   // 이름·주민번호 모두 다름
+  | 'PHONE_OWNED_BY_OTHER'       // 그 번호가 다른 사람 명의
+  | 'PHONE_MISMATCH'             // 신원은 실재하나 번호가 다름
+  | 'NOT_FOUND'                  // 어느 조합으로도 못 찾음
+  | 'CARRIER_MISMATCH';          // 신원은 맞으나 통신사 대역이 다름
+export interface VerifyResult {
+  ci: string | null;
+  verified: boolean;
+  existsInMyData: boolean;
+  reason: VerifyReason;
+  /** 번호 대역의 실제 통신사. 불일치 안내에 쓴다. */
+  actualCarrier: string | null;
+}
 export interface MyDataCompany { id: number; name: string; imgUrl: string }
 export interface MyDataLinkResult { cardCount: number; paymentCount: number; bankCount: number }
 /** 연동 가능 은행. id는 제공자가 이름순으로 매긴 순번이라 조회마다 같다. */
@@ -718,8 +740,9 @@ export const api = {
     post<ImpulseSnapshot>('/api/impulse/upload', { userId, csv }),
 
   /* ── 마이데이터 (§13) ── */
-  verify: (userId: number, name: string, social7: string, phone: string) =>
-    post<VerifyResult>('/api/mydata/verify', { userId, name, social7, phone }),
+  /** `carrier`는 온보딩에서 고른 통신사. 서버가 번호 대역과 대조한다(알뜰폰은 대조 생략). */
+  verify: (userId: number, name: string, social7: string, phone: string, carrier?: string) =>
+    post<VerifyResult>('/api/mydata/verify', { userId, name, social7, phone, carrier }),
   mydataCompanies: () => get<MyDataCompany[]>('/api/mydata/companies'),
   mydataBanks: () => get<MyDataBank[]>('/api/mydata/banks'),
   myBanks: (userId: number) => get<MyLinkedBank[]>(`/api/mydata/my-banks?userId=${userId}`),

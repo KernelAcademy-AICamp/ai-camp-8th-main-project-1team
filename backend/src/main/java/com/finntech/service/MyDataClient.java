@@ -30,6 +30,26 @@ public class MyDataClient {
         return response != null && Boolean.TRUE.equals(response.data());
     }
 
+    /**
+     * 신원 대조 — 어느 항목이 틀렸는지 가려내려고 제공자에 조회 사실만 묻는다.
+     * CI는 해시라 안 맞는다는 것까지만 알 수 있어, 항목별 판정에는 이 조회가 필요하다.
+     */
+    public IdentityMatch matchIdentity(String name, String social7, String phone) {
+        Envelope<IdentityMatch> response = client.get()
+                .uri(b -> b.path("/bank/mydata/identity-match")
+                        .queryParam("name", name)
+                        .queryParam("social7", social7)
+                        .queryParam("phone", phone).build())
+                .retrieve()
+                .body(new ParameterizedTypeReference<Envelope<IdentityMatch>>() {});
+        return response == null ? null : response.data();
+    }
+
+    /** 제공자의 조회 결과. 판정은 {@code AuthService}가 한다(마스터 §4 원칙 1). */
+    public record IdentityMatch(boolean exists, boolean phoneTaken,
+                                boolean phoneNameOk, boolean phoneSocialOk,
+                                boolean personFound) {}
+
     /** 카드사(연동 기관) 목록. */
     public List<CompanyView> findCompanies() {
         Envelope<List<CompanyView>> response = client.get()

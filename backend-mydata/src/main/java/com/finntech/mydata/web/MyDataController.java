@@ -2,6 +2,7 @@ package com.finntech.mydata.web;
 
 import com.finntech.mydata.dto.ApiResponse;
 import com.finntech.mydata.dto.MyDataDtos.AccountView;
+import com.finntech.mydata.dto.MyDataDtos.IdentityMatchView;
 import com.finntech.mydata.dto.MyDataDtos.BankView;
 import com.finntech.mydata.dto.MyDataDtos.CardView;
 import com.finntech.mydata.dto.MyDataDtos.MerchantView;
@@ -46,6 +47,16 @@ public class MyDataController {
     @GetMapping("/ci/{userCi}")
     public ApiResponse<Boolean> checkUser(@PathVariable String userCi) {
         return ApiResponse.ok(myDataService.userExists(userCi));
+    }
+
+    /**
+     * 신원 대조 — 본인인증이 어느 항목이 틀렸는지 가려내도록 <b>조회 사실만</b> 돌려준다.
+     * 이름·주민번호는 일치 여부(불리언)로만 나가므로 남의 실명이 넘어가지 않는다.
+     */
+    @GetMapping("/identity-match")
+    public ApiResponse<IdentityMatchView> matchIdentity(
+            @RequestParam String name, @RequestParam String social7, @RequestParam String phone) {
+        return ApiResponse.ok(myDataService.matchIdentity(name, social7, phone));
     }
 
     /** 입출금 통장 조회(§13-11) — 은행·계좌·월급·잔액 + 최근 입출금 내역. 계좌 없으면 data=null. */

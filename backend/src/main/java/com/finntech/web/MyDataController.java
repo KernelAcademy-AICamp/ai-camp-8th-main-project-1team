@@ -32,7 +32,7 @@ public class MyDataController {
     @PostMapping("/verify")
     public VerifyResult verify(@RequestBody VerifyRequest request) {
         return authService.verifyAssumed(request.userId(), request.name(),
-                request.social7(), request.phone());
+                request.social7(), request.phone(), request.carrier());
     }
 
     /** 연동 가능 은행 목록 — 자산연결 화면이 카드사와 함께 보여준다. */
@@ -98,6 +98,8 @@ public class MyDataController {
         return linkService.merchant(businessNumber);
     }
 
-    public record VerifyRequest(Long userId, String name, String social7, String phone) {}
+    /** {@code carrier}는 온보딩에서 고른 통신사(`SKT`·`KT`·`LG U+`·`알뜰폰`). 없으면 통신사 대조를 건너뛴다. */
+    public record VerifyRequest(Long userId, String name, String social7, String phone,
+                                String carrier) {}
     public record LinkRequest(Long userId, List<Long> companyIds, List<Long> bankIds) {}
 }

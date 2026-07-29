@@ -75,7 +75,8 @@ def make_identity(old_ci: str, salt: int = 0):
     name = rng.choice(SURNAMES) + rng.choice(GIVEN1) + rng.choice(GIVEN2)
     birth = BIRTH_START + timedelta(days=rng.randrange(SPAN + 1))
     social7 = social7_of(birth, rng.randrange(2))
-    phone = "010" + "".join(str(rng.randrange(10)) for _ in range(8))
+    # 국번은 배정된 대역에서만 뽑는다 — 난수 4자리면 0xxx·1xxx 같은 없는 번호가 섞인다.
+    phone = "010" + f"{random_exchange(rng):04d}" + "".join(str(rng.randrange(10)) for _ in range(4))
     return name, social7, phone, ci_of(name, social7, phone)
 
 
@@ -88,6 +89,56 @@ def birth_year_of(social7: str) -> int:
     """앞 7자리에서 출생연도를 읽는다(성별세대코드가 세기를 정한다)."""
     century = 1900 if social7[6] in "12" else 2000
     return century + int(social7[:2])
+
+
+# ── 이동전화 국번 (가운데 4자리) ────────────────────────────────────────────
+# 정부 대역 할당표에서 **배정된 구간**만 남긴 것이다. 합계 7,470개.
+# 자바 쪽에 같은 표가 두 벌 있다 — backend/util/Msisdn.java(통신사 판정),
+# backend-mydata/util/Msisdn.java(생성). **하나를 고치면 셋 다 고친다.**
+#
+# 미배정 사유: 0xxx는 국번이 될 수 없고, 1xxx는 전국대표번호(1544·1600 등)와 충돌한다.
+# 나머지(5970~5999·6000~6199·6900~6999·7000~7099·7800~7899)는 표에서 비어 있다.
+ASSIGNED_EXCHANGES = [(2000, 5969), (6200, 6899), (7100, 7799), (7900, 9999)]
+ASSIGNED_TOTAL = sum(hi - lo + 1 for lo, hi in ASSIGNED_EXCHANGES)
+
+
+def is_assigned(exchange: int) -> bool:
+    return any(lo <= exchange <= hi for lo, hi in ASSIGNED_EXCHANGES)
+
+
+def random_exchange(rng: random.Random) -> int:
+    """배정 구간에서 균등하게 뽑는다. 구간을 먼저 고르면 길이 차이 때문에 편향된다."""
+    k = rng.randrange(ASSIGNED_TOTAL)
+    for lo, hi in ASSIGNED_EXCHANGES:
+        size = hi - lo + 1
+        if k < size:
+            return lo + k
+        k -= size
+    raise AssertionError("누적합이 어긋났다")
+
+
+def exchange_of(phone: str) -> int:
+    """`010-1234-5678`·`01012345678` 어느 쪽이든 가운데 4자리를 돌려준다."""
+    d = "".join(c for c in phone if c.isdigit())
+    return int(d[3:7]) if len(d) == 11 else -1
+
+
+# ── 국번만 바꾸는 모드 (--rephone) ────────────────────────────────────────────
+# 생성기가 `010` + 난수 8자리였던 탓에 4,962명 중 1,290명(26%)이 존재하지 않는 국번이었다.
+# 온보딩이 국번을 검증하게 되면서 그 사람들은 로그인 자체가 막힌다.
+# 전체 재생성은 4,962명 전원의 CI가 바뀌어 시연 계정이 모두 무효가 되므로,
+# **미배정인 사람만** 이름·주민번호·뒤 4자리를 유지한 채 국번만 바꾼다.
+
+
+def rephone_identity(old_ci: str, name: str, social7: str, phone: str, salt: int = 0):
+    """미배정 국번이면 새 번호와 CI를 돌려주고, 유효하면 None."""
+    digits = "".join(c for c in phone if c.isdigit())
+    if len(digits) != 11 or is_assigned(int(digits[3:7])):
+        return None
+    # [0:16]은 이름, [16:32]는 생년이 이미 썼다. 겹치지 않게 다음 조각을 쓴다.
+    rng = random.Random(int(old_ci[32:48], 16) + salt)
+    new_phone = digits[:3] + f"{random_exchange(rng):04d}" + digits[7:]
+    return new_phone, ci_of(name, social7, new_phone)
 
 
 # ── 생년만 옮기는 모드 (--rebirth) ────────────────────────────────────────────
@@ -158,9 +209,36 @@ def main():
     ap.add_argument("--samples", type=int, default=10, help="출력할 로그인 표본 수")
     ap.add_argument("--rebirth", action="store_true",
                     help=f"신원을 새로 만들지 않고 생년만 {REBIRTH_MIN}~{REBIRTH_MAX}년으로 옮긴다")
+    ap.add_argument("--rephone", action="store_true",
+                    help="미배정 국번인 사람만 국번을 배정 대역으로 옮긴다(이름·주민번호·뒤 4자리 유지)")
     args = ap.parse_args()
 
-    if args.rebirth:
+    if args.rephone:
+        rows = [l.split("\t") for l in mysql(
+            "select mydata_user_id, mydata_user_persona, mydata_user_data_split, "
+            "       mydata_user_name, substr(mydata_user_social_number,1,7), mydata_user_phone_number "
+            "from finntech_mydata.mydata_user order by mydata_user_id"
+        ).splitlines() if l.strip()]
+        print(f"전체 사용자 {len(rows):,}명 · 배정 국번 {ASSIGNED_TOTAL:,}개")
+
+        mapping, used, kept = [], set(), 0
+        for old_ci, persona, split, name, social7, phone_disp in rows:
+            phone = phone_disp.replace("-", "")
+            salt = 0
+            while True:
+                out = rephone_identity(old_ci, name, social7, phone, salt)
+                if out is None or out[1] not in used:
+                    break
+                salt += 1
+            if out is None:
+                kept += 1
+                used.add(old_ci)
+                continue
+            new_phone, new_ci = out
+            used.add(new_ci)
+            mapping.append((old_ci, new_ci, name, social7, new_phone, persona, split))
+        print(f"  국번이 유효해 그대로 두는 사람 {kept:,}명 · 번호를 바꾸는 사람 {len(mapping):,}명")
+    elif args.rebirth:
         rows = [l.split("\t") for l in mysql(
             "select mydata_user_id, mydata_user_persona, mydata_user_data_split, "
             "       mydata_user_name, substr(mydata_user_social_number,1,7), mydata_user_phone_number "
