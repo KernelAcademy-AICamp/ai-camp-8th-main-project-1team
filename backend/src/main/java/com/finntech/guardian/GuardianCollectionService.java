@@ -185,6 +185,39 @@ public class GuardianCollectionService {
     }
 
     // ======================================================================
+    //  마이룸 배치 (개편안 '꾸미기 모드')
+    // ======================================================================
+
+    /**
+     * 소품을 슬롯에 놓거나(0~19) 창고로 내린다({@code slot=null}).
+     *
+     * <p><b>그 자리에 있던 소품은 사라지지 않고 창고로 간다.</b> 도감의 기록이라 지울 수 없고,
+     * 사용자도 "바꿨더니 없어졌다"를 겪으면 안 된다 — 개편안의 문구도 "○○는 도감에 보관돼요"다.
+     *
+     * @throws IllegalArgumentException 남의 소품이거나 슬롯 번호가 범위를 벗어난 경우
+     */
+    @Transactional
+    public List<RoomObject> place(Long userId, String code, Integer slot) {
+        List<RoomObject> mine = roomObjectRepository.findByUser(userId);
+        RoomObject target = mine.stream()
+                .filter(o -> o.getObjectId().equals(code)).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("가지고 있지 않은 소품이에요: " + code));
+
+        if (slot != null) {
+            // 그 자리를 쓰고 있던 다른 소품을 먼저 비운다 — 한 자리에 둘이 겹치면 씬이 깨진다.
+            for (RoomObject o : mine) {
+                if (!o.getId().equals(target.getId()) && slot.equals(o.getSlotIndex())) {
+                    o.placeAt(null);
+                    roomObjectRepository.save(o);
+                }
+            }
+        }
+        target.placeAt(slot);          // 범위 검사는 엔티티가 한다
+        roomObjectRepository.save(target);
+        return roomObjectRepository.findByUser(userId);
+    }
+
+    // ======================================================================
     //  내부
     // ======================================================================
 

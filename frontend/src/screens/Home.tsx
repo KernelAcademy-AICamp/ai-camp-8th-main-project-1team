@@ -16,7 +16,7 @@ import { useGuardian } from '../state/guardian';
 import { useAsync } from '../state/useAsync';
 import { api } from '../lib/api';
 import {
-  won, pctNum, iconOf, shortDate, CHALLENGE_STATE_LABEL, GRADE_LABEL, GRADE_EMOJI,
+  won, pctNum, iconOf, shortDate, CHALLENGE_STATE_LABEL, GRADE_LABEL, GRADE_EMOJI, SETTLED_STATES,
 } from '../lib/format';
 
 /** 세리머니 응답에는 판정 id가 없어 '봤음' 표시를 서버로 보낼 수 없다. 그래서 날짜로 기억한다. */
@@ -121,6 +121,18 @@ export function Home() {
               )}
             </button>
           </div>
+
+          {/* 챌린지가 끝났으면 월말 사이클로 가는 문을 연다(개편안 s-monthend → s-settle → s-renew).
+              강제로 밀어내지 않는 이유는 이 파일 위쪽에 적어 둔 그대로다 — 눌러서 들어가는 편이
+              빠져나오기도 쉽다. 다만 이 카드는 지나치기 어렵게 맨 위에 둔다. */}
+          {SETTLED_STATES.has(ch.state) && (
+            <button type="button" className="strip" onClick={() => go('monthend')}
+              style={{ background: 'linear-gradient(180deg,#FFFFFF 0%,#E7F4DC 100%)' }}>
+              <Icon id="i-gift" className="hic" />
+              <b>이번 챌린지가 끝났어요 — 결산 보기</b>
+              <span className="meta"><span className="chev" aria-hidden="true">›</span></span>
+            </button>
+          )}
 
           {/* 마이룸 스트립 — 스트릭 + 포인트(방 꾸미기 재화) */}
           <button type="button" className="strip" onClick={() => go('myroom')}>

@@ -103,6 +103,16 @@ export const CHALLENGE_STATE_LABEL: Record<string, string> = {
   RESTART_OFFER: '다시 시작할까요', CLOSED: '종료',
 };
 
+/**
+ * 챌린지가 <b>끝난</b> 상태들 — 이때 홈에 월말 결산 진입 카드를 띄운다.
+ *
+ * SETUP·ACTIVE·AT_RISK·EXCEEDED는 아직 진행 중이라 뺀다. ABANDONED(중단)도 뺀다 —
+ * 스스로 그만둔 사람에게 "수고했어요, 결산해볼까요"는 실없는 말이다.
+ */
+export const SETTLED_STATES = new Set([
+  'SETTLING', 'SUCCESS', 'PARTIAL', 'SHORTFALL', 'FAILED', 'REWARD_PENDING', 'RESTART_OFFER', 'CLOSED',
+]);
+
 /** 사물 등급 → 표시. */
 export const GRADE_LABEL: Record<string, string> = { COMMON: '보통', RARE: '희귀', EPIC: '영웅' };
 export const GRADE_EMOJI: Record<string, string> = { COMMON: '🪴', RARE: '🏮', EPIC: '💎' };

@@ -5,7 +5,7 @@
  * '오늘'은 브라우저 시계가 아니라 서버가 준 `asOf`다 — 데모에서 시계를 밀면 잔디도 같이 움직여야 한다.
  * 주간 미션은 백엔드에 조회 API가 없어(설계서 §9 미정), 같은 카드 모양에 잔디로 계산한 이번 주 현황을 넣었다.
  */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Icon } from '../components/Icons';
 import { AppBar, Scroll, Screen, ErrorBox, Loading, SectionTitle } from '../components/ui';
 import { useSession } from '../state/session';
@@ -22,6 +22,9 @@ const iso = (d: Date) =>
 
 export function Myroom() {
   const { go, userId } = useSession();
+  const [editing, setEditing] = useState(false);
+  /** 이동 중인 소품 코드 — 연타로 서버에 두 번 보내지 않게 잠근다. */
+  const [moving, setMoving] = useState<string | null>(null);
   const { home, loading, error, reload } = useGuardian();
   const room = useAsync(() => api.guardian.room(userId).catch(() => ({ objects: [], slotCount: 20 })), [userId]);
 
@@ -81,6 +84,28 @@ export function Myroom() {
 
   const items = home.itemsHeld;
   const objects = room.data?.objects ?? [];
+  const slotCount = room.data?.slotCount ?? 20;
+  const placed = objects.filter((o) => o.slotIndex !== null);
+  const stored = objects.filter((o) => o.slotIndex === null);
+  /** 창고에서 올릴 때 쓸 빈 자리. 다 찼으면 null이라 버튼이 막힌다. */
+  const nextFreeSlot = useMemo(() => {
+    const used = new Set(placed.map((o) => o.slotIndex));
+    for (let i = 0; i < slotCount; i++) if (!used.has(i)) return i;
+    return null;
+  }, [placed, slotCount]);
+
+  /** 자리를 옮긴다. 서버가 방 전체를 돌려주므로 그 응답으로 화면을 갱신한다. */
+  async function move(objectId: string, slot: number | null) {
+    if (moving) return;
+    setMoving(objectId);
+    try {
+      room.set(await api.guardian.placeObject(userId, objectId, slot));
+    } catch {
+      room.reload();       // 실패하면 서버 상태로 되돌린다 — 화면만 옮겨져 있으면 거짓말이 된다
+    } finally {
+      setMoving(null);
+    }
+  }
   const keptDays = home.grass.filter((g) => g.result === 'NO_SPEND_DAY' || g.result === 'ON_PACE_DAY').length;
   const gotToday = objects.some((o) => o.acquiredDate === home.asOf.slice(0, 10));
 
@@ -195,21 +220,61 @@ export function Myroom() {
           </p>
         </div>
 
-        {/* 모은 사물 */}
-        <SectionTitle aux={`${objects.length} / ${room.data?.slotCount ?? 20}`}>모은 사물</SectionTitle>
+        {/* 모은 사물 · 꾸미기 모드 (개편안 '꾸미기 모드')
+            방에 놓인 것과 창고에 있는 것을 갈라 보여주고, 눌러서 옮긴다. 내려도 사라지지 않는다 —
+            도감의 기록이라 지울 수 없고, "바꿨더니 없어졌다"를 겪게 하면 안 된다. */}
+        <SectionTitle
+          onAux={() => setEditing((v) => !v)}
+          auxLabel={editing ? '완료' : '꾸미기'}
+        >
+          모은 사물 {placed.length} / {room.data?.slotCount ?? 20}
+        </SectionTitle>
+        {editing && (
+          <p className="pv" style={{ marginTop: 0 }}>
+            놓을 자리를 눌러 바꿔 보세요. 내린 소품은 <b>창고</b>로 가고 도감에는 그대로 남아요.
+          </p>
+        )}
         <div className="card">
           {objects.length === 0 ? (
             <p className="empty" style={{ margin: 0 }}>아직 모은 사물이 없어요. 하루를 지켜내면 다음 날 아침에 도착해요.</p>
           ) : (
-            <div className="room-grid">
-              {objects.map((o) => (
-                <div key={o.objectId} className={`room-slot ${o.grade.toLowerCase()}`}
-                  title={`${o.objectId} · ${GRADE_LABEL[o.grade]} · ${o.acquiredDate} 획득`}>
-                  <span aria-hidden="true" style={{ fontSize: 20 }}>{GRADE_EMOJI[o.grade]}</span>
-                  <span>{GRADE_LABEL[o.grade]}</span>
-                </div>
-              ))}
-            </div>
+            <>
+              <div className="room-grid">
+                {placed.map((o) => (
+                  <button key={o.objectId} type="button" disabled={!editing || moving !== null}
+                    className={`room-slot ${o.grade.toLowerCase()}`}
+                    onClick={() => void move(o.objectId, null)}
+                    title={`${o.name} · ${GRADE_LABEL[o.grade]} · ${o.acquiredDate} 획득`}>
+                    <span aria-hidden="true" style={{ fontSize: 20 }}>{GRADE_EMOJI[o.grade]}</span>
+                    <span>{o.name}</span>
+                    {editing && <em style={{ fontSize: 10, color: 'var(--t3)', fontStyle: 'normal' }}>내리기</em>}
+                  </button>
+                ))}
+                {placed.length === 0 && (
+                  <p className="empty" style={{ margin: 0 }}>방이 비어 있어요. 아래 창고에서 올려 보세요.</p>
+                )}
+              </div>
+
+              {stored.length > 0 && (
+                <>
+                  <div className="divider" style={{ margin: '12px 0' }} />
+                  <p className="h-sub" style={{ margin: '0 0 8px' }}>창고 {stored.length}개</p>
+                  <div className="room-grid">
+                    {stored.map((o) => (
+                      <button key={o.objectId} type="button" disabled={!editing || moving !== null}
+                        className={`room-slot ${o.grade.toLowerCase()}`}
+                        style={{ opacity: 0.6 }}
+                        onClick={() => nextFreeSlot !== null && void move(o.objectId, nextFreeSlot)}
+                        title={`${o.name} · 창고`}>
+                        <span aria-hidden="true" style={{ fontSize: 20 }}>{GRADE_EMOJI[o.grade]}</span>
+                        <span>{o.name}</span>
+                        {editing && <em style={{ fontSize: 10, color: 'var(--blue)', fontStyle: 'normal' }}>올리기</em>}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
           )}
         </div>
 

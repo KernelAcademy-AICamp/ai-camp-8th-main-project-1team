@@ -650,7 +650,11 @@ export interface GuardianRoomObject {
   grade: Grade;
   acquiredDate: string;
   reasonCode: string | null;
+  /** 놓인 자리(0~19). null이면 창고에 있다. */
   slotIndex: number | null;
+  /** 표시명·그림 — 서버 카탈로그가 정한다. 프론트에 이름표를 복사해 두면 조용히 갈라진다. */
+  name: string;
+  glyph: string;
 }
 export interface GuardianRoom { objects: GuardianRoomObject[]; slotCount: number }
 export interface CreateChallengeInput {
@@ -887,6 +891,13 @@ export const api = {
     room: (userId: number) => get<GuardianRoom>(`/api/guardian/room?userId=${userId}`),
 
     /* ── 도감·포인트샵 (개편안 s-collection·s-shop) ── */
+    /**
+     * 배치 변경(꾸미기 모드) — slot=null이면 창고로 내린다.
+     * 그 자리에 있던 소품은 사라지지 않고 창고로 간다(도감 기록은 지워지지 않는다).
+     */
+    placeObject: (userId: number, objectId: string, slot: number | null) =>
+      post<GuardianRoom>(`/api/guardian/room/place?userId=${userId}`, { objectId, slot }),
+
     /** 도감 — 모은 칸과 못 모은 칸, 마일스톤 진행까지 서버가 계산해 준다. */
     collection: (userId: number) =>
       get<GuardianCollection>(`/api/guardian/collection?userId=${userId}`),

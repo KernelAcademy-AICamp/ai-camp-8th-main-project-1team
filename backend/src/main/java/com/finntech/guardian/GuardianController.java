@@ -32,17 +32,20 @@ public class GuardianController {
     private final GuardianBatchService batchService;
     private final GuardianRewardService rewardService;
     private final GuardianCollectionService collectionService;
+    private final GuardianCatalog catalog;
     private final GuardianSettlementService settlementService;
     private final GuardianClock clock;
 
     public GuardianController(GuardianService guardianService, GuardianBatchService batchService,
                               GuardianRewardService rewardService,
                               GuardianCollectionService collectionService,
+                              GuardianCatalog catalog,
                               GuardianSettlementService settlementService, GuardianClock clock) {
         this.guardianService = guardianService;
         this.batchService = batchService;
         this.rewardService = rewardService;
         this.collectionService = collectionService;
+        this.catalog = catalog;
         this.settlementService = settlementService;
         this.clock = clock;
     }
@@ -184,10 +187,23 @@ public class GuardianController {
 
     @GetMapping("/room")
     public Map<String, Object> room(@RequestParam Long userId) {
+        return roomView(rewardService.objects(userId));
+    }
+
+    /**
+     * 방 상태를 표시 정보와 함께 내려준다.
+     *
+     * <p>사물 코드({@code plant_small_01})만 주면 화면이 이름을 못 붙인다. 프론트에 이름표를
+     * 복사해 두면 소품을 추가할 때 두 곳을 고쳐야 하고 조용히 갈라진다 — 카탈로그가 한 곳이어야 한다.
+     */
+    private Map<String, Object> roomView(List<RoomObject> source) {
         List<Map<String, Object>> objects = new ArrayList<>();
-        for (RoomObject o : rewardService.objects(userId)) {
+        for (RoomObject o : source) {
+            GuardianCatalog.Item item = catalog.find(o.getObjectId());
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("objectId", o.getObjectId());
+            m.put("name", item.name());
+            m.put("glyph", item.glyph());
             m.put("grade", o.getGrade());
             m.put("acquiredDate", o.getAcquiredDate());
             m.put("reasonCode", o.getReasonCode());
@@ -406,6 +422,15 @@ public class GuardianController {
     public GuardianCollectionService.ShopView buy(@RequestParam Long userId, @PathVariable String code) {
         return collectionService.buy(userId, code);
     }
+
+    /** 배치 변경(꾸미기 모드) — slot을 비우면 창고로 내린다. 응답은 방 전체 상태. */
+    @PostMapping("/room/place")
+    public Map<String, Object> place(@RequestParam Long userId, @RequestBody PlaceRequest req) {
+        return roomView(collectionService.place(userId, req.objectId(), req.slot()));
+    }
+
+    /** @param slot null이면 창고로 내린다. */
+    public record PlaceRequest(String objectId, Integer slot) {}
 
     /** 월간 결산 — 방어율·카테고리별 성적·지킨 날·최장 연속·포인트·소품. */
     @GetMapping("/settlement")
