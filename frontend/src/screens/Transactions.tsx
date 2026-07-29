@@ -107,7 +107,7 @@ export function Transactions() {
                 <div key={p.paymentId} className="txn-item">
                   <div className="txn">
                     <span className="d">{shortDate(p.date)}</span>
-                    <span className="m">{p.merchantName ?? catLabel(p.category2 ?? p.category1)}</span>
+                    <span className="m">{p.merchantName ?? catLabel(p.category2 ?? p.category)}</span>
                     {p.cardName && (
                       <span className="c" style={{ border: `1px solid ${p.cardColor || 'var(--line)'}`, color: p.cardColor || 'var(--t3)', background: 'transparent' }}>
                         {p.cardName}

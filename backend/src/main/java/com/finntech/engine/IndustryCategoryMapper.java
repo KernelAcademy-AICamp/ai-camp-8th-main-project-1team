@@ -33,15 +33,31 @@ public class IndustryCategoryMapper {
     public static final String UNCLASSIFIED = "카테고리없음";
 
     private final Map<String, String> midByKsic;
+    private final Map<String, Double> discretionaryByMid;
 
     @SuppressWarnings("unchecked")
     public IndustryCategoryMapper(ObjectMapper objectMapper) {
         try (InputStream is = new ClassPathResource(PATH).getInputStream()) {
             Map<String, Object> root = objectMapper.readValue(is, Map.class);
             this.midByKsic = (Map<String, String>) root.get("midByKsic");
+            Map<String, Number> disc = (Map<String, Number>) root.get("discretionaryByMid");
+            Map<String, Double> d = new java.util.LinkedHashMap<>();
+            if (disc != null) disc.forEach((k, v) -> d.put(k, v.doubleValue()));
+            this.discretionaryByMid = d;
         } catch (IOException e) {
             throw new UncheckedIOException("업종코드 대조표를 읽지 못했다: " + PATH, e);
         }
+    }
+
+    /**
+     * 중분류의 <b>재량성</b>(0~1) — 낮을수록 생존필수, 높을수록 재량.
+     *
+     * <p>카탈로그의 {@code discretionaryBase}를 빈도가중 평균한 값이다. 절약 후보의 등급을
+     * 여기서 유도하므로, 카테고리가 늘어도 목록을 고칠 일이 없다.
+     * 모르는 중분류는 중간값(0.5) — 판단을 못 하겠으면 최적화가능으로 둔다.
+     */
+    public double discretionaryOf(String mid) {
+        return discretionaryByMid.getOrDefault(mid, 0.5);
     }
 
     /**

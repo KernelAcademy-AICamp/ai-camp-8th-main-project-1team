@@ -321,7 +321,8 @@ export interface MyCard {
 export interface MyPayment {
   paymentId: string;
   date: string;
-  category1: string;
+  /** 소비 중분류. 제공자는 업종코드까지만 주고 이 값은 앱이 붙인다. */
+  category: string;
   category2: string | null;
   amount: number;
   merchantName: string | null;
@@ -332,7 +333,8 @@ export interface MyPayment {
 export interface MyPaymentHistory {
   paymentId: string;
   date: string;
-  category1: string;
+  /** 소비 중분류. 제공자는 업종코드까지만 주고 이 값은 앱이 붙인다. */
+  category: string;
   category2: string | null;
   amount: number;
   merchantName: string | null;

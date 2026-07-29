@@ -227,27 +227,32 @@ public class AnalysisProperties {
     }
 
     /**
-     * 절약 후보(⑤) — 낭비형 임계치 + 3등급 카테고리. 카테고리 목록은 설정값(원칙 4)이며 category2로 매칭.
-     * 보호 목록은 ML 특징의 ESSENTIAL({@code WasteFeatureExtractor}, 모델 결속)과 <b>독립</b>이다(값만 겹칠 수 있음).
+     * 절약 후보(⑤) — 낭비형 임계치 + 3등급 판정.
+     *
+     * <p><b>등급을 목록으로 두지 않는다.</b> 예전에는 카테고리 이름 22개가 여기와 yml에 박혀 있었고
+     * (`removable: [카페, 배달, …]`), 카테고리 체계를 바꾸는 순간 하나도 안 겹쳐 <b>절약 후보가
+     * 통째로 사라졌다</b> — 화면에는 "줄일 게 없다"고 뜨는데 원인을 찾기 어렵다. 게다가 그 목록에는
+     * `면세점`·`보험`처럼 <b>존재하지 않는 카테고리</b>가 섞여 있어도 아무도 몰랐다.
+     *
+     * <p>이제 카탈로그가 이미 아는 <b>재량성</b>으로 판정한다. 재량성이 낮으면 생존필수라 보호하고,
+     * 높으면 통째로 줄일 수 있다고 보고, 중간이면 중앙값 초과분만 본다. 카테고리가 늘거나
+     * 이름이 바뀌어도 설정을 고칠 일이 없다(원칙 4).
      */
     public static class CutCandidate {
-        /** 낭비형 후보 임계 — category1의 낭비금액 비율이 이 이상이면 후보({@code WasteScoringService}의 하드코딩 0.5 이전). */
+        /** 낭비형 후보 임계 — 중분류의 낭비금액 비율이 이 이상이면 후보. */
         private double wasteRatioThreshold = 0.5;
-        /** 제거가능 — 대표금액 전체를 절감액으로(커피·배달·구독·쇼핑류). */
-        private List<String> removable = List.of("카페", "배달", "스트리밍", "백화점", "면세점", "간편결제");
-        /** 최적화가능 — 이 카테고리 중앙값 초과분만 절감액으로(식비·교통). */
-        private List<String> optimizable = List.of("한식", "중식", "일식", "양식", "분식", "대중교통", "택시");
-        /** 보호 — 후보에서 원천 제외(공과금·통신비·약국·보험). */
-        private List<String> protectedCategories = List.of("공과금", "통신비", "약국", "보험");
+        /** 이 값 미만이면 <b>보호</b> — 후보에서 원천 제외(의료·주거/통신·교통 등 생존필수). */
+        private double protectedBelow = 0.30;
+        /** 이 값 이상이면 <b>제거가능</b> — 대표금액 전체가 절감 대상(술·여행·취미 등). */
+        private double removableAbove = 0.55;
+        // 두 값 사이는 최적화가능 — 중앙값 초과분만 절감 대상(식비·카페처럼 끊을 수는 없는 소비).
 
         public double getWasteRatioThreshold() { return wasteRatioThreshold; }
         public void setWasteRatioThreshold(double v) { this.wasteRatioThreshold = v; }
-        public List<String> getRemovable() { return removable; }
-        public void setRemovable(List<String> v) { this.removable = v; }
-        public List<String> getOptimizable() { return optimizable; }
-        public void setOptimizable(List<String> v) { this.optimizable = v; }
-        public List<String> getProtectedCategories() { return protectedCategories; }
-        public void setProtectedCategories(List<String> v) { this.protectedCategories = v; }
+        public double getProtectedBelow() { return protectedBelow; }
+        public void setProtectedBelow(double v) { this.protectedBelow = v; }
+        public double getRemovableAbove() { return removableAbove; }
+        public void setRemovableAbove(double v) { this.removableAbove = v; }
     }
 
     /**

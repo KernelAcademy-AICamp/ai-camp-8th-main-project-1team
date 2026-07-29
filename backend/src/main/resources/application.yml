@@ -235,12 +235,15 @@ finntech:
       routine-appear-ratio: 0.25
       routine-min-days: 3
       routine-dispersion-max: 0.35
-    # 절약후보(⑤) — 낭비형 임계 + 3등급 카테고리(category2 매칭). 보호는 ML ESSENTIAL과 독립.
+    # 절약후보(⑤) — 등급을 **재량성**으로 판정한다(카테고리 이름을 박지 않는다, 원칙 4).
+    # 예전에는 이름 22개를 나열했는데, 카테고리 체계를 바꾸는 순간 하나도 안 겹쳐
+    # 절약 후보가 통째로 사라졌다. 게다가 목록에 '면세점'·'보험'처럼 존재하지 않는
+    # 카테고리가 섞여 있어도 아무도 몰랐다.
     cut-candidate:
       waste-ratio-threshold: 0.5
-      removable: [카페, 배달, 스트리밍, 백화점, 면세점, 간편결제]
-      optimizable: [한식, 중식, 일식, 양식, 분식, 대중교통, 택시]
-      protected-categories: [공과금, 통신비, 약국, 보험]
+      protected-below: 0.30    # 미만이면 보호 — 의료·주거/통신·교통/자동차
+      removable-above: 0.55    # 이상이면 제거가능 — 술/유흥·여행/숙박·취미/여가·쇼핑·미용
+                               # 사이는 최적화가능 — 식비·카페/간식·편의점·대형마트·생활·건강
     # 이상소비지수(④) — 4성분 해석가능 가중합(합=1 권장). 지수=100×Σ(weight×성분[0,1]).
     profile:
       waste-weight: 0.4          # 낭비비율(제거가능 지출/총지출)

@@ -19,6 +19,15 @@ class ProfileBuilderTest {
     private final AnalysisProperties.Volatility vol = new AnalysisProperties.Volatility();      // minMonths 3
     private final AnalysisProperties.Daypart daypart = new AnalysisProperties.Daypart();
 
+    /** 재량성 스텁 — 카페·배달은 제거가능(0.55 이상), 통신비는 보호. */
+    private static double disc(String mid) {
+        return switch (mid) {
+            case "통신비" -> 0.12;
+            case "한식" -> 0.45;
+            default -> 0.70;
+        };
+    }
+
     /** 첫 인자는 업종코드, 둘째는 우리 소비 중분류 — 집계 축이 중분류로 내려왔다. */
     private static UserPayment tx(LocalDateTime at, String ksic, String cat2, int amount) {
         return new UserPayment(at + "-" + cat2 + "-" + amount, 1L, "S1", 9001L, at, ksic, cat2, amount, "가맹점", 0, "1234567890");
@@ -36,7 +45,7 @@ class ProfileBuilderTest {
         SpendingPattern pattern = PatternAnalyzer.analyzeFrom(
                 w, LocalDateTime.of(2026, 2, 1, 0, 0), LocalDateTime.of(2026, 3, 1, 0, 0), daypart);
 
-        UserProfile p = ProfileBuilder.buildFrom(w, List.of(), pattern, profile, cut, vol);
+        UserProfile p = ProfileBuilder.buildFrom(w, List.of(), pattern, profile, cut, vol, ProfileBuilderTest::disc);
 
         assertEquals(100000, p.totalSpend());
         // 집계 축이 중분류라 최대 카테고리도 중분류로 나온다(예전에는 대분류 "고정비").
@@ -64,7 +73,7 @@ class ProfileBuilderTest {
         RecurringPayment routine = new RecurringPayment(
                 RecurringPayment.Type.ROUTINE, "배달", null, null, "심야", 10000, null, null, 2, 0.5);
 
-        UserProfile p = ProfileBuilder.buildFrom(w, List.of(routine), pattern, profile, cut, vol);
+        UserProfile p = ProfileBuilder.buildFrom(w, List.of(routine), pattern, profile, cut, vol, ProfileBuilderTest::disc);
 
         assertEquals(1.0, p.nightImpulseRatio(), 1e-9);
         assertEquals(20, p.contributionPoints().get("심야충동")); // 100×0.2×1.0

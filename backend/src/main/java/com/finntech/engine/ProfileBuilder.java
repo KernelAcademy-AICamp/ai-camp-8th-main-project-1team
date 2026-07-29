@@ -27,8 +27,12 @@ public class ProfileBuilder {
 
     private final UserPaymentRepository payments;
     private final AnalysisProperties props;
+    /** 절약 후보 등급을 재량성에서 유도한다 — 카테고리 이름 목록을 쓰지 않는다. */
+    private final IndustryCategoryMapper industryMapper;
 
-    public ProfileBuilder(UserPaymentRepository payments, AnalysisProperties props) {
+    public ProfileBuilder(UserPaymentRepository payments, AnalysisProperties props,
+                          IndustryCategoryMapper industryMapper) {
+        this.industryMapper = industryMapper;
         this.payments = payments;
         this.props = props;
     }
@@ -44,14 +48,14 @@ public class ProfileBuilder {
                 all, referenceTime, props.getRecurring(), props.getDaypart());
         SpendingPattern pattern = PatternAnalyzer.analyzeFrom(all, from, referenceTime, props.getDaypart());
         return buildFrom(window, recurring, pattern, props.getProfile(),
-                props.getCutCandidate(), props.getVolatility());
+                props.getCutCandidate(), props.getVolatility(), industryMapper::discretionaryOf);
     }
 
     /** 순수 조립 — 테스트 진입점. {@code window}는 이미 창 필터된 결제, {@code recurring}·{@code pattern}은 같은 창 산출물. */
     static UserProfile buildFrom(List<UserPayment> window, List<RecurringPayment> recurring, SpendingPattern pattern,
                                  AnalysisProperties.Profile pf, AnalysisProperties.CutCandidate cut,
-                                 AnalysisProperties.Volatility vol) {
-        Set<String> removable = Set.copyOf(cut.getRemovable());
+                                 AnalysisProperties.Volatility vol,
+                                 java.util.function.ToDoubleFunction<String> discretionary) {
 
         // category1별 지출 → 총지출·최대비중(집중도)
         Map<String, Long> byCat1 = new TreeMap<>();
@@ -59,7 +63,10 @@ public class ProfileBuilder {
         for (UserPayment p : window) {
             // 집계 축이 중분류다 — 대분류는 없앴다(업종과 소비종류를 겸하던 축).
             byCat1.merge(p.getCategory2(), (long) p.getAmount(), Long::sum);
-            if (removable.contains(p.getCategory2())) removableSpend += p.getAmount();
+            // '줄일 수 있는 소비'도 재량성이 정한다 — 이름 목록을 쓰면 체계가 바뀔 때 0이 된다.
+            if (discretionary.applyAsDouble(p.getCategory2()) >= cut.getRemovableAbove()) {
+                removableSpend += p.getAmount();
+            }
         }
         long total = byCat1.values().stream().mapToLong(Long::longValue).sum();
 
@@ -75,7 +82,8 @@ public class ProfileBuilder {
 
         long nightSpend = pattern.amountByDaypart().getOrDefault("심야", 0L);
         long routineWasteSpend = recurring.stream()
-                .filter(r -> r.type() == RecurringPayment.Type.ROUTINE && removable.contains(r.category2()))
+                .filter(r -> r.type() == RecurringPayment.Type.ROUTINE
+                        && discretionary.applyAsDouble(r.category2()) >= cut.getRemovableAbove())
                 .mapToLong(r -> r.representativeAmount() * r.occurrenceDays())
                 .sum();
         double nightImpulse = total > 0 ? Stats.clamp((double) (nightSpend + routineWasteSpend) / total, 0, 1) : 0;

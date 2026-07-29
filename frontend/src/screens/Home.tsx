@@ -77,13 +77,13 @@ export function Home() {
               <p className="empty">아직 불러온 결제가 없어요. 마이 &gt; 연결 관리에서 동기화해 보세요.</p>
             )}
             {recent.map((p) => {
-              const { icon, bg } = iconOf(p.category2 ?? p.category1);
+              const { icon, bg } = iconOf(p.category2 ?? p.category);
               return (
                 <div className="list-item" key={p.paymentId} style={{ padding: '12px 0', borderBottom: '1px solid var(--bg)' }}>
                   <span className="ic" style={{ background: bg }}><Icon id={icon} /></span>
                   <div className="tx">
-                    <b>{p.merchantName ?? p.category2 ?? p.category1}</b>
-                    <span>{shortDate(p.date)} · {p.category2 ?? p.category1}</span>
+                    <b>{p.merchantName ?? p.category2 ?? p.category}</b>
+                    <span>{shortDate(p.date)} · {p.category2 ?? p.category}</span>
                   </div>
                   <span className="amt">-{won(p.amount)}</span>
                 </div>
@@ -201,14 +201,14 @@ export function Home() {
               <p className="empty">아직 불러온 결제가 없어요. 마이 &gt; 연결 관리에서 동기화해 보세요.</p>
             )}
             {recent.map((p) => {
-              const name = p.merchantName ?? p.category2 ?? p.category1;
-              const { icon, bg } = iconOf(p.category2 ?? p.category1);
+              const name = p.merchantName ?? p.category2 ?? p.category;
+              const { icon, bg } = iconOf(p.category2 ?? p.category);
               return (
                 <div className="list-item" key={p.paymentId} style={{ padding: '12px 0', borderBottom: '1px solid var(--bg)' }}>
                   <span className="ic" style={{ background: bg }}><Icon id={icon} /></span>
                   <div className="tx">
                     <b>{name}</b>
-                    <span>{shortDate(p.date)} · {p.category2 ?? p.category1}</span>
+                    <span>{shortDate(p.date)} · {p.category2 ?? p.category}</span>
                   </div>
                   <span className="amt">-{won(p.amount)}</span>
                 </div>

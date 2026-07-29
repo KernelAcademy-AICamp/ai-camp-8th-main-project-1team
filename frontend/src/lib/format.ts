@@ -56,7 +56,9 @@ export function iconFor(name: string): string {
   if (/편의점|마트|생활|슈퍼/.test(n)) return 'i-cvs';
   if (/쇼핑|의류|패션|잡화|온라인/.test(n)) return 'i-shop';
   if (/구독|OTT|스트리밍|통신/.test(n)) return 'i-ott';
-  if (/건강|운동|헬스|스포츠/.test(n)) return 'i-heart';
+  if (/건강|운동|헬스|스포츠|피트니스/.test(n)) return 'i-heart';
+  if (/미용|헤어|네일|뷰티|화장/.test(n)) return 'i-gift';
+  if (/술|유흥|주점|호프|포차/.test(n)) return 'i-food';
   if (/책|공부|교육|학원|도서/.test(n)) return 'i-book';
   if (/선물|가족|경조/.test(n)) return 'i-gift';
   if (/반려|펫|동물/.test(n)) return 'i-paw';

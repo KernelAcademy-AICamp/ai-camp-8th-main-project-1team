@@ -366,12 +366,12 @@ public class MyDataLinkService {
                              String companyName, int requirement, int currentPerformance,
                              boolean requirementMet, int toRequirement, int earnedThisMonth) {}
 
-    public record PaymentRow(String paymentId, java.time.LocalDateTime date, String category1,
+    public record PaymentRow(String paymentId, java.time.LocalDateTime date, String category,
                              String category2, int amount, String merchantName, int receivedBenefit,
                              String businessNumber) {}
 
     /** 결제내역 모아보기 1건 — 결제 정보 + 어느 카드(실카드명·색·카드사)인지 + 가맹점 사업자번호. */
-    public record PaymentHistoryRow(String paymentId, java.time.LocalDateTime date, String category1,
+    public record PaymentHistoryRow(String paymentId, java.time.LocalDateTime date, String category,
                                     String category2, int amount, String merchantName, int receivedBenefit,
                                     String cardName, String cardColor, String companyName,
                                     String businessNumber) {}

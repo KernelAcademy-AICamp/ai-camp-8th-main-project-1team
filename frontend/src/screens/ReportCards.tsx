@@ -89,7 +89,7 @@ export function ReportCards() {
                       {rows.length === 0 ? <Empty>불러오는 중이거나 결제가 없어요.</Empty> : rows.slice(0, 30).map((p) => (
                         <div className="txn" key={p.paymentId}>
                           <span className="d">{shortDate(p.date)}</span>
-                          <span className="m">{p.merchantName ?? catLabel(p.category2 ?? p.category1)}</span>
+                          <span className="m">{p.merchantName ?? catLabel(p.category2 ?? p.category)}</span>
                           <span className="a">
                             {won(p.amount)}
                             {p.receivedBenefit > 0 && (
