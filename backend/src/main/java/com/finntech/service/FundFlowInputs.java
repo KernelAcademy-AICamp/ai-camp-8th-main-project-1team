@@ -2,12 +2,13 @@ package com.finntech.service;
 
 /**
  * 자금 흐름 축(L1~L5)의 입력 재료 — ①의 (B) 스키마와 1:1로 대응하는 <b>계약</b>이다
- * (`12_리포트_라이프스타일_설계.md` §4.1).
+ * (`13_취향 분석 및 추천_Agent_설계.md` §4.1).
  *
  * <p><b>왜 계약을 따로 두나(seam).</b> 5축 재료는 전부 계좌·소득을 봐야 알 수 있어 R7에 따라 ①이 (B)로
- * 넘겨야 한다 — ③은 계좌 원본을 직접 만지지 않는다. 지금은 ①의 (B)가 아직 구현 전이라 {@link FundFlowSource}가
- * 이 계약을 stub으로 채운다. ①(B)가 나오거나(정공법) 잔액만 account에서 끌어오기로 합의되면(B안), 소스 구현만
- * 갈아끼우고 이 계약과 {@link FundFlowService}는 그대로 둔다. 의존을 구현이 아니라 계약에 두는 것(DIP).
+ * 넘겨야 한다 — ③은 계좌 원본을 직접 만지지 않는다. 현재는 {@link FundFlowSource}의 구현
+ * {@link AccountFundFlowSource}(B안)가 잔액·급여를 마이데이터 계좌에서 직접 읽어 L1·L3를 채우고, L2·L4·L5는
+ * ①의 (B) 대기라 {@code null}(=UNKNOWN)이다. ①(B)가 나오면 소스 구현만 갈아끼우고 이 계약과
+ * {@link FundFlowService}는 그대로 둔다. 의존을 구현이 아니라 계약에 두는 것(DIP).
  *
  * <p>필드는 {@code (B)}의 material 이름을 그대로 따른다. 값을 아직 못 받는 축은 해당 서브레코드를 {@code null}로
  * 두면 그 축은 {@code UNKNOWN}으로 분류된다({@link FundFlowService}).
