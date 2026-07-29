@@ -37,14 +37,14 @@ function failureMessage(r: VerifyResult, selected: string): string {
   switch (r.reason) {
     // 번호 자체가 실존하지 않는다 — 신원 대조에 들어가기도 전이다.
     case 'UNASSIGNED_EXCHANGE':
-      return `${KTOA} 실존하지 않는 번호입니다. 휴대폰 번호를 다시 확인해 주세요.`;
+      return `${KTOA} 실존하지 않는 번호입니다.`;
     // 통신사만 다르다 — 입력한 번호 자체의 성질이라 짚어줘도 남의 신원을 캐는 데 쓸 수 없다.
     case 'CARRIER_MISMATCH':
       return `${KTOA} 입력하신 번호는 ${selected}가 아닌 ${r.actualCarrier} 관리 대역입니다.`;
     // 이름·주민번호는 맞는데 번호가 어긋난 경우. 남의 명의든 미등록이든 사용자가 할 일은 같다.
     case 'PHONE_OWNED_BY_OTHER':
     case 'PHONE_MISMATCH':
-      return `${KTOA} 등록된 전화번호가 불일치합니다. 휴대폰 번호를 다시 확인해 주세요.`;
+      return `${KTOA} 등록된 전화번호가 불일치합니다.`;
     // 이름·주민번호가 어긋난 경우. **무엇을 고치라는 말도 하지 않는다** —
     // 어느 항목을 지목하든 나머지는 맞다는 뜻이 되어, 남의 신원을 한 항목씩 맞춰볼 수 있게 된다.
     default:
