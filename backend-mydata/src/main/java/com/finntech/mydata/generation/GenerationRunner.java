@@ -55,6 +55,18 @@ public class GenerationRunner implements ApplicationRunner {
             "mydata_account_salary_payer, mydata_account_opened_date, mydata_account_salary, " +
             "mydata_account_payday, mydata_account_initial_balance) VALUES (?,?,?,?,?,?,?,?,?)";
 
+    /**
+     * 금액 배율의 하한·상한.
+     *
+     * <p>상한을 두는 이유는 카탈로그의 가격대를 지키는 것이다. 품목마다 {@code priceLow~priceHigh}가
+     * 이미 있는데 그 위에 월급 기반 배율을 무제한으로 곱하면 "1일권 18만원"이 나온다.
+     * 1.6배까지는 지역·업체 차이로 읽히지만 그 위는 존재하지 않는 가격이다.
+     *
+     * <p>배율이 상한에 걸리면 그 사용자의 월지출은 목표에 못 미친다. 그건 받아들인다 —
+     * 목표 총액을 맞추려고 없는 가격을 만들어 내는 것보다, 총액이 조금 덜 맞는 편이 낫다.
+     */
+    private static final double FLEX_SCALE_MIN = 0.1, FLEX_SCALE_MAX = 1.6;
+
     /** 입출금 통장 카탈로그(§13-11) — {은행, 상품명, 계좌번호형식('#'=랜덤숫자)}. 금융결제원 CMS 자리수 참조. */
     // 계좌번호 형식 — 금융결제원 CMS 계좌번호체계(2026.05.08)의 은행별 '보통예금' 행에 맞춘다.
     // 리터럴 숫자 = 과목코드(보통)·단축코드(PDF 지정), '#' = 랜덤숫자(점번호·일련번호·검증번호).
@@ -396,7 +408,16 @@ public class GenerationRunner implements ApplicationRunner {
             else flexTotal += t.amount();
         }
         long target = Math.round((fixedTotal + flexTotal) * scale);
-        double flexScale = flexTotal > 0 ? Math.max(0.1, (target - fixedTotal) / (double) flexTotal) : 1.0;
+        // **배율에 상한이 있어야 한다.** 예전에는 하한(0.1)만 있어서, 월급이 큰 사용자는 모든 금액이
+        // 몇 배로 부풀었다 — 실측에서 '클라이밍 1일권 181,000원'(카탈로그 20,000~30,000)이 나왔고
+        // 수량 1건 결제의 27.7%가 카탈로그 상한을 넘었으며 최대 14.2배까지 벌어졌다.
+        //
+        // 부유함은 같은 물건을 몇 배 주고 사는 것이 아니다 — **더 비싼 품목**을 고르거나
+        // **더 자주** 쓰는 것으로 나타나야 하고, 그 둘은 이미 페르소나(categoryMix·txPerMonth)가 한다.
+        // 그래서 금액 배율은 카탈로그 가격대를 크게 벗어나지 않는 범위로 묶는다.
+        double flexScale = flexTotal > 0
+                ? Math.max(FLEX_SCALE_MIN, Math.min(FLEX_SCALE_MAX, (target - fixedTotal) / (double) flexTotal))
+                : 1.0;
 
         List<Object[]> batch = new ArrayList<>(txns.size());
         List<AccountTxnGenerator.Row> outflow = new ArrayList<>(txns.size());
