@@ -11,6 +11,7 @@ import { AppBar, ProgressBar, Cta, Scroll, Screen, ErrorBox } from '../component
 import { Sheet } from '../components/Sheet';
 import { useSession } from '../state/session';
 import { api } from '../lib/api';
+import type { VerifyResult } from '../lib/api';
 import { DEMO_CI, DEMO_ENABLED } from '../lib/config';
 
 type Kind = 'text' | 'social' | 'carrier' | 'phone' | 'code';
@@ -24,6 +25,23 @@ const STEPS: Step[] = [
   { key: 'code', title: '문자로 받은\n인증번호를 입력해주세요', sub: '', label: '인증번호', kind: 'code', cta: '인증완료', ok: (v) => v.replace(/\D/g, '').length >= 6 },
 ];
 const CARRIERS = ['SKT', 'KT', 'LG U+', '알뜰폰'];
+
+/**
+ * 인증 실패 사유를 사람이 읽을 문장으로 옮긴다.
+ *
+ * 판정은 서버가 한다 — 국번 대역표를 화면에도 두면 반드시 어긋나기 때문이다.
+ * 여기서는 사유에 맞는 문장을 고르기만 한다.
+ */
+function failureMessage(r: VerifyResult): string {
+  switch (r.reason) {
+    case 'UNASSIGNED_EXCHANGE':
+      return '실존하지 않는 번호예요. 가운데 4자리를 다시 확인해 주세요.';
+    case 'CARRIER_MISMATCH':
+      return `[한국통신사업자연합회] 입력하신 정보는 ${r.actualCarrier} 관리 대역입니다. 통신사를 다시 골라주세요.`;
+    default:
+      return '이름과 휴대폰 번호가 맞지 않아요. 잘못 입력하신 것 같아요.';
+  }
+}
 
 /** 숫자만 저장하고, 표시는 010-0000-0000 형태로 자동 하이픈. */
 function formatPhone(digits: string): string {
@@ -49,7 +67,8 @@ export function Auth() {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
-  const [notFound, setNotFound] = useState(false);
+  /** 인증 실패 사유. 서버가 판정해 내려준 것을 문장으로만 옮긴다. */
+  const [failure, setFailure] = useState<string | null>(null);
 
   const cur = STEPS[step];
   const setVal = (v: string) => setVals((p) => ({ ...p, [cur.key]: v }));
@@ -62,10 +81,11 @@ export function Auth() {
 
   /** 인증번호까지 마치면 서버로 신원을 보내 가상 CI를 만든다. */
   async function verify() {
-    setBusy(true); setError(null); setNotFound(false);
+    setBusy(true); setError(null); setFailure(null);
     try {
-      const result = await api.verify(userId, (vals.name ?? '').trim(), social7, vals.phone ?? '');
-      if (!result.existsInMyData) { setNotFound(true); setBusy(false); return; }
+      const result = await api.verify(
+        userId, (vals.name ?? '').trim(), social7, vals.phone ?? '', vals.carrier);
+      if (!result.verified) { setFailure(failureMessage(result)); setBusy(false); return; }
       go('connect');
     } catch (e) {
       setError(e);
@@ -180,12 +200,7 @@ export function Auth() {
           ))}
         </div>
 
-        {notFound && (
-          <div className="error" role="alert">
-            마이데이터에 없는 신원이에요. 다른 정보로 다시 시도하거나,
-            {DEMO_ENABLED ? ' 아래 개발용 건너뛰기로 진행해 보세요.' : ' 데모 데이터를 먼저 준비해 주세요.'}
-          </div>
-        )}
+        {failure && <div className="error" role="alert">{failure}</div>}
         <ErrorBox error={error} />
 
         {DEMO_ENABLED && (
