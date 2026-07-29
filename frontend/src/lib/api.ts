@@ -65,9 +65,14 @@ export interface AlertResponse {
 export interface ReportLine {
   categoryCode: string;
   displayName: string;
+  /** 전 기간 누적 지출. 월 단위가 아니다 — 월평균이 필요하면 monthlyAmount를 쓴다. */
   amount: number;
   spendPercent: number;
   count: number;
+  /** 이 카테고리의 월평균 지출. 서버가 카테고리별 관측 개월수로 나눠 준다. */
+  monthlyAmount: number;
+  /** 위 월평균을 낼 때 쓴 분모(그 카테고리가 등장한 달의 수). */
+  observedMonths: number;
 }
 
 export interface ReportResponse {

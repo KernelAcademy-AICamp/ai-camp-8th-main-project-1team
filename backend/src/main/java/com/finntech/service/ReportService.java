@@ -123,7 +123,8 @@ public class ReportService {
         for (Map.Entry<String, AnalysisResult.CategoryStat> e : analysis.categoryStats().entrySet()) {
             AnalysisResult.CategoryStat s = e.getValue();
             Line line = new Line(s.categoryCode(), s.displayName(), s.totalAmount(),
-                    Math.round(s.spendRatio() * 1000.0) / 10.0, s.count());
+                    Math.round(s.spendRatio() * 1000.0) / 10.0, s.count(),
+                    s.monthlyAmount(), s.observedMonths());
             boolean isBad = mlWasteCategories != null
                     ? mlWasteCategories.contains(s.categoryCode())
                     : analysis.overspendingCategories().contains(s.categoryCode());
@@ -146,7 +147,18 @@ public class ReportService {
             String displayName,
             BigDecimal amount,
             double spendPercent,
-            long count
+            long count,
+            /**
+             * 이 카테고리의 <b>월평균</b> 지출 — {@code amount}(전 기간 누적)를 그 카테고리가
+             * 등장한 달의 수로 나눈 값.
+             *
+             * <p>화면이 직접 나누게 두면 안 된다. 예전에는 온보딩이 전체 관측 개월수로 나눴는데,
+             * 지킴이 서버는 카테고리별 개월수로 나누므로 <b>화면에 보여준 금액과 실제 챌린지
+             * 기준이 달랐다.</b> 나눗셈은 엔진 한 곳에서만 한다(원칙 2).
+             */
+            BigDecimal monthlyAmount,
+            /** 월평균을 낼 때 쓴 분모 — 화면이 "최근 N개월 평균"이라 설명할 수 있게 함께 보낸다. */
+            int observedMonths
     ) {}
 
     public record ReportBody(

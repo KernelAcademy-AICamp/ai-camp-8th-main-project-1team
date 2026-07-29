@@ -25,6 +25,14 @@ public class AnalysisProperties {
     private CutCandidate cutCandidate = new CutCandidate();
     private Profile profile = new Profile();
 
+    /**
+     * 월평균을 낼 때 거슬러 올라갈 달의 수 (PRD §기준 소비: "최근 3개월 카테고리별 월평균").
+     *
+     * <p>0 이하면 제한하지 않는다(전 기간). 예전에는 창이 없어 8개월 전 소비까지 평균에 섞였고,
+     * 화면은 "3개월 평균"이라 적어 두고 있었다 — 최근에 습관을 고친 사용자일수록 손해였다.
+     */
+    private int baselineMonths = 3;
+
     /** 과소비 기준: 카테고리 지출 ÷ 전체 지출 > ratioThreshold (문서 §5 ②) */
     public static class Overspending {
         private double ratioThreshold = 0.30;
@@ -286,4 +294,7 @@ public class AnalysisProperties {
     public void setCutCandidate(CutCandidate v) { this.cutCandidate = v; }
     public Profile getProfile() { return profile; }
     public void setProfile(Profile v) { this.profile = v; }
+
+    public int getBaselineMonths() { return baselineMonths; }
+    public void setBaselineMonths(int v) { this.baselineMonths = v; }
 }

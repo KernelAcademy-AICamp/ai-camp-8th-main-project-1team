@@ -10,9 +10,16 @@ package com.finntech.engine;
 public record CutCandidate(
         String category2,
         Type type,
-        /** 최근 창의 해당 category2 총 지출(원). */
+        /**
+         * 해당 category2의 <b>월 환산</b> 지출(원).
+         *
+         * <p>예전에는 관측 창(기본 90일)의 <b>합계</b>를 그대로 담고 이름만 {@code monthlySpend}였다.
+         * 화면은 그 값을 "월 N원"으로 표시했으므로 실제 월 지출의 약 3배가 나갔고, 다음 화면인
+         * 온보딩 2단계는 진짜 월평균을 보여줘 <b>같은 카테고리 금액이 화면을 넘길 때마다 10배씩
+         * 뛰었다.</b> 이제 창 길이로 나눠 한 달치로 환산한다 — 이름과 값이 일치한다.
+         */
         long monthlySpend,
-        /** 예상 절감액(원) — REMOVABLE=전액, OPTIMIZABLE=중앙값 초과분. */
+        /** 예상 <b>월</b> 절감액(원) — REMOVABLE=전액, OPTIMIZABLE=중앙값 초과분. 위와 같은 기준으로 환산한다. */
         long estimatedSaving,
         /** 코드가 생성한 근거 문장(집계 사실만). */
         String reason

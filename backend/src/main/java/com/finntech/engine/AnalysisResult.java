@@ -59,8 +59,49 @@ public record AnalysisResult(
             BigDecimal totalAmount,
             double spendRatio,
             long count,
-            boolean sufficientSamples
-    ) {}
+            boolean sufficientSamples,
+            /**
+             * <b>이 카테고리에</b> 소비가 있었던 달의 수 (yyyy-MM 기준, 최소 1).
+             *
+             * <p>월평균을 내려면 총액을 개월수로 나눠야 하는데, 그 개월수는 카테고리마다 다르다.
+             * 예전에는 소비자 쪽에서 {@link AnalysisResult#monthlySpend()}{@code .size()}
+             * (= 사용자가 <b>아무 카테고리든</b> 결제한 달의 수)로 나눴다. 분자는 한 카테고리의
+             * 총액인데 분모는 전체 기간이라, 최근 시작한 습관은 최대 관측 개월수 배만큼
+             * <b>과소평가</b>됐다 — 12개월 이력이 있는 사용자가 지난달 배달을 시작해 30만원을
+             * 썼다면 기준이 2.5만원으로 잡혀 챌린지 시작 직후 한도를 넘겼다.
+             *
+             * <p>지킴이 설계서 §1이 "기준 지출은 분석이 낸 <b>카테고리 월평균</b>의 합이다.
+             * 서비스가 다시 계산하지 않는다"고 못박으므로, 나눗셈의 분모도 엔진이 낸다(원칙 2).
+             */
+            int observedMonths,
+
+            /**
+             * 위 관측 달들의 <b>실제 일수 합</b>(2월=28·7월=31 …).
+             *
+             * <p>월평균은 관측한 달의 길이를 그대로 물려받는다. 하루 1만원을 쓰는 같은 습관이라도
+             * 7월만 본 사용자는 31만원, 2월만 본 사용자는 28만원이 월평균이 된다. 이 값을 30일
+             * 챌린지 한도로 환산 없이 쓰면 <b>같은 습관에 10.7% 다른 예산</b>이 잡히고 정산 등급까지
+             * 갈린다. 일수로 나눠 일액을 낸 뒤 챌린지 일수를 곱하면 관측 달이 무엇이든 같아진다.
+             *
+             * <p>챌린지 기간이 30일이 아닐 때는 더 크게 어긋난다 — 7일 챌린지에 한 달치 기준을
+             * 그대로 주면 아무 노력 없이 성공한다.
+             */
+            int observedMonthDays
+    ) {
+
+        /** 이 카테고리의 월평균 지출(설계서 §1 "카테고리 월평균"). 분모가 카테고리별이라 습관의 실제 크기에 맞는다. */
+        public BigDecimal monthlyAmount() {
+            return totalAmount.divide(BigDecimal.valueOf(Math.max(1, observedMonths)),
+                    0, java.math.RoundingMode.DOWN);
+        }
+
+        /** 이 카테고리의 지출을 {@code days}일치로 환산한다. 관측 달의 길이에 좌우되지 않는다. */
+        public BigDecimal amountOver(int days) {
+            int denominator = Math.max(1, observedMonthDays);
+            return totalAmount.multiply(BigDecimal.valueOf(Math.max(0, days)))
+                    .divide(BigDecimal.valueOf(denominator), 0, java.math.RoundingMode.DOWN);
+        }
+    }
 
     /** z-score를 어느 분포에 대해 계산했는가 — 경고 문구의 근거로 노출한다. */
     public enum BaselineSource {

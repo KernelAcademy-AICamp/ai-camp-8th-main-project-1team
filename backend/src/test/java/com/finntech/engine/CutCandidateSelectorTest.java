@@ -22,6 +22,14 @@ class CutCandidateSelectorTest {
                 LocalDateTime.of(2026, 2, 10, 12, 0), "생활", cat2, amount, "가맹점", 0, "1234567890");
     }
 
+    /** 창 길이 = 한 달(평균 30.436875일). 환산비가 1이라 창 합계가 그대로 월 금액이 된다. */
+    private static final int ONE_MONTH_WINDOW = 30;
+
+    /** 30일 창에 담긴 금액을 월 환산했을 때의 기대값 — 프로덕션 상수와 같은 비율을 쓴다. */
+    private static long monthly(long windowTotal) {
+        return Math.round(windowTotal * 30.436875 / ONE_MONTH_WINDOW);
+    }
+
     @Test
     @DisplayName("제거가능=전액·최적화가능=중앙값초과분, 절감액 순 정렬, 보호·미분류 제외")
     void ranksBySavingWithTierRules() {
@@ -32,22 +40,38 @@ class CutCandidateSelectorTest {
                 tx("공과금", 50000),                                     // 보호 → 제외
                 tx("잡화미분류", 3000));                                 // 미분류 → 후보 아님
 
-        List<CutCandidate> c = CutCandidateSelector.selectFrom(w, cut);
+        List<CutCandidate> c = CutCandidateSelector.selectFrom(w, cut, ONE_MONTH_WINDOW);
 
         assertEquals(3, c.size(), c.toString());
         assertEquals("배달", c.get(0).category2());
         assertEquals(CutCandidate.Type.REMOVABLE, c.get(0).type());
-        assertEquals(20000, c.get(0).estimatedSaving());
+        assertEquals(monthly(20000), c.get(0).estimatedSaving());
         assertEquals("카페", c.get(1).category2());
-        assertEquals(15000, c.get(1).estimatedSaving());
+        assertEquals(monthly(15000), c.get(1).estimatedSaving());
 
         CutCandidate han = c.get(2);
         assertEquals("한식", han.category2());
         assertEquals(CutCandidate.Type.OPTIMIZABLE, han.type());
-        assertEquals(8000, han.estimatedSaving());
-        assertEquals(40000, han.monthlySpend());
+        assertEquals(monthly(8000), han.estimatedSaving());
+        assertEquals(monthly(40000), han.monthlySpend());
 
         assertTrue(c.stream().noneMatch(x -> x.category2().equals("공과금")), "보호 카테고리 제외");
         assertFalse(c.stream().anyMatch(x -> x.category2().equals("잡화미분류")), "미분류 제외");
+    }
+
+    @Test
+    @DisplayName("창 길이가 달라도 같은 습관이면 같은 월 환산액이 나온다 (온보딩 1↔2 금액 불일치 회귀)")
+    void convertsWindowTotalToMonthlyRegardlessOfWindowLength() {
+        // 같은 하루 1만원 습관을 30일 창과 90일 창으로 각각 본다.
+        List<UserPayment> oneMonth = java.util.stream.IntStream.range(0, 30)
+                .mapToObj(i -> tx("배달", 10000)).toList();
+        List<UserPayment> threeMonths = java.util.stream.IntStream.range(0, 90)
+                .mapToObj(i -> tx("배달", 10000)).toList();
+
+        long from30 = CutCandidateSelector.selectFrom(oneMonth, cut, 30).get(0).monthlySpend();
+        long from90 = CutCandidateSelector.selectFrom(threeMonths, cut, 90).get(0).monthlySpend();
+
+        assertEquals(from30, from90, "창 길이가 3배여도 월 환산액은 같아야 한다");
+        assertEquals(monthly(300000), from30);
     }
 }

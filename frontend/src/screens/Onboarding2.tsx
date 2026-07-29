@@ -2,8 +2,9 @@
  * 이번 챌린지 정하기 2/4 — CT-01 줄일 카테고리 선택. 사용자가 1~2개 확정한다.
  *
  * 후보와 기준 지출은 `/api/report/monthly`(= 분석 엔진의 카테고리 집계)에서 가져온다.
- * 지킴이 서버가 챌린지 기준 지출을 잡을 때 쓰는 값과 **같은 산식**(카테고리 총액 ÷ 관측 개월수)을
- * 그대로 쓴다 — 화면에 보여준 금액과 서버가 잡는 기준이 어긋나면 강도 화면의 '지킬 돈'이 거짓말이 된다.
+ * **월평균은 서버가 계산한 `monthlyAmount`를 그대로 쓴다.** 예전에는 화면이 직접
+ * `총액 ÷ 전체 관측 개월수`로 나눴는데, 지킴이 서버는 카테고리별 개월수로 나누므로 둘이 달랐다 —
+ * 화면에 보여준 금액과 서버가 잡는 기준이 어긋나면 강도 화면의 '지킬 돈'이 거짓말이 된다.
  *
  * `negative`(줄이면 좋은 소비 — ML 낭비 판정 또는 쏠림 기준)가 AI 추천 후보다.
  */
@@ -15,24 +16,20 @@ import { useAsync } from '../state/useAsync';
 import { api, catLabel, type ReportLine } from '../lib/api';
 import { won, iconOf } from '../lib/format';
 
-/** 서버(GuardianService.baselineFor)와 동일: 카테고리 총액을 관측 개월수로 나눈 정수. */
-const monthlyOf = (amount: number, months: number) => Math.floor(Math.round(amount) / Math.max(1, months));
-
 export function Onboarding2() {
   const { go, back, userId, analysis, draft, patchDraft } = useSession();
   const report = useAsync(() => api.report(userId), [userId]);
   const inited = useRef(false);
 
-  const { options, recommended, months } = useMemo(() => {
+  const { options, recommended } = useMemo(() => {
     const r = report.data;
-    if (!r) return { options: [] as (ReportLine & { monthly: number; rec: boolean })[], recommended: [] as string[], months: 1 };
-    const m = Math.max(1, Object.keys(r.monthlySpend ?? {}).length);
+    if (!r) return { options: [] as (ReportLine & { monthly: number; rec: boolean })[], recommended: [] as string[] };
     const mark = (lines: ReportLine[], rec: boolean) =>
-      lines.map((l) => ({ ...l, monthly: monthlyOf(l.amount, m), rec }));
+      lines.map((l) => ({ ...l, monthly: l.monthlyAmount, rec }));
     const all = [...mark(r.negative, true), ...mark(r.positive, false)]
       .filter((l) => l.monthly > 0)
       .sort((x, y) => y.monthly - x.monthly);
-    return { options: all, recommended: all.filter((l) => l.rec).slice(0, 2).map((l) => l.categoryCode), months: m };
+    return { options: all, recommended: all.filter((l) => l.rec).slice(0, 2).map((l) => l.categoryCode) };
   }, [report.data]);
 
   /** ① 분석의 절약 후보(category2 단위) 근거 문장을 카테고리 이름으로 이어 붙인다. */
@@ -76,7 +73,7 @@ export function Onboarding2() {
         <p className="h-title">뭘 줄여볼까요?</p>
         <p className="h-sub">
           지킴이가 <b style={{ color: 'var(--blue-t)' }}>AI 추천</b>으로 골라봤어요. 1~2개 권장.
-          금액은 최근 {months}개월 평균 <b>한 달 지출</b>이에요 — 다음에서 강도로 실제 지킬 돈을 정해요.
+          금액은 <b>한 달 평균 지출</b>이에요 — 다음에서 강도로 실제 지킬 돈을 정해요.
         </p>
 
         <ErrorBox error={report.error} onRetry={report.reload} />

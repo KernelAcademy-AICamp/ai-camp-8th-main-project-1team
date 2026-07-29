@@ -38,6 +38,15 @@ public class GuardianProperties {
     /** 챌린지 기본 기간(일). 사용자 지정 기간은 설계서 D4에서 보류됐다. */
     private int defaultDurationDays = 30;
 
+    /**
+     * 주간 미션의 목표 — 한 주에 만들어야 할 무지출 연속 일수. 0이면 주간 미션을 만들지 않는다.
+     *
+     * <p>설계서 §9가 미션 내용을 열린 항목("보상 계층이 정한다")으로 두어 생성부가 없었고,
+     * 그래서 주간 미션 30P가 한 번도 지급되지 않았다. 개입 케이스 C5(무지출 3일 연속)와
+     * 같은 기준을 써서 사용자가 이미 아는 목표를 그대로 미션으로 삼는다.
+     */
+    private int weeklyMissionNoSpendDays = 3;
+
     private Notification notification = new Notification();
     private Point point = new Point();
     private Shop shop = new Shop();
@@ -121,6 +130,9 @@ public class GuardianProperties {
     public void setUndoWindowHours(int v) { this.undoWindowHours = v; }
     public int getDefaultDurationDays() { return defaultDurationDays; }
     public void setDefaultDurationDays(int v) { this.defaultDurationDays = v; }
+
+    public int getWeeklyMissionNoSpendDays() { return weeklyMissionNoSpendDays; }
+    public void setWeeklyMissionNoSpendDays(int v) { this.weeklyMissionNoSpendDays = v; }
     public Notification getNotification() { return notification; }
     public void setNotification(Notification v) { this.notification = v; }
     public Point getPoint() { return point; }

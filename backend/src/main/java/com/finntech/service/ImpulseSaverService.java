@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * 충동예산 절약통 (마스터 §5-5, 2026-07-21 방향 전환) — <b>수동 '살 뻔했다'를 대체</b>.
@@ -45,13 +46,16 @@ public class ImpulseSaverService {
     private final ConsumptionRepository consumptionRepository;
     private final CategoryRepository categoryRepository;
     private final ImpulseSaverStateRepository stateRepository;
+    private final com.finntech.config.AnalysisProperties analysisProps;
 
     public ImpulseSaverService(ConsumptionRepository consumptionRepository,
                                CategoryRepository categoryRepository,
-                               ImpulseSaverStateRepository stateRepository) {
+                               ImpulseSaverStateRepository stateRepository,
+                               com.finntech.config.AnalysisProperties analysisProps) {
         this.consumptionRepository = consumptionRepository;
         this.categoryRepository = categoryRepository;
         this.stateRepository = stateRepository;
+        this.analysisProps = analysisProps;
     }
 
     // ======================================================================
@@ -191,13 +195,36 @@ public class ImpulseSaverService {
         return sum;
     }
 
-    /** 카테고리별 월 평균 지출. {@code excludeMonth}(yyyy-MM)이 있으면 그 달은 제외(재검증 기준선용). */
+    /**
+     * 카테고리별 월 평균 지출. {@code excludeMonth}(yyyy-MM)이 있으면 그 달은 제외(재검증 기준선용).
+     *
+     * <p><b>최근 {@code finntech.analysis.baseline-months}개월만</b> 본다 — PRD가 기준 소비를
+     * "최근 3개월 카테고리별 월평균"으로 정하고 있고 화면도 "3개월 평균이 예산이 돼요"라고
+     * 적어 두었는데, 예전에는 창이 없어 <b>전 기간</b>을 평균했다. 데모 데이터가 9~10개월이라
+     * 8개월 전 소비까지 예산에 섞였고, 최근에 습관을 고친 사용자일수록 예산이 높게 잡혀 손해였다.
+     *
+     * <p>창은 '오늘'이 아니라 <b>데이터에 있는 최신 달</b>에서 거슬러 잡는다. 시계를 읽지 않으므로
+     * 같은 데이터면 언제 불러도 같은 값이 나온다(마스터 §4 원칙 3 재현성).
+     */
     private Map<String, BigDecimal> monthlyAvgByCategory(Long userId, String excludeMonth) {
+        List<Consumption> all = consumptionRepository.findAllForUser(userId);
+
+        // 볼 달을 먼저 정한다 — 최신 달부터 N개.
+        TreeSet<String> allMonths = new TreeSet<>();
+        for (Consumption c : all) {
+            String m = c.getOccurredAt().format(MONTH);
+            if (!m.equals(excludeMonth)) allMonths.add(m);
+        }
+        int window = analysisProps.getBaselineMonths();
+        Set<String> inWindow = window <= 0 || allMonths.size() <= window
+                ? allMonths
+                : new HashSet<>(new ArrayList<>(allMonths).subList(allMonths.size() - window, allMonths.size()));
+
         Map<String, BigDecimal> sum = new TreeMap<>();
         Map<String, Set<String>> monthsByCat = new TreeMap<>();
-        for (Consumption c : consumptionRepository.findAllForUser(userId)) {
+        for (Consumption c : all) {
             String m = c.getOccurredAt().format(MONTH);
-            if (m.equals(excludeMonth)) continue;
+            if (!inWindow.contains(m)) continue;
             String code = c.getCategory().getCode();
             sum.merge(code, c.getAmount(), BigDecimal::add);
             monthsByCat.computeIfAbsent(code, k -> new HashSet<>()).add(m);

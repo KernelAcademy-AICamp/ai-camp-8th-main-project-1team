@@ -32,17 +32,30 @@ public class CutCandidateSelector {
         this.props = props;
     }
 
-    /** 최근 {@code windowDays}일 절약 후보(⑤). 절감액 큰 순. */
+    /**
+     * 한 달의 평균 일수(365.2425 ÷ 12). 창 합계를 "월 얼마"로 환산할 때 쓴다.
+     * 30으로 잡으면 달력 한 달보다 1.4% 짧게 나와 절감액이 그만큼 과소 표시된다.
+     */
+    private static final double DAYS_PER_MONTH = 30.436875;
+
+    /** 최근 {@code windowDays}일 절약 후보(⑤). 절감액 큰 순. 금액은 <b>월 환산</b>이다. */
     public List<CutCandidate> select(Long userId, LocalDateTime referenceTime, int windowDays) {
         LocalDateTime from = referenceTime.minusDays(windowDays);
         List<UserPayment> window = payments.findByUserIdOrderByPaymentDateDesc(userId).stream()
                 .filter(p -> !p.getPaymentDate().isBefore(from) && !p.getPaymentDate().isAfter(referenceTime))
                 .toList();
-        return selectFrom(window, props.getCutCandidate());
+        return selectFrom(window, props.getCutCandidate(), windowDays);
+    }
+
+    /** 창 합계를 한 달치로 환산한다. 창이 비정상이면(0 이하) 그대로 둔다. */
+    private static long toMonthly(long windowTotal, int windowDays) {
+        if (windowDays <= 0) return windowTotal;
+        return Math.round(windowTotal * DAYS_PER_MONTH / windowDays);
     }
 
     /** 순수 선정 — 테스트 진입점. */
-    static List<CutCandidate> selectFrom(List<UserPayment> window, AnalysisProperties.CutCandidate cfg) {
+    static List<CutCandidate> selectFrom(List<UserPayment> window, AnalysisProperties.CutCandidate cfg,
+                                         int windowDays) {
         Set<String> removable = Set.copyOf(cfg.getRemovable());
         Set<String> optimizable = Set.copyOf(cfg.getOptimizable());
         Set<String> protectedCats = Set.copyOf(cfg.getProtectedCategories());
@@ -58,17 +71,19 @@ public class CutCandidateSelector {
         for (var e : byCat2.entrySet()) {
             String cat2 = e.getKey();
             List<Integer> amounts = e.getValue();
-            long spend = amounts.stream().mapToLong(Integer::longValue).sum();
+            // 창 합계를 월 환산해서 담는다. 근거 문장도 같은 값을 써야 숫자와 설명이 어긋나지 않는다.
+            long monthlySpend = toMonthly(amounts.stream().mapToLong(Integer::longValue).sum(), windowDays);
 
             if (removable.contains(cat2)) {
-                out.add(new CutCandidate(cat2, CutCandidate.Type.REMOVABLE, spend, spend,
-                        cat2 + " 지출 " + won(spend) + "은 전액 절약 대상(제거가능)"));
+                out.add(new CutCandidate(cat2, CutCandidate.Type.REMOVABLE, monthlySpend, monthlySpend,
+                        cat2 + " 지출 월 " + won(monthlySpend) + "은 전액 절약 대상(제거가능)"));
             } else if (optimizable.contains(cat2)) {
+                // 중앙값은 결제 한 건의 크기라 환산하지 않는다 — 초과분 합계만 월 단위로 바꾼다.
                 long median = Math.round(Stats.median(amounts.stream().mapToDouble(Integer::doubleValue).toArray()));
-                long excess = amounts.stream().mapToLong(a -> Math.max(0, a - median)).sum();
+                long excess = toMonthly(amounts.stream().mapToLong(a -> Math.max(0, a - median)).sum(), windowDays);
                 if (excess > 0) {
-                    out.add(new CutCandidate(cat2, CutCandidate.Type.OPTIMIZABLE, spend, excess,
-                            cat2 + " 중앙값(" + won(median) + ") 초과분 " + won(excess) + " 절감 가능(최적화가능)"));
+                    out.add(new CutCandidate(cat2, CutCandidate.Type.OPTIMIZABLE, monthlySpend, excess,
+                            cat2 + " 중앙값(" + won(median) + ") 초과분 월 " + won(excess) + " 절감 가능(최적화가능)"));
                 }
             }
             // 미분류 category2 → 후보 아님(보수적)
