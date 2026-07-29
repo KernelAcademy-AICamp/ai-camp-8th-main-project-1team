@@ -54,7 +54,8 @@ public class TasteAnalysisService {
                 .filter(p -> p.getPaymentDate() != null && !p.getPaymentDate().isBefore(since))
                 .toList();
 
-        List<HobbyScore> scores = aggregate(recent, hobbyCatalog.reverseMapping());
+        List<HobbyScore> scores = aggregate(recent, hobbyCatalog.reverseMapping(),
+                hobbyCatalog.refineByMerchant());
         String summary = summarize(scores);
         return new TasteProfile(userId, window, recent.size(), scores, summary);
     }
@@ -64,16 +65,29 @@ public class TasteAnalysisService {
     // ======================================================================
 
     /**
-     * 결제내역을 취미유형별로 집계해 건수 내림차순(→금액→이름)으로 정렬. 순수·결정론.
+     * 결제내역을 취미유형별로 집계해 건수 내림차순(→금액→이름)으로 정렬. 순수·결정론. (가맹점명 세분 없음)
      *
      * @param payments      대상 결제 (category2·amount·merchantName 사용)
      * @param reverseMap    category2 → 취미유형들 (1:N 허용)
      * @return 취미유형별 점수. 취미 신호가 없으면 빈 리스트.
      */
     static List<HobbyScore> aggregate(List<UserPayment> payments, Map<String, List<String>> reverseMap) {
+        return aggregate(payments, reverseMap, Map.of());
+    }
+
+    /**
+     * 위와 같되, 모호한 category2를 가맹점명으로 먼저 세분한다({@link #refineCategory2}).
+     * 예: category2 "스트리밍"은 음악(멜론)·영상(넷플릭스)·독서(밀리의서재)가 섞여 있어 그대로 매핑하면
+     * 취향이 왜곡된다 → 가맹점명으로 음악감상/영상시청/독서구독으로 가른 뒤 취미유형에 매핑한다.
+     *
+     * @param refineByMerchant category2 → (세분유형 → 가맹점명 키워드들). 부분일치.
+     */
+    static List<HobbyScore> aggregate(List<UserPayment> payments, Map<String, List<String>> reverseMap,
+                                      Map<String, Map<String, List<String>>> refineByMerchant) {
         Map<String, Acc> byHobby = new LinkedHashMap<>();
         for (UserPayment p : payments) {
-            List<String> hobbies = reverseMap.getOrDefault(p.getCategory2(), List.of());
+            String category2 = refineCategory2(p.getCategory2(), p.getMerchantName(), refineByMerchant);
+            List<String> hobbies = reverseMap.getOrDefault(category2, List.of());
             for (String hobby : hobbies) {
                 // 한 결제가 여러 취미의 signature면 각 취미에 카운트된다(1:N, 성향 신호는 겹쳐도 유효).
                 Acc a = byHobby.computeIfAbsent(hobby, k -> new Acc());
@@ -97,6 +111,26 @@ public class TasteAnalysisService {
                 .thenComparing(Comparator.comparingLong(HobbyScore::amount).reversed())
                 .thenComparing(HobbyScore::type));
         return scores;
+    }
+
+    /**
+     * 모호한 category2를 가맹점명 부분일치로 세분한다. 매칭이 없으면 원래 category2를 그대로 돌려준다.
+     * 순수 함수 — refineByMerchant는 데이터(리소스)로 주입되고 카테고리를 코드에 박지 않는다(설계원칙 4).
+     *
+     * <p>예: ("스트리밍", "멜론 스트리밍") → "음악감상", ("스트리밍", "넷플릭스") → "영상시청",
+     * ("스트리밍", "챗지피티플러스") → "스트리밍"(매칭 없음, 취미 신호 아님), ("일식", …) → "일식"(세분 대상 아님).
+     */
+    static String refineCategory2(String category2, String merchantName,
+                                  Map<String, Map<String, List<String>>> refineByMerchant) {
+        if (category2 == null || refineByMerchant == null) return category2;
+        Map<String, List<String>> subtypes = refineByMerchant.get(category2);
+        if (subtypes == null || merchantName == null) return category2;
+        for (Map.Entry<String, List<String>> e : subtypes.entrySet()) {
+            for (String keyword : e.getValue()) {
+                if (!keyword.isEmpty() && merchantName.contains(keyword)) return e.getKey();
+            }
+        }
+        return category2;
     }
 
     /**
