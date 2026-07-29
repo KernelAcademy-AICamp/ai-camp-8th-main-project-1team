@@ -99,8 +99,11 @@ for _ in $(seq 1 240); do            # 최대 60분
 done
 # 집계 로그가 떴어도 CSV 쓰기가 남을 수 있으니, 관련 쿼리가 완전히 빠질 때까지 한 번 더 확인한다.
 for _ in $(seq 1 60); do
+  # id<>CONNECTION_ID() 가 없으면 **이 쿼리가 자기를 센다** — 쿼리문 안에 'mydata_merchant'가
+  # 들어 있어 LIKE 에 자기 자신이 걸린다. 그러면 busy 가 0이 될 수 없어 대기가 안 풀린다.
   busy="$(mysql_q "SELECT COUNT(*) FROM information_schema.processlist
-                   WHERE command<>'Sleep' AND info IS NOT NULL AND info LIKE '%mydata_merchant%';")"
+                   WHERE command<>'Sleep' AND info IS NOT NULL
+                     AND id<>CONNECTION_ID() AND info LIKE '%mydata_merchant%';")"
   [[ "${busy:-0}" -eq 0 ]] && break
   sleep 5
 done
