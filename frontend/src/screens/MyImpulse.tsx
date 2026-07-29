@@ -100,12 +100,12 @@ export function MyImpulse() {
             <SectionTitle aux="정말 줄었는지 확인">다음달 카드내역으로 재검증</SectionTitle>
             <div className="card">
               <p className="empty" style={{ marginTop: 0 }}>
-                형식: <code>날짜,카테고리코드,금액</code> (한 줄에 한 건). 예: <code>2026-08-03,CAFE,5500</code>
+                형식: <code>날짜,카테고리코드,금액</code> (한 줄에 한 건). 예: <code>2026-08-03,카페/간식,5500</code>
               </p>
               <label className="form-row">
                 <span>카드내역 CSV</span>
                 <textarea className="inp" rows={4} value={csv} onChange={(e) => setCsv(e.target.value)}
-                  placeholder={'2026-08-03,CAFE,5500\n2026-08-05,SHOPPING,32000'} />
+                  placeholder={'2026-08-03,카페/간식,5500\n2026-08-05,쇼핑,32000'} />
               </label>
               <button type="button" className="btn btn-primary btn-sm" disabled={uploading || !csv.trim()}
                 onClick={() => {

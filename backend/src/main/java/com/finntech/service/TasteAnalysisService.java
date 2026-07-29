@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * <p><b>원리.</b> 일상 지출(식당·편의점·교통)만으로는 성향이 안 드러난다. 마이데이터 생성기는 취미성 지출을
  * '가끔이지만 뚜렷하게' 주입해 취향이 읽히게 설계돼 있다(mydata_catalog §4-B). 이 서비스는 그 신호를
- * {@link HobbyCatalog}의 역매핑(category2 → 취미유형)으로 되짚어 취미유형별로 집계한다.
+ * {@link HobbyCatalog}의 역매핑(업종코드 → 취미유형)으로 되짚어 취미유형별로 집계한다.
  *
  * <p><b>①과의 경계.</b> ① 소비 분석은 카테고리별 <b>금액 구조</b>를 보고, ③은 <b>취미 유형</b>을 본다
  * (06_prd §11.3: "취향 분석은 ③ 담당"). 같은 거래를 보되 목적이 다르다 — ①은 "얼마 쓰나", ③은 "어떤 사람인가".
@@ -66,14 +66,14 @@ public class TasteAnalysisService {
     /**
      * 결제내역을 취미유형별로 집계해 건수 내림차순(→금액→이름)으로 정렬. 순수·결정론.
      *
-     * @param payments      대상 결제 (category2·amount·merchantName 사용)
-     * @param reverseMap    category2 → 취미유형들 (1:N 허용)
+     * @param payments      대상 결제 (ksicCode·amount·merchantName 사용)
+     * @param reverseMap    업종코드 → 취미유형들 (1:N 허용)
      * @return 취미유형별 점수. 취미 신호가 없으면 빈 리스트.
      */
     static List<HobbyScore> aggregate(List<UserPayment> payments, Map<String, List<String>> reverseMap) {
         Map<String, Acc> byHobby = new LinkedHashMap<>();
         for (UserPayment p : payments) {
-            List<String> hobbies = reverseMap.getOrDefault(p.getCategory2(), List.of());
+            List<String> hobbies = reverseMap.getOrDefault(p.getKsicCode(), List.of());
             for (String hobby : hobbies) {
                 // 한 결제가 여러 취미의 signature면 각 취미에 카운트된다(1:N, 성향 신호는 겹쳐도 유효).
                 Acc a = byHobby.computeIfAbsent(hobby, k -> new Acc());

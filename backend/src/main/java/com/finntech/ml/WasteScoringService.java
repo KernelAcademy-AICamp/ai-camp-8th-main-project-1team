@@ -2,6 +2,7 @@ package com.finntech.ml;
 
 import com.finntech.domain.UserPayment;
 import com.finntech.domain.UserSpendingOverride;
+import com.finntech.engine.IndustryCategoryMapper;
 import com.finntech.repository.UserPaymentRepository;
 import com.finntech.repository.UserSpendingOverrideRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,8 +26,15 @@ import java.util.Map;
 @Service
 public class WasteScoringService {
 
-    /** '알 수 없는 PG 결제'의 category2. ML은 이를 낭비/필수로 판단하지 않고(사용자가 직접 결정), 학습에서도 제외한다(§13-11). */
-    private static final String UNCLASSIFIED = "미분류";
+    /**
+     * 무엇을 샀는지 알 수 없는 결제의 카테고리. ML은 이를 낭비/필수로 판단하지 않고(사용자가 직접 결정),
+     * 학습에서도 제외한다(§13-11).
+     *
+     * <p>이름을 여기에 박지 않고 {@link IndustryCategoryMapper}에서 가져온다. 예전에는 {@code "미분류"}가
+     * 박혀 있었는데 업종코드 체계로 옮기며 미분류 이름이 {@code "카테고리없음"}이 되었고, 그 결과
+     * <b>알 수 없는 PG 결제가 전부 ML 판정에 들어갔다</b> — 문자열이 안 맞을 뿐이라 크래시가 없었다.
+     */
+    private static final String UNCLASSIFIED = IndustryCategoryMapper.UNCLASSIFIED;
 
     private final SpendingClassifier classifier;
     private final UserPaymentRepository userPaymentRepository;

@@ -12,9 +12,13 @@ import org.springframework.stereotype.Component;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -42,6 +46,10 @@ public class GenerationRunner implements ApplicationRunner {
             "mydata_payment_discretionary_score, mydata_payment_location_address, " +
             "mydata_payment_location_lat, mydata_payment_location_lng, mydata_payment_business_number) " +
             "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    private static final String ACCOUNT_TXN_SQL = "INSERT INTO mydata_account_txn " +
+            "(mydata_account_id, mydata_account_txn_date, mydata_account_txn_type, " +
+            "mydata_account_txn_amount, mydata_account_txn_description, mydata_account_txn_note, " +
+            "mydata_account_txn_source, mydata_account_txn_payment_id) VALUES (?,?,?,?,?,?,?,?)";
     private static final String ACCOUNT_SQL = "INSERT INTO mydata_account " +
             "(mydata_account_id, mydata_user_id, mydata_account_bank, mydata_account_product, " +
             "mydata_account_salary_payer, mydata_account_opened_date, mydata_account_salary, " +
@@ -122,22 +130,28 @@ public class GenerationRunner implements ApplicationRunner {
                 props.getTargetCount(), userCount, props.getSeed());
 
         List<GeneratedUser> users = population.build(props.getSeed(), userCount);
-        long payTotal = 0;
+        Map<Long, String> cardNameById = cardCompanyNames();
+        long payTotal = 0, txnTotal = 0;
         int done = 0;
         for (GeneratedUser u : users) {
             insertUser(u);
-            List<String> cardIds = insertCards(u, cardCodes);
-            List<GenTxn> txns = simulator.simulate(u, u.startDate().plusDays(props.getHistoryDays()));
+            List<IssuedCard> cards = insertCards(u, cardCodes, cardNameById);
+            LocalDate genEnd = u.startDate().plusDays(props.getHistoryDays());
+            List<GenTxn> txns = simulator.simulate(u, genEnd);
             EconomyPlan econ = planEconomy(u, txns);          // 월급·지출률·금액 스케일·통장 산출
-            payTotal += insertPayments(u, cardIds, txns, econ.scale());
-            insertAccount(u, econ);
+            CardOutflow flow = insertPayments(u, cards, txns, econ.scale());
+            payTotal += flow.count();
+            // 통장을 먼저 굴려 보고 초기잔액을 확정한다 — 굴려 보기 전에는 마이너스가 되는지 알 수 없다.
+            Ledger ledger = buildLedger(econ, u.startDate(), genEnd, flow);
+            insertAccount(u, econ, ledger.initialBalance());   // 통장 거래의 FK 대상 — 먼저 넣는다
+            txnTotal += insertAccountTxns(econ, ledger, flow);
             if (++done % 2000 == 0) {
-                log.info("[generation] {}/{}명, 결제 {}건 ({}s)",
-                        done, users.size(), payTotal, (System.currentTimeMillis() - t0) / 1000);
+                log.info("[generation] {}/{}명, 결제 {}건, 통장거래 {}건 ({}s)",
+                        done, users.size(), payTotal, txnTotal, (System.currentTimeMillis() - t0) / 1000);
             }
         }
-        log.info("[generation] 완료 — 사용자 {}명 · 결제 {}건 · {}s",
-                users.size(), payTotal, (System.currentTimeMillis() - t0) / 1000);
+        log.info("[generation] 완료 — 사용자 {}명 · 결제 {}건 · 통장거래 {}건 · {}s",
+                users.size(), payTotal, txnTotal, (System.currentTimeMillis() - t0) / 1000);
         populateMerchants();
         logSummary();
     }
@@ -150,11 +164,14 @@ public class GenerationRunner implements ApplicationRunner {
     private void populateMerchants() {
         jdbc.update("DELETE FROM mydata_merchant");
         int n = jdbc.update(
-                "INSERT INTO mydata_merchant (business_number, merchant_name, address, lat, lng, online) " +
+                "INSERT INTO mydata_merchant (business_number, merchant_name, address, lat, lng, online, ksic_code) " +
                 "SELECT mydata_payment_business_number, MIN(mydata_payment_merchant_name), " +
                 "MIN(mydata_payment_location_address), MIN(mydata_payment_location_lat), " +
                 "MIN(mydata_payment_location_lng), " +
-                "MAX(CASE WHEN mydata_payment_channel = 'ONLINE' THEN 1 ELSE 0 END) " +
+                "MAX(CASE WHEN mydata_payment_channel = 'ONLINE' THEN 1 ELSE 0 END), " +
+                // 가맹점의 업종. 앱이 사업자번호로 조회할 때 결제 없이도 분류할 수 있어야 한다.
+                // 한 가맹점의 결제는 전부 같은 업종이므로 MIN으로 대표를 골라도 값이 같다.
+                "MIN(mydata_payment_ksic_code) " +
                 "FROM mydata_payment WHERE mydata_payment_business_number IS NOT NULL " +
                 "GROUP BY mydata_payment_business_number");
         log.info("[generation] 고유 가맹점 {}건 집계 → mydata_merchant", n);
@@ -314,23 +331,36 @@ public class GenerationRunner implements ApplicationRunner {
                 "900101-1000000", "010-0000-0000", v.baseName(), u.dataSplit());
     }
 
-    private List<String> insertCards(GeneratedUser u, List<Long> cardCodes) {
+    /** 발급된 카드 1장 — 통장 출금의 비고에 카드사명이 필요해 함께 들고 다닌다. */
+    private record IssuedCard(String id, String company) {}
+
+    private List<IssuedCard> insertCards(GeneratedUser u, List<Long> cardCodes,
+                                         Map<Long, String> companyByCode) {
         Random r = GenSeed.rng(u.userSeed(), 7);
         // 중복 카드명 방지(§13-11): 한 사람이 같은 카드사의 같은 카드를 카드번호만 바꿔 여러 장 갖는 건 비현실적.
         // 카탈로그(card_code=카드사×카드명 1:1)를 셔플해 서로 다른 card_code를 cardCount개 뽑는다(복원추출 금지).
         List<Long> pool = new ArrayList<>(cardCodes);
         Collections.shuffle(pool, r);
         int n = Math.min(u.cardCount(), pool.size());
-        List<String> ids = new ArrayList<>(n);
+        List<IssuedCard> ids = new ArrayList<>(n);
         for (int c = 0; c < n; c++) {
             String cardId = String.format("%04d-%04d-%04d-%04d",
                     r.nextInt(10000), r.nextInt(10000), r.nextInt(10000), r.nextInt(10000));
             long code = pool.get(c);
             jdbc.update(CARD_SQL, cardId, u.id(), code, Date.valueOf(LocalDate.of(2030, 12, 31)),
                     (int) Math.min(Integer.MAX_VALUE, u.variant().monthlyTotalMean()));
-            ids.add(cardId);
+            ids.add(new IssuedCard(cardId, companyByCode.getOrDefault(code, "카드")));
         }
         return ids;
+    }
+
+    /** 카드코드 → 카드사명. 사용자마다 다시 묻지 않도록 생성 시작에 한 번만 읽는다. */
+    private Map<Long, String> cardCompanyNames() {
+        Map<Long, String> out = new HashMap<>();
+        jdbc.query("SELECT c.card_code, co.card_company_name FROM card c "
+                        + "JOIN card_company co ON co.card_company_id = c.card_company_id",
+                (RowCallbackHandler) rs -> out.put(rs.getLong(1), rs.getString(2)));
+        return out;
     }
 
     /**
@@ -345,7 +375,18 @@ public class GenerationRunner implements ApplicationRunner {
      * {@code productPrice}는 원본을 넣어, 스키마 주석이 약속한 {@code amount ≈ 단가 × 수량}이
      * 깨져 있었다.
      */
-    private long insertPayments(GeneratedUser u, List<String> cardIds, List<GenTxn> txns, double scale) {
+    /**
+     * 결제 적재의 부산물 — 통장에 옮길 재료. 결제를 다시 읽지 않기 위해 여기서 함께 만든다.
+     *
+     * @param count      적재한 결제 수
+     * @param rows       통장에 복제할 카드 출금(스케일 적용 후 금액)
+     * @param outByMonth 월별 카드 지출 합계 — 이자가 붙을 실잔액을 구하는 데 쓴다
+     */
+    private record CardOutflow(long count, List<AccountTxnGenerator.Row> rows,
+                               Map<YearMonth, Long> outByMonth) {}
+
+    private CardOutflow insertPayments(GeneratedUser u, List<IssuedCard> cards,
+                                       List<GenTxn> txns, double scale) {
         Random ar = GenSeed.rng(u.userSeed(), 91);   // 금액 스냅용(결정론)
 
         // 고시요금분은 그대로 두고, 나머지가 목표 총액을 맞추도록 스케일을 재계산한다.
@@ -358,10 +399,13 @@ public class GenerationRunner implements ApplicationRunner {
         double flexScale = flexTotal > 0 ? Math.max(0.1, (target - fixedTotal) / (double) flexTotal) : 1.0;
 
         List<Object[]> batch = new ArrayList<>(txns.size());
+        List<AccountTxnGenerator.Row> outflow = new ArrayList<>(txns.size());
+        Map<YearMonth, Long> outByMonth = new HashMap<>();
         int seq = 0;
         for (GenTxn t : txns) {
             String payId = "g" + u.id().substring(0, 16) + "-" + (seq++);
-            String cardId = cardIds.get(Math.min(t.cardSlot(), cardIds.size() - 1));
+            IssuedCard card = cards.get(Math.min(t.cardSlot(), cards.size() - 1));
+            String cardId = card.id();
             int amount, unitPrice;
             if (isFixedTariff(t)) {
                 amount = t.amount();
@@ -378,9 +422,13 @@ public class GenerationRunner implements ApplicationRunner {
                     t.quantity(), t.wasteLabel(), t.discretionaryScore(), t.address(), t.lat(), t.lon(),
                     t.businessNumber()
             });
+            // 통장 쪽 사본. 적요는 가맹점, 비고는 카드사 — 실제 통장의 카드 출금이 그렇게 찍힌다.
+            outflow.add(new AccountTxnGenerator.Row(t.date(), "WITHDRAWAL", amount,
+                    t.merchant(), card.company(), "CARD", payId));
+            outByMonth.merge(YearMonth.from(t.date()), (long) amount, Long::sum);
         }
         jdbc.batchUpdate(PAY_SQL, batch);
-        return batch.size();
+        return new CardOutflow(batch.size(), outflow, outByMonth);
     }
 
     /** 고시요금 맥락인가 — 카탈로그가 정한다(contexts.json의 fixedTariff). */
@@ -465,8 +513,91 @@ public class GenerationRunner implements ApplicationRunner {
         return sb.toString();
     }
 
-    private void insertAccount(GeneratedUser u, EconomyPlan e) {
+    private void insertAccount(GeneratedUser u, EconomyPlan e, long initialBalance) {
         jdbc.update(ACCOUNT_SQL, e.accountNumber(), u.id(), e.bank(), e.product(), e.salaryPayer(),
-                Date.valueOf(u.startDate()), e.salary(), e.payday(), e.initialBalance());
+                Date.valueOf(u.startDate()), e.salary(), e.payday(), initialBalance);
+    }
+
+    /** 확정된 통장 — 보정된 초기잔액과 그 잔액으로 만든 거래 전부(날짜순). */
+    private record Ledger(long initialBalance, List<AccountTxnGenerator.Row> rows) {}
+
+    /** 초기잔액은 10만원 단위로 올린다 — 어중간한 값은 생성 데이터답지 않다. */
+    private static final long BALANCE_UNIT = 100_000L;
+    /** 바닥을 친 뒤에도 남겨 둘 여유(월급 배수). 딱 0원에 맞추면 통장이 늘 아슬아슬해 보인다. */
+    private static final double MARGIN_MONTHS_MIN = 2.0, MARGIN_MONTHS_MAX = 6.0;
+    /** 초기잔액 보정 재시도 상한. 이자가 잔액에 비례해 조금씩 늘어 보통 1회로 수렴한다. */
+    private static final int BALANCE_FIX_ROUNDS = 3;
+
+    /**
+     * 통장 거래를 만들고, <b>잔액이 마이너스로 내려가지 않도록 초기잔액을 보정</b>한다.
+     *
+     * <p><b>왜 여기인가.</b> 과소비형·외식형은 카드 지출이 급여를 크게 넘는다(페르소나의 사실이다).
+     * 초기잔액이 그 적자를 감당하지 못하면 통장이 음수로 가는데, 시연에서 마이너스 통장이 보이는 것은
+     * 의도가 아니다. 예전에는 생성이 끝난 뒤 {@code scripts/fix-account-balance.py}가 제공자 API로
+     * 실제 잔액을 물어 초기잔액을 올렸다. 통장 거래를 <b>적재</b>하는 지금은 그 방식이 성립하지 않는다 —
+     * 초기잔액을 올리면 잔액에 비례하는 <b>이자가 통째로 낡기</b> 때문이다. 그래서 굴려 보고 고치는 일을
+     * 생성 안으로 들여온다. 여유는 본인 월급의 배수로 줘 결과가 한 구간에 뭉치지 않게 한다.
+     *
+     * <p>보정하면 이자가 늘어 잔액이 다시 바뀌므로 몇 번 되돌린다. 이자는 월 0.1~2.0%/12라
+     * 증가분이 작아 보통 한 번에 수렴한다.
+     */
+    private Ledger buildLedger(EconomyPlan e, LocalDate opened, LocalDate genEnd, CardOutflow flow) {
+        LocalDateTime end = genEnd.atTime(23, 59, 59);
+        Random r = new Random(e.accountNumber().hashCode() ^ 0x5eedL);
+        double marginMonths = GenSeed.uniform(r, MARGIN_MONTHS_MIN, MARGIN_MONTHS_MAX);
+
+        long initial = e.initialBalance();
+        List<AccountTxnGenerator.Row> rows = List.of();
+        for (int round = 0; round <= BALANCE_FIX_ROUNDS; round++) {
+            rows = AccountTxnGenerator.generate(e.accountNumber(), e.bank(), e.salaryPayer(),
+                    opened, e.salary(), e.payday(), initial, end, flow.outByMonth());
+            long lowest = lowestBalance(initial, rows, flow);
+            if (lowest >= 0 || round == BALANCE_FIX_ROUNDS) break;
+            long need = -lowest + Math.round(e.salary() * marginMonths);
+            initial += (need + BALANCE_UNIT - 1) / BALANCE_UNIT * BALANCE_UNIT;
+        }
+        return new Ledger(initial, rows);
+    }
+
+    /** 통장·카드 거래를 시간순으로 굴렸을 때의 최저 잔액. 조회가 굴리는 것과 같은 순서여야 한다. */
+    private long lowestBalance(long initial, List<AccountTxnGenerator.Row> rows, CardOutflow flow) {
+        List<AccountTxnGenerator.Row> all = new ArrayList<>(rows);
+        all.addAll(flow.rows());
+        all.sort(java.util.Comparator.comparing(AccountTxnGenerator.Row::date)
+                .thenComparing(AccountTxnGenerator.Row::description));
+        long running = initial, lowest = initial;
+        for (AccountTxnGenerator.Row t : all) {
+            running += "DEPOSIT".equals(t.type()) ? t.amount() : -t.amount();
+            if (running < lowest) lowest = running;
+        }
+        return lowest;
+    }
+
+    /**
+     * 통장 거래를 적재한다 — 생성 시점에 만들어 두고 조회는 읽기만 한다(§13-11).
+     *
+     * <p><b>왜 조회가 아니라 여기인가.</b> 예전에는 통장을 열 때마다 이체를 다시 계산했는데,
+     * 그 계산이 "지금 이후는 건너뛴다"로 잘리면서 <b>조회 시점이 지난달 입금 총액을 바꿨다.</b>
+     * 여기서는 커트오프가 없으므로 생성 종료일까지 전부 만든다 — 결제내역과 같은 방식으로,
+     * 조회가 {@code date <= now}로 거른다.
+     *
+     * <p><b>순서가 강제된다.</b> 이자는 그 시점 실잔액에 붙고 실잔액은 이체와 카드 지출에
+     * 좌우되므로 {@code 이체 → 이자·세금} 순으로만 계산할 수 있다
+     * ({@link AccountTxnGenerator#generate}가 안에서 지킨다).
+     */
+    private long insertAccountTxns(EconomyPlan e, Ledger ledger, CardOutflow flow) {
+        List<Object[]> batch = new ArrayList<>(ledger.rows().size() + flow.rows().size());
+        for (AccountTxnGenerator.Row t : ledger.rows()) batch.add(txnRow(e, t));
+        // 카드 출금은 결제의 사본이다. 통장 한 장으로 잔액이 굴러가려면 같은 표에 있어야 한다.
+        if (props.isCopyCardPaymentsToAccount()) {
+            for (AccountTxnGenerator.Row t : flow.rows()) batch.add(txnRow(e, t));
+        }
+        jdbc.batchUpdate(ACCOUNT_TXN_SQL, batch);
+        return batch.size();
+    }
+
+    private static Object[] txnRow(EconomyPlan e, AccountTxnGenerator.Row t) {
+        return new Object[]{e.accountNumber(), Timestamp.valueOf(t.date()), t.type(),
+                t.amount(), t.description(), t.note(), t.source(), t.paymentId()};
     }
 }

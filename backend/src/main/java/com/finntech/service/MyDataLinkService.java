@@ -199,7 +199,11 @@ public class MyDataLinkService {
     /** 가맹점 조회(번호→주소) — 결제에 실린 사업자번호로 가맹점명·지번주소를 제공자에서 조회(프록시). 없으면 null. */
     @Transactional(readOnly = true)
     public MyDataResponses.MerchantView merchant(String businessNumber) {
-        return myDataClient.findMerchant(businessNumber);
+        MyDataResponses.MerchantView m = myDataClient.findMerchant(businessNumber);
+        if (m == null) return null;
+        // 업종코드는 사용자에게 보여줄 말이 아니다. 결제와 같은 표로 소비 중분류를 붙여 준다.
+        return new MyDataResponses.MerchantView(m.ksicCode(), industryMapper.midOf(m.ksicCode()),
+                m.businessNumber(), m.merchantName(), m.address(), m.lat(), m.lng(), m.online());
     }
 
     /**

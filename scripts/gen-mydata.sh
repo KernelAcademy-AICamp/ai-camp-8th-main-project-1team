@@ -39,10 +39,19 @@ if [[ "$existing" -gt 0 ]]; then
     exit 1
   fi
   echo "[FORCE] 기존 mydata_* 를 비운다(${existing}건)…"
-  mysql_q "SET FOREIGN_KEY_CHECKS=0;
-           TRUNCATE mydata_payment; TRUNCATE mydata_card; TRUNCATE mydata_account;
-           TRUNCATE mydata_user; TRUNCATE mydata_merchant;
-           SET FOREIGN_KEY_CHECKS=1;"
+  # 있는 테이블만 비운다. 새 마이그레이션이 도입한 테이블(mydata_account_txn 등)은 아직
+  # Flyway가 안 돌았을 수 있는데, 없는 테이블을 TRUNCATE 하면 스크립트가 통째로 멈춘다.
+  # 반대로 목록에서 빼면 옛 데이터가 새 계좌를 참조한 채 남는다(FK를 꺼 두어 조용히 통과).
+  for t in mydata_account_txn mydata_payment mydata_card mydata_account mydata_user mydata_merchant; do
+    exists="$(mysql_q "SELECT COUNT(*) FROM information_schema.tables
+                       WHERE table_schema='$DB_NAME' AND table_name='$t';")"
+    if [[ "${exists:-0}" -gt 0 ]]; then
+      mysql_q "SET FOREIGN_KEY_CHECKS=0; TRUNCATE $t; SET FOREIGN_KEY_CHECKS=1;"
+      echo "  비움: $t"
+    else
+      echo "  건너뜀(아직 없음): $t"
+    fi
+  done
 fi
 
 # ── 1) backend-mydata 빌드 ──
@@ -80,6 +89,8 @@ done
 # ── 4) 충돌 정리(사업자번호 → 주소 유일성 보장) ──
 # 10자리 번호 공간의 순수 해시충돌로 같은 번호가 서로 다른 주소를 갖는 건을 제거(README 규칙).
 echo "[gen-mydata] 충돌 정리(다중주소 사업자번호 제거)…"
+# 통장의 카드 출금은 결제의 **사본**이다. 결제만 지우면 통장에 그 출금만 남아 둘이 갈라진다
+# — 사본을 결제ID로 묶어 두었으므로 같은 조건으로 함께 지운다.
 mysql_q "
   CREATE TEMPORARY TABLE _collide AS
     SELECT mydata_payment_business_number AS bn
@@ -87,8 +98,13 @@ mysql_q "
     WHERE mydata_payment_business_number IS NOT NULL
     GROUP BY mydata_payment_business_number
     HAVING COUNT(DISTINCT mydata_payment_location_address) > 1;
+  CREATE TEMPORARY TABLE _dead AS
+    SELECT p.mydata_payment_id AS pid FROM mydata_payment p
+    JOIN _collide c ON p.mydata_payment_business_number = c.bn;
+  DELETE t FROM mydata_account_txn t JOIN _dead d ON t.mydata_account_txn_payment_id = d.pid;
   DELETE p FROM mydata_payment p JOIN _collide c ON p.mydata_payment_business_number = c.bn;
   DELETE m FROM mydata_merchant  m JOIN _collide c ON m.business_number = c.bn;
+  DROP TEMPORARY TABLE _dead;
   DROP TEMPORARY TABLE _collide;"
 
 # ── 5) 종료 + 검증 ──
@@ -98,5 +114,11 @@ collide="$(mysql_q "SELECT COUNT(*) FROM (SELECT mydata_payment_business_number 
              WHERE mydata_payment_business_number IS NOT NULL
              GROUP BY mydata_payment_business_number
              HAVING COUNT(DISTINCT mydata_payment_location_address)>1) t;")"
-echo "[gen-mydata] 완료: mydata_payment=${final}, 다중주소 사업자번호=${collide} (0이어야 정상)"
+# 결제와 통장 사본이 1:1인지 확인한다. 정리 단계가 한쪽만 지웠으면 여기서 드러난다.
+txns="$(mysql_q "SELECT COUNT(*) FROM mydata_account_txn;")"
+orphan="$(mysql_q "SELECT COUNT(*) FROM mydata_account_txn t
+             LEFT JOIN mydata_payment p ON p.mydata_payment_id = t.mydata_account_txn_payment_id
+             WHERE t.mydata_account_txn_source='CARD' AND p.mydata_payment_id IS NULL;")"
+echo "[gen-mydata] 완료: mydata_payment=${final}, 통장거래=${txns}, 다중주소 사업자번호=${collide} (0이어야 정상)"
+echo "[gen-mydata] 결제 없는 통장 카드출금=${orphan} (0이어야 정상)"
 echo "[gen-mydata] 다음: ./scripts/run-stack-mysql.sh 로 풀스택 기동."

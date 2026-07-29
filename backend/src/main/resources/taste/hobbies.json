@@ -1,92 +1,85 @@
 {
- "_note": "취미 성향 taxonomy. 사용자에게 1~3개 취미 배정 → 그 취미의 signatureCategories에서 '가끔·명백히' 지출을 주입해 성향이 마이데이터에서 식별되게 한다. 일상 지출(식당·편의점·교통)과 구분되는 취미 신호.",
+ "_note": "취미유형 → 그 취미를 신호하는 업종코드(KSIC 세분류). scripts/ksic/build_taste.py 가 생성기 카탈로그에서 파생한다(단일 원천). 앱은 업종코드까지만 받으므로 소비맥락(일식·백화점…)으로는 조회할 수 없다. 그 업종 방문 중 취미 signature 비율이 0.6 이상인 코드만 담는다 — 일상 지출에 묻힌 신호는 취향이 아니라 잡음이다.",
+ "signatureShareMin": 0.6,
  "hobbies": [
   {
    "type": "문화공연",
-   "signatureCategories": [
-    "공연전시"
+   "signatureKsic": [
+    "9011"
    ]
   },
   {
    "type": "여행",
-   "signatureCategories": [
-    "여행숙박",
-    "항공",
-    "철도",
-    "렌터카",
-    "고속버스"
+   "signatureKsic": [
+    "4910",
+    "4922",
+    "5110",
+    "7521",
+    "7611"
    ]
   },
   {
    "type": "반려동물",
-   "signatureCategories": [
-    "반려동물"
+   "signatureKsic": [
+    "7310"
    ]
   },
   {
    "type": "디지털게임",
-   "signatureCategories": [
-    "디지털가전",
-    "간편결제",
-    "스트리밍"
+   "signatureKsic": [
+    "4732",
+    "6031",
+    "6312"
    ]
   },
   {
    "type": "패션쇼핑",
-   "signatureCategories": [
-    "의류패션",
-    "백화점",
-    "화장품",
-    "드럭스토어"
+   "signatureKsic": [
+    "4741"
    ]
   },
   {
    "type": "스포츠레저",
-   "signatureCategories": [
-    "스포츠레저",
-    "헬스장"
+   "signatureKsic": [
+    "4763",
+    "9113"
    ]
   },
   {
    "type": "아웃도어캠핑",
-   "signatureCategories": [
-    "아웃도어캠핑"
+   "signatureKsic": [
+    "4763"
    ]
   },
   {
    "type": "독서문화",
-   "signatureCategories": [
-    "서점문구"
+   "signatureKsic": [
+    "4761"
    ]
   },
   {
    "type": "키즈육아",
-   "signatureCategories": [
-    "키즈육아",
-    "키즈카페"
+   "signatureKsic": [
+    "9122"
    ]
   },
   {
    "type": "취미공예",
-   "signatureCategories": [
-    "취미공예"
+   "signatureKsic": [
+    "4764"
    ]
   },
   {
    "type": "미식탐방",
-   "signatureCategories": [
-    "일식",
-    "양식",
-    "고기구이",
-    "뷔페",
-    "아시안"
+   "signatureKsic": [
+    "5612"
    ]
   },
   {
    "type": "영화관람",
-   "signatureCategories": [
-    "영화",
-    "스트리밍"
+   "signatureKsic": [
+    "5914",
+    "6031"
    ]
   }
  ]

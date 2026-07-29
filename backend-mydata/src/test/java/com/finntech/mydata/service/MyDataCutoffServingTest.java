@@ -42,13 +42,14 @@ class MyDataCutoffServingTest {
     @Autowired CardCompanyRepository companyRepository;
     @Autowired com.finntech.mydata.repository.MyDataAccountRepository accountRepository;
     @Autowired com.finntech.mydata.repository.MyDataMerchantRepository merchantRepository;
+    @Autowired com.finntech.mydata.repository.MyDataAccountTxnRepository accountTxnRepository;
 
     private static final LocalDateTime EARLY = LocalDateTime.parse("2026-07-21T23:59:59"); // 시드 기준일 끝
     private static final LocalDateTime LATE  = LocalDateTime.parse("2026-12-31T23:59:59"); // 미래로 전진
 
     private MyDataService serviceAt(LocalDateTime now) {
         return new MyDataService(userRepository, cardRepository, paymentRepository, companyRepository,
-                accountRepository, merchantRepository, now.toString(), "2026-07-21", 0);
+                accountRepository, merchantRepository, accountTxnRepository, now.toString(), "2026-07-21", 0);
     }
 
     private int totalPayments(List<CardView> cards) {
@@ -84,6 +85,42 @@ class MyDataCutoffServingTest {
         int incremental = late.findCardsSince(companyId, userId, EARLY).stream()
                 .mapToInt(c -> c.payments().size()).sum();
         assertThat(incremental).as("증분(=미래에 새로 생긴 결제)은 전체 증가분과 같다").isEqualTo(lateN - earlyN);
+    }
+
+    @Test
+    @Transactional
+    void 통장_잔액은_조회구간과_무관하고_거래를_굴린_값과_같다() {
+        String userId = (String) findUserWithCards()[0];
+        MyDataService svc = serviceAt(EARLY);
+
+        var one = svc.findAccount(userId, 1).orElseThrow();
+        var year = svc.findAccount(userId, 12).orElseThrow();
+
+        // 구간을 넓혀도 '지금 잔액'은 같다. 구간 밖 거래는 시작 잔액으로 접혀 들어가기 때문이다.
+        // (예전에는 이체를 조회 때마다 다시 계산했고, 커트오프가 난수 열을 잘라 이 값이 흔들렸다.)
+        assertThat(one.balance()).isEqualTo(year.balance());
+
+        // 넓은 구간이 좁은 구간을 포함한다.
+        assertThat(year.transactions().size()).isGreaterThanOrEqualTo(one.transactions().size());
+
+        // 화면은 최신순이고, 커트오프 이후 거래는 나오지 않는다.
+        assertThat(year.transactions()).isSortedAccordingTo(
+                java.util.Comparator.comparing(
+                        com.finntech.mydata.dto.MyDataDtos.AccountTxnView::date).reversed());
+        assertThat(year.transactions()).allSatisfy(t ->
+                assertThat(t.date()).isBeforeOrEqualTo(EARLY));
+
+        // balanceAfter는 실제로 굴러간 값이다 — 이웃한 두 줄의 차이가 그 거래 금액과 같아야 한다.
+        var rows = new java.util.ArrayList<>(year.transactions());
+        java.util.Collections.reverse(rows);          // 시간순으로 되돌린다
+        for (int i = 1; i < rows.size(); i++) {
+            var t = rows.get(i);
+            long delta = "DEPOSIT".equals(t.type()) ? t.amount() : -t.amount();
+            assertThat(rows.get(i).balanceAfter() - rows.get(i - 1).balanceAfter())
+                    .as("%s번째 거래(%s)의 잔액 증감", i, t.description()).isEqualTo(delta);
+        }
+        // 마지막 줄의 잔액이 곧 지금 잔액이다.
+        assertThat(rows.get(rows.size() - 1).balanceAfter()).isEqualTo(year.balance());
     }
 
     /** 카드를 가진 (userId, companyId) 조합을 실제 생성 데이터에서 찾는다. */

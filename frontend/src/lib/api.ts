@@ -346,6 +346,10 @@ export interface MyPaymentHistory {
 }
 /** 가맹점 조회(번호→주소). */
 export interface MyMerchant {
+  /** 제공자가 준 업종(KSIC 세분류). 표시용이 아니라 근거용이다. */
+  ksicCode: string | null;
+  /** 우리가 붙인 소비 중분류. 화면에는 이걸 쓴다. */
+  category: string | null;
   businessNumber: string;
   merchantName: string | null;
   address: string | null;
@@ -836,6 +840,10 @@ export const RULE_LABEL: Record<string, string> = {
  * 카테고리 코드 → 한글 표시명. RULE_LABEL과 같은 **표현 전용** 매핑이다.
  * 판단 로직(엔진·임계치)은 코드에 카테고리를 박지 않는다(설계원칙 4). 여기는 화면 표시일 뿐이다.
  * 서버가 내려준 displayName이 코드와 다르면 그쪽을 우선한다 — 이 맵은 폴백.
+ *
+ * 남은 항목은 **옛 영문 코드**뿐이다. 카테고리 체계가 업종코드 기반 중분류(한글)로 바뀌어
+ * 새 데이터에는 영문 코드가 나오지 않는다. 이전에 적재된 소비를 위해 남겨 둘 뿐이니
+ * 새 카테고리를 여기에 추가하지 않는다 — 중분류는 이름이 곧 표시명이라 폴백이 필요 없다.
  */
 export const CATEGORY_LABEL: Record<string, string> = {
   FOOD: '식비', CAFE: '카페·간식', SHOPPING: '쇼핑', TRANSPORT: '교통',

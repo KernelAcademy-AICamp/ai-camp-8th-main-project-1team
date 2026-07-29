@@ -84,6 +84,7 @@ public final class MyDataDtos {
                                  String note, long balanceAfter) {}
 
     /** 가맹점 조회(번호→주소) — 사용자가 결제에 실린 사업자번호로 가맹점명·지번주소를 조회한다. */
-    public record MerchantView(String businessNumber, String merchantName, String address,
+    /** @param ksicCode 가맹점 업종 — 결제 없이도 이 가맹점이 무슨 소비인지 알 수 있게 한다. */
+    public record MerchantView(String ksicCode, String businessNumber, String merchantName, String address,
                                Double lat, Double lng, boolean online) {}
 }

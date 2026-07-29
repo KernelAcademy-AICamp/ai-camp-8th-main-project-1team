@@ -28,6 +28,7 @@ public class MyDataService {
     private final CardCompanyRepository companyRepository;
     private final MyDataAccountRepository accountRepository;
     private final MyDataMerchantRepository merchantRepository;
+    private final MyDataAccountTxnRepository accountTxnRepository;
     private final String nowSetting;
     private final LocalDate referenceDate;
     /** 전체 조회 하한(W4-3): 0=무제한(현행), N>0이면 최근 N개월만 반환해 대량 사용자 응답 폭주를 막는다. */
@@ -36,6 +37,7 @@ public class MyDataService {
     public MyDataService(MyDataUserRepository userRepository, MyDataCardRepository cardRepository,
                          MyDataPaymentRepository paymentRepository, CardCompanyRepository companyRepository,
                          MyDataAccountRepository accountRepository, MyDataMerchantRepository merchantRepository,
+                         MyDataAccountTxnRepository accountTxnRepository,
                          @Value("${mydata.now:reference}") String nowSetting,
                          @Value("${mydata.seed.reference-date:2026-07-21}") String referenceDate,
                          @Value("${mydata.query.months-floor:0}") int monthsFloor) {
@@ -45,6 +47,7 @@ public class MyDataService {
         this.companyRepository = companyRepository;
         this.accountRepository = accountRepository;
         this.merchantRepository = merchantRepository;
+        this.accountTxnRepository = accountTxnRepository;
         // 빈 문자열은 '미설정'으로 본다. env(MYDATA_NOW=)가 비어 있으면 Spring은 yml의 기본값이 아니라
         // 빈 문자열을 넘긴다 — 이걸 그대로 parse하면 기동 후 조회에서 DateTimeParseException으로 터진다.
         this.nowSetting = (nowSetting == null || nowSetting.isBlank()) ? "system" : nowSetting.trim();
@@ -56,12 +59,13 @@ public class MyDataService {
     /**
      * 입출금 통장 조회(§13-11 경제 모델).
      *
-     * <p><b>잔액은 저장하지 않고 계산한다.</b> 통장 거래는 행으로 쌓아둔 것이 아니라
-     * 개설일·월급·이자·카드결제에서 유도된다. 그래서 결제가 하나 들어오면 즉시 반영된다.
+     * <p><b>거래는 생성 시점에 적재된다</b>({@code AccountTxnGenerator} → {@code mydata_account_txn}).
+     * 예전에는 조회할 때마다 개설일부터 지금까지의 이체를 다시 계산했는데, 그 계산이
+     * "지금 이후는 건너뛴다"로 잘리면서 <b>조회 시점이 지난달 입금 총액을 바꿨다</b> —
+     * 어제 본 통장과 오늘 본 통장의 지난주가 다르면 그건 통장이 아니다.
      *
-     * <p><b>기간을 맞추는 것이 중요하다.</b> 예전에는 카드 출금만 "최근 40건"으로 자르고 월급·이자는
-     * 개설일부터 전부 만들었다. 그 결과 최근 며칠 치 출금 옆에 몇 달 전 급여·이자만 덩그러니 놓여
-     * <b>한 푼도 안 쓰고 이자만 받은 통장</b>처럼 보였다. 이제 셋 다 같은 구간으로 자른다.
+     * <p><b>잔액만은 저장하지 않는다.</b> 거래가 하나 늘면 그 뒤 모든 행의 잔액이 낡기 때문이다.
+     * 구간 시작 잔액(= 초기잔액 + 그 이전 순증감)에 시간순으로 누적해 굴린다.
      *
      * @param months 최근 N개월(당월 포함). 1이면 이번 달, 7이면 이번 달 + 이전 6개월.
      */
@@ -73,36 +77,15 @@ public class MyDataService {
             LocalDateTime from = java.time.YearMonth.from(now).minusMonths(m - 1L).atDay(1).atStartOfDay();
             if (from.isBefore(a.getOpenedDate().atStartOfDay())) from = a.getOpenedDate().atStartOfDay();
 
-            // 전 기간의 입금(월급·이자)을 만든다 — 구간 밖의 것은 '구간 시작 잔액'을 구하는 데 쓰인다.
-            List<AccountTxnView> salary = salaryDeposits(a, now);
-            List<AccountTxnView> moves = transfers(a, now);
-            List<AccountTxnView> interest = interestAndTax(a, userId, now, moves);
+            String acc = a.getAccountNumber();
+            long running = a.getInitialBalance() + accountTxnRepository.netBefore(acc, from);
 
-            // 구간 시작 시점의 잔액. 그 이전 출금 합계는 한 번의 질의로 받는다.
-            long opening = a.getInitialBalance() - paymentRepository.sumByUserUpTo(userId, from.minusNanos(1));
-            for (AccountTxnView t : salary) if (t.date().isBefore(from)) opening += t.amount();
-            for (AccountTxnView t : concat(interest, moves)) {
-                if (!t.date().isBefore(from)) continue;
-                opening += "DEPOSIT".equals(t.type()) ? t.amount() : -t.amount();
-            }
-
-            // 구간 안의 거래를 모아 시간순으로 잔액을 굴린다.
-            List<AccountTxnView> rows = new java.util.ArrayList<>();
-            for (AccountTxnView t : concat(salary, interest, moves)) {
-                if (!t.date().isBefore(from)) rows.add(t);
-            }
-            for (MyDataPayment p : paymentRepository.findByUserBetween(userId, from, now)) {
-                rows.add(new AccountTxnView(p.getPaymentDate(), "WITHDRAWAL", p.getAmount(),
-                        p.getMerchantName(),
-                        p.getCard().getCardProduct().getCardCompany().getName(), 0));
-            }
-            rows.sort(java.util.Comparator.comparing(AccountTxnView::date));
-
-            long running = opening;
+            List<MyDataAccountTxn> rows = accountTxnRepository.findByAccountBetween(acc, from, now);
             List<AccountTxnView> txns = new java.util.ArrayList<>(rows.size());
-            for (AccountTxnView t : rows) {
-                running += "DEPOSIT".equals(t.type()) ? t.amount() : -t.amount();
-                txns.add(new AccountTxnView(t.date(), t.type(), t.amount(), t.description(), t.note(), running));
+            for (MyDataAccountTxn t : rows) {
+                running += "DEPOSIT".equals(t.getType()) ? t.getAmount() : -t.getAmount();
+                txns.add(new AccountTxnView(t.getDate(), t.getType(), t.getAmount(),
+                        t.getDescription(), t.getNote(), running));
             }
             long balance = running;   // 구간 끝 = 지금 잔액(구간은 항상 now까지다)
             java.util.Collections.reverse(txns);   // 화면은 최신순
@@ -116,216 +99,6 @@ public class MyDataService {
     @Transactional(readOnly = true)
     public java.util.Optional<AccountView> findAccount(String userId) {
         return findAccount(userId, 1);
-    }
-
-    @SafeVarargs
-    private static List<AccountTxnView> concat(List<AccountTxnView>... lists) {
-        List<AccountTxnView> out = new java.util.ArrayList<>();
-        for (List<AccountTxnView> l : lists) out.addAll(l);
-        return out;
-    }
-
-    // ── 계좌이체(사람 간) ────────────────────────────────────────────────────
-    // 통장에 카드값·급여·이자만 있으면 실제 통장처럼 보이지 않는다. 사람에게 보내고 받는 이체가
-    // 통장의 대부분을 차지하기 때문이다. 여기서 만든다 — 이것도 저장하지 않고 계산한다.
-
-    private static final String[] SURNAMES = {
-        "김","김","김","이","이","박","최","정","강","조","윤","장","임","한","오","서","신","권",
-        "황","안","송","전","홍","유","고","문","양","손","배","백","허","남","심","노","하","곽"
-    };
-    private static final String[] GIVEN1 = {
-        "민","서","지","예","하","도","시","주","유","준","현","승","은","다","소","태","재","성",
-        "진","채","수","우","규","연","가","나","선","형","정","윤"
-    };
-    private static final String[] GIVEN2 = {
-        "준","우","현","진","호","원","빈","석","훈","찬","영","복","희","린","아","은","연","율",
-        "경","미","지","수","혁","민","환","태","솔","겸","하","서"
-    };
-    /** 정기 이체(급여·매달 고액입금)의 채널. 일회성 송금과 구분된다. */
-    private static final String PAYROLL_CHANNEL = "펌뱅킹";
-    /**
-     * 일회성 이체의 비고 채널. 개인이 앱·ATM으로 보내는 경로들이다.
-     *
-     * <p>펌뱅킹은 여기 넣지 않는다 — 기업이 정기 이체에 쓰는 채널이라, 일반 이체에 섞이면
-     * 급여·정기 송금과 구분이 사라진다. 정기 이체는 {@link #PAYROLL_CHANNEL}을 쓴다.
-     */
-    private static final String[] CHANNELS = {
-        "당행CD","타행CD","전자금융이체","계좌대체","타행MB","타행IB","제휴CD","FB이체","FBS"
-    };
-
-    private static String randomName(java.util.Random rng) {
-        return SURNAMES[rng.nextInt(SURNAMES.length)]
-                + GIVEN1[rng.nextInt(GIVEN1.length)] + GIVEN2[rng.nextInt(GIVEN2.length)];
-    }
-
-    /**
-     * 개설일부터 now까지의 사람 간 계좌이체를 만든다.
-     *
-     * <p><b>결정론이어야 한다</b>(마스터 §4 원칙 3). 조회할 때마다 이체가 달라지면 잔액이 흔들리고
-     * 이자 계산까지 어긋난다. 계좌번호와 연·월을 시드로 삼아 같은 달은 언제 조회해도 같은 이체가 나온다.
-     */
-    private List<AccountTxnView> transfers(MyDataAccount a, LocalDateTime now) {
-        List<AccountTxnView> out = new java.util.ArrayList<>();
-        // 고액 입금을 보내는 사람은 계좌마다 하나로 고정한다(계좌번호가 시드라 늘 같은 이름).
-        java.util.Random who = new java.util.Random(a.getAccountNumber().hashCode());
-        String payer = SURNAMES[who.nextInt(SURNAMES.length)]
-                + GIVEN1[who.nextInt(GIVEN1.length)] + GIVEN2[who.nextInt(GIVEN2.length)];
-        java.time.YearMonth ym = java.time.YearMonth.from(a.getOpenedDate());
-        java.time.YearMonth last = java.time.YearMonth.from(now);
-        for (; !ym.isAfter(last); ym = ym.plusMonths(1)) {
-            java.util.Random rng = new java.util.Random(
-                    (a.getAccountNumber() + "/" + ym).hashCode() & 0xffffffffL);
-            // ── 출금 먼저 만든다. 월 30건 안팎을 날짜별 확률로 흩는다(없는 날도, 겹치는 날도 있게).
-            int days = ym.lengthOfMonth();
-            List<AccountTxnView> outs = new java.util.ArrayList<>();
-            long spent = 0;
-            for (int day = 1; day <= days; day++) {
-                LocalDate d = ym.atDay(day);
-                if (d.isBefore(a.getOpenedDate())) continue;
-                double u = rng.nextDouble();
-                int n = u < 0.24 ? 0 : u < 0.76 ? 1 : 2;      // 평균 약 1.0건/일 → 월 30건 안팎
-                for (int i = 0; i < n; i++) {
-                    LocalDateTime when = d.atTime(8 + rng.nextInt(14), rng.nextInt(60));
-                    if (when.isAfter(now)) continue;
-                    // 3,000~30,000원 · 1,000원 단위. 개인이 앱으로 보내는 송금의 실제 크기다.
-                    // (단위를 10,000원으로 잘못 두면 한 건이 3~15만원이 되고, 입금은 이 합계의
-                    //  88~96%로 역산되므로 입금까지 수십만원으로 함께 부풀어 오른다.)
-                    long amount = (3 + rng.nextInt(28)) * 1_000L;
-                    spent += amount;
-                    outs.add(new AccountTxnView(when, "WITHDRAWAL", amount,
-                            randomName(rng), CHANNELS[rng.nextInt(CHANNELS.length)], 0));
-                }
-            }
-            out.addAll(outs);
-            if (outs.isEmpty()) continue;
-
-            // ── 입금은 출금의 1/5 건수. 금액은 **출금 합계보다 살짝 적게** 맞춘다 —
-            // 통장이 계속 불거나 계속 마르지 않으면서, 카드 지출만큼은 실제로 줄어들게 하려는 것이다.
-            int inCount = Math.max(2, Math.round(outs.size() / 5f));
-            long target = (long) (spent * (0.88 + rng.nextDouble() * 0.08));   // 88~96%
-
-            // 그중 한 건은 매달 **같은 사람**이 보내는 고액 입금. 다달이 이름이 바뀌면
-            // 정기적인 관계(가족 송금·고정 정산)로 읽히지 않는다.
-            // 비고는 급여와 같은 펌뱅킹 — 매달 같은 날 같은 사람이 보내는 정기 이체는
-            // 실제로도 펌뱅킹으로 처리된다. 채널이 달마다 바뀌면 일회성 송금처럼 보인다.
-            // 30,000~300,000원 · 1만원 단위. 상한(target/2)에 걸리면 끝수가 남으므로 1만원 아래로 버린다
-            // — 버리지 않으면 `204,997원` 같은 값이 나와 사람이 보낸 송금으로 읽히지 않는다.
-            long big = Math.min(target / 2, (3 + rng.nextInt(28)) * 10_000L) / 10_000L * 10_000L;
-            LocalDate bigDay = ym.atDay(1 + rng.nextInt(days));
-            LocalDateTime bigAt = bigDay.atTime(10 + rng.nextInt(9), rng.nextInt(60));
-            if (!bigDay.isBefore(a.getOpenedDate()) && !bigAt.isAfter(now) && big > 0) {
-                out.add(new AccountTxnView(bigAt, "DEPOSIT", big, payer, PAYROLL_CHANNEL, 0));
-            } else {
-                big = 0;
-            }
-
-            // 남은 금액을 나머지 입금 건수로 쪼갠다. 균등분할이면 같은 금액이 반복돼 티가 나므로
-            // 가중치를 랜덤으로 주고, 마지막 건이 반올림 오차를 흡수한다. 전부 1,000원 단위.
-            int rest = Math.max(1, inCount - (big > 0 ? 1 : 0));
-            long remain = Math.max(0, target - big);
-            if (remain > 0) {
-                double[] w = new double[rest];
-                double sum = 0;
-                for (int i = 0; i < rest; i++) { w[i] = 0.5 + rng.nextDouble(); sum += w[i]; }
-                long allocated = 0;
-                for (int i = 0; i < rest; i++) {
-                    long amount = (i == rest - 1)
-                            ? remain - allocated
-                            : Math.round(remain * w[i] / sum / 1000d) * 1000L;
-                    amount = Math.max(1000, amount / 1000 * 1000);
-                    allocated += amount;
-                    LocalDate d = ym.atDay(1 + rng.nextInt(days));
-                    if (d.isBefore(a.getOpenedDate())) continue;
-                    LocalDateTime when = d.atTime(9 + rng.nextInt(11), rng.nextInt(60));
-                    if (when.isAfter(now)) continue;
-                    out.add(new AccountTxnView(when, "DEPOSIT", amount,
-                            randomName(rng), CHANNELS[rng.nextInt(CHANNELS.length)], 0));
-                }
-            }
-        }
-        return out;
-    }
-
-    /** 이자 원천징수 — 통장에는 소득세(14%)와 지방소득세(1.4%)가 따로 찍힌다. */
-    private static final double INCOME_TAX_RATE = 0.14, LOCAL_TAX_RATE = 0.014;
-    /** 연이율 범위. 입출금 통장이라 낮다(정기예금이 아니다). */
-    private static final double RATE_MIN = 0.001, RATE_MAX = 0.020;
-
-    /**
-     * 계좌별 연이율 — 계좌번호 해시에서 0.1~2.0% 사이로 뽑는다.
-     *
-     * <p>난수를 그때그때 뽑지 않는 이유는 재현성이다(마스터 §4 원칙 3). 같은 계좌는 언제 조회해도
-     * 같은 이율이어야 잔액이 흔들리지 않는다. 계좌번호는 불변이므로 시드로 적당하다.
-     */
-    private static double annualRate(MyDataAccount a) {
-        int h = a.getAccountNumber().hashCode();
-        double unit = (h & 0x7fffffff) / (double) Integer.MAX_VALUE;   // [0,1)
-        return RATE_MIN + unit * (RATE_MAX - RATE_MIN);
-    }
-
-    /**
-     * 매달 이자 입금과 그 직후의 이자소득세 출금을 만든다(≤now).
-     *
-     * <p><b>저장하지 않고 계산한다.</b> 월급 입금과 같은 방식이다 — 통장 거래는 행으로 쌓아둔 것이
-     * 아니라 개설일·월급·결제내역에서 유도된다. 그래서 이자를 넣는 데 마이데이터 재생성이 필요 없다.
-     *
-     * <p>이자는 <b>그 시점 실잔액</b>에 붙는다. 많이 쓴 달은 잔액이 낮아 이자도 적다 — "안 쓰면
-     * 더 붙는다"가 숫자로 드러나야 소비 조언 앱의 서사가 산다.
-     */
-    private List<AccountTxnView> interestAndTax(MyDataAccount a, String userId, LocalDateTime now,
-                                                List<AccountTxnView> moves) {
-        // 그 달의 '나간 돈' = 카드결제 + 계좌이체 순유출. 이체를 빼먹으면 이자가 실제 잔액과 어긋난다.
-        java.util.Map<java.time.YearMonth, Long> outByMonth = new java.util.HashMap<>();
-        for (Object[] row : paymentRepository.sumByUserPerMonth(userId, now)) {
-            outByMonth.merge(java.time.YearMonth.of(((Number) row[0]).intValue(), ((Number) row[1]).intValue()),
-                    ((Number) row[2]).longValue(), Long::sum);
-        }
-        for (AccountTxnView t : moves) {
-            outByMonth.merge(java.time.YearMonth.from(t.date()),
-                    "DEPOSIT".equals(t.type()) ? -t.amount() : t.amount(), Long::sum);
-        }
-
-        double rate = annualRate(a);
-        // 이자일은 개설일의 '일'을 따른다(말일 보정). 월급날과 겹치지 않게 시각만 다르게 둔다.
-        int day = Math.min(a.getOpenedDate().getDayOfMonth(), 28);
-        LocalDate d = a.getOpenedDate().withDayOfMonth(day);
-        if (!d.isAfter(a.getOpenedDate())) d = d.plusMonths(1);   // 개설 당월은 이자 없음
-
-        long balance = a.getInitialBalance();
-        LocalDate salaryDay = a.getOpenedDate().withDayOfMonth(Math.min(a.getPayday(), 28));
-        if (salaryDay.isBefore(a.getOpenedDate())) salaryDay = salaryDay.plusMonths(1);
-
-        List<AccountTxnView> out = new java.util.ArrayList<>();
-        for (; !d.atTime(0, 5).isAfter(now); d = d.plusMonths(1)) {
-            java.time.YearMonth ym = java.time.YearMonth.from(d);
-            for (; !salaryDay.isAfter(d); salaryDay = salaryDay.plusMonths(1)) balance += a.getSalary();
-            balance -= outByMonth.getOrDefault(ym.minusMonths(1), 0L);
-
-            long interest = Math.max(0, (long) (Math.max(0, balance) * rate / 12.0));
-            if (interest <= 0) continue;
-            // 통장에는 소득세와 지방소득세가 **따로** 찍힌다. 합쳐 쓰면 실제 통장과 다르다.
-            long incomeTax = (long) (interest * INCOME_TAX_RATE);
-            long localTax = (long) (interest * LOCAL_TAX_RATE);
-            String office = a.getBank() + "본부";
-            out.add(new AccountTxnView(d.atTime(0, 5), "DEPOSIT", interest, "이자입금", office, 0));
-            if (incomeTax > 0) out.add(new AccountTxnView(d.atTime(0, 6), "WITHDRAWAL", incomeTax, "결산소득세", office, 0));
-            if (localTax > 0) out.add(new AccountTxnView(d.atTime(0, 7), "WITHDRAWAL", localTax, "결산지방세", office, 0));
-            balance += interest - incomeTax - localTax;
-        }
-        return out;
-    }
-
-    /** 개설일 이후 매달 월급날(payday≤28)에 입금된 월급 내역(≤now). 잔액 계산과 내역 표시에 공용. */
-    private List<AccountTxnView> salaryDeposits(MyDataAccount a, LocalDateTime now) {
-        List<AccountTxnView> out = new java.util.ArrayList<>();
-        LocalDate d = a.getOpenedDate().withDayOfMonth(a.getPayday());
-        if (d.isBefore(a.getOpenedDate())) d = d.plusMonths(1);
-        // 적요는 상대(회사), 비고는 채널. 기업 급여이체는 펌뱅킹으로 나간다.
-        for (; !d.atTime(9, 0).isAfter(now); d = d.plusMonths(1)) {
-            out.add(new AccountTxnView(d.atTime(9, 0), "DEPOSIT", a.getSalary(),
-                    a.getSalaryPayer(), PAYROLL_CHANNEL, 0));
-        }
-        return out;
     }
 
     /**
@@ -376,7 +149,7 @@ public class MyDataService {
     @Transactional(readOnly = true)
     public java.util.Optional<MerchantView> findMerchant(String businessNumber) {
         return merchantRepository.findById(businessNumber).map(m ->
-                new MerchantView(m.getBusinessNumber(), m.getMerchantName(), m.getAddress(),
+                new MerchantView(m.getKsicCode(), m.getBusinessNumber(), m.getMerchantName(), m.getAddress(),
                         m.getLat(), m.getLng(), m.isOnline()));
     }
 

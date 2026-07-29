@@ -90,7 +90,7 @@ public class UnknownPgPaymentRunner implements ApplicationRunner {
                 String payId = "u" + uid.substring(0, 16) + "-" + (seq++);
                 LocalDateTime when = d.atTime(r.nextInt(24), r.nextInt(60));
                 batch.add(new Object[]{
-                        payId, cardId, Timestamp.valueOf(when), "온라인", "미분류",
+                        payId, cardId, Timestamp.valueOf(when), "6312", "미분류",
                         amount, pg, 0, "ONLINE", "알 수 없는 결제", null, 1, null, null, null, null, null});
                 total++;
                 if (batch.size() >= 5000) { jdbc.batchUpdate(PAY_SQL, batch); batch.clear(); }
