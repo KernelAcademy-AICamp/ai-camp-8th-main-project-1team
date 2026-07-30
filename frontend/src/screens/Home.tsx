@@ -136,12 +136,16 @@ export function Home() {
             </span>
           </button>
 
-          {/* 히어로 — 지키는 금액과 달성률 */}
+          {/* 히어로 — 지키는 금액과 그 비율.
+              '달성률'이라 부르면 안 된다. 이 값은 설계서 §1의 `확보 절약액 ÷ 지킬 돈`이라
+              시간 축이 없다 — 한 푼도 안 쓴 첫날에도 100%다. 완주한 것처럼 읽히던 자리라
+              "지금 지키는 중"이라는 현재 상태로 바꾸고, 며칠째인지를 옆에 붙여 진행을 드러낸다. */}
           <div className="hero">
-            <div className="cap">이번 챌린지 달성률</div>
+            <div className="cap">지금 지키고 있어요</div>
             <div className="big">{defense}%</div>
             <div className="sub">
-              지킬 돈 {won(ch.targetSaving)} 중 <b>{won(ch.securedSaving)}</b> 지키는 중
+              지킬 돈 {won(ch.targetSaving)} 중 <b>{won(ch.securedSaving)}</b>
+              {' · '}{ch.daysElapsed}/{ch.daysTotal}일째
               {ch.daysLeft > 0 ? ` · D-${ch.daysLeft}` : ' · 마지막 날'}
             </div>
           </div>

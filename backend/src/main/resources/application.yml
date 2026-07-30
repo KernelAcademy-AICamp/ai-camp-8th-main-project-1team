@@ -144,6 +144,15 @@ finntech:
     # 되돌리기 유예. 낙관적 판정(D1-A)의 안전판이다.
     undo-window-hours: 24
     default-duration-days: 30
+    # 주간 미션 목표(무지출 연속 일수). 0이면 주간 미션을 만들지 않는다.
+    # 개입 케이스 C5(무지출 3일 연속)와 같은 기준 — 사용자가 이미 아는 목표를 미션으로 쓴다.
+    weekly-mission-no-spend-days: 3
+    # 새벽 배치(일 판정·정산). 설계서가 배치를 전제하는데 자동 실행이 없어 챌린지가 끝나지 않았다.
+    # 주기가 하루보다 짧아도 무해하다 — 같은 날은 멱등하게 넘어간다.
+    daily-batch:
+      enabled: true
+      interval-ms: 600000        # 10분
+      initial-delay-ms: 90000    # 기동 직후 DB가 자리잡을 시간
     notification:
       # 거래성 1 + 시간성 1. 이 예산을 넘으면 C13으로 침묵한다.
       daily-push-limit: 2
@@ -178,6 +187,9 @@ finntech:
 
   # 전부 설정값이다. 페르소나(D-09) 확정 시 이 블록만 갈아끼우면 된다 (문서 §8 설계 제약 2).
   analysis:
+    # 월평균을 낼 때 볼 최근 달 수 (PRD 기준 소비: "최근 3개월 카테고리별 월평균").
+    # 0 이하면 전 기간. 창이 없으면 오래전에 고친 습관이 계속 평균에 남는다.
+    baseline-months: 3
     overspending:
       # 카테고리 지출 ÷ 전체 지출 > 0.30 → 과소비
       ratio-threshold: 0.30

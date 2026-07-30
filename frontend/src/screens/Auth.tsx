@@ -11,6 +11,7 @@ import { AppBar, ProgressBar, Cta, Scroll, Screen, ErrorBox } from '../component
 import { Sheet } from '../components/Sheet';
 import { useSession } from '../state/session';
 import { api } from '../lib/api';
+import type { VerifyResult } from '../lib/api';
 import { DEMO_CI, DEMO_ENABLED } from '../lib/config';
 
 type Kind = 'text' | 'social' | 'carrier' | 'phone' | 'code';
@@ -24,6 +25,32 @@ const STEPS: Step[] = [
   { key: 'code', title: '문자로 받은\n인증번호를 입력해주세요', sub: '', label: '인증번호', kind: 'code', cta: '인증완료', ok: (v) => v.replace(/\D/g, '').length >= 6 },
 ];
 const CARRIERS = ['SKT', 'KT', 'LG U+', '알뜰폰'];
+
+/**
+ * 인증 실패 사유를 사람이 읽을 문장으로 옮긴다.
+ *
+ * 판정은 서버가 한다 — 국번 대역표를 화면에도 두면 반드시 어긋나기 때문이다.
+ * 여기서는 사유에 맞는 문장을 고르기만 한다.
+ */
+function failureMessage(r: VerifyResult, selected: string): string {
+  const KTOA = '[한국통신사업자연합회]';
+  switch (r.reason) {
+    // 번호 자체가 실존하지 않는다 — 신원 대조에 들어가기도 전이다.
+    case 'UNASSIGNED_EXCHANGE':
+      return `${KTOA} 실존하지 않는 번호입니다.`;
+    // 통신사만 다르다 — 입력한 번호 자체의 성질이라 짚어줘도 남의 신원을 캐는 데 쓸 수 없다.
+    case 'CARRIER_MISMATCH':
+      return `${KTOA} 입력하신 번호는 ${selected}가 아닌 ${r.actualCarrier} 관리 대역입니다.`;
+    // 이름·주민번호는 맞는데 번호가 어긋난 경우. 남의 명의든 미등록이든 사용자가 할 일은 같다.
+    case 'PHONE_OWNED_BY_OTHER':
+    case 'PHONE_MISMATCH':
+      return `${KTOA} 등록된 전화번호가 불일치합니다.`;
+    // 이름·주민번호가 어긋난 경우. **무엇을 고치라는 말도 하지 않는다** —
+    // 어느 항목을 지목하든 나머지는 맞다는 뜻이 되어, 남의 신원을 한 항목씩 맞춰볼 수 있게 된다.
+    default:
+      return `${KTOA} 신원 정보가 불일치합니다.`;
+  }
+}
 
 /** 숫자만 저장하고, 표시는 010-0000-0000 형태로 자동 하이픈. */
 function formatPhone(digits: string): string {
@@ -49,10 +76,18 @@ export function Auth() {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
-  const [notFound, setNotFound] = useState(false);
+  /** 인증 실패 사유. 서버가 판정해 내려준 것을 문장으로만 옮긴다. */
+  const [failure, setFailure] = useState<string | null>(null);
 
   const cur = STEPS[step];
-  const setVal = (v: string) => setVals((p) => ({ ...p, [cur.key]: v }));
+
+  /**
+   * 단계 이동은 여기 한 곳으로 모은다. 예전에는 `setStep`을 세 군데에서 직접 불러서,
+   * **뒤로 가도 실패 문구가 그대로 남았다.** 화면이 바뀌면 지난 단계의 경고는 지운다.
+   */
+  const goStep = (n: number) => { setFailure(null); setStep(n); };
+
+  const setVal = (v: string) => { setFailure(null); setVals((p) => ({ ...p, [cur.key]: v })); };
   const curVal = vals[cur.key] ?? '';
   const curOk = cur.kind === 'social'
     ? (vals.social?.length ?? 0) >= 6 && (vals.socialG?.length ?? 0) >= 1
@@ -60,15 +95,25 @@ export function Auth() {
 
   const social7 = `${vals.social ?? ''}${vals.socialG ?? ''}`;
 
-  /** 인증번호까지 마치면 서버로 신원을 보내 가상 CI를 만든다. */
-  async function verify() {
-    setBusy(true); setError(null); setNotFound(false);
+  /**
+   * 서버에 신원을 보내 판정을 받는다. 통과하면 CI가 연결된다(서버는 통과했을 때만 저장한다).
+   *
+   * <b>인증요청 단계에서도 부른다.</b> 번호가 실존하지 않거나 통신사가 다르면 실제 인증에서는
+   * **문자 자체가 가지 않는다.** 인증번호를 받아 적은 뒤에야 "그 번호는 없습니다"라고 하는 것은
+   * 순서가 틀렸다. 그래서 `인증요청`을 누르는 그 자리에서 먼저 판정한다.
+   *
+   * @returns 통과 여부. 실패하면 사유를 화면에 띄운 채 false를 돌려준다.
+   */
+  async function requestVerify(): Promise<boolean> {
+    setBusy(true); setError(null); setFailure(null);
     try {
-      const result = await api.verify(userId, (vals.name ?? '').trim(), social7, vals.phone ?? '');
-      if (!result.existsInMyData) { setNotFound(true); setBusy(false); return; }
-      go('connect');
+      const result = await api.verify(
+        userId, (vals.name ?? '').trim(), social7, vals.phone ?? '', vals.carrier);
+      if (!result.verified) { setFailure(failureMessage(result, vals.carrier ?? '')); return false; }
+      return true;
     } catch (e) {
       setError(e);
+      return false;
     } finally {
       setBusy(false);
     }
@@ -89,14 +134,21 @@ export function Auth() {
     }
   }
 
-  function next() {
-    if (cur.key === 'phone' && !consented) { setConsentOpen(true); return; }
-    if (step >= STEPS.length - 1) { void verify(); return; }
-    setStep(step + 1);
+  async function next() {
+    // 인증요청 — 문자를 보내기 전에 번호가 실존하는지, 통신사가 맞는지 먼저 판정한다.
+    if (cur.key === 'phone') {
+      if (!(await requestVerify())) return;              // 실패 사유는 이 화면에 그대로 남는다
+      if (!consented) { setConsentOpen(true); return; }
+      goStep(STEPS.findIndex((x) => x.key === 'code'));
+      return;
+    }
+    // 인증완료 — 앞에서 이미 통과한 신원이므로 여기서는 연결로 넘어간다.
+    if (step >= STEPS.length - 1) { go('connect'); return; }
+    goStep(step + 1);
   }
   function confirmConsent() {
     setConsented(true); setConsentOpen(false);
-    setTimeout(() => setStep(STEPS.findIndex((s) => s.key === 'code')), 200);
+    setTimeout(() => goStep(STEPS.findIndex((s) => s.key === 'code')), 200);
   }
   const reqOk = TERMS.filter((t) => t.req).every((t) => checked.has(t.id));
   const allOn = TERMS.every((t) => checked.has(t.id));
@@ -158,7 +210,7 @@ export function Auth() {
 
   return (
     <Screen title="본인인증">
-      <AppBar onBack={step > 0 ? () => setStep(step - 1) : back} />
+      <AppBar onBack={step > 0 ? () => goStep(step - 1) : back} />
       <ProgressBar value={0.1 + step * 0.03} />
       <Scroll><div className="pad">
         <p className="h-title" style={{ whiteSpace: 'pre-line' }}>{cur.title}</p>
@@ -180,12 +232,7 @@ export function Auth() {
           ))}
         </div>
 
-        {notFound && (
-          <div className="error" role="alert">
-            마이데이터에 없는 신원이에요. 다른 정보로 다시 시도하거나,
-            {DEMO_ENABLED ? ' 아래 개발용 건너뛰기로 진행해 보세요.' : ' 데모 데이터를 먼저 준비해 주세요.'}
-          </div>
-        )}
+        {failure && <div className="error" role="alert">{failure}</div>}
         <ErrorBox error={error} />
 
         {DEMO_ENABLED && (
@@ -201,7 +248,7 @@ export function Auth() {
       </div></Scroll>
 
       <Cta>
-        <button type="button" className="btn btn-primary" disabled={!curOk || busy} onClick={next}>
+        <button type="button" className="btn btn-primary" disabled={!curOk || busy} onClick={() => void next()}>
           {busy ? '확인 중…' : cur.cta}
         </button>
       </Cta>

@@ -70,7 +70,9 @@ export function Onboarding1() {
                   <div className="list-item">
                     <span className="ic" style={{ background: bg }}><Icon id={icon} /></span>
                     <div className="tx"><b>{c.category2}</b><span>{c.reason}</span></div>
-                    <span className="amt">{won(c.monthlySpend)}</span>
+                    {/* 월 환산액이다. 다음 화면(ob2)의 '한 달 평균'과 같은 기준이라야
+                        같은 카테고리 금액이 화면을 넘길 때 튀지 않는다. */}
+                    <span className="amt">월 {won(c.monthlySpend)}</span>
                   </div>
                   {i < candidates.length - 1 && <div className="divider" />}
                 </div>
@@ -93,13 +95,17 @@ export function Onboarding1() {
         {/* 고정지출 — 못 줄이는 소비로 분리 */}
         {fixed.length > 0 && (
           <>
+            {/* '매달'이라고 쓰면 안 된다 — FIXED 판정에는 주간 주기(6~8일)도 들어온다.
+                주 1회 7,000원이 "매달 7,000원"으로 보이면 실제 월 부담(약 3만원)의 1/4로 읽힌다.
+                주기는 응답에 이미 있으므로 칩에 그대로 드러낸다. */}
             <p className="label">
-              그동안 매달 빠져나간 고정지출이에요 <span style={{ color: 'var(--t3)', fontWeight: 600 }}>(못 줄여요)</span>
+              그동안 꼬박꼬박 빠져나간 고정지출이에요 <span style={{ color: 'var(--t3)', fontWeight: 600 }}>(못 줄여요)</span>
             </p>
             <div className="chips">
               {fixed.map((f, i) => (
                 <span key={`${f.merchantName ?? f.category2}-${i}`} className="chip static">
                   {f.merchantName ?? f.category2} · {won(f.representativeAmount)}
+                  {f.periodDays ? ` · ${f.periodDays}일마다` : ''}
                 </span>
               ))}
             </div>

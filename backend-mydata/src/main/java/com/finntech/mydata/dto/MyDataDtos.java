@@ -14,6 +14,23 @@ public final class MyDataDtos {
     // 데이터 최소화(W7-2): 주민번호·전화번호는 응답에 싣지 않는다(본체 미소비). 격리가 뚫려도 PII 미유출.
     public record UserView(String id, String name) {}
 
+    /**
+     * 신원 대조 결과 — 본인인증이 <b>어느 항목이 틀렸는지</b> 가려내는 재료다.
+     *
+     * <p>제공자는 <b>사실만</b> 답한다. "이름이 틀렸다"는 판정은 본체가 한다(마스터 §4 원칙 1).
+     * 그래서 여기서 돌려주는 것은 조회 결과일 뿐이고, 이름·주민번호는 <b>일치 여부(불리언)</b>로만
+     * 나간다 — 남의 실명이 그대로 넘어가지 않게 한다.
+     *
+     * @param exists        셋(이름·주민7·전화)이 모두 맞는 사람이 있는가
+     * @param phoneTaken    그 전화번호로 등록된 사람이 있는가
+     * @param phoneNameOk   그 번호 명의자의 이름이 입력한 이름과 같은가 (번호 미등록이면 false)
+     * @param phoneSocialOk 그 번호 명의자의 주민번호 앞 7자리가 같은가 (번호 미등록이면 false)
+     * @param personFound   이름+주민번호로 찾은 사람이 있는가 (번호는 다를 수 있다)
+     */
+    public record IdentityMatchView(boolean exists, boolean phoneTaken,
+                                    boolean phoneNameOk, boolean phoneSocialOk,
+                                    boolean personFound) {}
+
     public record CompanyView(Long id, String name, String imgUrl) {}
 
     /**

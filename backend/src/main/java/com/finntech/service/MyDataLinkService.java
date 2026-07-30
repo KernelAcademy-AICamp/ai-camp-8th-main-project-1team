@@ -267,22 +267,33 @@ public class MyDataLinkService {
 
     public record SyncResult(int newPayments) {}
 
-    /** '내 카드' 화면 — 카드별 실적 진행률 + 이번달 받은 혜택. */
+    /**
+     * '내 카드' 화면 — 카드별 실적 진행률 + 이번달 받은 혜택.
+     *
+     * <p><b>실적도 조회 시점에 다시 센다.</b> 예전에는 연동하던 순간에 계산해 {@code UserCard}에
+     * 저장한 값을 그대로 보여줬고, 갱신하는 곳이 어디에도 없었다({@code setCurrentPerformance}
+     * 호출부 0건 — 증분 동기화도 건드리지 않았다). 그래서 6월에 연동하고 7월에 이 화면을 열면
+     * "이번 달 사용"에는 <b>6월 금액</b>이, 바로 옆 "받은 혜택"에는 7월 금액이 나란히 떴다.
+     * 한 줄 안에서 두 값의 기간이 달랐고, 전월실적 진행바도 7월 내내 움직이지 않았다.
+     */
     @Transactional(readOnly = true)
     public List<MyCardView> myCards(Long userId) {
         YearMonth referenceMonth = YearMonth.from(referenceDate());
         List<MyCardView> views = new ArrayList<>();
         for (UserCard card : userCardRepository.findByUserIdOrderByIdAsc(userId)) {
-            int earnedThisMonth = userPaymentRepository
+            List<UserPayment> thisMonth = userPaymentRepository
                     .findByUserIdAndCardSerialOrderByPaymentDateDesc(userId, card.getSerialNumber()).stream()
                     .filter(payment -> YearMonth.from(payment.getPaymentDate()).equals(referenceMonth))
-                    .mapToInt(UserPayment::getReceivedBenefit).sum();
+                    .toList();
+            int earnedThisMonth = thisMonth.stream().mapToInt(UserPayment::getReceivedBenefit).sum();
+            int currentPerformance = thisMonth.stream().mapToInt(UserPayment::getAmount).sum();
+
             boolean requirementMet = card.getRequirement() == 0
-                    || card.getCurrentPerformance() >= card.getRequirement();
-            int toRequirement = Math.max(0, card.getRequirement() - card.getCurrentPerformance());
+                    || currentPerformance >= card.getRequirement();
+            int toRequirement = Math.max(0, card.getRequirement() - currentPerformance);
             views.add(new MyCardView(card.getSerialNumber(), card.getCardCode(), card.getCardName(),
                     card.getCardColor(), card.getCompanyName(), card.getRequirement(),
-                    card.getCurrentPerformance(), requirementMet, toRequirement, earnedThisMonth));
+                    currentPerformance, requirementMet, toRequirement, earnedThisMonth));
         }
         return views;
     }

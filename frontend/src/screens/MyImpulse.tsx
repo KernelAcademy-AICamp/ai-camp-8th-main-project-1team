@@ -73,7 +73,10 @@ export function MyImpulse() {
             </div>
 
             {/* ① 충동 카테고리 지정 → 예산 */}
-            <SectionTitle aux="3개월 평균이 예산이 돼요">어떤 소비가 충동이었나요?</SectionTitle>
+            {/* 창 길이는 서버 설정(finntech.analysis.baseline-months)이 정한다. 화면에 숫자를 박으면
+            설정을 바꿨을 때 문구만 옛말이 된다 — 예전에 "3개월"이라 적어두고 실제로는 전 기간을
+            평균하던 것이 그 사례다. */}
+        <SectionTitle aux="최근 소비 평균이 예산이 돼요">어떤 소비가 충동이었나요?</SectionTitle>
             <div className="card">
               {s.options.length === 0 ? (
                 <Empty>소비 이력이 아직 없어요. 카드를 연결하거나 소비를 기록해 보세요.</Empty>

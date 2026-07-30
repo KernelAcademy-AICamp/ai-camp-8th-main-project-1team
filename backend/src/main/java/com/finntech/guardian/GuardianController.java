@@ -338,6 +338,16 @@ public class GuardianController {
     private Map<String, Object> batchResultView(GuardianBatchService.BatchResult r) {
         Map<String, Object> verdict = new LinkedHashMap<>();
         DailyVerdict v = r.verdict();
+        // 판정이 없을 수 있다 — 대상 날짜가 챌린지 시작 전이면 설계서 §2에 따라 판정하지 않는다.
+        if (v == null) {
+            Map<String, Object> skipped = new LinkedHashMap<>();
+            skipped.put("verdict", null);
+            skipped.put("grantedObject", null);
+            skipped.put("notifications", List.of());
+            skipped.put("pointEvents", List.of());
+            skipped.put("stateTransition", null);
+            return skipped;
+        }
         verdict.put("date", v.getVerdictDate());
         verdict.put("result", v.getResult());
         verdict.put("grantObject", v.isGrantObject());

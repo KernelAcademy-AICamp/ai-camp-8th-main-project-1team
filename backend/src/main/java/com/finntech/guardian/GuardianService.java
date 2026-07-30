@@ -93,52 +93,65 @@ public class GuardianService {
         }
 
         LocalDateTime now = clock.now(userId);
-        Baseline baseline = baselineFor(userId, categories, now);
-        if (baseline.monthlyAmount() <= 0) {
+        // 기준 지출을 기간에 맞춰 환산해야 하므로 일수를 먼저 정한다.
+        int days = durationDays == null ? props.getDefaultDurationDays() : durationDays;
+        Baseline baseline = baselineFor(userId, categories, now, days);
+        if (baseline.periodAmount() <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "이 카테고리의 소비 이력이 없어 기준 지출을 잡을 수 없어요");
         }
-        long target = targetSaving == null ? baseline.monthlyAmount() / 3 : targetSaving;
-        if (target <= 0 || target >= baseline.monthlyAmount()) {
+        long target = targetSaving == null ? baseline.periodAmount() / 3 : targetSaving;
+        if (target <= 0 || target >= baseline.periodAmount()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "지킬 돈은 0보다 크고 기준 지출(" + GuardianCopy.won(baseline.monthlyAmount()) + "원)보다 작아야 해요");
+                    "지킬 돈은 0보다 크고 기준 지출(" + GuardianCopy.won(baseline.periodAmount()) + "원)보다 작아야 해요");
         }
 
-        long cap = baseline.monthlyAmount() - target;
+        long cap = baseline.periodAmount() - target;
         double bufferRatio = GuardianRules.computeBufferRatio(baseline.avgTransactionAmount(), cap);
         LocalDate start = now.toLocalDate();
-        int days = durationDays == null ? props.getDefaultDurationDays() : durationDays;
 
         GuardianChallenge ch = new GuardianChallenge(userId, categories, sanctuary,
-                baseline.monthlyAmount(), target, bufferRatio,
+                baseline.periodAmount(), target, bufferRatio,
                 start, start.plusDays(days - 1L), rewardName, rewardPrice, now);
         rewardService.items(userId, now);   // 보유 아이템 레코드를 미리 만들어 둔다
         return challengeRepository.save(ch);
     }
 
-    /** 기준 지출(카테고리 월평균 합)과 평균 결제액. */
-    record Baseline(long monthlyAmount, Long avgTransactionAmount) {}
+    /**
+     * 기준 지출과 평균 결제액.
+     *
+     * @param monthlyAmount 카테고리 월평균의 합(설계서 §1). 안내 문구·화면 표시에 쓴다.
+     * @param periodAmount  그것을 <b>챌린지 일수로 환산</b>한 값. 한도·달성률 산수는 이쪽을 쓴다.
+     */
+    record Baseline(long monthlyAmount, long periodAmount, Long avgTransactionAmount) {}
 
     /**
-     * 기존 {@link AnalysisResult}에서 기준선을 파생한다.
-     * 관측 개월수는 분석이 이미 센 {@code monthlySpend}의 키 수를 그대로 쓴다.
+     * 기존 {@link AnalysisResult}에서 기준선을 파생한다. 설계서 §1: "기준 지출은 분석이 낸
+     * <b>카테고리 월평균</b>의 합이다. 서비스가 다시 계산하지 않는다."
+     *
+     * <p>예전에는 분모로 {@code monthlySpend().size()}(사용자가 <b>아무거나</b> 결제한 달의 수)를
+     * 썼다. 분자는 카테고리 하나의 총액인데 분모가 전체 기간이라, 최근 시작한 습관일수록
+     * 크게 과소평가됐다 — 12개월 이력자가 지난달 배달 30만원을 썼으면 기준이 2.5만원이 되어
+     * 챌린지 시작 직후 한도를 넘겼다. 이제 분모를 엔진이 카테고리별로 세어 준다.
+     *
+     * <p>{@code days}로 환산하는 이유는 {@link AnalysisResult.CategoryStat#observedMonthDays} 참고.
      */
-    Baseline baselineFor(Long userId, List<String> categories, LocalDateTime now) {
+    Baseline baselineFor(Long userId, List<String> categories, LocalDateTime now, int days) {
         AnalysisResult analysis = analysisEngine.analyze(userId, now);
-        int months = Math.max(1, analysis.monthlySpend().size());
 
         long monthly = 0L;
+        long period = 0L;
         long total = 0L;
         long count = 0L;
         for (String code : categories) {
             AnalysisResult.CategoryStat stat = analysis.categoryStats().get(code);
             if (stat == null) continue;
-            long amount = stat.totalAmount().setScale(0, RoundingMode.HALF_UP).longValue();
-            monthly += amount / months;
-            total += amount;
+            monthly += stat.monthlyAmount().longValue();
+            period += stat.amountOver(days).longValue();
+            total += stat.totalAmount().setScale(0, RoundingMode.HALF_UP).longValue();
             count += stat.count();
         }
-        return new Baseline(monthly, count > 0 ? total / count : null);
+        return new Baseline(monthly, period, count > 0 ? total / count : null);
     }
 
     // ======================================================================
@@ -179,7 +192,7 @@ public class GuardianService {
             return new IngestResult(tx, null, ch == null ? null : ch.getState(), null);
         }
 
-        boolean counted = classify(ch, tx, today, now);
+        boolean counted = classify(ch, tx, now);
         if (counted) {
             ch.setSpentAmount(ch.getSpentAmount() + tx.getAmount());
             // 초과 확정은 배치의 몫이다 — 거래 순간에 EXCEEDED로 넘기면 24시간 안에
@@ -206,7 +219,7 @@ public class GuardianService {
      * 판정 함수는 순수하게(DB 접근 없이) 두어야 단위 테스트가 가능하므로, 원장을 실제로
      * 움직이는 쪽은 여기서 따로 처리한다.
      */
-    private boolean classify(GuardianChallenge ch, GuardianTransaction tx, LocalDate today, LocalDateTime now) {
+    private boolean classify(GuardianChallenge ch, GuardianTransaction tx, LocalDateTime now) {
         if (tx.getTxType() == TxType.REFUND) {
             restoreRefund(ch, tx);
             return false;
@@ -221,7 +234,17 @@ public class GuardianService {
             tx.exclude();
             return false;
         }
-        tx.count(today, now.plusHours(props.getUndoWindowHours()));
+        // 챌린지 기간 밖의 거래는 이 챌린지의 지출이 아니다. 예전에는 발생일을 보지 않아
+        // 2년 전 결제 한 건으로도 한도를 태울 수 있었다(수신 API가 occurredAt을 검증하지 않는다).
+        LocalDate occurredOn = tx.getOccurredAt().toLocalDate();
+        if (occurredOn.isBefore(ch.getStartDate()) || occurredOn.isAfter(ch.getEndDate())) {
+            tx.exclude();
+            return false;
+        }
+        // 집계일은 **거래가 일어난 날**이다. 예전에는 '가상 오늘'로 찍어서, 데모로 시계를 민 뒤
+        // 과거 날짜 결제를 넣으면 그 돈이 오늘 지출로 잡혔다. 그 날의 일 판정은 이미
+        // '무지출'로 확정돼 사물까지 지급된 뒤였고, 멱등 조기 반환 때문에 되돌려지지도 않았다.
+        tx.count(occurredOn, now.plusHours(props.getUndoWindowHours()));
         return true;
     }
 
@@ -302,7 +325,7 @@ public class GuardianService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "챌린지를 찾을 수 없어요"));
 
         tx.assignCategory(category, confidence == null ? 1.0 : confidence);
-        if (classify(ch, tx, today, now)) {
+        if (classify(ch, tx, now)) {
             ch.setSpentAmount(ch.getSpentAmount() + tx.getAmount());
             ChallengeState next = GuardianRules.nextStateOnSpend(ch.getState(), ratio(ch), props.getAtRiskRatio());
             ch.setState(next == ChallengeState.EXCEEDED ? ChallengeState.AT_RISK : next);

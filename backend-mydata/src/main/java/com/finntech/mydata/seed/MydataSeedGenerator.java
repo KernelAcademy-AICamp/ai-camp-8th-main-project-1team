@@ -3,6 +3,7 @@ package com.finntech.mydata.seed;
 import com.finntech.mydata.domain.*;
 import com.finntech.mydata.repository.*;
 import com.finntech.mydata.util.Ci;
+import com.finntech.mydata.util.Msisdn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -190,8 +191,13 @@ public class MydataSeedGenerator implements CommandLineRunner {
 
     private static boolean isYear2000s(int year) { return year >= 2000; }
 
+    /**
+     * 국번은 <b>실제로 배정된 대역에서만</b> 뽑는다({@link Msisdn}). 예전에는 난수 4자리라
+     * 0xxx·1xxx 같은 존재하지 않는 번호가 26%나 섞였고, 온보딩이 국번을 검증하면서
+     * 그 신원은 로그인 자체가 막혔다.
+     */
     private static String generatePhone(Random rnd) {
-        return String.format("010%04d%04d", rnd.nextInt(10000), rnd.nextInt(10000));
+        return String.format("010%04d%04d", Msisdn.randomAssigned(rnd), rnd.nextInt(10000));
     }
 
     private static String generateSerial(Random rnd) {

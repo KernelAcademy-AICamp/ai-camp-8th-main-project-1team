@@ -41,6 +41,11 @@ public class AnalysisEngine {
         this.props = props;
     }
 
+    /** {@code yyyy-MM} 키의 실제 일수(윤년 포함). 월평균을 일액으로 환산할 때 쓴다. */
+    private static int daysInMonth(String yearMonth) {
+        return java.time.YearMonth.parse(yearMonth).lengthOfMonth();
+    }
+
     @Transactional(readOnly = true)
     public AnalysisResult analyze(Long userId, LocalDateTime referenceTime) {
         List<Consumption> all = consumptionRepository.findAllForUser(userId);
@@ -55,14 +60,19 @@ public class AnalysisEngine {
         Map<String, List<Consumption>> byCategory = new TreeMap<>();
         Map<String, String> displayNames = new TreeMap<>();
         Map<String, BigDecimal> monthly = new TreeMap<>();
+        // 카테고리별로 '그 카테고리에 소비가 있었던 달'을 따로 센다. 전체 관측 개월수로 나누면
+        // 최근 시작한 습관이 과소평가된다(CategoryStat.observedMonths 주석 참고).
+        Map<String, Set<String>> monthsByCategory = new TreeMap<>();
 
         for (Consumption c : all) {
             total = total.add(c.getAmount());
             if (c.isPlanned()) planned = planned.add(c.getAmount());
             String code = c.getCategory().getCode();
+            String month = c.getOccurredAt().format(MONTH);
             byCategory.computeIfAbsent(code, k -> new ArrayList<>()).add(c);
             displayNames.putIfAbsent(code, c.getCategory().getDisplayName());
-            monthly.merge(c.getOccurredAt().format(MONTH), c.getAmount(), BigDecimal::add);
+            monthsByCategory.computeIfAbsent(code, k -> new TreeSet<>()).add(month);
+            monthly.merge(month, c.getAmount(), BigDecimal::add);
         }
 
         Map<String, AnalysisResult.CategoryStat> stats = new TreeMap<>();
@@ -73,8 +83,12 @@ public class AnalysisEngine {
             double ratio = total.signum() == 0 ? 0.0
                     : sum.divide(total, 10, RoundingMode.HALF_UP).doubleValue();
             boolean sufficient = e.getValue().size() >= props.getFds().getMinSamplesPerCategory();
+            Set<String> catMonths = monthsByCategory.getOrDefault(e.getKey(), Set.of());
+            int observedMonths = Math.max(1, catMonths.size());
+            int observedMonthDays = catMonths.stream().mapToInt(AnalysisEngine::daysInMonth).sum();
             stats.put(e.getKey(), new AnalysisResult.CategoryStat(
-                    e.getKey(), displayNames.get(e.getKey()), sum, ratio, e.getValue().size(), sufficient));
+                    e.getKey(), displayNames.get(e.getKey()), sum, ratio, e.getValue().size(),
+                    sufficient, observedMonths, Math.max(1, observedMonthDays)));
             if (ratio > props.getOverspending().getRatioThreshold()) {
                 overspending.add(e.getKey());
             }
