@@ -139,7 +139,7 @@ public class GuardianCollectionService {
         if (!item.purchasable()) throw new IllegalArgumentException("상점에 없는 물건입니다: " + code);
         if (ownedCodes(userId).contains(code)) throw new IllegalStateException("이미 가지고 있어요");
 
-        GuardianItems it = items(userId);
+        GuardianItems it = itemsForUpdate(userId);
         if (it.getPointBalance() < item.price()) {
             throw new IllegalStateException("포인트가 " + (item.price() - it.getPointBalance()) + "P 모자라요");
         }
@@ -174,7 +174,7 @@ public class GuardianCollectionService {
         if (view.owned() < target.count()) {
             throw new IllegalStateException(target.count() + "종을 모으면 열려요");
         }
-        GuardianItems it = items(userId);
+        GuardianItems it = itemsForUpdate(userId);
         if (it.hasClaimed(target.count())) {
             throw new IllegalStateException("이미 받은 보상이에요");
         }
@@ -235,7 +235,24 @@ public class GuardianCollectionService {
         return out;
     }
 
+    /**
+     * 조회용 보유 상태. <b>없으면 만들지 않고</b> 기본값 객체를 그대로 돌려준다.
+     *
+     * <p>예전에는 여기서 {@code save}를 했는데, 부르는 쪽이 {@code @Transactional(readOnly = true)}라
+     * 커넥션이 읽기 전용이었다. 그래서 아직 행이 없는 사용자가 도감·상점을 열면
+     * {@code Connection is read-only}로 <b>500</b>이 났다 — 이미 행이 있는 사용자로만 눌러 봐서
+     * 로컬에서는 끝까지 안 보였고, 새 DB로 도는 CI에서야 드러났다.
+     *
+     * <p>조회가 행을 만들 이유도 없다. 포인트 0, 소지품 없음은 <b>기본값으로 표현되는 상태</b>지
+     * 저장이 필요한 사실이 아니다. 실제로 쓸 때만 {@link #itemsForUpdate}가 만든다.
+     */
     private GuardianItems items(Long userId) {
+        return itemsRepository.findByUserId(userId)
+                .orElseGet(() -> new GuardianItems(userId, LocalDateTime.now(clock)));
+    }
+
+    /** 갱신용 보유 상태. 없으면 만들어 저장한다 — 쓰기 트랜잭션에서만 부른다. */
+    private GuardianItems itemsForUpdate(Long userId) {
         return itemsRepository.findByUserId(userId)
                 .orElseGet(() -> itemsRepository.save(
                         new GuardianItems(userId, LocalDateTime.now(clock))));
