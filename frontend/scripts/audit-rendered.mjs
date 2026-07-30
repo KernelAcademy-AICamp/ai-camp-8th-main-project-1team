@@ -121,6 +121,12 @@ const PROBE = () => {
     const r = el.getBoundingClientRect();
     return r.width > 0 && r.height > 0;
   };
+  /**
+   * 비활성 요소인가. KWCAG 5.4.3(=WCAG 1.4.3)은 **작동하지 않는 구성요소**의 글자를 대비 대상에서
+   * 뺀다 — 지난 날짜 달력 칸, 놓을 수 없는 방 슬롯 같은 것들이다. 크롬이 비활성 버튼 글자를
+   * `rgba(16,16,16,.3)`으로 흐리게 그리므로, 빼지 않으면 정상 UI 가 위반으로 잡힌다.
+   */
+  const inactive = (el) => !!el.closest('[disabled],[aria-disabled="true"],fieldset[disabled]');
   /** 접근 이름. `<label><span>금액</span><input/></label>` 처럼 **감싼 label** 도 정당한 이름이라
       이걸 안 보면 멀쩡한 입력이 '이름 없음'으로 잡힌다(실제로 2건 오탐했다). */
   const label = (el) => {
@@ -148,16 +154,33 @@ const PROBE = () => {
   const small = [];
   const lowContrast = [];
   const unnamed = [];
+  const unstyled = [];
+
+  /* UA 기본값이 남은 <button>. 클래스는 붙어 있는데 `background`·`border`·`font-family`·`width`를
+     지우지 않으면 브라우저 기본 회색 버튼이 그대로 보인다 — 동의창이 회색 덩어리로,
+     인증서 목록이 시스템 폰트로 나갔던 원인이다. CSS는 있으니 문자열 검사로는 못 잡는다. */
+  const bodyFont = getComputedStyle(document.body).fontFamily;
 
   for (const el of controls) {
     const r = el.getBoundingClientRect();
     const s = getComputedStyle(el);
+    const off = inactive(el);           // 비활성은 누를 수 없다 — 크기·대비 대상이 아니다
 
     /* 6.1.3 — 44×44. 인라인 링크(문장 속 a)는 지침상 예외다. */
     const inlineLink = el.tagName === 'A' && s.display.includes('inline');
-    if (!inlineLink && (r.width < 44 || r.height < 44)) {
+    if (!off && !inlineLink && (r.width < 44 || r.height < 44)) {
       small.push({ tag: el.tagName.toLowerCase(), cls: el.className?.toString().slice(0, 30),
                    label: label(el), w: +r.width.toFixed(1), h: +r.height.toFixed(1) });
+    }
+
+    /* UA 기본값이 남았는가 — 폰트가 본문과 다르거나, 크롬 기본 버튼 면색 그대로거나 */
+    if (el.tagName === 'BUTTON' && el.className) {
+      const why = [];
+      if (s.fontFamily !== bodyFont) why.push('폰트');
+      if (s.backgroundColor === 'rgb(239, 239, 239)') why.push('기본면색');
+      if (why.length) {
+        unstyled.push({ cls: el.className.toString().slice(0, 30), label: label(el), why: why.join('·') });
+      }
     }
 
     /* 5.1.1 — 접근 이름 */
@@ -167,7 +190,7 @@ const PROBE = () => {
 
     /* 5.4.3 — 글자 대비. 큰 글자(18.5px+ 또는 14px+ 굵게)는 3:1. */
     const fg = parse(s.color);
-    if (fg && fg[3] > 0 && el.textContent.trim()) {
+    if (!off && fg && fg[3] > 0 && el.textContent.trim()) {
       const size = px(s.fontSize);
       const bold = +s.fontWeight >= 700;
       const need = size >= 24 || (size >= 18.66 && bold) ? 3 : 4.5;
@@ -182,7 +205,7 @@ const PROBE = () => {
   /* 본문 텍스트 대비도 본다 — 조작 요소만 보면 설명문이 흐린 것을 놓친다. */
   const textLow = [];
   for (const el of [...document.querySelectorAll('p, span, div, li, h1, h2, h3, h4, label, small')]) {
-    if (!visible(el)) continue;
+    if (!visible(el) || inactive(el)) continue;
     const own = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
     if (!own) continue;
     const s = getComputedStyle(el);
@@ -208,7 +231,7 @@ const PROBE = () => {
 
   return {
     controls: controls.length,
-    small, lowContrast, unnamed,
+    small, lowContrast, unnamed, unstyled,
     textLow, /* 자르지 않는다 — 12건으로 잘랐더니 오탐이 앞을 채워 진짜 위반이 가려졌다. */
     textLowCount: textLow.length,
     docW, innerW: window.innerWidth, overflowing,
@@ -217,7 +240,7 @@ const PROBE = () => {
 
 // ── 실행 ────────────────────────────────────────────────────────────────
 const browser = await chromium.launch();
-const findings = { small: [], contrast: [], unnamed: [], overflow: [], focus: [] };
+const findings = { small: [], contrast: [], unnamed: [], overflow: [], focus: [], unstyled: [] };
 let pagesSeen = 0;
 const redirected = [];
 let controlsSeen = 0;
@@ -249,6 +272,7 @@ for (const vp of VIEWPORTS) {
     for (const s of r.small) findings.small.push({ where, ...s });
     for (const c of r.lowContrast) findings.contrast.push({ where, ...c });
     for (const u of r.unnamed) findings.unnamed.push({ where, ...u });
+    for (const u of r.unstyled) findings.unstyled.push({ where, ...u });
     for (const t of r.textLow) findings.contrast.push({ where, label: t.text, ...t });
     if (r.overflowing.length) findings.overflow.push({ where, docW: r.docW, innerW: r.innerW, who: r.overflowing });
 
@@ -336,6 +360,8 @@ bad += section('6.1.3 조작 가능 44×44px', small,
   (r) => `${String(r.w).padStart(5)}×${String(r.h).padEnd(4)} ×${String(r.n).padEnd(4)} ${r.tag}.${r.cls}  "${r.label || '이름없음'}"  [${r.where}]`);
 bad += section('5.4.3 명도 대비', contrast,
   (r) => `${r.ratio}:1 (필요 ${r.need}) ${r.size}px  "${r.label}"  .${r.cls}  [${r.where}]`);
+bad += section('UA 기본 스타일이 남은 버튼', uniq(findings.unstyled, (x) => x.cls),
+  (r) => `${r.why.padEnd(10)} button.${r.cls}  "${r.label || '이름없음'}"  [${r.where}]`);
 bad += section('5.1.1 접근 이름', unnamed,
   (r) => `<${r.tag}> .${r.cls}  [${r.where}]`);
 bad += section('반응형 가로 넘침', findings.overflow,

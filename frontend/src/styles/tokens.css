@@ -49,6 +49,10 @@
 @media (min-width: 1200px) { :root { --col: 560px; } }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+/* 조작 요소는 본문 글꼴을 물려받는다. 브라우저 기본값이 시스템 글꼴이라, 클래스에
+   `font-family:inherit`를 빠뜨린 버튼만 혼자 다른 글꼴로 나온다 — 인증서 목록·동의창이
+   그렇게 깨져 보였다. 한 곳에서 막는다. */
+button, input, select, textarea { font-family: inherit; }
 html, body { margin: 0; padding: 0; }
 html { -webkit-text-size-adjust: 100%; }
 

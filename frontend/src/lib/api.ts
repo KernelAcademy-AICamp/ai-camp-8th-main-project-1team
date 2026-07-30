@@ -778,6 +778,8 @@ export const api = {
     del<{ deletedCount: number }>(`/api/users/${userId}/data`),
 
   privacyPolicy: () => get<PrivacyPolicy>('/api/privacy/policy'),
+  /** 이용약관 요약. 정본은 legal/terms-of-service.md — 방침과 같은 모양으로 내려온다. */
+  privacyTerms: () => get<PrivacyPolicy>('/api/privacy/terms'),
   categories: () => get<CategoryView[]>('/api/categories'),
   addConsumption: (input: ConsumptionInput) => post<{ id: number }>('/api/consumption', input),
 
