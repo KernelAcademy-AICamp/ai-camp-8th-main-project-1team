@@ -114,7 +114,7 @@ export function Home() {
             <p style={{ fontSize: 21, fontWeight: 800, margin: 0 }}>지킴이</p>
             <button type="button" className="icon-btn" onClick={() => go('notifications')}
               aria-label={home.unreadNotifications > 0 ? `알림함 · 안 읽은 알림 ${home.unreadNotifications}건` : '알림함'}
-              style={{ position: 'relative', width: 40, height: 40 }}>
+              style={{ position: 'relative' }}>   {/* 크기는 .icon-btn(44px)에 맡긴다 — 인라인 40px 이 덮어 터치 타깃이 미달했다 */}
               <Icon id="i-bell" className="ci" />
               {home.unreadNotifications > 0 && (
                 <span aria-hidden="true" style={{ position: 'absolute', top: 5, right: 5, width: 8, height: 8, borderRadius: '50%', background: 'var(--red)' }} />

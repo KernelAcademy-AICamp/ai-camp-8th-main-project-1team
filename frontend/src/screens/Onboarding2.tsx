@@ -97,7 +97,7 @@ export function Onboarding2() {
                   background: on ? 'var(--blue-weak)' : 'var(--card)',
                 }}>
                 {c.rec && (
-                  <span style={{ position: 'absolute', top: -8, right: 14, fontSize: 10, fontWeight: 700, background: 'var(--blue)', color: '#fff', padding: '2px 8px', borderRadius: 20 }}>
+                  <span style={{ position: 'absolute', top: -8, right: 14, fontSize: 10, fontWeight: 700, background: 'var(--blue-surface)', color: '#fff', padding: '2px 8px', borderRadius: 20 }}>
                     AI 추천
                   </span>
                 )}

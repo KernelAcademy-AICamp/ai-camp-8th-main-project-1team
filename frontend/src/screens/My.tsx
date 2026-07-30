@@ -74,7 +74,7 @@ export function My() {
           </div>
           <div className="stat">
             <div className="k">보호 중인 성역</div>
-            <div className="v" style={{ color: 'var(--green)' }}>
+            <div className="v" style={{ color: 'var(--green-t)' }}>
               {ch ? `${ch.sanctuaryCategories.length}개` : '0개'}
             </div>
           </div>

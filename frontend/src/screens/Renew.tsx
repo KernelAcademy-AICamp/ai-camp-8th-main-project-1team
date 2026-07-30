@@ -45,7 +45,7 @@ export function Renew() {
               <div className="tx" style={{ paddingLeft: 2 }}>
                 <b style={{ fontSize: 15 }}>다음 달 목표 저금액</b>
               </div>
-              <span className="amt" style={{ color: 'var(--blue)', fontSize: 18 }}>
+              <span className="amt" style={{ color: 'var(--blue-t)', fontSize: 18 }}>
                 {won(data.suggestedTargetSaving)}
               </span>
             </div>
@@ -76,7 +76,7 @@ function Line({ row }: { row: RenewalLine }) {
       <div className="tx">
         <b>
           {row.category}{' '}
-          <span style={{ color: lower ? 'var(--amber)' : 'var(--green)', fontSize: 13 }}>
+          <span style={{ color: lower ? 'var(--amber-t)' : 'var(--green-t)', fontSize: 13 }}>
             {won(row.currentCap)} → {won(row.suggestedCap)} {lower ? '하향' : '유지'}
           </span>
         </b>

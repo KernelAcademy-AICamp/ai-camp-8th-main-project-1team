@@ -12,6 +12,23 @@
  *
  * 접근성·반응형 기반(:focus-visible·@media·명도 대비 토큰)은 styles/tokens.css 가 정본이다.
  */
+
+/* ── 디자인 토큰 — 개편안(MOA_UI_0729(2).html)의 :root 그대로.
+      브랜드=세이지 그린, 배경=웜 크림. 변수명은 이전 팔레트와 호환을 위해 유지한다
+      (--blue 가 초록인 이유). 값을 임의로 바꾸지 않는다 — 바꾸려면 원본 html부터 고친다. ── */
+:root{
+  --blue:#00B14F; --blue-dark:#163300; --blue-weak:#E2F6D5;
+  --bg:#F8F9FA; --card:#FFFFFF; --line:#E9ECEF;
+  /* --t3 은 개편안의 #868685 를 어둡게 옮긴 값이다. 원값은 앱 배경(#F8F9FA) 위에서 3.04:1 이라
+     본문 글자로 쓰면 검사항목 5.4.3(4.5:1)에 걸린다 — 63곳이 전부 `color:` 였다. 색상은 두고
+     명도만 내려 4.58:1 로 맞췄다. 브라우저 실측(scripts/audit-rendered.mjs)이 잡아낸 것으로,
+     CSS 원문만 읽는 검사는 이걸 못 본다. */
+  --t1:#0E0F0C; --t2:#454745; --t3:#6B6E6B;
+  --green:#00B14F; --green-weak:#E2F6D5;
+  --red:#D03238; --amber:#E68A2E;
+  --radius:20px; --radius-sm:12px;
+}
+
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;}
 /* 개편안의 body는 **검정 배경에 폰 프레임을 늘어놓는 프로토타입 보드**였다
@@ -38,7 +55,7 @@ body{
 .appbar{position:sticky;top:0;z-index:30;height:52px;display:flex;align-items:center;gap:4px;
   flex:0 0 auto;background:var(--bg);width:100%;max-width:var(--col);margin:0 auto;
   padding:0 calc(var(--pad-x) - 16px);}
-.appbar .back{width:40px;height:40px;border:none;background:none;font-size:22px;color:var(--t1);cursor:pointer;border-radius:12px;}
+.appbar .back{width:44px;height:44px;border:none;background:none;font-size:22px;color:var(--t1);cursor:pointer;border-radius:12px;}
 .appbar .back:active{background:#F1F3F5;}
 .appbar .title{font-size:16px;font-weight:600;}
 .appbar .steps{margin-left:auto;font-size:13px;color:var(--t3);padding-right:14px;font-weight:600;}
@@ -55,8 +72,14 @@ body{
   font-weight:700;font-family:inherit;cursor:pointer;transition:transform .08s, background .15s;
   min-height:44px;}   /* 터치 타깃 44px — KWCAG 6.1.3. 개편안에는 없던 값이다. */
 .btn:active{transform:scale(.98);}
-.btn-primary{background:var(--blue);color:#fff;}
-.btn-primary:disabled{background:#B9E4CC;color:#fff;cursor:default;}
+/* 채워진 버튼은 **글자 대비 4.5:1**을 맞춰야 한다(KWCAG 5.4.3). 개편안의 브랜드 그린
+   #00B14F에 흰 글자는 2.84:1로 미달이라, 면만 한 단계 어둡게 한 --blue-surface(4.52:1)를 쓴다.
+   아이콘·그래프는 원래 --blue를 그대로 쓴다(비텍스트는 이 항목의 대상이 아니다). */
+.btn-primary{background:var(--blue-surface);color:#fff;}
+/* 비활성 버튼도 **보여야 한다.** 개편안은 연한 초록(#B9E4CC)에 흰 글자라 배경에 묻혀
+   버튼이 사라진 것처럼 보였다 — 온보딩에서 "다음이 없어졌다"로 읽혀 진행이 막혔다.
+   회색 면에 읽히는 글자를 둬서 '지금은 누를 수 없다'가 보이게 한다. */
+.btn-primary:disabled{background:#E4E7E3;color:#565B58;cursor:default;}   /* 5.55:1 */
 .btn-ghost{background:#F1F3F5;color:var(--t1);}
 /* 하단 CTA — **본문과 같은 열**에 놓는다. 개편안은 폰 프레임 바닥에 absolute로 붙였는데,
    그걸 fixed로 바꾸면 뷰포트 기준이 되어 본문 열(--col)과 어긋나 버튼이 치우친다.
@@ -131,8 +154,8 @@ body{
 .strip b{font-size:14px;}
 .strip .meta{margin-left:auto;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:700;color:var(--t1);}
 .strip .meta .mgrp{display:flex;align-items:center;gap:16px;}
-.strip .meta .fire{color:#F97316;display:flex;align-items:center;gap:4px;}
-.strip .chev{color:#C4C4C2;font-size:15px;line-height:1;}
+.strip .meta .fire{color:#C2410C;display:flex;align-items:center;gap:4px;}
+.strip .chev{color:var(--t3);font-size:15px;line-height:1;}
 
 .hero{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:12px;}
 .hero-top{display:flex;align-items:center;justify-content:space-between;}
@@ -168,7 +191,9 @@ body{
 .day-t .dsum{font-size:13px;font-weight:700;color:var(--t1);letter-spacing:0;}
 .day-t:first-child{margin-top:0;}
 /* 소비 내역 달력 (접이식, 전체 화면 플랫, 앱바 아래 고정) */
-.cal{flex:0 0 auto;padding:4px 24px 0;}
+/* 7칸 × 44px = 308px 이 들어가야 터치 타깃(6.1.3)을 지킨다. 좌우 24px 로 두면 320px 화면에서
+   칸이 38.8px 로 줄어 미달한다. **좁을 때만** 여백을 좁힌다 — 넓은 화면에서는 24px 그대로다. */
+.cal{flex:0 0 auto;padding:4px clamp(4px, calc((100% - 316px) / 2), 24px) 0;}
 .cal-head{display:flex;align-items:center;gap:4px;margin-bottom:12px;}
 .cal-head b{font-size:18px;font-weight:700;letter-spacing:0;}
 .cal-head button{border:none;background:none;color:#C4C4C2;font-size:16px;line-height:1;cursor:pointer;padding:4px 8px;font-family:inherit;}
@@ -179,7 +204,7 @@ body{
 .sp-shadow.on::after{opacity:1;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:8px;}
 .cal .wd{font-size:12px;font-weight:500;color:var(--t3);text-align:center;padding-bottom:4px;}
-.cal .wd.sun{color:#F04452;}.cal .wd.sat{color:#3182F6;}
+.cal .wd.sun{color:var(--red-t);}.cal .wd.sat{color:#1B64DA;}
 .cal .day{border:none;background:none;padding:0;font-family:inherit;cursor:pointer;
   display:flex;flex-direction:column;align-items:center;min-height:44px;}
 .cal .day .dn{position:relative;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
@@ -198,10 +223,10 @@ body{
 .cal-leg .lg-td{width:12px;height:12px;border-radius:50%;border:1px solid #C4C4C2;}
 .cal-leg .lg-sel{width:12px;height:12px;border-radius:50%;background:var(--blue);}
 .cal-leg .lg-kp{width:4px;height:4px;border-radius:50%;background:var(--blue);}
-.cal-hd{display:flex;justify-content:center;padding:12px 0;cursor:pointer;}
+.cal-hd{display:flex;align-items:center;justify-content:center;min-height:44px;padding:12px 0;cursor:pointer;}
 .cal-hd i{display:block;width:40px;height:4px;border-radius:4px;background:#E9ECEF;}
 .fchips{display:flex;gap:8px;margin-bottom:16px;}
-.fchips button{border:1px solid var(--line);background:#fff;border-radius:20px;height:32px;padding:4px 12px;
+.fchips button{border:1px solid var(--line);background:#fff;border-radius:20px;min-height:44px;padding:4px 12px;
   font-size:13px;font-weight:500;color:var(--t2);font-family:inherit;cursor:pointer;transition:.15s;}
 .fchips button.on{background:var(--t1);border-color:var(--t1);color:#fff;font-weight:700;}
 .sp-empty{padding:40px 0;text-align:center;font-size:13px;color:var(--t3);}
@@ -220,17 +245,17 @@ body{
 .guardian p{margin:0;font-size:13px;color:var(--t1);line-height:1.4;}
 .ctx3{display:flex;gap:8px;margin:0 0 8px 60px;flex-wrap:wrap;align-items:center;}
 .ctx3 button{border:1px solid var(--line);background:#fff;border-radius:20px;height:24px;min-width:60px;
-  padding:4px 8px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;font-family:inherit;transition:.15s;}
+  padding:4px 8px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;font-family:inherit;transition:.15s;min-height:44px;}
 .ctx3 button.on{background:var(--t1);color:#fff;border-color:var(--t1);}
 .ctx-fb{font-size:12px;color:#054D28;font-weight:600;margin:0 0 8px 60px;display:none;}
 .sp-tag{display:inline-block;font-size:10px;font-weight:700;padding:0 8px;line-height:16px;border-radius:20px;margin-left:8px;vertical-align:1px;}
-.tag-sanct{background:var(--green-weak);color:var(--green);}
-.tag-fixed{background:#F1F3F5;color:var(--t3);}
+.tag-sanct{background:var(--green-weak);color:var(--green-t);}      /* 4.64:1 */
+.tag-fixed{background:#F1F3F5;color:#5A5F5C;}                       /* 5.4:1 */
 .section-t{font-size:18px;font-weight:700;margin:24px 0 12px;}
 .section-t.row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .sec-more{border:none;background:none;padding:0;font-family:inherit;font-size:14px;font-weight:500;
   color:var(--t3);cursor:pointer;display:flex;align-items:center;gap:4px;}
-.sec-more .chev{font-size:14px;line-height:1;color:#C4C4C2;}
+.sec-more .chev{font-size:14px;line-height:1;color:var(--t3);}
 .sec-more:active{opacity:.6;}
 
 /* ---- report ---- */
@@ -244,11 +269,11 @@ body{
 .barchart .col .lab{font-size:12px;color:var(--t3);font-weight:600;}
 .tag-good,.tag-bad,.tag-warn{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:4px 8px;border-radius:20px;}
 .tag-good{background:var(--green-weak);color:#054D28;}
-.tag-bad{background:#FDECEE;color:var(--red);}
-.tag-warn{background:#FFF4E5;color:var(--amber);}
+.tag-bad{background:#FDECEE;color:var(--red-t);}                    /* 4.9:1 */
+.tag-warn{background:#FFF4E5;color:var(--amber-t);}                 /* 4.8:1 */
 /* ---- 리포트: 주차 내비 / 방어율 추이 / 소비 성격 / 미션 ---- */
 .wk-nav{display:flex;align-items:center;gap:8px;}
-.wk-nav button{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:#fff;
+.wk-nav button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;
   color:var(--t2);font-size:14px;cursor:pointer;font-family:inherit;line-height:1;}
 .wk-nav button:disabled{opacity:.35;cursor:default;}
 .trend{display:flex;align-items:flex-end;gap:8px;height:88px;}
@@ -273,7 +298,7 @@ body{
 .rank-head .logo{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:13px;flex:0 0 auto;}
 .rank-head b{font-size:16px;display:block;}
 .rank-head span{font-size:12px;color:var(--t3);}
-.rank-save{font-size:20px;font-weight:700;color:var(--green);}
+.rank-save{font-size:20px;font-weight:700;color:var(--green-t);}
 .rank-save small{font-size:12px;color:var(--t3);font-weight:600;margin-left:5px;}
 .why{background:var(--bg);border-radius:12px;padding:12px 16px;font-size:12px;color:var(--t2);margin-top:12px;line-height:1.5;}
 .why b{color:var(--t1);}
@@ -356,7 +381,7 @@ body{
 .mchip{font-size:11px;font-weight:700;padding:4px 8px;border-radius:20px;flex:0 0 auto;}
 .c-blue{background:var(--blue-weak);color:var(--blue-dark);}
 .c-green{background:var(--green-weak);color:#054D28;}
-.c-amber{background:#FFF4E5;color:var(--amber);}
+.c-amber{background:#FFF4E5;color:var(--amber-t);}
 .mbar{height:4px;background:var(--bg);border-radius:8px;margin-top:11px;overflow:hidden;}
 .mbar i{display:block;height:100%;border-radius:8px;}
 /* grass */
@@ -465,6 +490,7 @@ body{
 /* ---- 도감 ---- */
 .col-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
 .col-cell{aspect-ratio:1;background:var(--card);border-radius:16px;display:flex;flex-direction:column;
+  font-family:inherit;padding:0;
   align-items:center;justify-content:center;gap:4px;cursor:pointer;border:1.5px solid transparent;transition:.12s;}
 .col-cell.sel{border-color:var(--blue);}
 .col-cell svg{width:32px;height:32px;}
@@ -490,9 +516,10 @@ body{
 .shop-card img{width:52px;height:52px;object-fit:contain;}
 .shop-card b{font-size:14px;}
 .sprice{font-size:12px;font-weight:700;color:var(--t2);display:flex;align-items:center;gap:4px;}
-.buy-btn{width:100%;border:none;border-radius:12px;padding:8px 4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;background:var(--blue);color:#fff;}
-.buy-btn:disabled{background:#ECEFE7;color:var(--t3);cursor:default;}
-.buy-btn.owned{background:var(--green-weak);color:var(--green);cursor:default;}
+.buy-btn{width:100%;border:none;border-radius:12px;min-height:44px;padding:8px 4px;font-size:12px;font-weight:700;
+  font-family:inherit;cursor:pointer;background:var(--blue-surface);color:#fff;}
+.buy-btn:disabled{background:#E4E7E3;color:#565B58;cursor:default;}
+.buy-btn.owned{background:var(--green-weak);color:var(--green-t);cursor:default;}   /* 4.64:1 */
 .mini-toast{position:fixed;bottom:calc(var(--tabbar-h) + 24px);left:50%;transform:translateX(-50%);background:rgba(25,31,40,.9);
   color:#fff;font-size:12px;font-weight:600;padding:12px 20px;border-radius:32px;display:none;z-index:50;white-space:nowrap;}
 .mini-toast.show{display:block;animation:mpop .22s cubic-bezier(.2,1.2,.4,1);}
@@ -573,7 +600,7 @@ body{
 .stepper{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
 .stepper button{width:32px;height:32px;border-radius:12px;border:1.5px solid var(--line);background:#fff;
   font-size:15px;font-weight:700;color:var(--t2);cursor:pointer;font-family:inherit;line-height:1;}
-.stepper button:active{background:var(--blue-weak);border-color:var(--blue);color:var(--blue);}
+.stepper button:active{background:var(--blue-weak);border-color:var(--blue);color:var(--blue-t);}
 .stepper button:disabled{opacity:.35;cursor:default;}
 .stepper b{font-size:14px;min-width:48px;text-align:center;}
 .pv{background:var(--bg);border-radius:16px;padding:16px 16px;margin-top:16px;font-size:13px;color:var(--t2);line-height:1.55;}
@@ -593,10 +620,10 @@ body{
    900px 이상에서는 아래 @media가 탭바 자체를 420px 알약으로 만들므로 이 상한이 필요 없다. */
 .tabbar > *{max-width:calc(var(--col) / 3);}
 .tabbar button{flex:1;border:none;background:none;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:4px;cursor:pointer;color:#B0B0AE;font-family:inherit;}
+  align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--t-tab-off);font-family:inherit;}
 .tabbar button svg{width:24px;height:24px;}
 .tabbar button .tl{font-size:11px;font-weight:600;}
-.tabbar button.on{color:var(--blue);}
+.tabbar button.on{color:var(--blue-t);}   /* 브랜드 그린을 글자로 쓰면 2.84:1 */
 .spacer{height:96px;}
 .done-hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:0 40px;}
 .menu .list-item{cursor:pointer;}
@@ -658,7 +685,10 @@ body{
 }
 .skip-link {
   position: absolute; left: 12px; top: -60px; z-index: 200;
-  background: var(--blue); color: #fff; padding: 10px 16px;
+  /* 초점을 받으면 화면에 나타나는 진짜 조작 요소다 — 44px 과 4.5:1 을 똑같이 지켜야 한다.
+     화면 밖에 숨어 있다는 이유로 검사에서 빠뜨리기 쉬운 자리. */
+  display: inline-flex; align-items: center; min-height: 44px;
+  background: var(--blue-surface); color: #fff; padding: 10px 16px;
   border-radius: 10px; font-size: 14px; font-weight: 700; text-decoration: none;
   transition: top .15s;
 }
@@ -694,7 +724,7 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 .menu-item .mi-tx { flex: 1; min-width: 0; }
 .menu-item .mi-tx b { display: block; font-size: 15.5px; font-weight: 600; color: var(--t1); }
 .menu-item .mi-tx span { font-size: 12.5px; color: var(--t3); }
-.menu-item .chev { color: #C4CAD1; font-size: 16px; flex: 0 0 auto; }
+.menu-item .chev { color: var(--t3); font-size: 16px; flex: 0 0 auto; }
 .chip.static { cursor: default; }
 
 /* 보조 배지 — 출처·상태 표시. */
@@ -715,7 +745,7 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 .guardian .msg b { font-size: 13px; color: var(--blue-t); font-weight: 700; }
 .guardian .msg p { margin: 3px 0 0; font-size: 14.5px; color: var(--t1); line-height: 1.5; }
 .section-t .aux { font-size: 12px; color: var(--t3); font-weight: 600; }
-.section-t .aux-btn { border: none; background: none; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--blue-t); cursor: pointer; padding: 8px; min-height: 34px; min-width: 34px; border-radius: 8px; }
+.section-t .aux-btn { border: none; background: none; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--blue-t); cursor: pointer; padding: 8px; min-height: 44px; min-width: 44px; border-radius: 8px; }
 .tabbar .tab-dot { position: absolute; top: 12px; margin-left: 22px; width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
 
 /* ===== 상태/에러 ===== */
@@ -778,7 +808,7 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 .goal-head { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
 .goal-emoji { font-size: 20px; }
 .goal-name { font-size: 15.5px; font-weight: 700; flex: 1; min-width: 0; }
-.icon-btn { border: none; background: none; font-family: inherit; cursor: pointer; color: var(--t3); font-size: 15px; width: 34px; height: 34px; border-radius: 9px; }
+.icon-btn { border: none; background: none; font-family: inherit; cursor: pointer; color: var(--t3); font-size: 15px; width: 44px; height: 44px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; }
 .icon-btn.on { color: var(--amber); }
 .icon-btn:hover { background: var(--bg); }
 .goal-meta { font-size: 13px; color: var(--t2); margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
@@ -805,13 +835,13 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
    보이는 건 글자뿐이지만 위아래 여백으로 누를 면적은 남긴다(KS X 3253 컨트롤 크기). */
 .txn-biz { display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   margin-left: 52px; padding-bottom: 6px; }
-.biz-link { appearance: none; border: 0; background: transparent; font: inherit;
+.biz-link { appearance: none; border: 0; background: transparent; font: inherit; min-height: 44px;
   font-size: 11.5px; line-height: 1.2; color: var(--t2); font-variant-numeric: tabular-nums;
   padding: 9px 6px 9px 0; margin: -9px 0; cursor: pointer; }
 .biz-link:hover { text-decoration: underline; }
 .biz-addr { font-size: 11.5px; color: var(--t3); }
 
-.month-head { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line); margin-bottom: 4px; font-size: 14px; }
+.month-head { display: flex; justify-content: space-between; align-items: center; min-height: 44px; padding: 6px 0; border-bottom: 1px solid var(--line); margin-bottom: 4px; font-size: 14px; }
 .month-head b { font-weight: 700; }
 
 /* ===== 카드(내 카드) ===== */

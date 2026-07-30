@@ -54,8 +54,10 @@ export function ReportAnalysis() {
           const fixed = recurring.filter((r) => r.type === 'FIXED');
           const routine = recurring.filter((r) => r.type === 'ROUTINE');
           const maxFactor = Math.max(1, ...Object.values(profile.contributionPoints));
-          const indexColor = profile.abnormalityIndex >= 60 ? 'var(--red)'
-            : profile.abnormalityIndex >= 35 ? 'var(--amber)' : 'var(--green)';
+          // 글자로도, 막대로도 쓰이는 색이다. 큰 숫자(38px)라 3:1 이면 되지만 브랜드 그린은 2.49:1 이라
+          // 미달한다 — 그래픽 색이 아니라 **글자용 토큰**을 쓴다.
+          const indexColor = profile.abnormalityIndex >= 60 ? 'var(--red-t)'
+            : profile.abnormalityIndex >= 35 ? 'var(--amber-t)' : 'var(--green-t)';
 
           return (
             <>

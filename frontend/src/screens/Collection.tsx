@@ -125,14 +125,16 @@ export function Collection() {
           <div className="col-grid" style={{ marginTop: 12 }}>
             {data.cells.map((c) =>
               c.owned ? (
-                <div
+                <button
+                  type="button"
                   key={c.code}
                   className={`col-cell${c.grade === 'RARE' || c.grade === 'EPIC' ? ' rare' : ''}${sel === c.code ? ' sel' : ''}`}
+                  aria-pressed={sel === c.code}
                   onClick={() => setSel(c.code)}
                 >
                   <ItemGlyph glyph={c.glyph} />
                   <span>{c.name}</span>
-                </div>
+                </button>
               ) : (
                 <div key={c.code} className="col-cell locked">
                   <i>?</i>
