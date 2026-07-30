@@ -6,7 +6,9 @@ import com.finntech.service.MyDataResponses.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -34,6 +36,8 @@ public class MyDataLinkService {
     private final UserPaymentRepository userPaymentRepository;
     private final ConsumptionRepository consumptionRepository;
     private final CategoryRepository categoryRepository;
+    /** 업종코드 → 소비 중분류. 제공자는 업종까지만 주므로 분류는 우리가 한다. */
+    private final com.finntech.engine.IndustryCategoryMapper industryMapper;
     private final UserCardCompanyRepository userCardCompanyRepository;
     private final UserBankRepository userBankRepository;
     private final ReportRepository reportRepository;
@@ -44,6 +48,7 @@ public class MyDataLinkService {
     public MyDataLinkService(MyDataClient myDataClient, AppUserRepository userRepository,
                              UserCardRepository userCardRepository, UserPaymentRepository userPaymentRepository,
                              ConsumptionRepository consumptionRepository, CategoryRepository categoryRepository,
+                             com.finntech.engine.IndustryCategoryMapper industryMapper,
                              UserCardCompanyRepository userCardCompanyRepository,
                              UserBankRepository userBankRepository, ReportRepository reportRepository,
                              java.time.Clock clock,
@@ -54,6 +59,7 @@ public class MyDataLinkService {
         this.userPaymentRepository = userPaymentRepository;
         this.consumptionRepository = consumptionRepository;
         this.categoryRepository = categoryRepository;
+        this.industryMapper = industryMapper;
         this.userCardCompanyRepository = userCardCompanyRepository;
         this.userBankRepository = userBankRepository;
         this.reportRepository = reportRepository;
@@ -98,7 +104,7 @@ public class MyDataLinkService {
     @Transactional
     public LinkResult linkCardCompanies(Long userId, List<Long> companyIds, List<Long> bankIds) {
         AppUser user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("user " + userId + " not found"));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user " + userId + " not found"));
         String ci = user.getCi();
         if (ci == null || ci.isBlank()) {
             throw new IllegalStateException("본인인증(가상 CI)이 먼저 필요합니다");
@@ -140,13 +146,15 @@ public class MyDataLinkService {
                 for (PaymentView payment : card.payments()) {
                     userPaymentRepository.save(new UserPayment(
                             UserPayment.rowId(userId, payment.id()), userId, card.cardId(),
-                            payment.cardCode(), payment.date(), payment.category1(), payment.category2(),
+                            payment.cardCode(), payment.date(), payment.ksicCode(),
+                            industryMapper.midOf(payment.ksicCode()),
                             payment.amount(), payment.merchantName(), payment.receivedBenefitAmount(),
                             payment.businessNumber()));
-                    // 기존 엔진 재사용을 위한 투영 — category1(대분류)을 카테고리 코드로 그대로 쓴다(온디맨드 생성, 원칙 4).
-                    Category category = categoryRepository.findByCode(payment.category1())
-                            .orElseGet(() -> categoryRepository.save(
-                                    new Category(payment.category1(), payment.category1())));
+                    // 업종코드 → 우리 소비 중분류(결정론 1:1). 예전에는 제공자의 7대분류를 그대로
+                    // 카테고리 코드로 썼는데, 그 축이 업종과 소비종류를 겸해 왜곡이 났다.
+                    String mid = industryMapper.midOf(payment.ksicCode());
+                    Category category = categoryRepository.findByCode(mid)
+                            .orElseGet(() -> categoryRepository.save(new Category(mid, mid)));
                     consumptionRepository.save(new Consumption(userId, category,
                             BigDecimal.valueOf(payment.amount()), payment.date(), false,
                             Enums.DataSource.MYDATA));
@@ -193,7 +201,11 @@ public class MyDataLinkService {
     /** 가맹점 조회(번호→주소) — 결제에 실린 사업자번호로 가맹점명·지번주소를 제공자에서 조회(프록시). 없으면 null. */
     @Transactional(readOnly = true)
     public MyDataResponses.MerchantView merchant(String businessNumber) {
-        return myDataClient.findMerchant(businessNumber);
+        MyDataResponses.MerchantView m = myDataClient.findMerchant(businessNumber);
+        if (m == null) return null;
+        // 업종코드는 사용자에게 보여줄 말이 아니다. 결제와 같은 표로 소비 중분류를 붙여 준다.
+        return new MyDataResponses.MerchantView(m.ksicCode(), industryMapper.midOf(m.ksicCode()),
+                m.businessNumber(), m.merchantName(), m.address(), m.lat(), m.lng(), m.online());
     }
 
     /**
@@ -212,7 +224,7 @@ public class MyDataLinkService {
     @Transactional(readOnly = true)
     public MyDataResponses.AccountView account(Long userId, int months) {
         AppUser user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("user " + userId + " not found"));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user " + userId + " not found"));
         if (!userBankRepository.existsByUserId(userId)) return null;
         String ci = user.getCi();
         if (ci == null || ci.isBlank()) return null;
@@ -226,7 +238,7 @@ public class MyDataLinkService {
     @Transactional
     public SyncResult renew(Long userId) {
         AppUser user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("user " + userId + " not found"));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user " + userId + " not found"));
         String ci = user.getCi();
         if (ci == null || ci.isBlank()) throw new IllegalStateException("본인인증(가상 CI)이 먼저 필요합니다");
         if (!user.isConsentGiven()) {
@@ -243,12 +255,13 @@ public class MyDataLinkService {
                     if (userPaymentRepository.existsById(UserPayment.rowId(userId, payment.id()))) continue;
                     userPaymentRepository.save(new UserPayment(
                             UserPayment.rowId(userId, payment.id()), userId, card.cardId(),
-                            payment.cardCode(), payment.date(), payment.category1(), payment.category2(),
+                            payment.cardCode(), payment.date(), payment.ksicCode(),
+                            industryMapper.midOf(payment.ksicCode()),
                             payment.amount(), payment.merchantName(), payment.receivedBenefitAmount(),
                             payment.businessNumber()));
-                    Category category = categoryRepository.findByCode(payment.category1())
-                            .orElseGet(() -> categoryRepository.save(
-                                    new Category(payment.category1(), payment.category1())));
+                    String mid = industryMapper.midOf(payment.ksicCode());
+                    Category category = categoryRepository.findByCode(mid)
+                            .orElseGet(() -> categoryRepository.save(new Category(mid, mid)));
                     consumptionRepository.save(new Consumption(userId, category,
                             BigDecimal.valueOf(payment.amount()), payment.date(), false, Enums.DataSource.MYDATA));
                     added++;
@@ -303,7 +316,7 @@ public class MyDataLinkService {
     public List<PaymentRow> cardPayments(Long userId, String cardSerial) {
         return userPaymentRepository.findByUserIdAndCardSerialOrderByPaymentDateDesc(userId, cardSerial).stream()
                 .map(payment -> new PaymentRow(payment.getPaymentId(), payment.getPaymentDate(),
-                        payment.getCategory1(), payment.getCategory2(), payment.getAmount(),
+                        payment.getCategory2(), payment.getCategory2(), payment.getAmount(),
                         payment.getMerchantName(), payment.getReceivedBenefit(), payment.getBusinessNumber()))
                 .toList();
     }
@@ -322,7 +335,7 @@ public class MyDataLinkService {
                 .map(payment -> {
                     UserCard card = bySerial.get(payment.getCardSerial());
                     return new PaymentHistoryRow(payment.getPaymentId(), payment.getPaymentDate(),
-                            payment.getCategory1(), payment.getCategory2(), payment.getAmount(),
+                            payment.getCategory2(), payment.getCategory2(), payment.getAmount(),
                             payment.getMerchantName(), payment.getReceivedBenefit(),
                             card != null ? card.getCardName() : null,
                             card != null ? card.getCardColor() : null,
@@ -359,12 +372,12 @@ public class MyDataLinkService {
                              String companyName, int requirement, int currentPerformance,
                              boolean requirementMet, int toRequirement, int earnedThisMonth) {}
 
-    public record PaymentRow(String paymentId, java.time.LocalDateTime date, String category1,
+    public record PaymentRow(String paymentId, java.time.LocalDateTime date, String category,
                              String category2, int amount, String merchantName, int receivedBenefit,
                              String businessNumber) {}
 
     /** 결제내역 모아보기 1건 — 결제 정보 + 어느 카드(실카드명·색·카드사)인지 + 가맹점 사업자번호. */
-    public record PaymentHistoryRow(String paymentId, java.time.LocalDateTime date, String category1,
+    public record PaymentHistoryRow(String paymentId, java.time.LocalDateTime date, String category,
                                     String category2, int amount, String merchantName, int receivedBenefit,
                                     String cardName, String cardColor, String companyName,
                                     String businessNumber) {}

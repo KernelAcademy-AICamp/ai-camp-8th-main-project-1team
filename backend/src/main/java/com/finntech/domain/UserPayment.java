@@ -40,9 +40,16 @@ public class UserPayment {
     @Column(name = "payment_date", nullable = false)
     private LocalDateTime paymentDate;
 
-    @Column(name = "category1", nullable = false, length = 30)
-    private String category1;
+/** 제공자가 준 업종코드(KSIC 세분류 4자리). 분류의 원본 근거라 그대로 보관한다. */
+    @Column(name = "ksic_code", nullable = false, length = 8)
+    private String ksicCode;
 
+/**
+     * 우리 소비 중분류 — 업종코드를 대조표로 옮긴 결과.
+     *
+     * <p>ML의 {@code cat2} 특징이 이 값을 쓴다. 예전에는 제공자의 소비맥락 52종이었는데,
+     * 제공자가 더는 넘기지 않으므로(업종까지만 준다) 우리가 정한 축으로 바꿨다.
+     */
     @Column(name = "category2", length = 30)
     private String category2;
 
@@ -70,14 +77,14 @@ public class UserPayment {
     protected UserPayment() {}
 
     public UserPayment(String paymentId, Long userId, String cardSerial, Long cardCode,
-                       LocalDateTime paymentDate, String category1, String category2,
+                       LocalDateTime paymentDate, String ksicCode, String category2,
                        int amount, String merchantName, int receivedBenefit, String businessNumber) {
         this.paymentId = paymentId;
         this.userId = userId;
         this.cardSerial = cardSerial;
         this.cardCode = cardCode;
         this.paymentDate = paymentDate;
-        this.category1 = category1;
+        this.ksicCode = ksicCode;
         this.category2 = category2;
         this.amount = amount;
         this.merchantName = merchantName;
@@ -90,7 +97,7 @@ public class UserPayment {
     public String getCardSerial() { return cardSerial; }
     public Long getCardCode() { return cardCode; }
     public LocalDateTime getPaymentDate() { return paymentDate; }
-    public String getCategory1() { return category1; }
+    public String getKsicCode() { return ksicCode; }
     public String getCategory2() { return category2; }
     public int getAmount() { return amount; }
     public String getMerchantName() { return merchantName; }

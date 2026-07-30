@@ -39,7 +39,9 @@ echo "[3/4] 시드 삽입 (개발 전용 경로 — 일반 API로는 DUMMY_SEED�
 curl -s -X POST "$API/api/dev/seed" -H 'Content-Type: application/json' -d '{
   "nickname":"demo","monthlyIncome":3200000,"goalAmount":4000000,"goalMonths":12,
   "months":6,"txPerMonth":60,
-  "categoryMix":{"FOOD":0.35,"CAFE":0.20,"SHOPPING":0.25,"TRANSPORT":0.20},
+  # 카테고리는 업종코드 대조표가 정하는 **우리 소비 중분류**다. 예전 FOOD·CAFE 같은 영문 코드를
+  # 쓰면 분석 엔진·ML이 모르는 이름이 되어 재량성 판정이 전부 기본값(0.5)으로 떨어진다.
+  "categoryMix":{"식비":0.35,"카페/간식":0.20,"쇼핑":0.25,"교통/자동차":0.20},
   "plannedRatio":0.65,"volatility":0.18,
   "anomalyCount":6,"anomalyMagnitudeMin":1.5,"anomalyMagnitudeMax":3.0,"seed":7}' >/dev/null
 curl -s -X POST "$API/api/alert/rescan?userId=1" >/dev/null

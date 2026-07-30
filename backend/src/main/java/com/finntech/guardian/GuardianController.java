@@ -5,6 +5,7 @@ import com.finntech.guardian.domain.GuardianEnums.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -31,13 +32,25 @@ public class GuardianController {
     private final GuardianService guardianService;
     private final GuardianBatchService batchService;
     private final GuardianRewardService rewardService;
+    private final GuardianCollectionService collectionService;
+    private final GuardianCatalog catalog;
+    private final GuardianWeeklyReportService weeklyReportService;
+    private final GuardianSettlementService settlementService;
     private final GuardianClock clock;
 
     public GuardianController(GuardianService guardianService, GuardianBatchService batchService,
-                              GuardianRewardService rewardService, GuardianClock clock) {
+                              GuardianRewardService rewardService,
+                              GuardianCollectionService collectionService,
+                              GuardianCatalog catalog,
+                              GuardianWeeklyReportService weeklyReportService,
+                              GuardianSettlementService settlementService, GuardianClock clock) {
         this.guardianService = guardianService;
         this.batchService = batchService;
         this.rewardService = rewardService;
+        this.collectionService = collectionService;
+        this.catalog = catalog;
+        this.weeklyReportService = weeklyReportService;
+        this.settlementService = settlementService;
         this.clock = clock;
     }
 
@@ -178,10 +191,23 @@ public class GuardianController {
 
     @GetMapping("/room")
     public Map<String, Object> room(@RequestParam Long userId) {
+        return roomView(rewardService.objects(userId));
+    }
+
+    /**
+     * 방 상태를 표시 정보와 함께 내려준다.
+     *
+     * <p>사물 코드({@code plant_small_01})만 주면 화면이 이름을 못 붙인다. 프론트에 이름표를
+     * 복사해 두면 소품을 추가할 때 두 곳을 고쳐야 하고 조용히 갈라진다 — 카탈로그가 한 곳이어야 한다.
+     */
+    private Map<String, Object> roomView(List<RoomObject> source) {
         List<Map<String, Object>> objects = new ArrayList<>();
-        for (RoomObject o : rewardService.objects(userId)) {
+        for (RoomObject o : source) {
+            GuardianCatalog.Item item = catalog.find(o.getObjectId());
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("objectId", o.getObjectId());
+            m.put("name", item.name());
+            m.put("glyph", item.glyph());
             m.put("grade", o.getGrade());
             m.put("acquiredDate", o.getAcquiredDate());
             m.put("reasonCode", o.getReasonCode());
@@ -254,6 +280,9 @@ public class GuardianController {
         m.put("id", ch.getId());
         m.put("state", ch.getState());
         m.put("categories", ch.getCategorySet());
+        // 성역도 함께 내려준다 — 소비 내역의 '성역' 필터가 이 목록으로 거른다.
+        // 없으면 필터가 조용히 빈 결과를 내는데, 화면은 "성역 지출이 없다"로 읽어 버린다.
+        m.put("sanctuaryCategories", ch.getSanctuarySet());
         m.put("baselineAmount", ch.getBaselineAmount());
         m.put("targetSaving", ch.getTargetSaving());
         m.put("challengeCap", ch.getChallengeCap());
@@ -367,6 +396,84 @@ public class GuardianController {
         out.put("pointEvents", r.pointEvents());
         out.put("stateTransition", r.stateTransition());
         return out;
+    }
+
+    // ======================================================================
+    //  도감 · 포인트샵 · 결산 · 갱신 (개편안 s-collection·s-shop·s-settle·s-renew)
+    // ======================================================================
+
+    /** 도감 — 모은 소품과 아직 못 모은 칸, 마일스톤 진행. */
+    @GetMapping("/collection")
+    public GuardianCollectionService.CollectionView collection(@RequestParam Long userId) {
+        return collectionService.collection(userId);
+    }
+
+    /** 마일스톤 보상 청구 — N종을 채웠을 때. 아직이면 400. */
+    @PostMapping("/collection/milestones/{count}/claim")
+    public GuardianCollectionService.CollectionView claimMilestone(@RequestParam Long userId,
+                                                                   @PathVariable int count) {
+        return collectionService.claim(userId, count);
+    }
+
+    /** 포인트샵 진열대 — 보유 여부와 살 수 있는지까지 서버가 판단해 내려준다. */
+    @GetMapping("/shop")
+    public GuardianCollectionService.ShopView shop(@RequestParam Long userId) {
+        return collectionService.shop(userId);
+    }
+
+    /** 구매 — 포인트로만. 잔액이 모자라거나 이미 가진 물건이면 400. */
+    @PostMapping("/shop/{code}/buy")
+    public GuardianCollectionService.ShopView buy(@RequestParam Long userId, @PathVariable String code) {
+        return collectionService.buy(userId, code);
+    }
+
+    /** 배치 변경(꾸미기 모드) — slot을 비우면 창고로 내린다. 응답은 방 전체 상태. */
+    @PostMapping("/room/place")
+    public Map<String, Object> place(@RequestParam Long userId, @RequestBody PlaceRequest req) {
+        return roomView(collectionService.place(userId, req.objectId(), req.slot()));
+    }
+
+    /** @param slot null이면 창고로 내린다. */
+    public record PlaceRequest(String objectId, Integer slot) {}
+
+    /**
+     * 주간 리포트 — 이번 주 방어율·4주 추이·소비 성격.
+     *
+     * @param weeksAgo 0이면 이번 주, 1이면 지난주. 화면의 주차 네비게이션이 쓴다.
+     */
+    @GetMapping("/report/weekly")
+    public GuardianWeeklyReportService.WeeklyReport weekly(@RequestParam Long userId,
+                                                           @RequestParam(defaultValue = "0") int weeksAgo) {
+        return weeklyReportService.report(userId, weeksAgo);
+    }
+
+    /** 월간 결산 — 방어율·카테고리별 성적·지킨 날·최장 연속·포인트·소품. */
+    @GetMapping("/settlement")
+    public GuardianSettlementService.SettlementView settlement(@RequestParam Long userId) {
+        return settlementService.settle(userId);
+    }
+
+    /** 다음 달 조정안 — 지난달 실적에서 유도한다. 사용자가 그대로 쓰거나 직접 고친다. */
+    @GetMapping("/renewal")
+    public GuardianSettlementService.RenewalView renewal(@RequestParam Long userId) {
+        return settlementService.renewal(userId);
+    }
+
+    // ======================================================================
+    //  예외 → 응답
+    // ======================================================================
+
+    /**
+     * 사용자 잘못은 <b>400</b>으로 돌려준다 — 500은 서버가 고장났다는 뜻이다.
+     *
+     * <p>"포인트가 50P 모자라요"·"아직 챌린지가 없어요"는 전부 정상적인 거절이다. 이걸 500으로
+     * 내보내면 프론트가 "알 수 없는 오류"만 띄우고, 우리가 애써 쓴 안내 문구가 사용자에게 닿지
+     * 않는다. 실제로 상점 구매·마일스톤 청구·소품 배치가 전부 500으로 나가고 있었다.
+     */
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> badRequest(RuntimeException e) {
+        return Map.of("error", e.getMessage() == null ? "요청을 처리할 수 없어요" : e.getMessage());
     }
 
     /** 비율은 소수 넷째 자리까지 — 설계서 응답 예시와 자릿수를 맞춘다. */

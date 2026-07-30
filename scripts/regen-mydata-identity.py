@@ -59,8 +59,11 @@ GIVEN2 = ["준", "우", "현", "진", "호", "원", "빈", "석", "훈", "찬",
           "영", "복", "희", "린", "아", "은", "연", "율", "경", "미",
           "지", "수", "혁", "민", "환", "태", "솔", "겸", "하", "서"]
 
-BIRTH_START = date(1970, 1, 1)
-BIRTH_END = date(2005, 12, 31)
+# 타깃이 20~30대 직장인이라 생년은 이 범위로 고정한다. 아래 REBIRTH_MIN/MAX 와 **같은 값**이어야
+# 한다 — 전에 여기만 1970~2005 로 남아 있어서 새로 만든 4,511명 중 2,100명(47%)이 범위 밖으로
+# 나왔고, 그걸 되돌리려 `--rebirth` 를 따로 돌려야 했다. 한 곳에서 나오게 묶는다.
+BIRTH_START = date(REBIRTH_MIN := 1987, 1, 1)
+BIRTH_END = date(REBIRTH_MAX := 2006, 12, 31)
 SPAN = (BIRTH_END - BIRTH_START).days
 
 
@@ -146,7 +149,7 @@ def rephone_identity(old_ci: str, name: str, social7: str, phone: str, salt: int
 # 그렇다고 전체를 다시 만들면 이름·전화번호까지 바뀌어 **모든 사람의 로그인 정보가 무효**가 된다.
 # 그래서 범위 밖인 사람만, 이름·전화번호는 그대로 두고 **생년월일만** 범위 안으로 옮긴다.
 # 범위 안이던 사람은 CI가 그대로라 아무 영향이 없다.
-REBIRTH_MIN, REBIRTH_MAX = 1987, 2006
+# 범위 자체는 BIRTH_START/BIRTH_END 와 함께 위에서 정의한다(두 곳이 갈라져 사고가 났었다).
 
 
 def reborn_identity(old_ci: str, name: str, social7: str, phone: str, salt: int = 0):

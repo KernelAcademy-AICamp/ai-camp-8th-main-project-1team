@@ -11,7 +11,7 @@ import { AppBar, ProgressBar, Cta, Scroll, Screen, ErrorBox } from '../component
 import { Sheet } from '../components/Sheet';
 import { useSession } from '../state/session';
 import { api } from '../lib/api';
-import type { VerifyResult } from '../lib/api';
+import type { PrivacyPolicy, VerifyResult } from '../lib/api';
 import { DEMO_CI, DEMO_ENABLED } from '../lib/config';
 
 type Kind = 'text' | 'social' | 'carrier' | 'phone' | 'code';
@@ -60,11 +60,17 @@ function formatPhone(digits: string): string {
   return `${n.slice(0, 3)}-${n.slice(3, 7)}-${n.slice(7)}`;
 }
 
+/**
+ * 동의 항목. `doc`은 '상세보기'가 무엇을 펼칠지다 — 전자상거래법·개인정보보호법 모두 동의 전에
+ * 전문을 볼 수 있어야 하는데, 개편 화면에 그 버튼이 없어 **읽을 방법 자체가 없었다.**
+ * 백엔드 `/api/privacy/terms`는 이미 있었는데 부르는 곳이 없던 것도 같은 이유다.
+ */
 const TERMS = [
-  { id: 't1', label: '서비스 이용약관', req: true },
-  { id: 't2', label: '개인(신용)정보 수집·이용 동의', req: true, desc: '소비 분석 목적으로만 사용, 제3자 제공 안 함' },
-  { id: 't3', label: '고유식별정보 처리 동의', req: true },
-  { id: 't4', label: '지킴이 알림·혜택 수신', req: false },
+  { id: 't1', label: '서비스 이용약관', req: true, doc: 'terms' as const },
+  { id: 't2', label: '개인(신용)정보 수집·이용 동의', req: true, doc: 'policy' as const,
+    desc: '소비 분석 목적으로만 사용, 제3자 제공 안 함' },
+  { id: 't3', label: '고유식별정보 처리 동의', req: true, doc: 'policy' as const },
+  { id: 't4', label: '지킴이 알림·혜택 수신', req: false, doc: 'policy' as const },
 ];
 
 export function Auth() {
@@ -72,6 +78,18 @@ export function Auth() {
   const [step, setStep] = useState(0);
   const [vals, setVals] = useState<Record<string, string>>({});
   const [consentOpen, setConsentOpen] = useState(false);
+  /** 펼쳐 놓은 약관 전문. null이면 닫혀 있다. */
+  const [doc, setDoc] = useState<{ label: string; body: PrivacyPolicy | null; error: string | null } | null>(null);
+
+  async function openDoc(label: string, which: 'terms' | 'policy') {
+    setDoc({ label, body: null, error: null });
+    try {
+      const body = which === 'terms' ? await api.privacyTerms() : await api.privacyPolicy();
+      setDoc({ label, body, error: null });
+    } catch (e) {
+      setDoc({ label, body: null, error: e instanceof Error ? e.message : '불러오지 못했어요' });
+    }
+  }
   const [consented, setConsented] = useState(false);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
@@ -263,20 +281,46 @@ export function Auth() {
         {TERMS.map((t) => {
           const on = checked.has(t.id);
           return (
-            <button type="button" key={t.id} className={`chk${on ? ' on' : ''}`} aria-pressed={on} onClick={() => toggle(t.id)}>
-              <span className="box" aria-hidden="true">✓</span>
-              <span className="ct">
-                <b>{t.label}</b>{' '}
-                <span className="req" style={!t.req ? { color: 'var(--blue-t)' } : undefined}>({t.req ? '필수' : '선택'})</span>
-                {t.desc && <span className="desc">{t.desc}</span>}
-              </span>
-            </button>
+            <div className="chk-row" key={t.id}>
+              <button type="button" className={`chk${on ? ' on' : ''}`} aria-pressed={on} onClick={() => toggle(t.id)}>
+                <span className="box" aria-hidden="true">✓</span>
+                <span className="ct">
+                  <b>{t.label}</b>{' '}
+                  <span className="req" style={!t.req ? { color: 'var(--blue-t)' } : undefined}>({t.req ? '필수' : '선택'})</span>
+                  {t.desc && <span className="desc">{t.desc}</span>}
+                </span>
+              </button>
+              {/* 체크 버튼 안에 버튼을 넣을 수 없어 형제로 둔다(중첩 버튼은 무효 마크업이다). */}
+              <button type="button" className="chk-more" aria-label={`${t.label} 전문 보기`}
+                onClick={() => void openDoc(t.label, t.doc)}>
+                보기
+              </button>
+            </div>
           );
         })}
         <div style={{ height: 10 }} />
         <button type="button" className="btn btn-primary" disabled={!reqOk} onClick={confirmConsent}>
           동의하고 인증번호 받기
         </button>
+      </Sheet>
+
+      <Sheet open={doc !== null} onClose={() => setDoc(null)} title={doc?.label ?? '약관'}>
+        <p className="sheet-title">{doc?.label}</p>
+        {doc?.error && <ErrorBox error={doc.error} />}
+        {doc && !doc.body && !doc.error && <p className="sheet-sub">불러오는 중이에요…</p>}
+        {doc?.body && (
+          <div className="doc">
+            <p className="sheet-sub">{doc.body.title}</p>
+            {doc.body.clauses.map((c) => (
+              <section key={c.title}>
+                <h3>{c.title}</h3>
+                <p>{c.body}</p>
+              </section>
+            ))}
+            {doc.body.notice && <p className="doc-note">{doc.body.notice}</p>}
+          </div>
+        )}
+        <button type="button" className="btn btn-ghost" onClick={() => setDoc(null)}>닫기</button>
       </Sheet>
     </Screen>
   );

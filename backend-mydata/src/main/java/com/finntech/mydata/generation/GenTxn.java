@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * @param businessNumber      가맹점 사업자등록번호 10자리(신원에서 결정론 파생)
  */
 public record GenTxn(
-        int cardSlot, LocalDateTime date, String category1, String category2,
+        int cardSlot, LocalDateTime date, String ksicCode, String category2,
         int amount, String merchant, String channel, String productName, int productPrice,
         int quantity, String wasteLabel, double discretionaryScore,
         String address, Double lat, Double lon, String businessNumber) {

@@ -37,6 +37,7 @@ public class ProductLookupService {
     private final String apiKey;
     private final String model;
     private final RestClient gemini;
+    private final com.finntech.engine.IndustryCategoryMapper industryMapper;
     private final HttpClient http = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NORMAL)
             .connectTimeout(Duration.ofSeconds(5))
@@ -45,7 +46,9 @@ public class ProductLookupService {
     public ProductLookupService(
             @Value("${finntech.gemini.api-key:}") String apiKey,
             @Value("${finntech.gemini.model:gemini-2.0-flash}") String model,
-            @Value("${finntech.gemini.base-url:https://generativelanguage.googleapis.com}") String baseUrl) {
+            @Value("${finntech.gemini.base-url:https://generativelanguage.googleapis.com}") String baseUrl,
+            com.finntech.engine.IndustryCategoryMapper industryMapper) {
+        this.industryMapper = industryMapper;
         this.apiKey = apiKey;
         this.model = model;
         this.gemini = RestClient.builder().baseUrl(baseUrl).build();
@@ -75,12 +78,15 @@ public class ProductLookupService {
     public LookupResult fromImage(String base64, String mimeType) {
         if (!aiEnabled() || base64 == null || base64.isBlank()) return LookupResult.empty();
         try {
+            // 카테고리 목록을 프롬프트에 박지 않는다(원칙 4). 대조표가 바뀌면 프롬프트도 따라온다 —
+            // 예전에는 FOOD·CAFE 같은 영문 코드를 박아 두어, 체계를 중분류로 옮긴 뒤에도
+            // 엔진이 못 알아듣는 코드를 AI가 계속 만들어 냈다.
             String prompt = """
                     이 상품 스크린샷을 보고 JSON만 출력하세요(설명·마크다운 금지).
                     {"name": 상품명, "price": 가격_숫자만_정수_원, "category": 코드}
-                    category는 다음 중 하나: FOOD, CAFE, SHOPPING, TRANSPORT, HOUSING, MEDICAL, CULTURE, ETC.
+                    category는 다음 중 하나: %s.
                     가격을 못 찾으면 price는 0.
-                    """;
+                    """.formatted(String.join(", ", industryMapper.midCategories()));
             Map<?, ?> resp = gemini.post()
                     .uri("/v1beta/models/{model}:generateContent?key={key}", model, apiKey)
                     .contentType(MediaType.APPLICATION_JSON)

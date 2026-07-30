@@ -8,16 +8,27 @@ public final class CatalogModels {
     private CatalogModels() {}
 
     /**
-     * 소비맥락(contexts.json) 1건 = category2 → 7대분류 매핑 + 빈도·재량성 가중치.
+     * 소비맥락(contexts.json) 1건 = 거래를 현실적으로 만들기 위한 '무대'.
+     *
+     * <p><b>{@code ksicCode}가 소비 카테고리를 대신한다.</b> 예전에는 여기에 {@code category1}
+     * (7대분류)이 있어 그 값이 그대로 앱의 소비 카테고리가 됐다. 그러다 보니 한 축이
+     * "가맹점 업종"과 "사용자 소비 종류"를 겸해, 지하철이 '온라인' 대분류에 들어가는 왜곡이 났다.
+     * 이제 마이데이터는 <b>업종코드만</b> 넘기고, 소비 카테고리는 앱이 결정론 1:1 표로 붙인다.
+     *
+     * @param category2         맥락 이름. 상품·가맹점 풀을 고르는 키일 뿐, 앱에는 나가지 않는다
+     * @param ksicCode          KSIC 세분류 4자리. 이 맥락의 결제가 어느 업종에서 일어나는가
      * @param frequencyWeight   하루활동 방문확률 base(0..1)
      * @param discretionaryBase <b>재량성</b> base(0..1) = "생존필수인가?" 척도(낮음=필수, 높음=재량). <b>낭비성향이
      *                          아니다</b> — 무대(필수/재량) 판정·금액 분포에만 쓰고, 낭비확률에 직접 넣지 않는다(재량≠낭비).
      * @param merchantSource    INDEPENDENT|BRAND|MIXED|ONLINE|OPERATOR
      * @param locationType      POI|ROUTE|VENUE_CLUSTER|NONE
+     * @param fixedTariff       요금이 고시로 정해진 맥락(운임·요금제·고지서). true면 금액에 지터를
+     *                          걸지 않는다 — 지하철은 1,550원이지 1,400원이나 1,700원이 아니다.
      */
     public record CatalogContext(
-            String category2, String category1, String channel, String locationType,
-            double frequencyWeight, double discretionaryBase, String merchantSource) {}
+            String category2, String ksicCode, String channel, String locationType,
+            double frequencyWeight, double discretionaryBase, String merchantSource,
+            boolean fixedTariff) {}
 
     /** contexts.json 최상위 래퍼. */
     public record ContextsFile(List<CatalogContext> contexts) {}
@@ -27,7 +38,14 @@ public final class CatalogModels {
      * discretionary = 재량성(생존필수 아님) 척도이며 <b>낭비성향이 아니다</b>. 취미 상품의 높은 재량성은
      * 낭비로 직결되지 않는다(라벨러가 충동·과다 기반으로 판정, 본인 취미는 보호).
      */
-    public record ProductEntry(String name, int priceLow, int priceHigh, double discretionary) {}
+    public record ProductEntry(String name, int priceLow, int priceHigh, double discretionary,
+                               double weight) {
+
+        /** 가중치 없는 4원소 표기(대다수 품목) — 균등 추출. */
+        public ProductEntry(String name, int priceLow, int priceHigh, double discretionary) {
+            this(name, priceLow, priceHigh, discretionary, 1.0);
+        }
+    }
 
     /**
      * 브랜드/플랫폼(merchants_brand.json) 1건.

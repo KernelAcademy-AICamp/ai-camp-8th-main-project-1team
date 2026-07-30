@@ -8,9 +8,15 @@
 (TRAIN 60 / VAL 15 / TEST 15 / SERVICE 10). **SERVICE는 학습·평가에서 제외**(앱 시연 전용, 누수 방지).
 
 ## 특징 (추론 일치·누수 금지)
-`category2 · log금액 · 시각(sin/cos)·심야 · 요일(sin/cos)·주말 · 개인 평소대비 금액(과다) ·
+`cat2(= **우리 소비 중분류**) · log금액 · 시각(sin/cos)·심야 · 요일(sin/cos)·주말 · 개인 평소대비 금액(과다) ·
 user_mean_log_amount · user_disc_ratio(페르소나 프록시)`.
 **제외**: `discretionary_score`(=생성 시 p_waste, 누수) · `persona`(추론 미가용) · 절대날짜(tenure 누수).
+
+> **cat2의 축이 바뀌었다(2026-07-29).** 예전에는 제공자가 준 소비맥락 52종이었다. 이제 제공자는
+> **업종코드(KSIC 세분류)까지만** 넘기고 소비 카테고리는 앱이 붙이므로, 학습도 같은 대조표
+> (`backend/src/main/resources/ksic-mid.json`)를 거쳐 **중분류 15종**을 쓴다.
+> `ESSENTIAL`도 같은 파일에서 읽는다 — 예전에는 이 목록이 네 곳에 손으로 복사돼 있었다.
+> 재학습 전까지 `SpendingClassifier`가 체계 불일치를 감지해 **규칙 baseline으로 폴백**한다.
 
 ## 모델 (W8-2)
 - **프로덕션 = EBM**(순수 GAM, interactions=0 → Java 정확 재현). PR-AUC **0.438** · ROC-AUC 0.795 · Brier 0.110.
@@ -21,7 +27,9 @@ user_mean_log_amount · user_disc_ratio(페르소나 프록시)`.
 
 ## 실행
 1. 생성 데이터가 MySQL에 있어야 함(`backend-mydata` generation).
-2. 덤프: `mysql ... -e "SELECT ..."`로 `card_user.tsv·user_split.tsv·payments.tsv` 생성(경로는 train.py 참조).
+2. 덤프: **`bash ml/dump.sh`** → `user_split.tsv·card_user.tsv·payments.tsv`.
+   (예전에는 이 단계가 `"SELECT ..."`로만 적혀 있어 실제 쿼리가 저장소에 없었다 —
+   재학습할 때마다 쿼리를 다시 짜야 했고, 학습 때 쓴 것과 같은 데이터인지 확인할 방법이 없었다.)
 3. 학습·내보내기: `python train.py` → `ebm_export.json`(형상함수 테이블)·`parity_samples.json`(Java 검증용)·`metrics.json`.
 4. 배치: `ebm_export.json` → `backend/src/main/resources/ml/ebm_model.json`.
    Java 스코어러 `com.finntech.ml.SpendingClassifier`가 로드해 추론.

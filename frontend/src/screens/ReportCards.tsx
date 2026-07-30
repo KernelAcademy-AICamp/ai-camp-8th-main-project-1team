@@ -66,7 +66,7 @@ export function ReportCards() {
                   <div style={{ marginTop: 14 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--t2)' }}>
                       <span>전월실적 {man(c.requirement)}</span>
-                      <span style={{ fontWeight: 700, color: c.requirementMet ? 'var(--green)' : 'var(--t2)' }}>
+                      <span style={{ fontWeight: 700, color: c.requirementMet ? 'var(--green-t)' : 'var(--t2)' }}>
                         {c.requirementMet ? '✓ 충족' : `${won(c.toRequirement)} 더`}
                       </span>
                     </div>
@@ -89,7 +89,7 @@ export function ReportCards() {
                       {rows.length === 0 ? <Empty>불러오는 중이거나 결제가 없어요.</Empty> : rows.slice(0, 30).map((p) => (
                         <div className="txn" key={p.paymentId}>
                           <span className="d">{shortDate(p.date)}</span>
-                          <span className="m">{p.merchantName ?? catLabel(p.category2 ?? p.category1)}</span>
+                          <span className="m">{p.merchantName ?? catLabel(p.category2 ?? p.category)}</span>
                           <span className="a">
                             {won(p.amount)}
                             {p.receivedBenefit > 0 && (

@@ -22,10 +22,10 @@ class DailyActivitySimulatorTest {
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
     private final CatalogLoader loader = new CatalogLoader(mapper);
     private final GenerationProperties props = new GenerationProperties();
+    private final CatalogSampler sampler = new CatalogSampler(loader, new MerchantRegistry(
+            props.getSeed(), loader.regions(), props.getAddress().getBubunProb()));
     private final DailyActivitySimulator sim = new DailyActivitySimulator(
-            new CatalogSampler(loader, new MerchantRegistry(
-                    props.getSeed(), loader.regions(), props.getAddress().getBubunProb())),
-            new WasteLabeler(props), loader, props);
+            sampler, new WasteLabeler(props, sampler), loader, props);
     private final List<GeneratedUser> users = new PopulationBuilder(loader, props).build(20260721L, 500);
 
     private GeneratedUser first(String persona) {
@@ -101,12 +101,16 @@ class DailyActivitySimulatorTest {
         // '빈도'로 검증한다(외식형=식비를 가장 자주 결제). (§13-11: 금액 스냅과 무관하게 성립)
         GeneratedUser u = first("외식형");   // 식비 믹스 ~0.54
         List<GenTxn> txns = sim.simulate(u, u.startDate().plusDays(120));
-        Map<String, Long> cntByCat1 = txns.stream()
-                .collect(Collectors.groupingBy(GenTxn::category1, Collectors.counting()));
-        String top = cntByCat1.entrySet().stream()
-                .max(Map.Entry.comparingByValue()).orElseThrow().getKey();
-        double sikbiFreq = cntByCat1.getOrDefault("식비", 0L) / (double) txns.size();
-        assertThat(top).isEqualTo("식비");           // 외식형은 식비를 가장 자주 결제
-        assertThat(sikbiFreq).isGreaterThan(0.30);   // 식비 방문이 지배적
+        // **금액 비중**으로 본다. 빈도로 보면 카페(1,300원)가 한식(13,000원)을 이긴다 —
+        // 방문가중이 `지출비중 ÷ 평균단가`라 싼 업종일수록 자주 찍히는 것이 정상이다.
+        // 페르소나가 말하는 것은 '지출비중'이므로 검증도 금액으로 해야 한다.
+        Map<String, Long> amtByKsic = txns.stream()
+                .collect(Collectors.groupingBy(GenTxn::ksicCode,
+                        Collectors.summingLong(t -> (long) t.amount())));
+        long total = amtByKsic.values().stream().mapToLong(Long::longValue).sum();
+        // 5611 한식 · 5612 외국식 · 5616 치킨피자 · 5619 간이 = 식비 중분류
+        long food = java.util.stream.Stream.of("5611", "5612", "5616", "5619")
+                .mapToLong(c -> amtByKsic.getOrDefault(c, 0L)).sum();
+        assertThat(food / (double) total).isGreaterThan(0.30);   // 외식형은 식비 지출이 지배적
     }
 }

@@ -16,7 +16,7 @@ import { useGuardian } from '../state/guardian';
 import { useAsync } from '../state/useAsync';
 import { api } from '../lib/api';
 import {
-  won, pctNum, iconOf, shortDate, CHALLENGE_STATE_LABEL, GRADE_LABEL, GRADE_EMOJI,
+  won, pctNum, iconOf, shortDate, CHALLENGE_STATE_LABEL, GRADE_LABEL, GRADE_EMOJI, SETTLED_STATES,
 } from '../lib/format';
 
 /** 세리머니 응답에는 판정 id가 없어 '봤음' 표시를 서버로 보낼 수 없다. 그래서 날짜로 기억한다. */
@@ -77,13 +77,13 @@ export function Home() {
               <p className="empty">아직 불러온 결제가 없어요. 마이 &gt; 연결 관리에서 동기화해 보세요.</p>
             )}
             {recent.map((p) => {
-              const { icon, bg } = iconOf(p.category2 ?? p.category1);
+              const { icon, bg } = iconOf(p.category2 ?? p.category);
               return (
                 <div className="list-item" key={p.paymentId} style={{ padding: '12px 0', borderBottom: '1px solid var(--bg)' }}>
                   <span className="ic" style={{ background: bg }}><Icon id={icon} /></span>
                   <div className="tx">
-                    <b>{p.merchantName ?? p.category2 ?? p.category1}</b>
-                    <span>{shortDate(p.date)} · {p.category2 ?? p.category1}</span>
+                    <b>{p.merchantName ?? p.category2 ?? p.category}</b>
+                    <span>{shortDate(p.date)} · {p.category2 ?? p.category}</span>
                   </div>
                   <span className="amt">-{won(p.amount)}</span>
                 </div>
@@ -114,13 +114,25 @@ export function Home() {
             <p style={{ fontSize: 21, fontWeight: 800, margin: 0 }}>지킴이</p>
             <button type="button" className="icon-btn" onClick={() => go('notifications')}
               aria-label={home.unreadNotifications > 0 ? `알림함 · 안 읽은 알림 ${home.unreadNotifications}건` : '알림함'}
-              style={{ position: 'relative', width: 40, height: 40 }}>
+              style={{ position: 'relative' }}>   {/* 크기는 .icon-btn(44px)에 맡긴다 — 인라인 40px 이 덮어 터치 타깃이 미달했다 */}
               <Icon id="i-bell" className="ci" />
               {home.unreadNotifications > 0 && (
                 <span aria-hidden="true" style={{ position: 'absolute', top: 5, right: 5, width: 8, height: 8, borderRadius: '50%', background: 'var(--red)' }} />
               )}
             </button>
           </div>
+
+          {/* 챌린지가 끝났으면 월말 사이클로 가는 문을 연다(개편안 s-monthend → s-settle → s-renew).
+              강제로 밀어내지 않는 이유는 이 파일 위쪽에 적어 둔 그대로다 — 눌러서 들어가는 편이
+              빠져나오기도 쉽다. 다만 이 카드는 지나치기 어렵게 맨 위에 둔다. */}
+          {SETTLED_STATES.has(ch.state) && (
+            <button type="button" className="strip" onClick={() => go('monthend')}
+              style={{ background: 'linear-gradient(180deg,#FFFFFF 0%,#E7F4DC 100%)' }}>
+              <Icon id="i-gift" className="hic" />
+              <b>이번 챌린지가 끝났어요 — 결산 보기</b>
+              <span className="meta"><span className="chev" aria-hidden="true">›</span></span>
+            </button>
+          )}
 
           {/* 마이룸 스트립 — 스트릭 + 포인트(방 꾸미기 재화) */}
           <button type="button" className="strip" onClick={() => go('myroom')}>
@@ -136,17 +148,37 @@ export function Home() {
             </span>
           </button>
 
-          {/* 히어로 — 지키는 금액과 그 비율.
-              '달성률'이라 부르면 안 된다. 이 값은 설계서 §1의 `확보 절약액 ÷ 지킬 돈`이라
-              시간 축이 없다 — 한 푼도 안 쓴 첫날에도 100%다. 완주한 것처럼 읽히던 자리라
-              "지금 지키는 중"이라는 현재 상태로 바꾸고, 며칠째인지를 옆에 붙여 진행을 드러낸다. */}
+          {/* 히어로 (개편안 `.hero-top`/`.hero-mid`) — 지킨 금액이 크게, 방어율은 반원 게이지로.
+              '달성률'이라 부르지 않는다. 이 값은 `확보 절약액 ÷ 지킬 돈`이라 시간 축이 없어
+              한 푼도 안 쓴 첫날에도 100%다 — 완주한 것처럼 읽히지 않게 '방어율'로 적고
+              며칠째인지를 D-day로 옆에 둔다.
+
+              게이지 길이는 개편안의 계산을 그대로 쓴다: 반원 호의 길이가 144.5라
+              `stroke-dashoffset = 144.5 × (1 − 비율)`이면 채운 만큼만 보인다. */}
           <div className="hero">
-            <div className="cap">지금 지키고 있어요</div>
-            <div className="big">{defense}%</div>
-            <div className="sub">
-              지킬 돈 {won(ch.targetSaving)} 중 <b>{won(ch.securedSaving)}</b>
-              {' · '}{ch.daysElapsed}/{ch.daysTotal}일째
-              {ch.daysLeft > 0 ? ` · D-${ch.daysLeft}` : ' · 마지막 날'}
+            <div className="hero-top">
+              <div className="cap">이번 달 지킨 돈</div>
+              <div className="dday">{ch.daysLeft > 0 ? `D-${ch.daysLeft}` : '마지막 날'}</div>
+            </div>
+            <div className="hero-mid">
+              <div style={{ minWidth: 0 }}>
+                <div className="keep">{won(ch.securedSaving).replace('원', '')}<em>원</em></div>
+                <div className="sub">목표 {won(ch.targetSaving)}</div>
+              </div>
+              <div className="gauge">
+                <svg viewBox="0 0 105 60" aria-hidden="true">
+                  <path className="gtrack" d="M6.5 52.5 A46 46 0 0 1 98.5 52.5" />
+                  <path
+                    className="gfill"
+                    d="M6.5 52.5 A46 46 0 0 1 98.5 52.5"
+                    style={{ strokeDashoffset: (144.5 * (1 - Math.min(100, defense) / 100)).toFixed(1) }}
+                  />
+                </svg>
+                <div className="gval"><b>{defense}%</b><small>방어율</small></div>
+              </div>
+            </div>
+            <div className="hero-tip">
+              {ch.daysElapsed}/{ch.daysTotal}일째 · {strip.remainingCapLabel}
             </div>
           </div>
 
@@ -201,14 +233,14 @@ export function Home() {
               <p className="empty">아직 불러온 결제가 없어요. 마이 &gt; 연결 관리에서 동기화해 보세요.</p>
             )}
             {recent.map((p) => {
-              const name = p.merchantName ?? p.category2 ?? p.category1;
-              const { icon, bg } = iconOf(p.category2 ?? p.category1);
+              const name = p.merchantName ?? p.category2 ?? p.category;
+              const { icon, bg } = iconOf(p.category2 ?? p.category);
               return (
                 <div className="list-item" key={p.paymentId} style={{ padding: '12px 0', borderBottom: '1px solid var(--bg)' }}>
                   <span className="ic" style={{ background: bg }}><Icon id={icon} /></span>
                   <div className="tx">
                     <b>{name}</b>
-                    <span>{shortDate(p.date)} · {p.category2 ?? p.category1}</span>
+                    <span>{shortDate(p.date)} · {p.category2 ?? p.category}</span>
                   </div>
                   <span className="amt">-{won(p.amount)}</span>
                 </div>

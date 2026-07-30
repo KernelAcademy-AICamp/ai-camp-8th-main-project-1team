@@ -26,7 +26,7 @@ const PROVIDERS = [
 ];
 
 const Logo = ({ inst }: { inst: Inst }) => (
-  <span className="inst-logo" style={{ color: inst.fg ?? '#fff', background: inst.bg }} aria-hidden="true">
+  <span className="logo" style={{ color: inst.fg ?? '#fff', background: inst.bg }} aria-hidden="true">
     {inst.label}
   </span>
 );
@@ -135,18 +135,21 @@ export function Connect() {
               </b>
               {!cat.available && <span className="aux-badge" style={{ marginLeft: 'auto' }}>준비 중</span>}
             </button>
-            {cat.items.map((inst) => {
-              const on = picked.has(inst.id);
-              return (
-                <button type="button" key={`${cat.key}-${inst.id}`} className={`inst-row${on ? ' on' : ''}`}
-                  onClick={() => toggle(inst.id)} disabled={!cat.available} aria-pressed={on}
-                  style={!cat.available ? { opacity: .45, cursor: 'default' } : undefined}>
-                  <Logo inst={inst} />
-                  <span className="inst-name">{inst.name}</span>
-                  <Check state={on ? 'all' : 'none'} />
-                </button>
-              );
-            })}
+            {/* 기관은 3열 그리드 카드로 고른다(개편안 `.inst-grid`) — 로고가 커서 한눈에 찾는다.
+                업권 묶음과 '준비 중' 표시는 그대로 둔다(개편안에는 없지만 실제로 필요한 정보다). */}
+            <div className="inst-grid">
+              {cat.items.map((inst) => {
+                const on = picked.has(inst.id);
+                return (
+                  <button type="button" key={`${cat.key}-${inst.id}`} className={`inst${on ? ' on' : ''}`}
+                    onClick={() => toggle(inst.id)} disabled={!cat.available} aria-pressed={on}
+                    style={!cat.available ? { opacity: .45, cursor: 'default' } : undefined}>
+                    <Logo inst={inst} />
+                    <span>{inst.name}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         ))}
 

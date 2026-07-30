@@ -72,6 +72,15 @@ public class GenerationProperties {
     /** 정리 CSV(가맹점명·사업자번호·주소) 출력 경로. 비우면 CSV를 쓰지 않는다. */
     private String merchantCsvPath = "";
 
+    /**
+     * 카드 결제를 통장 거래로도 <b>복제</b>할 것인가(기본 예).
+     *
+     * <p>복제하면 통장 한 장에서 잔액이 그대로 굴러가고 조회가 단순 조회가 된다 — 실제 통장이 그렇다.
+     * 대신 결제 수만큼 행이 늘어난다(결제 1,100만이면 통장도 1,100만). 저장 공간이 아쉬우면 꺼도
+     * 되지만, 그러면 조회가 결제 테이블과 통장 테이블을 합쳐 정렬해야 한다.
+     */
+    private boolean copyCardPaymentsToAccount = true;
+
     /** 가맹점 주소(지번)·동선 조건. */
     private Address address = new Address();
 
@@ -312,6 +321,9 @@ public class GenerationProperties {
     public void setCatalogPath(String catalogPath) { this.catalogPath = catalogPath; }
     public String getMerchantCsvPath() { return merchantCsvPath; }
     public void setMerchantCsvPath(String merchantCsvPath) { this.merchantCsvPath = merchantCsvPath; }
+
+    public boolean isCopyCardPaymentsToAccount() { return copyCardPaymentsToAccount; }
+    public void setCopyCardPaymentsToAccount(boolean v) { this.copyCardPaymentsToAccount = v; }
     public Address getAddress() { return address; }
     public void setAddress(Address address) { this.address = address; }
 }

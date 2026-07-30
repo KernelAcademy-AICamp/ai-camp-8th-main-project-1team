@@ -28,7 +28,8 @@ class MyDataLinkServiceTest {
     private static final LocalDateTime 마지막_결제 = LocalDateTime.of(2026, 7, 28, 11, 40);
 
     private static PaymentView 결제(String id, LocalDateTime at, int amount) {
-        return new PaymentView(id, at, "여가", "영화", amount, "씨네Q", 0, 9713L, "1234567890");
+        // 5914 = 영화 및 비디오물 상영업 → 취미/여가. 제공자는 업종코드까지만 준다.
+        return new PaymentView(id, at, "5914", amount, "씨네Q", 0, 9713L, "1234567890");
     }
 
     private static CardView 카드(List<PaymentView> payments) {
@@ -66,7 +67,8 @@ class MyDataLinkServiceTest {
                 LocalDateTime.of(2026, 7, 28, 14, 0).atZone(ZoneId.systemDefault()).toInstant(),
                 ZoneId.systemDefault());
 
-        new MyDataLinkService(client, users, cards, payments, consumptions, categories, links,
+        new MyDataLinkService(client, users, cards, payments, consumptions, categories,
+                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()), links,
                 mock(UserBankRepository.class), reports, clock, "")
                 .linkCardCompanies(1L, List.of(9007L));
 
@@ -95,7 +97,8 @@ class MyDataLinkServiceTest {
         Clock clock = Clock.fixed(연동시각.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
 
         new MyDataLinkService(client, users, mock(UserCardRepository.class), mock(UserPaymentRepository.class),
-                mock(ConsumptionRepository.class), mock(CategoryRepository.class), links,
+                mock(ConsumptionRepository.class), mock(CategoryRepository.class),
+                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()), links,
                 mock(UserBankRepository.class), mock(ReportRepository.class), clock, "")
                 .linkCardCompanies(1L, List.of(9007L));
 

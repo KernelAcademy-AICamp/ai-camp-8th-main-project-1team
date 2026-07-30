@@ -66,6 +66,28 @@ code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 \
 [ "$code" = "403" ] && bad "브라우저 오리진이 CORS에 막힌다 (Origin: $ORIGIN → 403)" \
                     || ok "브라우저 오리진 허용 (POST with Origin → $code)"
 
+# 개편(MOA)으로 늘어난 경로 — 화면이 늘어도 스모크가 그대로면 새 사슬은 아무도 안 지킨다.
+#
+# **404를 실패로 보지 않는다.** 이 경로들은 대부분 '진행 중 챌린지가 있는 사용자'를 전제하는데,
+# CI의 갓 띄운 스택에는 챌린지가 없다. 여기서 봐야 하는 것은 "라우팅이 살아 있고 서버가
+# 500으로 죽지 않는가"다 — 200/404는 통과, 5xx와 연결 실패는 실패.
+expect_routed() {
+  local path="$1" desc="$2"
+  local code
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$BASE$path" || echo 000)
+  case "$code" in
+    2*|404|400) ok "$desc ($path → $code)" ;;
+    *)          bad "$desc ($path → $code, 2xx/4xx 기대)" ;;
+  esac
+}
+
+expect_routed "/api/guardian/collection?userId=1"     "도감"
+expect_routed "/api/guardian/shop?userId=1"           "포인트샵"
+expect_routed "/api/guardian/room?userId=1"           "마이룸"
+expect_routed "/api/guardian/settlement?userId=1"     "월간 결산"
+expect_routed "/api/guardian/renewal?userId=1"        "다음 달 갱신"
+expect_routed "/api/guardian/report/weekly?userId=1"  "주간 리포트"
+
 echo
 echo "[2/3] 닫혀 있는가"
 expect_closed 8082 "마이데이터 서버 비공개"
