@@ -104,7 +104,19 @@ public class CatalogSampler {
      * 사업자번호·주소·좌표는 신원에서 결정론 파생({@link MerchantRegistry})한다 → 같은 점포는 항상 같은 번호·주소.
      * 온라인이거나 앵커가 없으면 전국 본사(HQ) 결제로 처리.
      */
+    /** 품목을 가리지 않는 옛 호출부용. 새 코드는 품목을 함께 넘긴다. */
     public ResolvedMerchant resolveMerchant(String category2, RegionEntry anchor, Random r) {
+        return resolveMerchant(category2, anchor, null, r);
+    }
+
+    /**
+     * 그 맥락의 상호를 하나 고른다. {@code productName} 을 주면 <b>그 품목을 파는 사업자</b>만 고른다.
+     *
+     * <p>한 맥락에 서로 다른 운영주체가 섞이는 경우가 있다 — 대중교통은 도시철도(서울교통공사·한국철도공사)와
+     * 버스·충전(티머니·캐시비)이 한 칸에 있다. 상호와 품목을 따로 뽑으면 <b>`지하철`이 `시내버스` 요금을
+     * 받는</b> 명세서가 나온다(실제로 그렇게 1,600만 건이 생성됐다). 짝을 맞춘다.
+     */
+    public ResolvedMerchant resolveMerchant(String category2, RegionEntry anchor, String productName, Random r) {
         CatalogContext ctx = ctxByCat2.get(category2);
         String source = ctx == null ? "INDEPENDENT" : ctx.merchantSource();
         String channel = ctx == null ? "OFFLINE" : ctx.channel();
@@ -122,7 +134,7 @@ public class CatalogSampler {
         String display;      // 결제 명세서 표시상호(forms 노이즈·동점 포함 가능)
         boolean branchable = false;
         if (useBrand && hasBrands(category2)) {
-            BrandEntry b = pick(brands.get(category2), r);
+            BrandEntry b = pickForProduct(brands.get(category2), productName, r);
             base = b.name();
             branchable = b.branchable();
             display = displayName(b, branchable, anchor, r);
@@ -130,7 +142,7 @@ public class CatalogSampler {
             base = pick(independents.get(ksic), r);
             display = base;
         } else if (hasBrands(category2)) {
-            BrandEntry b = pick(brands.get(category2), r);
+            BrandEntry b = pickForProduct(brands.get(category2), productName, r);
             base = b.name();
             branchable = b.branchable();
             display = displayName(b, branchable, anchor, r);
@@ -156,6 +168,17 @@ public class CatalogSampler {
      * 가끔이다 — 균등 추출이면 장거리 요금이 기본요금만큼 자주 나와 현실과 어긋난다.
      * 가중치를 안 준 품목은 1.0이라 기존 동작 그대로다.
      */
+    /**
+     * 그 품목을 파는 사업자 중에서 고른다. 아무도 안 팔면(카탈로그가 덜 채워진 경우) 전체에서 고른다 —
+     * 짝이 안 맞는 것이 아예 상호가 없는 것보다 낫고, 그 상태는 CatalogConsistencyTest 가 잡는다.
+     */
+    private BrandEntry pickForProduct(List<BrandEntry> pool, String productName, Random r) {
+        if (productName == null) return pick(pool, r);
+        List<BrandEntry> fit = new ArrayList<>();
+        for (BrandEntry b : pool) if (b.canSell(productName)) fit.add(b);
+        return pick(fit.isEmpty() ? pool : fit, r);
+    }
+
     public ResolvedProduct resolveProduct(String category2, Random r) {
         List<ProductEntry> list = products.get(category2);
         if (list == null || list.isEmpty()) return new ResolvedProduct(category2, 10000, 0.5);

@@ -52,7 +52,27 @@ public final class CatalogModels {
      * @param branchable true면 생성기가 {@code name+동+"점"} 합성(가끔 forms 변형으로 명세서 노이즈)
      * @param forms       실 카드명세서 표기 변형(법인명·오타·영문 등) — 없으면 name 사용
      */
-    public record BrandEntry(String name, boolean branchable, String channel, List<String> forms) {}
+    /**
+     * 브랜드/사업자 1건.
+     *
+     * @param serves 이 사업자가 파는 품목의 이름 접두사. 비어 있으면 그 맥락의 아무 품목이나 판다.
+     *               <b>왜 필요한가.</b> 예전에는 상호와 품목을 따로 뽑아서 `지하철`이 `시내버스`
+     *               요금(1,500원)을 받고 `광역버스 장거리`(3,167원)까지 받았다. 한 맥락에 서로 다른
+     *               운영주체가 섞여 있으면(도시철도·버스·충전사업자) 짝을 맞춰야 명세서가 말이 된다.
+     */
+    public record BrandEntry(String name, boolean branchable, String channel,
+                             List<String> forms, List<String> serves) {
+        public BrandEntry {
+            forms = forms == null ? List.of() : forms;
+            serves = serves == null ? List.of() : serves;
+        }
+        /** 이 사업자가 그 품목을 파는가. serves 가 비어 있으면 가리지 않는다. */
+        public boolean canSell(String productName) {
+            if (serves.isEmpty() || productName == null) return true;
+            for (String pre : serves) if (productName.startsWith(pre)) return true;
+            return false;
+        }
+    }
 
     /**
      * 전국 행정동(regions.json) 1건 — 실 중심좌표(WGS84) + 사용자 분포 가중.
