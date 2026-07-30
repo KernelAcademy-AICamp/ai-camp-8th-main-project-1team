@@ -60,4 +60,22 @@ public class AppConfig {
             }
         };
     }
+
+    /**
+     * 절약 후보 선정에 쓸 <b>중분류별 ML 낭비 비율</b> 공급자.
+     *
+     * <p>엔진({@code CutCandidateSelector})이 ml 패키지를 직접 알면 의존이 순환한다
+     * (engine → ml → engine). 그래서 여기서 함수로 묶어 넘긴다 — 엔진은 "숫자를 받는" 자리로 남는다.
+     *
+     * <p>모델이 준비되지 않았거나 판정할 결제가 없으면 <b>빈 표</b>다. 그때 선정기는 게이트를
+     * 통과시키고 예전 규칙(전액 제거가능)으로 돈다 — 근거가 없을 때 조언을 지우는 것보다
+     * 하던 대로 두는 편이 덜 놀랍다.
+     */
+    @org.springframework.context.annotation.Bean
+    public java.util.function.Function<Long, java.util.Map<String, Double>> wasteRatioByCategory(
+            com.finntech.ml.WasteScoringService wasteScoring) {
+        return userId -> wasteScoring.summarize(userId)
+                .map(com.finntech.ml.WasteScoringService.MlSummary::wasteRatioByCategory1)
+                .orElseGet(java.util.Map::of);
+    }
 }

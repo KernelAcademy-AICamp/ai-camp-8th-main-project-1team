@@ -19,16 +19,28 @@ import { api } from '../lib/api';
 import { mergeInstitutions, splitPicked, type Inst, type InstCategory } from '../lib/institutions';
 
 const PROVIDERS = [
-  { name: '카카오톡', bg: '#FFCD00', fg: '#3c1e1e', label: 'K', desc: '카카오 지갑 인증서' },
-  { name: '네이버', bg: '#03C75A', fg: '#fff', label: 'N', desc: '네이버 인증서' },
-  { name: 'PASS', bg: '#E6002D', fg: '#fff', label: 'P', desc: '통신사 인증' },
-  { name: '토스', bg: '#3182F6', fg: '#fff', label: 't', desc: '토스 인증서' },
+  { name: '카카오톡', bg: '#FFCD00', fg: '#3c1e1e', label: 'K', desc: '카카오 지갑 인증서', logo: '/logo/cert-kakao.png' },
+  { name: '네이버', bg: '#03C75A', fg: '#fff', label: 'N', desc: '네이버 인증서', logo: '/logo/cert-naver.jpeg' },
+  { name: 'PASS', bg: '#E6002D', fg: '#fff', label: 'P', desc: '통신사 인증', logo: '/logo/cert-pass.png' },
+  { name: '토스', bg: '#3182F6', fg: '#fff', label: 't', desc: '토스 인증서', logo: '/logo/cert-toss.jpg' },
 ];
 
+/**
+ * 기관 로고. 실제 CI 파일이 있으면 그것을 쓰고, 없으면 색 배지에 약칭을 그린다.
+ *
+ * 파일이 있는 곳만 로고를 쓰는 이유: 26개만 확보돼 있어서, 전부 로고로 바꾸면 나머지가 빈 동그라미가
+ * 된다. 섞이는 것보다 빈 칸이 나쁘다.
+ */
 const Logo = ({ inst }: { inst: Inst }) => (
+  inst.logo ? (
+    <span className="logo logo-img" aria-hidden="true">
+      <img src={inst.logo} alt="" loading="lazy" />
+    </span>
+  ) : (
   <span className="logo" style={{ color: inst.fg ?? '#fff', background: inst.bg }} aria-hidden="true">
     {inst.label}
   </span>
+  )
 );
 
 /** 체크 표식 — all(✓)·some(–)·none(빈). 선택은 초록. */
@@ -145,7 +157,9 @@ export function Connect() {
                     onClick={() => toggle(inst.id)} disabled={!cat.available} aria-pressed={on}
                     style={!cat.available ? { opacity: .45, cursor: 'default' } : undefined}>
                     <Logo inst={inst} />
-                    <span>{inst.name}</span>
+                    {/* 로고가 있으면 이름을 감춘다 — 로고 자체가 이름이라 두 번 읽힌다.
+                        스크린리더에는 남겨야 하므로 시각적으로만 숨긴다. */}
+                    <span className={inst.logo ? 'sr-only' : undefined}>{inst.name}</span>
                   </button>
                 );
               })}
@@ -192,7 +206,10 @@ export function Connect() {
             <p className="sheet-sub">마이데이터 연결엔 통합인증이 필요해요. 쓰시는 걸로 골라주세요.</p>
             {PROVIDERS.map((p) => (
               <button type="button" key={p.name} className="provider" onClick={() => void pickProvider(p.name)}>
-                <span className="pl" style={{ background: p.bg, color: p.fg }} aria-hidden="true">{p.label}</span>
+                {/* 실제 인증서 CI. 없으면 색 배지로 떨어진다. */}
+                {p.logo
+                  ? <span className="pl pl-img" aria-hidden="true"><img src={p.logo} alt="" /></span>
+                  : <span className="pl" style={{ background: p.bg, color: p.fg }} aria-hidden="true">{p.label}</span>}
                 <span><b>{p.name}</b><span className="sub">{p.desc}</span></span>
               </button>
             ))}

@@ -587,6 +587,19 @@ export interface WeeklyReport {
   labeledCount: number;
   exemptedAmount: number;
   headline: string;
+  /** 주간 미션 정산 (개편안 s-report). 미션이 없으면 빈 배열이라 화면이 절을 감춘다. */
+  missions: MissionLine[];
+  /** 성공한 미션에 일요일 정산으로 지급될 포인트 합계. */
+  missionReward: number;
+  /** '지킴이가 본 이번 주'. 견줄 지난주가 없으면 두 문장 모두 null. */
+  coaching: { good: string | null; watch: string | null };
+}
+
+/** 주간 미션 한 줄. ONGOING이면 아직 기간 중(일요일 배치가 정산한다). */
+export interface MissionLine {
+  text: string;
+  status: 'SUCCESS' | 'FAILED' | 'ONGOING';
+  reward: number;
 }
 
 /** 도감 한 칸. owned=false면 자물쇠로 그린다(무엇이 남았는지 보여야 모을 마음이 생긴다). */

@@ -258,8 +258,10 @@ public class DailyActivitySimulator {
         // 시간대를 먼저 뽑아 앵커(집/직장/인접동/여행지)를 시간대별로 결정한다.
         int hour = sampleHour(v, r);
         RegionEntry anchor = anchor(u, date, hour, travel, r);
-        ResolvedMerchant m = sampler.resolveMerchant(cat2, anchor, r);
+        // 품목을 먼저 뽑고, **그 품목을 파는** 사업자를 고른다. 순서가 뒤집히면
+        // 지하철이 시내버스 요금을 받는다.
         ResolvedProduct p = sampler.resolveProduct(cat2, r);
+        ResolvedMerchant m = sampler.resolveMerchant(cat2, anchor, p.name(), r);
 
         int qty = MULTI_QTY.contains(cat2) ? GenSeed.uniformInt(r, 1, 3) : 1;
         // 고시요금은 흔들지 않는다. 지하철 1,550원에 로그정규 지터(sigma 0.20~0.30)를 곱하고
