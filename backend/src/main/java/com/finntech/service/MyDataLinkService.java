@@ -6,7 +6,9 @@ import com.finntech.service.MyDataResponses.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -102,7 +104,7 @@ public class MyDataLinkService {
     @Transactional
     public LinkResult linkCardCompanies(Long userId, List<Long> companyIds, List<Long> bankIds) {
         AppUser user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("user " + userId + " not found"));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user " + userId + " not found"));
         String ci = user.getCi();
         if (ci == null || ci.isBlank()) {
             throw new IllegalStateException("본인인증(가상 CI)이 먼저 필요합니다");
@@ -222,7 +224,7 @@ public class MyDataLinkService {
     @Transactional(readOnly = true)
     public MyDataResponses.AccountView account(Long userId, int months) {
         AppUser user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("user " + userId + " not found"));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user " + userId + " not found"));
         if (!userBankRepository.existsByUserId(userId)) return null;
         String ci = user.getCi();
         if (ci == null || ci.isBlank()) return null;
@@ -236,7 +238,7 @@ public class MyDataLinkService {
     @Transactional
     public SyncResult renew(Long userId) {
         AppUser user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("user " + userId + " not found"));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user " + userId + " not found"));
         String ci = user.getCi();
         if (ci == null || ci.isBlank()) throw new IllegalStateException("본인인증(가상 CI)이 먼저 필요합니다");
         if (!user.isConsentGiven()) {

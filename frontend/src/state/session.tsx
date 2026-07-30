@@ -9,6 +9,7 @@ import {
   createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode,
 } from 'react';
 import { DEFAULT_USER_ID } from '../lib/config';
+import { ApiError, api } from '../lib/api';
 import type { AnalysisSummary } from '../lib/api';
 
 export type ScreenId =
@@ -162,6 +163,31 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setAnalysis(null);
     setScreen('splash');
     window.history.pushState(null, '', '#/splash');
+  }, []);
+
+  /**
+   * 기동 시 **저장된 사용자가 서버에 실제로 있는지** 한 번 확인하고, 없으면 처음으로 되돌린다.
+   *
+   * 서버 DB가 갈리면(개발 재기동·운영 DB 교체·새 환경 배포) 남아 있던 id 로 모든 요청이 404 가
+   * 되어 화면마다 'Load Failed'만 뜬다. 사용자에겐 **다시 가입할 길조차 없다** — 온보딩도 같은
+   * id 로 부르기 때문이다. 저장값을 버려야 빠져나올 수 있다.
+   *
+   * 오류 문구로 판별하지 않는 이유: Spring 기본 404 본문은 사유를 싣지 않아
+   * (`server.error.include-message`가 never) "사용자 없음"과 "챌린지 없음"이 구분되지 않는다.
+   * 그래서 존재 여부를 **명시적으로** 묻는다. 기동당 요청 한 번이다.
+   */
+  useEffect(() => {
+    if (!read('mydata_onboarded')) return;          // 아직 가입 전이면 확인할 것이 없다
+    let alive = true;
+    void api.getUser(userId).catch((e: unknown) => {
+      if (!alive || !(e instanceof ApiError) || e.status !== 404) return;   // 네트워크 오류는 건드리지 않는다
+      remove('demo_user_id');
+      setUserIdState(DEFAULT_USER_ID);
+      resetOnboarding();
+    });
+    return () => { alive = false; };
+    // 기동 시 한 번만 — 사람을 바꿀 때마다 다시 물을 필요는 없다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const patchDraft = useCallback((patch: Partial<ChallengeDraft>) => {

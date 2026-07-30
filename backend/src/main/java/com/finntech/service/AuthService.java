@@ -4,7 +4,9 @@ import com.finntech.domain.AppUser;
 import com.finntech.repository.AppUserRepository;
 import com.finntech.util.Ci;
 import com.finntech.util.Msisdn;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -44,7 +46,7 @@ public class AuthService {
     public VerifyResult verifyAssumed(Long userId, String name, String social7, String phone,
                                       String carrier) {
         AppUser user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("user " + userId + " not found"));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user " + userId + " not found"));
 
         // ① 실존하는 국번인가. 형식(010-****-****)이 맞아도 배정되지 않은 대역일 수 있다.
         Msisdn.Carrier actual = Msisdn.carrierOfPhone(phone);
