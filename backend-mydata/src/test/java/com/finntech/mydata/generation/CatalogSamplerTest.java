@@ -16,8 +16,9 @@ class CatalogSamplerTest {
     private final ObjectMapper mapper = JsonMapper.builder()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
     private final CatalogLoader loader = new CatalogLoader(mapper);
+    private final GenerationProperties props = new GenerationProperties();
     private final CatalogSampler sampler = new CatalogSampler(loader,
-            new MerchantRegistry(20260721L, loader.regions(), 0.35));
+            new MerchantRegistry(20260721L, loader.regions(), 0.35), props);
 
     @Test
     void merchantProductLocationResolvedFromRealData() {
@@ -43,12 +44,15 @@ class CatalogSamplerTest {
         assertThat(conv.name()).contains(anchor.dong());
         assertThat(BusinessNumberGenerator.isValid(conv.businessNumber())).isTrue();
 
-        // 온라인(이커머스) → 전국 본사(HQ) 지번주소·좌표 + 유효 사업자번호 (더 이상 위치 null 아님)
+        // 온라인(이커머스) → **실제 본사 주소**. 예전에는 브랜드명 해시로 전국 행정동 하나를 뽑아
+        // "쿠팡 · 경상북도 성주군"이 찍혔다. 이제 카탈로그의 실주소를 그대로 쓰므로 지번 형식이 아닐 수
+        // 있고(도로명·건물명), 해외 본사는 사업자번호도 좌표도 없다.
         var online = sampler.resolveMerchant("이커머스", anchor, new Random(4));
         assertThat(online.channel()).isEqualTo("ONLINE");
-        assertThat(online.lat()).isNotNull();
-        assertThat(online.address()).endsWith("번지");
-        assertThat(BusinessNumberGenerator.isValid(online.businessNumber())).isTrue();
+        assertThat(online.address()).isNotBlank();
+        if (online.businessNumber() != null) {
+            assertThat(online.businessNumber()).hasSize(10);
+        }
 
         // 상품 가격 유효
         var prod = sampler.resolveProduct("치킨", new Random(5));

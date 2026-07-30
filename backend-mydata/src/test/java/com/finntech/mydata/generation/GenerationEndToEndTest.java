@@ -55,16 +55,18 @@ class GenerationEndToEndTest {
         assertThat(count("SELECT COUNT(*) FROM mydata_payment " +
                 "WHERE mydata_payment_channel='OFFLINE' AND mydata_payment_location_lat IS NOT NULL")).isGreaterThan(0);
 
-        // 전 결제에 유효 형식 사업자번호(10자리) + 고유 가맹점 집계(번호→주소 조회 소스)
+        // 사업자번호는 10자리이거나 없다(해외 본사). 없으면 앱이 주소 조회 버튼을 그리지 않는다.
         assertThat(count("SELECT COUNT(*) FROM mydata_payment " +
                 "WHERE mydata_payment_business_number IS NOT NULL " +
-                "AND LENGTH(mydata_payment_business_number)=10")).isEqualTo(pays);
+                "AND LENGTH(mydata_payment_business_number)<>10")).isEqualTo(0);
         int merchants = count("SELECT COUNT(*) FROM mydata_merchant");
         assertThat(merchants).isGreaterThan(0);
         assertThat(count("SELECT COUNT(DISTINCT mydata_payment_business_number) FROM mydata_payment"))
                 .isEqualTo(merchants);                                    // 가맹점 = 사업자번호 DISTINCT
-        assertThat(count("SELECT COUNT(*) FROM mydata_merchant WHERE address LIKE '%번지'"))
-                .isEqualTo(merchants);                                    // 온라인 포함 전부 지번주소 보유
+        // 주소는 전부 있어야 한다. 다만 형식이 하나가 아니다 — 동네 가맹점은 생성 지번,
+        // 본사·시설은 카탈로그의 실주소(도로명·건물명·해외)다.
+        assertThat(count("SELECT COUNT(*) FROM mydata_merchant WHERE address IS NULL OR address=''"))
+                .isEqualTo(0);
 
         // 정리 CSV(가맹점명·사업자번호·주소·온라인)가 헤더 + 가맹점 수만큼 기록되고 형식이 유효하다
         var csv = java.nio.file.Path.of("target/merchants-e2e.csv");
@@ -74,8 +76,10 @@ class GenerationEndToEndTest {
         assertThat(lines).hasSize(merchants + 1);                         // 헤더 + 고유 가맹점
         String sample = lines.get(1);
         assertThat(sample).containsPattern("\\d{3}-\\d{2}-\\d{5}");       // 사업자번호 XXX-YY-ZZZZA
-        assertThat(sample).contains("번지");                              // 지번주소
         assertThat(sample).matches(".*,(Y|N)$");                          // 온라인 플래그
+        // 주소 형식은 하나가 아니다 — 동네 가맹점은 생성 지번("…번지"), 본사·시설은 카탈로그의
+        // 실주소다("서울 종로구 낙원동 288 낙원상가 3층 300호"). 둘 다 나오는지 본다.
+        assertThat(lines.subList(1, lines.size())).anyMatch(l -> l.contains("번지"));
 
         // 데이터 분리 4종
         assertThat(count("SELECT COUNT(DISTINCT mydata_user_data_split) FROM mydata_user " +

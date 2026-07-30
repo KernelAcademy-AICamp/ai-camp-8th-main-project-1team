@@ -18,7 +18,7 @@ class WasteModelTest {
     // 필수 무대 판정이 카탈로그의 재량성을 보므로 sampler가 필요하다(ESSENTIAL 목록 폐기).
     private final CatalogSampler sampler = new CatalogSampler(new CatalogLoader(mapper),
             new MerchantRegistry(props.getSeed(), new CatalogLoader(mapper).regions(),
-                    props.getAddress().getBubunProb()));
+                    props.getAddress().getBubunProb()), props);
     private final WasteLabeler labeler = new WasteLabeler(props, sampler);
 
     private PersonaVariant overspender() {

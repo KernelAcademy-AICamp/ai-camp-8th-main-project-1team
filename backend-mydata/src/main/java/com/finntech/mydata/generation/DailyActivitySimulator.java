@@ -38,6 +38,8 @@ public class DailyActivitySimulator {
     /** MULTI_QTY 맥락의 기대 수량 — {@code uniformInt(1,3)}의 평균. 계획단가를 실제 결제액에 맞춘다. */
     private static final double EXPECTED_MULTI_QTY = 2.0;
     private static final Set<String> RECURRING = Set.of("통신비", "공과금", "스트리밍");
+    /** 교통카드로 내는 맥락 — 사용자마다 한 장으로 고정한다(택시도 대개 등록 카드 하나다). */
+    private static final Set<String> TRANSIT_CATS = Set.of("대중교통", "택시");
 
     private final CatalogSampler sampler;
     private final WasteLabeler labeler;
@@ -109,10 +111,23 @@ public class DailyActivitySimulator {
      */
     private double typicalOf(String category2, String ksicCode) {
         var items = sampler.productsOf(category2);
-        if (items.isEmpty()) return avgPrice(ksicCode);
+        if (items.isEmpty()) return compressTypical(avgPrice(ksicCode));
         long sum = 0;
         for (var p : items) sum += (p.priceLow() + p.priceHigh()) / 2L;
-        return Math.max(1000.0, (double) sum / items.size());
+        return compressTypical(Math.max(1000.0, (double) sum / items.size()));
+    }
+
+    /**
+     * 기준액에도 결제와 <b>같은</b> 압축을 건다.
+     *
+     * <p>안 걸면 판정이 무너진다 — 결제만 눌리고 기준이 그대로면 "평소의 몇 배인가"가 통째로
+     * 작아져 과다 판정이 거의 발화하지 않는다. 둘 다 누르면 배수가 {@code m → m^α} 로 단조롭게
+     * 바뀔 뿐이라, 임계를 {@code E^α} 로 옮기는 것만으로 판정 대상이 그대로 유지된다.
+     */
+    private double compressTypical(double typical) {
+        var a = props.getAddress();
+        return typical <= a.getCompressThreshold() ? typical
+                : a.getCompressThreshold() * Math.pow(typical / a.getCompressThreshold(), a.getCompressAlpha());
     }
 
     /**
@@ -203,17 +218,66 @@ public class DailyActivitySimulator {
 
         double baseDaily = v.txPerMonthMean() / 30.0;
         var day = props.getRandomness().getDay();
-        Map<LocalDate, RegionEntry> travel = buildTravelSchedule(u, genEnd);   // 여행/출장 일정(결정론)
+        var addr = props.getAddress();
+        Map<LocalDate, RegionEntry> travel = buildTravelSchedule(u, genEnd);   // 여행 일정(결정론)
+        Map<LocalDate, Boolean> trips = buildBusinessTrips(u, genEnd);         // 출장 일정(직장인만)
+        String commuteCat = u.work() != null ? commuteCategory(u, GenSeed.rng(u.userSeed(), 58)) : null;
+        boolean longCommute = "철도".equals(commuteCat) || "고속버스".equals(commuteCat);
+        int refuelEvery = GenSeed.uniformInt(GenSeed.rng(u.userSeed(), 59),
+                addr.getRefuelIntervalDays()[0], addr.getRefuelIntervalDays()[1]);
 
         long span = ChronoUnit.DAYS.between(u.startDate(), genEnd);
         for (long d = 0; d <= span; d++) {
             LocalDate date = u.startDate().plusDays(d);
             double cf = WasteCurve.factor(curve, (int) d);
+            boolean weekday = date.getDayOfWeek().getValue() <= 5;
+            boolean away = travel.containsKey(date);
+            Boolean trip = trips.get(date);
 
             // 정기구독(월 1회)
             if (date.getDayOfMonth() == subDay) {
                 for (int s = 0; s < subCount; s++) {
                     out.add(subscriptionTxn(u, v, date, cf, r));
+                }
+            }
+
+            // ── 출장 — 회사 일로 타지에 간다. 이동수단 결제 + 1박이면 숙박 ──
+            if (trip != null) {
+                RegionEntry dest = farRegion(u.home(), GenSeed.rng(u.userSeed(), 60 + (int) d));
+                boolean outbound = trip != null && trips.getOrDefault(date.minusDays(1), null) == null;
+                String mode = r.nextBoolean() ? "철도" : "고속버스";
+                out.add(scriptedTxn(u, v, date, GenSeed.uniformInt(r, 7, 10), mode,
+                        outbound ? u.home() : dest, u.transitCard(), true, cf, null, r));
+                if (Boolean.TRUE.equals(trip)) {
+                    out.add(scriptedTxn(u, v, date, GenSeed.uniformInt(r, 18, 22), "여행숙박",
+                            dest, r.nextInt(u.cardCount()), true, cf, "모텔", r));
+                }
+            }
+
+            // ── 통근 — 가장 규칙적인 축. 출장·여행일에는 없다 ──
+            if (u.work() != null && weekday && !away && trip == null) {
+                if (u.hasVehicle()) {
+                    // 차를 타면 대중교통이 안 보인다. 대신 주유가 주기적으로, 금액이 크게 찍힌다.
+                    if (d % refuelEvery == 0) {
+                        out.add(scriptedTxn(u, v, date, GenSeed.uniformInt(r, 7, 21), "주유소",
+                                maybeAdjacent(u.home(), r), r.nextInt(u.cardCount()), true, cf, null, r));
+                        if (r.nextDouble() < addr.getTollProb()) {
+                            out.add(scriptedTxn(u, v, date, GenSeed.uniformInt(r, 7, 21), "통행료",
+                                    maybeAdjacent(u.work(), r), r.nextInt(u.cardCount()), true, cf, null, r));
+                        }
+                    }
+                } else if (r.nextDouble() < addr.getCommuteProb()) {
+                    // 원거리 통근은 매일이 아니다 — 주 2~4회 오간다.
+                    boolean ride = !longCommute || r.nextDouble()
+                            < GenSeed.uniformInt(r, addr.getLongCommuteTripsPerWeek()[0],
+                                                    addr.getLongCommuteTripsPerWeek()[1]) / 5.0;
+                    if (ride) {
+                        String prod = "대중교통".equals(commuteCat) ? transitProduct(u, r) : null;
+                        out.add(scriptedTxn(u, v, date, addr.getCommuteHours()[0], commuteCat,
+                                u.home(), u.transitCard(), true, cf, prod, r));
+                        out.add(scriptedTxn(u, v, date, addr.getCommuteHours()[1], commuteCat,
+                                u.work(), u.transitCard(), true, cf, prod, r));
+                    }
                 }
             }
 
@@ -271,10 +335,12 @@ public class DailyActivitySimulator {
         boolean fixed = ctx != null && ctx.fixedTariff();
         int amount;
         if (fixed) {
-            amount = Math.max(100, p.unitPrice() * qty);
+            amount = fixedFare(p.unitPrice() * qty);
         } else {
             double sigma = GenSeed.uniform(r, amt.getSigmaLog()[0], amt.getSigmaLog()[1]);
-            amount = snapAmount(Math.max(500, (int) Math.round(p.unitPrice() * qty * GenSeed.jitter(r, sigma))), r);
+            int raw = Math.max(500, (int) Math.round(p.unitPrice() * qty * GenSeed.jitter(r, sigma)));
+            amount = snapAmount(compressHigh(raw, props.getAddress().getCompressThreshold(),
+                    props.getAddress().getCompressAlpha()), r);
         }
 
         LocalDateTime when = date.atTime(hour, r.nextInt(60));
@@ -288,8 +354,39 @@ public class DailyActivitySimulator {
         double typical = typicalOf(cat2, ksic);
 
         var lab = labeler.label(cat2, amount, typical, hour, planned, hobbyMatch, deliveryOveruse, subLeak, v, cf, r);
-        return new GenTxn(r.nextInt(u.cardCount()), when, ksic, cat2, amount, m.name(), m.channel(),
+        // 교통 결제는 늘 같은 카드다 — 사람은 교통카드를 한 장으로 쓴다.
+        int card = TRANSIT_CATS.contains(cat2) ? u.transitCard() : r.nextInt(u.cardCount());
+        return new GenTxn(card, when, ksic, cat2, amount, m.name(), m.channel(),
                 p.name(), p.unitPrice(), qty, lab.label(), round4(lab.pWaste()),
+                m.address(), m.lat(), m.lon(), m.businessNumber());
+    }
+
+    /**
+     * <b>무엇을 살지 이미 정해진</b> 결제 1건 — 통근·주유·출장처럼 동선이 부르는 소비.
+     *
+     * <p>{@link #oneTxn}과 갈라 두는 이유: 저쪽은 "카테고리 믹스에서 뽑는" 확률적 소비이고,
+     * 이쪽은 "출근하니까 지하철을 탄다"는 <b>결정된</b> 소비다. 섞으면 통근이 확률에 묻힌다.
+     *
+     * @param cardIndex   교통은 사용자의 교통카드로 고정, 나머지는 임의
+     * @param productHint 품목 이름 접두사(예: "지하철"). null이면 그 맥락에서 가중 추출
+     */
+    private GenTxn scriptedTxn(GeneratedUser u, PersonaVariant v, LocalDate date, int hour,
+                               String cat2, RegionEntry anchor, int cardIndex, boolean planned,
+                               double cf, String productHint, Random r) {
+        var ctx = sampler.context(cat2);
+        String ksic = ctx != null ? ctx.ksicCode() : "4921";
+        ResolvedProduct p = sampler.resolveProduct(cat2, productHint, r);
+        ResolvedMerchant m = sampler.resolveMerchant(cat2, anchor, p.name(), r);
+        int amount = ctx != null && ctx.fixedTariff()
+                ? fixedFare(p.unitPrice())
+                : snapAmount(compressHigh(Math.max(500, (int) Math.round(p.unitPrice()
+                        * GenSeed.jitter(r, GenSeed.uniform(r, 0.05, 0.12)))),
+                        props.getAddress().getCompressThreshold(),
+                        props.getAddress().getCompressAlpha()), r);
+        var lab = labeler.label(cat2, amount, typicalOf(cat2, ksic), hour, planned,
+                false, false, false, v, cf, r);
+        return new GenTxn(cardIndex, date.atTime(hour, r.nextInt(60)), ksic, cat2, amount,
+                m.name(), m.channel(), p.name(), p.unitPrice(), 1, lab.label(), round4(lab.pWaste()),
                 m.address(), m.lat(), m.lon(), m.businessNumber());
     }
 
@@ -307,6 +404,36 @@ public class DailyActivitySimulator {
                 ctx != null ? ctx.ksicCode() : "6031", cat2, amount,
                 m.name(), "ONLINE", p.name(), p.unitPrice(), 1, lab.label(), round4(lab.pWaste()),
                 m.address(), m.lat(), m.lon(), m.businessNumber());
+    }
+
+    /**
+     * 고시요금은 <b>카탈로그 값 그대로</b>다. 반올림조차 하지 않는다.
+     *
+     * <p>한 번은 100원 단위로 스냅해 볼까 했는데, 그러면 지하철 25~30km 구간의 실제 요금
+     * <b>1,950원이 2,000원</b>이 된다. 요금을 '정리'하려는 손길이 곧 요금을 틀리게 만든다 —
+     * 예전에 로그정규 지터를 걸어 1,550원을 850~2,800원으로 흩뿌린 것과 같은 실수다.
+     *
+     * <p>존재하지 않는 요금(예전의 {@code 광역버스 3,261원})은 여기서 고칠 문제가 아니라
+     * <b>카탈로그에 범위를 준 것</b>이 문제다. 정액 요금은 products.json 에서 단일 값으로 둔다.
+     */
+    static int fixedFare(int amount) {
+        return Math.max(100, amount);
+    }
+
+    /**
+     * <b>고액 구간 압축</b> — 총 소비 규모를 0.7배로 낮추되 건수는 그대로 둔다.
+     *
+     * <p><b>왜 단가가 아니라 여기인가.</b> 카탈로그의 지하철 1,550원·KTX 59,800원은 실제 고시요금이라
+     * 사실이다. 거기에 0.7을 곱하면 1,085원 같은 존재하지 않는 요금이 나온다 — 예전에 지터를 걸어
+     * 똑같은 사고를 냈다. 그래서 <b>결제 금액 단계</b>에서, 그것도 고시요금 맥락은 빼고 누른다.
+     *
+     * <p>{@code T} 아래는 손대지 않고 위로만 지수 압축한다. 배수가 {@code m → m^α} 로 바뀌므로,
+     * 낭비 판정의 '평소 대비 배수' 임계도 {@code E → E^α} 로 함께 낮추면 <b>낭비로 잡히는 거래
+     * 집합이 정확히 같다</b>(근사가 아니다). 그 값이 {@code impulse.excess-amount-multiplier} 다.
+     */
+    static int compressHigh(int amount, double threshold, double alpha) {
+        if (amount <= threshold) return amount;
+        return (int) Math.round(threshold * Math.pow(amount / threshold, alpha));
     }
 
     /**
@@ -338,10 +465,100 @@ public class DailyActivitySimulator {
                               Map<LocalDate, RegionEntry> travel, Random r) {
         RegionEntry dest = travel.get(date);
         if (dest != null) return maybeAdjacent(dest, r);                 // 여행 중
-        int[] work = props.getAddress().getWorkHours();
+        var addr = props.getAddress();
+        int[] work = addr.getWorkHours();
         boolean weekday = date.getDayOfWeek().getValue() <= 5;
-        boolean atWork = u.work() != null && weekday && hour >= work[0] && hour < work[1];
+        if (u.work() == null || !weekday) return maybeAdjacent(u.home(), r);
+
+        // 출퇴근 시간대에는 집도 회사도 아닌 '경로상'에서 쓰는 일이 많다 —
+        // 회사 앞 편의점, 환승역 카페. 이 소비가 동선의 상당 부분인데 예전에는 표현이 없었다.
+        int[] ch = addr.getCommuteHours();
+        boolean commuting = hour <= ch[0] + 1 || (hour >= ch[1] - 1 && hour <= ch[1] + 1);
+        if (commuting && r.nextDouble() < addr.getCorridorProb()) return corridor(u, r);
+
+        boolean atWork = hour >= work[0] && hour < work[1];
         return maybeAdjacent(atWork ? u.work() : u.home(), r);
+    }
+
+    // ── 통근·차량·출장 ─────────────────────────────────────────────────────────
+    //
+    // 예전에는 교통 결제가 **카테고리 추첨의 부산물**이었다. 그래서 매일 출퇴근하는 직장인인데도
+    // 지하철 결제가 어떤 주에는 한 번도 없고 어떤 주에는 다섯 번 나왔다. 사람의 소비에서
+    // 가장 규칙적인 축이 통근인데 그것이 없으니, 불규칙한 지출이 '낭비'로 도드라지지도 않았다.
+    //
+    // 이제 통근을 **일정으로** 만든다. 규칙적인 축이 생기면 그 밖의 지출이 상대적으로 드러난다.
+
+    /** 두 행정동 사이 대략 거리(km) — 통근 수단을 가르는 데만 쓰므로 하버사인이면 충분하다. */
+    private static double distanceKm(RegionEntry a, RegionEntry b) {
+        double dLat = Math.toRadians(b.lat() - a.lat());
+        double dLon = Math.toRadians(b.lon() - a.lon());
+        double la1 = Math.toRadians(a.lat()), la2 = Math.toRadians(b.lat());
+        double h = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return 6371.0 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    }
+
+    /**
+     * 집↔회사 거리로 통근 수단을 정한다.
+     * 가까우면 시내 대중교통, 시도를 넘으면 광역버스, 아주 멀면 기차·고속버스다.
+     */
+    private String commuteCategory(GeneratedUser u, Random r) {
+        double km = distanceKm(u.home(), u.work());
+        if (km >= props.getAddress().getLongCommuteKm()) return r.nextBoolean() ? "철도" : "고속버스";
+        return "대중교통";
+    }
+
+    /** 대중교통 안에서 무엇을 타는가 — 같은 시군구면 버스가 흔하고, 시군구를 넘으면 지하철이 흔하다. */
+    private static String transitProduct(GeneratedUser u, Random r) {
+        boolean sameSigungu = u.home().sigungu().equals(u.work().sigungu())
+                && u.home().sido().equals(u.work().sido());
+        double pSubway = sameSigungu ? 0.35 : 0.70;
+        return r.nextDouble() < pSubway ? "지하철" : (r.nextDouble() < 0.75 ? "시내버스" : "광역버스");
+    }
+
+    /**
+     * 출퇴근 시간대의 '경로상' 앵커 — 집도 회사도 아닌, 그 사이 어딘가.
+     *
+     * <p>실제 소비의 상당 부분이 여기서 일어난다(회사 앞 편의점, 환승역 카페). 두 지점의 중점에
+     * 가장 가까운 행정동을 쓰면 늘 같은 동이 나와 부자연스러우므로, 중점 근방에서 결정론으로 고른다.
+     */
+    private RegionEntry corridor(GeneratedUser u, Random r) {
+        double mLat = (u.home().lat() + u.work().lat()) / 2, mLon = (u.home().lon() + u.work().lon()) / 2;
+        RegionEntry best = null; double bestD = Double.MAX_VALUE;
+        // 전국을 훑지 않는다 — 집·회사 시군구의 동들 중에서 중점에 가까운 쪽을 고른다.
+        List<RegionEntry> pool = new ArrayList<>();
+        pool.addAll(sigunguIndex.getOrDefault(u.home().sido() + "|" + u.home().sigungu(), List.of()));
+        pool.addAll(sigunguIndex.getOrDefault(u.work().sido() + "|" + u.work().sigungu(), List.of()));
+        if (pool.isEmpty()) return u.work();
+        for (RegionEntry rg : pool) {
+            double d = Math.abs(rg.lat() - mLat) + Math.abs(rg.lon() - mLon);
+            if (d < bestD) { bestD = d; best = rg; }
+        }
+        // 늘 같은 동이면 기계적이라, 그 동이 속한 시군구 안에서 한 번 더 흔든다.
+        List<RegionEntry> sib = sigunguIndex.get(best.sido() + "|" + best.sigungu());
+        return sib == null || sib.isEmpty() ? best : sib.get(r.nextInt(sib.size()));
+    }
+
+    /**
+     * 출장 일정 — 여행과 별개로 <b>직장인에게만</b> 생긴다.
+     *
+     * <p>여행은 집에서 출발해 놀러 가는 것이고, 출장은 회사 일로 가서 업무 소비를 하고 돌아온다.
+     * 값이 {@code true}면 1박(그날 숙박 결제가 붙는다).
+     */
+    private Map<LocalDate, Boolean> buildBusinessTrips(GeneratedUser u, LocalDate genEnd) {
+        Map<LocalDate, Boolean> map = new HashMap<>();
+        if (u.work() == null) return map;
+        var addr = props.getAddress();
+        int[] iv = addr.getBusinessTripIntervalWeeks();
+        Random tr = GenSeed.rng(u.userSeed(), 57);
+        LocalDate cursor = u.startDate().plusWeeks(GenSeed.uniformInt(tr, iv[0], iv[1]));
+        while (!cursor.isAfter(genEnd)) {
+            boolean overnight = tr.nextDouble() < addr.getBusinessTripOvernightProb();
+            map.put(cursor, overnight);
+            if (overnight && !cursor.plusDays(1).isAfter(genEnd)) map.put(cursor.plusDays(1), false);
+            cursor = cursor.plusDays(overnight ? 2 : 1).plusWeeks(GenSeed.uniformInt(tr, iv[0], iv[1]));
+        }
+        return map;
     }
 
     /** 확률적으로 같은 시군구의 다른 동(인접 동)으로 이동. 후보 없으면 그대로. */

@@ -505,7 +505,9 @@ public class GenerationRunner implements ApplicationRunner {
         double scale = raw > 0 ? targetTotal / raw : 1.0;
 
         int payday = 1 + r.nextInt(28);
-        long initialBalance = Math.round(salary * GenSeed.uniform(r, 0.3, 12.0) / 100_000.0) * 100_000L;
+        // 월급의 0.3~12배로 시작하되 상한을 넘지 않는다 — 고소득 페르소나는 12배가 1억을 넘는다.
+        long initialBalance = Math.min(BALANCE_CAP,
+                Math.round(salary * GenSeed.uniform(r, 0.3, 12.0) / 100_000.0) * 100_000L);
         String[] a = ACCOUNTS[r.nextInt(ACCOUNTS.length)];
         String accountNumber = fillAccountNumber(a[2], r);
         List<String> cos = companies();
@@ -547,7 +549,13 @@ public class GenerationRunner implements ApplicationRunner {
     /** 바닥을 친 뒤에도 남겨 둘 여유(월급 배수). 딱 0원에 맞추면 통장이 늘 아슬아슬해 보인다. */
     private static final double MARGIN_MONTHS_MIN = 2.0, MARGIN_MONTHS_MAX = 6.0;
     /** 초기잔액 보정 재시도 상한. 이자가 잔액에 비례해 조금씩 늘어 보통 1회로 수렴한다. */
-    private static final int BALANCE_FIX_ROUNDS = 3;
+    private static final int BALANCE_FIX_ROUNDS = 6;   // 위·아래를 번갈아 맞추므로 여유를 둔다
+    /**
+     * 통장 잔액 상한. 더미 데이터에 수억 원짜리 통장이 보이면 시연이 어색하다.
+     * 아래(0)와 위(이 값) 사이에 들어가도록 초기잔액을 조정한다 — 스윙 자체가 이보다 크면
+     * <b>0을 지키는 쪽을 택한다</b>. 마이너스 통장이 상한 초과보다 더 어색하기 때문이다.
+     */
+    private static final long BALANCE_CAP = 20_000_000L;
 
     /**
      * 통장 거래를 만들고, <b>잔액이 마이너스로 내려가지 않도록 초기잔액을 보정</b>한다.
@@ -569,15 +577,49 @@ public class GenerationRunner implements ApplicationRunner {
 
         long initial = e.initialBalance();
         List<AccountTxnGenerator.Row> rows = List.of();
+        long goodInitial = -1;                     // 마지막으로 '0 이상'이 확인된 상태
+        List<AccountTxnGenerator.Row> goodRows = List.of();
+
         for (int round = 0; round <= BALANCE_FIX_ROUNDS; round++) {
             rows = AccountTxnGenerator.generate(e.accountNumber(), e.bank(), e.salaryPayer(),
                     opened, e.salary(), e.payday(), initial, end, flow.outByMonth());
             long lowest = lowestBalance(initial, rows, flow);
-            if (lowest >= 0 || round == BALANCE_FIX_ROUNDS) break;
-            long need = -lowest + Math.round(e.salary() * marginMonths);
-            initial += (need + BALANCE_UNIT - 1) / BALANCE_UNIT * BALANCE_UNIT;
+            if (lowest < 0) {                      // 아래가 뚫렸다 — 올린다
+                if (round == BALANCE_FIX_ROUNDS) break;
+                long need = -lowest + Math.round(e.salary() * marginMonths);
+                initial += (need + BALANCE_UNIT - 1) / BALANCE_UNIT * BALANCE_UNIT;
+                continue;
+            }
+            goodInitial = initial; goodRows = rows;   // 여기까지는 안전하다
+            long highest = highestBalance(initial, rows, flow);
+            if (highest <= BALANCE_CAP || round == BALANCE_FIX_ROUNDS) break;
+            // 위가 뚫렸다 — 내린다. 내릴 수 있는 여유가 곧 lowest다(그만큼 내리면 최저가 0).
+            long next = (Math.max(initial - lowest, initial - (highest - BALANCE_CAP)))
+                    / BALANCE_UNIT * BALANCE_UNIT;
+            if (next >= initial) break;            // 더 못 내린다 — 스윙이 상한보다 크다
+            initial = next;
+        }
+        // 내리다가 아래가 뚫렸으면(이자가 줄어 잔액 궤적이 달라진다) 마지막 안전 상태로 되돌린다.
+        // **마이너스 통장이 상한 초과보다 나쁘다** — 화면에 음수 잔액이 보이면 안 된다.
+        if (goodInitial >= 0 && lowestBalance(initial, rows, flow) < 0) {
+            initial = goodInitial;
+            rows = goodRows;
         }
         return new Ledger(initial, rows);
+    }
+
+    /** 통장·카드 거래를 굴렸을 때의 최고 잔액. 상한(2,000만원)을 지키는지 보는 데 쓴다. */
+    private long highestBalance(long initial, List<AccountTxnGenerator.Row> rows, CardOutflow flow) {
+        List<AccountTxnGenerator.Row> all = new ArrayList<>(rows);
+        all.addAll(flow.rows());
+        all.sort(java.util.Comparator.comparing(AccountTxnGenerator.Row::date)
+                .thenComparing(AccountTxnGenerator.Row::description));
+        long running = initial, highest = initial;
+        for (AccountTxnGenerator.Row t : all) {
+            running += "DEPOSIT".equals(t.type()) ? t.amount() : -t.amount();
+            if (running > highest) highest = running;
+        }
+        return highest;
     }
 
     /** 통장·카드 거래를 시간순으로 굴렸을 때의 최저 잔액. 조회가 굴리는 것과 같은 순서여야 한다. */
