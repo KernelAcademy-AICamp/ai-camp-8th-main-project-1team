@@ -237,5 +237,20 @@ class WalkingSkeletonTest {
         assertFalse(after.valid(), "변조가 탐지되어야 한다");
         assertEquals(targetSeq, after.firstBrokenSeq(), "깨진 지점을 정확히 지목해야 한다");
         assertFalse(after.problems().isEmpty());
+
+        // ── 원복 ──────────────────────────────────────────────────────────
+        // 이 변조는 **실제로 커밋된다**(@Transactional 롤백이 닿지 않는 별도 트랜잭션).
+        // 테스트 DB는 `DB_CLOSE_DELAY=-1` 인메모리 하나를 전 테스트가 공유하므로, 되돌리지 않으면
+        // 뒤에 도는 테스트가 이 깨진 체인을 물려받는다. 실제로 CI에서 실행 순서가 달라지자
+        // PrivacyFlowTest 가 "seq=1 entry_hash 불일치"로 떨어졌다 — 자기 잘못이 아닌데 빨개졌다.
+        // 시연 각본은 그대로 두고, 무대만 치운다.
+        int restored = transactionTemplate.execute(status ->
+                em.createNativeQuery(
+                        "update audit_log set payload_json = "
+                                + "replace(payload_json, '\"userID\"', '\"userId\"') where seq = :seq")
+                        .setParameter("seq", targetSeq)
+                        .executeUpdate());
+        assertEquals(1, restored, "변조를 되돌려야 뒤 테스트가 오염되지 않는다");
+        assertTrue(auditService.verify().valid(), "원복 후에는 다시 유효해야 한다");
     }
 }
