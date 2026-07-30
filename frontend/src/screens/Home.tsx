@@ -7,39 +7,23 @@
  * 목업의 '카테고리별 소진 진행바' 자리에는 서버가 주는 단위(챌린지 전체)로 두 줄을 놓았다 —
  * 지킴이 원장은 카테고리 묶음 하나를 한도로 관리하고 카테고리별 소진율을 따로 내려주지 않는다.
  */
-import { useEffect, useState } from 'react';
 import { Icon } from '../components/Icons';
 import { Orb, Scroll, Screen, ErrorBox, Loading, SectionTitle } from '../components/ui';
-import { Modal } from '../components/Sheet';
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
 import { useAsync } from '../state/useAsync';
 import { api } from '../lib/api';
 import {
-  won, pctNum, iconOf, shortDate, CHALLENGE_STATE_LABEL, GRADE_LABEL, GRADE_EMOJI, SETTLED_STATES,
+  won, pctNum, iconOf, shortDate, CHALLENGE_STATE_LABEL, SETTLED_STATES,
 } from '../lib/format';
 
 /** 세리머니 응답에는 판정 id가 없어 '봤음' 표시를 서버로 보낼 수 없다. 그래서 날짜로 기억한다. */
-const SEEN_KEY = 'guardian_ceremony_seen';
-const readSeen = () => { try { return localStorage.getItem(SEEN_KEY) ?? ''; } catch { return ''; } };
-const writeSeen = (d: string) => { try { localStorage.setItem(SEEN_KEY, d); } catch { /* noop */ } };
 
 export function Home() {
   const { go, userId } = useSession();
   const { home, loading, error, reload } = useGuardian();
   const notes = useAsync(() => api.guardian.notifications(userId).catch(() => ({ notifications: [] })), [userId]);
   const payments = useAsync(() => api.allPayments(userId, 6).catch(() => []), [userId]);
-  const [ceremonyOpen, setCeremonyOpen] = useState(false);
-
-  const ceremony = home?.ceremony ?? null;
-  useEffect(() => {
-    if (ceremony && readSeen() !== ceremony.verdictDate) setCeremonyOpen(true);
-  }, [ceremony]);
-
-  function closeCeremony() {
-    if (ceremony) writeSeen(ceremony.verdictDate);
-    setCeremonyOpen(false);
-  }
 
   const recent = [...(payments.data ?? [])].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
 
@@ -134,19 +118,6 @@ export function Home() {
             </button>
           )}
 
-          {/* 마이룸 스트립 — 스트릭 + 포인트(방 꾸미기 재화) */}
-          <button type="button" className="strip" onClick={() => go('myroom')}>
-            <Orb size={28} />
-            <b>마이룸</b>
-            <span className="meta">
-              <span className="fire"><Icon id="i-flame" className="" size={15} /> {strip.grassStreak}일</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <Icon id="i-coin" className="" size={15} /> {strip.pointBalance}P
-              </span>
-              {strip.unopenedCeremony && <span className="dot-new" aria-label="새 소식" />}
-              <span className="chev" aria-hidden="true">›</span>
-            </span>
-          </button>
 
           {/* 히어로 (개편안 `.hero-top`/`.hero-mid`) — 지킨 금액이 크게, 방어율은 반원 게이지로.
               '달성률'이라 부르지 않는다. 이 값은 `확보 절약액 ÷ 지킬 돈`이라 시간 축이 없어
@@ -181,6 +152,20 @@ export function Home() {
               {ch.daysElapsed}/{ch.daysTotal}일째 · {strip.remainingCapLabel}
             </div>
           </div>
+
+          {/* 마이룸 스트립 — 스트릭 + 포인트(방 꾸미기 재화) */}
+          <button type="button" className="strip" onClick={() => go('myroom')}>
+            <Orb size={28} />
+            <b>마이룸</b>
+            <span className="meta">
+              <span className="fire"><Icon id="i-flame" className="" size={15} /> {strip.grassStreak}일</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <Icon id="i-coin" className="" size={15} /> {strip.pointBalance}P
+              </span>
+              {strip.unopenedCeremony && <span className="dot-new" aria-label="새 소식" />}
+              <span className="chev" aria-hidden="true">›</span>
+            </span>
+          </button>
 
           {/* 지킴이 말풍선 */}
           <div className="guardian">
@@ -252,28 +237,6 @@ export function Home() {
         </div>
       </Scroll>
 
-      {/* 아침 세리머니 — 하루를 지켜냈을 때 사물이 도착한다 */}
-      <Modal open={ceremonyOpen && !!ceremony} onClose={closeCeremony} title="지킴이 세리머니">
-        {ceremony && (
-          <>
-            <div className="orb orb-bob" />
-            <h3>{ceremony.result === 'NO_SPEND_DAY' ? '어젯밤을 지켜냈어요!' : '어제도 잘 지켰어요'}</h3>
-            <p>
-              {ceremony.message ?? '새 아이템이 도착했어요'}
-              {ceremony.objectId && (
-                <><br /><b style={{ color: 'var(--blue-t)' }}>
-                  {GRADE_EMOJI[ceremony.grade ?? 'COMMON']} {ceremony.objectId}
-                </b> · {GRADE_LABEL[ceremony.grade ?? 'COMMON']} 등급</>
-              )}
-            </p>
-            <p className="fine">포인트는 방 꾸미기 전용이에요 · 내 돈은 그대로 내 계좌에</p>
-            <button type="button" className="btn btn-primary" style={{ padding: 14 }}
-              onClick={() => { closeCeremony(); go('myroom'); }}>방에 두기</button>
-            <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 8, width: '100%' }}
-              onClick={closeCeremony}>나중에</button>
-          </>
-        )}
-      </Modal>
     </Screen>
   );
 }

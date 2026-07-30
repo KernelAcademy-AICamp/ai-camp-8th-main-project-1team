@@ -122,6 +122,57 @@ export function Report() {
           </>
         )}
 
+        {/* 주간 미션 정산 (개편안 s-report) — 미션이 없으면 절 자체를 감춘다.
+            빈 카드를 띄우면 "미션이 없다"가 아니라 "고장났다"로 읽힌다. */}
+        {weekly.data && weekly.data.missions.length > 0 && (
+          <>
+            <SectionTitle>주간 미션 정산</SectionTitle>
+            <div className="card" style={{ padding: '16px 24px' }}>
+              <div style={{ fontSize: 14, color: 'var(--t2)', marginBottom: 8 }}>
+                <b>{weekly.data.missions.filter((m) => m.status === 'SUCCESS').length}개 성공</b>
+                {weekly.data.missionReward > 0
+                  ? `, 일요일에 +${weekly.data.missionReward}P가 정산돼요`
+                  : ', 아직 정산할 포인트가 없어요'}
+              </div>
+              {weekly.data.missions.map((m) => (
+                <div className="msn-row" key={m.text}>
+                  {m.text}
+                  <span className={`mchip ${m.status === 'SUCCESS' ? 'c-green' : m.status === 'FAILED' ? 'c-red' : 'c-amber'}`}>
+                    {m.status === 'SUCCESS' ? '성공' : m.status === 'FAILED' ? '아쉬움' : '진행 중'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* 지킴이가 본 이번 주 — 잘한 점 하나, 함께 볼 점 하나.
+            문장은 서버의 규칙 엔진이 만든다(마스터 §4 원칙 1). 견줄 지난주가 없으면 감춘다. */}
+        {weekly.data && (weekly.data.coaching.good || weekly.data.coaching.watch) && (
+          <>
+            <SectionTitle>지킴이가 본 이번 주</SectionTitle>
+            <div className="card">
+              {weekly.data.coaching.good && (
+                <div style={{ marginBottom: weekly.data.coaching.watch ? 14 : 0 }}>
+                  <span className="tag-good">잘한 점</span>
+                  <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--t2)', lineHeight: 1.4 }}>
+                    {weekly.data.coaching.good}
+                  </p>
+                </div>
+              )}
+              {weekly.data.coaching.good && weekly.data.coaching.watch && <div className="divider" />}
+              {weekly.data.coaching.watch && (
+                <div style={{ marginTop: weekly.data.coaching.good ? 14 : 0 }}>
+                  <span className="tag-warn">함께 볼 점</span>
+                  <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--t2)', lineHeight: 1.4 }}>
+                    {weekly.data.coaching.watch}
+                  </p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
         {/* 이번 챌린지 — 지키는 금액이 주 지표다 */}
         {ch ? (
           <div className="hero">
