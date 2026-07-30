@@ -25,10 +25,22 @@ const PROVIDERS = [
   { name: '토스', bg: '#3182F6', fg: '#fff', label: 't', desc: '토스 인증서' },
 ];
 
+/**
+ * 기관 로고. 실제 CI 파일이 있으면 그것을 쓰고, 없으면 색 배지에 약칭을 그린다.
+ *
+ * 파일이 있는 곳만 로고를 쓰는 이유: 26개만 확보돼 있어서, 전부 로고로 바꾸면 나머지가 빈 동그라미가
+ * 된다. 섞이는 것보다 빈 칸이 나쁘다.
+ */
 const Logo = ({ inst }: { inst: Inst }) => (
+  inst.logo ? (
+    <span className="logo logo-img" aria-hidden="true">
+      <img src={inst.logo} alt="" loading="lazy" />
+    </span>
+  ) : (
   <span className="logo" style={{ color: inst.fg ?? '#fff', background: inst.bg }} aria-hidden="true">
     {inst.label}
   </span>
+  )
 );
 
 /** 체크 표식 — all(✓)·some(–)·none(빈). 선택은 초록. */

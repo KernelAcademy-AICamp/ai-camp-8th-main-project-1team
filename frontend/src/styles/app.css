@@ -459,8 +459,11 @@ body{
 .tray .tr-head button{margin-left:auto;border:none;background:#F1F3F5;width:28px;height:28px;border-radius:50%;
   font-size:12px;color:var(--t2);cursor:pointer;font-family:inherit;}
 .tr-row{display:flex;gap:8px;overflow-x:auto;}
+/* 개편안은 `<div>` 지만 우리는 눌러야 해서 `<button>` 이다 — UA 기본값을 지운다.
+   (같은 실수로 동의창·인증서 목록·마이룸 스트립이 회색 덩어리로 나갔다) */
 .tr-card{flex:0 0 88px;background:#F5F7F8;border:1.5px solid transparent;border-radius:16px;
-  padding:8px 8px 12px;text-align:center;cursor:pointer;position:relative;}
+  padding:8px 8px 12px;text-align:center;cursor:pointer;position:relative;
+  font-family:inherit;color:inherit;min-height:44px;}
 .tr-card svg{width:56px;height:52px;display:block;margin:0 auto 4px;}
 .tr-card img{width:56px;height:52px;object-fit:contain;display:block;margin:0 auto 4px;}
 .tr-card b{font-size:11px;font-weight:700;display:block;}
@@ -577,6 +580,11 @@ body{
 .inst.on{border-color:var(--blue);background:var(--blue-weak);}
 .inst .logo{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   font-weight:700;color:#fff;font-size:14px;}
+/* 실제 CI 로고. **동그라미를 쓰지 않는다** — 금융사 로고는 대부분 가로로 길어서
+   원 안에 넣으면 지름에 맞춰 줄어들어 글자가 뭉개진다. 가로로 넓은 칸에 원본 비율로 담는다. */
+.inst .logo-img{width:64px;height:34px;border-radius:8px;background:#fff;
+  border:1px solid var(--line);padding:4px 6px;}
+.inst .logo-img img{width:100%;height:100%;object-fit:contain;display:block;}
 .inst span{font-size:12px;font-weight:600;color:var(--t2);}
 .inst.on span{color:var(--blue-dark);}
 .trow{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--bg);font-size:14px;}

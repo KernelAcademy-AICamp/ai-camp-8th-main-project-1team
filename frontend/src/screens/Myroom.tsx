@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '../components/Icons';
 import { Modal } from '../components/Sheet';
+import { IsoRoom, CAT_ACT_LABEL, type CatAct, type RoomSel } from '../components/IsoRoom';
 import { AppBar, Scroll, Screen, ErrorBox, Loading, SectionTitle } from '../components/ui';
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
@@ -32,6 +33,36 @@ const SEEN_KEY = 'guardian_ceremony_seen';
 const readSeen = () => { try { return localStorage.getItem(SEEN_KEY) ?? ''; } catch { return ''; } };
 const writeSeen = (d: string) => { try { localStorage.setItem(SEEN_KEY, d); } catch { /* noop */ } };
 
+/**
+ * 소품을 누르면 나오는 한 줄. 개편안 `objInfo` 를 옮겼다.
+ * 방을 "예쁜 그림"이 아니라 "지켜서 모은 것"으로 읽히게 하는 장치라, 문장에 유래를 담는다.
+ */
+const OBJ_INFO: Record<string, string> = {
+  lamp: '스탠드 조명 — 첫 주를 지켜냈을 때 도착했어요',
+  frame: '그린 액자 — 무지출 3일 연속의 기록이에요',
+  table: '사이드테이블 — 포인트샵에서 데려왔어요',
+  moodlight: '무드등 — 어젯밤을 지켜낸 선물이에요',
+  sofa: '민트 소파 — 포인트샵에서 150P에 만나요',
+  bed: '포근한 침대 — 냥지킴이가 제일 좋아하는 자리',
+  shelf: '원목 책장 — 읽은 만큼 채워져요',
+  bowl: '머그컵 — 집에서 내려 마신 날의 흔적',
+  yarn: '털뭉치 — 냥지킴이의 장난감',
+  plant: '몬스테라 — 물 주는 걸 잊어도 잘 자라요',
+  cat: '냥지킴이 — 오늘도 방을 지키고 있어요',
+  rug: '핑크 러그 — 가운데를 포근하게',
+  rug2: '민트 러그 — 가운데를 산뜻하게',
+};
+
+/** 꾸미기 서랍의 재고. 개편안 `TRAY_INV`. */
+const TRAY_INV: Record<string, { label: string; items: { k: string; n: string }[] }> = {
+  rug: { label: '러그 자리', items: [{ k: 'rug', n: '핑크 러그' }, { k: 'rug2', n: '민트 러그' }] },
+  bed: { label: '침대 자리', items: [{ k: 'bed', n: '포근한 침대' }] },
+  table: { label: '테이블 자리', items: [{ k: 'table', n: '사이드테이블' }] },
+};
+
+/** 냥지킴이 행동 후보 — 소파가 있으면 소파에서도 논다(개편안 openMyroom). */
+const CAT_ACTS: CatAct[] = ['nap', 'read', 'rug'];
+
 export function Myroom() {
   const { go, userId } = useSession();
   const [editing, setEditing] = useState(false);
@@ -39,6 +70,17 @@ export function Myroom() {
   const [moving, setMoving] = useState<string | null>(null);
   const { home, loading, error, reload } = useGuardian();
   const [ceremonyOpen, setCeremonyOpen] = useState(false);
+  /** 자리별로 고른 소품. 개편안 `ROOM_SEL` — 꾸미기에서 바꾼다. */
+  const [sel, setSel] = useState<RoomSel>({ rug: 'rug' });
+  /** 열려 있는 꾸미기 서랍(자리 이름). null이면 닫혀 있다. */
+  const [tray, setTray] = useState<keyof RoomSel | 'bed' | 'table' | null>(null);
+  /** 누른 소품의 설명. 개편안 `objInfo` → `.iso-pop`. */
+  const [pop, setPop] = useState<string | null>(null);
+  /**
+   * 냥지킴이 행동 — 진입할 때 한 번 정한다.
+   * `useState` 초기값으로 뽑는 이유: 렌더마다 다시 뽑으면 고양이가 방 안을 순간이동한다.
+   */
+  const [catAct] = useState<CatAct>(() => CAT_ACTS[Math.floor(Math.random() * CAT_ACTS.length)]);
   const ceremony = home?.ceremony ?? null;
 
   // 방이 그려진 뒤에 뜨도록 한 박자 늦춘다(개편안도 450ms 뒤에 연다).
@@ -47,6 +89,13 @@ export function Myroom() {
     const t = setTimeout(() => setCeremonyOpen(true), 450);
     return () => clearTimeout(t);
   }, [ceremony]);
+
+  // 소품 설명은 2.5초 뒤 스스로 사라진다(개편안 objInfo). 누를 대상이 아니라 알림이다.
+  useEffect(() => {
+    if (!pop) return;
+    const t = setTimeout(() => setPop(null), 2500);
+    return () => clearTimeout(t);
+  }, [pop]);
 
   function closeCeremony() {
     if (ceremony) writeSeen(ceremony.verdictDate);
@@ -150,20 +199,36 @@ export function Myroom() {
 
   return (
     <Screen title="마이룸" hasTabBar>
-      <AppBar onBack={() => go('home')} title="마이룸" />
-      <Scroll><div className="pad" style={{ paddingTop: 12 }}>
+      {/* 개편안은 앱바 대신 씬 위에 뜨는 두 버튼을 쓴다 — 방을 가리지 않으려는 배치다. */}
+      <button type="button" className="mr-back" onClick={() => go('home')} aria-label="홈으로">‹</button>
+      <button type="button" className={`mr-edit${editing ? ' on' : ''}`} aria-pressed={editing}
+              onClick={() => { setEditing((v) => !v); setTray(null); setPop(null); }} aria-label="꾸미기">
+        <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor"
+             strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+        </svg>
+      </button>
+      <Scroll>
 
-        {/* 방 씬 */}
-        <div className="scene" role="img" aria-label={`지킴이의 방 · 모은 사물 ${objects.length}개`}>
-          <div className="sun" />
-          <div className="sc-rug" />
-          <div className="sc-plant"><span className="leaf l1" /><span className="leaf l2" /><span className="leaf l3" /><div className="pot" /><div className="shadow" /></div>
-          <div className="sc-books"><i className="b3" style={{ width: 42 }} /><i className="b2" /><i className="b1" /><div className="shadow" /></div>
-          <div className="sc-orb"><div className="orb orb-bob" style={{ width: 76, height: 76 }} /><div className="shadow" /></div>
-          <div className="sc-lamp"><div className="shade" /><div className="pole" /><div className="base" /><div className="shadow" /></div>
-          <div className={`sc-new${gotToday ? ' pop' : ''}`}><div className="dome" /><div className="nbase" /><div className="shadow" /></div>
-          <div className="sc-hint">지킨 만큼 방이 채워져요 · 포인트로 아이템을 배치해요</div>
+        {/* 방 씬 — 개편안 `buildIsoScene` 을 그대로 옮긴 아이소메트릭 SVG.
+            평면 일러스트로는 소품이 늘어날 때 겹침 순서가 무너져 침대 위에 러그가 깔렸다. */}
+        <div className="scene-full" role="img"
+             aria-label={`지킴이의 방 · 모은 사물 ${objects.length}개 · ${CAT_ACT_LABEL[catAct]}`}>
+          <div className="mr-title">마이룸</div>
+          <IsoRoom
+            sel={sel}
+            act={catAct}
+            editing={editing}
+            moodPlaced={gotToday}
+            sofaOwned={objects.some((o) => o.objectId === 'sofa')}
+            onPick={(k) => setPop(OBJ_INFO[k] ?? null)}
+            onSlot={(slot) => setTray(slot)}
+          />
+          <div id="mrCap" className="sc-hint">소품 하나하나가 지켜낸 하루예요</div>
+          {pop && <div className="iso-pop show" role="status">{pop}</div>}
         </div>
+
+        <div className="content-sheet"><div className="pad" style={{ paddingTop: 18 }}>
 
         {/* 마이룸 히어로 (개편안 `.mr-hero`) — 연속 방어 · 오늘 진행 · 내일의 약속.
             게이지는 한도 대비 쓴 비율이 아니라 **남은 여유**를 채운다. 다 쓰면 비고 안 쓰면 가득 차
@@ -340,7 +405,37 @@ export function Myroom() {
         </div>
 
         <div className="spacer" style={{ height: 30 }} />
-      </div></Scroll>
+      </div></div></Scroll>
+
+      {/* 꾸미기 서랍 — 자리를 누르면 그 자리에 놓을 수 있는 소품이 올라온다(개편안 `.tray`). */}
+      <div className={`tray${tray ? ' open' : ''}`}>
+        {tray && (
+          <>
+            <div className="tr-head">
+              <b>{TRAY_INV[tray].label}</b>
+              <small>고르면 바로 바뀌어요</small>
+              <button type="button" onClick={() => setTray(null)} aria-label="닫기">✕</button>
+            </div>
+            <div className="tr-row">
+              {TRAY_INV[tray].items.map((it) => {
+                const on = tray === 'rug' && sel.rug === it.k;
+                return (
+                  <button type="button" key={it.k} className={`tr-card${on ? ' cur' : ''}`}
+                          aria-pressed={on}
+                          onClick={() => {
+                            if (tray === 'rug') setSel((v) => ({ ...v, rug: it.k as RoomSel['rug'] }));
+                            setTray(null);
+                          }}>
+                    {on && <span className="onbadge">사용 중</span>}
+                    <img src={`/room/${it.k}.png`} alt="" />
+                    <b>{it.n}</b>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
 
       {/* 아침 세리머니 — 방에 들어왔을 때 소품이 도착한다(개편안 openMyroom). */}
       <Modal open={ceremonyOpen && !!ceremony} onClose={closeCeremony} title="지킴이 세리머니">

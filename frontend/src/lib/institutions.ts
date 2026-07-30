@@ -7,7 +7,9 @@
  * 카드사 그룹만 서버 목록으로 갈아끼우고(`mergeCompanies`) 나머지 업권은 선택 불가로 둔다.
  * 그래야 은행 id 1을 카드사 id 1로 잘못 보내는 사고가 나지 않는다.
  */
-export interface Inst { id: number; name: string; label: string; bg: string; fg?: string }
+export interface Inst { id: number; name: string; label: string; bg: string; fg?: string;
+  /** 실제 로고 경로(`public/logo`). 없으면 색 배지+약칭으로 떨어진다. */
+  logo?: string }
 export interface InstCategory {
   key: string;
   name: string;
@@ -15,6 +17,79 @@ export interface InstCategory {
   /** 실제로 연결(전송요구)까지 되는 업권인가. 더미 제공자는 카드만 서빙한다. */
   available: boolean;
 }
+
+
+/**
+ * 기관 이름 → 실제 로고 파일(`public/logo`). 파일이 있는 곳만 로고를 쓰고,
+ * 없으면 지금까지처럼 색 배지에 약칭을 그린다 — 빈 칸이 생기지 않게 하기 위함이다.
+ *
+ * 출처는 `reference/logo/`(각 사 CI). 파일명이 곧 기관명이라 표를 손으로 맞출 필요가 없다.
+ */
+const LOGO: Record<string, string> = {
+  'BNK경남은행': '/logo/BNK경남은행.svg',
+  'BNK부산은행': '/logo/BNK부산은행.svg',
+  'IBK기업은행': '/logo/IBK기업은행.svg',
+  'KB국민은행': '/logo/KB국민은행.svg',
+  'KB국민카드': '/logo/KB국민카드.svg',
+  'NH농협은행': '/logo/NH농협은행.svg',
+  'SC제일은행': '/logo/SC제일은행.svg',
+  'iM뱅크': '/logo/iM뱅크.svg',
+  '광주은행': '/logo/광주은행.svg',
+  '롯데카드': '/logo/롯데카드.webp',
+  '삼성카드': '/logo/삼성카드.svg',
+  '수협은행': '/logo/수협은행.svg',
+  '신한은행': '/logo/신한은행.svg',
+  '신한카드': '/logo/신한카드.svg',
+  '우리은행': '/logo/우리은행.svg',
+  '우리카드': '/logo/우리카드.svg',
+  '전북은행': '/logo/전북은행.svg',
+  '제주은행': '/logo/제주은행.svg',
+  '카카오뱅크': '/logo/카카오뱅크.svg',
+  '케이뱅크': '/logo/케이뱅크.svg',
+  '토스뱅크': '/logo/토스뱅크.svg',
+  '하나은행': '/logo/하나은행.svg',
+  '하나카드': '/logo/하나카드.svg',
+  '한국산업은행': '/logo/한국산업은행.svg',
+  '한국수출입은행': '/logo/한국수출입은행.svg',
+  '현대카드': '/logo/현대카드.svg'
+};
+
+/**
+ * 파일명과 표기명이 다른 곳. 같은 회사인데 이름을 달리 부르는 경우만 손으로 적는다.
+ * (부분일치로는 못 맞추는 것들 — `KDB산업은행`과 `한국산업은행`은 글자가 겹치지 않는다)
+ */
+const LOGO_ALIAS: Record<string, string> = {
+  'KDB산업은행': '한국산업은행',
+  'NH농협카드': 'NH농협은행',
+};
+
+/**
+ * 그 기관의 로고 경로.
+ *
+ * 이름이 딱 맞으면 그것, 아니면 <b>가장 긴 부분일치</b>를 쓴다 — 제공자가 내려주는 이름에는
+ * `Sh수협은행`·`iM뱅크(대구)`처럼 접두어나 괄호가 붙어 파일명(`수협은행`·`iM뱅크`)과 어긋난다.
+ * 가장 긴 것을 고르는 이유: `부산은행`이 `BNK부산은행`과 `부산은행` 둘 다에 걸릴 때
+ * 짧은 쪽을 집으면 엉뚱한 회사가 나올 수 있다.
+ */
+export function logoOf(name: string): string | undefined {
+  if (LOGO[name]) return LOGO[name];
+  const alias = LOGO_ALIAS[name];
+  if (alias && LOGO[alias]) return LOGO[alias];
+
+  let best: string | undefined;
+  for (const key of Object.keys(LOGO)) {
+    if (!name.includes(key) && !key.includes(name)) continue;
+    if (!best || key.length > best.length) best = key;
+  }
+  return best ? LOGO[best] : undefined;
+}
+
+/**
+ * 화면에서 감출 업권. 더미 제공자가 서빙하지 않아 고를 수도 없는데 목록만 길어져,
+ * "준비 중"이 여섯 줄 늘어서면 연결 화면이 무엇을 하는 곳인지 흐려진다.
+ * 데이터는 남겨 두고 표시만 뺀다 — 제공자가 늘면 여기서 지우면 된다.
+ */
+const HIDDEN_CATEGORIES = new Set(['savings', 'sec', 'ins', 'install']);
 
 const A = { savings: '#5B6BF5', sec: '#1F6FEB', ins: '#7A5AF8', install: '#E58A4E' };
 
@@ -75,30 +150,30 @@ export function brandOf(name: string): { label: string; bg: string; fg?: string 
 export const INSTITUTIONS: InstCategory[] = [
   {
     key: 'bank', name: '은행', available: false, items: [
-      { id: 1, name: 'KB국민은행', label: 'KB', bg: '#FFB300', fg: '#5f4200' },
-      { id: 2, name: '신한은행', label: '신한', bg: '#0046FF' },
-      { id: 3, name: '우리은행', label: '우리', bg: '#0067AC' },
-      { id: 4, name: '하나은행', label: '하나', bg: '#008485' },
-      { id: 5, name: 'NH농협은행', label: 'NH', bg: '#0A8A3E' },
-      { id: 6, name: 'IBK기업은행', label: 'IBK', bg: '#004C97' },
-      { id: 7, name: 'SC제일은행', label: 'SC', bg: '#0F7B3E' },
-      { id: 8, name: '한국씨티은행', label: 'citi', bg: '#003B70' },
-      { id: 9, name: '카카오뱅크', label: 'k', bg: '#FFCD00', fg: '#3c1e1e' },
-      { id: 10, name: '케이뱅크', label: 'K', bg: '#00C3E3' },
-      { id: 11, name: '토스뱅크', label: '토스', bg: '#3182F6' },
-      { id: 12, name: '수협은행', label: '수협', bg: '#0F9BD7' },
-      { id: 13, name: 'iM뱅크(대구)', label: 'iM', bg: '#008C95' },
-      { id: 14, name: '부산은행', label: '부산', bg: '#E6002D' },
-      { id: 15, name: '광주은행', label: '광주', bg: '#00857C' },
-      { id: 16, name: '전북은행', label: '전북', bg: '#C8102E' },
-      { id: 17, name: '경남은행', label: '경남', bg: '#EF3E42' },
-      { id: 18, name: '제주은행', label: '제주', bg: '#0067AC' },
-      { id: 19, name: '새마을금고', label: 'MG', bg: '#00559C' },
-      { id: 20, name: '신협', label: '신협', bg: '#0091D0' },
-      { id: 21, name: '우체국', label: '우체', bg: '#E4002B' },
-      { id: 22, name: 'KDB산업은행', label: 'KDB', bg: '#003876' },
-      { id: 23, name: '지역농협', label: '농협', bg: '#0A8A3E' },
-      { id: 24, name: '산림조합', label: '산림', bg: '#1E7A46' },
+      { id: 1, name: 'KB국민은행', label: 'KB', bg: '#FFB300', fg: '#5f4200', logo: logoOf('KB국민은행') },
+      { id: 2, name: '신한은행', label: '신한', bg: '#0046FF', logo: logoOf('신한은행') },
+      { id: 3, name: '우리은행', label: '우리', bg: '#0067AC', logo: logoOf('우리은행') },
+      { id: 4, name: '하나은행', label: '하나', bg: '#008485', logo: logoOf('하나은행') },
+      { id: 5, name: 'NH농협은행', label: 'NH', bg: '#0A8A3E', logo: logoOf('NH농협은행') },
+      { id: 6, name: 'IBK기업은행', label: 'IBK', bg: '#004C97', logo: logoOf('IBK기업은행') },
+      { id: 7, name: 'SC제일은행', label: 'SC', bg: '#0F7B3E', logo: logoOf('SC제일은행') },
+      { id: 8, name: '한국씨티은행', label: 'citi', bg: '#003B70', logo: logoOf('한국씨티은행') },
+      { id: 9, name: '카카오뱅크', label: 'k', bg: '#FFCD00', fg: '#3c1e1e', logo: logoOf('카카오뱅크') },
+      { id: 10, name: '케이뱅크', label: 'K', bg: '#00C3E3', logo: logoOf('케이뱅크') },
+      { id: 11, name: '토스뱅크', label: '토스', bg: '#3182F6', logo: logoOf('토스뱅크') },
+      { id: 12, name: '수협은행', label: '수협', bg: '#0F9BD7', logo: logoOf('수협은행') },
+      { id: 13, name: 'iM뱅크(대구)', label: 'iM', bg: '#008C95', logo: logoOf('iM뱅크(대구)') },
+      { id: 14, name: '부산은행', label: '부산', bg: '#E6002D', logo: logoOf('부산은행') },
+      { id: 15, name: '광주은행', label: '광주', bg: '#00857C', logo: logoOf('광주은행') },
+      { id: 16, name: '전북은행', label: '전북', bg: '#C8102E', logo: logoOf('전북은행') },
+      { id: 17, name: '경남은행', label: '경남', bg: '#EF3E42', logo: logoOf('경남은행') },
+      { id: 18, name: '제주은행', label: '제주', bg: '#0067AC', logo: logoOf('제주은행') },
+      { id: 19, name: '새마을금고', label: 'MG', bg: '#00559C', logo: logoOf('새마을금고') },
+      { id: 20, name: '신협', label: '신협', bg: '#0091D0', logo: logoOf('신협') },
+      { id: 21, name: '우체국', label: '우체', bg: '#E4002B', logo: logoOf('우체국') },
+      { id: 22, name: 'KDB산업은행', label: 'KDB', bg: '#003876', logo: logoOf('KDB산업은행') },
+      { id: 23, name: '지역농협', label: '농협', bg: '#0A8A3E', logo: logoOf('지역농협') },
+      { id: 24, name: '산림조합', label: '산림', bg: '#1E7A46', logo: logoOf('산림조합') },
     ],
   },
   {
@@ -115,16 +190,16 @@ export const INSTITUTIONS: InstCategory[] = [
   },
   {
     key: 'card', name: '카드사', available: true, items: [
-      { id: 201, name: '신한카드', label: '신한', bg: '#0046FF' },
-      { id: 202, name: '삼성카드', label: '삼성', bg: '#1428A0' },
-      { id: 203, name: 'KB국민카드', label: 'KB', bg: '#FFB300', fg: '#5f4200' },
-      { id: 204, name: '현대카드', label: '현대', bg: '#111111' },
-      { id: 205, name: '롯데카드', label: '롯데', bg: '#DA291C' },
-      { id: 206, name: '우리카드', label: '우리', bg: '#0067AC' },
-      { id: 207, name: '하나카드', label: '하나', bg: '#008485' },
-      { id: 208, name: 'BC카드', label: 'BC', bg: '#E4002B' },
-      { id: 209, name: 'NH농협카드', label: 'NH', bg: '#0A8A3E' },
-      { id: 210, name: '씨티카드', label: 'citi', bg: '#003B70' },
+      { id: 201, name: '신한카드', label: '신한', bg: '#0046FF', logo: logoOf('신한카드') },
+      { id: 202, name: '삼성카드', label: '삼성', bg: '#1428A0', logo: logoOf('삼성카드') },
+      { id: 203, name: 'KB국민카드', label: 'KB', bg: '#FFB300', fg: '#5f4200', logo: logoOf('KB국민카드') },
+      { id: 204, name: '현대카드', label: '현대', bg: '#111111', logo: logoOf('현대카드') },
+      { id: 205, name: '롯데카드', label: '롯데', bg: '#DA291C', logo: logoOf('롯데카드') },
+      { id: 206, name: '우리카드', label: '우리', bg: '#0067AC', logo: logoOf('우리카드') },
+      { id: 207, name: '하나카드', label: '하나', bg: '#008485', logo: logoOf('하나카드') },
+      { id: 208, name: 'BC카드', label: 'BC', bg: '#E4002B', logo: logoOf('BC카드') },
+      { id: 209, name: 'NH농협카드', label: 'NH', bg: '#0A8A3E', logo: logoOf('NH농협카드') },
+      { id: 210, name: '씨티카드', label: 'citi', bg: '#003B70', logo: logoOf('씨티카드') },
     ],
   },
   {
@@ -157,11 +232,11 @@ export const INSTITUTIONS: InstCategory[] = [
   },
   {
     key: 'pay', name: '페이머니', available: false, items: [
-      { id: 501, name: '카카오페이', label: 'pay', bg: '#FFCD00', fg: '#3c1e1e' },
-      { id: 502, name: '네이버페이', label: 'N', bg: '#03C75A' },
-      { id: 503, name: '페이코', label: 'PAYCO', bg: '#F03E3E' },
-      { id: 504, name: '토스페이', label: '토스', bg: '#3182F6' },
-      { id: 505, name: '쿠페이', label: '쿠팡', bg: '#E31937' },
+      { id: 501, name: '카카오페이', label: 'pay', bg: '#FFCD00', fg: '#3c1e1e', logo: logoOf('카카오페이') },
+      { id: 502, name: '네이버페이', label: 'N', bg: '#03C75A', logo: logoOf('네이버페이') },
+      { id: 503, name: '페이코', label: 'PAYCO', bg: '#F03E3E', logo: logoOf('페이코') },
+      { id: 504, name: '토스페이', label: '토스', bg: '#3182F6', logo: logoOf('토스페이') },
+      { id: 505, name: '쿠페이', label: '쿠팡', bg: '#E31937', logo: logoOf('쿠페이') },
     ],
   },
   {
@@ -203,7 +278,7 @@ export function mergeInstitutions(
         ...c,
         items: companies.map((co) => {
           const b = brandOf(co.name);
-          return { id: co.id, name: co.name, label: b.label, bg: b.bg, fg: b.fg };
+          return { id: co.id, name: co.name, label: b.label, bg: b.bg, fg: b.fg, logo: logoOf(co.name) };
         }),
       };
     }
@@ -214,7 +289,7 @@ export function mergeInstitutions(
         available: true,
         items: banks.map((bk) => {
           const b = brandOf(bk.name);
-          return { id: BANK_ID_OFFSET + bk.id, name: bk.name, label: b.label, bg: b.bg, fg: b.fg };
+          return { id: BANK_ID_OFFSET + bk.id, name: bk.name, label: b.label, bg: b.bg, fg: b.fg, logo: logoOf(bk.name) };
         }),
       };
     }
@@ -223,5 +298,7 @@ export function mergeInstitutions(
   // 연결되는 업권을 위로 올린다. 준비 중(선택 불가)인 업권이 먼저 보이면 실제로 연결할 수 있는
   // 카드사·은행을 찾으려고 한참 내려가야 한다 — 화면의 첫인상이 "아직 안 되는 것들"이 된다.
   // 업권 사이 상대 순서는 그대로 둔다(카탈로그가 정한 업권 배열을 존중).
-  return [...merged.filter((c) => c.available), ...merged.filter((c) => !c.available)];
+  // 제공자가 서빙하지 않는 업권은 목록에서 뺀다(HIDDEN_CATEGORIES 주석 참고).
+  const shown = merged.filter((c) => !HIDDEN_CATEGORIES.has(c.key));
+  return [...shown.filter((c) => c.available), ...shown.filter((c) => !c.available)];
 }
