@@ -53,25 +53,70 @@ public final class CatalogModels {
      * @param forms       실 카드명세서 표기 변형(법인명·오타·영문 등) — 없으면 name 사용
      */
     /**
+     * 본사(또는 단일 시설) 소재지 — 실제 주소다.
+     *
+     * <p>해외 본사는 국내 지번이 없어 {@code lat}·{@code lon}이 {@code null}이다(스팀·아마존·아고다 등).
+     * 좌표를 쓰는 화면이 없으므로 무해하다 — 앱은 주소 문자열만 보여 준다.
+     *
+     * @param businessNumber 실제 사업자등록번호. 주면 생성 번호 대신 이것을 쓴다.
+     */
+    public record HqEntry(String address, Double lat, Double lon, String businessNumber) {}
+
+    /**
      * 브랜드/사업자 1건.
      *
      * @param serves 이 사업자가 파는 품목의 이름 접두사. 비어 있으면 그 맥락의 아무 품목이나 판다.
      *               <b>왜 필요한가.</b> 예전에는 상호와 품목을 따로 뽑아서 `지하철`이 `시내버스`
      *               요금(1,500원)을 받고 `광역버스 장거리`(3,167원)까지 받았다. 한 맥락에 서로 다른
      *               운영주체가 섞여 있으면(도시철도·버스·충전사업자) 짝을 맞춰야 명세서가 말이 된다.
+     *
+     * @param channel      이 사업자의 결제 채널. <b>맥락보다 우선한다.</b> 예전에는 이 필드가 정의만
+     *                     되고 한 번도 읽히지 않아, 애플·스팀·예스24가 '디지털가전'(OFFLINE) 맥락에
+     *                     묶여 동네 지번주소를 받았다. 비어 있으면 맥락의 값을 쓴다.
+     * @param locationType <b>주소를 어떻게 정하는가</b> — 결제 채널과는 다른 축이다. 이 둘을 하나로
+     *                     묶었더니 "온라인 결제인데 실물 시설"(공연장)과 "오프라인 결제인데 지점이
+     *                     없음"(교통 사업자)을 표현할 수 없었다. 비어 있으면 맥락의 값을 쓴다.
+     *                     <ul>
+     *                       <li>{@code POI} — 앵커 동의 지번(지점이 있는 브랜드. 기존 동작)
+     *                       <li>{@code NONE}·{@code ROUTE} — {@code hq} 고정 주소 하나
+     *                       <li>{@code VENUE_CLUSTER} — 그 시설의 실주소({@code hq})
+     *                       <li>{@code DISTRICT} — <b>시군구마다 다른 사업자</b>. 이름은 시군구에서
+     *                           합성하고 주소는 그 시군구 안에서 결정론으로 뽑는다(ㅇㅇ시설공단)
+     *                     </ul>
+     * @param regions      담당 광역시도. 비어 있으면 전국. 앵커 시도와 겹치는 사업자만 후보가 된다 —
+     *                     부산에서 지하철을 타고 서울교통공사가 찍히면 안 된다.
+     * @param hq           본사·시설의 실주소. {@code locationType}이 {@code POI}·{@code DISTRICT}가
+     *                     아니면 있어야 한다({@code CatalogConsistencyTest}가 검사).
      */
     public record BrandEntry(String name, boolean branchable, String channel,
-                             List<String> forms, List<String> serves) {
+                             List<String> forms, List<String> serves,
+                             String locationType, List<String> regions, HqEntry hq) {
         public BrandEntry {
             forms = forms == null ? List.of() : forms;
             serves = serves == null ? List.of() : serves;
+            regions = regions == null ? List.of() : regions;
         }
+
+        /** 예전 5원소 표기(주소·지역이 없던 시절) — 테스트와 옛 카탈로그용. */
+        public BrandEntry(String name, boolean branchable, String channel,
+                          List<String> forms, List<String> serves) {
+            this(name, branchable, channel, forms, serves, null, List.of(), null);
+        }
+
         /** 이 사업자가 그 품목을 파는가. serves 가 비어 있으면 가리지 않는다. */
         public boolean canSell(String productName) {
             if (serves.isEmpty() || productName == null) return true;
             for (String pre : serves) if (productName.startsWith(pre)) return true;
             return false;
         }
+
+        /** 이 사업자가 그 시도를 담당하는가. regions 가 비어 있으면 전국이라 가리지 않는다. */
+        public boolean servesRegion(String sido) {
+            return regions.isEmpty() || sido == null || regions.contains(sido);
+        }
+
+        /** 담당 지역이 정해진 사업자인가 — 전국 사업자와 섞을 때 비율을 나누는 기준. */
+        public boolean isRegional() { return !regions.isEmpty(); }
     }
 
     /**

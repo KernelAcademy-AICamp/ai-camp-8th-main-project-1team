@@ -7,7 +7,9 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -46,6 +48,11 @@ public class PopulationBuilder {
         WeightedRegions metro = new WeightedRegions(regions, r -> METRO.contains(r.sido()));
         WeightedRegions suburb = new WeightedRegions(regions, r -> CAPITAL_SUBURB.contains(r.sido()));
         WeightedRegions seoul = new WeightedRegions(regions, r -> "서울특별시".equals(r.sido()));
+        // 시도별 버킷 — 회사를 '집과 같은 시도'에서 뽑기 위해 미리 갈라 둔다.
+        Map<String, WeightedRegions> byS = new LinkedHashMap<>();
+        for (RegionEntry rg : regions) {
+            byS.computeIfAbsent(rg.sido(), s -> new WeightedRegions(regions, x -> s.equals(x.sido())));
+        }
 
         LocalDate from = props.getStartDate().getFrom();
         long dayspan = ChronoUnit.DAYS.between(from, props.getStartDate().getTo());
@@ -74,18 +81,39 @@ public class PopulationBuilder {
                     default -> all; // POP_WEIGHTED / ALL
                 };
                 RegionEntry home = homeBucket.sample(r);
-                RegionEntry work = variant.commute() ? seoul.sample(r) : null;
+                RegionEntry work = variant.commute() ? workplace(home, seoul, byS, r) : null;
 
                 boolean vehicle = PersonaResolver.hasVehicle(variant.hasVehicleMode(), r);
                 int cards = GenSeed.uniformInt(r, variant.cards()[0], variant.cards()[1]);
                 String split = dataSplit(r);
                 long userSeed = GenSeed.mix(masterSeed, 303, idx);
 
+                // 교통카드는 한 장으로 고정한다 — 사람은 지하철 요금을 날마다 다른 카드로 내지 않는다.
+                int transitCard = GenSeed.uniformInt(r, 0, cards - 1);
                 users.add(new GeneratedUser(GenSeed.ci(masterSeed, idx), variant, start,
-                        home, work, vehicle, cards, split, userSeed));
+                        home, work, vehicle, cards, split, userSeed, transitCard));
             }
         }
         return users;
+    }
+
+    /**
+     * 통근자의 회사 위치.
+     *
+     * <p><b>예전에는 전원이 서울에서 뽑혔다</b>({@code seoul.sample(r)}). 그래서 부산에 사는 사람도
+     * 제주에 사는 사람도 회사가 서울이었고, 근무시간대 결제가 전부 서울에 찍혔다. 동선이 통째로
+     * 거짓이 되는 자리였다.
+     *
+     * <p>이제 <b>수도권 거주자만</b> 서울로 통근하고(경기·인천→서울은 실제로 흔하다),
+     * 그 밖의 지역은 <b>집과 같은 시도 안에서</b> 회사를 뽑는다. 같은 시도 안이어도 시군구가 다르면
+     * 통근 거리가 생기므로, 시내 대중교통·광역버스·기차 중 무엇을 타는지는 거리로 갈린다.
+     */
+    private static RegionEntry workplace(RegionEntry home, WeightedRegions seoul,
+                                         Map<String, WeightedRegions> bySido, Random r) {
+        boolean capital = CAPITAL_SUBURB.contains(home.sido()) || "서울특별시".equals(home.sido());
+        if (capital) return seoul.sample(r);
+        WeightedRegions same = bySido.get(home.sido());
+        return same != null ? same.sample(r) : home;
     }
 
     private String dataSplit(Random r) {

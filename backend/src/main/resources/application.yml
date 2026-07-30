@@ -205,9 +205,12 @@ finntech:
       baseline-window-months: 3
       night-start-hour: 0
       night-end-hour: 6
-      night-amount-multiplier: 2.0
+      # 2.0 → 1.69. 생성기가 고액 구간을 지수 압축(α=0.77)하면서 '평소 대비 배수'가 m→m^0.77 로
+      # 바뀌었다. 임계를 2.0^0.77 = 1.69 로 옮겨야 이상으로 잡히는 거래가 그대로 유지된다.
+      # 비율 기반 임계(ratio-threshold·modified-z-threshold)는 스케일 불변이라 손대지 않는다.
+      night-amount-multiplier: 1.69
       new-category-max-baseline-count: 2
-      frequency-multiplier: 2.0
+      frequency-multiplier: 1.69
     volatility:
       min-months: 3
       # 안정성 = clamp(1 - 월지출CV/cv-cap). 재생성 데이터는 시작월이 부분월(가입 말일)이라 CV가 과대계상돼(≈0.59)
