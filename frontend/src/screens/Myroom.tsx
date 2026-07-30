@@ -54,6 +54,21 @@ export function Myroom() {
     return { kept, total: last7.length || 7 };
   }, [grid.cells]);
 
+  /**
+   * 창고에서 올릴 때 쓸 빈 자리. 다 찼으면 null이라 버튼이 막힌다.
+   *
+   * **이른 반환보다 위에 있어야 한다.** 아래(로딩·빈 방 분기 뒤)에 두었더니 첫 렌더는 로딩으로
+   * 빠져 이 훅을 건너뛰고, 데이터가 온 두 번째 렌더에서야 실행돼 훅 개수가 달라졌다 —
+   * React가 "Rendered more hooks than during the previous render"로 죽어 마이룸이 열리지 않는다.
+   */
+  const nextFreeSlot = useMemo(() => {
+    const objs = room.data?.objects ?? [];
+    const slots = room.data?.slotCount ?? 20;
+    const used = new Set(objs.filter((o) => o.slotIndex !== null).map((o) => o.slotIndex));
+    for (let i = 0; i < slots; i++) if (!used.has(i)) return i;
+    return null;
+  }, [room.data]);
+
   if (loading && !home) {
     return (
       <Screen title="마이룸" hasTabBar>
@@ -84,15 +99,8 @@ export function Myroom() {
 
   const items = home.itemsHeld;
   const objects = room.data?.objects ?? [];
-  const slotCount = room.data?.slotCount ?? 20;
   const placed = objects.filter((o) => o.slotIndex !== null);
   const stored = objects.filter((o) => o.slotIndex === null);
-  /** 창고에서 올릴 때 쓸 빈 자리. 다 찼으면 null이라 버튼이 막힌다. */
-  const nextFreeSlot = useMemo(() => {
-    const used = new Set(placed.map((o) => o.slotIndex));
-    for (let i = 0; i < slotCount; i++) if (!used.has(i)) return i;
-    return null;
-  }, [placed, slotCount]);
 
   /** 자리를 옮긴다. 서버가 방 전체를 돌려주므로 그 응답으로 화면을 갱신한다. */
   async function move(objectId: string, slot: number | null) {
@@ -288,7 +296,7 @@ export function Myroom() {
                         title={`${o.name} · 창고`}>
                         <span aria-hidden="true" style={{ fontSize: 20 }}>{GRADE_EMOJI[o.grade]}</span>
                         <span>{o.name}</span>
-                        {editing && <em style={{ fontSize: 10, color: 'var(--blue)', fontStyle: 'normal' }}>올리기</em>}
+                        {editing && <em style={{ fontSize: 10, color: 'var(--blue-t)', fontStyle: 'normal' }}>올리기</em>}
                       </button>
                     ))}
                   </div>
