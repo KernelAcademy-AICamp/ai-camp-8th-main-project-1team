@@ -70,15 +70,51 @@ def main():
         else:
             print(f'  ⚠ 신호가 하나도 안 남은 취미: {h["type"]}')
 
+    # ── 손으로 유지하는 예외를 보존한다 ────────────────────────────────────
+    # `refineByMerchant`(6031 스트리밍을 가맹점명으로 음악/영상/독서로 가르는 표)와 그 세분유형을
+    # signature 로 쓰는 취미들은 **파생물이 아니다.** 그냥 덮어쓰면 6031 이 다시 디지털게임·영화관람의
+    # signature 로 돌아가 멜론(음악)이 게임·영화로 새던 버그가 되살아난다. 기존 파일에서 들고 온다.
+    prev = {}
+    if os.path.exists(OUT):
+        try:
+            with open(OUT, encoding='utf-8') as f:
+                prev = json.load(f)
+        except Exception as e:                      # 형식이 깨졌으면 보존을 포기하되 조용히 넘어가지 않는다
+            print(f'  ⚠ 기존 {os.path.relpath(OUT, ROOT)} 를 읽지 못해 수동 예외를 보존하지 못한다: {e}')
+
+    refine = prev.get('refineByMerchant', {})
+    subtypes = {st for k, v in refine.items() if not k.startswith('_') for st in v}
+    if subtypes:
+        by_type = {h['type']: h for h in out}
+        for h in prev.get('hobbies', []):
+            manual = [s for s in h.get('signatureKsic', []) if s in subtypes]
+            if not manual:
+                continue
+            cur = by_type.get(h['type'])
+            if cur is None:                          # 세분유형만으로 사는 취미(음악감상)는 파생에 안 나온다
+                cur = {'type': h['type'], 'signatureKsic': []}
+                out.append(cur)
+                by_type[h['type']] = cur
+            cur['signatureKsic'] = sorted(set(cur['signatureKsic']) | set(manual))
+        # 세분 대상 코드는 직접 signature 로 쓰지 않는다 — 그러라고 가른 것이다.
+        refined_codes = {k for k in refine if not k.startswith('_')}
+        for h in out:
+            h['signatureKsic'] = [c for c in h['signatureKsic'] if c not in refined_codes]
+        out[:] = [h for h in out if h['signatureKsic']]
+        print(f'  수동 예외 보존: 세분 코드 {sorted(refined_codes)} → 세분유형 {sorted(subtypes)}')
+
     doc = {
         '_note': ('취미유형 → 그 취미를 신호하는 업종코드(KSIC 세분류). '
                   'scripts/ksic/build_taste.py 가 생성기 카탈로그에서 파생한다(단일 원천). '
                   '앱은 업종코드까지만 받으므로 소비맥락(일식·백화점…)으로는 조회할 수 없다. '
                   f'그 업종 방문 중 취미 signature 비율이 {SIGNATURE_SHARE_MIN} 이상인 코드만 담는다 — '
-                  '일상 지출에 묻힌 신호는 취향이 아니라 잡음이다.'),
+                  '일상 지출에 묻힌 신호는 취향이 아니라 잡음이다. '
+                  'refineByMerchant 는 파생이 아니라 손으로 유지하는 예외표다(taste/README.md).'),
         'signatureShareMin': SIGNATURE_SHARE_MIN,
         'hobbies': out,
     }
+    if refine:
+        doc['refineByMerchant'] = refine
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, 'w', encoding='utf-8') as f:
         json.dump(doc, f, ensure_ascii=False, indent=1)

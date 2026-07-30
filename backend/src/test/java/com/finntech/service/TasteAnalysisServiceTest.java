@@ -11,11 +11,14 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * 취향 집계·요약의 순수 함수만 검증한다(DB·LLM 없음).
+ * 취향 집계·요약·세분의 순수 함수만 검증한다(DB·LLM 없음).
  *
  * <p>역매핑의 키는 <b>업종코드</b>다 — 앱이 제공자에게서 받는 것이 거기까지이기 때문이다.
- * 실제 taste/hobbies.json 구조를 본뜬다(여행=7521 여행사/5110 항공, 6031 스트리밍은
- * 디지털게임·영화관람 두 취미의 signature라 중복).
+ * 실제 taste/hobbies.json 구조를 본뜬다(여행=7521 여행사/5110 항공, 4763 운동·오락용품 소매는
+ * 스포츠레저·아웃도어캠핑 두 취미의 signature라 중복).
+ *
+ * <p>{@code 6031}(스트리밍)은 직접 취미로 매핑하지 않는다 — 음악·영상·독서·AI가 한 코드에 섞여 있어
+ * refineByMerchant로 가맹점명을 보고 음악감상/영상시청/독서구독으로 가른 뒤 취미유형에 매핑한다.
  */
 class TasteAnalysisServiceTest {
 
@@ -24,8 +27,21 @@ class TasteAnalysisServiceTest {
             "5110", List.of("여행"),          // 항공 여객 운송업
             "9011", List.of("문화공연"),       // 공연시설 운영업
             "5612", List.of("미식탐방"),       // 외국식 음식점업
-            "6031", List.of("디지털게임", "영화관람"),   // 한 업종코드가 두 취미의 signature
-            "5914", List.of("영화관람"));      // 영화 상영업
+            "5914", List.of("영화관람"),       // 영화 상영업
+            "4763", List.of("스포츠레저", "아웃도어캠핑"),  // 한 업종코드가 두 취미의 signature
+            "음악감상", List.of("음악감상"),    // 아래 세분유형 → 취미
+            "영상시청", List.of("영화관람"),
+            "독서구독", List.of("독서문화"));
+
+    /**
+     * 업종코드 {@code 6031}(스트리밍)을 가맹점명으로 세분(부분일치).
+     * 챗지피티(AI)는 어디에도 없어 취미 신호가 아니다.
+     */
+    private static final Map<String, Map<String, List<String>>> REFINE = Map.of(
+            "6031", Map.of(
+                    "음악감상", List.of("멜론", "스포티파이", "지니", "애플뮤직"),
+                    "영상시청", List.of("넷플릭스", "유튜브", "디즈니", "티빙"),
+                    "독서구독", List.of("밀리의서재", "리디")));
 
     /** 취향 분석은 업종코드만 본다. 중분류는 같은 결제에 실려 있어도 집계에 관여하지 않는다. */
     private static UserPayment pay(String ksic, int amount, String merchant) {
@@ -66,14 +82,55 @@ class TasteAnalysisServiceTest {
 
     @Test
     void 한_결제가_여러_취미의_signature면_모두에_카운트된다() {
-        // 6031(스트리밍) → 디지털게임·영화관람 둘 다.
-        List<UserPayment> ps = List.of(pay("6031", 14900, "넷플릭스"));
+        // 4763(운동·오락용품 소매) → 스포츠레저·아웃도어캠핑 둘 다.
+        List<UserPayment> ps = List.of(pay("4763", 89000, "데카트론"));
 
         List<HobbyScore> out = TasteAnalysisService.aggregate(ps, REVERSE);
 
         assertThat(out).extracting(HobbyScore::type)
-                .containsExactlyInAnyOrder("디지털게임", "영화관람");
+                .containsExactlyInAnyOrder("스포츠레저", "아웃도어캠핑");
         assertThat(out).allSatisfy(s -> assertThat(s.count()).isEqualTo(1));
+    }
+
+    @Test
+    void 스트리밍은_가맹점명으로_세분된다_멜론은_음악_넷플릭스는_영상_챗지피티는_제외() {
+        List<UserPayment> ps = List.of(
+                pay("6031", 10900, "멜론 스트리밍"),    // 음악감상 → 음악감상
+                pay("6031", 13500, "넷플릭스 스탠다드"), // 영상시청 → 영화관람
+                pay("6031", 29000, "챗지피티플러스"));   // 매칭 없음 → 6031 유지 → 취미 아님
+
+        List<HobbyScore> out = TasteAnalysisService.aggregate(ps, REVERSE, REFINE);
+
+        assertThat(out).extracting(HobbyScore::type)
+                .containsExactlyInAnyOrder("음악감상", "영화관람");   // 챗지피티는 빠진다
+        assertThat(out).allSatisfy(s -> assertThat(s.count()).isEqualTo(1));
+    }
+
+    @Test
+    void 세분이_없으면_멜론이_영화관람으로_샌다_회귀() {
+        // 세분표를 주지 않으면 6031 은 REVERSE 에 없으므로 아무 취미도 못 잡는다.
+        // 예전처럼 6031 을 디지털게임·영화관람의 signature 로 두었다면 멜론이 그 둘로 샜다.
+        List<UserPayment> ps = List.of(pay("6031", 10900, "멜론 스트리밍"));
+
+        assertThat(TasteAnalysisService.aggregate(ps, REVERSE)).isEmpty();
+        assertThat(TasteAnalysisService.aggregate(ps, REVERSE, REFINE))
+                .extracting(HobbyScore::type).containsExactly("음악감상");
+    }
+
+    @Test
+    void refineKsic는_두_생성기_어휘를_모두_커버하고_비대상은_그대로_둔다() {
+        // seed 어휘(맨이름) — Catalog.MERCHANTS 스트리밍 = [넷플릭스, 유튜브프리미엄, 멜론]
+        assertThat(TasteAnalysisService.refineKsic("6031", "멜론", REFINE)).isEqualTo("음악감상");
+        assertThat(TasteAnalysisService.refineKsic("6031", "유튜브프리미엄", REFINE)).isEqualTo("영상시청");
+        // generation 어휘(서비스명) — products.json
+        assertThat(TasteAnalysisService.refineKsic("6031", "멜론 스트리밍", REFINE)).isEqualTo("음악감상");
+        assertThat(TasteAnalysisService.refineKsic("6031", "밀리의서재", REFINE)).isEqualTo("독서구독");
+        // 매칭 없음(AI) → 원 업종코드 유지
+        assertThat(TasteAnalysisService.refineKsic("6031", "챗지피티플러스", REFINE)).isEqualTo("6031");
+        // 세분 대상 아닌 업종코드는 손대지 않음
+        assertThat(TasteAnalysisService.refineKsic("5612", "스시집", REFINE)).isEqualTo("5612");
+        // 가맹점명 null 방어 → 원 업종코드 유지
+        assertThat(TasteAnalysisService.refineKsic("6031", null, REFINE)).isEqualTo("6031");
     }
 
     @Test
