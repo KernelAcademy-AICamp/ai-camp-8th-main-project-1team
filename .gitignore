@@ -7,6 +7,8 @@ frontend/node_modules/
 # ── 로컬 DB (H2 파일) ──
 backend/data/
 backend-mydata/data/
+# 저장소 루트의 H2 파일 — 락 파일이 실행할 때마다 바뀌어 변경으로 잡힌다.
+data/
 *.mv.db
 *.trace.db
 
