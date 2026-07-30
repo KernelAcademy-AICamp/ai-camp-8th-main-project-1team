@@ -60,12 +60,30 @@ public final class Catalog {
             Map.entry("영화", List.of("CGV", "롯데시네마", "메가박스")),
             Map.entry("헬스장", List.of("애니타임피트니스", "짐박스")),
             Map.entry("카페", List.of("스타벅스", "이디야", "투썸플레이스", "메가커피")),
-            Map.entry("편의점", List.of("CU", "GS25", "세븐일레븐"))
+            Map.entry("편의점", List.of("CU", "GS25", "세븐일레븐")),
+            // 업종코드 재분류로 CONTEXTS_BY_KSIC 의 맥락 이름이 바뀌었는데 여기를 안 맞춰
+            // 아래 7개가 상호 없이 남았다. 시드가 MERCHANTS.get(맥락) 을 그대로 쓰므로
+            // null 이 되어 **앱이 기동 실패했다**(NPE: "merchants" is null).
+            Map.entry("한식", List.of("김밥천국", "본죽", "한솥도시락")),
+            Map.entry("양식", List.of("아웃백", "빕스", "매드포갈릭")),
+            Map.entry("분식", List.of("신전떡볶이", "죠스떡볶이", "국대떡볶이")),
+            Map.entry("대중교통", List.of("지하철", "버스", "택시")),
+            Map.entry("통신비", List.of("SKT", "KT", "LGU+")),
+            Map.entry("화장품", List.of("올리브영", "이니스프리", "아리따움")),
+            Map.entry("의원", List.of("연세의원", "튼튼의원", "서울365의원"))
     );
 
     /** 카드사 목록(이름). */
+    /**
+     * 카드사. <b>{@link #CARD_DEFS}가 쓰는 회사는 전부 여기 있어야 한다.</b>
+     *
+     * 시드는 {@code companies.get(cardDef.company())}로 상품에 회사를 붙이는데, 목록에 없으면
+     * 조용히 null 이 들어가고 저장에서 not-null 위반으로 **앱이 기동 실패한다**. 실제로 카드를
+     * 늘리면서 여기를 안 고쳐 우리카드·하나카드가 빠졌고, 시드가 켜진 환경이 통째로 뜨지 않았다.
+     * 아래 CARD_DEFS 를 늘릴 때 이 목록도 함께 늘린다 — 정합은 CatalogConsistencyTest 가 지킨다.
+     */
     public static final List<String> COMPANIES = List.of(
-            "신한카드", "삼성카드", "현대카드", "KB국민카드", "롯데카드");
+            "신한카드", "삼성카드", "현대카드", "KB국민카드", "롯데카드", "우리카드", "하나카드");
 
     /** 카드 혜택 정의: 대분류·할인율(%)·실적구간[start,end]·월한도. */
     /** @param midCategory 혜택 대상 소비 중분류. 실제 카드도 소비자가 아는 묶음 단위로 준다. */
