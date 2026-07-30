@@ -65,8 +65,12 @@ finntech:
   # 뒤 3개는 앱(Capacitor) 웹뷰의 오리진이다. 웹 자산이 기기 안에서 서빙되므로 브라우저와 달리
   # 오리진이 도메인이 아니고, 플랫폼·설정에 따라 셋 중 하나가 된다(안드로이드 http/https,
   # iOS capacitor). 어느 것이 될지 빌드 설정에 달려 있어 셋을 함께 연다.
+  # 5173은 `npm run dev`, 4173은 `npm run preview`(빌드 결과 미리보기)다. 4173이 빠져 있어서
+  # 미리보기로 열면 모든 요청이 403 `Invalid CORS request`가 되고, 화면에는 원인을 알 수 없는
+  # 'Load failed'만 떴다 — 브라우저가 CORS 차단을 네트워크 오류로만 알려 주기 때문이다.
+  # 배포 전 마지막으로 확인하는 것이 preview 이므로 둘 다 열어 둔다.
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,capacitor://localhost,https://localhost,http://localhost}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173,capacitor://localhost,https://localhost,http://localhost}
 
   # ---- 통장 비교 (정보성) — 실 예·적금 금리 비교 -----------------------------
   # 금소법: '단순 정보제공 + 판매목적 아님 + 무제휴/무광고 + 가입 편의 미제공'이면 중개업 아님
