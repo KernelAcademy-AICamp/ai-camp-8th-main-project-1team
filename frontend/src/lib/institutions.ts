@@ -32,8 +32,17 @@ const LOGO: Record<string, string> = {
   'KB국민은행': '/logo/KB국민은행.svg',
   'KB국민카드': '/logo/KB국민카드.svg',
   'NH농협은행': '/logo/NH농협은행.svg',
+  'PASS인증서': '/logo/PASS인증서.png',
   'SC제일은행': '/logo/SC제일은행.svg',
+  'coupay': '/logo/coupay.png',
   'iM뱅크': '/logo/iM뱅크.svg',
+  'kakaopay': '/logo/kakaopay.svg',
+  'naverpay': '/logo/naverpay.svg',
+  'payco': '/logo/payco.svg',
+  'tosspay': '/logo/tosspay.svg',
+  '네이버인증서': '/logo/네이버인증서.jpeg',
+  '카카오인증서': '/logo/카카오인증서.png',
+  '토스인증서': '/logo/토스인증서.jpg',
   '광주은행': '/logo/광주은행.svg',
   '롯데카드': '/logo/롯데카드.webp',
   '삼성카드': '/logo/삼성카드.svg',
@@ -61,6 +70,12 @@ const LOGO: Record<string, string> = {
 const LOGO_ALIAS: Record<string, string> = {
   'KDB산업은행': '한국산업은행',
   'NH농협카드': 'NH농협은행',
+  // 간편결제는 파일명이 영문이라 한글 표기명과 글자가 겹치지 않는다.
+  '카카오페이': 'kakaopay',
+  '네이버페이': 'naverpay',
+  '페이코': 'payco',
+  '토스페이': 'tosspay',
+  '쿠페이': 'coupay',
 };
 
 /**

@@ -19,10 +19,10 @@ import { api } from '../lib/api';
 import { mergeInstitutions, splitPicked, type Inst, type InstCategory } from '../lib/institutions';
 
 const PROVIDERS = [
-  { name: '카카오톡', bg: '#FFCD00', fg: '#3c1e1e', label: 'K', desc: '카카오 지갑 인증서' },
-  { name: '네이버', bg: '#03C75A', fg: '#fff', label: 'N', desc: '네이버 인증서' },
-  { name: 'PASS', bg: '#E6002D', fg: '#fff', label: 'P', desc: '통신사 인증' },
-  { name: '토스', bg: '#3182F6', fg: '#fff', label: 't', desc: '토스 인증서' },
+  { name: '카카오톡', bg: '#FFCD00', fg: '#3c1e1e', label: 'K', desc: '카카오 지갑 인증서', logo: '/logo/카카오인증서.png' },
+  { name: '네이버', bg: '#03C75A', fg: '#fff', label: 'N', desc: '네이버 인증서', logo: '/logo/네이버인증서.jpeg' },
+  { name: 'PASS', bg: '#E6002D', fg: '#fff', label: 'P', desc: '통신사 인증', logo: '/logo/PASS인증서.png' },
+  { name: '토스', bg: '#3182F6', fg: '#fff', label: 't', desc: '토스 인증서', logo: '/logo/토스인증서.jpg' },
 ];
 
 /**
@@ -157,7 +157,9 @@ export function Connect() {
                     onClick={() => toggle(inst.id)} disabled={!cat.available} aria-pressed={on}
                     style={!cat.available ? { opacity: .45, cursor: 'default' } : undefined}>
                     <Logo inst={inst} />
-                    <span>{inst.name}</span>
+                    {/* 로고가 있으면 이름을 감춘다 — 로고 자체가 이름이라 두 번 읽힌다.
+                        스크린리더에는 남겨야 하므로 시각적으로만 숨긴다. */}
+                    <span className={inst.logo ? 'sr-only' : undefined}>{inst.name}</span>
                   </button>
                 );
               })}
@@ -204,7 +206,10 @@ export function Connect() {
             <p className="sheet-sub">마이데이터 연결엔 통합인증이 필요해요. 쓰시는 걸로 골라주세요.</p>
             {PROVIDERS.map((p) => (
               <button type="button" key={p.name} className="provider" onClick={() => void pickProvider(p.name)}>
-                <span className="pl" style={{ background: p.bg, color: p.fg }} aria-hidden="true">{p.label}</span>
+                {/* 실제 인증서 CI. 없으면 색 배지로 떨어진다. */}
+                {p.logo
+                  ? <span className="pl pl-img" aria-hidden="true"><img src={p.logo} alt="" /></span>
+                  : <span className="pl" style={{ background: p.bg, color: p.fg }} aria-hidden="true">{p.label}</span>}
                 <span><b>{p.name}</b><span className="sub">{p.desc}</span></span>
               </button>
             ))}

@@ -575,16 +575,22 @@ body{
 .sheet-title{font-size:19px;font-weight:700;margin-bottom:4px;}
 .sheet-sub{font-size:14px;color:var(--t3);margin:0 0 16px;line-height:1.5;}
 .inst-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:6px;}
+/* `min-width:0` 이 없으면 격자 칸이 내용의 최소폭 아래로 못 줄어든다. SVG 로고는 고유 폭이
+   1,400px대라 그 값이 칸을 밀어 올려 오른쪽 열이 화면 밖으로 삐져나갔다(390px 화면에서 문서 418px). */
 .inst{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:16px 8px 12px;
-  display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:.15s;}
+  display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:.15s;
+  min-width:0;overflow:hidden;}
 .inst.on{border-color:var(--blue);background:var(--blue-weak);}
 .inst .logo{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   font-weight:700;color:#fff;font-size:14px;}
-/* 실제 CI 로고. **동그라미를 쓰지 않는다** — 금융사 로고는 대부분 가로로 길어서
-   원 안에 넣으면 지름에 맞춰 줄어들어 글자가 뭉개진다. 가로로 넓은 칸에 원본 비율로 담는다. */
-.inst .logo-img{width:64px;height:34px;border-radius:8px;background:#fff;
-  border:1px solid var(--line);padding:4px 6px;}
-.inst .logo-img img{width:100%;height:100%;object-fit:contain;display:block;}
+/* 실제 CI 로고. **동그라미도 테두리도 쓰지 않는다** — 금융사 로고는 가로로 길어서
+   원에 넣으면 지름에 맞춰 줄어들고, 테두리·여백을 두면 그만큼 더 작아져 글자가 뭉개진다.
+   칸을 끝까지 쓰되 `object-fit:contain` 이 비율을 지킨다 — 좌우로 늘어나지 않는다. */
+.inst .logo-img{width:100%;aspect-ratio:5/2;border-radius:0;background:none;
+  border:none;padding:0;}
+.inst .logo-img img{width:100%;height:100%;max-width:100%;object-fit:contain;display:block;}
+/* 로고를 쓰는 칸은 이름을 감추므로 위아래 여백을 줄여 로고가 커질 자리를 준다. */
+.inst:has(.logo-img){padding:10px 8px;justify-content:center;}
 .inst span{font-size:12px;font-weight:600;color:var(--t2);}
 .inst.on span{color:var(--blue-dark);}
 .trow{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--bg);font-size:14px;}
@@ -595,6 +601,9 @@ body{
   width:100%;text-align:left;font-family:inherit;color:inherit;}
 .provider:active{transform:scale(.98);}
 .provider .pl{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff;}
+/* 실제 인증서 CI — 배경·테두리 없이 비율만 지킨다(로고마다 여백 규정이 다르다). */
+.provider .pl-img{background:none;padding:0;overflow:hidden;}
+.provider .pl-img img{width:100%;height:100%;object-fit:contain;display:block;}
 .provider b{font-size:16px;}
 /* 마크업은 `<span class="sub">` 인데 여기서 `p` 를 겨냥하고 있어 설명문이 제목과 같은 크기로
    한 줄에 붙어 나왔다. 둘 다 받는다. */
