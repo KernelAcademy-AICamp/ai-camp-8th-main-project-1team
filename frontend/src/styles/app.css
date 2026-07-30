@@ -268,7 +268,9 @@ body{
 .sp-tag{display:inline-block;font-size:10px;font-weight:700;padding:0 8px;line-height:16px;border-radius:20px;margin-left:8px;vertical-align:1px;}
 .tag-sanct{background:var(--green-weak);color:var(--green-t);}      /* 4.64:1 */
 .tag-fixed{background:#F1F3F5;color:#5A5F5C;}                       /* 5.4:1 */
-.section-t{font-size:18px;font-weight:700;margin:24px 0 12px;}
+/* 제목과 보조 문구(aux)를 양끝으로 벌린다. 규칙이 없으면 `이번 주지킨 날 기준`처럼 붙어 읽힌다. */
+.section-t{font-size:18px;font-weight:700;margin:24px 0 12px;
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
 .section-t.row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .sec-more{border:none;background:none;padding:0;font-family:inherit;font-size:14px;font-weight:500;
   color:var(--t3);cursor:pointer;display:flex;align-items:center;gap:4px;}
@@ -370,7 +372,9 @@ body{
   border-radius:16px 16px 4px 4px;box-shadow:0 0 18px rgba(255,140,190,.6);}
 .sc-new .nbase{width:20px;height:6px;background:#C9CFD8;border-radius:4px;margin:1px auto 0;}
 .sc-new .shadow{left:-5px;bottom:-8px;width:40px;height:9px;}
-.sc-hint{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:11px;color:#4C5560;font-weight:600;}
+/* 본문 시트가 씬 위로 20px 겹쳐 올라오므로(.content-sheet margin-top:-20px), 안내문을
+   그보다 위에 둔다. bottom:10px 이면 글자 아랫부분이 시트에 잘려 반쯤 지워진 것처럼 보였다. */
+.sc-hint{position:absolute;left:0;right:0;bottom:28px;text-align:center;font-size:11px;color:#4C5560;font-weight:600;}
 /* room widgets */
 .today-line{background:var(--card);border-radius:var(--radius-sm);padding:16px 16px;margin-bottom:12px;
   display:flex;align-items:center;gap:12px;}
