@@ -161,7 +161,10 @@ body{
 @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
 
 /* ---- home ---- */
-.strip{background:linear-gradient(180deg,#FFFFFF 0%,#F0FFF9 100%);border-radius:16px;padding:16px;margin-bottom:24px;
+/* 개편안에서는 `<div>` 라 저절로 전체 폭이었다. 우리는 누를 수 있어야 해서 `<button>` 으로
+   바꿨는데 폭 지정을 빠뜨려, 내용만큼만 넓어지고 왼쪽에 치우쳐 붙었다. */
+.strip{width:100%;text-align:left;font-family:inherit;color:inherit;border:none;
+  background:linear-gradient(180deg,#FFFFFF 0%,#F0FFF9 100%);border-radius:16px;padding:16px;margin-bottom:24px;
   display:flex;align-items:center;gap:8px;cursor:pointer;transition:transform .08s;}
 .strip:active{transform:scale(.985);}
 .strip .hic{width:20px;height:20px;flex:0 0 auto;}

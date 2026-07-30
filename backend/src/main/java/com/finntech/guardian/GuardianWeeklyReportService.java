@@ -7,13 +7,19 @@ import com.finntech.guardian.domain.GuardianEnums.TxState;
 import com.finntech.guardian.domain.GuardianTransaction;
 import com.finntech.guardian.repository.DailyVerdictRepository;
 import com.finntech.guardian.repository.GuardianChallengeRepository;
+import com.finntech.guardian.domain.WeeklyMission;
 import com.finntech.guardian.repository.GuardianTransactionRepository;
+import com.finntech.guardian.repository.WeeklyMissionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.List;
 
 /**
@@ -36,15 +42,22 @@ public class GuardianWeeklyReportService {
     private final GuardianChallengeRepository challengeRepository;
     private final DailyVerdictRepository verdictRepository;
     private final GuardianTransactionRepository txRepository;
+    private final WeeklyMissionRepository missionRepository;
     private final GuardianClock clock;
+    /** 미션 1개 성공당 지급 포인트. 값은 application.yml — 코드에 박지 않는다(원칙 4). */
+    private final int missionPoint;
 
     public GuardianWeeklyReportService(GuardianChallengeRepository challengeRepository,
                                        DailyVerdictRepository verdictRepository,
                                        GuardianTransactionRepository txRepository,
+                                       WeeklyMissionRepository missionRepository,
+                                       GuardianProperties props,
                                        GuardianClock clock) {
         this.challengeRepository = challengeRepository;
         this.verdictRepository = verdictRepository;
         this.txRepository = txRepository;
+        this.missionRepository = missionRepository;
+        this.missionPoint = props.getPoint().getWeeklyMission();
         this.clock = clock;
     }
 
@@ -60,10 +73,26 @@ public class GuardianWeeklyReportService {
     /** @param count 건수, @param ratio 그 주 라벨링 전체 대비 비율 */
     public record LabelSlice(String key, String label, int count, double ratio) {}
 
+    /**
+     * 주간 미션 한 줄. {@code achieved} 가 null 이면 아직 기간 중이다(일요일 배치가 정산한다).
+     * 개편안 s-report 의 '주간 미션 정산'.
+     */
+    public record MissionLine(String text, String status, Integer reward) {}
+
+    /**
+     * '지킴이가 본 이번 주' — 잘한 점 하나, 함께 볼 점 하나.
+     *
+     * <p><b>규칙이 만든다.</b> 지난주 대비 건수가 가장 많이 줄어든 카테고리가 잘한 점이고,
+     * 가장 많이 늘어난 쪽이 함께 볼 점이다(마스터 §4 원칙 1 — 판단은 설명가능한 모델이,
+     * 표현은 AI가). 문장에 쓰는 숫자는 전부 여기서 센 값이다.
+     */
+    public record Coaching(String good, String watch) {}
+
     public record WeeklyReport(LocalDate weekStart, LocalDate weekEnd, String weekLabel,
                                double defenseRate, Double deltaFromLastWeek,
                                List<WeekPoint> trend, List<LabelSlice> labels,
-                               int labeledCount, long exemptedAmount, String headline) {}
+                               int labeledCount, long exemptedAmount, String headline,
+                               List<MissionLine> missions, int missionReward, Coaching coaching) {}
 
     @Transactional(readOnly = true)
     public WeeklyReport report(Long userId, int weeksAgo) {
@@ -103,13 +132,78 @@ public class GuardianWeeklyReportService {
                 slice("TARGET", "줄이려던 소비", counted, labeled),
                 slice("UNAVOIDABLE", "불가피한 소비", exempted, labeled));
 
+        // ── 주간 미션 정산 · 이번 주 코칭
+        List<MissionLine> missions = missionLines(userId, start);
+        int reward = (int) missions.stream().filter(m -> "SUCCESS".equals(m.status())).count() * missionPoint;
+        Coaching coaching = coaching(ch.getId(), start, end);
+
         return new WeeklyReport(start, end, weekLabel(start), cur.defenseRate(), delta,
-                trend, labels, labeled, exemptedAmount, headline(trend, delta));
+                trend, labels, labeled, exemptedAmount, headline(trend, delta),
+                missions, reward, coaching);
     }
 
     // ======================================================================
     //  내부
     // ======================================================================
+
+    /** 그 주의 미션을 사람이 읽는 문장으로. 없으면 빈 목록이라 화면이 절을 통째로 감춘다. */
+    private List<MissionLine> missionLines(Long userId, LocalDate weekStart) {
+        List<MissionLine> out = new ArrayList<>();
+        for (WeeklyMission m : missionRepository.findByUserAndPeriod(userId, weekStart)) {
+            String text = switch (m.getConditionType()) {
+                case CATEGORY_COUNT_MAX -> m.getCategory() + " 주 " + m.getThreshold() + "회 이하";
+                case NO_SPEND_STREAK_MIN -> "무지출 " + m.getThreshold() + "일 연속";
+                case LABELING_COUNT_MIN -> "소비 성격 " + m.getThreshold() + "건 답하기";
+            };
+            String status = m.getAchieved() == null ? "ONGOING"
+                    : m.getAchieved() ? "SUCCESS" : "FAILED";
+            out.add(new MissionLine(text, status, missionPoint));
+        }
+        return out;
+    }
+
+    /**
+     * 지난주와 이번 주의 카테고리별 건수를 견줘 한 문장씩 만든다.
+     *
+     * <p>비교할 것이 없으면(첫 주이거나 결제가 없으면) null 을 담아 화면이 그 줄을 감추게 한다 —
+     * 없는 근거로 칭찬하거나 나무라지 않는다.
+     */
+    private Coaching coaching(Long challengeId, LocalDate start, LocalDate end) {
+        Map<String, Integer> now = countByCategory(challengeId, start, end);
+        Map<String, Integer> before = countByCategory(challengeId, start.minusWeeks(1), start.minusDays(1));
+        if (now.isEmpty() && before.isEmpty()) return new Coaching(null, null);
+
+        String bestDown = null, bestUp = null;
+        int down = 0, up = 0;
+        for (String cat : new TreeSet<>(union(now, before))) {
+            int diff = now.getOrDefault(cat, 0) - before.getOrDefault(cat, 0);
+            if (diff < down) { down = diff; bestDown = cat; }
+            if (diff > up) { up = diff; bestUp = cat; }
+        }
+        String good = bestDown == null ? null
+                : bestDown + " 지출이 지난주보다 " + (-down) + "번 줄었어요.";
+        String watch = bestUp == null ? null
+                : bestUp + " 지출이 지난주보다 " + up + "번 늘었어요. 이번 주에 한 번 더 살펴봐요.";
+        return new Coaching(good, watch);
+    }
+
+    private Map<String, Integer> countByCategory(Long challengeId, LocalDate from, LocalDate to) {
+        Map<String, Integer> m = new TreeMap<>();   // 재현성 — 순서가 고정돼야 같은 문장이 나온다
+        for (GuardianTransaction t : txRepository.findByChallenge(challengeId)) {
+            LocalDate d = t.getOccurredAt().toLocalDate();
+            if (d.isBefore(from) || d.isAfter(to)) continue;
+            if (t.getState() != TxState.COUNTED) continue;   // 성역·계획 소비는 잔소리 대상이 아니다
+            if (t.getCategory() == null) continue;
+            m.merge(t.getCategory(), 1, Integer::sum);
+        }
+        return m;
+    }
+
+    private static Set<String> union(Map<String, Integer> a, Map<String, Integer> b) {
+        Set<String> s = new TreeSet<>(a.keySet());
+        s.addAll(b.keySet());
+        return s;
+    }
 
     private WeekPoint weekPoint(Long challengeId, LocalDate weekStart, boolean current) {
         List<DailyVerdict> vs = verdictRepository.findRange(challengeId, weekStart, weekStart.plusDays(6));

@@ -5,8 +5,9 @@
  * '오늘'은 브라우저 시계가 아니라 서버가 준 `asOf`다 — 데모에서 시계를 밀면 잔디도 같이 움직여야 한다.
  * 주간 미션은 백엔드에 조회 API가 없어(설계서 §9 미정), 같은 카드 모양에 잔디로 계산한 이번 주 현황을 넣었다.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '../components/Icons';
+import { Modal } from '../components/Sheet';
 import { AppBar, Scroll, Screen, ErrorBox, Loading, SectionTitle } from '../components/ui';
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
@@ -20,12 +21,38 @@ const DAY = 86_400_000;
 const iso = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
+/**
+ * 세리머니를 하루에 한 번만 띄우려고 마지막으로 본 판정일을 남긴다.
+ *
+ * <b>왜 마이룸인가.</b> 개편안은 마이룸에 들어올 때 소품이 도착한다 — 방이 채워지는 것을
+ * 눈앞에서 보여 주는 연출이다. 우리는 홈에서 띄우고 있었는데, 그러면 방을 보지도 않은 채
+ * 모달만 닫게 되어 "무엇이 어디에 놓였는지"가 남지 않는다.
+ */
+const SEEN_KEY = 'guardian_ceremony_seen';
+const readSeen = () => { try { return localStorage.getItem(SEEN_KEY) ?? ''; } catch { return ''; } };
+const writeSeen = (d: string) => { try { localStorage.setItem(SEEN_KEY, d); } catch { /* noop */ } };
+
 export function Myroom() {
   const { go, userId } = useSession();
   const [editing, setEditing] = useState(false);
   /** 이동 중인 소품 코드 — 연타로 서버에 두 번 보내지 않게 잠근다. */
   const [moving, setMoving] = useState<string | null>(null);
   const { home, loading, error, reload } = useGuardian();
+  const [ceremonyOpen, setCeremonyOpen] = useState(false);
+  const ceremony = home?.ceremony ?? null;
+
+  // 방이 그려진 뒤에 뜨도록 한 박자 늦춘다(개편안도 450ms 뒤에 연다).
+  useEffect(() => {
+    if (!ceremony || readSeen() === ceremony.verdictDate) return;
+    const t = setTimeout(() => setCeremonyOpen(true), 450);
+    return () => clearTimeout(t);
+  }, [ceremony]);
+
+  function closeCeremony() {
+    if (ceremony) writeSeen(ceremony.verdictDate);
+    setCeremonyOpen(false);
+  }
+
   const room = useAsync(() => api.guardian.room(userId).catch(() => ({ objects: [], slotCount: 20 })), [userId]);
 
   const grid = useMemo(() => {
@@ -314,6 +341,27 @@ export function Myroom() {
 
         <div className="spacer" style={{ height: 30 }} />
       </div></Scroll>
+
+      {/* 아침 세리머니 — 방에 들어왔을 때 소품이 도착한다(개편안 openMyroom). */}
+      <Modal open={ceremonyOpen && !!ceremony} onClose={closeCeremony} title="지킴이 세리머니">
+        {ceremony && (
+          <>
+            <div className="orb orb-bob" />
+            <h3>{ceremony.result === 'NO_SPEND_DAY' ? '어젯밤을 지켜냈어요!' : '어제도 잘 지켰어요'}</h3>
+            <p>
+              {ceremony.message ?? '새 소품이 도착했어요'}
+              {ceremony.objectId && (
+                <><br /><b style={{ color: 'var(--blue-t)' }}>
+                  {GRADE_EMOJI[ceremony.grade ?? 'COMMON']} {ceremony.objectId}
+                </b> · {GRADE_LABEL[ceremony.grade ?? 'COMMON']} 등급</>
+              )}
+            </p>
+            <p className="fine">포인트는 방 꾸미기 전용이에요 · 내 돈은 그대로 내 계좌에</p>
+            <button type="button" className="btn btn-primary" style={{ padding: 14 }}
+              onClick={() => { closeCeremony(); void reload(); }}>방에 두기</button>
+          </>
+        )}
+      </Modal>
     </Screen>
   );
 }
