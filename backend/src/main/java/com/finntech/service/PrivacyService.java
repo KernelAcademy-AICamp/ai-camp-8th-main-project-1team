@@ -23,7 +23,9 @@ import com.finntech.repository.WishlistItemRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -114,7 +116,7 @@ public class PrivacyService {
     @Transactional
     public AppUser setConsent(Long userId, boolean consent, LocalDateTime at) {
         AppUser user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("user " + userId + " not found"));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user " + userId + " not found"));
         user.setConsentGiven(consent);
         userRepository.save(user);
 

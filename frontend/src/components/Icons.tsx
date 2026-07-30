@@ -124,6 +124,28 @@ export function IconSprite() {
           <circle cx="12" cy="8" r="4.1" fill="currentColor" />
           <path d="M4.4 20.4c.6-4 4-5.6 7.6-5.6s7 1.6 7.6 5.6H4.4z" fill="currentColor" />
         </symbol>
+        {/* 개편안(MOA_UI_0729(2))이 새로 쓰는 4종 — 박수 손·집·기차·확성기. 원본 심볼 그대로다. */}
+        <symbol id="i-hand" viewBox="0 0 74 96">
+          <ellipse cx="18" cy="54" rx="11" ry="17" fill="#F6B189" transform="rotate(-22 18 54)" />
+          <path d="M22 88 V36 C22 16 30 7 38 7 C50 7 56 17 56 32 V88 Z" fill="#FFC9A3" />
+          <path d="M31 10 V44 M40 8 V44 M49 14 V44" stroke="#F0A87E" strokeWidth="1.6" strokeLinecap="round" />
+          <rect x="18" y="82" width="42" height="14" rx="7" fill="#00B14F" />
+        </symbol>
+        <symbol id="i-house" viewBox="0 0 24 24">
+          <path d="M11.1 3.2a1.4 1.4 0 0 1 1.8 0l8.4 6.9a1 1 0 0 1-.6 1.8H3.3a1 1 0 0 1-.6-1.8l8.4-6.9z" fill="#4CCB85" />
+          <rect x="4.8" y="10.4" width="14.4" height="10.4" rx="2.4" fill="#00B14F" />
+          <rect x="9.9" y="14.4" width="4.2" height="6.4" rx="1.2" fill="#fff" />
+        </symbol>
+        <symbol id="i-ktx" viewBox="0 0 24 24">
+          <path d="M5 5.5C5 4.1 6.1 3 7.5 3h9C17.9 3 19 4.1 19 5.5V14c0 3-2.5 5-7 5s-7-2-7-5V5.5z" fill="#38BDF8" />
+          <rect x="7.4" y="6" width="9.2" height="4.4" rx="1.4" fill="#E8F6FE" />
+          <circle cx="8.6" cy="14.6" r="1.2" fill="#0B4F71" /><circle cx="15.4" cy="14.6" r="1.2" fill="#0B4F71" />
+          <rect x="8.5" y="20" width="7" height="1.6" rx=".8" fill="#94A3B8" />
+        </symbol>
+        <symbol id="i-mega" viewBox="0 0 24 24">
+          <path d="M20 4.4v15.2l-7.6-3.2H6a2.8 2.8 0 0 1-2.8-2.8v-2.8A2.8 2.8 0 0 1 6 8h6.4L20 4.4z" fill="#00B14F" />
+          <path d="M6.8 17.2h2.9l.9 2.6a1.5 1.5 0 0 1-2.8 1l-1-3.6z" fill="#00804A" />
+        </symbol>
       </defs>
     </svg>
   );

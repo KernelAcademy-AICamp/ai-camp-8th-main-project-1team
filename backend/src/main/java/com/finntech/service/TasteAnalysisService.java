@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * <p><b>원리.</b> 일상 지출(식당·편의점·교통)만으로는 성향이 안 드러난다. 마이데이터 생성기는 취미성 지출을
  * '가끔이지만 뚜렷하게' 주입해 취향이 읽히게 설계돼 있다(mydata_catalog §4-B). 이 서비스는 그 신호를
- * {@link HobbyCatalog}의 역매핑(category2 → 취미유형)으로 되짚어 취미유형별로 집계한다.
+ * {@link HobbyCatalog}의 역매핑(업종코드 → 취미유형)으로 되짚어 취미유형별로 집계한다.
  *
  * <p><b>①과의 경계.</b> ① 소비 분석은 카테고리별 <b>금액 구조</b>를 보고, ③은 <b>취미 유형</b>을 본다
  * (06_prd §11.3: "취향 분석은 ③ 담당"). 같은 거래를 보되 목적이 다르다 — ①은 "얼마 쓰나", ③은 "어떤 사람인가".
@@ -54,7 +54,8 @@ public class TasteAnalysisService {
                 .filter(p -> p.getPaymentDate() != null && !p.getPaymentDate().isBefore(since))
                 .toList();
 
-        List<HobbyScore> scores = aggregate(recent, hobbyCatalog.reverseMapping());
+        List<HobbyScore> scores = aggregate(recent, hobbyCatalog.reverseMapping(),
+                hobbyCatalog.refineByMerchant());
         String summary = summarize(scores);
         return new TasteProfile(userId, window, recent.size(), scores, summary);
     }
@@ -64,16 +65,29 @@ public class TasteAnalysisService {
     // ======================================================================
 
     /**
-     * 결제내역을 취미유형별로 집계해 건수 내림차순(→금액→이름)으로 정렬. 순수·결정론.
+     * 결제내역을 취미유형별로 집계해 건수 내림차순(→금액→이름)으로 정렬. 순수·결정론. (가맹점명 세분 없음)
      *
-     * @param payments      대상 결제 (category2·amount·merchantName 사용)
-     * @param reverseMap    category2 → 취미유형들 (1:N 허용)
+     * @param payments      대상 결제 (ksicCode·amount·merchantName 사용)
+     * @param reverseMap    업종코드 → 취미유형들 (1:N 허용)
      * @return 취미유형별 점수. 취미 신호가 없으면 빈 리스트.
      */
     static List<HobbyScore> aggregate(List<UserPayment> payments, Map<String, List<String>> reverseMap) {
+        return aggregate(payments, reverseMap, Map.of());
+    }
+
+    /**
+     * 위와 같되, 모호한 업종코드를 가맹점명으로 먼저 세분한다({@link #refineKsic}).
+     * 예: {@code 6031 스트리밍}은 음악(멜론)·영상(넷플릭스)·독서(밀리의서재)가 섞여 있어 그대로 매핑하면
+     * 취향이 왜곡된다 → 가맹점명으로 음악감상/영상시청/독서구독으로 가른 뒤 취미유형에 매핑한다.
+     *
+     * @param refineByMerchant 업종코드 → (세분유형 → 가맹점명 키워드들). 부분일치.
+     */
+    static List<HobbyScore> aggregate(List<UserPayment> payments, Map<String, List<String>> reverseMap,
+                                      Map<String, Map<String, List<String>>> refineByMerchant) {
         Map<String, Acc> byHobby = new LinkedHashMap<>();
         for (UserPayment p : payments) {
-            List<String> hobbies = reverseMap.getOrDefault(p.getCategory2(), List.of());
+            String axis = refineKsic(p.getKsicCode(), p.getMerchantName(), refineByMerchant);
+            List<String> hobbies = reverseMap.getOrDefault(axis, List.of());
             for (String hobby : hobbies) {
                 // 한 결제가 여러 취미의 signature면 각 취미에 카운트된다(1:N, 성향 신호는 겹쳐도 유효).
                 Acc a = byHobby.computeIfAbsent(hobby, k -> new Acc());
@@ -97,6 +111,29 @@ public class TasteAnalysisService {
                 .thenComparing(Comparator.comparingLong(HobbyScore::amount).reversed())
                 .thenComparing(HobbyScore::type));
         return scores;
+    }
+
+    /**
+     * 모호한 업종코드를 가맹점명 부분일치로 세분한다. 매칭이 없으면 원래 업종코드를 그대로 돌려준다.
+     * 순수 함수 — refineByMerchant는 데이터(리소스)로 주입되고 카테고리를 코드에 박지 않는다(설계원칙 4).
+     *
+     * <p>세분 축이 업종코드인 이유: 앱이 받는 것은 업종코드까지이고, {@code category2} 는 이제
+     * 중분류 15개("취미/여가")로 채워져 소비맥락 이름("스트리밍")으로는 아무것도 맞지 않는다.
+     *
+     * <p>예: ("6031", "멜론 스트리밍") → "음악감상", ("6031", "넷플릭스") → "영상시청",
+     * ("6031", "챗지피티플러스") → "6031"(매칭 없음, 취미 신호 아님), ("5611", …) → "5611"(세분 대상 아님).
+     */
+    static String refineKsic(String ksicCode, String merchantName,
+                             Map<String, Map<String, List<String>>> refineByMerchant) {
+        if (ksicCode == null || refineByMerchant == null) return ksicCode;
+        Map<String, List<String>> subtypes = refineByMerchant.get(ksicCode);
+        if (subtypes == null || merchantName == null) return ksicCode;
+        for (Map.Entry<String, List<String>> e : subtypes.entrySet()) {
+            for (String keyword : e.getValue()) {
+                if (!keyword.isEmpty() && merchantName.contains(keyword)) return e.getKey();
+            }
+        }
+        return ksicCode;
     }
 
     /**

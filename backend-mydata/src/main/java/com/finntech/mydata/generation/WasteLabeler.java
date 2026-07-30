@@ -16,12 +16,28 @@ public class WasteLabeler {
 
     private final GenerationProperties.Label cfg;
     private final GenerationProperties.Impulse imp;
-    private final Set<String> essential;
+    /**
+     * 필수 무대로 볼 재량성 상한. 이보다 낮으면 낭비 판정을 하지 않는다.
+     *
+     * <p>예전에는 필수 <b>맥락 이름 10개</b>가 yml에 박혀 있었고, 같은 목록이 Java·Python에도
+     * 손으로 복사돼 있었다. 이제 카탈로그가 이미 갖고 있는 {@code discretionaryBase}로 판단한다 —
+     * 맥락을 추가할 때 목록을 따로 고칠 일이 없고, 학습(train.py)과 기준이 갈라지지 않는다.
+     * 값은 {@code scripts/ksic/build_resources.py}의 ESSENTIAL_THRESHOLD와 같아야 한다.
+     */
+    private static final double ESSENTIAL_MAX_DISCRETIONARY = 0.30;
 
-    public WasteLabeler(GenerationProperties props) {
+    private final CatalogSampler sampler;
+
+    public WasteLabeler(GenerationProperties props, CatalogSampler sampler) {
         this.cfg = props.getLabel();
         this.imp = cfg.getImpulse();
-        this.essential = new HashSet<>(cfg.getEssentialCategories());
+        this.sampler = sampler;
+    }
+
+    /** 이 맥락이 '생존필수 무대'인가 — 카탈로그의 재량성이 정한다. */
+    private boolean isEssential(String category2) {
+        var ctx = sampler.context(category2);
+        return ctx != null && ctx.discretionaryBase() < ESSENTIAL_MAX_DISCRETIONARY;
     }
 
     /** 라벨 + 잔재 확률(p_waste, discretionary_score 컬럼에 저장 — ML 특징 아님). */
@@ -35,7 +51,7 @@ public class WasteLabeler {
                         boolean planned, boolean hobbyMatch, boolean deliveryOveruse,
                         boolean subscriptionLeak, PersonaVariant v, double curveFactor, Random r) {
         double p;
-        if (essential.contains(category2)) {
+        if (isEssential(category2)) {
             p = cfg.getBaseWasteProb();                       // 필수 무대: 낭비 아님
         } else {
             boolean excess = typicalAmount > 0 && amount > imp.getExcessAmountMultiplier() * typicalAmount;

@@ -23,11 +23,12 @@ class CatalogLoaderTest {
     private final CatalogLoader loader = new CatalogLoader(mapper);
 
     @Test
-    void contextsMapToSevenTopCategoriesOnly() {
+    void contextsCarryValidKsicCodes() {
         List<CatalogContext> ctx = loader.contexts();
         assertThat(ctx).hasSizeGreaterThanOrEqualTo(40);
         assertThat(ctx).allSatisfy(c -> {
-            assertThat(c.category1()).isIn("온라인", "쇼핑", "생활", "식비", "여가", "카페/간식", "편의점");
+            // 대분류는 없앴다 — 맥락은 업종코드(KSIC 세분류 4자리)를 가리킨다.
+            assertThat(c.ksicCode()).matches("\\d{4}");
             assertThat(c.channel()).isIn("ONLINE", "OFFLINE");
             assertThat(c.frequencyWeight()).isBetween(0.0, 1.0);
             assertThat(c.discretionaryBase()).isBetween(0.0, 1.0);
@@ -71,11 +72,14 @@ class CatalogLoaderTest {
         // 인구 비중 합 = 1.0
         double shareSum = personas.stream().mapToDouble(p -> p.populationShare()).sum();
         assertThat(shareSum).isCloseTo(1.0, org.assertj.core.data.Offset.offset(0.001));
-        var validCat1 = java.util.Set.of("식비", "카페/간식", "편의점", "쇼핑", "생활", "여가", "온라인");
+        // 페르소나는 **우리 소비 중분류**로 지출비중을 말한다 — 소비자 행동이지 업종 분류가 아니다.
+        var validMid = java.util.Set.of("식비", "카페/간식", "편의점/잡화", "대형마트", "술/유흥",
+                "쇼핑", "취미/여가", "의료", "건강/피트니스", "주거/통신", "미용",
+                "교통/자동차", "여행/숙박", "생활", "카테고리없음");
         var hobbyTypes = loader.hobbies().stream().map(h -> h.type()).collect(java.util.stream.Collectors.toSet());
         assertThat(personas).allSatisfy(p -> {
-            // 7대분류 비중 합 = 100, 키 유효
-            assertThat(p.categoryMix().keySet()).isSubsetOf(validCat1);
+            // 중분류 비중 합 = 100, 키 유효
+            assertThat(p.categoryMix().keySet()).isSubsetOf(validMid);
             assertThat(p.categoryMix().values().stream().mapToDouble(Double::doubleValue).sum())
                     .isCloseTo(100.0, org.assertj.core.data.Offset.offset(0.5));
             assertThat(p.onlineRatio()).isBetween(0.0, 1.0);
@@ -121,10 +125,12 @@ class CatalogLoaderTest {
     @Test
     void independentsAreLargeRealNamePool() {
         @SuppressWarnings("unchecked")
-        Map<String, Object> pool = (Map<String, Object>) loader.independents().get("namePoolByCategory2");
+        Map<String, Object> pool = (Map<String, Object>) loader.independents().get("namePoolByKsic");
         int total = pool.values().stream().mapToInt(v -> ((List<?>) v).size()).sum();
-        assertThat(total).isGreaterThanOrEqualTo(10_000);   // 서울 실상호 + KAPF
-        assertThat(loader.independents()).containsKeys("dongWeights", "coordBBoxTM");
+        assertThat(total).isGreaterThanOrEqualTo(10_000);   // 공공데이터 실상호(인허가·심평원)
+        // 키는 업종코드 4자리 — 예전에는 소비맥락 이름이었다.
+        assertThat(pool.keySet()).allMatch(k -> k.matches("\\d{4}"));
+        // dongWeights·coordBBoxTM은 뺐다. 로드만 되고 읽는 곳이 없던 데이터다(호출부 0건).
         assertThat(loader.fares()).containsKey("대중교통");
     }
 }

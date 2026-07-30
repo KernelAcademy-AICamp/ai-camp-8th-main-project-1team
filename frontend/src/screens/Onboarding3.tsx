@@ -13,7 +13,7 @@ import { useGuardian } from '../state/guardian';
 import { ApiError, api } from '../lib/api';
 import { CHALLENGE_DAYS } from '../lib/config';
 import {
-  won, iconOf, INTENSITY_TIERS, DEFAULT_INTENSITY,
+  won, wonShort, iconOf, INTENSITY_TIERS, DEFAULT_INTENSITY,
   INTENSITY_MIN, INTENSITY_MAX, INTENSITY_STEP, round1,
 } from '../lib/format';
 
@@ -25,6 +25,9 @@ export function Onboarding3() {
   const inited = useRef(false);
 
   const baseOf = (code: string) => draft.baseline[code]?.monthlyAmount ?? 0;
+  /** 그 강도를 전 카테고리에 적용했을 때 한 달에 지킬 돈. 버튼에 결과를 미리 보여주려고 센다. */
+  const tierTotal = (v: number) =>
+    draft.cutCats.reduce((sum, code) => sum + Math.round(baseOf(code) * v), 0);
   const nameOf = (code: string) => draft.baseline[code]?.displayName ?? code;
 
   useEffect(() => {
@@ -105,11 +108,13 @@ export function Onboarding3() {
         <p className="h-title">얼마나<br />줄여볼까요?</p>
         <p className="h-sub">강도를 고르면 이번 {CHALLENGE_DAYS}일 동안 지킬 돈이 정해져요. 카테고리별로 다르게 잡아도 돼요.</p>
 
+        {/* 강도 버튼에는 **금액**을 적는다(개편안). "50%"는 얼마인지 모르지만 "월 16.5만"은 안다 —
+            고르기 전에 결과가 보여야 고를 수 있다. */}
         <div className="int-seg" role="group" aria-label="절약 강도 프리셋">
           {INTENSITY_TIERS.map((t) => (
             <button type="button" key={t.key} className={activeTier?.key === t.key ? 'on' : ''}
               aria-pressed={activeTier?.key === t.key} onClick={() => setAll(t.value)}>
-              <b>{t.label}</b><span>{Math.round(t.value * 100)}%</span>
+              <b>{t.label}</b><span>월 {wonShort(tierTotal(t.value))}</span>
             </button>
           ))}
         </div>
@@ -117,7 +122,11 @@ export function Onboarding3() {
 
         <div className="goal-card">
           <div className="gh-head">
-            <div className="gh-cap">이번 챌린지에 지킬 돈</div>
+            <div className="gh-cap">
+              이번 챌린지에 지킬 돈
+              {/* 프리셋에 없는 조합이면 직접 맞춘 것이다 — 그 사실을 표시해 준다(개편안 `custom-chip`). */}
+              {!activeTier && <span className="custom-chip">직접 설정</span>}
+            </div>
             <div className="gh-num">{won(total)}</div>
           </div>
           {draft.cutCats.map((code) => {

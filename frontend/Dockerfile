@@ -1,6 +1,9 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package*.json ./
+# playwright 는 접근성 실측(scripts/audit-rendered.mjs) 전용 devDependency 다. 설치 훅이
+# 크로미움 ~150MB 를 받으므로 이미지 빌드에서는 막는다 — 여기서 브라우저를 띄울 일이 없다.
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 RUN npm ci
 COPY . .
 # 운영 번들의 API 주소. 빈 문자열이 기본이며, 그러면 config.ts의 `?? 'http://localhost:8080'`

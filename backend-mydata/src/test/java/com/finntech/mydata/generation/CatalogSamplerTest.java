@@ -24,9 +24,9 @@ class CatalogSamplerTest {
         RegionEntry anchor = loader.regions().get(0); // 서울 종로구 사직동
         assertThat(anchor.dong()).isNotBlank();
 
-        // 대분류 안에서 category2 선택
-        String c2 = sampler.pickCategory2("식비", new Random(1));
-        assertThat(sampler.context(c2).category1()).isEqualTo("식비");
+        // 업종코드 안에서 맥락 선택 — 예전에는 대분류였다.
+        String c2 = sampler.pickCategory2("5611", new Random(1));
+        assertThat(sampler.context(c2).ksicCode()).isEqualTo("5611");
 
         // 소상공인(한식) → 오프라인 실상호 + 앵커 동 지번주소·좌표 + 유효 사업자번호
         var korean = sampler.resolveMerchant("한식", anchor, new Random(2));

@@ -11,20 +11,35 @@ import java.util.Map;
 public final class Catalog {
     private Catalog() {}
 
-    /** 대분류 → 중분류 목록. 순서 고정(재현성). */
-    public static final Map<String, List<String>> CATEGORY_TREE = Map.ofEntries(
-            Map.entry("온라인", List.of("간편결제", "배달", "스트리밍", "통신", "교통")),
-            Map.entry("쇼핑", List.of("대형마트", "백화점", "뷰티", "아울렛")),
-            Map.entry("생활", List.of("병원", "약국", "주유소")),
-            Map.entry("식비", List.of("일반음식점", "휴게음식점")),
-            Map.entry("여가", List.of("영화", "헬스장")),
-            Map.entry("카페/간식", List.of("카페")),
-            Map.entry("편의점", List.of("편의점"))
+    /**
+     * 업종코드(KSIC 세분류) → 소비맥락 목록. 순서 고정(재현성).
+     *
+     * <p>예전에는 7대분류를 키로 썼는데, 그 축이 소비 카테고리를 겸하고 있어 없앴다.
+     * 이 시드는 소규모 데모용이라 대량 생성기({@code generation/})의 52맥락 전체를 담지 않고
+     * 대표 맥락만 둔다 — 코드는 같은 체계를 쓴다(scripts/ksic/ksic-mapping.tsv).
+     */
+    public static final Map<String, List<String>> CONTEXTS_BY_KSIC = Map.ofEntries(
+            Map.entry("5611", List.of("한식")),
+            Map.entry("5612", List.of("양식")),
+            Map.entry("5619", List.of("배달", "분식")),
+            Map.entry("5622", List.of("카페")),
+            Map.entry("4712", List.of("편의점", "화장품")),
+            Map.entry("4711", List.of("대형마트", "백화점")),
+            Map.entry("4781", List.of("약국")),
+            Map.entry("4771", List.of("주유소")),
+            Map.entry("4921", List.of("대중교통")),
+            Map.entry("6122", List.of("통신비")),
+            Map.entry("6031", List.of("스트리밍")),
+            Map.entry("6312", List.of("간편결제")),
+            Map.entry("5914", List.of("영화")),
+            Map.entry("9113", List.of("헬스장")),
+            Map.entry("8620", List.of("의원"))
     );
 
-    /** 순서 고정용 대분류 배열. */
-    public static final List<String> CATEGORY1 = List.of(
-            "온라인", "쇼핑", "생활", "식비", "여가", "카페/간식", "편의점");
+    /** 순서 고정용 업종코드 배열. */
+    public static final List<String> KSIC_CODES = List.of(
+            "5611", "5612", "5619", "5622", "4712", "4711", "4781", "4771",
+            "4921", "6122", "6031", "6312", "5914", "9113", "8620");
 
     /** 중분류 → 가맹점 후보. */
     public static final Map<String, List<String>> MERCHANTS = Map.ofEntries(
@@ -45,45 +60,77 @@ public final class Catalog {
             Map.entry("영화", List.of("CGV", "롯데시네마", "메가박스")),
             Map.entry("헬스장", List.of("애니타임피트니스", "짐박스")),
             Map.entry("카페", List.of("스타벅스", "이디야", "투썸플레이스", "메가커피")),
-            Map.entry("편의점", List.of("CU", "GS25", "세븐일레븐"))
+            Map.entry("편의점", List.of("CU", "GS25", "세븐일레븐")),
+            // 업종코드 재분류로 CONTEXTS_BY_KSIC 의 맥락 이름이 바뀌었는데 여기를 안 맞춰
+            // 아래 7개가 상호 없이 남았다. 시드가 MERCHANTS.get(맥락) 을 그대로 쓰므로
+            // null 이 되어 **앱이 기동 실패했다**(NPE: "merchants" is null).
+            Map.entry("한식", List.of("김밥천국", "본죽", "한솥도시락")),
+            Map.entry("양식", List.of("아웃백", "빕스", "매드포갈릭")),
+            Map.entry("분식", List.of("신전떡볶이", "죠스떡볶이", "국대떡볶이")),
+            Map.entry("대중교통", List.of("지하철", "버스", "택시")),
+            Map.entry("통신비", List.of("SKT", "KT", "LGU+")),
+            Map.entry("화장품", List.of("올리브영", "이니스프리", "아리따움")),
+            Map.entry("의원", List.of("연세의원", "튼튼의원", "서울365의원"))
     );
 
     /** 카드사 목록(이름). */
+    /**
+     * 카드사. <b>{@link #CARD_DEFS}가 쓰는 회사는 전부 여기 있어야 한다.</b>
+     *
+     * 시드는 {@code companies.get(cardDef.company())}로 상품에 회사를 붙이는데, 목록에 없으면
+     * 조용히 null 이 들어가고 저장에서 not-null 위반으로 **앱이 기동 실패한다**. 실제로 카드를
+     * 늘리면서 여기를 안 고쳐 우리카드·하나카드가 빠졌고, 시드가 켜진 환경이 통째로 뜨지 않았다.
+     * 아래 CARD_DEFS 를 늘릴 때 이 목록도 함께 늘린다 — 정합은 CatalogConsistencyTest 가 지킨다.
+     */
     public static final List<String> COMPANIES = List.of(
-            "신한카드", "삼성카드", "현대카드", "KB국민카드", "롯데카드");
+            "신한카드", "삼성카드", "현대카드", "KB국민카드", "롯데카드", "우리카드", "하나카드");
 
     /** 카드 혜택 정의: 대분류·할인율(%)·실적구간[start,end]·월한도. */
-    public record BenefitDef(String category1, int percent, int perfStart, int perfEnd, int monthlyLimit) {}
+    /** @param midCategory 혜택 대상 소비 중분류. 실제 카드도 소비자가 아는 묶음 단위로 준다. */
+    public record BenefitDef(String midCategory, int percent, int perfStart, int perfEnd, int monthlyLimit) {}
 
     /** 카드 상품 정의: 이름·색·카드사·혜택 목록. */
     public record CardDef(String name, String color, String company, List<BenefitDef> benefits) {}
 
-    /** 카드 카탈로그(코드 고정). 각 카드는 전월실적 30~40만 구간에서 카테고리별 혜택을 준다. */
+    /**
+     * 카드 카탈로그(코드 고정). 각 카드는 전월실적 30~40만 구간에서 중분류별 혜택을 준다.
+     *
+     * <p>혜택 기준이 7대분류에서 <b>우리 중분류</b>로 바뀌었다. 옛 '온라인 5%'처럼 교통까지
+     * 뭉뚱그리던 것이 사라지고, 카드마다 성격이 갈린다 — 교통 특화·의료 특화 같은 것이
+     * 실제 카드 시장의 모습이기도 하다. 15개 중분류를 고루 덮어야 어느 카드를 골라도
+     * 혜택이 붙는 소비가 생긴다.
+     */
     public static final List<CardDef> CARD_DEFS = List.of(
             new CardDef("신한카드 Deep Dream", "#1a2b6b", "신한카드", List.of(
                     new BenefitDef("카페/간식", 10, 300000, 0, 10000),
-                    new BenefitDef("온라인", 5, 300000, 0, 10000))),
+                    new BenefitDef("쇼핑", 5, 300000, 0, 10000))),
             new CardDef("삼성카드 taptap O", "#1428a0", "삼성카드", List.of(
-                    new BenefitDef("편의점", 10, 400000, 0, 5000),
-                    new BenefitDef("온라인", 5, 400000, 0, 10000))),
+                    new BenefitDef("편의점/잡화", 10, 400000, 0, 5000),
+                    new BenefitDef("교통/자동차", 5, 400000, 0, 10000))),
             new CardDef("현대카드 ZERO", "#111111", "현대카드", List.of(
                     new BenefitDef("생활", 3, 0, 0, 20000),
                     new BenefitDef("식비", 3, 0, 0, 20000),
                     new BenefitDef("쇼핑", 3, 0, 0, 20000))),
             new CardDef("KB국민 굿데이", "#6b4e9e", "KB국민카드", List.of(
-                    new BenefitDef("쇼핑", 7, 300000, 0, 15000),
-                    new BenefitDef("생활", 5, 300000, 0, 10000))),
+                    new BenefitDef("대형마트", 7, 300000, 0, 15000),
+                    new BenefitDef("의료", 5, 300000, 0, 10000))),
             new CardDef("롯데카드 LOCA", "#d0021b", "롯데카드", List.of(
                     new BenefitDef("쇼핑", 5, 300000, 0, 12000),
-                    new BenefitDef("여가", 8, 300000, 0, 8000))),
+                    new BenefitDef("취미/여가", 8, 300000, 0, 8000))),
             new CardDef("신한카드 카카오페이", "#ffcd00", "신한카드", List.of(
-                    new BenefitDef("온라인", 3, 300000, 0, 12000),
+                    new BenefitDef("교통/자동차", 3, 300000, 0, 12000),
                     new BenefitDef("카페/간식", 5, 300000, 0, 6000))),
             new CardDef("삼성카드 iD", "#0a0a0a", "삼성카드", List.of(
                     new BenefitDef("식비", 5, 400000, 0, 12000),
-                    new BenefitDef("카페/간식", 5, 400000, 0, 6000))),
+                    new BenefitDef("술/유흥", 5, 400000, 0, 6000))),
             new CardDef("현대카드 M", "#2e2e2e", "현대카드", List.of(
-                    new BenefitDef("여가", 5, 300000, 0, 8000),
-                    new BenefitDef("편의점", 3, 300000, 0, 5000)))
+                    new BenefitDef("건강/피트니스", 5, 300000, 0, 8000),
+                    new BenefitDef("미용", 5, 300000, 0, 8000))),
+            new CardDef("하나카드 트래블로그", "#00857e", "하나카드", List.of(
+                    new BenefitDef("여행/숙박", 8, 300000, 0, 15000),
+                    new BenefitDef("교통/자동차", 3, 300000, 0, 8000))),
+            new CardDef("우리카드 카드의정석", "#0067ac", "우리카드", List.of(
+                    new BenefitDef("주거/통신", 5, 300000, 0, 12000),
+                    new BenefitDef("편의점/잡화", 3, 300000, 0, 5000)))
     );
 }

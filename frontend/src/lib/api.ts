@@ -321,7 +321,8 @@ export interface MyCard {
 export interface MyPayment {
   paymentId: string;
   date: string;
-  category1: string;
+  /** 소비 중분류. 제공자는 업종코드까지만 주고 이 값은 앱이 붙인다. */
+  category: string;
   category2: string | null;
   amount: number;
   merchantName: string | null;
@@ -332,7 +333,8 @@ export interface MyPayment {
 export interface MyPaymentHistory {
   paymentId: string;
   date: string;
-  category1: string;
+  /** 소비 중분류. 제공자는 업종코드까지만 주고 이 값은 앱이 붙인다. */
+  category: string;
   category2: string | null;
   amount: number;
   merchantName: string | null;
@@ -344,6 +346,10 @@ export interface MyPaymentHistory {
 }
 /** 가맹점 조회(번호→주소). */
 export interface MyMerchant {
+  /** 제공자가 준 업종(KSIC 세분류). 표시용이 아니라 근거용이다. */
+  ksicCode: string | null;
+  /** 우리가 붙인 소비 중분류. 화면에는 이걸 쓴다. */
+  category: string | null;
   businessNumber: string;
   merchantName: string | null;
   address: string | null;
@@ -484,6 +490,8 @@ export interface GuardianChallenge extends GuardianSnapshot {
   id: number;
   state: ChallengeState;
   categories: string[];
+  /** 성역 — 줄이지 않기로 한 카테고리. 소비 내역의 '성역' 필터가 이걸로 거른다. */
+  sanctuaryCategories: string[];
   baselineAmount: number;
   targetSaving: number;
   challengeCap: number;
@@ -557,12 +565,120 @@ export interface GuardianTransactionView {
   undoDeadline: string | null;
   undoActions?: { reason: UndoReason; label: string; remaining?: number }[];
 }
+/** 주간 리포트의 한 주. defenseRate = 지킨 날 ÷ 판정한 날. */
+export interface WeekPoint {
+  weekStart: string;
+  label: string;
+  keptDays: number;
+  judgedDays: number;
+  defenseRate: number;
+  current: boolean;
+}
+export interface LabelSlice { key: string; label: string; count: number; ratio: number }
+export interface WeeklyReport {
+  weekStart: string;
+  weekEnd: string;
+  weekLabel: string;
+  defenseRate: number;
+  /** 지난주 대비 증감(비율 차). 지난주 판정이 없으면 null. */
+  deltaFromLastWeek: number | null;
+  trend: WeekPoint[];
+  labels: LabelSlice[];
+  labeledCount: number;
+  exemptedAmount: number;
+  headline: string;
+}
+
+/** 도감 한 칸. owned=false면 자물쇠로 그린다(무엇이 남았는지 보여야 모을 마음이 생긴다). */
+export interface CollectionCell {
+  code: string;
+  name: string;
+  grade: 'COMMON' | 'RARE' | 'EPIC';
+  /** 프론트 SVG 심볼 키 — 그림은 프론트에 있고 서버는 어느 그림인지만 가리킨다. */
+  glyph: string;
+  story: string;
+  owned: boolean;
+  acquiredDate: string | null;
+  reason: string | null;
+}
+export interface CollectionMilestone {
+  count: number;
+  reward: 'EXEMPTION' | 'MISSION_CHANGE' | 'EPIC_DRAW';
+  label: string;
+  claimed: boolean;
+}
+export interface GuardianCollection {
+  owned: number;
+  total: number;
+  percent: number;
+  cells: CollectionCell[];
+  milestones: CollectionMilestone[];
+  next: CollectionMilestone | null;
+  exemption: number;
+  missionChange: number;
+  grassGuard: number;
+  points: number;
+}
+export interface ShopEntry {
+  code: string;
+  name: string;
+  glyph: string;
+  story: string;
+  category: 'FURNITURE' | 'BACKGROUND';
+  price: number;
+  owned: boolean;
+  /** 서버가 잔액과 대조해 판단한 값 — 화면은 이걸 믿는다. */
+  affordable: boolean;
+}
+export interface GuardianShop { points: number; items: ShopEntry[] }
+
+/** 월간 결산의 카테고리 한 줄. rate = 지켜낸 금액 / 한도. */
+export interface SettlementCategory {
+  category: string;
+  cap: number;
+  spent: number;
+  kept: number;
+  rate: number;
+}
+export interface GuardianSettlement {
+  challengeId: number;
+  startDate: string;
+  endDate: string;
+  targetSaving: number;
+  securedSaving: number;
+  defenseRate: number;
+  categories: SettlementCategory[];
+  keptDays: number;
+  bestStreak: number;
+  pointsEarned: number;
+  objectsCollected: number;
+  completionBonus: number;
+}
+/** 다음 달 조정안. action=KEEP(유지)·LOWER(하향) — 올리는 선택지는 없다. */
+export interface RenewalLine {
+  category: string;
+  currentCap: number;
+  suggestedCap: number;
+  action: 'KEEP' | 'LOWER';
+  lastRate: number;
+  reason: string;
+}
+export interface GuardianRenewal {
+  lines: RenewalLine[];
+  suggestedTargetSaving: number;
+  sanctuaries: string[];
+}
+
 export interface GuardianRoomObject {
   objectId: string;
   grade: Grade;
   acquiredDate: string;
   reasonCode: string | null;
+  /** 놓인 자리(0~19). null이면 창고에 있다. */
   slotIndex: number | null;
+  /** 표시명·그림 — 서버 카탈로그가 정한다. 프론트에 이름표를 복사해 두면 조용히 갈라진다. */
+  name: string;
+  glyph: string;
 }
 export interface GuardianRoom { objects: GuardianRoomObject[]; slotCount: number }
 export interface CreateChallengeInput {
@@ -662,6 +778,8 @@ export const api = {
     del<{ deletedCount: number }>(`/api/users/${userId}/data`),
 
   privacyPolicy: () => get<PrivacyPolicy>('/api/privacy/policy'),
+  /** 이용약관 요약. 정본은 legal/terms-of-service.md — 방침과 같은 모양으로 내려온다. */
+  privacyTerms: () => get<PrivacyPolicy>('/api/privacy/terms'),
   categories: () => get<CategoryView[]>('/api/categories'),
   addConsumption: (input: ConsumptionInput) => post<{ id: number }>('/api/consumption', input),
 
@@ -797,6 +915,33 @@ export const api = {
     /** 홈 한 방. 진행 중 챌린지가 없으면 404(ApiError.status===404). */
     home: (userId: number) => get<GuardianHome>(`/api/guardian/home?userId=${userId}`),
     room: (userId: number) => get<GuardianRoom>(`/api/guardian/room?userId=${userId}`),
+
+    /* ── 도감·포인트샵 (개편안 s-collection·s-shop) ── */
+    /**
+     * 배치 변경(꾸미기 모드) — slot=null이면 창고로 내린다.
+     * 그 자리에 있던 소품은 사라지지 않고 창고로 간다(도감 기록은 지워지지 않는다).
+     */
+    placeObject: (userId: number, objectId: string, slot: number | null) =>
+      post<GuardianRoom>(`/api/guardian/room/place?userId=${userId}`, { objectId, slot }),
+
+    /** 도감 — 모은 칸과 못 모은 칸, 마일스톤 진행까지 서버가 계산해 준다. */
+    collection: (userId: number) =>
+      get<GuardianCollection>(`/api/guardian/collection?userId=${userId}`),
+    /** 마일스톤 보상 청구(10종 면제권·15종 미션변경권·20종 에픽뽑기). */
+    claimMilestone: (userId: number, count: number) =>
+      post<GuardianCollection>(`/api/guardian/collection/milestones/${count}/claim?userId=${userId}`, {}),
+    shop: (userId: number) => get<GuardianShop>(`/api/guardian/shop?userId=${userId}`),
+    /** 구매 — 살 수 있는지는 서버가 판단한다(프론트의 P 비교는 표시용일 뿐). */
+    buyItem: (userId: number, code: string) =>
+      post<GuardianShop>(`/api/guardian/shop/${encodeURIComponent(code)}/buy?userId=${userId}`, {}),
+
+    /* ── 월말 사이클 (개편안 s-settle·s-renew) ── */
+    /** 주간 리포트 — weeksAgo=0 이번 주, 1 지난주. */
+    weeklyReport: (userId: number, weeksAgo = 0) =>
+      get<WeeklyReport>(`/api/guardian/report/weekly?userId=${userId}&weeksAgo=${weeksAgo}`),
+    settlement: (userId: number) =>
+      get<GuardianSettlement>(`/api/guardian/settlement?userId=${userId}`),
+    renewal: (userId: number) => get<GuardianRenewal>(`/api/guardian/renewal?userId=${userId}`),
     createChallenge: (userId: number, input: CreateChallengeInput) =>
       post<{ challenge: GuardianChallenge; snapshot: GuardianSnapshot }>(
         `/api/guardian/challenges?userId=${userId}`, input),
@@ -834,6 +979,10 @@ export const RULE_LABEL: Record<string, string> = {
  * 카테고리 코드 → 한글 표시명. RULE_LABEL과 같은 **표현 전용** 매핑이다.
  * 판단 로직(엔진·임계치)은 코드에 카테고리를 박지 않는다(설계원칙 4). 여기는 화면 표시일 뿐이다.
  * 서버가 내려준 displayName이 코드와 다르면 그쪽을 우선한다 — 이 맵은 폴백.
+ *
+ * 남은 항목은 **옛 영문 코드**뿐이다. 카테고리 체계가 업종코드 기반 중분류(한글)로 바뀌어
+ * 새 데이터에는 영문 코드가 나오지 않는다. 이전에 적재된 소비를 위해 남겨 둘 뿐이니
+ * 새 카테고리를 여기에 추가하지 않는다 — 중분류는 이름이 곧 표시명이라 폴백이 필요 없다.
  */
 export const CATEGORY_LABEL: Record<string, string> = {
   FOOD: '식비', CAFE: '카페·간식', SHOPPING: '쇼핑', TRANSPORT: '교통',

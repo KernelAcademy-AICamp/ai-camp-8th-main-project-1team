@@ -27,9 +27,13 @@ public class CutCandidateSelector {
     private final UserPaymentRepository payments;
     private final AnalysisProperties props;
 
-    public CutCandidateSelector(UserPaymentRepository payments, AnalysisProperties props) {
+    private final IndustryCategoryMapper industryMapper;
+
+    public CutCandidateSelector(UserPaymentRepository payments, AnalysisProperties props,
+                                IndustryCategoryMapper industryMapper) {
         this.payments = payments;
         this.props = props;
+        this.industryMapper = industryMapper;
     }
 
     /**
@@ -44,7 +48,7 @@ public class CutCandidateSelector {
         List<UserPayment> window = payments.findByUserIdOrderByPaymentDateDesc(userId).stream()
                 .filter(p -> !p.getPaymentDate().isBefore(from) && !p.getPaymentDate().isAfter(referenceTime))
                 .toList();
-        return selectFrom(window, props.getCutCandidate(), windowDays);
+        return selectFrom(window, props.getCutCandidate(), windowDays, industryMapper::discretionaryOf);
     }
 
     /** 창 합계를 한 달치로 환산한다. 창이 비정상이면(0 이하) 그대로 둔다. */
@@ -53,17 +57,22 @@ public class CutCandidateSelector {
         return Math.round(windowTotal * DAYS_PER_MONTH / windowDays);
     }
 
-    /** 순수 선정 — 테스트 진입점. */
+    /**
+     * 순수 선정 — 테스트 진입점.
+     *
+     * <p>등급은 <b>재량성</b>이 정한다({@code discretionary}: 중분류 → 0~1). 예전에는 카테고리
+     * 이름 22개가 설정에 박혀 있어, 체계를 바꾸면 하나도 안 겹쳐 후보가 통째로 사라졌다.
+     */
     static List<CutCandidate> selectFrom(List<UserPayment> window, AnalysisProperties.CutCandidate cfg,
-                                         int windowDays) {
-        Set<String> removable = Set.copyOf(cfg.getRemovable());
-        Set<String> optimizable = Set.copyOf(cfg.getOptimizable());
-        Set<String> protectedCats = Set.copyOf(cfg.getProtectedCategories());
-
+                                         int windowDays, java.util.function.ToDoubleFunction<String> discretionary) {
         TreeMap<String, List<Integer>> byCat2 = new TreeMap<>();
         for (UserPayment p : window) {
             String cat2 = p.getCategory2();
-            if (cat2 == null || protectedCats.contains(cat2)) continue;
+            // 재량성이 낮으면 생존필수 — 줄이라고 권하지 않는다(약값·통신비·교통비).
+            // 무엇을 샀는지 모르는 소비(간편결제 등)도 뺀다 — "카테고리없음을 줄이세요"는
+            // 사용자가 행동으로 옮길 수 없는 조언이다.
+            if (cat2 == null || IndustryCategoryMapper.UNCLASSIFIED.equals(cat2)) continue;
+            if (discretionary.applyAsDouble(cat2) < cfg.getProtectedBelow()) continue;
             byCat2.computeIfAbsent(cat2, k -> new ArrayList<>()).add(p.getAmount());
         }
 
@@ -74,10 +83,10 @@ public class CutCandidateSelector {
             // 창 합계를 월 환산해서 담는다. 근거 문장도 같은 값을 써야 숫자와 설명이 어긋나지 않는다.
             long monthlySpend = toMonthly(amounts.stream().mapToLong(Integer::longValue).sum(), windowDays);
 
-            if (removable.contains(cat2)) {
+            if (discretionary.applyAsDouble(cat2) >= cfg.getRemovableAbove()) {
                 out.add(new CutCandidate(cat2, CutCandidate.Type.REMOVABLE, monthlySpend, monthlySpend,
                         cat2 + " 지출 월 " + won(monthlySpend) + "은 전액 절약 대상(제거가능)"));
-            } else if (optimizable.contains(cat2)) {
+            } else {
                 // 중앙값은 결제 한 건의 크기라 환산하지 않는다 — 초과분 합계만 월 단위로 바꾼다.
                 long median = Math.round(Stats.median(amounts.stream().mapToDouble(Integer::doubleValue).toArray()));
                 long excess = toMonthly(amounts.stream().mapToLong(a -> Math.max(0, a - median)).sum(), windowDays);
@@ -86,7 +95,6 @@ public class CutCandidateSelector {
                             cat2 + " 중앙값(" + won(median) + ") 초과분 월 " + won(excess) + " 절감 가능(최적화가능)"));
                 }
             }
-            // 미분류 category2 → 후보 아님(보수적)
         }
         out.sort(Comparator.comparingLong(CutCandidate::estimatedSaving).reversed()
                 .thenComparing(CutCandidate::category2)); // 동점은 사전순 → 결정론

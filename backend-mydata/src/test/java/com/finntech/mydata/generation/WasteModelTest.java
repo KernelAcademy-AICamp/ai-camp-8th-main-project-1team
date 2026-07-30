@@ -15,7 +15,11 @@ class WasteModelTest {
     private final ObjectMapper mapper = JsonMapper.builder()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
     private final GenerationProperties props = new GenerationProperties();
-    private final WasteLabeler labeler = new WasteLabeler(props);
+    // 필수 무대 판정이 카탈로그의 재량성을 보므로 sampler가 필요하다(ESSENTIAL 목록 폐기).
+    private final CatalogSampler sampler = new CatalogSampler(new CatalogLoader(mapper),
+            new MerchantRegistry(props.getSeed(), new CatalogLoader(mapper).regions(),
+                    props.getAddress().getBubunProb()));
+    private final WasteLabeler labeler = new WasteLabeler(props, sampler);
 
     private PersonaVariant overspender() {
         var base = new CatalogLoader(mapper).personas().stream()

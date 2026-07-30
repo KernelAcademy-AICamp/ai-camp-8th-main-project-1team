@@ -22,9 +22,11 @@ const iso = (d: Date) =>
 
 export function Myroom() {
   const { go, userId } = useSession();
+  const [editing, setEditing] = useState(false);
+  /** 이동 중인 소품 코드 — 연타로 서버에 두 번 보내지 않게 잠근다. */
+  const [moving, setMoving] = useState<string | null>(null);
   const { home, loading, error, reload } = useGuardian();
   const room = useAsync(() => api.guardian.room(userId).catch(() => ({ objects: [], slotCount: 20 })), [userId]);
-  const [decorMsg, setDecorMsg] = useState(false);
 
   const grid = useMemo(() => {
     if (!home) return { cells: [] as { date: string; level: number; day: number; today: boolean; result?: string }[], lead: 0 };
@@ -51,6 +53,21 @@ export function Myroom() {
     const kept = last7.filter((c) => c.level >= 2).length;
     return { kept, total: last7.length || 7 };
   }, [grid.cells]);
+
+  /**
+   * 창고에서 올릴 때 쓸 빈 자리. 다 찼으면 null이라 버튼이 막힌다.
+   *
+   * **이른 반환보다 위에 있어야 한다.** 아래(로딩·빈 방 분기 뒤)에 두었더니 첫 렌더는 로딩으로
+   * 빠져 이 훅을 건너뛰고, 데이터가 온 두 번째 렌더에서야 실행돼 훅 개수가 달라졌다 —
+   * React가 "Rendered more hooks than during the previous render"로 죽어 마이룸이 열리지 않는다.
+   */
+  const nextFreeSlot = useMemo(() => {
+    const objs = room.data?.objects ?? [];
+    const slots = room.data?.slotCount ?? 20;
+    const used = new Set(objs.filter((o) => o.slotIndex !== null).map((o) => o.slotIndex));
+    for (let i = 0; i < slots; i++) if (!used.has(i)) return i;
+    return null;
+  }, [room.data]);
 
   if (loading && !home) {
     return (
@@ -82,8 +99,27 @@ export function Myroom() {
 
   const items = home.itemsHeld;
   const objects = room.data?.objects ?? [];
+  const placed = objects.filter((o) => o.slotIndex !== null);
+  const stored = objects.filter((o) => o.slotIndex === null);
+
+  /** 자리를 옮긴다. 서버가 방 전체를 돌려주므로 그 응답으로 화면을 갱신한다. */
+  async function move(objectId: string, slot: number | null) {
+    if (moving) return;
+    setMoving(objectId);
+    try {
+      room.set(await api.guardian.placeObject(userId, objectId, slot));
+    } catch {
+      room.reload();       // 실패하면 서버 상태로 되돌린다 — 화면만 옮겨져 있으면 거짓말이 된다
+    } finally {
+      setMoving(null);
+    }
+  }
   const keptDays = home.grass.filter((g) => g.result === 'NO_SPEND_DAY' || g.result === 'ON_PACE_DAY').length;
   const gotToday = objects.some((o) => o.acquiredDate === home.asOf.slice(0, 10));
+  /** 남은 한도 비율 — 게이지를 '남은 여유'로 채우기 위한 값. 한도가 0이면 0으로 둔다. */
+  const capLeftRatio = home.challenge.challengeCap > 0
+    ? Math.max(0, Math.min(1, home.challenge.remainingCap / home.challenge.challengeCap))
+    : 0;
 
   return (
     <Screen title="마이룸" hasTabBar>
@@ -102,12 +138,28 @@ export function Myroom() {
           <div className="sc-hint">지킨 만큼 방이 채워져요 · 포인트로 아이템을 배치해요</div>
         </div>
 
-        <div className="today-line">
-          <span className="dot" aria-hidden="true" />
-          <p>
+        {/* 마이룸 히어로 (개편안 `.mr-hero`) — 연속 방어 · 오늘 진행 · 내일의 약속.
+            게이지는 한도 대비 쓴 비율이 아니라 **남은 여유**를 채운다. 다 쓰면 비고 안 쓰면 가득 차
+            "지킬수록 는다"가 눈에 보인다 — 소진율을 채우면 잘 지킨 사람의 막대가 비어 버린다. */}
+        <div className="mr-hero">
+          <div className="streakrow">
+            <Icon id="i-flame" className="" size={20} />
+            {home.strip.grassStreak > 0 ? `${home.strip.grassStreak}일 연속 방어 중` : '오늘부터 다시 시작'}
+            <small>이번 챌린지 {keptDays}일 지킴</small>
+          </div>
+          <div className="day-gauge">
+            <div className="lbl">
+              <span>{home.strip.noSpendStreak > 0 ? '오늘 무지출 진행 중' : home.challenge.categoryLabel}</span>
+              <span>{home.strip.remainingCapLabel}</span>
+            </div>
+            <div className="gbar">
+              <i style={{ width: `${Math.round(capLeftRatio * 100)}%` }} />
+            </div>
+          </div>
+          <p className="promise">
             {home.strip.noSpendStreak > 0
-              ? <><b>무지출 {home.strip.noSpendStreak}일째</b> — 자정까지 지키면 내일 아침 새 아이템이 도착해요</>
-              : <><b>{home.challenge.categoryLabel}</b>를 지켜보는 중 — 한도 안에서는 조용히 있을게요</>}
+              ? '오늘을 지키면 내일 아침, 방에 새 소품이 도착해요'
+              : '한도 안에서 쓴 날에도 소품은 와요 — 소품은 벌이 아니에요'}
           </p>
         </div>
 
@@ -122,16 +174,24 @@ export function Myroom() {
           <div className="asset"><b>{keptDays}일</b><span>이번 챌린지</span></div>
         </div>
 
-        {/* 방 꾸미기 — 상점 구매 API는 아직 없다(설계서 §9). 버튼은 두되 상태를 솔직히 적는다. */}
-        <button type="button" className="btn btn-ghost" onClick={() => setDecorMsg((v) => !v)} aria-expanded={decorMsg}>
-          🎨 방 꾸미기
-        </button>
-        {decorMsg && (
-          <div className="pv" style={{ marginTop: 10 }}>
-            포인트로 <b>사물 30P · 가구 150P · 벽/바닥 400P</b>를 배치하는 꾸미기 화면이 곧 열려요.
-            지금은 지킨 날마다 사물이 자동으로 도착해요. 현금 결제 경로는 두지 않아요.
+        {/* 포인트샵·도감 진입 (개편안 `.entry-row`) — 방을 채우는 두 경로다.
+            포인트샵은 사서 놓고, 도감은 지켜서 받는다. */}
+        <div className="entry-row">
+          <div className="entry" role="button" tabIndex={0}
+               onClick={() => go('shop')}
+               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') go('shop'); }}>
+            <Icon id="i-coin" className="" size={24} />
+            <div><b>{items.pointBalance}P</b><span>포인트샵</span></div>
+            <em>›</em>
           </div>
-        )}
+          <div className="entry" role="button" tabIndex={0}
+               onClick={() => go('collection')}
+               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') go('collection'); }}>
+            <Icon id="i-gift" className="" size={24} />
+            <div><b>{objects.length}종</b><span>도감</span></div>
+            <em>›</em>
+          </div>
+        </div>
 
         {/* 이번 주 현황 */}
         <SectionTitle aux="지킨 날 기준">이번 주</SectionTitle>
@@ -188,21 +248,61 @@ export function Myroom() {
           </p>
         </div>
 
-        {/* 모은 사물 */}
-        <SectionTitle aux={`${objects.length} / ${room.data?.slotCount ?? 20}`}>모은 사물</SectionTitle>
+        {/* 모은 사물 · 꾸미기 모드 (개편안 '꾸미기 모드')
+            방에 놓인 것과 창고에 있는 것을 갈라 보여주고, 눌러서 옮긴다. 내려도 사라지지 않는다 —
+            도감의 기록이라 지울 수 없고, "바꿨더니 없어졌다"를 겪게 하면 안 된다. */}
+        <SectionTitle
+          onAux={() => setEditing((v) => !v)}
+          auxLabel={editing ? '완료' : '꾸미기'}
+        >
+          모은 사물 {placed.length} / {room.data?.slotCount ?? 20}
+        </SectionTitle>
+        {editing && (
+          <p className="pv" style={{ marginTop: 0 }}>
+            놓을 자리를 눌러 바꿔 보세요. 내린 소품은 <b>창고</b>로 가고 도감에는 그대로 남아요.
+          </p>
+        )}
         <div className="card">
           {objects.length === 0 ? (
             <p className="empty" style={{ margin: 0 }}>아직 모은 사물이 없어요. 하루를 지켜내면 다음 날 아침에 도착해요.</p>
           ) : (
-            <div className="room-grid">
-              {objects.map((o) => (
-                <div key={o.objectId} className={`room-slot ${o.grade.toLowerCase()}`}
-                  title={`${o.objectId} · ${GRADE_LABEL[o.grade]} · ${o.acquiredDate} 획득`}>
-                  <span aria-hidden="true" style={{ fontSize: 20 }}>{GRADE_EMOJI[o.grade]}</span>
-                  <span>{GRADE_LABEL[o.grade]}</span>
-                </div>
-              ))}
-            </div>
+            <>
+              <div className="room-grid">
+                {placed.map((o) => (
+                  <button key={o.objectId} type="button" disabled={!editing || moving !== null}
+                    className={`room-slot ${o.grade.toLowerCase()}`}
+                    onClick={() => void move(o.objectId, null)}
+                    title={`${o.name} · ${GRADE_LABEL[o.grade]} · ${o.acquiredDate} 획득`}>
+                    <span aria-hidden="true" style={{ fontSize: 20 }}>{GRADE_EMOJI[o.grade]}</span>
+                    <span>{o.name}</span>
+                    {editing && <em style={{ fontSize: 10, color: 'var(--t3)', fontStyle: 'normal' }}>내리기</em>}
+                  </button>
+                ))}
+                {placed.length === 0 && (
+                  <p className="empty" style={{ margin: 0 }}>방이 비어 있어요. 아래 창고에서 올려 보세요.</p>
+                )}
+              </div>
+
+              {stored.length > 0 && (
+                <>
+                  <div className="divider" style={{ margin: '12px 0' }} />
+                  <p className="h-sub" style={{ margin: '0 0 8px' }}>창고 {stored.length}개</p>
+                  <div className="room-grid">
+                    {stored.map((o) => (
+                      <button key={o.objectId} type="button" disabled={!editing || moving !== null}
+                        className={`room-slot ${o.grade.toLowerCase()}`}
+                        style={{ opacity: 0.6 }}
+                        onClick={() => nextFreeSlot !== null && void move(o.objectId, nextFreeSlot)}
+                        title={`${o.name} · 창고`}>
+                        <span aria-hidden="true" style={{ fontSize: 20 }}>{GRADE_EMOJI[o.grade]}</span>
+                        <span>{o.name}</span>
+                        {editing && <em style={{ fontSize: 10, color: 'var(--blue-t)', fontStyle: 'normal' }}>올리기</em>}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
           )}
         </div>
 

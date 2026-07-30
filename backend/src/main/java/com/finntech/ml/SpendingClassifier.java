@@ -1,13 +1,18 @@
 package com.finntech.ml;
 
+import com.finntech.engine.IndustryCategoryMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 낭비/필수 해석가능 ML 추론기 (W8) — Python 학습 EBM(순수 GAM)의 형상함수 테이블을 읽어
@@ -27,11 +32,13 @@ public class SpendingClassifier {
     private record Term(String feature, boolean nominal, String[] names, double[] edges, double[] scores) {}
 
     private final double intercept;
+    private static final Logger log = LoggerFactory.getLogger(SpendingClassifier.class);
+
     private final double threshold;
     private final List<Term> terms;
     private final boolean ready;
 
-    public SpendingClassifier(ObjectMapper objectMapper) {
+    public SpendingClassifier(ObjectMapper objectMapper, IndustryCategoryMapper categories) {
         double ic = 0, thr = 0.5;
         List<Term> ts = List.of();
         boolean ok = false;
@@ -41,7 +48,7 @@ public class SpendingClassifier {
             ic = ((Number) root.get("intercept")).doubleValue();
             if (root.get("decision_threshold") != null) thr = ((Number) root.get("decision_threshold")).doubleValue();
             ts = parseTerms(root);
-            ok = !ts.isEmpty();
+            ok = !ts.isEmpty() && categoriesMatch(ts, categories);
         } catch (Exception e) {
             ok = false;
         }
@@ -51,7 +58,32 @@ public class SpendingClassifier {
         this.ready = ok;
     }
 
-    /** 모델이 로드됐는지. false면 엔진은 규칙 FDS baseline을 쓴다. */
+    /**
+     * 모델의 {@code cat2} 이름들이 <b>현재 카테고리 체계</b>와 맞는지 확인한다.
+     *
+     * <p>안 맞으면 모델을 안 쓴 것으로 친다. {@link #termScore}가 모르는 이름을 기여 0으로
+     * 처리하기 때문에, 체계를 바꾸고 재학습을 잊으면 <b>전역 중요도 1위 특징이 통째로 죽은 채</b>
+     * 확률이 계속 나온다 — 크래시도 로그도 없이 판정만 뭉개진다. 실제로 소비 카테고리를
+     * 52개 맥락에서 15개 중분류로 옮기면서 이 상황을 만들었다.
+     *
+     * <p>겹치는 이름이 절반도 안 되면 다른 체계로 학습된 모델이다. 그때는 규칙 baseline이
+     * 조용히 틀린 ML보다 낫다.
+     */
+    private static boolean categoriesMatch(List<Term> terms, IndustryCategoryMapper categories) {
+        Term cat = terms.stream().filter(t -> "cat2".equals(t.feature())).findFirst().orElse(null);
+        if (cat == null || cat.names() == null || cat.names().length == 0) return true;   // 명목 특징이 없으면 검사할 것도 없다
+        Set<String> known = categories.midCategories();
+        if (known.isEmpty()) return true;
+        long hit = Arrays.stream(cat.names()).filter(known::contains).count();
+        boolean match = hit * 2 >= cat.names().length;
+        if (!match) {
+            log.warn("ML 모델의 cat2 이름이 현재 카테고리 체계와 맞지 않는다 — 모델 {}개 중 {}개만 일치. "
+                    + "재학습 전까지 규칙 baseline을 쓴다(ml/README.md 참고).", cat.names().length, hit);
+        }
+        return match;
+    }
+
+    /** 모델이 로드됐고 <b>현재 카테고리 체계와 맞는지</b>. false면 엔진은 규칙 FDS baseline을 쓴다. */
     public boolean isReady() { return ready; }
 
     /** 낭비 판정 임계값(학습 시 F1 최적). */

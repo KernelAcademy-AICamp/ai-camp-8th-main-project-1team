@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/check-css-tokens.mjs && node scripts/check-contrast.mjs && node scripts/check-a11y.mjs && tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:css": "node scripts/check-css-tokens.mjs",
+    "check:a11y": "node scripts/check-a11y.mjs",
+    "audit:rendered": "node scripts/audit-rendered.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
@@ -19,6 +22,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "oxlint": "^1.75.0",
+    "playwright": "^1.62.0",
     "typescript": "~7.0.2",
     "vite": "^8.1.1"
   }

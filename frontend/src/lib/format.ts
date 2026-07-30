@@ -56,7 +56,9 @@ export function iconFor(name: string): string {
   if (/편의점|마트|생활|슈퍼/.test(n)) return 'i-cvs';
   if (/쇼핑|의류|패션|잡화|온라인/.test(n)) return 'i-shop';
   if (/구독|OTT|스트리밍|통신/.test(n)) return 'i-ott';
-  if (/건강|운동|헬스|스포츠/.test(n)) return 'i-heart';
+  if (/건강|운동|헬스|스포츠|피트니스/.test(n)) return 'i-heart';
+  if (/미용|헤어|네일|뷰티|화장/.test(n)) return 'i-gift';
+  if (/술|유흥|주점|호프|포차/.test(n)) return 'i-food';
   if (/책|공부|교육|학원|도서/.test(n)) return 'i-book';
   if (/선물|가족|경조/.test(n)) return 'i-gift';
   if (/반려|펫|동물/.test(n)) return 'i-paw';
@@ -100,6 +102,16 @@ export const CHALLENGE_STATE_LABEL: Record<string, string> = {
   FAILED: '이번엔 쉬어가요', ABANDONED: '중단됨', REWARD_PENDING: '보상 대기',
   RESTART_OFFER: '다시 시작할까요', CLOSED: '종료',
 };
+
+/**
+ * 챌린지가 <b>끝난</b> 상태들 — 이때 홈에 월말 결산 진입 카드를 띄운다.
+ *
+ * SETUP·ACTIVE·AT_RISK·EXCEEDED는 아직 진행 중이라 뺀다. ABANDONED(중단)도 뺀다 —
+ * 스스로 그만둔 사람에게 "수고했어요, 결산해볼까요"는 실없는 말이다.
+ */
+export const SETTLED_STATES = new Set([
+  'SETTLING', 'SUCCESS', 'PARTIAL', 'SHORTFALL', 'FAILED', 'REWARD_PENDING', 'RESTART_OFFER', 'CLOSED',
+]);
 
 /** 사물 등급 → 표시. */
 export const GRADE_LABEL: Record<string, string> = { COMMON: '보통', RARE: '희귀', EPIC: '영웅' };

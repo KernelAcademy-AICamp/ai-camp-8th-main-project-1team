@@ -30,10 +30,20 @@ public class MyDataMerchant {
     @Column(name = "online", nullable = false)
     private boolean online;
 
+    /**
+     * 가맹점의 업종(KSIC 세분류 4자리).
+     *
+     * <p>앱이 사업자번호로 가맹점을 조회할 때 업종을 함께 받아야, 결제 없이도 분류할 수 있다.
+     * 한 가맹점의 결제는 전부 같은 업종이라 집계 때 대표값 하나면 된다.
+     */
+    @Column(name = "ksic_code", length = 8)
+    private String ksicCode;
+
     protected MyDataMerchant() {}
 
     public MyDataMerchant(String businessNumber, String merchantName, String address,
-                          Double lat, Double lng, boolean online) {
+                          Double lat, Double lng, boolean online, String ksicCode) {
+        this.ksicCode = ksicCode;
         this.businessNumber = businessNumber;
         this.merchantName = merchantName;
         this.address = address;
@@ -48,4 +58,5 @@ public class MyDataMerchant {
     public Double getLat() { return lat; }
     public Double getLng() { return lng; }
     public boolean isOnline() { return online; }
+    public String getKsicCode() { return ksicCode; }
 }

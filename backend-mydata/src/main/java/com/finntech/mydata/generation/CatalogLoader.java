@@ -41,6 +41,7 @@ public class CatalogLoader {
     private List<HobbyType> hobbies;
     private List<PersonaProfile> personas;
     private Map<String, Object> independents;
+    private Map<String, Object> midmap;
     private Map<String, Object> fares;
 
     public CatalogLoader(ObjectMapper objectMapper) {
@@ -118,6 +119,19 @@ public class CatalogLoader {
         return independents;
     }
 
+    /**
+     * 우리 중분류 → 업종코드 목록. 페르소나가 말하는 지출비중(중분류 단위)을
+     * 실제 거래가 일어나는 업종 단위로 푸는 데 쓴다.
+     * scripts/ksic 가 대조표와 contexts에서 생성하므로 손으로 고치지 않는다.
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> midmap() {
+        if (midmap == null) {
+            midmap = readValue("midmap.json", Map.class);
+        }
+        return midmap;
+    }
+
     /** 시변 표준요금 앵커 + 명세서 표기 포맷 메모. */
     @SuppressWarnings("unchecked")
     public Map<String, Object> fares() {
@@ -133,11 +147,14 @@ public class CatalogLoader {
             List<ProductEntry> list = new ArrayList<>();
             for (Object row : (List<?>) e.getValue()) {
                 List<?> t = (List<?>) row;
+                // 5번째 원소는 선택 — 추출 가중치다. 없으면 1.0(균등).
+                // 지하철처럼 '기본요금이 대부분이고 추가요금은 가끔'인 요금 사다리를 표현한다.
                 list.add(new ProductEntry(
                         (String) t.get(0),
                         ((Number) t.get(1)).intValue(),
                         ((Number) t.get(2)).intValue(),
-                        ((Number) t.get(3)).doubleValue()));
+                        ((Number) t.get(3)).doubleValue(),
+                        t.size() > 4 ? ((Number) t.get(4)).doubleValue() : 1.0));
             }
             out.put(e.getKey(), list);
         }
