@@ -25,8 +25,15 @@ on:
     branches: [develop]
   workflow_dispatch:
 
+# 취소는 **같은 PR의 옛 커밋**에만 건다. develop 푸시는 커밋마다 따로 세운다.
+#
+# 왜 이렇게까지 하나 — `ci-${{ github.ref }}` 하나로 묶었더니 기능 브랜치의 PR 런이 뜰 때마다
+# develop의 push 런이 2초 만에 취소됐다(2026-07-30, 809143a·43b876d 연속 2회). 그런데
+# **main PR이 요구하는 검사가 그 develop push 런**이라, 검사가 깨진 것도 아닌데 배포가 막혔다.
+# develop 푸시는 머지 하나마다 '이 커밋이 운영에 나가도 되는가'를 묻는 기록이므로,
+# 뒤 커밋이 앞 커밋의 답을 지워서는 안 된다. 그래서 push 는 SHA 로 격리한다.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
 env:

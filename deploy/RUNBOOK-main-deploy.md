@@ -27,6 +27,38 @@
 덤프를 뜬다면 **재생성·재연동을 모두 끝낸 직후**에 떠야 하고, 그 사이 로컬에서 온보딩을 한 번이라도
 더 하면 다시 낡는다. 파생 데이터를 덤프로 옮기는 것 자체가 위태롭다.
 
+### 재생성하면 신원(CI)도 끊긴다 — 재연동은 '복구'가 아니라 '전멸'이다 (2026-07-30 실측)
+
+위 문단의 "사용자가 연동하면 다시 투영된다"에는 **조건이 하나 빠져 있었다.** 재생성이
+`mydata_user` 를 다시 만들면 **CI(= `mydata_user` 의 PK)도 새로 생긴다.** 그러면 그 전에 연동한
+사용자의 `app_user.ci` 는 원장의 누구와도 맞지 않는다.
+
+`linkCardCompanies` 는 **먼저 지우고 나중에 채운다** — `user_card`·`user_payment`·
+`Consumption(MYDATA)`·`user_card_company`·`user_bank`·`report` 를 전부 삭제한 뒤
+`findCards(companyId, ci)` 로 다시 받아온다. CI 가 끊겼으면 삭제만 되고 **0건이 들어온다.**
+운영에서 `userId=2` 로 실제로 밟았다 — `HTTP 200 {"cardCount":0,"paymentCount":0}` 이고
+801행이 사라졌다. 그대로 11명에게 돌렸다면 전원이 비었다.
+
+**재생성 뒤에는 반드시 이것부터 센다.**
+
+```sql
+SELECT a.id, (SELECT COUNT(*) FROM finntech_mydata.mydata_user m
+              WHERE m.mydata_user_id = a.ci) AS ci_in_ledger
+  FROM finntech.app_user a ORDER BY a.id;     -- 0 이면 그 사용자는 재연동해도 빈다
+```
+
+0 인 사용자를 되살리려면 **연동 전에 CI 를 다시 붙인다.** 원장에 살아 있고 아직 아무도 쓰지 않는
+사람(카드 4장 이상)을 사용자 id 순으로 결정론 배정한 뒤 `POST /api/mydata/link` 를 부른다.
+가상 인물이 바뀌지만 앱 쪽 이름·목표·저축·지킴이 진행은 그대로 남는다.
+실행 결과: 11명 32초, 결제 525~2,279건, `legacy_rows=0` · `merchant_mismatch=0` ·
+`ksic_mismatch=0` · 중분류 정확히 15개.
+
+**그리고 파생본을 SQL 로 손보지 않는다.** 교통 상호를 맞추겠다고
+`user_payment.merchant_name` 을 원장에서 조인해 덮었다가 **엉뚱한 값을 넣었다.** `payment_id`
+는 사람 해시 기반이라 재생성 뒤에도 *조인은 되지만* 가리키는 결제의 내용이 다르다.
+"조인된다"는 "같은 결제다"가 아니다 — 그 확인은 `ksic_code`·금액까지 대조해야 한다.
+파생본은 손으로 고치지 말고 재투영시킨다.
+
 ---
 
 ## 규모 — 미리 알고 시작한다
