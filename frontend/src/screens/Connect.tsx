@@ -19,10 +19,10 @@ import { api } from '../lib/api';
 import { mergeInstitutions, splitPicked, type Inst, type InstCategory } from '../lib/institutions';
 
 const PROVIDERS = [
-  { name: '카카오톡', bg: '#FFCD00', fg: '#3c1e1e', label: 'K', desc: '카카오 지갑 인증서', logo: '/logo/카카오인증서.png' },
-  { name: '네이버', bg: '#03C75A', fg: '#fff', label: 'N', desc: '네이버 인증서', logo: '/logo/네이버인증서.jpeg' },
-  { name: 'PASS', bg: '#E6002D', fg: '#fff', label: 'P', desc: '통신사 인증', logo: '/logo/PASS인증서.png' },
-  { name: '토스', bg: '#3182F6', fg: '#fff', label: 't', desc: '토스 인증서', logo: '/logo/토스인증서.jpg' },
+  { name: '카카오톡', bg: '#FFCD00', fg: '#3c1e1e', label: 'K', desc: '카카오 지갑 인증서', logo: '/logo/cert-kakao.png' },
+  { name: '네이버', bg: '#03C75A', fg: '#fff', label: 'N', desc: '네이버 인증서', logo: '/logo/cert-naver.jpeg' },
+  { name: 'PASS', bg: '#E6002D', fg: '#fff', label: 'P', desc: '통신사 인증', logo: '/logo/cert-pass.png' },
+  { name: '토스', bg: '#3182F6', fg: '#fff', label: 't', desc: '토스 인증서', logo: '/logo/cert-toss.jpg' },
 ];
 
 /**
