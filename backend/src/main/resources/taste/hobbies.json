@@ -1,93 +1,26 @@
 {
- "_note": "취미 성향 taxonomy. 사용자에게 1~3개 취미 배정 → 그 취미의 signatureCategories에서 '가끔·명백히' 지출을 주입해 성향이 마이데이터에서 식별되게 한다. 일상 지출(식당·편의점·교통)과 구분되는 취미 신호.",
+ "_note": "취미 성향 taxonomy. 사용자에게 1~3개 취미 배정 → 그 취미의 signatureCategories에서 '가끔·명백히' 지출을 주입해 성향이 마이데이터에서 식별되게 한다. 일상 지출(식당·편의점·교통)과 구분되는 취미 신호. ※ 생성기 원본에서 파생하되 ③ 분석용으로 확장: category2 '스트리밍'은 음악(멜론)·영상(넷플릭스)·독서(밀리의서재)·AI(챗지피티)가 뒤섞여 원본만으론 취향이 왜곡된다 → refineByMerchant로 가맹점명 세분 후 음악감상/영상시청/독서구독으로 매핑한다. 생성기 원본과의 차이는 taste/README.md 참조.",
  "hobbies": [
-  {
-   "type": "문화공연",
-   "signatureCategories": [
-    "공연전시"
-   ]
-  },
-  {
-   "type": "여행",
-   "signatureCategories": [
-    "여행숙박",
-    "항공",
-    "철도",
-    "렌터카",
-    "고속버스"
-   ]
-  },
-  {
-   "type": "반려동물",
-   "signatureCategories": [
-    "반려동물"
-   ]
-  },
-  {
-   "type": "디지털게임",
-   "signatureCategories": [
-    "디지털가전",
-    "간편결제",
-    "스트리밍"
-   ]
-  },
-  {
-   "type": "패션쇼핑",
-   "signatureCategories": [
-    "의류패션",
-    "백화점",
-    "화장품",
-    "드럭스토어"
-   ]
-  },
-  {
-   "type": "스포츠레저",
-   "signatureCategories": [
-    "스포츠레저",
-    "헬스장"
-   ]
-  },
-  {
-   "type": "아웃도어캠핑",
-   "signatureCategories": [
-    "아웃도어캠핑"
-   ]
-  },
-  {
-   "type": "독서문화",
-   "signatureCategories": [
-    "서점문구"
-   ]
-  },
-  {
-   "type": "키즈육아",
-   "signatureCategories": [
-    "키즈육아",
-    "키즈카페"
-   ]
-  },
-  {
-   "type": "취미공예",
-   "signatureCategories": [
-    "취미공예"
-   ]
-  },
-  {
-   "type": "미식탐방",
-   "signatureCategories": [
-    "일식",
-    "양식",
-    "고기구이",
-    "뷔페",
-    "아시안"
-   ]
-  },
-  {
-   "type": "영화관람",
-   "signatureCategories": [
-    "영화",
-    "스트리밍"
-   ]
+  { "type": "문화공연", "signatureCategories": ["공연전시"] },
+  { "type": "여행", "signatureCategories": ["여행숙박", "항공", "철도", "렌터카", "고속버스"] },
+  { "type": "반려동물", "signatureCategories": ["반려동물"] },
+  { "type": "디지털게임", "signatureCategories": ["디지털가전", "간편결제"] },
+  { "type": "패션쇼핑", "signatureCategories": ["의류패션", "백화점", "화장품", "드럭스토어"] },
+  { "type": "스포츠레저", "signatureCategories": ["스포츠레저", "헬스장"] },
+  { "type": "아웃도어캠핑", "signatureCategories": ["아웃도어캠핑"] },
+  { "type": "독서문화", "signatureCategories": ["서점문구", "독서구독"] },
+  { "type": "키즈육아", "signatureCategories": ["키즈육아", "키즈카페"] },
+  { "type": "취미공예", "signatureCategories": ["취미공예"] },
+  { "type": "미식탐방", "signatureCategories": ["일식", "양식", "고기구이", "뷔페", "아시안"] },
+  { "type": "영화관람", "signatureCategories": ["영화", "영상시청"] },
+  { "type": "음악감상", "signatureCategories": ["음악감상"] }
+ ],
+ "refineByMerchant": {
+  "_note": "모호한 category2를 가맹점명(서비스명) 부분일치로 세분. '멜론'이든 '멜론 스트리밍'이든 substring으로 잡혀 seed 어휘(넷플릭스/유튜브프리미엄/멜론)와 generation 어휘(멜론 스트리밍/스포티파이…) 둘 다 커버한다. 매칭이 없으면 원 category2 유지 → 챗지피티(AI 구독)는 취미 신호가 아니므로 어디에도 안 잡힌다.",
+  "스트리밍": {
+   "음악감상": ["멜론", "스포티파이", "지니", "애플뮤직", "벅스", "플로"],
+   "영상시청": ["넷플릭스", "유튜브", "디즈니", "티빙", "웨이브", "왓챠", "쿠팡플레이"],
+   "독서구독": ["밀리의서재", "리디"]
   }
- ]
+ }
 }

@@ -11,8 +11,9 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * 취향 집계·요약의 순수 함수만 검증한다(DB·LLM 없음).
- * 역매핑은 hobbies.json 실제 구조를 본뜬다(여행=여행숙박/항공/철도…, 스트리밍=디지털게임+영화관람 중복).
+ * 취향 집계·요약·세분의 순수 함수만 검증한다(DB·LLM 없음).
+ * 역매핑·세분은 hobbies.json 실제 구조를 본뜬다 — '스트리밍'은 직접 취미로 매핑하지 않고
+ * refineByMerchant로 음악감상/영상시청/독서구독으로 가른 뒤 취미유형에 매핑한다.
  */
 class TasteAnalysisServiceTest {
 
@@ -22,8 +23,16 @@ class TasteAnalysisServiceTest {
             "공연전시", List.of("문화공연"),
             "일식", List.of("미식탐방"),
             "양식", List.of("미식탐방"),
-            "스트리밍", List.of("디지털게임", "영화관람"),   // 한 category2가 두 취미의 signature
+            "음악감상", List.of("음악감상"),   // 세분유형 → 취미
+            "영상시청", List.of("영화관람"),
             "영화", List.of("영화관람"));
+
+    /** category2 "스트리밍"을 가맹점명으로 세분(부분일치). 챗지피티(AI)는 어디에도 없어 취미 신호가 아니다. */
+    private static final Map<String, Map<String, List<String>>> REFINE = Map.of(
+            "스트리밍", Map.of(
+                    "음악감상", List.of("멜론", "스포티파이", "지니", "애플뮤직"),
+                    "영상시청", List.of("넷플릭스", "유튜브", "디즈니", "티빙"),
+                    "독서구독", List.of("밀리의서재", "리디")));
 
     private static UserPayment pay(String category2, int amount, String merchant) {
         return new UserPayment("id-" + category2 + "-" + amount, 1L, "card", 1L,
@@ -62,15 +71,33 @@ class TasteAnalysisServiceTest {
     }
 
     @Test
-    void 한_결제가_여러_취미의_signature면_모두에_카운트된다() {
-        // 스트리밍 → 디지털게임·영화관람 둘 다.
-        List<UserPayment> ps = List.of(pay("스트리밍", 14900, "넷플릭스"));
+    void 스트리밍은_가맹점명으로_세분된다_멜론은_음악_넷플릭스는_영상_챗지피티는_제외() {
+        List<UserPayment> ps = List.of(
+                pay("스트리밍", 10900, "멜론 스트리밍"),    // 음악감상 → 음악감상
+                pay("스트리밍", 13500, "넷플릭스 스탠다드"), // 영상시청 → 영화관람
+                pay("스트리밍", 29000, "챗지피티플러스"));   // 매칭 없음 → 스트리밍 유지 → 취미 아님
 
-        List<HobbyScore> out = TasteAnalysisService.aggregate(ps, REVERSE);
+        List<HobbyScore> out = TasteAnalysisService.aggregate(ps, REVERSE, REFINE);
 
         assertThat(out).extracting(HobbyScore::type)
-                .containsExactlyInAnyOrder("디지털게임", "영화관람");
+                .containsExactlyInAnyOrder("음악감상", "영화관람");   // 챗지피티는 빠진다
         assertThat(out).allSatisfy(s -> assertThat(s.count()).isEqualTo(1));
+    }
+
+    @Test
+    void refineCategory2는_두_생성기_어휘를_모두_커버하고_비대상은_그대로_둔다() {
+        // seed 어휘(맨이름) — Catalog.MERCHANTS 스트리밍 = [넷플릭스, 유튜브프리미엄, 멜론]
+        assertThat(TasteAnalysisService.refineCategory2("스트리밍", "멜론", REFINE)).isEqualTo("음악감상");
+        assertThat(TasteAnalysisService.refineCategory2("스트리밍", "유튜브프리미엄", REFINE)).isEqualTo("영상시청");
+        // generation 어휘(서비스명) — products.json
+        assertThat(TasteAnalysisService.refineCategory2("스트리밍", "멜론 스트리밍", REFINE)).isEqualTo("음악감상");
+        assertThat(TasteAnalysisService.refineCategory2("스트리밍", "밀리의서재", REFINE)).isEqualTo("독서구독");
+        // 매칭 없음(AI) → 원 category2 유지
+        assertThat(TasteAnalysisService.refineCategory2("스트리밍", "챗지피티플러스", REFINE)).isEqualTo("스트리밍");
+        // 세분 대상 아닌 category2는 손대지 않음
+        assertThat(TasteAnalysisService.refineCategory2("일식", "스시집", REFINE)).isEqualTo("일식");
+        // 가맹점명 null 방어 → 원 category2 유지
+        assertThat(TasteAnalysisService.refineCategory2("스트리밍", null, REFINE)).isEqualTo("스트리밍");
     }
 
     @Test

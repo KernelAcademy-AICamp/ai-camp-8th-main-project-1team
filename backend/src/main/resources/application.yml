@@ -105,6 +105,15 @@ finntech:
     # 자연어(join_member·spcl_cnd)에 묻힌 자격은 후속 LLM 사전 라벨링에서 구조화한다.
     exclude-keywords: [간부, 청년, 장병, 미소, 청약]
 
+  # ---- 자금 흐름 5축(L1~L5) 분류 임계치 (FundFlowService) --------------------
+  # AoM 버퍼 구간(θ_buffer)은 13_취향 분석 및 추천_Agent_설계.md §8 미정 → 아래는 잠정값이다.
+  # 재료(B)가 실데이터로 붙으면 분포 보고 재역산한다(설계원칙 4: 임계치는 전부 여기).
+  fund-flow:
+    aom-thin-max-months: 1.0    # 평균잔고가 월지출의 1개월치 미만 → THIN(유동성 취약)
+    aom-thick-min-months: 3.0   # 3개월치 이상 → THICK(안정)
+    fixed-cost-low-ratio: 0.20  # 고정비/소득 ≤ 0.20 → LOW
+    fixed-cost-high-ratio: 0.40 # 고정비/소득 ≥ 0.40 → HIGH
+
   # 감사로그 계층 3 — RFC 3161 TSA 앵커링
   tsa:
     # 기본 false. 외부 네트워크에 의존하므로 시연 직전에 켜서 앵커를 만들어 둔다.
