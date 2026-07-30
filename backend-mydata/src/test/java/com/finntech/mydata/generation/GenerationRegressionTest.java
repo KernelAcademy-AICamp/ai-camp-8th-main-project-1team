@@ -162,6 +162,30 @@ class GenerationRegressionTest {
     }
 
     @Test
+    @DisplayName("같은 사업자번호는 같은 주소다 — 어기면 그 브랜드의 결제가 통째로 지워진다")
+    void 같은_번호는_같은_주소다() {
+        // 실제로 밟았다. 같은 법인이 여러 브랜드로 등록돼 있는데(티머니=티머니택시=온다택시,
+        // 애플=애플앱스토어=애플티비플러스) 자료를 두 파일에서 따로 채우는 바람에 주소 표기가
+        // 갈렸다. gen-mydata.sh 의 충돌 정리는 "한 사업자번호에 주소 2개"를 해시 충돌로 보고
+        // **그 번호의 결제·통장거래를 전부 삭제**한다. 그래서 17개 브랜드가 데이터에서 사라졌다.
+        Map<String, Set<String>> addrByBiz = new HashMap<>();
+        Map<String, Set<String>> namesByBiz = new HashMap<>();
+        for (var e : loader.brands().entrySet()) {
+            for (BrandEntry b : e.getValue()) {
+                var hq = b.hq();
+                if (hq == null || hq.businessNumber() == null || hq.businessNumber().isBlank()) continue;
+                addrByBiz.computeIfAbsent(hq.businessNumber(), k -> new HashSet<>()).add(hq.address());
+                namesByBiz.computeIfAbsent(hq.businessNumber(), k -> new HashSet<>()).add(b.name());
+            }
+        }
+        List<String> offenders = new ArrayList<>();
+        addrByBiz.forEach((bn, addrs) -> {
+            if (addrs.size() > 1) offenders.add(bn + " " + namesByBiz.get(bn) + " → " + addrs);
+        });
+        assertThat(offenders).isEmpty();
+    }
+
+    @Test
     @DisplayName("hq 가 필요한 브랜드는 전부 주소를 갖고 있다")
     void 고정주소가_필요한_브랜드는_주소가_있다() {
         Set<String> needsHq = Set.of("NONE", "ROUTE", "VENUE_CLUSTER");
