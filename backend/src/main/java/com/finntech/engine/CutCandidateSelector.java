@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -29,11 +30,22 @@ public class CutCandidateSelector {
 
     private final IndustryCategoryMapper industryMapper;
 
+    /**
+     * 사용자 → 중분류별 ML 낭비 비율. 표가 비면 게이트를 통과시킨다.
+     *
+     * <p>{@code WasteScoringService}를 직접 주입하지 않고 함수로 받는 이유: 엔진이 ml 패키지를 알면
+     * 의존이 engine → ml → engine 으로 돌아 순환이 된다. 함수 하나만 받으면 엔진은 여전히
+     * "숫자를 받아 규칙을 적용하는" 자리로 남는다.
+     */
+    private final java.util.function.Function<Long, Map<String, Double>> wasteRatios;
+
     public CutCandidateSelector(UserPaymentRepository payments, AnalysisProperties props,
-                                IndustryCategoryMapper industryMapper) {
+                                IndustryCategoryMapper industryMapper,
+                                java.util.function.Function<Long, Map<String, Double>> wasteRatios) {
         this.payments = payments;
         this.props = props;
         this.industryMapper = industryMapper;
+        this.wasteRatios = wasteRatios;
     }
 
     /**
@@ -48,7 +60,8 @@ public class CutCandidateSelector {
         List<UserPayment> window = payments.findByUserIdOrderByPaymentDateDesc(userId).stream()
                 .filter(p -> !p.getPaymentDate().isBefore(from) && !p.getPaymentDate().isAfter(referenceTime))
                 .toList();
-        return selectFrom(window, props.getCutCandidate(), windowDays, industryMapper::discretionaryOf);
+        return selectFrom(window, props.getCutCandidate(), windowDays, industryMapper::discretionaryOf,
+                wasteRatios.apply(userId));
     }
 
     /** 창 합계를 한 달치로 환산한다. 창이 비정상이면(0 이하) 그대로 둔다. */
@@ -57,14 +70,33 @@ public class CutCandidateSelector {
         return Math.round(windowTotal * DAYS_PER_MONTH / windowDays);
     }
 
+    /** ML 없이 부르는 옛 호출부·테스트용 — 게이트를 통과시킨다(빈 표 = 근거 없음 = 통과). */
+    static List<CutCandidate> selectFrom(List<UserPayment> window, AnalysisProperties.CutCandidate cfg,
+                                         int windowDays, java.util.function.ToDoubleFunction<String> discretionary) {
+        return selectFrom(window, cfg, windowDays, discretionary, Map.of());
+    }
+
     /**
      * 순수 선정 — 테스트 진입점.
      *
-     * <p>등급은 <b>재량성</b>이 정한다({@code discretionary}: 중분류 → 0~1). 예전에는 카테고리
-     * 이름 22개가 설정에 박혀 있어, 체계를 바꾸면 하나도 안 겹쳐 후보가 통째로 사라졌다.
+     * <p><b>ML 낭비확률 게이트.</b> 등급은 재량성이 정하지만, 그 사람이 <b>실제로</b> 그 카테고리를
+     * 낭비하고 있는지는 재량성이 모른다. 취미/여가는 누구에게나 재량 0.63이라 늘 '전액 제거가능'이
+     * 됐다 — 취미를 아껴 쓰는 사람에게도 "월 115만원을 통째로 줄이세요"가 나갔다.
+     *
+     * <p>그래서 EBM이 낸 <b>중분류별 낭비 비율</b>로 두 가지를 한다.
+     * <ol>
+     *   <li>비율이 {@code wasteRatioThreshold} 미만이면 후보에서 뺀다 — 그 사람에겐 낭비가 아니다.</li>
+     *   <li>제거가능의 절감액을 <b>낭비 비율만큼</b>으로 잡는다. 62%가 낭비인데 100%를 절약액이라
+     *       적으면 그건 숫자가 아니라 과장이다.</li>
+     * </ol>
+     *
+     * <p>모델이 준비되지 않았거나({@code SpendingClassifier.isReady()==false}) 그 카테고리에 근거가
+     * 없으면 표가 비어 있고, 그때는 <b>게이트를 통과시키고 전액</b>으로 둔다 — 판정의 근거가 없을 때
+     * 조언을 지우는 것이 아니라, 예전 규칙 그대로 두는 편이 덜 놀랍다.
      */
     static List<CutCandidate> selectFrom(List<UserPayment> window, AnalysisProperties.CutCandidate cfg,
-                                         int windowDays, java.util.function.ToDoubleFunction<String> discretionary) {
+                                         int windowDays, java.util.function.ToDoubleFunction<String> discretionary,
+                                         Map<String, Double> wasteRatioByCategory) {
         TreeMap<String, List<Integer>> byCat2 = new TreeMap<>();
         for (UserPayment p : window) {
             String cat2 = p.getCategory2();
@@ -83,9 +115,22 @@ public class CutCandidateSelector {
             // 창 합계를 월 환산해서 담는다. 근거 문장도 같은 값을 써야 숫자와 설명이 어긋나지 않는다.
             long monthlySpend = toMonthly(amounts.stream().mapToLong(Integer::longValue).sum(), windowDays);
 
+            // ML 게이트 — 근거가 있고 그 비율이 임계 미만이면 뺀다.
+            Double ratio = wasteRatioByCategory.get(cat2);
+            if (ratio != null && ratio < cfg.getWasteRatioThreshold()) continue;
+
             if (discretionary.applyAsDouble(cat2) >= cfg.getRemovableAbove()) {
-                out.add(new CutCandidate(cat2, CutCandidate.Type.REMOVABLE, monthlySpend, monthlySpend,
-                        cat2 + " 지출 월 " + won(monthlySpend) + "은 전액 절약 대상(제거가능)"));
+                if (ratio != null) {
+                    long saving = Math.round(monthlySpend * ratio);
+                    if (saving <= 0) continue;
+                    out.add(new CutCandidate(cat2, CutCandidate.Type.REMOVABLE, monthlySpend, saving,
+                            cat2 + " 지출 월 " + won(monthlySpend) + " 중 "
+                                    + Math.round(ratio * 100) + "%가 줄일 수 있는 소비 — 월 "
+                                    + won(saving) + " 절약 가능(제거가능)"));
+                } else {
+                    out.add(new CutCandidate(cat2, CutCandidate.Type.REMOVABLE, monthlySpend, monthlySpend,
+                            cat2 + " 지출 월 " + won(monthlySpend) + "은 전액 절약 대상(제거가능)"));
+                }
             } else {
                 // 중앙값은 결제 한 건의 크기라 환산하지 않는다 — 초과분 합계만 월 단위로 바꾼다.
                 long median = Math.round(Stats.median(amounts.stream().mapToDouble(Integer::doubleValue).toArray()));
