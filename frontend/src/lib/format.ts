@@ -44,7 +44,7 @@ export const ICON_BG: Record<string, string> = {
   'i-cvs': 'var(--c-cvs)', 'i-shop': 'var(--c-shop)', 'i-ott': 'var(--c-ott)',
   'i-heart': '#FFE9EC', 'i-book': '#FFF7E6', 'i-gift': '#FFF1E8',
   'i-paw': '#F3EEFF', 'i-med': '#FDECEE', 'i-plane': '#E8F6FE', 'i-game': '#EEF0FF',
-  'i-card': '#E8F1FF', 'i-coin': '#FFF7E6',
+  'i-card': '#E8F1FF', 'i-coin': '#FFF7E6', 'i-doc': '#EAF0F6',
 };
 
 /** 카테고리 표시명 → 아이콘 id. 코드가 아니라 이름으로 고른다(세그먼트 비의존). */
@@ -55,6 +55,7 @@ export function iconFor(name: string): string {
   if (/택시|교통|대중교통|주유|주차/.test(n)) return 'i-taxi';
   if (/편의점|마트|생활|슈퍼/.test(n)) return 'i-cvs';
   if (/쇼핑|의류|패션|잡화|온라인/.test(n)) return 'i-shop';
+  if (/보험|금융/.test(n)) return 'i-doc';      // 금융/보험 — 통신보다 먼저 본다('보험'이 '통신'에 안 걸리도록)
   if (/구독|OTT|스트리밍|통신/.test(n)) return 'i-ott';
   if (/건강|운동|헬스|스포츠|피트니스/.test(n)) return 'i-heart';
   if (/미용|헤어|네일|뷰티|화장/.test(n)) return 'i-gift';

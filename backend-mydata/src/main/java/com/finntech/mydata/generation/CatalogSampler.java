@@ -167,6 +167,10 @@ public class CatalogSampler {
             display = category2;
         }
 
+        // 택시는 표시명 뒤에 차량 번호판이 붙는다 — **표시만** 달라지고 결제하는 가맹점은 같다
+        // (사용자 확인 2026-07-31). 그래서 base(=신원)는 건드리지 않는다.
+        if (TAXI_CATEGORY.equals(category2)) display = display + taxiPlate(anchor, r);
+
         // ── 주소 규칙 ── 채널(결제수단)과는 다른 축이다.
         if (brand != null && brand.hq() != null) {              // 본사·시설 실주소
             Merchant m = registry.resolveFixed(base, brand.hq());
@@ -250,8 +254,24 @@ public class CatalogSampler {
     }
 
     public ResolvedProduct resolveProduct(String category2, Random r) {
+        return resolveProduct(category2, r, null);
+    }
+
+    /**
+     * 조건에 맞는 품목만 놓고 뽑는다. 조건에 맞는 게 없으면 전체에서 뽑는다.
+     *
+     * <p>보험이 이걸 쓴다 — 차가 없는 사람에게 자동차·운전자보험이 나가면 안 되고, 차가 있으면
+     * 운전자보험은 반드시 하나 든다(사용자 결정 2026-07-31).
+     */
+    public ResolvedProduct resolveProduct(String category2, Random r,
+                                          java.util.function.Predicate<String> accept) {
         List<ProductEntry> list = products.get(category2);
         if (list == null || list.isEmpty()) return new ResolvedProduct(category2, 10000, 0.5);
+        if (accept != null) {
+            List<ProductEntry> fit = new ArrayList<>();
+            for (ProductEntry p : list) if (accept.test(p.name())) fit.add(p);
+            if (!fit.isEmpty()) list = fit;
+        }
         ProductEntry chosen = pickByWeight(list, r);
         int price = GenSeed.uniformInt(r, chosen.priceLow(), chosen.priceHigh());
         return new ResolvedProduct(chosen.name(), price, chosen.discretionary());
@@ -292,4 +312,42 @@ public class CatalogSampler {
     }
 
     private static <T> T pick(List<T> list, Random r) { return list.get(r.nextInt(list.size())); }
+
+    /** 택시 카테고리 — 결제 표시명 뒤에 차량 번호판이 붙는다. */
+    private static final String TAXI_CATEGORY = "택시";
+    /** 사업용(영업용) 차량의 용도기호. 자가용(가~마 등)과 구분된다. */
+    private static final String[] PLATE_LETTERS = {"아", "바", "사", "자"};
+
+    /**
+     * 택시 결제에 함께 찍히는 <b>차량 번호판</b> (사용자 결정 2026-07-31).
+     *
+     * <p>예: {@code 티머니택시경기31아2122}. 실제 카드 전표도 택시는 상호 뒤에 차량번호가 붙는다.
+     * <b>표시만 달라지고 결제하는 가맹점은 같다</b> — 사업자번호·주소는 브랜드 본사 그대로다.
+     * 번호판마다 가맹점을 새로 만들면 원장에 결제 수만큼 가맹점이 늘어나는데, 그것은 사실과 다르다.
+     *
+     * <p>구성: 지역 2글자 + 31~36 + 아·바·사·자 + 네 자리. 앞 두 자리는 앵커(결제한 곳)의 시도다 —
+     * 서울에서 잡은 택시가 제주 번호판을 달고 있으면 어색하다.
+     */
+    static String taxiPlate(RegionEntry anchor, Random r) {
+        int num = 31 + r.nextInt(6);                                  // 31~36
+        String letter = PLATE_LETTERS[r.nextInt(PLATE_LETTERS.length)];
+        int serial = r.nextInt(10_000);                               // 0000~9999
+        return plateRegion(anchor == null ? null : anchor.sido())
+                + num + letter + String.format("%04d", serial);
+    }
+
+    /**
+     * 시도명 → 번호판 지역 2글자.
+     *
+     * <p>대부분 앞 두 글자면 된다(서울특별시→서울, 경기도→경기, 강원도→강원). 충청·전라·경상만
+     * 앞 두 글자가 같아 구분이 안 되므로 <b>첫 글자 + 방위</b>로 줄인다(충청북도→충북, 경상남도→경남).
+     * 실제 자동차 등록번호의 지역 표기와 같다.
+     */
+    static String plateRegion(String sido) {
+        if (sido == null || sido.length() < 2) return "서울";
+        if (sido.startsWith("충청") || sido.startsWith("전라") || sido.startsWith("경상")) {
+            return "" + sido.charAt(0) + sido.charAt(2);
+        }
+        return sido.substring(0, 2);
+    }
 }

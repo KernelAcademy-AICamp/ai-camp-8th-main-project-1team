@@ -27,4 +27,14 @@ public record GeneratedUser(
                          String dataSplit, long userSeed) {
         this(id, variant, startDate, home, work, hasVehicle, cardCount, dataSplit, userSeed, 0);
     }
+
+    /**
+     * 반려동물을 기르는가 — <b>펫보험은 이 사람만 든다</b>(사용자 결정 2026-07-31).
+     *
+     * <p>페르소나에는 없는 속성이라 사용자 시드에서 결정론으로 유도한다. 2022 농림부 조사 기준
+     * 반려동물 양육 가구가 약 25%다. 시드에서 뽑으므로 몇 번을 돌려도 같은 사람이 같은 답을 준다.
+     */
+    public boolean hasPet() {
+        return Math.floorMod(Long.hashCode(userSeed ^ 0x9E3779B97F4A7C15L), 100) < 25;
+    }
 }

@@ -51,7 +51,7 @@ SELECT a.id, (SELECT COUNT(*) FROM finntech_mydata.mydata_user m
 사람(카드 4장 이상)을 사용자 id 순으로 결정론 배정한 뒤 `POST /api/mydata/link` 를 부른다.
 가상 인물이 바뀌지만 앱 쪽 이름·목표·저축·지킴이 진행은 그대로 남는다.
 실행 결과: 11명 32초, 결제 525~2,279건, `legacy_rows=0` · `merchant_mismatch=0` ·
-`ksic_mismatch=0` · 중분류 정확히 15개.
+`ksic_mismatch=0` · 중분류 정확히 16개(2026-07-31 금융/보험 추가).
 
 **CI 를 손으로 옮기면 `birth_year` 도 함께 옮긴다.** `app_user.birth_year` 는 본인인증이 주민번호에서
 계산해 넣는 값이라, CI 만 SQL 로 갈아끼우면 **앞사람의 생년이 그대로 남는다.** 실제로 12명 중 11명이

@@ -58,7 +58,7 @@ class SpendingClassifierGuardTest {
     @Test
     @DisplayName("배포된 모델이 현재 대조표와 같은 체계로 학습돼 있다")
     void deployedModelMatchesCurrentTaxonomy() {
-        // 2026-07-30 재학습으로 cat2가 우리 중분류 15종이 되었다. 이 단언이 깨지면
+        // 2026-07-30 재학습으로 cat2가 우리 중분류가 되었다(2026-07-31 금융/보험 추가로 16종). 이 단언이 깨지면
         // 데이터 체계를 바꾸고 재학습을 잊은 것이다 — 그러면 ML 판정이 통째로 규칙 baseline이 된다.
         SpendingClassifier clf = new SpendingClassifier(mapper, new IndustryCategoryMapper(mapper));
         assertThat(clf.isReady())
