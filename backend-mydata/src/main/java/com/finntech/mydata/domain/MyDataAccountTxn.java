@@ -22,8 +22,14 @@ import java.time.LocalDateTime;
 @Table(name = "mydata_account_txn")
 public class MyDataAccountTxn {
 
-    /** 거래 출처. 카드 출금은 {@code mydata_payment}의 사본이라 대조하려면 출처를 알아야 한다. */
-    public enum Source { TRANSFER, SALARY, INTEREST, TAX, CARD }
+    /**
+     * 거래 출처. 카드 출금은 {@code mydata_payment}의 사본이라 대조하려면 출처를 알아야 한다.
+     *
+     * <p>{@code KPASS}는 대중교통비 환급이다(2026-07-31). {@code TRANSFER}로 뭉뚱그리지 않는 이유는
+     * TRANSFER가 이 저장소에서 <b>사람 간 계좌이체</b>를 뜻하기 때문이다 — 환급을 거기 섞으면
+     * 이체 통계가 조용히 틀린다.
+     */
+    public enum Source { TRANSFER, SALARY, INTEREST, TAX, CARD, KPASS }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

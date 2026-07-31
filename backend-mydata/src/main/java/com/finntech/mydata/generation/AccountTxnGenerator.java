@@ -93,14 +93,24 @@ public final class AccountTxnGenerator {
      */
     public static List<Row> generate(String accountNumber, String bank, String salaryPayer,
                                      LocalDate openedDate, int salary, int payday, long initialBalance,
-                                     LocalDateTime end, Map<YearMonth, Long> cardOutByMonth) {
+                                     LocalDateTime end, Map<YearMonth, Long> cardOutByMonth,
+                                     Map<YearMonth, Long> transitByMonth) {
         List<Row> moves = transfers(accountNumber, openedDate, end);
         List<Row> out = new ArrayList<>(moves);
         out.addAll(salaryDeposits(salaryPayer, openedDate, salary, payday, end));
+        out.addAll(kpassRefunds(transitByMonth, openedDate, end));
         out.addAll(interestAndTax(accountNumber, bank, openedDate, salary, payday,
                 initialBalance, end, cardOutByMonth, moves));
         out.sort(java.util.Comparator.comparing(Row::date).thenComparing(Row::description));
         return out;
+    }
+
+    /** K-패스 환급을 넘기지 않는 옛 호출부·테스트용. */
+    public static List<Row> generate(String accountNumber, String bank, String salaryPayer,
+                                     LocalDate openedDate, int salary, int payday, long initialBalance,
+                                     LocalDateTime end, Map<YearMonth, Long> cardOutByMonth) {
+        return generate(accountNumber, bank, salaryPayer, openedDate, salary, payday,
+                initialBalance, end, cardOutByMonth, Map.of());
     }
 
     private static String randomName(Random rng) {
@@ -261,6 +271,44 @@ public final class AccountTxnGenerator {
         // 기업 급여이체는 펌뱅킹으로 나간다.
         for (; !d.atTime(9, 0).isAfter(end); d = d.plusMonths(1)) {
             out.add(new Row(d.atTime(9, 0), "DEPOSIT", salary, salaryPayer, PAYROLL_CHANNEL, "SALARY"));
+        }
+        return out;
+    }
+
+    /** K-패스 환급 문턱 — 한 달 대중교통비가 이 금액을 넘으면 초과분을 전액 돌려받는다. */
+    static final long KPASS_THRESHOLD = 50_000L;
+    /** 환급 입금일 — 이용한 달의 <b>다음 달</b> 20일. */
+    private static final int KPASS_PAYDAY = 20;
+
+    /**
+     * K-패스 환급 입금 (사용자 결정 2026-07-31).
+     *
+     * <p>한 달 <b>대중교통</b> 결제 합계가 5만원을 넘으면 초과분 전액을 다음 달 20일에 돌려준다.
+     * 그래서 실질 교통비가 월 5만원으로 고정되고, <b>대중교통은 아껴야 할 대상이 아니게 된다</b> —
+     * 통근·출장으로 매일 타는 사람이 그 이유로 낭비 판정을 받는 일이 없어진다.
+     *
+     * <p>택시·주유·통행료는 대상이 아니다. 실제 K-패스도 지하철·버스만 친다.
+     *
+     * <p>관측 기간의 <b>마지막 달</b> 환급은 나오지 않는다 — 입금일이 창 밖이기 때문이다.
+     * 그것이 사실이므로 억지로 앞당기지 않는다("아직 못 받았다").
+     *
+     * @param transitByMonth 월별 대중교통 결제 합계
+     */
+    static List<Row> kpassRefunds(Map<YearMonth, Long> transitByMonth, LocalDate openedDate,
+                                  LocalDateTime end) {
+        List<Row> out = new ArrayList<>();
+        if (transitByMonth == null || transitByMonth.isEmpty()) return out;
+        // 정렬 고정 — 재현성(마스터 §4 원칙 3). Map은 순회 순서를 보장하지 않는다.
+        for (YearMonth ym : new java.util.TreeMap<>(transitByMonth).keySet()) {
+            long spent = transitByMonth.getOrDefault(ym, 0L);
+            long refund = spent - KPASS_THRESHOLD;
+            if (refund <= 0) continue;
+            LocalDate day = ym.plusMonths(1).atDay(KPASS_PAYDAY);
+            if (day.isBefore(openedDate)) continue;
+            LocalDateTime at = day.atTime(10, 0);
+            if (at.isAfter(end)) continue;
+            out.add(new Row(at, "DEPOSIT", (int) Math.min(Integer.MAX_VALUE, refund),
+                    ym.getMonthValue() + "월K패스환급", PAYROLL_CHANNEL, "KPASS"));
         }
         return out;
     }
