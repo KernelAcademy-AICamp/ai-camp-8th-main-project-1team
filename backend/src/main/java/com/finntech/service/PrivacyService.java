@@ -68,6 +68,7 @@ public class PrivacyService {
     private final UserCardCompanyRepository userCardCompanyRepository;
     private final UserBankRepository userBankRepository;
     private final UserSpendingOverrideRepository overrideRepository;
+    private final com.finntech.repository.UserMerchantStanceRepository merchantStanceRepository;
     private final CutCandidateSelectionRepository cutSelectionRepository;
     private final AuditService auditService;
     private final int retentionDays;
@@ -87,6 +88,7 @@ public class PrivacyService {
                           UserCardCompanyRepository userCardCompanyRepository,
                           UserBankRepository userBankRepository,
                           UserSpendingOverrideRepository overrideRepository,
+                          com.finntech.repository.UserMerchantStanceRepository merchantStanceRepository,
                           CutCandidateSelectionRepository cutSelectionRepository,
                           AuditService auditService,
                           @Value("${finntech.privacy.retention-days:90}") int retentionDays) {
@@ -105,6 +107,7 @@ public class PrivacyService {
         this.userCardCompanyRepository = userCardCompanyRepository;
         this.userBankRepository = userBankRepository;
         this.overrideRepository = overrideRepository;
+        this.merchantStanceRepository = merchantStanceRepository;
         this.cutSelectionRepository = cutSelectionRepository;
         this.auditService = auditService;
         this.retentionDays = retentionDays;
@@ -226,6 +229,8 @@ public class PrivacyService {
         userCardCompanyRepository.deleteByUserId(userId);   // 연동 카드사·동기화 기록도 파기(W2)
         userBankRepository.deleteByUserId(userId);         // 연동 은행 기록도 함께 파기
         overrideRepository.deleteByUserId(userId);   // 개인화 override도 파기(W8-5)
+        // 가맹점 판정 성향도 사용자가 쌓은 판단이다 — 어디서 무엇을 사는지가 드러난다.
+        merchantStanceRepository.deleteByUserId(userId);
         cutSelectionRepository.deleteByUserId(userId);   // 절약후보 선택추적(⑤)도 소비결정 정보이므로 파기
         userRepository.findById(userId).ifPresent(user -> {
             user.setCi(null);

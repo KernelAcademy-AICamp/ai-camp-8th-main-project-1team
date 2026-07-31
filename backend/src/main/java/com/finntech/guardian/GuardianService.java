@@ -46,6 +46,7 @@ public class GuardianService {
     private final ConsumptionRepository consumptionRepository;
     private final CategoryRepository categoryRepository;
     private final com.finntech.repository.UserPaymentRepository userPaymentRepository;
+    private final com.finntech.repository.UserMerchantStanceRepository stanceRepository;
 
     public GuardianService(GuardianChallengeRepository challengeRepository,
                            GuardianTransactionRepository txRepository,
@@ -58,7 +59,8 @@ public class GuardianService {
                            AnalysisEngine analysisEngine,
                            ConsumptionRepository consumptionRepository,
                            CategoryRepository categoryRepository,
-                           com.finntech.repository.UserPaymentRepository userPaymentRepository) {
+                           com.finntech.repository.UserPaymentRepository userPaymentRepository,
+                           com.finntech.repository.UserMerchantStanceRepository stanceRepository) {
         this.challengeRepository = challengeRepository;
         this.txRepository = txRepository;
         this.notificationRepository = notificationRepository;
@@ -71,6 +73,7 @@ public class GuardianService {
         this.consumptionRepository = consumptionRepository;
         this.categoryRepository = categoryRepository;
         this.userPaymentRepository = userPaymentRepository;
+        this.stanceRepository = stanceRepository;
     }
 
     // ======================================================================
@@ -131,6 +134,8 @@ public class GuardianService {
                 baseline.periodAmount(), target, bufferRatio,
                 start, start.plusDays(days - 1L), rewardName, rewardPrice, now);
         rewardService.items(userId, now);   // 보유 아이템 레코드를 미리 만들어 둔다
+        // 뺀 결제가 가리킨 가맹점의 성향을 한 칸 올린다 — 다음 달에 같은 것을 또 빼지 않도록.
+        promoteStances(userId, keptPaymentIds, now);
         return challengeRepository.save(ch);
     }
 
@@ -190,6 +195,37 @@ public class GuardianService {
         // 예전에는 monthlyAmount(총액÷관측월)와 amountOver(days)를 따로 냈는데, 창을 쓰는
         // 지금은 둘 다 같은 값이 되고 환산이 오히려 오차를 만든다.
         return new Baseline(total, total, count > 0 ? total / count : null);
+    }
+
+    /** NORMAL → LENIENT 로 가는 데 필요한 '낭비 아님' 횟수. 설계 원칙 4 — 임계치는 yml. */
+    @org.springframework.beans.factory.annotation.Value("${finntech.ml.stance-to-lenient:1}")
+    private int toLenient;
+    /** LENIENT → EXCLUDED 로 가는 데 필요한 누적 횟수. */
+    @org.springframework.beans.factory.annotation.Value("${finntech.ml.stance-to-excluded:3}")
+    private int toExcluded;
+
+    /**
+     * 뺀 결제가 가리킨 가맹점의 성향을 한 칸 올린다.
+     *
+     * <p><b>왜 여기인가.</b> 뺀 것을 그 챌린지에만 반영하면 다음 달에 같은 가게가 또 낭비로 떠서
+     * 사용자가 같은 판단을 되풀이해야 한다. 그렇다고 한 번에 제외해 버리면 <b>같은 가게에서
+     * 낭비 목적으로 사는 경우</b>를 영영 못 잡는다(사용자 지적 2026-07-31). 그래서 한 칸씩만
+     * 올리고, 사용자가 "역시 낭비였다"고 하면 되돌아간다.
+     *
+     * <p>사업자번호가 없는 결제(해외 등)는 건너뛴다 — 묶을 신원이 없다.
+     */
+    private void promoteStances(Long userId, List<String> keptPaymentIds, LocalDateTime now) {
+        if (keptPaymentIds == null || keptPaymentIds.isEmpty()) return;
+        for (var p : userPaymentRepository.findAllById(keptPaymentIds)) {
+            if (!userId.equals(p.getUserId())) continue;
+            String biz = p.getBusinessNumber();
+            if (biz == null || biz.isBlank()) continue;
+            var st = stanceRepository.findByUserIdAndBusinessNumber(userId, biz)
+                    .orElseGet(() -> new com.finntech.domain.UserMerchantStance(
+                            userId, biz, p.getMerchantName(), now));
+            st.kept(toLenient, toExcluded, now);
+            stanceRepository.save(st);
+        }
     }
 
     /** 사용자가 뺀 결제의 합계와 건수. */

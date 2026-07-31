@@ -384,6 +384,17 @@ export interface MyAccount {
   balance: number;
   transactions: MyAccountTxn[];
 }
+/** 가맹점 판정 성향 — NORMAL은 목록에 오지 않는다(아무것도 안 한 곳). */
+export type StanceLevel = 'NORMAL' | 'LENIENT' | 'EXCLUDED';
+export interface MerchantStance {
+  businessNumber: string;
+  merchantName: string | null;
+  stance: StanceLevel;
+  /** '낭비 아님'을 누른 횟수. */
+  keptCount: number;
+  updatedAt: string;
+}
+
 /** 온보딩 창 안의 결제 1건. `waste`가 null이면 모델이 판정하지 못한 것이다(체크하지 않는다). */
 export interface OnboardingPayment {
   paymentId: string;
@@ -825,6 +836,17 @@ export const api = {
    */
   onboardingWindow: (userId: number, windowDays = 0) =>
     get<OnboardingWindow>(`/api/onboarding/window?userId=${userId}&windowDays=${windowDays}`),
+  /* ── 가맹점 판정 성향 (마이 > 낭비 판정 관리) ── */
+  merchantStances: (userId: number) =>
+    get<{ userId: number; items: MerchantStance[] }>(`/api/merchant-stance?userId=${userId}`),
+  /** "역시 낭비였다" — 한 단계 되돌린다. */
+  revertStance: (userId: number, businessNumber: string) =>
+    post<{ businessNumber: string; stance: StanceLevel; keptCount: number }>(
+      `/api/merchant-stance/${encodeURIComponent(businessNumber)}/revert?userId=${userId}`, {}),
+  /** 설정을 통째로 지운다 — 다음부터 전역 임계로 돌아간다. */
+  clearStance: (userId: number, businessNumber: string) =>
+    del<{ businessNumber: string; stance: StanceLevel }>(
+      `/api/merchant-stance/${encodeURIComponent(businessNumber)}?userId=${userId}`),
   score: (userId: number) => get<ScoreResponse>(`/api/score/${userId}`),
 
   // 사용자 · 동의 · 정보주체 권리

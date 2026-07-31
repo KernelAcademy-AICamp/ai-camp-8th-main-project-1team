@@ -28,7 +28,8 @@ export type ScreenId =
   // 리포트 하위 — r-compare 는 개편안 s-compare(맞춤 상품 Top3)
   | 'r-compare' | 'r-analysis' | 'r-spending' | 'r-cards' | 'r-account' | 'r-waste' | 'r-savings'
   // 마이 하위
-  | 'm-impulse' | 'm-goals' | 'm-connections' | 'm-record' | 'm-policy' | 'm-survey' | 'm-demo';
+  | 'm-impulse' | 'm-goals' | 'm-connections' | 'm-record' | 'm-policy' | 'm-survey' | 'm-demo'
+  | 'm-stances';
 
 export const TAB_SCREENS = ['home', 'report', 'my'] as const;
 export type TabId = (typeof TAB_SCREENS)[number];
@@ -48,6 +49,7 @@ const ALL_SCREENS = [
   'collection', 'shop', 'monthend', 'settle', 'renew',
   'r-compare', 'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings',
   'm-impulse', 'm-goals', 'm-connections', 'm-record', 'm-policy', 'm-survey', 'm-demo',
+  'm-stances',
 ] as const;
 
 // 하나라도 빠지면 여기서 타입 오류가 난다(빠진 ScreenId가 never에 배정되지 못한다).
