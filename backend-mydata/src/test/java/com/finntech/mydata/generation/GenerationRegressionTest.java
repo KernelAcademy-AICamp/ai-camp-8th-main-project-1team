@@ -315,4 +315,196 @@ class GenerationRegressionTest {
         }
         assertThat(checked).isPositive();
     }
+
+    // ── 택시 번호판 (2026-07-31 추가) ─────────────────────────────────────────
+
+    @Test
+    @DisplayName("택시 표시명 뒤에 차량 번호판이 붙는다 — 지역2 + 31~36 + 아바사자 + 네자리")
+    void 택시_번호판_형식() {
+        Random r = new Random(7);
+        var regions = loader.regions();
+        for (int i = 0; i < 300; i++) {
+            RegionEntry anchor = regions.get(r.nextInt(regions.size()));
+            var m = sampler.resolveMerchant("택시", anchor, r);
+            assertThat(m.name())
+                    .as("택시 표시명 (앵커 %s)", anchor.sido())
+                    .matches(".+[가-힣]{2}3[1-6][아바사자]\\d{4}$");
+            // 앞 두 글자는 결제한 곳의 시도다 — 서울에서 잡은 택시가 제주 번호판이면 어색하다.
+            String plate = m.name().substring(m.name().length() - 9);
+            assertThat(plate.substring(0, 2))
+                    .isEqualTo(CatalogSampler.plateRegion(anchor.sido()));
+        }
+    }
+
+    @Test
+    @DisplayName("번호판이 달라도 결제하는 가맹점은 하나다 — 사업자번호·주소가 흔들리면 안 된다")
+    void 택시_가맹점은_하나다() {
+        Random r = new Random(11);
+        RegionEntry anchor = loader.regions().get(0);
+        Map<String, Set<String>> addrByBiz = new HashMap<>();
+        Set<String> plates = new HashSet<>();
+        for (int i = 0; i < 200; i++) {
+            var m = sampler.resolveMerchant("택시", anchor, r);
+            addrByBiz.computeIfAbsent(m.businessNumber(), k -> new HashSet<>()).add(m.address());
+            plates.add(m.name());
+        }
+        assertThat(plates.size()).as("번호판은 여러 개여야 한다").isGreaterThan(1);
+        addrByBiz.forEach((biz, addrs) ->
+                assertThat(addrs).as("사업자번호 %s 의 주소", biz).hasSize(1));
+        assertThat(addrByBiz.size())
+                .as("택시 브랜드 수만큼만 사업자가 있어야 한다 — 번호판마다 가맹점이 생기면 안 된다")
+                .isLessThanOrEqualTo(8);
+    }
+
+    @Test
+    @DisplayName("번호판 지역 표기 — 충청·전라·경상만 방위로 줄인다")
+    void 번호판_지역표기() {
+        assertThat(CatalogSampler.plateRegion("서울특별시")).isEqualTo("서울");
+        assertThat(CatalogSampler.plateRegion("경기도")).isEqualTo("경기");
+        assertThat(CatalogSampler.plateRegion("강원도")).isEqualTo("강원");
+        assertThat(CatalogSampler.plateRegion("세종특별자치시")).isEqualTo("세종");
+        assertThat(CatalogSampler.plateRegion("제주특별자치도")).isEqualTo("제주");
+        assertThat(CatalogSampler.plateRegion("충청북도")).isEqualTo("충북");
+        assertThat(CatalogSampler.plateRegion("충청남도")).isEqualTo("충남");
+        assertThat(CatalogSampler.plateRegion("전라남도")).isEqualTo("전남");
+        assertThat(CatalogSampler.plateRegion("경상북도")).isEqualTo("경북");
+        assertThat(CatalogSampler.plateRegion("경상남도")).isEqualTo("경남");
+    }
+
+    // ── K-패스 환급 (2026-07-31 추가) ─────────────────────────────────────────
+
+    @Test
+    @DisplayName("한 달 대중교통비의 5만원 초과분이 다음 달 20일에 환급된다")
+    void 케이패스_환급() {
+        var transit = new java.util.TreeMap<java.time.YearMonth, Long>();
+        transit.put(java.time.YearMonth.of(2026, 3), 30_000L);    // 문턱 아래 — 환급 없음
+        transit.put(java.time.YearMonth.of(2026, 4), 50_000L);    // 딱 문턱 — 환급 없음
+        transit.put(java.time.YearMonth.of(2026, 5), 88_000L);    // 38,000원 환급
+        transit.put(java.time.YearMonth.of(2026, 6), 120_000L);   // 70,000원 환급
+
+        var rows = AccountTxnGenerator.kpassRefunds(transit, LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 7, 31).atTime(23, 59));
+
+        assertThat(rows).hasSize(2);
+        assertThat(rows.get(0).date().toLocalDate()).isEqualTo(LocalDate.of(2026, 6, 20));
+        assertThat(rows.get(0).amount()).isEqualTo(38_000);
+        assertThat(rows.get(0).description()).isEqualTo("5월K패스환급");
+        assertThat(rows.get(0).type()).isEqualTo("DEPOSIT");
+        assertThat(rows.get(1).date().toLocalDate()).isEqualTo(LocalDate.of(2026, 7, 20));
+        assertThat(rows.get(1).amount()).isEqualTo(70_000);
+        assertThat(rows.get(1).description()).isEqualTo("6월K패스환급");
+    }
+
+    // ── 보험 (2026-07-31 추가) ────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("보험사는 자기가 파는 상품만 판다 — 삼성화재가 DB의 펫블리를 팔면 안 된다")
+    void 보험사와_상품이_짝이다() {
+        var brands = loader.brands().get("보험");
+        assertThat(brands).as("보험 브랜드").isNotEmpty();
+        Map<String, String> owner = new HashMap<>();
+        for (BrandEntry b : brands) {
+            assertThat(b.serves()).as("%s 의 취급 상품", b.name()).isNotEmpty();
+            assertThat(b.hq()).as("%s 의 본사", b.name()).isNotNull();
+            for (String s : b.serves()) {
+                assertThat(owner.put(s, b.name()))
+                        .as("상품 '%s' 를 두 보험사가 판다", s).isNull();
+            }
+        }
+        // 명세서 표기는 forms 변형이 섞인다(삼성화재 → 삼성화재다이렉트). 사업자번호로 본다.
+        Map<String, String> bizOf = new HashMap<>();
+        for (BrandEntry b : brands) bizOf.put(b.name(), b.hq().businessNumber());
+        Random r = new Random(3);
+        for (int i = 0; i < 400; i++) {
+            var product = sampler.resolveProduct("보험", r);
+            var m = sampler.resolveMerchant("보험", null, product.name(), r);
+            assertThat(m.businessNumber())
+                    .as("상품 '%s' 를 파는 보험사 (표기: %s)", product.name(), m.name())
+                    .isEqualTo(bizOf.get(owner.get(product.name())));
+        }
+    }
+
+    @Test
+    @DisplayName("보험료는 매달 같은 날 같은 금액이다 — 계약은 달마다 바뀌지 않는다")
+    void 보험료는_고정이다() {
+        var sim = new DailyActivitySimulator(sampler, new WasteLabeler(props, sampler), loader, props);
+        var users = new PopulationBuilder(loader, props).build(props.getSeed(), 120);
+        int checked = 0;
+        for (var u : users) {
+            var ins = sim.simulate(u, u.startDate().plusDays(120)).stream()
+                    .filter(t -> "보험".equals(t.category2()))
+                    // 여행보험은 계약이 아니라 여행 건당이라 고정일 규칙 밖이다.
+                    .filter(t -> !DailyActivitySimulator.isTravelInsurance(t.productName())).toList();
+            if (ins.isEmpty()) continue;
+            // 날짜는 매달 같은 '일'
+            assertThat(ins.stream().map(t -> t.date().getDayOfMonth()).distinct())
+                    .as("%s 의 보험료 출금일", u.id()).hasSize(1);
+            // 같은 상품이면 상호·금액이 늘 같다
+            Map<String, Set<Integer>> amtByProduct = new HashMap<>();
+            Map<String, Set<String>> merchByProduct = new HashMap<>();
+            for (var t : ins) {
+                amtByProduct.computeIfAbsent(t.productName(), k -> new HashSet<>()).add(t.amount());
+                merchByProduct.computeIfAbsent(t.productName(), k -> new HashSet<>()).add(t.merchant());
+            }
+            amtByProduct.forEach((p, a) -> assertThat(a).as("'%s' 보험료", p).hasSize(1));
+            merchByProduct.forEach((p, m) -> assertThat(m).as("'%s' 보험사", p).hasSize(1));
+            if (++checked >= 25) break;
+        }
+        assertThat(checked).as("보험을 든 사용자가 하나도 없다").isPositive();
+    }
+
+    @Test
+    @DisplayName("차가 없으면 자동차·운전자보험이 안 나가고, 차가 있으면 운전자보험이 반드시 있다")
+    void 차량과_보험이_맞는다() {
+        var sim = new DailyActivitySimulator(sampler, new WasteLabeler(props, sampler), loader, props);
+        var users = new PopulationBuilder(loader, props).build(props.getSeed(), 150);
+        int withCar = 0, without = 0;
+        for (var u : users) {
+            var products = sim.simulate(u, u.startDate().plusDays(70)).stream()
+                    .filter(t -> "보험".equals(t.category2()))
+                    .map(t -> t.productName()).collect(java.util.stream.Collectors.toSet());
+            if (products.isEmpty()) continue;
+            // 펫보험은 반려동물이 있는 사람만 든다.
+            if (!u.hasPet()) {
+                assertThat(products).as("반려동물 없는 %s 의 보험", u.id())
+                        .noneMatch(DailyActivitySimulator::isPetInsurance);
+            }
+            if (u.hasVehicle()) {
+                assertThat(products).as("차 있는 %s 의 보험", u.id())
+                        .anyMatch(n -> n.contains("운전자"));
+                withCar++;
+            } else {
+                assertThat(products).as("차 없는 %s 의 보험", u.id())
+                        .noneMatch(DailyActivitySimulator::isVehicleInsurance);
+                without++;
+            }
+        }
+        assertThat(withCar).as("차 있는 표본").isPositive();
+        assertThat(without).as("차 없는 표본").isPositive();
+    }
+
+    @Test
+    @DisplayName("보험료를 전력·가스회사가 받지 않는다 — 공과금 맥락에 얹혀 있던 자리")
+    void 보험료는_보험사가_받는다() {
+        var utilities = loader.brands().get("공과금").stream().map(BrandEntry::name).toList();
+        Random r = new Random(5);
+        for (int i = 0; i < 200; i++) {
+            var product = sampler.resolveProduct("보험", r);
+            var m = sampler.resolveMerchant("보험", null, product.name(), r);
+            assertThat(utilities).as("'%s' 를 받은 상호", product.name()).doesNotContain(m.name());
+        }
+        // 그리고 공과금 품목에 보험료가 남아 있으면 안 된다.
+        assertThat(loader.products().get("공과금")).extracting(p -> p.name())
+                .as("공과금 품목").noneMatch(n -> n.contains("보험"));
+    }
+
+    @Test
+    @DisplayName("관측 창 밖의 환급은 만들지 않는다 — 아직 못 받은 돈이다")
+    void 케이패스_창밖은_없다() {
+        var transit = new java.util.TreeMap<java.time.YearMonth, Long>();
+        transit.put(java.time.YearMonth.of(2026, 7), 200_000L);   // 입금일은 8/20 → 창 밖
+        var rows = AccountTxnGenerator.kpassRefunds(transit, LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 7, 31).atTime(23, 59));
+        assertThat(rows).isEmpty();
+    }
 }

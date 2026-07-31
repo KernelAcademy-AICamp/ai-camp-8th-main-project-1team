@@ -75,7 +75,7 @@ class CatalogLoaderTest {
         // 페르소나는 **우리 소비 중분류**로 지출비중을 말한다 — 소비자 행동이지 업종 분류가 아니다.
         var validMid = java.util.Set.of("식비", "카페/간식", "편의점/잡화", "대형마트", "술/유흥",
                 "쇼핑", "취미/여가", "의료", "건강/피트니스", "주거/통신", "미용",
-                "교통/자동차", "여행/숙박", "생활", "카테고리없음");
+                "교통/자동차", "여행/숙박", "생활", "금융/보험", "카테고리없음");
         var hobbyTypes = loader.hobbies().stream().map(h -> h.type()).collect(java.util.stream.Collectors.toSet());
         assertThat(personas).allSatisfy(p -> {
             // 중분류 비중 합 = 100, 키 유효

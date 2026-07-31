@@ -67,6 +67,18 @@ public class GenerationRunner implements ApplicationRunner {
      */
     private static final double FLEX_SCALE_MIN = 0.1, FLEX_SCALE_MAX = 1.6;
 
+    /**
+     * 월급·월 카드지출의 현실 범위 (사용자 결정 2026-07-31).
+     *
+     * <p>재조정 전에는 월급 평균 449만·월지출 평균 583만이었고, 지출이 100~350만 안에 드는 사용자가
+     * 4,511명 중 548명(12%)뿐이었다. 시연에서 '통상 직장인의 소비'로 읽히지 않는다.
+     *
+     * <p><b>두 상한이 함께 걸린다.</b> 월급만 낮추면 지출률 1.45가 그대로 곱해져 상한을 넘고,
+     * 지출만 자르면 월급 높은 사람이 전부 흑자가 된다. 그래서 목표 월지출도 여기서 묶는다.
+     */
+    private static final long SALARY_MIN = 2_000_000L, SALARY_MAX = 4_000_000L;
+    private static final long SPEND_MIN = 1_000_000L, SPEND_MAX = 3_500_000L;
+
     /** 입출금 통장 카탈로그(§13-11) — {은행, 상품명, 계좌번호형식('#'=랜덤숫자)}. 금융결제원 CMS 자리수 참조. */
     // 계좌번호 형식 — 금융결제원 CMS 계좌번호체계(2026.05.08)의 은행별 '보통예금' 행에 맞춘다.
     // 리터럴 숫자 = 과목코드(보통)·단축코드(PDF 지정), '#' = 랜덤숫자(점번호·일련번호·검증번호).
@@ -172,12 +184,18 @@ public class GenerationRunner implements ApplicationRunner {
      * 고유 가맹점 집계 — 결제에서 사업자번호 DISTINCT로 {가맹점명·지번주소·좌표}를 뽑아 mydata_merchant에 채운다.
      * 번호·주소·좌표는 신원에서 결정론 파생돼 사업자번호당 상수라, 대표 표시명(MIN)만 골라도 일관된다.
      * 사용자의 '번호→주소' 조회와 정리 CSV의 소스.
+     *
+     * <p><b>택시 번호판은 떼고 담는다.</b> 택시 결제의 표시명에는 차량번호가 붙지만
+     * ({@code 티머니택시경기31아2122}) 결제하는 가맹점은 브랜드 하나다. 떼지 않으면 가맹점
+     * 대표명이 아무 차량의 번호판이 되어, 사업자번호로 조회했을 때 엉뚱한 이름이 나온다.
      */
     private void populateMerchants() {
         jdbc.update("DELETE FROM mydata_merchant");
         int n = jdbc.update(
                 "INSERT INTO mydata_merchant (business_number, merchant_name, address, lat, lng, online, ksic_code) " +
-                "SELECT mydata_payment_business_number, MIN(mydata_payment_merchant_name), " +
+                "SELECT mydata_payment_business_number, " +
+                "MIN(REGEXP_REPLACE(mydata_payment_merchant_name, " +
+                "                   '[가-힣]{2}3[1-6][아바사자][0-9]{4}$', '')), " +
                 "MIN(mydata_payment_location_address), MIN(mydata_payment_location_lat), " +
                 "MIN(mydata_payment_location_lng), " +
                 "MAX(CASE WHEN mydata_payment_channel = 'ONLINE' THEN 1 ELSE 0 END), " +
@@ -394,8 +412,16 @@ public class GenerationRunner implements ApplicationRunner {
      * @param rows       통장에 복제할 카드 출금(스케일 적용 후 금액)
      * @param outByMonth 월별 카드 지출 합계 — 이자가 붙을 실잔액을 구하는 데 쓴다
      */
+    /**
+     * @param transitByMonth 월별 <b>대중교통</b> 결제 합계. K-패스 환급액을 구하는 데 쓴다.
+     *                       택시·주유·통행료는 K-패스 대상이 아니라 빠진다(사용자 결정 2026-07-31).
+     */
     private record CardOutflow(long count, List<AccountTxnGenerator.Row> rows,
-                               Map<YearMonth, Long> outByMonth) {}
+                               Map<YearMonth, Long> outByMonth,
+                               Map<YearMonth, Long> transitByMonth) {}
+
+    /** K-패스 환급 대상 카테고리. 택시는 제외한다. */
+    private static final String TRANSIT_CATEGORY = "대중교통";
 
     private CardOutflow insertPayments(GeneratedUser u, List<IssuedCard> cards,
                                        List<GenTxn> txns, double scale) {
@@ -422,6 +448,7 @@ public class GenerationRunner implements ApplicationRunner {
         List<Object[]> batch = new ArrayList<>(txns.size());
         List<AccountTxnGenerator.Row> outflow = new ArrayList<>(txns.size());
         Map<YearMonth, Long> outByMonth = new HashMap<>();
+        Map<YearMonth, Long> transitByMonth = new HashMap<>();
         int seq = 0;
         for (GenTxn t : txns) {
             String payId = "g" + u.id().substring(0, 16) + "-" + (seq++);
@@ -447,9 +474,12 @@ public class GenerationRunner implements ApplicationRunner {
             outflow.add(new AccountTxnGenerator.Row(t.date(), "WITHDRAWAL", amount,
                     t.merchant(), card.company(), "CARD", payId));
             outByMonth.merge(YearMonth.from(t.date()), (long) amount, Long::sum);
+            if (TRANSIT_CATEGORY.equals(t.category2())) {
+                transitByMonth.merge(YearMonth.from(t.date()), (long) amount, Long::sum);
+            }
         }
         jdbc.batchUpdate(PAY_SQL, batch);
-        return new CardOutflow(batch.size(), outflow, outByMonth);
+        return new CardOutflow(batch.size(), outflow, outByMonth, transitByMonth);
     }
 
     /** 고시요금 맥락인가 — 카탈로그가 정한다(contexts.json의 fixedTariff). */
@@ -492,22 +522,38 @@ public class GenerationRunner implements ApplicationRunner {
         for (GenTxn t : txns) { raw += t.amount(); if ("WASTE".equals(t.wasteLabel())) waste += t.amount(); }
         double wasteRatio = raw > 0 ? (double) waste / raw : 0.0;
 
-        // 월급 = 페르소나 기준액 × 개인편차. 대부분 통상 수준(0.7~1.6배)이되, 8%는 고소득(추가 1.6~2.8배).
-        // 10만원 단위, [210만(최저임금)~1200만] 클램프 → 최저임금~고소득까지 넓은 현실 분포.
+        // ── 월급 ── 페르소나 기준액 × 개인편차, 10만원 단위, [200만, 400만] 클램프.
+        //
+        // 예전에는 상한이 1200만이고 8%가 고소득 분기(×1.6~2.8)를 탔다. 그러면 월 카드지출이
+        // 평균 583만까지 올라가 "통상 직장인의 소비"로 읽히지 않았다(사용자 결정 2026-07-31).
+        // 고소득 분기는 400만 상한과 모순이므로 뺀다.
         int base = baseSalary(u.variant().baseName());
-        double f = GenSeed.uniform(r, 0.7, 1.6);
-        if (r.nextDouble() < 0.08) f *= GenSeed.uniform(r, 1.6, 2.8);   // 소수의 고소득자
-        int salary = (int) Math.min(12_000_000L, Math.max(2_100_000L,
-                Math.round(base * f / 100_000.0) * 100_000L));
-        double spendRatio = Math.max(0.5, Math.min(1.5, 0.55 + wasteRatio * 1.5));
+        int salary = (int) Math.min(SALARY_MAX, Math.max(SALARY_MIN,
+                Math.round(base * GenSeed.uniform(r, 0.82, 1.22) / 100_000.0) * 100_000L));
+
+        // ── 지출률 ── **페르소나는 월급이 아니라 지출률로 드러낸다.**
+        //
+        // 예전에는 과소비형이 월급도 제일 높아서, 적자를 만들려면 지출률을 1.5까지 올려야 했다.
+        // 월급 상한(400만)과 지출 상한(350만)이 함께 걸리면 그 구조에서는 고소득 과소비형이 전부
+        // 흑자가 된다. 월급과 지출률을 떼면 '저소득 과소비형은 적자, 고소득 절약형은 흑자'가
+        // 자연히 갈린다. 낭비율이 높을수록 더 쓴다는 관계는 그대로 둔다.
+        double spendRatio = Math.max(0.5, Math.min(1.45, 0.5 + wasteRatio * 1.35));
         double months = Math.max(1.0, props.getHistoryDays() / 30.0);
-        double targetTotal = (double) salary * spendRatio * months;
+        // 목표 월지출도 [100만, 350만]으로 묶는다 — 두 상한이 함께 걸려야 요구가 지켜진다.
+        double monthlyTarget = Math.max(SPEND_MIN, Math.min(SPEND_MAX, salary * spendRatio));
+        double targetTotal = monthlyTarget * months;
         double scale = raw > 0 ? targetTotal / raw : 1.0;
 
         int payday = 1 + r.nextInt(28);
-        // 월급의 0.3~12배로 시작하되 상한을 넘지 않는다 — 고소득 페르소나는 12배가 1억을 넘는다.
-        long initialBalance = Math.min(BALANCE_CAP,
-                Math.round(salary * GenSeed.uniform(r, 0.3, 12.0) / 100_000.0) * 100_000L);
+        // ── 초기 잔액 ── 적자면 버틸 만큼 넣어 주고, 흑자면 적게 시작한다.
+        //
+        // 적자 사용자는 잔액이 계속 줄어드는 것이 정상이다(사용자 결정 2026-07-31). 그런데 시작
+        // 잔액이 적으면 관측 기간 중간에 0을 뚫고, 잔액 보정 라운드가 개입해 소비를 깎아 버린다.
+        // 그래서 **필요한 만큼 먼저 넣는다** — 총 적자에 여유 1.3~2.2배.
+        long monthlyDeficit = Math.max(0L, Math.round(monthlyTarget) - salary);
+        long need = Math.round(monthlyDeficit * months * GenSeed.uniform(r, 1.3, 2.2));
+        long initialBalance = Math.min(BALANCE_CAP, Math.max(0L,
+                Math.round((need + salary * GenSeed.uniform(r, 0.3, 3.0)) / 100_000.0) * 100_000L));
         String[] a = ACCOUNTS[r.nextInt(ACCOUNTS.length)];
         String accountNumber = fillAccountNumber(a[2], r);
         List<String> cos = companies();
@@ -515,14 +561,20 @@ public class GenerationRunner implements ApplicationRunner {
         return new EconomyPlan(accountNumber, a[0], a[1], payer, salary, payday, initialBalance, scale);
     }
 
+    /**
+     * 페르소나별 월급 기준액. 2025 중위 ~282만·평균 ~350만 근처에 모으고 차등은 <b>작게</b> 둔다.
+     *
+     * <p>페르소나의 성격은 {@code spendRatio}(지출률)가 드러낸다. 여기서 크게 벌리면 '과소비형은
+     * 원래 많이 번다'가 되어, 적자를 만들려고 지출률을 억지로 올려야 했던 옛 구조로 되돌아간다.
+     */
     private static int baseSalary(String persona) {
-        return switch (persona) {   // 통상 노동자 수준(2025 중위 ~282만·평균 ~350만)에 페르소나별 소폭 차등
-            case "절약형" -> 2_600_000;
-            case "균형형" -> 3_200_000;
-            case "과소비형" -> 3_900_000;
-            case "구독과다형" -> 3_400_000;
-            case "외식형" -> 3_600_000;
-            default -> 3_200_000;
+        return switch (persona) {
+            case "절약형" -> 2_900_000;
+            case "균형형" -> 3_000_000;
+            case "과소비형" -> 2_800_000;
+            case "구독과다형" -> 3_000_000;
+            case "외식형" -> 3_000_000;
+            default -> 3_000_000;
         };
     }
 
@@ -582,7 +634,8 @@ public class GenerationRunner implements ApplicationRunner {
 
         for (int round = 0; round <= BALANCE_FIX_ROUNDS; round++) {
             rows = AccountTxnGenerator.generate(e.accountNumber(), e.bank(), e.salaryPayer(),
-                    opened, e.salary(), e.payday(), initial, end, flow.outByMonth());
+                    opened, e.salary(), e.payday(), initial, end,
+                    flow.outByMonth(), flow.transitByMonth());
             long lowest = lowestBalance(initial, rows, flow);
             if (lowest < 0) {                      // 아래가 뚫렸다 — 올린다
                 if (round == BALANCE_FIX_ROUNDS) break;

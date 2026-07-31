@@ -1,3160 +1,3403 @@
 {
- "_note": "category2 → 브랜드/플랫폼. 손으로 큐레이션한 목록이다(독립 상호는 merchants_independent.json).\nlocationType 이 주소를 정한다 — POI(앵커 동 지번) · NONE/ROUTE(hq 고정) · VENUE_CLUSTER(시설 실주소) · DISTRICT(시군구마다 다른 사업자). channel 은 결제수단이며 맥락보다 우선한다.\nhq.businessNumber 는 실제 사업자등록번호다. 해외 본사는 국내 번호가 없어 비운다 — 그러면 앱에서 주소 조회 버튼 자체가 뜨지 않는다(Transactions.tsx 가 businessNumber 로 가드).",
- "byCategory2": {
-  "편의점": [
-   {
-    "name": "GS25",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "지에스25",
-     "GS25"
+  "_note": "category2 → 브랜드/플랫폼. 손으로 큐레이션한 목록이다(독립 상호는 merchants_independent.json).\nlocationType 이 주소를 정한다 — POI(앵커 동 지번) · NONE/ROUTE(hq 고정) · VENUE_CLUSTER(시설 실주소) · DISTRICT(시군구마다 다른 사업자). channel 은 결제수단이며 맥락보다 우선한다.\nhq.businessNumber 는 실제 사업자등록번호다. 해외 본사는 국내 번호가 없어 비운다 — 그러면 앱에서 주소 조회 버튼 자체가 뜨지 않는다(Transactions.tsx 가 businessNumber 로 가드). ※ byCategory2 의 키는 앱 중분류가 아니라 **생성 맥락**(42종)이다. 맥락→KSIC→중분류(16종) 순으로 옮겨진다(contexts.json·ksic-mapping.tsv). '반려동물' 맥락은 앱에서 '생활'로, '보험'은 '금융/보험'으로 보인다.",
+  "byCategory2": {
+    "편의점": [
+      {
+        "name": "GS25",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "지에스25",
+          "GS25"
+        ]
+      },
+      {
+        "name": "CU",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "씨유",
+          "CU"
+        ]
+      },
+      {
+        "name": "세븐일레븐",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "세븐일레븐",
+          "7-ELEVEN"
+        ]
+      },
+      {
+        "name": "이마트24",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "이마트24",
+          "emart24"
+        ]
+      },
+      {
+        "name": "미니스톱",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "카페": [
+      {
+        "name": "스타벅스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "(주)스타벅스코리아",
+          "스타벅스"
+        ]
+      },
+      {
+        "name": "투썸플레이스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "투썸플레이스",
+          "투썸"
+        ]
+      },
+      {
+        "name": "메가엠지씨커피",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "메가엠지씨커피",
+          "메가커피"
+        ]
+      },
+      {
+        "name": "컴포즈커피",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "이디야커피",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "이디야",
+          "이디야커피"
+        ]
+      },
+      {
+        "name": "빽다방",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "커피빈",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "커피빈",
+          "커피빈코리아"
+        ]
+      },
+      {
+        "name": "할리스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "공차",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "폴바셋",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "파스쿠찌",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "탐앤탐스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "더벤티",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "매머드커피",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "카페드롭탑",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "가비양",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "셀렉토커피",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "커피에반하다",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "베이커리": [
+      {
+        "name": "파리바게뜨",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "파리바게뜨",
+          "파리바케뜨",
+          "파리크라상"
+        ]
+      },
+      {
+        "name": "뚜레쥬르",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "뚜레쥬르",
+          "뚜레주르"
+        ]
+      },
+      {
+        "name": "던킨",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "던킨",
+          "던킨도너츠"
+        ]
+      },
+      {
+        "name": "성심당",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "김영모과자점",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "노티드",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "패스트푸드": [
+      {
+        "name": "맥도날드",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "맥도날드",
+          "한국맥도날드"
+        ]
+      },
+      {
+        "name": "롯데리아",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "버거킹",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "맘스터치",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "KFC",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "KFC",
+          "케이에프씨"
+        ]
+      },
+      {
+        "name": "써브웨이",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "노브랜드버거",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "프랭크버거",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "이삭토스트",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "한솥도시락",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "본죽",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "김밥천국",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "치킨": [
+      {
+        "name": "교촌치킨",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "교촌치킨",
+          "교촌"
+        ]
+      },
+      {
+        "name": "BBQ",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "BBQ",
+          "비비큐",
+          "제너시스비비큐"
+        ]
+      },
+      {
+        "name": "BHC",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "BHC",
+          "비에이치씨"
+        ]
+      },
+      {
+        "name": "굽네치킨",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "네네치킨",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "처갓집양념치킨",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "페리카나",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "호식이두마리치킨",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "60계치킨",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "자담치킨",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "푸라닭",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "또래오래",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "멕시카나",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "노랑통닭",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "바른치킨",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "피자": [
+      {
+        "name": "도미노피자",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "피자헛",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "미스터피자",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "파파존스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "피자스쿨",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "피자마루",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "반올림피자",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "7번가피자",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "피자알볼로",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "야식": [
+      {
+        "name": "원할머니보쌈족발",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "장충동왕족발",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "족발야시장",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "더맛있는족발보쌈",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "소문난왕족발",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "대형마트": [
+      {
+        "name": "이마트",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "이마트",
+          "(주)이마트"
+        ]
+      },
+      {
+        "name": "홈플러스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "롯데마트",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "코스트코",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "코스트코",
+          "코스트코코리아"
+        ]
+      },
+      {
+        "name": "트레이더스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "이마트에브리데이",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "롯데슈퍼",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "GS더프레시",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "홈플러스익스프레스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "노브랜드",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "하나로마트",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "하나로마트",
+          "농협하나로마트"
+        ]
+      },
+      {
+        "name": "메가마트",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "드럭스토어": [
+      {
+        "name": "올리브영",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "올리브영",
+          "CJ올리브영"
+        ]
+      },
+      {
+        "name": "롭스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "랄라블라",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "생활잡화": [
+      {
+        "name": "다이소",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "다이소",
+          "아성다이소"
+        ]
+      },
+      {
+        "name": "아트박스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "모닝글로리",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "노브랜드",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "화장품": [
+      {
+        "name": "이니스프리",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "아리따움",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "더페이스샵",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "미샤",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "네이처리퍼블릭",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "토니모리",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "에뛰드",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "의류패션": [
+      {
+        "name": "유니클로",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "자라",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "자라",
+          "ZARA"
+        ]
+      },
+      {
+        "name": "에이치앤엠",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "에이치앤엠",
+          "H&M"
+        ]
+      },
+      {
+        "name": "스파오",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "탑텐",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "지오다노",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "에잇세컨즈",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "나이키",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "나이키",
+          "나이키코리아"
+        ]
+      },
+      {
+        "name": "아디다스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "데상트",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "백화점": [
+      {
+        "name": "롯데백화점",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "신세계백화점",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "현대백화점",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "갤러리아백화점",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "AK플라자",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "NC백화점",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "영화": [
+      {
+        "name": "CGV",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "CGV",
+          "씨지브이",
+          "CJCGV"
+        ]
+      },
+      {
+        "name": "롯데시네마",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "메가박스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "씨네Q",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "헬스장": [
+      {
+        "name": "애니타임피트니스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "스포애니",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "커브스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "놀이공원": [
+      {
+        "name": "에버랜드",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "VENUE_CLUSTER",
+        "hq": {
+          "address": "경기 용인시 처인구 포곡읍 전대리 310 (에버랜드로 199)",
+          "lat": 37.29231,
+          "lon": 127.2164,
+          "businessNumber": "1358504288"
+        }
+      },
+      {
+        "name": "롯데월드",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "VENUE_CLUSTER",
+        "hq": {
+          "address": "서울 송파구 잠실동 40-1 (올림픽로 240)",
+          "lat": 37.50414,
+          "lon": 127.11767,
+          "businessNumber": "2198500014"
+        }
+      },
+      {
+        "name": "서울랜드",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "VENUE_CLUSTER",
+        "hq": {
+          "address": "경기 과천시 막계동 33 (광명로 181)",
+          "lat": 37.43169,
+          "lon": 126.99988,
+          "businessNumber": "1388104654"
+        }
+      },
+      {
+        "name": "서울대공원",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "VENUE_CLUSTER",
+        "hq": {
+          "address": "경기 과천시 막계동 159-1 (대공원광장로 102)",
+          "lat": 37.43169,
+          "lon": 126.99988,
+          "businessNumber": "1388300900"
+        }
+      },
+      {
+        "name": "어린이대공원",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "VENUE_CLUSTER",
+        "hq": {
+          "address": "서울 광진구 능동 18 (능동로 216) [시설] / 공단본사 성동구 마장동 527-6",
+          "lat": 37.5509,
+          "lon": 127.08139,
+          "businessNumber": "2068204293"
+        }
+      },
+      {
+        "name": "캐리비안베이",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "VENUE_CLUSTER",
+        "hq": {
+          "address": "경기 용인시 처인구 포곡읍 전대리 310 (에버랜드로 199)",
+          "lat": 37.29231,
+          "lon": 127.2164,
+          "businessNumber": "1358504288"
+        }
+      }
+    ],
+    "미용실": [
+      {
+        "name": "박승철헤어스투디오",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "이철헤어커커",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "준오헤어",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "리안헤어",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "블루클럽",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "주유소": [
+      {
+        "name": "SK에너지",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "SK에너지",
+          "SK네트웍스"
+        ]
+      },
+      {
+        "name": "GS칼텍스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "S-OIL",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "S-OIL",
+          "에쓰오일"
+        ]
+      },
+      {
+        "name": "현대오일뱅크",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "현대오일뱅크",
+          "현대오일뱅크(주)"
+        ]
+      }
+    ],
+    "이커머스": [
+      {
+        "name": "쿠팡",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "쿠팡",
+          "쿠팡(주)",
+          "COUPANG"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 송파구 신천동 7-30 (송파대로 570, 18층)",
+          "lat": 37.50414,
+          "lon": 127.11767,
+          "businessNumber": "1208800767"
+        }
+      },
+      {
+        "name": "네이버쇼핑",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "네이버페이",
+          "네이버쇼핑",
+          "스마트스토어"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "경기 성남시 분당구 정자동 178-4 네이버 1784 (정자일로 95)",
+          "lat": 37.36652,
+          "lon": 127.11233,
+          "businessNumber": "2208162517"
+        }
+      },
+      {
+        "name": "G마켓",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "G마켓",
+          "지마켓"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 역삼동 737 강남파이낸스센터 34~37층 (테헤란로 152)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "2208183676"
+        }
+      },
+      {
+        "name": "11번가",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "경기 광명시 일직동 512-3 유플래닛타워 (신기로 20)",
+          "lat": 37.46766,
+          "lon": 126.86532,
+          "businessNumber": "8158101244"
+        }
+      },
+      {
+        "name": "SSG닷컴",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "SSG.COM",
+          "쓱닷컴"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 영등포구 영등포동4가 79 KB영등포타워 (영신로34길 30)",
+          "lat": 37.51235,
+          "lon": 126.90594,
+          "businessNumber": "8708801143"
+        }
+      },
+      {
+        "name": "옥션",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 역삼동 737 강남파이낸스센터 34~37층 (테헤란로 152)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "2208183676"
+        }
+      },
+      {
+        "name": "위메프",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 삼성동 168-6 위메프빌딩 (영동대로 502)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "5668701096"
+        }
+      },
+      {
+        "name": "티몬",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 신사동 529-4 아리지빌딩 (압구정로 118)",
+          "lat": 37.52608,
+          "lon": 127.02261,
+          "businessNumber": "2118841856"
+        }
+      },
+      {
+        "name": "인터파크",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 삼성동 168-6 (영동대로 502)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "4228103185"
+        }
+      },
+      {
+        "name": "마켓컬리",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "마켓컬리",
+          "컬리"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 역삼동 647-14 한국타이어빌딩 18층 (테헤란로 133)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "2618123567"
+        }
+      },
+      {
+        "name": "오늘의집",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 서초구 서초동 1321-15 삼성생명서초타워 25·27층 (서초대로74길 4)",
+          "lat": 37.48798,
+          "lon": 127.01105,
+          "businessNumber": "1198691245"
+        }
+      },
+      {
+        "name": "무신사",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 성동구 성수동2가 277-47 무신사캠퍼스 N1 (아차산로13길 11)",
+          "lat": 37.55306,
+          "lon": 127.03814,
+          "businessNumber": "2118879575"
+        }
+      },
+      {
+        "name": "지그재그",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 삼성동 159-8 파르나스타워 27층 (테헤란로 521)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "2148891525"
+        }
+      },
+      {
+        "name": "에이블리",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 서초구 서초동 1303-22 9층 (강남대로 465)",
+          "lat": 37.48798,
+          "lon": 127.01105,
+          "businessNumber": "1648700149"
+        }
+      },
+      {
+        "name": "알리익스프레스",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "알리익스프레스",
+          "ALIEXPRESS"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 삼성동 159-8 파르나스타워 29층 (테헤란로 521)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "8058802959"
+        }
+      },
+      {
+        "name": "테무",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "테무",
+          "TEMU"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 종로구 관철동 12-13 포인트23 (종로12길 23)",
+          "lat": 37.58153,
+          "lon": 126.99032,
+          "businessNumber": "5778103108"
+        }
+      },
+      {
+        "name": "아마존",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "AMAZON",
+          "아마존"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "미국 시애틀 (지번 해당없음)"
+        }
+      }
+    ],
+    "배달": [
+      {
+        "name": "배달의민족",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "배달의민족",
+          "우아한형제들",
+          "우아한형제들(배민)"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 송파구 방이동 44-2 장은빌딩 (위례성대로 2)",
+          "lat": 37.50414,
+          "lon": 127.11767,
+          "businessNumber": "1208765763"
+        }
+      },
+      {
+        "name": "쿠팡이츠",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "쿠팡이츠",
+          "COUPANG EATS"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "경기 성남시 분당구 삼평동 645 알파타워 702호 (판교역로 180)",
+          "lat": 37.40284,
+          "lon": 127.11016,
+          "businessNumber": "8968702133"
+        }
+      },
+      {
+        "name": "요기요",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "요기요",
+          "위대한상상"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 역삼동 역삼823빌딩 7층 (논현로85길 70) ※역삼동 번지 미확정",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "2118868802"
+        }
+      },
+      {
+        "name": "땡겨요",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 중구 태평로2가 120 신한은행 본점 (세종대로9길 20)",
+          "lat": 37.56019,
+          "lon": 127.00059,
+          "businessNumber": "2028102637"
+        }
+      }
+    ],
+    "스트리밍": [
+      {
+        "name": "넷플릭스",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "넷플릭스",
+          "NETFLIX.COM",
+          "넷플릭스서비시스코리아"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 종로구 공평동 17 센트로폴리스 A동 20층 (우정국로 26)",
+          "lat": 37.58153,
+          "lon": 126.99032,
+          "businessNumber": "1658700119"
+        }
+      },
+      {
+        "name": "유튜브프리미엄",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "GOOGLE*YOUTUBEPREMIUM",
+          "유튜브프리미엄",
+          "구글"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 역삼동 737 강남파이낸스센터 22층 (테헤란로 152)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "1208665164"
+        }
+      },
+      {
+        "name": "디즈니플러스",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "디즈니플러스",
+          "DISNEY PLUS"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 역삼동 737 강남파이낸스센터 (테헤란로 152)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "2208103347"
+        }
+      },
+      {
+        "name": "티빙",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 마포구 상암동 1647 DMC디지털큐브 15층 (상암산로 34)",
+          "lat": 37.57519,
+          "lon": 126.8856,
+          "businessNumber": "1888801893"
+        }
+      },
+      {
+        "name": "웨이브",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 영등포구 여의도동 35-1 여의도우체국빌딩 15층 (여의나루로 60)",
+          "lat": 37.51235,
+          "lon": 126.90594,
+          "businessNumber": "2208838020"
+        }
+      },
+      {
+        "name": "왓챠",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 서초구 서초동 1329-7 신덕빌딩 3층 (강남대로 343)",
+          "lat": 37.48798,
+          "lon": 127.01105,
+          "businessNumber": "2118866013"
+        }
+      },
+      {
+        "name": "쿠팡플레이",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 송파구 신천동 7-30 (송파대로 570, 18층)",
+          "lat": 37.50414,
+          "lon": 127.11767,
+          "businessNumber": "1208800767"
+        }
+      },
+      {
+        "name": "라프텔",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 영등포구 여의도동 23 Three IFC 13층 (국제금융로 10)",
+          "lat": 37.51235,
+          "lon": 126.90594,
+          "businessNumber": "5358602250"
+        }
+      },
+      {
+        "name": "애플티비플러스",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 삼성동 159 아셈타워 3901호 (영동대로 517)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "1208184429"
+        }
+      },
+      {
+        "name": "멜론",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "멜론",
+          "MELON",
+          "카카오"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "경기 성남시 분당구 삼평동 681 에이치스퀘어 N동 8~10층 (판교역로 235)",
+          "lat": 37.40284,
+          "lon": 127.11016,
+          "businessNumber": "2208802594"
+        }
+      },
+      {
+        "name": "지니뮤직",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 역삼동 809-10 한석타워 4~9층 (강남대로 456)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "3148103453"
+        }
+      },
+      {
+        "name": "스포티파이",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "SPOTIFY",
+          "스포티파이"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 논현동 18-3 제이빌딩 8층 (강남대로 586)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "2048701387"
+        }
+      },
+      {
+        "name": "벅스",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 논현동 18-3 제이빌딩 (강남대로 586)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "2118715555"
+        }
+      },
+      {
+        "name": "플로",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 서초구 서초동 1338-12 한화생명보험빌딩 (강남대로 311)",
+          "lat": 37.48798,
+          "lon": 127.01105,
+          "businessNumber": "2148629288"
+        }
+      },
+      {
+        "name": "밀리의서재",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 마포구 상암동 1607 YTN 뉴스퀘어 13층 (상암산로 76)",
+          "lat": 37.57519,
+          "lon": 126.8856,
+          "businessNumber": "4238800370"
+        }
+      },
+      {
+        "name": "리디",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 역삼동 702-28 어반벤치빌딩 4·10·11층 (테헤란로 325)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "1208727435"
+        }
+      },
+      {
+        "name": "윌라",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 서초구 서초동 1321-11 11층 (서초대로 398)",
+          "lat": 37.48798,
+          "lon": 127.01105,
+          "businessNumber": "2208765006"
+        }
+      },
+      {
+        "name": "챗지피티플러스",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "CHATGPT SUBSCRIPTION",
+          "OPENAI"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "미국 캘리포니아 샌프란시스코 (한국 본사 없음)"
+        }
+      }
+    ],
+    "간편결제": [
+      {
+        "name": "카카오페이",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "경기 성남시 분당구 백현동 532 카카오판교아지트 B동 (판교역로 166)",
+          "lat": 37.39051,
+          "lon": 127.10971,
+          "businessNumber": "5278800686"
+        }
+      },
+      {
+        "name": "네이버페이",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "경기 성남시 분당구 정자동 178-4 네이버 1784 (정자일로 95)",
+          "lat": 37.36652,
+          "lon": 127.11233,
+          "businessNumber": "5248601528"
+        }
+      },
+      {
+        "name": "토스",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "토스",
+          "비바리퍼블리카"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 역삼동 736-1 캐피탈타워 (테헤란로 142)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "1208801280"
+        }
+      },
+      {
+        "name": "삼성페이",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "경기 수원시 영통구 매탄동 416 (삼성로 129)",
+          "lat": 37.26319,
+          "lon": 127.05746,
+          "businessNumber": "1248100998"
+        }
+      },
+      {
+        "name": "페이코",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 구로구 구로동 222-22 (디지털로26길 72)",
+          "lat": 37.49375,
+          "lon": 126.86319,
+          "businessNumber": "5638100723"
+        }
+      },
+      {
+        "name": "애플앱스토어",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "APPLE.COM/BILL",
+          "앱스토어"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 삼성동 159 아셈타워 3901호 (영동대로 517)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "1208184429"
+        }
+      },
+      {
+        "name": "구글플레이",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "GOOGLE PLAY",
+          "구글플레이"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 역삼동 737 강남파이낸스센터 22층 (테헤란로 152)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "1208665164"
+        }
+      },
+      {
+        "name": "원스토어",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "경기 성남시 분당구 삼평동 642 (판교역로 188)",
+          "lat": 37.40284,
+          "lon": 127.11016,
+          "businessNumber": "8568600329"
+        }
+      }
+    ],
+    "통신비": [
+      {
+        "name": "SK텔레콤",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "SK텔레콤",
+          "(주)에스케이텔레콤",
+          "SKT"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 중구 을지로2가 11 SK텔레콤빌딩 (을지로 65)",
+          "lat": 37.56019,
+          "lon": 127.00059,
+          "businessNumber": "1048137225"
+        }
+      },
+      {
+        "name": "KT",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "KT",
+          "(주)케이티",
+          "케이티"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "경기 성남시 분당구 정자동 206 (불정로 90)",
+          "lat": 37.36652,
+          "lon": 127.11233,
+          "businessNumber": "1028142945"
+        }
+      },
+      {
+        "name": "LG유플러스",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "LG유플러스",
+          "LGU+",
+          "엘지유플러스"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 용산구 한강로3가 65-228 (한강대로 32)",
+          "lat": 37.53571,
+          "lon": 126.97611,
+          "businessNumber": "2208139938"
+        }
+      },
+      {
+        "name": "KT엠모바일",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 대치동 890-20 KT선릉타워 East (테헤란로 422)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "1338143410"
+        }
+      },
+      {
+        "name": "SK세븐모바일",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 마포구 공덕동 252-5 마포T타운 (마포대로 144)",
+          "lat": 37.55024,
+          "lon": 126.95889,
+          "businessNumber": "1048143391"
+        }
+      },
+      {
+        "name": "U+유모바일",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 마포구 상암동 1595-1 드림타워 (월드컵북로56길 19)",
+          "lat": 37.57519,
+          "lon": 126.8856,
+          "businessNumber": "1148196221"
+        }
+      },
+      {
+        "name": "헬로모바일",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 마포구 상암동 1595-1 드림타워 (월드컵북로56길 19)",
+          "lat": 37.57519,
+          "lon": 126.8856,
+          "businessNumber": "1178113423"
+        }
+      }
+    ],
+    "공과금": [
+      {
+        "name": "한국전력공사",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "한국전력공사",
+          "한전"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "전남 나주시 빛가람동 120 (전력로 55)",
+          "lat": 35.01561,
+          "lon": 126.78968,
+          "businessNumber": "1208200052"
+        }
+      },
+      {
+        "name": "서울도시가스",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강서구 염창동 281 (공항대로 607)",
+          "lat": 37.55068,
+          "lon": 126.87433,
+          "businessNumber": "1098131605"
+        }
+      },
+      {
+        "name": "삼천리",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 영등포구 여의도동 35-6 삼천리빌딩 (국제금융로6길 42)",
+          "lat": 37.51235,
+          "lon": 126.90594,
+          "businessNumber": "1168100755"
+        }
+      },
+      {
+        "name": "코원에너지서비스",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 대치동 27-1 (남부순환로 3165)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "1208114525"
+        }
+      },
+      {
+        "name": "서울시상수도사업본부",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 서대문구 합동 27-1 (서소문로 51)",
+          "lat": 37.57797,
+          "lon": 126.93848,
+          "businessNumber": "1108300770"
+        }
+      }
+    ],
+    "대중교통": [
+      {
+        "name": "서울교통공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "regions": [
+          "서울특별시"
+        ],
+        "hq": {
+          "address": "서울특별시 성동구 천호대로 346",
+          "lat": 37.55306,
+          "lon": 127.03814,
+          "businessNumber": "6988700598"
+        }
+      },
+      {
+        "name": "경기교통공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "regions": [
+          "경기도"
+        ],
+        "hq": {
+          "address": "경기 양주시 옥정로6길 18",
+          "lat": 37.81974,
+          "lon": 127.02925,
+          "businessNumber": "4768200431"
+        }
+      },
+      {
+        "name": "부산교통공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "regions": [
+          "부산광역시"
+        ],
+        "hq": {
+          "address": "부산광역시 부산진구 중앙대로644번길 20",
+          "lat": 35.16087,
+          "lon": 129.04539,
+          "businessNumber": "6058209189"
+        }
+      },
+      {
+        "name": "대구교통공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "regions": [
+          "대구광역시"
+        ],
+        "hq": {
+          "address": "대구광역시 달서구 월배로 250",
+          "lat": 35.8369,
+          "lon": 128.53505,
+          "businessNumber": "5148206760"
+        }
+      },
+      {
+        "name": "인천교통공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "regions": [
+          "인천광역시"
+        ],
+        "hq": {
+          "address": "인천광역시 남동구 경인로 674",
+          "lat": 37.44557,
+          "lon": 126.72261,
+          "businessNumber": "1398202409"
+        }
+      },
+      {
+        "name": "대전교통공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "regions": [
+          "대전광역시"
+        ],
+        "hq": {
+          "address": "대전광역시 서구 월드컵대로 480",
+          "lat": 36.32961,
+          "lon": 127.37073,
+          "businessNumber": "3148210117"
+        }
+      },
+      {
+        "name": "울산교통공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "regions": [
+          "울산광역시"
+        ],
+        "hq": {
+          "address": "울산광역시 남구 중앙로 201",
+          "lat": 35.53262,
+          "lon": 129.3126,
+          "businessNumber": "6108300023"
+        }
+      },
+      {
+        "name": "세종교통공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "regions": [
+          "세종특별자치시"
+        ],
+        "hq": {
+          "address": "세종특별자치시 조치원읍 군청로 93",
+          "lat": 36.60511,
+          "lon": 127.28702,
+          "businessNumber": "1338204414"
+        }
+      },
+      {
+        "name": "충청교통공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "regions": [
+          "충청남도",
+          "충청북도"
+        ],
+        "hq": {
+          "address": "충청남도 홍성군 홍북읍 충남대로 21",
+          "lat": 36.64117,
+          "lon": 126.69015,
+          "businessNumber": "3058300010"
+        }
+      },
+      {
+        "name": "경상교통공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "regions": [
+          "경상남도",
+          "경상북도"
+        ],
+        "hq": {
+          "address": "경상북도 안동시 풍천면 도청대로 455",
+          "lat": 36.51605,
+          "lon": 128.51265,
+          "businessNumber": "5048300145"
+        }
+      },
+      {
+        "name": "강원교통공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "regions": [
+          "강원도"
+        ],
+        "hq": {
+          "address": "강원특별자치도 춘천시 중앙로 1",
+          "lat": 37.87136,
+          "lon": 127.73179,
+          "businessNumber": "2218300013"
+        }
+      },
+      {
+        "name": "전북교통공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "regions": [
+          "전라북도"
+        ],
+        "hq": {
+          "address": "전북특별자치도 전주시 완산구 효자로 225 [1, 2]",
+          "lat": 35.80572,
+          "lon": 127.12905,
+          "businessNumber": "4028300010"
+        }
+      },
+      {
+        "name": "제주교통공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "regions": [
+          "제주특별자치도"
+        ],
+        "hq": {
+          "address": "제주특별자치도 제주시 문연로 6",
+          "lat": 33.49453,
+          "lon": 126.52146,
+          "businessNumber": "6168300017"
+        }
+      },
+      {
+        "name": "광주교통공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "regions": [
+          "전라남도",
+          "광주광역시"
+        ],
+        "hq": {
+          "address": "광주광역시 서구 마륵동 165-27",
+          "lat": 35.14843,
+          "lon": 126.86978,
+          "businessNumber": "4108212674"
+        }
+      },
+      {
+        "name": "한국철도공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "ROUTE",
+        "serves": [
+          "지하철"
+        ],
+        "hq": {
+          "address": "대전광역시 동구 중앙로 240",
+          "lat": 36.33092,
+          "lon": 127.44827,
+          "businessNumber": "3148210024"
+        }
+      },
+      {
+        "name": "티머니",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [
+          "티머니",
+          "(주)티머니",
+          "TMONEY"
+        ],
+        "serves": [
+          "시내버스",
+          "마을버스",
+          "광역버스",
+          "교통카드 충전"
+        ],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "서울 중구 남대문로5가 581 서울시티타워 (후암로 110)",
+          "lat": 37.56019,
+          "lon": 127.00059,
+          "businessNumber": "1048183559"
+        }
+      },
+      {
+        "name": "캐시비",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [
+          "캐시비",
+          "로카모빌리티"
+        ],
+        "serves": [
+          "시내버스",
+          "마을버스",
+          "광역버스",
+          "교통카드 충전"
+        ],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "서울 중구 다동 39 케이스퀘어시티 10~11층 (청계천로 24)",
+          "lat": 37.46053,
+          "lon": 126.90416,
+          "businessNumber": "1298638970"
+        }
+      }
+    ],
+    "택시": [
+      {
+        "name": "카카오T",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [
+          "카카오T",
+          "카카오모빌리티"
+        ],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "경기 성남시 분당구 백현동 537 알파돔타워 13층 (판교역로 152)",
+          "lat": 37.39051,
+          "lon": 127.10971,
+          "businessNumber": "1728600842"
+        }
+      },
+      {
+        "name": "우티",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [
+          "우티",
+          "UT"
+        ],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "서울 중구 수표동 99 시그니처타워 동관 17층 (청계천로 100)",
+          "lat": 37.56019,
+          "lon": 127.00059,
+          "businessNumber": "1668602049"
+        }
+      },
+      {
+        "name": "티머니택시",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [
+          "티머니택시",
+          "T-money택시"
+        ],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "서울 중구 남대문로5가 581 서울시티타워 (후암로 110)",
+          "lat": 37.56019,
+          "lon": 127.00059,
+          "businessNumber": "1048183559"
+        }
+      },
+      {
+        "name": "온다택시",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "서울 중구 남대문로5가 581 서울시티타워 (후암로 110)",
+          "lat": 37.56019,
+          "lon": 127.00059,
+          "businessNumber": "1048183559"
+        }
+      },
+      {
+        "name": "이비카드",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "서울 중구 다동 39 케이스퀘어시티 10~11층 (청계천로 24)",
+          "lat": 37.46053,
+          "lon": 126.90416,
+          "businessNumber": "1298638970"
+        }
+      }
+    ],
+    "철도": [
+      {
+        "name": "한국철도공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [
+          "한국철도공사",
+          "코레일",
+          "KTX(한국철도공사)",
+          "레츠코레일"
+        ],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "대전광역시 동구 중앙로 240",
+          "lat": 36.33092,
+          "lon": 127.44827,
+          "businessNumber": "3148210024"
+        }
+      },
+      {
+        "name": "SR",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [
+          "SR",
+          "수서고속철도",
+          "SRT"
+        ],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "서울특별시 강남구 광평로 56길 12",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "3058631590"
+        }
+      }
+    ],
+    "항공": [
+      {
+        "name": "대한항공",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [
+          "대한항공",
+          "(주)대한항공"
+        ],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "서울 강서구 공항동 1370 (하늘길 260)",
+          "lat": 37.55527,
+          "lon": 126.79548,
+          "businessNumber": "1108114794"
+        }
+      },
+      {
+        "name": "아시아나항공",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [
+          "아시아나항공",
+          "(주)아시아나"
+        ],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "서울 강서구 오쇠동 47 아시아나타운 (오정로 443-83)",
+          "lat": 37.55359,
+          "lon": 126.84101,
+          "businessNumber": "1048117480"
+        }
+      },
+      {
+        "name": "제주항공",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "제주 제주시 연동 301-1 건설공제회관 3층 (신대로 64)",
+          "lat": 33.45769,
+          "lon": 126.49588,
+          "businessNumber": "6168150527"
+        }
+      },
+      {
+        "name": "진에어",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "서울 강서구 등촌동 653-25 KAL빌딩 (공항대로 453)",
+          "lat": 37.55359,
+          "lon": 126.84101,
+          "businessNumber": "1218189086"
+        }
+      },
+      {
+        "name": "티웨이항공",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "대구 중구 동인동2가 74-15 KT대구타워 신관 10층 (동덕로 167)",
+          "lat": 35.86513,
+          "lon": 128.59221,
+          "businessNumber": "1018194800"
+        }
+      },
+      {
+        "name": "에어부산",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "부산 강서구 대저2동 3148-5 (유통단지1로57번가길 6)",
+          "lat": 35.16162,
+          "lon": 128.93807,
+          "businessNumber": "6058184518"
+        }
+      },
+      {
+        "name": "에어서울",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "인천 중구 운서동 2840 인천국제공항 내 (공항로 272)",
+          "lat": 37.46387,
+          "lon": 126.44905,
+          "businessNumber": "8258100091"
+        }
+      }
+    ],
+    "고속버스": [
+      {
+        "name": "코버스",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [
+          "코버스",
+          "고속버스통합"
+        ],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "서울특별시 중구 남대문로5가 581",
+          "lat": 37.56019,
+          "lon": 127.00059,
+          "businessNumber": "3968703587"
+        }
+      },
+      {
+        "name": "센트럴시티",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "서울 서초구 반포동 19-3 (신반포로 176)",
+          "lat": 37.48798,
+          "lon": 127.01105,
+          "businessNumber": "1148100569"
+        }
+      },
+      {
+        "name": "이지티켓",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "서울특별시 서초구 반포동 19-4",
+          "lat": 37.48798,
+          "lon": 127.01105,
+          "businessNumber": "3538700773"
+        }
+      }
+    ],
+    "통행료": [
+      {
+        "name": "한국도로공사",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [
+          "한국도로공사",
+          "고속도로통행료",
+          "하이패스"
+        ],
+        "locationType": "ROUTE",
+        "hq": {
+          "address": "경북 김천시 율곡동 941 (혁신8로 77)",
+          "lat": 36.12056,
+          "lon": 128.18575,
+          "businessNumber": "1298200103"
+        }
+      },
+      {
+        "name": "시설공단",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "locationType": "DISTRICT"
+      }
+    ],
+    "렌터카": [
+      {
+        "name": "롯데렌터카",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "SK렌터카",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "쏘카",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "제주 제주시 연동 2332-4 연동엘리시아 907호 [등기]",
+          "lat": 33.45769,
+          "lon": 126.49588,
+          "businessNumber": "6168190529"
+        }
+      },
+      {
+        "name": "그린카",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 대치동 890-38 동산빌딩 6층 (테헤란로70길 16)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "2208791595"
+        }
+      },
+      {
+        "name": "AJ렌터카",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "약국": [
+      {
+        "name": "온누리약국",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "대웅약국",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "메디팜",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "휴게음식": [],
+    "공연전시": [
+      {
+        "name": "인터파크티켓",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "경기 성남시 수정구 금토동 텐엑스타워 (금토로 70)",
+          "lat": 37.44676,
+          "lon": 127.13273,
+          "businessNumber": "8248102515"
+        }
+      },
+      {
+        "name": "예스24공연",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 영등포구 여의도동 15-15 일신빌딩 5~6층 (은행로 11)",
+          "lat": 37.51235,
+          "lon": 126.90594,
+          "businessNumber": "2298137000"
+        }
+      },
+      {
+        "name": "멜론티켓",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "경기 성남시 분당구 삼평동 681 에이치스퀘어 N동 8~10층 (판교역로 235)",
+          "lat": 37.40284,
+          "lon": 127.11016,
+          "businessNumber": "2208802594"
+        }
+      },
+      {
+        "name": "티켓링크",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "경기 성남시 분당구 삼평동 629 플레이뮤지엄 3층 (대왕판교로645번길 16)",
+          "lat": 37.40284,
+          "lon": 127.11016,
+          "businessNumber": "1448125090"
+        }
+      },
+      {
+        "name": "NOL",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "NOL",
+          "놀유니버스",
+          "인터파크"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "경기 성남시 수정구 금토동 텐엑스타워 (금토로 70)",
+          "lat": 37.44676,
+          "lon": 127.13273,
+          "businessNumber": "8248102515"
+        }
+      },
+      {
+        "name": "예술의전당",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "VENUE_CLUSTER",
+        "hq": {
+          "address": "서울 서초구 서초동 700 (남부순환로 2406)",
+          "lat": 37.48798,
+          "lon": 127.01105,
+          "businessNumber": "2148200264"
+        }
+      },
+      {
+        "name": "세종문화회관",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "VENUE_CLUSTER",
+        "hq": {
+          "address": "서울 종로구 세종로 81-3 (세종대로 175)",
+          "lat": 37.58153,
+          "lon": 126.99032,
+          "businessNumber": "1018206773"
+        }
+      },
+      {
+        "name": "블루스퀘어",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "VENUE_CLUSTER",
+        "hq": {
+          "address": "서울 용산구 한남동 727-56 (이태원로 294)",
+          "lat": 37.53992,
+          "lon": 127.00429,
+          "businessNumber": "2148837365"
+        }
+      },
+      {
+        "name": "샤롯데씨어터",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "VENUE_CLUSTER",
+        "hq": {
+          "address": "서울 송파구 잠실동 40-1 (올림픽로 240) [극장] / 법인본사 신천동 29 롯데월드타워",
+          "lat": 37.50414,
+          "lon": 127.11767,
+          "businessNumber": "3138700979"
+        }
+      },
+      {
+        "name": "LG아트센터",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "VENUE_CLUSTER",
+        "hq": {
+          "address": "서울 강서구 마곡동 812 (마곡중앙로 136)",
+          "lat": 37.55359,
+          "lon": 126.84101,
+          "businessNumber": "2208203849"
+        }
+      }
+    ],
+    "여행숙박": [
+      {
+        "name": "야놀자",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 대치동 1003 엠디엠타워 4~9층 (테헤란로108길 42)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "2208742885"
+        }
+      },
+      {
+        "name": "여기어때",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 삼성동 51-2 479타워 11층 (봉은사로 479)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "7428600224"
+        }
+      },
+      {
+        "name": "아고다",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "아고다",
+          "AGODA"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "싱가포르 (지번 해당없음)"
+        }
+      },
+      {
+        "name": "부킹닷컴",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "부킹닷컴",
+          "BOOKING.COM"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "네덜란드 암스테르담 (지번 해당없음)"
+        }
+      },
+      {
+        "name": "호텔스컴바인",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "호주 시드니 (지번 해당없음)"
+        }
+      },
+      {
+        "name": "트립닷컴",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "트립닷컴",
+          "TRIP.COM"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 종로구 청진동 246 D타워 7층 (종로3길 17)",
+          "lat": 37.58153,
+          "lon": 126.99032,
+          "businessNumber": "2318600568"
+        }
+      },
+      {
+        "name": "에어비앤비",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "에어비앤비",
+          "AIRBNB"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 중구 저동1가 114 (삼일대로 343)",
+          "lat": 37.56019,
+          "lon": 127.00059,
+          "businessNumber": "1208810192"
+        }
+      },
+      {
+        "name": "하나투어",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 종로구 공평동 1 하나빌딩 (인사동5길 41)",
+          "lat": 37.58153,
+          "lon": 126.99032,
+          "businessNumber": "1028139440"
+        }
+      },
+      {
+        "name": "모두투어",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 중구 을지로1가 188-3 백남빌딩 (을지로 16)",
+          "lat": 37.56019,
+          "lon": 127.00059,
+          "businessNumber": "2028145295"
+        }
+      },
+      {
+        "name": "인터파크투어",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "경기 성남시 수정구 금토동 텐엑스타워 (금토로 70)",
+          "lat": 37.44676,
+          "lon": 127.13273,
+          "businessNumber": "8248102515"
+        }
+      }
+    ],
+    "반려동물": [
+      {
+        "name": "펫프렌즈",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 논현동 16-23 큐브타워 지하2~5층 (도산대로4길 15)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "1758100190"
+        }
+      },
+      {
+        "name": "어바웃펫",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 금천구 가산동 459-14 현대테라타워 가산DK 507·508호 (가산디지털2로 144)",
+          "lat": 37.47772,
+          "lon": 126.88546,
+          "businessNumber": "1208790035"
+        }
+      },
+      {
+        "name": "펫박스",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 영등포구 당산동5가 9-2 당산역2차 SK V1타워 B301 (선유동2로 64)",
+          "lat": 37.51235,
+          "lon": 126.90594,
+          "businessNumber": "3188102359"
+        }
+      },
+      {
+        "name": "바잇미",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 역삼동 726-10 레트로빌딩 (논현로80길 7)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "2108700613"
+        }
+      },
+      {
+        "name": "롯데마트펫가든",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "이리온",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "코코스퀘어",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "디지털가전": [
+      {
+        "name": "하이마트",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "하이마트",
+          "롯데하이마트"
+        ]
+      },
+      {
+        "name": "삼성디지털프라자",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "LG베스트샵",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "애플",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "APPLE.COM",
+          "애플"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 삼성동 159 아셈타워 3901호 (영동대로 517)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "1208184429"
+        }
+      },
+      {
+        "name": "전자랜드",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "컴퓨존",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 금천구 가산동 60-19 SJ테크노빌 (벚꽃로 278)",
+          "lat": 37.47772,
+          "lon": 126.88546,
+          "businessNumber": "1068183458"
+        }
+      },
+      {
+        "name": "다나와",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 금천구 가산동 50-3 대륭포스트타워6차 17층 (벚꽃로 298)",
+          "lat": 37.47772,
+          "lon": 126.88546,
+          "businessNumber": "1178140065"
+        }
+      },
+      {
+        "name": "스팀",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "STEAM",
+          "스팀"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "미국 워싱턴주 벨뷰 (지번 해당없음)"
+        }
+      },
+      {
+        "name": "플레이스테이션스토어",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [
+          "PLAYSTATION",
+          "플레이스테이션스토어"
+        ],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 강남구 역삼동 735-3 포스코타워 역삼 8층 (테헤란로 134)",
+          "lat": 37.49881,
+          "lon": 127.05839,
+          "businessNumber": "1068602673"
+        }
+      },
+      {
+        "name": "닌텐도",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 중구 순화동 216 AIA타워 2층 (통일로2길 16)",
+          "lat": 37.56019,
+          "lon": 127.00059,
+          "businessNumber": "1208703578"
+        }
+      }
+    ],
+    "스포츠레저": [
+      {
+        "name": "골프존",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "데카트론",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "스포츠몬스터",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "나이키",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "아디다스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "뉴발란스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "아웃도어캠핑": [
+      {
+        "name": "코베아",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "스노우피크",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "헬리녹스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "네파",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "K2",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "블랙야크",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "아이더",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "서점문구": [
+      {
+        "name": "교보문고",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": [
+          "교보문고",
+          "교보"
+        ]
+      },
+      {
+        "name": "영풍문고",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "예스24",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 영등포구 여의도동 15-15 일신빌딩 5~6층 (은행로 11)",
+          "lat": 37.51235,
+          "lon": 126.90594,
+          "businessNumber": "2298137000"
+        }
+      },
+      {
+        "name": "알라딘",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "반디앤루니스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "핫트랙스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "모나미스토어",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "아트박스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "키즈육아": [
+      {
+        "name": "아가방",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "토이저러스",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "짐보리",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "해피랜드",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "포래즈",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      },
+      {
+        "name": "블루독베이비",
+        "branchable": true,
+        "channel": "OFFLINE",
+        "forms": []
+      }
+    ],
+    "취미공예": [
+      {
+        "name": "낙원악기상가",
+        "branchable": false,
+        "channel": "OFFLINE",
+        "forms": [],
+        "locationType": "VENUE_CLUSTER",
+        "hq": {
+          "address": "서울 종로구 낙원동 288 낙원상가 3층 300호 (삼일대로 428)",
+          "lat": 37.58153,
+          "lon": 126.99032,
+          "businessNumber": "1018100132"
+        }
+      },
+      {
+        "name": "텐바이텐",
+        "branchable": false,
+        "channel": "ONLINE",
+        "forms": [],
+        "locationType": "NONE",
+        "hq": {
+          "address": "서울 서초구 서초동 1321-11 그레이츠강남(플래티넘타워) 20층 (서초대로 398)",
+          "lat": 37.48798,
+          "lon": 127.01105,
+          "businessNumber": "1078783297"
+        }
+      }
+    ],
+    "보험": [
+      {
+        "name": "삼성화재",
+        "branchable": false,
+        "channel": "ONLINE",
+        "locationType": "NONE",
+        "forms": [
+          "삼성화재해상보험",
+          "삼성화재다이렉트"
+        ],
+        "hq": {
+          "address": "서울 서초구 서초동 1321-1 (서초대로74길 14)",
+          "lat": 37.4979,
+          "lon": 127.0276,
+          "businessNumber": "2028145617"
+        },
+        "serves": [
+          "애니카 자동차보험",
+          "삼성화재 다이렉트 자동차보험",
+          "삼성화재 다이렉트 운전자보험",
+          "삼성화재 실손의료비보험",
+          "다이렉트 착easy 암보험",
+          "덴탈파트너 치아보험",
+          "NEW 마이 슈퍼스타 자녀보험",
+          "삼성화재 다이렉트 어린이 보험",
+          "삼성화재 다이렉트 해외여행보험",
+          "위풍댕댕 펫보험",
+          "다이렉트 AI보험 주택화재플랜",
+          "아름다운 생활Ⅱ 연금보험"
+        ]
+      },
+      {
+        "name": "현대해상",
+        "branchable": false,
+        "channel": "ONLINE",
+        "locationType": "NONE",
+        "forms": [
+          "현대해상화재보험",
+          "하이카다이렉트"
+        ],
+        "hq": {
+          "address": "서울 종로구 세종로 80-1 (세종대로 163) 현대해상빌딩",
+          "lat": 37.5707,
+          "lon": 126.9769,
+          "businessNumber": "1028132035"
+        },
+        "serves": [
+          "하이카개인용자동차보험",
+          "현대해상 다이렉트자동차보험",
+          "뉴하이카운전자상해보험",
+          "현대해상 실손의료비보험",
+          "두배받는암보험",
+          "굿앤굿어린이종합보험Q",
+          "어린이치아보험",
+          "굿앤굿우리펫보험",
+          "현대해상 해외여행보험",
+          "주택화재상해보험",
+          "노후웰스 연금보험"
+        ]
+      },
+      {
+        "name": "DB손해보험",
+        "branchable": false,
+        "channel": "ONLINE",
+        "locationType": "NONE",
+        "forms": [
+          "DB손보",
+          "DB다이렉트"
+        ],
+        "hq": {
+          "address": "서울 강남구 대치동 891-10 (테헤란로 432) DB금융센터",
+          "lat": 37.5045,
+          "lon": 127.0525,
+          "businessNumber": "2018145593"
+        },
+        "serves": [
+          "DB자동차보험",
+          "DB원데이자동차보험",
+          "DB운전자보험",
+          "DB실손의료비보험",
+          "걸을수록THE좋은건강보험",
+          "DB암보험",
+          "DB치아보험",
+          "DB자녀보험",
+          "펫블리반려견보험",
+          "펫블리반려묘보험",
+          "DB해외여행보험",
+          "오잘공골프보험"
+        ]
+      },
+      {
+        "name": "KB손해보험",
+        "branchable": false,
+        "channel": "ONLINE",
+        "locationType": "NONE",
+        "forms": [
+          "KB손보"
+        ],
+        "hq": {
+          "address": "서울 강남구 역삼동 718-2 (테헤란로 117) KB손해보험빌딩",
+          "lat": 37.501,
+          "lon": 127.0335,
+          "businessNumber": "2028148370"
+        },
+        "serves": [
+          "KB자동차보험",
+          "KB 플러스 운전자상해보험",
+          "KB하루운전자보험",
+          "KB 손보 실손의료비보장보험",
+          "KB 9회주는 암보험Plus",
+          "KB The건강한 치아보험",
+          "KB금쪽같은자녀보험Plus",
+          "KB 금쪽같은 펫보험(강아지)",
+          "KB 금쪽같은 펫보험(고양이)",
+          "KB해외여행보험",
+          "KB주택화재보험",
+          "KB멀티플러스연금보험"
+        ]
+      },
+      {
+        "name": "메리츠화재",
+        "branchable": false,
+        "channel": "ONLINE",
+        "locationType": "NONE",
+        "forms": [
+          "메리츠화재해상보험"
+        ],
+        "hq": {
+          "address": "서울 강남구 역삼동 825-2 (강남대로 382) 메리츠타워",
+          "lat": 37.4996,
+          "lon": 127.0276,
+          "businessNumber": "1168103752"
+        },
+        "serves": [
+          "메리츠다이렉트개인용자동차보험",
+          "걱정제로 운전자보험",
+          "메리츠 실손의료비보험",
+          "올케어 보장 꽉 채운 암보험",
+          "메리츠 치아보험 이목구비",
+          "올케어 꽉 채운 골키퍼 건강보험",
+          "펫퍼민트 Puppy&Family보험",
+          "펫퍼민트 Cat&Family보험",
+          "메리츠 간편한 정기보험",
+          "메리츠 저축보험 M-Class"
+        ]
+      },
+      {
+        "name": "AXA손해보험",
+        "branchable": false,
+        "channel": "ONLINE",
+        "locationType": "NONE",
+        "forms": [
+          "AXA다이렉트",
+          "악사손해보험"
+        ],
+        "hq": {
+          "address": "서울 용산구 한강로2가 191 (한강대로71길 4)",
+          "lat": 37.5296,
+          "lon": 126.9663,
+          "businessNumber": "1148604968"
+        },
+        "serves": [
+          "AXA다이렉트 자동차보험",
+          "AXA다이렉트 원데이자동차보험",
+          "AXA다이렉트 운전자보험",
+          "AXA 실손의료비보험",
+          "AXA 마이케어 암보험",
+          "AXA 스마일 치아보험",
+          "AXA다이렉트 해외여행보험"
+        ]
+      },
+      {
+        "name": "AIG손해보험",
+        "branchable": false,
+        "channel": "ONLINE",
+        "locationType": "NONE",
+        "forms": [
+          "AIG"
+        ],
+        "hq": {
+          "address": "서울 영등포구 여의도동 23 (국제금융로 10) 국제금융센터",
+          "lat": 37.5254,
+          "lon": 126.9256,
+          "businessNumber": "1018667365"
+        },
+        "serves": [
+          "AIG 다이렉트 자동차보험",
+          "AIG 스마트 운전자보험",
+          "AIG 실손의료비보험",
+          "AIG 든든한 암보험",
+          "AIG 우리아이 어린이보험",
+          "AIG 원스톱 해외여행보험",
+          "AIG 홈케어 주택화재보험"
+        ]
+      },
+      {
+        "name": "하나손해보험",
+        "branchable": false,
+        "channel": "ONLINE",
+        "locationType": "NONE",
+        "forms": [
+          "하나손보"
+        ],
+        "hq": {
+          "address": "서울 종로구 인의동 28-2 (창경궁로 117)",
+          "lat": 37.573,
+          "lon": 126.9995,
+          "businessNumber": "1078624985"
+        },
+        "serves": [
+          "하나 원큐 자동차보험",
+          "하나 원큐 운전자보험",
+          "하나 실손의료비보험",
+          "하나 굿모닝 암보험",
+          "하나 스마일 치아보험",
+          "하나 원큐 해외여행보험",
+          "하나 펫사랑보험"
+        ]
+      },
+      {
+        "name": "카카오페이손해보험",
+        "branchable": false,
+        "channel": "ONLINE",
+        "locationType": "NONE",
+        "forms": [
+          "카카오페이손보"
+        ],
+        "hq": {
+          "address": "경기 성남시 분당구 삼평동 681 (판교역로 152)",
+          "lat": 37.3947,
+          "lon": 127.1112,
+          "businessNumber": "6208802208"
+        },
+        "serves": [
+          "카카오페이 해외여행보험",
+          "카카오페이 운전자보험",
+          "카카오페이 펫보험",
+          "카카오페이 자전거보험",
+          "카카오페이 골프보험",
+          "카카오페이 휴대폰보험"
+        ]
+      }
     ]
-   },
-   {
-    "name": "CU",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "씨유",
-     "CU"
-    ]
-   },
-   {
-    "name": "세븐일레븐",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "세븐일레븐",
-     "7-ELEVEN"
-    ]
-   },
-   {
-    "name": "이마트24",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "이마트24",
-     "emart24"
-    ]
-   },
-   {
-    "name": "미니스톱",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "카페": [
-   {
-    "name": "스타벅스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "(주)스타벅스코리아",
-     "스타벅스"
-    ]
-   },
-   {
-    "name": "투썸플레이스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "투썸플레이스",
-     "투썸"
-    ]
-   },
-   {
-    "name": "메가엠지씨커피",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "메가엠지씨커피",
-     "메가커피"
-    ]
-   },
-   {
-    "name": "컴포즈커피",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "이디야커피",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "이디야",
-     "이디야커피"
-    ]
-   },
-   {
-    "name": "빽다방",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "커피빈",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "커피빈",
-     "커피빈코리아"
-    ]
-   },
-   {
-    "name": "할리스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "공차",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "폴바셋",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "파스쿠찌",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "탐앤탐스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "더벤티",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "매머드커피",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "카페드롭탑",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "가비양",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "셀렉토커피",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "커피에반하다",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "베이커리": [
-   {
-    "name": "파리바게뜨",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "파리바게뜨",
-     "파리바케뜨",
-     "파리크라상"
-    ]
-   },
-   {
-    "name": "뚜레쥬르",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "뚜레쥬르",
-     "뚜레주르"
-    ]
-   },
-   {
-    "name": "던킨",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "던킨",
-     "던킨도너츠"
-    ]
-   },
-   {
-    "name": "성심당",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "김영모과자점",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "노티드",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "패스트푸드": [
-   {
-    "name": "맥도날드",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "맥도날드",
-     "한국맥도날드"
-    ]
-   },
-   {
-    "name": "롯데리아",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "버거킹",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "맘스터치",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "KFC",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "KFC",
-     "케이에프씨"
-    ]
-   },
-   {
-    "name": "써브웨이",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "노브랜드버거",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "프랭크버거",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "이삭토스트",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "한솥도시락",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "본죽",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "김밥천국",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "치킨": [
-   {
-    "name": "교촌치킨",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "교촌치킨",
-     "교촌"
-    ]
-   },
-   {
-    "name": "BBQ",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "BBQ",
-     "비비큐",
-     "제너시스비비큐"
-    ]
-   },
-   {
-    "name": "BHC",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "BHC",
-     "비에이치씨"
-    ]
-   },
-   {
-    "name": "굽네치킨",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "네네치킨",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "처갓집양념치킨",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "페리카나",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "호식이두마리치킨",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "60계치킨",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "자담치킨",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "푸라닭",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "또래오래",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "멕시카나",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "노랑통닭",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "바른치킨",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "피자": [
-   {
-    "name": "도미노피자",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "피자헛",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "미스터피자",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "파파존스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "피자스쿨",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "피자마루",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "반올림피자",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "7번가피자",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "피자알볼로",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "야식": [
-   {
-    "name": "원할머니보쌈족발",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "장충동왕족발",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "족발야시장",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "더맛있는족발보쌈",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "소문난왕족발",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "대형마트": [
-   {
-    "name": "이마트",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "이마트",
-     "(주)이마트"
-    ]
-   },
-   {
-    "name": "홈플러스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "롯데마트",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "코스트코",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "코스트코",
-     "코스트코코리아"
-    ]
-   },
-   {
-    "name": "트레이더스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "이마트에브리데이",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "롯데슈퍼",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "GS더프레시",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "홈플러스익스프레스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "노브랜드",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "하나로마트",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "하나로마트",
-     "농협하나로마트"
-    ]
-   },
-   {
-    "name": "메가마트",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "드럭스토어": [
-   {
-    "name": "올리브영",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "올리브영",
-     "CJ올리브영"
-    ]
-   },
-   {
-    "name": "롭스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "랄라블라",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "생활잡화": [
-   {
-    "name": "다이소",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "다이소",
-     "아성다이소"
-    ]
-   },
-   {
-    "name": "아트박스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "모닝글로리",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "노브랜드",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "화장품": [
-   {
-    "name": "이니스프리",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "아리따움",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "더페이스샵",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "미샤",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "네이처리퍼블릭",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "토니모리",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "에뛰드",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "의류패션": [
-   {
-    "name": "유니클로",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "자라",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "자라",
-     "ZARA"
-    ]
-   },
-   {
-    "name": "에이치앤엠",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "에이치앤엠",
-     "H&M"
-    ]
-   },
-   {
-    "name": "스파오",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "탑텐",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "지오다노",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "에잇세컨즈",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "나이키",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "나이키",
-     "나이키코리아"
-    ]
-   },
-   {
-    "name": "아디다스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "데상트",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "백화점": [
-   {
-    "name": "롯데백화점",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "신세계백화점",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "현대백화점",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "갤러리아백화점",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "AK플라자",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "NC백화점",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "영화": [
-   {
-    "name": "CGV",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "CGV",
-     "씨지브이",
-     "CJCGV"
-    ]
-   },
-   {
-    "name": "롯데시네마",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "메가박스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "씨네Q",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "헬스장": [
-   {
-    "name": "애니타임피트니스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "스포애니",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "커브스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "놀이공원": [
-   {
-    "name": "에버랜드",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "VENUE_CLUSTER",
-    "hq": {
-     "address": "경기 용인시 처인구 포곡읍 전대리 310 (에버랜드로 199)",
-     "lat": 37.29231,
-     "lon": 127.2164,
-     "businessNumber": "1358504288"
-    }
-   },
-   {
-    "name": "롯데월드",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "VENUE_CLUSTER",
-    "hq": {
-     "address": "서울 송파구 잠실동 40-1 (올림픽로 240)",
-     "lat": 37.50414,
-     "lon": 127.11767,
-     "businessNumber": "2198500014"
-    }
-   },
-   {
-    "name": "서울랜드",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "VENUE_CLUSTER",
-    "hq": {
-     "address": "경기 과천시 막계동 33 (광명로 181)",
-     "lat": 37.43169,
-     "lon": 126.99988,
-     "businessNumber": "1388104654"
-    }
-   },
-   {
-    "name": "서울대공원",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "VENUE_CLUSTER",
-    "hq": {
-     "address": "경기 과천시 막계동 159-1 (대공원광장로 102)",
-     "lat": 37.43169,
-     "lon": 126.99988,
-     "businessNumber": "1388300900"
-    }
-   },
-   {
-    "name": "어린이대공원",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "VENUE_CLUSTER",
-    "hq": {
-     "address": "서울 광진구 능동 18 (능동로 216) [시설] / 공단본사 성동구 마장동 527-6",
-     "lat": 37.5509,
-     "lon": 127.08139,
-     "businessNumber": "2068204293"
-    }
-   },
-   {
-    "name": "캐리비안베이",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "VENUE_CLUSTER",
-    "hq": {
-     "address": "경기 용인시 처인구 포곡읍 전대리 310 (에버랜드로 199)",
-     "lat": 37.29231,
-     "lon": 127.2164,
-     "businessNumber": "1358504288"
-    }
-   }
-  ],
-  "미용실": [
-   {
-    "name": "박승철헤어스투디오",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "이철헤어커커",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "준오헤어",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "리안헤어",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "블루클럽",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "주유소": [
-   {
-    "name": "SK에너지",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "SK에너지",
-     "SK네트웍스"
-    ]
-   },
-   {
-    "name": "GS칼텍스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "S-OIL",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "S-OIL",
-     "에쓰오일"
-    ]
-   },
-   {
-    "name": "현대오일뱅크",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "현대오일뱅크",
-     "현대오일뱅크(주)"
-    ]
-   }
-  ],
-  "이커머스": [
-   {
-    "name": "쿠팡",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "쿠팡",
-     "쿠팡(주)",
-     "COUPANG"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 송파구 신천동 7-30 (송파대로 570, 18층)",
-     "lat": 37.50414,
-     "lon": 127.11767,
-     "businessNumber": "1208800767"
-    }
-   },
-   {
-    "name": "네이버쇼핑",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "네이버페이",
-     "네이버쇼핑",
-     "스마트스토어"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "경기 성남시 분당구 정자동 178-4 네이버 1784 (정자일로 95)",
-     "lat": 37.36652,
-     "lon": 127.11233,
-     "businessNumber": "2208162517"
-    }
-   },
-   {
-    "name": "G마켓",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "G마켓",
-     "지마켓"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 역삼동 737 강남파이낸스센터 34~37층 (테헤란로 152)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "2208183676"
-    }
-   },
-   {
-    "name": "11번가",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "경기 광명시 일직동 512-3 유플래닛타워 (신기로 20)",
-     "lat": 37.46766,
-     "lon": 126.86532,
-     "businessNumber": "8158101244"
-    }
-   },
-   {
-    "name": "SSG닷컴",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "SSG.COM",
-     "쓱닷컴"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 영등포구 영등포동4가 79 KB영등포타워 (영신로34길 30)",
-     "lat": 37.51235,
-     "lon": 126.90594,
-     "businessNumber": "8708801143"
-    }
-   },
-   {
-    "name": "옥션",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 역삼동 737 강남파이낸스센터 34~37층 (테헤란로 152)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "2208183676"
-    }
-   },
-   {
-    "name": "위메프",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 삼성동 168-6 위메프빌딩 (영동대로 502)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "5668701096"
-    }
-   },
-   {
-    "name": "티몬",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 신사동 529-4 아리지빌딩 (압구정로 118)",
-     "lat": 37.52608,
-     "lon": 127.02261,
-     "businessNumber": "2118841856"
-    }
-   },
-   {
-    "name": "인터파크",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 삼성동 168-6 (영동대로 502)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "4228103185"
-    }
-   },
-   {
-    "name": "마켓컬리",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "마켓컬리",
-     "컬리"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 역삼동 647-14 한국타이어빌딩 18층 (테헤란로 133)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "2618123567"
-    }
-   },
-   {
-    "name": "오늘의집",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 서초구 서초동 1321-15 삼성생명서초타워 25·27층 (서초대로74길 4)",
-     "lat": 37.48798,
-     "lon": 127.01105,
-     "businessNumber": "1198691245"
-    }
-   },
-   {
-    "name": "무신사",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 성동구 성수동2가 277-47 무신사캠퍼스 N1 (아차산로13길 11)",
-     "lat": 37.55306,
-     "lon": 127.03814,
-     "businessNumber": "2118879575"
-    }
-   },
-   {
-    "name": "지그재그",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 삼성동 159-8 파르나스타워 27층 (테헤란로 521)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "2148891525"
-    }
-   },
-   {
-    "name": "에이블리",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 서초구 서초동 1303-22 9층 (강남대로 465)",
-     "lat": 37.48798,
-     "lon": 127.01105,
-     "businessNumber": "1648700149"
-    }
-   },
-   {
-    "name": "알리익스프레스",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "알리익스프레스",
-     "ALIEXPRESS"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 삼성동 159-8 파르나스타워 29층 (테헤란로 521)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "8058802959"
-    }
-   },
-   {
-    "name": "테무",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "테무",
-     "TEMU"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 종로구 관철동 12-13 포인트23 (종로12길 23)",
-     "lat": 37.58153,
-     "lon": 126.99032,
-     "businessNumber": "5778103108"
-    }
-   },
-   {
-    "name": "아마존",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "AMAZON",
-     "아마존"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "미국 시애틀 (지번 해당없음)"
-    }
-   }
-  ],
-  "배달": [
-   {
-    "name": "배달의민족",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "배달의민족",
-     "우아한형제들",
-     "우아한형제들(배민)"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 송파구 방이동 44-2 장은빌딩 (위례성대로 2)",
-     "lat": 37.50414,
-     "lon": 127.11767,
-     "businessNumber": "1208765763"
-    }
-   },
-   {
-    "name": "쿠팡이츠",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "쿠팡이츠",
-     "COUPANG EATS"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "경기 성남시 분당구 삼평동 645 알파타워 702호 (판교역로 180)",
-     "lat": 37.40284,
-     "lon": 127.11016,
-     "businessNumber": "8968702133"
-    }
-   },
-   {
-    "name": "요기요",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "요기요",
-     "위대한상상"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 역삼동 역삼823빌딩 7층 (논현로85길 70) ※역삼동 번지 미확정",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "2118868802"
-    }
-   },
-   {
-    "name": "땡겨요",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 중구 태평로2가 120 신한은행 본점 (세종대로9길 20)",
-     "lat": 37.56019,
-     "lon": 127.00059,
-     "businessNumber": "2028102637"
-    }
-   }
-  ],
-  "스트리밍": [
-   {
-    "name": "넷플릭스",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "넷플릭스",
-     "NETFLIX.COM",
-     "넷플릭스서비시스코리아"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 종로구 공평동 17 센트로폴리스 A동 20층 (우정국로 26)",
-     "lat": 37.58153,
-     "lon": 126.99032,
-     "businessNumber": "1658700119"
-    }
-   },
-   {
-    "name": "유튜브프리미엄",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "GOOGLE*YOUTUBEPREMIUM",
-     "유튜브프리미엄",
-     "구글"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 역삼동 737 강남파이낸스센터 22층 (테헤란로 152)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "1208665164"
-    }
-   },
-   {
-    "name": "디즈니플러스",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "디즈니플러스",
-     "DISNEY PLUS"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 역삼동 737 강남파이낸스센터 (테헤란로 152)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "2208103347"
-    }
-   },
-   {
-    "name": "티빙",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 마포구 상암동 1647 DMC디지털큐브 15층 (상암산로 34)",
-     "lat": 37.57519,
-     "lon": 126.8856,
-     "businessNumber": "1888801893"
-    }
-   },
-   {
-    "name": "웨이브",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 영등포구 여의도동 35-1 여의도우체국빌딩 15층 (여의나루로 60)",
-     "lat": 37.51235,
-     "lon": 126.90594,
-     "businessNumber": "2208838020"
-    }
-   },
-   {
-    "name": "왓챠",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 서초구 서초동 1329-7 신덕빌딩 3층 (강남대로 343)",
-     "lat": 37.48798,
-     "lon": 127.01105,
-     "businessNumber": "2118866013"
-    }
-   },
-   {
-    "name": "쿠팡플레이",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 송파구 신천동 7-30 (송파대로 570, 18층)",
-     "lat": 37.50414,
-     "lon": 127.11767,
-     "businessNumber": "1208800767"
-    }
-   },
-   {
-    "name": "라프텔",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 영등포구 여의도동 23 Three IFC 13층 (국제금융로 10)",
-     "lat": 37.51235,
-     "lon": 126.90594,
-     "businessNumber": "5358602250"
-    }
-   },
-   {
-    "name": "애플티비플러스",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 삼성동 159 아셈타워 3901호 (영동대로 517)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "1208184429"
-    }
-   },
-   {
-    "name": "멜론",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "멜론",
-     "MELON",
-     "카카오"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "경기 성남시 분당구 삼평동 681 에이치스퀘어 N동 8~10층 (판교역로 235)",
-     "lat": 37.40284,
-     "lon": 127.11016,
-     "businessNumber": "2208802594"
-    }
-   },
-   {
-    "name": "지니뮤직",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 역삼동 809-10 한석타워 4~9층 (강남대로 456)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "3148103453"
-    }
-   },
-   {
-    "name": "스포티파이",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "SPOTIFY",
-     "스포티파이"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 논현동 18-3 제이빌딩 8층 (강남대로 586)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "2048701387"
-    }
-   },
-   {
-    "name": "벅스",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 논현동 18-3 제이빌딩 (강남대로 586)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "2118715555"
-    }
-   },
-   {
-    "name": "플로",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 서초구 서초동 1338-12 한화생명보험빌딩 (강남대로 311)",
-     "lat": 37.48798,
-     "lon": 127.01105,
-     "businessNumber": "2148629288"
-    }
-   },
-   {
-    "name": "밀리의서재",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 마포구 상암동 1607 YTN 뉴스퀘어 13층 (상암산로 76)",
-     "lat": 37.57519,
-     "lon": 126.8856,
-     "businessNumber": "4238800370"
-    }
-   },
-   {
-    "name": "리디",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 역삼동 702-28 어반벤치빌딩 4·10·11층 (테헤란로 325)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "1208727435"
-    }
-   },
-   {
-    "name": "윌라",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 서초구 서초동 1321-11 11층 (서초대로 398)",
-     "lat": 37.48798,
-     "lon": 127.01105,
-     "businessNumber": "2208765006"
-    }
-   },
-   {
-    "name": "챗지피티플러스",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "CHATGPT SUBSCRIPTION",
-     "OPENAI"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "미국 캘리포니아 샌프란시스코 (한국 본사 없음)"
-    }
-   }
-  ],
-  "간편결제": [
-   {
-    "name": "카카오페이",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "경기 성남시 분당구 백현동 532 카카오판교아지트 B동 (판교역로 166)",
-     "lat": 37.39051,
-     "lon": 127.10971,
-     "businessNumber": "5278800686"
-    }
-   },
-   {
-    "name": "네이버페이",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "경기 성남시 분당구 정자동 178-4 네이버 1784 (정자일로 95)",
-     "lat": 37.36652,
-     "lon": 127.11233,
-     "businessNumber": "5248601528"
-    }
-   },
-   {
-    "name": "토스",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "토스",
-     "비바리퍼블리카"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 역삼동 736-1 캐피탈타워 (테헤란로 142)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "1208801280"
-    }
-   },
-   {
-    "name": "삼성페이",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "경기 수원시 영통구 매탄동 416 (삼성로 129)",
-     "lat": 37.26319,
-     "lon": 127.05746,
-     "businessNumber": "1248100998"
-    }
-   },
-   {
-    "name": "페이코",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 구로구 구로동 222-22 (디지털로26길 72)",
-     "lat": 37.49375,
-     "lon": 126.86319,
-     "businessNumber": "5638100723"
-    }
-   },
-   {
-    "name": "애플앱스토어",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "APPLE.COM/BILL",
-     "앱스토어"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 삼성동 159 아셈타워 3901호 (영동대로 517)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "1208184429"
-    }
-   },
-   {
-    "name": "구글플레이",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "GOOGLE PLAY",
-     "구글플레이"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 역삼동 737 강남파이낸스센터 22층 (테헤란로 152)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "1208665164"
-    }
-   },
-   {
-    "name": "원스토어",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "경기 성남시 분당구 삼평동 642 (판교역로 188)",
-     "lat": 37.40284,
-     "lon": 127.11016,
-     "businessNumber": "8568600329"
-    }
-   }
-  ],
-  "통신비": [
-   {
-    "name": "SK텔레콤",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "SK텔레콤",
-     "(주)에스케이텔레콤",
-     "SKT"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 중구 을지로2가 11 SK텔레콤빌딩 (을지로 65)",
-     "lat": 37.56019,
-     "lon": 127.00059,
-     "businessNumber": "1048137225"
-    }
-   },
-   {
-    "name": "KT",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "KT",
-     "(주)케이티",
-     "케이티"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "경기 성남시 분당구 정자동 206 (불정로 90)",
-     "lat": 37.36652,
-     "lon": 127.11233,
-     "businessNumber": "1028142945"
-    }
-   },
-   {
-    "name": "LG유플러스",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "LG유플러스",
-     "LGU+",
-     "엘지유플러스"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 용산구 한강로3가 65-228 (한강대로 32)",
-     "lat": 37.53571,
-     "lon": 126.97611,
-     "businessNumber": "2208139938"
-    }
-   },
-   {
-    "name": "KT엠모바일",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 대치동 890-20 KT선릉타워 East (테헤란로 422)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "1338143410"
-    }
-   },
-   {
-    "name": "SK세븐모바일",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 마포구 공덕동 252-5 마포T타운 (마포대로 144)",
-     "lat": 37.55024,
-     "lon": 126.95889,
-     "businessNumber": "1048143391"
-    }
-   },
-   {
-    "name": "U+유모바일",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 마포구 상암동 1595-1 드림타워 (월드컵북로56길 19)",
-     "lat": 37.57519,
-     "lon": 126.8856,
-     "businessNumber": "1148196221"
-    }
-   },
-   {
-    "name": "헬로모바일",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 마포구 상암동 1595-1 드림타워 (월드컵북로56길 19)",
-     "lat": 37.57519,
-     "lon": 126.8856,
-     "businessNumber": "1178113423"
-    }
-   }
-  ],
-  "공과금": [
-   {
-    "name": "한국전력공사",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "한국전력공사",
-     "한전"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "전남 나주시 빛가람동 120 (전력로 55)",
-     "lat": 35.01561,
-     "lon": 126.78968,
-     "businessNumber": "1208200052"
-    }
-   },
-   {
-    "name": "서울도시가스",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강서구 염창동 281 (공항대로 607)",
-     "lat": 37.55068,
-     "lon": 126.87433,
-     "businessNumber": "1098131605"
-    }
-   },
-   {
-    "name": "삼천리",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 영등포구 여의도동 35-6 삼천리빌딩 (국제금융로6길 42)",
-     "lat": 37.51235,
-     "lon": 126.90594,
-     "businessNumber": "1168100755"
-    }
-   },
-   {
-    "name": "코원에너지서비스",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 대치동 27-1 (남부순환로 3165)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "1208114525"
-    }
-   },
-   {
-    "name": "서울시상수도사업본부",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 서대문구 합동 27-1 (서소문로 51)",
-     "lat": 37.57797,
-     "lon": 126.93848,
-     "businessNumber": "1108300770"
-    }
-   }
-  ],
-  "대중교통": [
-   {
-    "name": "서울교통공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "regions": [
-     "서울특별시"
-    ],
-    "hq": {
-     "address": "서울특별시 성동구 천호대로 346",
-     "lat": 37.55306,
-     "lon": 127.03814,
-     "businessNumber": "6988700598"
-    }
-   },
-   {
-    "name": "경기교통공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "regions": [
-     "경기도"
-    ],
-    "hq": {
-     "address": "경기 양주시 옥정로6길 18",
-     "lat": 37.81974,
-     "lon": 127.02925,
-     "businessNumber": "4768200431"
-    }
-   },
-   {
-    "name": "부산교통공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "regions": [
-     "부산광역시"
-    ],
-    "hq": {
-     "address": "부산광역시 부산진구 중앙대로644번길 20",
-     "lat": 35.16087,
-     "lon": 129.04539,
-     "businessNumber": "6058209189"
-    }
-   },
-   {
-    "name": "대구교통공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "regions": [
-     "대구광역시"
-    ],
-    "hq": {
-     "address": "대구광역시 달서구 월배로 250",
-     "lat": 35.8369,
-     "lon": 128.53505,
-     "businessNumber": "5148206760"
-    }
-   },
-   {
-    "name": "인천교통공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "regions": [
-     "인천광역시"
-    ],
-    "hq": {
-     "address": "인천광역시 남동구 경인로 674",
-     "lat": 37.44557,
-     "lon": 126.72261,
-     "businessNumber": "1398202409"
-    }
-   },
-   {
-    "name": "대전교통공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "regions": [
-     "대전광역시"
-    ],
-    "hq": {
-     "address": "대전광역시 서구 월드컵대로 480",
-     "lat": 36.32961,
-     "lon": 127.37073,
-     "businessNumber": "3148210117"
-    }
-   },
-   {
-    "name": "울산교통공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "regions": [
-     "울산광역시"
-    ],
-    "hq": {
-     "address": "울산광역시 남구 중앙로 201",
-     "lat": 35.53262,
-     "lon": 129.3126,
-     "businessNumber": "6108300023"
-    }
-   },
-   {
-    "name": "세종교통공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "regions": [
-     "세종특별자치시"
-    ],
-    "hq": {
-     "address": "세종특별자치시 조치원읍 군청로 93",
-     "lat": 36.60511,
-     "lon": 127.28702,
-     "businessNumber": "1338204414"
-    }
-   },
-   {
-    "name": "충청교통공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "regions": [
-     "충청남도",
-     "충청북도"
-    ],
-    "hq": {
-     "address": "충청남도 홍성군 홍북읍 충남대로 21",
-     "lat": 36.64117,
-     "lon": 126.69015,
-     "businessNumber": "3058300010"
-    }
-   },
-   {
-    "name": "경상교통공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "regions": [
-     "경상남도",
-     "경상북도"
-    ],
-    "hq": {
-     "address": "경상북도 안동시 풍천면 도청대로 455",
-     "lat": 36.51605,
-     "lon": 128.51265,
-     "businessNumber": "5048300145"
-    }
-   },
-   {
-    "name": "강원교통공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "regions": [
-     "강원도"
-    ],
-    "hq": {
-     "address": "강원특별자치도 춘천시 중앙로 1",
-     "lat": 37.87136,
-     "lon": 127.73179,
-     "businessNumber": "2218300013"
-    }
-   },
-   {
-    "name": "전북교통공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "regions": [
-     "전라북도"
-    ],
-    "hq": {
-     "address": "전북특별자치도 전주시 완산구 효자로 225 [1, 2]",
-     "lat": 35.80572,
-     "lon": 127.12905,
-     "businessNumber": "4028300010"
-    }
-   },
-   {
-    "name": "제주교통공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "regions": [
-     "제주특별자치도"
-    ],
-    "hq": {
-     "address": "제주특별자치도 제주시 문연로 6",
-     "lat": 33.49453,
-     "lon": 126.52146,
-     "businessNumber": "6168300017"
-    }
-   },
-   {
-    "name": "광주교통공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "regions": [
-     "전라남도",
-     "광주광역시"
-    ],
-    "hq": {
-     "address": "광주광역시 서구 마륵동 165-27",
-     "lat": 35.14843,
-     "lon": 126.86978,
-     "businessNumber": "4108212674"
-    }
-   },
-   {
-    "name": "한국철도공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "ROUTE",
-    "serves": [
-     "지하철"
-    ],
-    "hq": {
-     "address": "대전광역시 동구 중앙로 240",
-     "lat": 36.33092,
-     "lon": 127.44827,
-     "businessNumber": "3148210024"
-    }
-   },
-   {
-    "name": "티머니",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [
-     "티머니",
-     "(주)티머니",
-     "TMONEY"
-    ],
-    "serves": [
-     "시내버스",
-     "마을버스",
-     "광역버스",
-     "교통카드 충전"
-    ],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "서울 중구 남대문로5가 581 서울시티타워 (후암로 110)",
-     "lat": 37.56019,
-     "lon": 127.00059,
-     "businessNumber": "1048183559"
-    }
-   },
-   {
-    "name": "캐시비",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [
-     "캐시비",
-     "로카모빌리티"
-    ],
-    "serves": [
-     "시내버스",
-     "마을버스",
-     "광역버스",
-     "교통카드 충전"
-    ],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "서울 중구 다동 39 케이스퀘어시티 10~11층 (청계천로 24)",
-     "lat": 37.46053,
-     "lon": 126.90416,
-     "businessNumber": "1298638970"
-    }
-   }
-  ],
-  "택시": [
-   {
-    "name": "카카오T",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [
-     "카카오T",
-     "카카오모빌리티"
-    ],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "경기 성남시 분당구 백현동 537 알파돔타워 13층 (판교역로 152)",
-     "lat": 37.39051,
-     "lon": 127.10971,
-     "businessNumber": "1728600842"
-    }
-   },
-   {
-    "name": "우티",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [
-     "우티",
-     "UT"
-    ],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "서울 중구 수표동 99 시그니처타워 동관 17층 (청계천로 100)",
-     "lat": 37.56019,
-     "lon": 127.00059,
-     "businessNumber": "1668602049"
-    }
-   },
-   {
-    "name": "티머니택시",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [
-     "티머니택시",
-     "T-money택시"
-    ],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "서울 중구 남대문로5가 581 서울시티타워 (후암로 110)",
-     "lat": 37.56019,
-     "lon": 127.00059,
-     "businessNumber": "1048183559"
-    }
-   },
-   {
-    "name": "온다택시",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "서울 중구 남대문로5가 581 서울시티타워 (후암로 110)",
-     "lat": 37.56019,
-     "lon": 127.00059,
-     "businessNumber": "1048183559"
-    }
-   },
-   {
-    "name": "이비카드",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "서울 중구 다동 39 케이스퀘어시티 10~11층 (청계천로 24)",
-     "lat": 37.46053,
-     "lon": 126.90416,
-     "businessNumber": "1298638970"
-    }
-   }
-  ],
-  "철도": [
-   {
-    "name": "한국철도공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [
-     "한국철도공사",
-     "코레일",
-     "KTX(한국철도공사)",
-     "레츠코레일"
-    ],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "대전광역시 동구 중앙로 240",
-     "lat": 36.33092,
-     "lon": 127.44827,
-     "businessNumber": "3148210024"
-    }
-   },
-   {
-    "name": "SR",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [
-     "SR",
-     "수서고속철도",
-     "SRT"
-    ],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "서울특별시 강남구 광평로 56길 12",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "3058631590"
-    }
-   }
-  ],
-  "항공": [
-   {
-    "name": "대한항공",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [
-     "대한항공",
-     "(주)대한항공"
-    ],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "서울 강서구 공항동 1370 (하늘길 260)",
-     "lat": 37.55527,
-     "lon": 126.79548,
-     "businessNumber": "1108114794"
-    }
-   },
-   {
-    "name": "아시아나항공",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [
-     "아시아나항공",
-     "(주)아시아나"
-    ],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "서울 강서구 오쇠동 47 아시아나타운 (오정로 443-83)",
-     "lat": 37.55359,
-     "lon": 126.84101,
-     "businessNumber": "1048117480"
-    }
-   },
-   {
-    "name": "제주항공",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "제주 제주시 연동 301-1 건설공제회관 3층 (신대로 64)",
-     "lat": 33.45769,
-     "lon": 126.49588,
-     "businessNumber": "6168150527"
-    }
-   },
-   {
-    "name": "진에어",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "서울 강서구 등촌동 653-25 KAL빌딩 (공항대로 453)",
-     "lat": 37.55359,
-     "lon": 126.84101,
-     "businessNumber": "1218189086"
-    }
-   },
-   {
-    "name": "티웨이항공",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "대구 중구 동인동2가 74-15 KT대구타워 신관 10층 (동덕로 167)",
-     "lat": 35.86513,
-     "lon": 128.59221,
-     "businessNumber": "1018194800"
-    }
-   },
-   {
-    "name": "에어부산",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "부산 강서구 대저2동 3148-5 (유통단지1로57번가길 6)",
-     "lat": 35.16162,
-     "lon": 128.93807,
-     "businessNumber": "6058184518"
-    }
-   },
-   {
-    "name": "에어서울",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "인천 중구 운서동 2840 인천국제공항 내 (공항로 272)",
-     "lat": 37.46387,
-     "lon": 126.44905,
-     "businessNumber": "8258100091"
-    }
-   }
-  ],
-  "고속버스": [
-   {
-    "name": "코버스",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [
-     "코버스",
-     "고속버스통합"
-    ],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "서울특별시 중구 남대문로5가 581",
-     "lat": 37.56019,
-     "lon": 127.00059,
-     "businessNumber": "3968703587"
-    }
-   },
-   {
-    "name": "센트럴시티",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "서울 서초구 반포동 19-3 (신반포로 176)",
-     "lat": 37.48798,
-     "lon": 127.01105,
-     "businessNumber": "1148100569"
-    }
-   },
-   {
-    "name": "이지티켓",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "서울특별시 서초구 반포동 19-4",
-     "lat": 37.48798,
-     "lon": 127.01105,
-     "businessNumber": "3538700773"
-    }
-   }
-  ],
-  "통행료": [
-   {
-    "name": "한국도로공사",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [
-     "한국도로공사",
-     "고속도로통행료",
-     "하이패스"
-    ],
-    "locationType": "ROUTE",
-    "hq": {
-     "address": "경북 김천시 율곡동 941 (혁신8로 77)",
-     "lat": 36.12056,
-     "lon": 128.18575,
-     "businessNumber": "1298200103"
-    }
-   },
-   {
-    "name": "시설공단",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "locationType": "DISTRICT"
-   }
-  ],
-  "렌터카": [
-   {
-    "name": "롯데렌터카",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "SK렌터카",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "쏘카",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "제주 제주시 연동 2332-4 연동엘리시아 907호 [등기]",
-     "lat": 33.45769,
-     "lon": 126.49588,
-     "businessNumber": "6168190529"
-    }
-   },
-   {
-    "name": "그린카",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 대치동 890-38 동산빌딩 6층 (테헤란로70길 16)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "2208791595"
-    }
-   },
-   {
-    "name": "AJ렌터카",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "약국": [
-   {
-    "name": "온누리약국",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "대웅약국",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "메디팜",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "휴게음식": [],
-  "공연전시": [
-   {
-    "name": "인터파크티켓",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "경기 성남시 수정구 금토동 텐엑스타워 (금토로 70)",
-     "lat": 37.44676,
-     "lon": 127.13273,
-     "businessNumber": "8248102515"
-    }
-   },
-   {
-    "name": "예스24공연",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 영등포구 여의도동 15-15 일신빌딩 5~6층 (은행로 11)",
-     "lat": 37.51235,
-     "lon": 126.90594,
-     "businessNumber": "2298137000"
-    }
-   },
-   {
-    "name": "멜론티켓",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "경기 성남시 분당구 삼평동 681 에이치스퀘어 N동 8~10층 (판교역로 235)",
-     "lat": 37.40284,
-     "lon": 127.11016,
-     "businessNumber": "2208802594"
-    }
-   },
-   {
-    "name": "티켓링크",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "경기 성남시 분당구 삼평동 629 플레이뮤지엄 3층 (대왕판교로645번길 16)",
-     "lat": 37.40284,
-     "lon": 127.11016,
-     "businessNumber": "1448125090"
-    }
-   },
-   {
-    "name": "NOL",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "NOL",
-     "놀유니버스",
-     "인터파크"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "경기 성남시 수정구 금토동 텐엑스타워 (금토로 70)",
-     "lat": 37.44676,
-     "lon": 127.13273,
-     "businessNumber": "8248102515"
-    }
-   },
-   {
-    "name": "예술의전당",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "VENUE_CLUSTER",
-    "hq": {
-     "address": "서울 서초구 서초동 700 (남부순환로 2406)",
-     "lat": 37.48798,
-     "lon": 127.01105,
-     "businessNumber": "2148200264"
-    }
-   },
-   {
-    "name": "세종문화회관",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "VENUE_CLUSTER",
-    "hq": {
-     "address": "서울 종로구 세종로 81-3 (세종대로 175)",
-     "lat": 37.58153,
-     "lon": 126.99032,
-     "businessNumber": "1018206773"
-    }
-   },
-   {
-    "name": "블루스퀘어",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "VENUE_CLUSTER",
-    "hq": {
-     "address": "서울 용산구 한남동 727-56 (이태원로 294)",
-     "lat": 37.53992,
-     "lon": 127.00429,
-     "businessNumber": "2148837365"
-    }
-   },
-   {
-    "name": "샤롯데씨어터",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "VENUE_CLUSTER",
-    "hq": {
-     "address": "서울 송파구 잠실동 40-1 (올림픽로 240) [극장] / 법인본사 신천동 29 롯데월드타워",
-     "lat": 37.50414,
-     "lon": 127.11767,
-     "businessNumber": "3138700979"
-    }
-   },
-   {
-    "name": "LG아트센터",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "VENUE_CLUSTER",
-    "hq": {
-     "address": "서울 강서구 마곡동 812 (마곡중앙로 136)",
-     "lat": 37.55359,
-     "lon": 126.84101,
-     "businessNumber": "2208203849"
-    }
-   }
-  ],
-  "여행숙박": [
-   {
-    "name": "야놀자",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 대치동 1003 엠디엠타워 4~9층 (테헤란로108길 42)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "2208742885"
-    }
-   },
-   {
-    "name": "여기어때",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 삼성동 51-2 479타워 11층 (봉은사로 479)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "7428600224"
-    }
-   },
-   {
-    "name": "아고다",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "아고다",
-     "AGODA"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "싱가포르 (지번 해당없음)"
-    }
-   },
-   {
-    "name": "부킹닷컴",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "부킹닷컴",
-     "BOOKING.COM"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "네덜란드 암스테르담 (지번 해당없음)"
-    }
-   },
-   {
-    "name": "호텔스컴바인",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "호주 시드니 (지번 해당없음)"
-    }
-   },
-   {
-    "name": "트립닷컴",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "트립닷컴",
-     "TRIP.COM"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 종로구 청진동 246 D타워 7층 (종로3길 17)",
-     "lat": 37.58153,
-     "lon": 126.99032,
-     "businessNumber": "2318600568"
-    }
-   },
-   {
-    "name": "에어비앤비",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "에어비앤비",
-     "AIRBNB"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 중구 저동1가 114 (삼일대로 343)",
-     "lat": 37.56019,
-     "lon": 127.00059,
-     "businessNumber": "1208810192"
-    }
-   },
-   {
-    "name": "하나투어",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 종로구 공평동 1 하나빌딩 (인사동5길 41)",
-     "lat": 37.58153,
-     "lon": 126.99032,
-     "businessNumber": "1028139440"
-    }
-   },
-   {
-    "name": "모두투어",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 중구 을지로1가 188-3 백남빌딩 (을지로 16)",
-     "lat": 37.56019,
-     "lon": 127.00059,
-     "businessNumber": "2028145295"
-    }
-   },
-   {
-    "name": "인터파크투어",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "경기 성남시 수정구 금토동 텐엑스타워 (금토로 70)",
-     "lat": 37.44676,
-     "lon": 127.13273,
-     "businessNumber": "8248102515"
-    }
-   }
-  ],
-  "반려동물": [
-   {
-    "name": "펫프렌즈",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 논현동 16-23 큐브타워 지하2~5층 (도산대로4길 15)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "1758100190"
-    }
-   },
-   {
-    "name": "어바웃펫",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 금천구 가산동 459-14 현대테라타워 가산DK 507·508호 (가산디지털2로 144)",
-     "lat": 37.47772,
-     "lon": 126.88546,
-     "businessNumber": "1208790035"
-    }
-   },
-   {
-    "name": "펫박스",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 영등포구 당산동5가 9-2 당산역2차 SK V1타워 B301 (선유동2로 64)",
-     "lat": 37.51235,
-     "lon": 126.90594,
-     "businessNumber": "3188102359"
-    }
-   },
-   {
-    "name": "바잇미",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 역삼동 726-10 레트로빌딩 (논현로80길 7)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "2108700613"
-    }
-   },
-   {
-    "name": "롯데마트펫가든",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "이리온",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "코코스퀘어",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "디지털가전": [
-   {
-    "name": "하이마트",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "하이마트",
-     "롯데하이마트"
-    ]
-   },
-   {
-    "name": "삼성디지털프라자",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "LG베스트샵",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "애플",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "APPLE.COM",
-     "애플"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 삼성동 159 아셈타워 3901호 (영동대로 517)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "1208184429"
-    }
-   },
-   {
-    "name": "전자랜드",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "컴퓨존",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 금천구 가산동 60-19 SJ테크노빌 (벚꽃로 278)",
-     "lat": 37.47772,
-     "lon": 126.88546,
-     "businessNumber": "1068183458"
-    }
-   },
-   {
-    "name": "다나와",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 금천구 가산동 50-3 대륭포스트타워6차 17층 (벚꽃로 298)",
-     "lat": 37.47772,
-     "lon": 126.88546,
-     "businessNumber": "1178140065"
-    }
-   },
-   {
-    "name": "스팀",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "STEAM",
-     "스팀"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "미국 워싱턴주 벨뷰 (지번 해당없음)"
-    }
-   },
-   {
-    "name": "플레이스테이션스토어",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [
-     "PLAYSTATION",
-     "플레이스테이션스토어"
-    ],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 강남구 역삼동 735-3 포스코타워 역삼 8층 (테헤란로 134)",
-     "lat": 37.49881,
-     "lon": 127.05839,
-     "businessNumber": "1068602673"
-    }
-   },
-   {
-    "name": "닌텐도",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 중구 순화동 216 AIA타워 2층 (통일로2길 16)",
-     "lat": 37.56019,
-     "lon": 127.00059,
-     "businessNumber": "1208703578"
-    }
-   }
-  ],
-  "스포츠레저": [
-   {
-    "name": "골프존",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "데카트론",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "스포츠몬스터",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "나이키",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "아디다스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "뉴발란스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "아웃도어캠핑": [
-   {
-    "name": "코베아",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "스노우피크",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "헬리녹스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "네파",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "K2",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "블랙야크",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "아이더",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "서점문구": [
-   {
-    "name": "교보문고",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": [
-     "교보문고",
-     "교보"
-    ]
-   },
-   {
-    "name": "영풍문고",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "예스24",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 영등포구 여의도동 15-15 일신빌딩 5~6층 (은행로 11)",
-     "lat": 37.51235,
-     "lon": 126.90594,
-     "businessNumber": "2298137000"
-    }
-   },
-   {
-    "name": "알라딘",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "반디앤루니스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "핫트랙스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "모나미스토어",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "아트박스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "키즈육아": [
-   {
-    "name": "아가방",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "토이저러스",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "짐보리",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "해피랜드",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "포래즈",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   },
-   {
-    "name": "블루독베이비",
-    "branchable": true,
-    "channel": "OFFLINE",
-    "forms": []
-   }
-  ],
-  "취미공예": [
-   {
-    "name": "낙원악기상가",
-    "branchable": false,
-    "channel": "OFFLINE",
-    "forms": [],
-    "locationType": "VENUE_CLUSTER",
-    "hq": {
-     "address": "서울 종로구 낙원동 288 낙원상가 3층 300호 (삼일대로 428)",
-     "lat": 37.58153,
-     "lon": 126.99032,
-     "businessNumber": "1018100132"
-    }
-   },
-   {
-    "name": "텐바이텐",
-    "branchable": false,
-    "channel": "ONLINE",
-    "forms": [],
-    "locationType": "NONE",
-    "hq": {
-     "address": "서울 서초구 서초동 1321-11 그레이츠강남(플래티넘타워) 20층 (서초대로 398)",
-     "lat": 37.48798,
-     "lon": 127.01105,
-     "businessNumber": "1078783297"
-    }
-   }
-  ]
- }
+  }
 }

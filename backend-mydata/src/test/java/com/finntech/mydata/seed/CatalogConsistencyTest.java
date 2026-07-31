@@ -81,12 +81,12 @@ class CatalogConsistencyTest {
     @Test
     @DisplayName("혜택의 중분류는 대조표가 아는 이름이다")
     void benefitCategoriesAreKnownMidCategories() {
-        // 중분류 15개(+미분류). 여기 없는 이름으로 혜택을 걸면 어떤 결제에도 매칭되지 않아
+        // 중분류 16개(+미분류). 여기 없는 이름으로 혜택을 걸면 어떤 결제에도 매칭되지 않아
         // 혜택이 조용히 0원이 된다 — 죽지 않아서 더 늦게 발견된다.
         Set<String> mids = Set.of(
                 "식비", "카페/간식", "편의점/잡화", "대형마트", "쇼핑", "교통/자동차",
                 "주거/통신", "취미/여가", "미용", "의료", "건강/피트니스", "생활",
-                "여행/숙박", "술/유흥", "카테고리없음");
+                "여행/숙박", "술/유흥", "금융/보험", "카테고리없음");
 
         List<String> unknown = Catalog.CARD_DEFS.stream()
                 .flatMap(c -> c.benefits().stream())
