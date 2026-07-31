@@ -40,11 +40,17 @@ class GuardianFlowTest {
     static final LocalDateTime REF = LocalDateTime.of(2026, 8, 3, 14, 0, 0);
 
     /**
-     * 30일 챌린지의 기준 지출 — 배달 750,000원(25,000 × 10건 × 3개월)을
-     * 관측한 5·6·7월의 실제 일수(31+30+31 = 92일)로 나눈 뒤 30일을 곱한 값.
-     * 월평균(250,000원)을 그대로 쓰면 관측 달의 길이가 챌린지 예산에 새어 들어간다.
+     * 30일 챌린지의 기준 지출 — <b>최근 30일 실측</b>이다(2026-07-31 변경).
+     *
+     * <p>기준 시각 2026-08-03 14:00에서 30일을 되짚으면 7/4 14:00부터다. 씨앗 데이터의 배달은
+     * 매달 1~10일 19:00이므로 그 창에 드는 것은 <b>7/4~7/10의 7건</b> = 175,000원이다.
+     *
+     * <p>예전에는 전 기간(5·6·7월 750,000원)을 92일로 나눠 30일로 환산했다(244,565원). 그러면
+     * 화면이 보여준 금액과 사용자가 훑을 수 있는 결제 목록이 어긋난다 — 온보딩에서 "이 결제는
+     * 낭비가 아니다"를 골라도 그 금액이 기준의 어디에서 빠지는지 대응되지 않는다.
+     * 최근 30일 실측이면 목록과 금액이 1:1로 맞는다.
      */
-    static final long BASELINE_30D = 750_000L * 30 / 92;   // 244,565
+    static final long BASELINE_30D = 25_000L * 7;   // 175,000
 
     @TestConfiguration
     static class FixedClockConfig {
@@ -66,6 +72,7 @@ class GuardianFlowTest {
     @Autowired AppUserRepository userRepository;
     @Autowired CategoryRepository categoryRepository;
     @Autowired ConsumptionRepository consumptionRepository;
+    @Autowired com.finntech.repository.UserPaymentRepository userPaymentRepository;
 
     static Long userId;
     static Long challengeId;
@@ -107,12 +114,30 @@ class GuardianFlowTest {
         // 기준 지출은 월평균이 아니라 **챌린지 일수로 환산한 값**이다.
         // 배달 25,000원 × 10건 × 3개월 = 750,000원을 5·6·7월(31+30+31 = 92일)로 나눠
         // 하루 8,152원, 30일이면 244,565원. 관측한 달이 무엇이든 같은 습관이면 같은 값이 나온다.
-        assertEquals(BASELINE_30D, ch.getBaselineAmount(), "750,000원 ÷ 92일 × 30일");
+        assertEquals(BASELINE_30D, ch.getBaselineAmount(), "최근 30일 실측 = 25,000 × 7건");
         assertEquals(100_000L, ch.getTargetSaving());
         assertEquals(BASELINE_30D - 100_000L, ch.getChallengeCap(), "한도 = 기준 지출 − 지킬 돈");
-        assertEquals(0.173, ch.getBufferRatio(), 1e-9, "버퍼 = 25,000/한도 반올림");
+        assertEquals(0.2, ch.getBufferRatio(), 1e-9,
+                "버퍼 = 25,000/75,000 = 0.333 → 상한 0.2 (MAX_BUFFER_RATIO)");
         assertEquals(30, ch.getDaysTotal());
         assertEquals(ChallengeState.ACTIVE, ch.getState());
+    }
+
+    @Test
+    @Order(1)
+    @DisplayName("뺀 결제만큼 기준 지출이 줄어든다 — 화면이 보여준 '지킬 돈'과 서버 한도가 맞아야 한다")
+    void keptPaymentsReduceBaseline() {
+        // 창 안(7/4~7/10) 배달 7건 중 2건을 '낭비가 아니다'로 뺀다.
+        var kept = userPaymentRepository.findByUserIdOrderByPaymentDateDesc(userId).stream()
+                .filter(p -> "GTEST_DELIVERY".equals(p.getCategory2()))
+                .filter(p -> !p.getPaymentDate().isBefore(REF.minusDays(30))
+                        && !p.getPaymentDate().isAfter(REF))
+                .limit(2).map(p -> p.getPaymentId()).toList();
+        // 마이데이터 투영이 없는 테스트 환경이면 뺄 결제가 없다 — 그때는 기준이 그대로여야 한다.
+        var b = guardianService.baselineFor(userId, List.of("GTEST_DELIVERY"), REF, 30, kept);
+        long expected = BASELINE_30D - kept.size() * 25_000L;
+        assertEquals(expected, b.periodAmount(),
+                "뺀 " + kept.size() + "건(건당 25,000원)만큼 기준에서 빠져야 한다");
     }
 
     @Test
@@ -234,7 +259,7 @@ class GuardianFlowTest {
         // 스냅샷이 없으면 "왜 그날 그랬지"를 나중에 답할 수 없다
         assertTrue(v.getPaceRatio() > 0, "판정 당시 페이스가 박제돼야 한다");
         assertTrue(v.getAllowedRatio() > v.getPaceRatio(), "허용선 = 페이스 + 버퍼");
-        assertEquals(v.getPaceRatio() + 0.173, v.getAllowedRatio(), 1e-9);
+        assertEquals(v.getPaceRatio() + 0.2, v.getAllowedRatio(), 1e-9);
 
         if (v.isGrantObject()) {
             assertNotNull(v.getGradeWeights());

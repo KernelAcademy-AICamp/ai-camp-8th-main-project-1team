@@ -798,6 +798,32 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 .error { background: #FDECEE; color: var(--red-t); border-radius: 12px; padding: 12px 14px; font-size: 13px; margin: 8px 0; line-height: 1.5; }
 .error code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; word-break: break-all; }
 .notice-ok { background: var(--green-weak); color: var(--green-t); border-radius: 12px; padding: 12px 14px; font-size: 13px; margin: 8px 0; line-height: 1.5; }
+/* ---- 줄일 수 있는 소비 펼치기 (온보딩 3/4) ----
+   ML 판정은 완벽하지 않다(운영 실측 정밀도 0.689). 사용자가 "이건 낭비가 아니다"를 빼야
+   숫자를 믿을 수 있어서, 결제를 일시·가맹점·금액으로 펼쳐 하나씩 끌 수 있게 한다. */
+.pick-toggle { width: 100%; border: none; background: none; font-family: inherit; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 0 10px; font-size: 12.5px; color: var(--t3); font-weight: 600; text-align: left; }
+.pick-toggle b { color: var(--blue-t); }
+.pick-toggle .chev { font-size: 13px; }
+.pick-list { list-style: none; margin: 0 0 10px; padding: 0; max-height: 260px; overflow-y: auto;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg); }
+.pick-list li + li { border-top: 1px solid var(--line); }
+.pick { width: 100%; border: none; background: none; font-family: inherit; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; padding: 9px 10px; text-align: left; }
+/* 뺀 것은 흐리게 + 취소선 — 목록에서 사라지면 되돌리기가 어렵다. */
+.pick.off { opacity: .45; }
+.pick.off .m, .pick.off .a { text-decoration: line-through; }
+.pick .box { flex: 0 0 auto; width: 17px; height: 17px; border-radius: 5px; font-size: 11px;
+  border: 1.5px solid var(--line); background: var(--card); color: #fff;
+  display: flex; align-items: center; justify-content: center; }
+.pick:not(.off) .box { background: var(--blue); border-color: var(--blue); }
+.pick .d { flex: 0 0 auto; font-size: 11.5px; color: var(--t3); font-variant-numeric: tabular-nums; }
+.pick .m { flex: 1 1 auto; font-size: 13px; color: var(--t1); overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+.pick .a { flex: 0 0 auto; font-size: 13px; font-weight: 700; color: var(--t1);
+  font-variant-numeric: tabular-nums; }
+
 /* 오류가 아니라 '지금은 안 된다'는 사실을 알릴 때. 붉은 오류 상자로 겁주지 않는다. */
 .notice-warn { background: #FFF6E5; color: var(--amber-t); border-radius: 12px; padding: 12px 14px; font-size: 13px; margin: 8px 0; line-height: 1.5; }
 .empty { color: var(--t3); font-size: 13.5px; line-height: 1.6; margin: 6px 0; }

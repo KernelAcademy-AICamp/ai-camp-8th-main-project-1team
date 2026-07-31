@@ -13,7 +13,7 @@ import { useGuardian } from '../state/guardian';
 import { ApiError, api } from '../lib/api';
 import { CHALLENGE_DAYS } from '../lib/config';
 import {
-  won, wonShort, iconOf, INTENSITY_TIERS, DEFAULT_INTENSITY,
+  won, wonShort, iconOf, shortDate, INTENSITY_TIERS, DEFAULT_INTENSITY,
   INTENSITY_MIN, INTENSITY_MAX, INTENSITY_STEP, round1,
 } from '../lib/format';
 
@@ -24,13 +24,43 @@ export function Onboarding3() {
   const [error, setError] = useState<unknown>(null);
   /** 서버가 409로 거절했을 때의 안내 — 오류가 아니라 '지금은 못 바꾼다'는 사실이다. */
   const [conflict, setConflict] = useState<string | null>(null);
+  /** 지금 펼쳐 놓은 카테고리. 한 번에 하나만 열어 화면이 길어지지 않게 한다. */
+  const [expanded, setExpanded] = useState<string | null>(null);
   const inited = useRef(false);
 
-  const baseOf = (code: string) => draft.baseline[code]?.monthlyAmount ?? 0;
+  /** 그 카테고리의 최근 30일 실제 지출(창 안 합계). */
+  const spendOf = (code: string) => draft.baseline[code]?.monthlyAmount ?? 0;
+  const paymentsOf = (code: string) => draft.baseline[code]?.payments ?? [];
+
+  /**
+   * 강도를 곱할 <b>대상 금액</b> — 낭비로 판정됐고 사용자가 빼지 않은 결제의 합.
+   *
+   * <p>전체 지출에 곱하면 월세·병원비까지 줄이라는 말이 된다. 그리고 ML 판정은 완벽하지
+   * 않으므로(운영 실측 정밀도 0.689) 사용자가 "이건 낭비가 아니다"를 빼는 절차가 있어야
+   * 숫자를 믿을 수 있다. 뺀 만큼 여기서 정확히 줄어든다.
+   */
+  const kept = new Set(draft.keptPaymentIds);
+  const wasteOf = (code: string) => paymentsOf(code)
+    .filter((p) => p.waste === true && !kept.has(p.paymentId))
+    .reduce((s, p) => s + p.amount, 0);
+  /** 판정 목록이 아예 없으면(모델 미배치 등) 옛 방식대로 전체 지출을 기준으로 둔다. */
+  const baseOf = (code: string) => {
+    const w = wasteOf(code);
+    return w > 0 || paymentsOf(code).some((p) => p.waste === true) ? w : spendOf(code);
+  };
   /** 그 강도를 전 카테고리에 적용했을 때 한 달에 지킬 돈. 버튼에 결과를 미리 보여주려고 센다. */
   const tierTotal = (v: number) =>
     draft.cutCats.reduce((sum, code) => sum + Math.round(baseOf(code) * v), 0);
   const nameOf = (code: string) => draft.baseline[code]?.displayName ?? code;
+
+  const toggleKeep = (paymentId: string) => {
+    const on = kept.has(paymentId);
+    patchDraft({
+      keptPaymentIds: on
+        ? draft.keptPaymentIds.filter((k) => k !== paymentId)
+        : [...draft.keptPaymentIds, paymentId],
+    });
+  };
 
   useEffect(() => {
     if (inited.current) return;
@@ -89,6 +119,9 @@ export function Onboarding3() {
         sanctuaryCategories: draft.sanctuary,
         targetSaving: total,
         durationDays: CHALLENGE_DAYS,
+        // 뺀 결제를 서버에도 알린다. 안 보내면 화면만 줄고 서버 한도는 그대로라
+        // 사용자가 고른 의미가 사라진다.
+        keptPaymentIds: draft.keptPaymentIds,
       });
       await trackCutSelections();
       await reload();
@@ -143,6 +176,9 @@ export function Onboarding3() {
             const goal = Math.round(baseOf(code) * inten);
             const name = nameOf(code);
             const { icon, bg } = iconOf(name);
+            const rows = paymentsOf(code).filter((p) => p.waste === true);
+            const open = expanded === code;
+            const keptCount = rows.filter((p) => kept.has(p.paymentId)).length;
             return (
               <div key={code}>
                 <div className="list-item">
@@ -159,6 +195,37 @@ export function Onboarding3() {
                       aria-label={`${name} 강도 높이기`}>+</button>
                   </div>
                 </div>
+
+                {/* 줄일 수 있는 소비 펼치기 — ML 판정은 완벽하지 않다(정밀도 0.689).
+                    "이건 낭비가 아니다" 싶은 것을 사용자가 빼야 숫자를 믿을 수 있다. */}
+                {rows.length > 0 && (
+                  <>
+                    <button type="button" className="pick-toggle" aria-expanded={open}
+                      onClick={() => setExpanded(open ? null : code)}>
+                      <span>줄일 수 있는 소비 {rows.length}건 · 기준 {won(baseOf(code))}
+                        {keptCount > 0 && <b> · {keptCount}건 뺐어요</b>}</span>
+                      <span className="chev" aria-hidden="true">{open ? '⌃' : '⌄'}</span>
+                    </button>
+                    {open && (
+                      <ul className="pick-list">
+                        {rows.map((p) => {
+                          const off = kept.has(p.paymentId);
+                          return (
+                            <li key={p.paymentId}>
+                              <button type="button" className={off ? 'pick off' : 'pick'}
+                                aria-pressed={!off} onClick={() => toggleKeep(p.paymentId)}>
+                                <span className="box" aria-hidden="true">{off ? '' : '✓'}</span>
+                                <span className="d">{shortDate(p.date)}</span>
+                                <span className="m">{p.merchantName ?? '가맹점 미상'}</span>
+                                <span className="a">{won(p.amount)}</span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </>
+                )}
                 <div className="divider" />
               </div>
             );

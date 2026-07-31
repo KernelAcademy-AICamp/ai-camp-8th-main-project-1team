@@ -17,6 +17,8 @@ const MONEY: Item[] = [
 ];
 const DATA: Item[] = [
   { id: 'm-connections', emoji: '🔗', bg: 'var(--c-taxi)', title: '연결 관리', desc: '연결한 기관 · 동기화 · 다시 연결' },
+  { id: 'm-stances', emoji: '🧾', bg: 'var(--c-taxi)', title: '낭비 판정 관리',
+    desc: "'낭비가 아니에요'로 빼 둔 곳 보기 · 되돌리기" },
   { id: 'm-record', emoji: '✏️', bg: 'var(--c-cvs)', title: '소비 기록과 동의', desc: '직접 기록 · 동의 철회 · 내 기록 삭제' },
   { id: 'm-policy', emoji: '📄', bg: 'var(--c-ott)', title: '개인정보 처리방침', desc: '무엇을 받아 어떻게 쓰는지' },
   { id: 'm-survey', emoji: '💬', bg: 'var(--c-cafe)', title: '사용자 테스트', desc: '써보고 느낀 점을 남겨주세요' },

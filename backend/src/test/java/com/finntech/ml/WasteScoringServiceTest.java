@@ -113,8 +113,13 @@ class WasteScoringServiceTest {
         UserSpendingOverrideRepository overrides = org.mockito.Mockito.mock(UserSpendingOverrideRepository.class);
         org.mockito.Mockito.when(overrides.findByUserId(1L)).thenReturn(List.of());
 
-        return new WasteScoringService(classifier, payments, overrides,
-                java.time.Clock.systemDefaultZone(), threshold);
+        // 가맹점 성향은 이 테스트의 관심사가 아니다 — 빈 저장소를 준다(전부 NORMAL).
+        var stances = org.mockito.Mockito.mock(
+                com.finntech.repository.UserMerchantStanceRepository.class);
+        org.mockito.Mockito.when(stances.findByUserId(1L)).thenReturn(List.of());
+
+        return new WasteScoringService(classifier, payments, overrides, stances,
+                java.time.Clock.systemDefaultZone(), threshold, 0.20);
     }
 
     @Test

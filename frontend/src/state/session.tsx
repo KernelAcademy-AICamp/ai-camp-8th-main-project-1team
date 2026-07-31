@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { DEFAULT_USER_ID } from '../lib/config';
 import { ApiError, api } from '../lib/api';
-import type { AnalysisSummary } from '../lib/api';
+import type { AnalysisSummary, OnboardingPayment } from '../lib/api';
 
 export type ScreenId =
   // L0 최초 온보딩
@@ -28,7 +28,8 @@ export type ScreenId =
   // 리포트 하위 — r-compare 는 개편안 s-compare(맞춤 상품 Top3)
   | 'r-compare' | 'r-analysis' | 'r-spending' | 'r-cards' | 'r-account' | 'r-waste' | 'r-savings'
   // 마이 하위
-  | 'm-impulse' | 'm-goals' | 'm-connections' | 'm-record' | 'm-policy' | 'm-survey' | 'm-demo';
+  | 'm-impulse' | 'm-goals' | 'm-connections' | 'm-record' | 'm-policy' | 'm-survey' | 'm-demo'
+  | 'm-stances';
 
 export const TAB_SCREENS = ['home', 'report', 'my'] as const;
 export type TabId = (typeof TAB_SCREENS)[number];
@@ -48,6 +49,7 @@ const ALL_SCREENS = [
   'collection', 'shop', 'monthend', 'settle', 'renew',
   'r-compare', 'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings',
   'm-impulse', 'm-goals', 'm-connections', 'm-record', 'm-policy', 'm-survey', 'm-demo',
+  'm-stances',
 ] as const;
 
 // 하나라도 빠지면 여기서 타입 오류가 난다(빠진 ScreenId가 never에 배정되지 못한다).
@@ -74,10 +76,33 @@ export interface ChallengeDraft {
   cutCats: string[];
   /** 카테고리별 절약 강도(0.1~0.9). */
   intensities: Record<string, number>;
-  /** 코드 → 표시명·월평균. 화면이 매번 다시 묻지 않도록 함께 들고 다닌다. */
-  baseline: Record<string, { displayName: string; monthlyAmount: number; reason?: string; type?: string }>;
+  /**
+   * 코드 → 표시명·창 안 실측금액·그 안의 결제들. 화면이 매번 다시 묻지 않도록 함께 들고 다닌다.
+   *
+   * <b>`payments`는 강도 화면이 펼쳐 보여주는 목록이다.</b> 금액과 목록이 같은 응답에서 와야
+   * "이 결제를 빼면 금액이 이만큼 줄어든다"가 성립한다.
+   */
+  baseline: Record<string, {
+    displayName: string;
+    /** 최근 30일 **실측** 합계. 월 환산이 아니다. */
+    monthlyAmount: number;
+    /** ML이 낭비로 본 금액(그 카테고리 안에서). */
+    wasteAmount?: number;
+    payments?: OnboardingPayment[];
+    reason?: string;
+    type?: string;
+  }>;
+  /**
+   * 사용자가 "이건 낭비가 아니다"로 해제한 결제 id.
+   *
+   * 지킬 돈은 <b>낭비로 남은 금액</b>에만 강도를 곱한다 — 전체 지출에 곱하면 월세·병원비까지
+   * 줄이라는 말이 된다.
+   */
+  keptPaymentIds: string[];
 }
-const emptyDraft: ChallengeDraft = { sanctuary: [], cutCats: [], intensities: {}, baseline: {} };
+const emptyDraft: ChallengeDraft = {
+  sanctuary: [], cutCats: [], intensities: {}, baseline: {}, keptPaymentIds: [],
+};
 
 interface Session {
   userId: number;

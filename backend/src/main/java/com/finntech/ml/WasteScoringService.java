@@ -1,8 +1,10 @@
 package com.finntech.ml;
 
+import com.finntech.domain.UserMerchantStance;
 import com.finntech.domain.UserPayment;
 import com.finntech.domain.UserSpendingOverride;
 import com.finntech.engine.IndustryCategoryMapper;
+import com.finntech.repository.UserMerchantStanceRepository;
 import com.finntech.repository.UserPaymentRepository;
 import com.finntech.repository.UserSpendingOverrideRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,19 +41,44 @@ public class WasteScoringService {
     private final SpendingClassifier classifier;
     private final UserPaymentRepository userPaymentRepository;
     private final UserSpendingOverrideRepository overrideRepository;
+    private final UserMerchantStanceRepository stanceRepository;
     private final Clock clock;
+    /** 관대(LENIENT) 가맹점에 더할 임계 폭. 클수록 '확실할 때만' 낭비로 본다. */
+    private final double lenientThresholdShift;
     /** category1이 '줄이면 좋은 소비'가 되는 낭비금액 비율 하한. 설계 원칙 4 — 임계치는 application.yml. */
     private final double wasteCategoryRatioThreshold;
 
     public WasteScoringService(SpendingClassifier classifier, UserPaymentRepository userPaymentRepository,
-                               UserSpendingOverrideRepository overrideRepository, Clock clock,
+                               UserSpendingOverrideRepository overrideRepository,
+                               UserMerchantStanceRepository stanceRepository,
+                               Clock clock,
                                @Value("${finntech.ml.waste-category-ratio-threshold:0.35}")
-                               double wasteCategoryRatioThreshold) {
+                               double wasteCategoryRatioThreshold,
+                               @Value("${finntech.ml.lenient-threshold-shift:0.20}")
+                               double lenientThresholdShift) {
         this.classifier = classifier;
         this.userPaymentRepository = userPaymentRepository;
         this.overrideRepository = overrideRepository;
+        this.stanceRepository = stanceRepository;
         this.clock = clock;
         this.wasteCategoryRatioThreshold = wasteCategoryRatioThreshold;
+        this.lenientThresholdShift = lenientThresholdShift;
+    }
+
+    /**
+     * 그 가맹점에 적용할 임계 — 사용자가 쌓아 온 판단을 반영한다.
+     *
+     * <p>NORMAL은 전역 임계 그대로, LENIENT는 δ만큼 올려 '확실할 때만' 낭비로 보고,
+     * EXCLUDED는 아예 낭비로 보지 않는다(1.0 이상이면 어떤 확률도 넘지 못한다).
+     */
+    private double thresholdFor(Map<String, UserMerchantStance.Stance> stances, String bizNo) {
+        UserMerchantStance.Stance st = bizNo == null ? null : stances.get(bizNo);
+        if (st == null) return classifier.threshold();
+        return switch (st) {
+            case EXCLUDED -> Double.MAX_VALUE;
+            case LENIENT -> classifier.threshold() + lenientThresholdShift;
+            case NORMAL -> classifier.threshold();
+        };
     }
 
     /** 거래별 낭비 판정 + 설명. */
@@ -69,6 +96,11 @@ public class WasteScoringService {
         for (UserSpendingOverride o : overrideRepository.findByUserId(userId)) {
             overrides.put(o.getCategory2(), o.isForcedWaste());
         }
+        // 가맹점별 성향 — 사용자가 "이건 낭비 아님"을 반복한 곳은 임계가 올라가 있다.
+        Map<String, UserMerchantStance.Stance> stances = new HashMap<>();
+        for (UserMerchantStance st : stanceRepository.findByUserId(userId)) {
+            stances.put(st.getBusinessNumber(), st.getStance());
+        }
         List<WasteJudgment> out = new ArrayList<>(payments.size());
         for (UserPayment p : payments) {
             if (p.getCategory2() == null || UNCLASSIFIED.equals(p.getCategory2())) continue; // 미분류(unknown-pg)는 판정 안 함
@@ -81,8 +113,11 @@ public class WasteScoringService {
                 waste = overrides.get(p.getCategory2());
                 explanation = "개인화: 사용자가 " + (waste ? "낭비" : "필수") + "로 지정";
             } else {
-                waste = prob >= classifier.threshold();
-                explanation = explain(classifier.contributions(feats), waste);
+                double thr = thresholdFor(stances, p.getBusinessNumber());
+                waste = prob >= thr;
+                explanation = thr > classifier.threshold() && !waste
+                        ? "이 가게는 낭비가 아니라고 하셔서, 확실할 때만 알려드려요"
+                        : explain(classifier.contributions(feats), waste);
             }
             out.add(new WasteJudgment(p.getPaymentId(), p.getCategory2(), p.getAmount(),
                     p.getPaymentDate(), prob, waste, explanation));

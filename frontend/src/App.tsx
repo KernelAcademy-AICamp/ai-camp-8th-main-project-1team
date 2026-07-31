@@ -46,6 +46,7 @@ import { MyRecord } from './screens/MyRecord';
 import { MyPolicy } from './screens/MyPolicy';
 import { MySurvey } from './screens/MySurvey';
 import { MyDemo } from './screens/MyDemo';
+import { MyStances } from './screens/MyStances';
 
 /** 최초 온보딩(마이데이터 연결 전)에만 열리는 화면. */
 const LINK_FLOW: ScreenId[] = ['splash', 'auth', 'connect'];
@@ -67,6 +68,7 @@ const SCREENS: Record<ScreenId, ComponentType> = {
   'r-waste': ReportWaste, 'r-savings': ReportSavings,
   'm-impulse': MyImpulse, 'm-goals': MyGoals, 'm-connections': MyConnections,
   'm-record': MyRecord, 'm-policy': MyPolicy, 'm-survey': MySurvey, 'm-demo': MyDemo,
+  'm-stances': MyStances,
 };
 
 function ScreenHost() {
