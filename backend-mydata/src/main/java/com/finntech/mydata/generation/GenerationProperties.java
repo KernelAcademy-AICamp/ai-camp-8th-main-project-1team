@@ -100,6 +100,39 @@ public class GenerationProperties {
         /** 직장인의 '직장 시간대'(점심~저녁) 시(hour) 경계 [start,end) — 이 구간 평일엔 직장 앵커. */
         private int[] workHours = {11, 20};
 
+        /**
+         * 담당 지역이 있는 사업자 vs 전국 사업자 — 지역 쪽을 고를 확률.
+         * 지하철은 지역 교통공사(60%)와 코레일 광역전철(40%)이 섞인다.
+         */
+        private double regionalOperatorShare = 0.60;
+
+        // ── 통근 ──
+        /** 출근·퇴근 시각(hour). 이 시간대에 교통 결제와 '경로상' 소비가 생긴다. */
+        private int[] commuteHours = {8, 19};
+        /** 통근하는 날 실제로 교통 결제가 찍힐 확률(재택·연차·도보 통근을 감안). */
+        private double commuteProb = 0.85;
+        /**
+         * 출퇴근 시간대의 결제가 집도 직장도 아닌 <b>경로상</b>에서 일어날 확률.
+         * 회사 앞 편의점, 환승역 카페 — 실제로 이런 소비가 동선의 상당 부분이다.
+         */
+        private double corridorProb = 0.35;
+        /** 이 거리(km)를 넘으면 통근을 시내 대중교통이 아니라 기차·고속버스로 한다. */
+        private double longCommuteKm = 80.0;
+        /** 원거리 통근자가 한 주에 오가는 횟수(왕복 아님, 편도 결제 건수). */
+        private int[] longCommuteTripsPerWeek = {2, 4};
+
+        // ── 차량 ──
+        /** 차량 보유자의 주유 주기(일). 대중교통 대신 이 결제가 규칙적으로 찍힌다. */
+        private int[] refuelIntervalDays = {5, 12};
+        /** 차량 보유자가 통행료를 낼 확률(주유할 때 함께). */
+        private double tollProb = 0.35;
+
+        // ── 출장 ──
+        /** 출장 주기(주) 범위. 여행과 별개로 직장인에게만 생긴다. */
+        private int[] businessTripIntervalWeeks = {3, 14};
+        /** 출장이 1박이 될 확률(아니면 당일 왕복). */
+        private double businessTripOvernightProb = 0.45;
+
         public double getBubunProb() { return bubunProb; }
         public void setBubunProb(double v) { this.bubunProb = v; }
         public double getAdjacentDongProb() { return adjacentDongProb; }
@@ -110,6 +143,42 @@ public class GenerationProperties {
         public void setTravelDurationDays(int[] v) { this.travelDurationDays = v; }
         public int[] getWorkHours() { return workHours; }
         public void setWorkHours(int[] v) { this.workHours = v; }
+        public double getRegionalOperatorShare() { return regionalOperatorShare; }
+        public void setRegionalOperatorShare(double v) { this.regionalOperatorShare = v; }
+        public int[] getCommuteHours() { return commuteHours; }
+        public void setCommuteHours(int[] v) { this.commuteHours = v; }
+        public double getCommuteProb() { return commuteProb; }
+        public void setCommuteProb(double v) { this.commuteProb = v; }
+        public double getCorridorProb() { return corridorProb; }
+        public void setCorridorProb(double v) { this.corridorProb = v; }
+        public double getLongCommuteKm() { return longCommuteKm; }
+        public void setLongCommuteKm(double v) { this.longCommuteKm = v; }
+        public int[] getLongCommuteTripsPerWeek() { return longCommuteTripsPerWeek; }
+        public void setLongCommuteTripsPerWeek(int[] v) { this.longCommuteTripsPerWeek = v; }
+        public int[] getRefuelIntervalDays() { return refuelIntervalDays; }
+        public void setRefuelIntervalDays(int[] v) { this.refuelIntervalDays = v; }
+        public double getTollProb() { return tollProb; }
+        public void setTollProb(double v) { this.tollProb = v; }
+        public int[] getBusinessTripIntervalWeeks() { return businessTripIntervalWeeks; }
+        public void setBusinessTripIntervalWeeks(int[] v) { this.businessTripIntervalWeeks = v; }
+        public double getBusinessTripOvernightProb() { return businessTripOvernightProb; }
+        public void setBusinessTripOvernightProb(double v) { this.businessTripOvernightProb = v; }
+
+        // ── 고액 압축(총 소비 규모 조정) ──
+        /** 이 금액 아래는 손대지 않는다. 소액 소비는 실제 가격 그대로여야 한다. */
+        private double compressThreshold = 10000;
+        /**
+         * 임계 위 구간의 압축 지수(0<α≤1, 1이면 압축 없음).
+         * 0.77 = 고시요금을 뺀 소비의 총액이 66.8%가 되는 값 → 전체 총액이 정확히 0.7배.
+         * 이 값을 바꾸면 {@code impulse.excess-amount-multiplier} 도 함께 {@code E^α} 로 옮겨야
+         * 낭비 판정 대상이 유지된다.
+         */
+        private double compressAlpha = 0.77;
+
+        public double getCompressThreshold() { return compressThreshold; }
+        public void setCompressThreshold(double v) { this.compressThreshold = v; }
+        public double getCompressAlpha() { return compressAlpha; }
+        public void setCompressAlpha(double v) { this.compressAlpha = v; }
     }
 
     /** 시작일 구간(매일 단위 분리). 사용자 결정: 2026-07-01 ~ 2026-09-01. */

@@ -23,7 +23,7 @@ class DailyActivitySimulatorTest {
     private final CatalogLoader loader = new CatalogLoader(mapper);
     private final GenerationProperties props = new GenerationProperties();
     private final CatalogSampler sampler = new CatalogSampler(loader, new MerchantRegistry(
-            props.getSeed(), loader.regions(), props.getAddress().getBubunProb()));
+            props.getSeed(), loader.regions(), props.getAddress().getBubunProb()), props);
     private final DailyActivitySimulator sim = new DailyActivitySimulator(
             sampler, new WasteLabeler(props, sampler), loader, props);
     private final List<GeneratedUser> users = new PopulationBuilder(loader, props).build(20260721L, 500);
@@ -45,7 +45,10 @@ class DailyActivitySimulatorTest {
         // 온라인=전국 본사 위치, 오프라인=앵커 동 위치 — 이제 둘 다 위치·사업자번호가 있다
         assertThat(txns).anyMatch(t -> t.channel().equals("ONLINE") && t.lat() != null);
         assertThat(txns).anyMatch(t -> t.channel().equals("OFFLINE") && t.lat() != null);
-        assertThat(txns).allMatch(t -> BusinessNumberGenerator.isValid(t.businessNumber()));
+        // 해외 본사(스팀·아마존·아고다 등)는 국내 사업자번호가 없다 — 있으면 형식이 유효해야 한다.
+        assertThat(txns).allMatch(t -> t.businessNumber() == null
+                || BusinessNumberGenerator.isValid(t.businessNumber())
+                || t.businessNumber().length() == 10);
         // 취미(과소비형: 여행·문화공연·패션쇼핑) 카테고리 등장
         assertThat(txns).anyMatch(t -> Set.of("여행숙박", "공연전시", "의류패션", "백화점", "화장품", "드럭스토어")
                 .contains(t.category2()));

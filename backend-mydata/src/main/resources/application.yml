@@ -88,6 +88,23 @@ mydata:
     persona:
       base-count: 5
       variants-per-base: 40
+    # 가맹점 주소·사용자 동선. 통근이 소비의 가장 규칙적인 축이라, 이 값들이 데이터의 결을 정한다.
+    address:
+      # 담당 지역이 있는 사업자 vs 전국 사업자 — 지하철은 지역 교통공사 60% / 코레일 광역전철 40%.
+      regional-operator-share: 0.60
+      commute-hours: [8, 19]          # 출근·퇴근 시각
+      commute-prob: 0.85              # 통근일에 실제로 교통 결제가 찍힐 확률(재택·연차·도보 감안)
+      corridor-prob: 0.35             # 출퇴근 시간대 결제가 '집도 회사도 아닌 경로상'일 확률
+      long-commute-km: 80.0           # 이 거리↑면 시내 대중교통이 아니라 기차·고속버스
+      long-commute-trips-per-week: [2, 4]
+      refuel-interval-days: [5, 12]   # 차량 보유자의 주유 주기 — 대중교통 대신 이게 규칙적으로 찍힌다
+      toll-prob: 0.35
+      business-trip-interval-weeks: [3, 14]
+      business-trip-overnight-prob: 0.45
+      # 고액 압축 — 총 소비 규모를 0.7배로. 건수는 줄이지 않고 임계 위 구간만 지수 압축한다.
+      # 카탈로그의 고시요금(지하철 1,550원 등)은 사실이라 단가를 건드리지 않는다.
+      compress-threshold: 10000
+      compress-alpha: 0.77            # 고시요금 제외 총액 66.8% → 전체 0.7배
     # 다층 랜덤성 — "모두 같은 곡선 형태" 금지. 범위 [min,max]는 사용자/날별로 표본추출.
     randomness:
       curve:                          # 사용자별 낭비곡선 편차(전체는 하락해도 개인은 제각각)
@@ -123,7 +140,16 @@ mydata:
         night-hours: [23, 4]          # 심야(23~익일4시) 충동 신호
         night-weight: 0.55            # 0.35→0.55
         unplanned-weight: 0.45        # 0.25→0.45 정기/구독 아닌 즉흥
-        excess-amount-multiplier: 1.5 # 2.0→1.5 (평소 1.5배↑면 과다로 봄 — 더 자주 발화)
+        # 1.5 → 1.10. 고액 압축(address.compress-alpha=0.77)으로 '평소 대비 배수'가 눌리는 만큼 낮춘다.
+        #
+        # **이론값 1.5^0.77=1.36 은 틀렸다.** 그 식은 금액과 기준액이 **둘 다** 압축 임계(1만원)를
+        # 넘을 때만 성립한다. 카페(4천원)·편의점처럼 기준액이 임계 아래인 맥락은 기준은 그대로인데
+        # 금액만 눌려, 배수가 m^0.77 보다 더 줄어든다. 하나의 상수로는 복원되지 않는다.
+        #
+        # 그래서 실측으로 맞췄다(WasteCalibrationTest — 스프링을 띄워 이 파일을 그대로 읽는다).
+        # 전체 낭비율이 직전 데이터(32.55%)와 같아지는 값이 1.10 이다. 임계를 바꾸면 그 테스트를
+        # 다시 돌려 표를 갱신한다. 표를 손으로 옮겨 적은 설정으로 재면 두 번 어긋난다 — 겪었다.
+        excess-amount-multiplier: 1.10
         excess-weight: 0.45           # 0.30→0.45 과다
         freq-spike-weight: 0.20       # (WasteLabeler 미사용 — 값만 유지)
         delivery-overuse-weight: 0.40 # 0.25→0.40 배달 과다

@@ -32,10 +32,23 @@ public class CatalogSampler {
     /** 업종코드 → 그 업종 맥락들의 빈도가중 합. 중분류 비중을 업종별로 나눌 때 쓴다. */
     private final Map<String, Double> freqByKsic = new LinkedHashMap<>();
     private final MerchantRegistry registry;
+    /** 시도|시군구 → 그 시군구의 동 목록. 시군구 단위 사업자(ㅇㅇ시설공단)의 소재지 후보다. */
+    private final Map<String, List<RegionEntry>> sigunguIndex = new LinkedHashMap<>();
+    /**
+     * 담당 지역이 정해진 사업자와 전국 사업자가 한 맥락에 섞일 때, 지역 사업자를 고를 확률.
+     *
+     * <p>지하철이 그렇다 — 서울에서 타면 서울교통공사지만, 수도권 광역전철은 코레일이 운영한다.
+     * 둘 중 하나만 남기면 어느 쪽이든 사실과 어긋나므로 섞는다.
+     */
+    private final double regionalShare;
 
     @SuppressWarnings("unchecked")
-    public CatalogSampler(CatalogLoader catalog, MerchantRegistry registry) {
+    public CatalogSampler(CatalogLoader catalog, MerchantRegistry registry, GenerationProperties props) {
         this.registry = registry;
+        this.regionalShare = props.getAddress().getRegionalOperatorShare();
+        for (RegionEntry rg : catalog.regions()) {
+            sigunguIndex.computeIfAbsent(rg.sido() + "|" + rg.sigungu(), k -> new ArrayList<>()).add(rg);
+        }
         this.brands = catalog.brands();
         this.products = catalog.products();
         this.independents = (Map<String, List<String>>) catalog.independents().get("namePoolByKsic");
@@ -120,6 +133,7 @@ public class CatalogSampler {
         CatalogContext ctx = ctxByCat2.get(category2);
         String source = ctx == null ? "INDEPENDENT" : ctx.merchantSource();
         String channel = ctx == null ? "OFFLINE" : ctx.channel();
+        String locationType = ctx == null ? "POI" : ctx.locationType();
         boolean useBrand = switch (source) {
             case "BRAND", "ONLINE", "OPERATOR" -> true;
             case "MIXED" -> r.nextBoolean();
@@ -130,35 +144,87 @@ public class CatalogSampler {
         // 업태는 업종코드로 정리돼 있기 때문이다(scripts/ksic/ksic-mapping.tsv).
         String ksic = ctx == null ? null : ctx.ksicCode();
 
+        // 브랜드에서 뽑았을 때만 non-null. 채널·주소 규칙이 브랜드에 붙어 있다.
+        BrandEntry brand = (useBrand || !hasIndependents(ksic)) && hasBrands(category2)
+                ? pickBrand(brands.get(category2), productName, anchor, r) : null;
+
         String base;         // 정규 신원의 이름 부분(정식 브랜드명 또는 독립상호)
         String display;      // 결제 명세서 표시상호(forms 노이즈·동점 포함 가능)
         boolean branchable = false;
-        if (useBrand && hasBrands(category2)) {
-            BrandEntry b = pickForProduct(brands.get(category2), productName, r);
-            base = b.name();
-            branchable = b.branchable();
-            display = displayName(b, branchable, anchor, r);
+        if (brand != null) {
+            base = brand.name();
+            branchable = brand.branchable();
+            display = displayName(brand, branchable, anchor, r);
+            // 브랜드가 값을 들고 있으면 맥락보다 우선한다. 예전에는 이 필드가 읽히지 않아
+            // 애플·스팀·예스24가 '디지털가전'(OFFLINE) 맥락에 묶여 동네 지번주소를 받았다.
+            if (brand.channel() != null && !brand.channel().isBlank()) channel = brand.channel();
+            if (brand.locationType() != null && !brand.locationType().isBlank()) locationType = brand.locationType();
         } else if (hasIndependents(ksic)) {
             base = pick(independents.get(ksic), r);
             display = base;
-        } else if (hasBrands(category2)) {
-            BrandEntry b = pickForProduct(brands.get(category2), productName, r);
-            base = b.name();
-            branchable = b.branchable();
-            display = displayName(b, branchable, anchor, r);
         } else {
             base = category2;   // 최후 폴백
             display = category2;
         }
 
-        boolean online = "ONLINE".equals(channel);
-        if (online || anchor == null) {
-            Merchant m = registry.resolveOnline(base, base);   // 온라인 정규명 = base(전국 HQ)
+        // ── 주소 규칙 ── 채널(결제수단)과는 다른 축이다.
+        if (brand != null && brand.hq() != null) {              // 본사·시설 실주소
+            Merchant m = registry.resolveFixed(base, brand.hq());
+            return new ResolvedMerchant(display, channel, m.lat(), m.lon(), m.address(), m.businessNumber());
+        }
+        if ("DISTRICT".equals(locationType) && anchor != null) { // 시군구마다 다른 사업자
+            String districtName = districtName(anchor);
+            Merchant m = registry.resolveDistrict(base, districtName + base, anchor,
+                    sigunguIndex.get(anchor.sido() + "|" + anchor.sigungu()));
+            return new ResolvedMerchant(districtName + base, channel, m.lat(), m.lon(),
+                    m.address(), m.businessNumber());
+        }
+        if ("ONLINE".equals(channel) || anchor == null) {        // hq 없는 온라인 — 옛 경로(전국 해시)
+            Merchant m = registry.resolveOnline(base, base);
             return new ResolvedMerchant(display, channel, m.lat(), m.lon(), m.address(), m.businessNumber());
         }
         String canonicalName = branchable ? base + " " + anchor.dong() + "점" : base;
         Merchant m = registry.resolveOffline(base, canonicalName, anchor);
         return new ResolvedMerchant(display, channel, m.lat(), m.lon(), m.address(), m.businessNumber());
+    }
+
+    /**
+     * 시군구 이름에서 사업자 이름의 앞부분을 만든다 — {@code 강남구}→{@code 강남}, {@code 양평군}→{@code 양평}.
+     *
+     * <p>두 가지를 예외로 둔다. ① {@code 고양시덕양구}처럼 시·구가 붙은 특례시는 <b>시 단위</b>로
+     * 자른다(공단이 구마다 있지 않다). ② {@code 중구}·{@code 동구}처럼 떼면 한 글자만 남는 이름은
+     * 그대로 둔다 — "중시설공단"은 이름으로 읽히지 않는다.
+     */
+    static String districtName(RegionEntry anchor) {
+        String s = anchor.sigungu();
+        int si = s.indexOf('시');
+        if (si > 0 && si < s.length() - 1) return s.substring(0, si);   // 고양시덕양구 → 고양
+        String cut = s.length() > 1 && "시군구".indexOf(s.charAt(s.length() - 1)) >= 0
+                ? s.substring(0, s.length() - 1) : s;
+        return cut.length() >= 2 ? cut : s;                             // 중구 → 중구
+    }
+
+    /**
+     * 품목·지역을 함께 맞춰 사업자를 고른다.
+     *
+     * <p><b>지역이 왜 필요한가.</b> 대중교통에는 시도별 교통공사가 들어 있다. 부산에서 지하철을 타고
+     * 서울교통공사가 찍히면 안 된다. 그렇다고 지역 공사만 남기면 수도권 광역전철을 운영하는
+     * 코레일이 사라진다 — 그래서 담당 지역이 있는 쪽과 전국 쪽을 {@code regionalOperatorShare}로 섞는다.
+     */
+    private BrandEntry pickBrand(List<BrandEntry> pool, String productName, RegionEntry anchor, Random r) {
+        List<BrandEntry> fit = new ArrayList<>();
+        for (BrandEntry b : pool) if (b.canSell(productName)) fit.add(b);
+        if (fit.isEmpty()) fit = pool;
+
+        String sido = anchor == null ? null : anchor.sido();
+        List<BrandEntry> regional = new ArrayList<>(), national = new ArrayList<>();
+        for (BrandEntry b : fit) {
+            if (!b.isRegional()) national.add(b);
+            else if (b.servesRegion(sido)) regional.add(b);
+        }
+        if (regional.isEmpty()) return pick(national.isEmpty() ? fit : national, r);
+        if (national.isEmpty()) return pick(regional, r);
+        return pick(r.nextDouble() < regionalShare ? regional : national, r);
     }
 
     /**
@@ -169,29 +235,38 @@ public class CatalogSampler {
      * 가중치를 안 준 품목은 1.0이라 기존 동작 그대로다.
      */
     /**
-     * 그 품목을 파는 사업자 중에서 고른다. 아무도 안 팔면(카탈로그가 덜 채워진 경우) 전체에서 고른다 —
-     * 짝이 안 맞는 것이 아예 상호가 없는 것보다 낫고, 그 상태는 CatalogConsistencyTest 가 잡는다.
+     * 품목 이름이 {@code prefix} 로 시작하는 것 중에서 뽑는다 — 통근·출장처럼 <b>무엇을 타는지 이미
+     * 정해진</b> 결제용. 예: 통근이면 "지하철", 원거리 출장이면 "KTX". 해당 품목이 없으면 전체에서.
      */
-    private BrandEntry pickForProduct(List<BrandEntry> pool, String productName, Random r) {
-        if (productName == null) return pick(pool, r);
-        List<BrandEntry> fit = new ArrayList<>();
-        for (BrandEntry b : pool) if (b.canSell(productName)) fit.add(b);
-        return pick(fit.isEmpty() ? pool : fit, r);
+    public ResolvedProduct resolveProduct(String category2, String prefix, Random r) {
+        List<ProductEntry> list = products.get(category2);
+        if (prefix == null || list == null || list.isEmpty()) return resolveProduct(category2, r);
+        List<ProductEntry> fit = new ArrayList<>();
+        for (ProductEntry p : list) if (p.name().startsWith(prefix)) fit.add(p);
+        if (fit.isEmpty()) return resolveProduct(category2, r);
+        ProductEntry chosen = pickByWeight(fit, r);
+        return new ResolvedProduct(chosen.name(),
+                GenSeed.uniformInt(r, chosen.priceLow(), chosen.priceHigh()), chosen.discretionary());
     }
 
     public ResolvedProduct resolveProduct(String category2, Random r) {
         List<ProductEntry> list = products.get(category2);
         if (list == null || list.isEmpty()) return new ResolvedProduct(category2, 10000, 0.5);
+        ProductEntry chosen = pickByWeight(list, r);
+        int price = GenSeed.uniformInt(r, chosen.priceLow(), chosen.priceHigh());
+        return new ResolvedProduct(chosen.name(), price, chosen.discretionary());
+    }
+
+    /** 품목 가중치대로 하나 뽑는다. 가중치를 안 준 품목은 1.0이라 균등과 같다. */
+    private static ProductEntry pickByWeight(List<ProductEntry> list, Random r) {
         double total = 0;
         for (ProductEntry p : list) total += p.weight();
-        ProductEntry chosen = list.get(list.size() - 1);
         double x = r.nextDouble() * total, acc = 0;
         for (ProductEntry p : list) {
             acc += p.weight();
-            if (x < acc) { chosen = p; break; }
+            if (x < acc) return p;
         }
-        int price = GenSeed.uniformInt(r, chosen.priceLow(), chosen.priceHigh());
-        return new ResolvedProduct(chosen.name(), price, chosen.discretionary());
+        return list.get(list.size() - 1);
     }
 
     // ── 내부 ──
