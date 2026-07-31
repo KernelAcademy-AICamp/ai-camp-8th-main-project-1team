@@ -384,6 +384,36 @@ export interface MyAccount {
   balance: number;
   transactions: MyAccountTxn[];
 }
+/** 온보딩 창 안의 결제 1건. `waste`가 null이면 모델이 판정하지 못한 것이다(체크하지 않는다). */
+export interface OnboardingPayment {
+  paymentId: string;
+  date: string;
+  merchantName: string | null;
+  businessNumber: string | null;
+  amount: number;
+  cardName: string | null;
+  cardColor: string | null;
+  waste: boolean | null;
+  wasteProbability: number | null;
+  reason: string | null;
+}
+/** 카테고리 하나 — `amount`는 창 안의 **실제 합계**다(월 환산·관측월 나눗셈을 하지 않는다). */
+export interface OnboardingCategory {
+  categoryCode: string;
+  displayName: string;
+  amount: number;
+  count: number;
+  wasteAmount: number;
+  payments: OnboardingPayment[];
+}
+export interface OnboardingWindow {
+  userId: number;
+  windowDays: number;
+  from: string;
+  to: string;
+  categories: OnboardingCategory[];
+}
+
 /** 결제별 ML 낭비/필수 판정 + '왜' (§W8, /api/ml/waste). */
 export interface WasteJudgment {
   paymentId: string;
@@ -706,6 +736,11 @@ export interface CreateChallengeInput {
   rewardName?: string;
   rewardPrice?: number;
   durationDays?: number;
+  /**
+   * 온보딩에서 **"이건 낭비가 아니다"**로 뺀 결제 id.
+   * 서버가 기준 지출에서 그만큼 뺀다 — 화면이 보여준 '지킬 돈'과 서버 한도가 어긋나지 않게.
+   */
+  keptPaymentIds?: string[];
 }
 export interface GuardianIngestResult {
   transaction: GuardianTransactionView;
@@ -784,6 +819,12 @@ export const api = {
   alerts: (userId: number) => get<AlertResponse>(`/api/alert/list?userId=${userId}`),
   rescan: (userId: number) => post<unknown>(`/api/alert/rescan?userId=${userId}`),
   report: (userId: number) => get<ReportResponse>(`/api/report/monthly?userId=${userId}`),
+  /**
+   * 온보딩이 보는 **하나의 창**(기본 최근 30일). 카테고리 금액·결제 목록·ML 낭비 판정이
+   * 전부 같은 구간에서 나오므로, 화면 금액과 서버 기준 지출이 어긋나지 않는다.
+   */
+  onboardingWindow: (userId: number, windowDays = 0) =>
+    get<OnboardingWindow>(`/api/onboarding/window?userId=${userId}&windowDays=${windowDays}`),
   score: (userId: number) => get<ScoreResponse>(`/api/score/${userId}`),
 
   // 사용자 · 동의 · 정보주체 권리

@@ -1,35 +1,41 @@
 /**
  * 이번 챌린지 정하기 2/4 — CT-01 줄일 카테고리 선택. 사용자가 1~2개 확정한다.
  *
- * 후보와 기준 지출은 `/api/report/monthly`(= 분석 엔진의 카테고리 집계)에서 가져온다.
- * **월평균은 서버가 계산한 `monthlyAmount`를 그대로 쓴다.** 예전에는 화면이 직접
- * `총액 ÷ 전체 관측 개월수`로 나눴는데, 지킴이 서버는 카테고리별 개월수로 나누므로 둘이 달랐다 —
- * 화면에 보여준 금액과 서버가 잡는 기준이 어긋나면 강도 화면의 '지킬 돈'이 거짓말이 된다.
+ * 금액은 <b>최근 30일 실측</b>이다(`/api/onboarding/window`). 예전에는 이 화면이 전 기간을
+ * 관측 개월수로 나눈 값을 보여줬고, 앞 화면(ob1)은 최근 90일을 월로 환산한 값을 보여줬다 —
+ * 같은 '취미/여가'가 691,150원과 745,118원으로 갈렸다(2026-07-31 실측). 서버가 챌린지 기준으로
+ * 삼는 값은 또 그 둘과 달랐다.
  *
- * `negative`(줄이면 좋은 소비 — ML 낭비 판정 또는 쏠림 기준)가 AI 추천 후보다.
+ * <b>이제 셋이 같은 창을 본다.</b> 그래야 다음 화면에서 결제를 펼쳐 "이건 낭비가 아니다"를
+ * 골랐을 때, 금액이 정확히 그만큼 줄어드는 것이 설명된다.
+ *
+ * 추천은 ML 낭비 판정 금액(`wasteAmount`)이 큰 카테고리다.
  */
 import { useEffect, useMemo, useRef } from 'react';
 import { Icon } from '../components/Icons';
 import { AppBar, ProgressBar, Cta, Scroll, Screen, ErrorBox, Loading, Empty } from '../components/ui';
 import { useSession } from '../state/session';
 import { useAsync } from '../state/useAsync';
-import { api, catLabel, type ReportLine } from '../lib/api';
+import { api, catLabel, type OnboardingCategory } from '../lib/api';
 import { won, iconOf } from '../lib/format';
+
+type Option = OnboardingCategory & { rec: boolean };
 
 export function Onboarding2() {
   const { go, back, userId, analysis, draft, patchDraft } = useSession();
-  const report = useAsync(() => api.report(userId), [userId]);
+  const report = useAsync(() => api.onboardingWindow(userId), [userId]);
   const inited = useRef(false);
 
   const { options, recommended } = useMemo(() => {
     const r = report.data;
-    if (!r) return { options: [] as (ReportLine & { monthly: number; rec: boolean })[], recommended: [] as string[] };
-    const mark = (lines: ReportLine[], rec: boolean) =>
-      lines.map((l) => ({ ...l, monthly: l.monthlyAmount, rec }));
-    const all = [...mark(r.negative, true), ...mark(r.positive, false)]
-      .filter((l) => l.monthly > 0)
-      .sort((x, y) => y.monthly - x.monthly);
-    return { options: all, recommended: all.filter((l) => l.rec).slice(0, 2).map((l) => l.categoryCode) };
+    if (!r) return { options: [] as Option[], recommended: [] as string[] };
+    // 낭비로 판정된 금액이 그 카테고리 지출의 3분의 1을 넘으면 '줄여볼 만한 곳'으로 본다.
+    // 비율로 보는 이유: 금액만 보면 식비처럼 원래 큰 카테고리가 늘 1등이 된다.
+    const all: Option[] = r.categories
+      .filter((c) => c.amount > 0)
+      .map((c) => ({ ...c, rec: c.wasteAmount > 0 && c.wasteAmount / c.amount >= 0.33 }))
+      .sort((x, y) => y.wasteAmount - x.wasteAmount || y.amount - x.amount);
+    return { options: all, recommended: all.filter((c) => c.rec).slice(0, 2).map((c) => c.categoryCode) };
   }, [report.data]);
 
   /** ① 분석의 절약 후보(category2 단위) 근거 문장을 카테고리 이름으로 이어 붙인다. */
@@ -52,7 +58,9 @@ export function Onboarding2() {
     options.forEach((o) => {
       baseline[o.categoryCode] = {
         displayName: catLabel(o.categoryCode, o.displayName),
-        monthlyAmount: o.monthly,
+        monthlyAmount: o.amount,
+        wasteAmount: o.wasteAmount,
+        payments: o.payments,
         reason: reasonOf(o.displayName) ?? undefined,
         type: o.rec ? 'RECOMMENDED' : 'OTHER',
       };
@@ -73,7 +81,7 @@ export function Onboarding2() {
         <p className="h-title">뭘 줄여볼까요?</p>
         <p className="h-sub">
           지킴이가 <b style={{ color: 'var(--blue-t)' }}>AI 추천</b>으로 골라봤어요. 1~2개 권장.
-          금액은 <b>한 달 평균 지출</b>이에요 — 다음에서 강도로 실제 지킬 돈을 정해요.
+          금액은 <b>최근 30일 실제 지출</b>이에요 — 다음에서 어떤 결제를 뺄지 고르고 강도를 정해요.
         </p>
 
         <ErrorBox error={report.error} onRetry={report.reload} />
@@ -106,11 +114,13 @@ export function Onboarding2() {
                   <span className="tx">
                     <b>{name} <span style={{ fontSize: 12, color: 'var(--t3)', fontWeight: 600 }}>
                       {c.rec ? '줄이면 좋아요' : '잘 관리 중'}</span></b>
-                    <span>{reason ?? `최근 ${c.count.toLocaleString('ko-KR')}건 · 전체의 ${c.spendPercent}%`}</span>
+                    <span>{reason ?? (c.wasteAmount > 0
+                      ? `${c.count.toLocaleString('ko-KR')}건 중 ${won(c.wasteAmount)}이 줄일 수 있는 소비`
+                      : `최근 ${c.count.toLocaleString('ko-KR')}건`)}</span>
                   </span>
                   <span style={{ textAlign: 'right', flex: '0 0 auto' }}>
-                    <b style={{ color: 'var(--t1)', fontSize: 15, display: 'block' }}>{won(c.monthly)}</b>
-                    <span style={{ fontSize: 11, color: 'var(--t3)' }}>한 달 평균</span>
+                    <b style={{ color: 'var(--t1)', fontSize: 15, display: 'block' }}>{won(c.amount)}</b>
+                    <span style={{ fontSize: 11, color: 'var(--t3)' }}>최근 30일</span>
                   </span>
                 </span>
               </button>

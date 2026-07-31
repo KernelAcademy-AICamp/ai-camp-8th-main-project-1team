@@ -23,6 +23,9 @@ export function Onboarding1() {
     [userId],
   );
   const cats = useAsync(() => api.categories().catch(() => []), [userId]);
+  // 다음 화면(ob2)과 **같은 창**을 본다. 예전에는 여기가 최근 90일 환산, 저기가 전 기간 평균이라
+  // 같은 카테고리 금액이 화면을 넘길 때 튀었다(2026-07-31 실측 691,150 vs 745,118).
+  const win = useAsync(() => api.onboardingWindow(userId).catch(() => null), [userId]);
 
   const a = analysis ?? fetched.data;
   if (fetched.error) {
@@ -46,6 +49,9 @@ export function Onboarding1() {
   const topDow = DOW_KR[a.pattern.peak?.dayOfWeek ?? topKey(a.pattern.amountByDayOfWeek)] ?? '금';
   const topPart = a.pattern.peak?.daypart ?? topKey(a.pattern.amountByDaypart) ?? '저녁';
   const candidates = a.cutCandidates.slice(0, 5);
+  /** 창 응답에서 그 카테고리의 실측 금액. 아직 안 왔거나 없으면 null(그때만 옛 값으로 뒤로 물러난다). */
+  const windowAmount = (name: string) =>
+    win.data?.categories.find((c) => c.displayName === name)?.amount ?? null;
 
   const toggleSanctuary = (code: string) => {
     const on = draft.sanctuary.includes(code);
@@ -58,7 +64,7 @@ export function Onboarding1() {
       <ProgressBar value={0.25} />
       <Scroll><div className="pad">
         <p className="h-title">최근 소비를<br />이렇게 하고 있었어요</p>
-        <p className="h-sub">지킴이가 그동안의 소비를 살펴봤어요. 이 중에서 함께 줄여볼 곳을 곧 골라요.</p>
+        <p className="h-sub">지킴이가 <b>최근 30일</b> 소비를 살펴봤어요. 이 중에서 함께 줄여볼 곳을 곧 골라요.</p>
 
         {/* 소비 요약 — 습관 소비(줄일 후보 재료) */}
         {candidates.length > 0 ? (
@@ -70,9 +76,9 @@ export function Onboarding1() {
                   <div className="list-item">
                     <span className="ic" style={{ background: bg }}><Icon id={icon} /></span>
                     <div className="tx"><b>{c.category2}</b><span>{c.reason}</span></div>
-                    {/* 월 환산액이다. 다음 화면(ob2)의 '한 달 평균'과 같은 기준이라야
-                        같은 카테고리 금액이 화면을 넘길 때 튀지 않는다. */}
-                    <span className="amt">월 {won(c.monthlySpend)}</span>
+                    {/* 최근 30일 **실측**이다. ob2·서버 기준 지출과 같은 값이라야
+                        화면을 넘길 때 금액이 튀지 않는다. */}
+                    <span className="amt">{won(windowAmount(c.category2) ?? c.monthlySpend)}</span>
                   </div>
                   {i < candidates.length - 1 && <div className="divider" />}
                 </div>

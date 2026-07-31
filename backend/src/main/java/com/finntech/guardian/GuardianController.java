@@ -58,20 +58,26 @@ public class GuardianController {
     //  챌린지
     // ======================================================================
 
+    /**
+     * @param keptPaymentIds 온보딩에서 사용자가 <b>"이건 낭비가 아니다"</b>로 뺀 결제 id.
+     *                       기준 지출에서 그만큼 뺀다 — 화면이 보여준 금액과 서버가 잡는 한도가
+     *                       어긋나면 '지킬 돈'이 거짓말이 된다(2026-07-31).
+     */
     public record CreateChallengeRequest(
             @NotNull List<String> categories,
             List<String> sanctuaryCategories,
             Long targetSaving,
             String rewardName,
             Long rewardPrice,
-            Integer durationDays) {}
+            Integer durationDays,
+            List<String> keptPaymentIds) {}
 
     @PostMapping("/challenges")
     public Map<String, Object> createChallenge(@RequestParam Long userId,
                                                @Valid @RequestBody CreateChallengeRequest req) {
         GuardianChallenge ch = guardianService.createChallenge(userId, req.categories(),
                 req.sanctuaryCategories(), req.targetSaving(), req.rewardName(),
-                req.rewardPrice(), req.durationDays());
+                req.rewardPrice(), req.durationDays(), req.keptPaymentIds());
         return Map.of("challenge", challengeView(ch),
                 "snapshot", snapshotView(guardianService.snapshotOf(ch, clock.today(userId))));
     }

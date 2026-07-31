@@ -45,6 +45,7 @@ public class GuardianService {
     private final AnalysisEngine analysisEngine;
     private final ConsumptionRepository consumptionRepository;
     private final CategoryRepository categoryRepository;
+    private final com.finntech.repository.UserPaymentRepository userPaymentRepository;
 
     public GuardianService(GuardianChallengeRepository challengeRepository,
                            GuardianTransactionRepository txRepository,
@@ -56,7 +57,8 @@ public class GuardianService {
                            GuardianProperties props,
                            AnalysisEngine analysisEngine,
                            ConsumptionRepository consumptionRepository,
-                           CategoryRepository categoryRepository) {
+                           CategoryRepository categoryRepository,
+                           com.finntech.repository.UserPaymentRepository userPaymentRepository) {
         this.challengeRepository = challengeRepository;
         this.txRepository = txRepository;
         this.notificationRepository = notificationRepository;
@@ -68,6 +70,7 @@ public class GuardianService {
         this.analysisEngine = analysisEngine;
         this.consumptionRepository = consumptionRepository;
         this.categoryRepository = categoryRepository;
+        this.userPaymentRepository = userPaymentRepository;
     }
 
     // ======================================================================
@@ -81,10 +84,24 @@ public class GuardianService {
      * @param categories   줄이기로 한 카테고리 코드
      * @param targetSaving 지킬 돈. 기준 지출보다 작아야 한다.
      */
+    /** 제외 목록 없이 부르는 옛 호출부·테스트용. */
     @Transactional
     public GuardianChallenge createChallenge(Long userId, List<String> categories, List<String> sanctuary,
                                              Long targetSaving, String rewardName, Long rewardPrice,
                                              Integer durationDays) {
+        return createChallenge(userId, categories, sanctuary, targetSaving, rewardName,
+                rewardPrice, durationDays, List.of());
+    }
+
+    /**
+     * @param keptPaymentIds 온보딩에서 <b>"이건 낭비가 아니다"</b>로 뺀 결제 id. 기준 지출에서 뺀다.
+     *                       화면이 그만큼 줄여 보여줬는데 서버가 안 빼면 한도만 넉넉해져,
+     *                       사용자가 고른 의미가 사라진다.
+     */
+    @Transactional
+    public GuardianChallenge createChallenge(Long userId, List<String> categories, List<String> sanctuary,
+                                             Long targetSaving, String rewardName, Long rewardPrice,
+                                             Integer durationDays, List<String> keptPaymentIds) {
         if (categories == null || categories.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "줄일 카테고리를 하나 이상 골라주세요");
         }
@@ -95,7 +112,7 @@ public class GuardianService {
         LocalDateTime now = clock.now(userId);
         // 기준 지출을 기간에 맞춰 환산해야 하므로 일수를 먼저 정한다.
         int days = durationDays == null ? props.getDefaultDurationDays() : durationDays;
-        Baseline baseline = baselineFor(userId, categories, now, days);
+        Baseline baseline = baselineFor(userId, categories, now, days, keptPaymentIds);
         if (baseline.periodAmount() <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "이 카테고리의 소비 이력이 없어 기준 지출을 잡을 수 없어요");
@@ -134,24 +151,73 @@ public class GuardianService {
      * 크게 과소평가됐다 — 12개월 이력자가 지난달 배달 30만원을 썼으면 기준이 2.5만원이 되어
      * 챌린지 시작 직후 한도를 넘겼다. 이제 분모를 엔진이 카테고리별로 세어 준다.
      *
-     * <p>{@code days}로 환산하는 이유는 {@link AnalysisResult.CategoryStat#observedMonthDays} 참고.
+     * <p><b>창을 챌린지 기간과 같게 잡는다</b>(2026-07-31). 전 기간 월평균을 쓰면 화면이
+     * 보여준 금액과 사용자가 훑을 수 있는 결제 목록이 어긋난다 — 온보딩에서 "이 결제는 낭비가
+     * 아니다"를 골라도 그 금액이 기준의 어디에서 빠지는지 대응되지 않는다. 최근 {@code days}일
+     * <b>실측</b>이면 목록과 금액이 1:1로 맞는다.
+     *
+     * <p>부작용도 정직하게 적어 둔다 — 최근 한 달이 튀면 기준도 튄다. 그래도 숨겨진 평균보다
+     * 보이는 실측이 낫다는 것이 이 화면의 판단이다(사용자 결정 2026-07-31).
      */
     Baseline baselineFor(Long userId, List<String> categories, LocalDateTime now, int days) {
-        AnalysisResult analysis = analysisEngine.analyze(userId, now);
+        return baselineFor(userId, categories, now, days, List.of());
+    }
 
-        long monthly = 0L;
-        long period = 0L;
+    /**
+     * @param keptPaymentIds 사용자가 <b>"이건 낭비가 아니다"</b>로 뺀 결제 id. 그 금액을 기준에서 뺀다.
+     *                       화면은 이미 뺀 금액으로 '지킬 돈'을 계산해 보여줬으므로, 서버가 안 빼면
+     *                       한도만 넉넉해져 사용자가 고른 의미가 사라진다.
+     */
+    Baseline baselineFor(Long userId, List<String> categories, LocalDateTime now, int days,
+                         List<String> keptPaymentIds) {
+        AnalysisResult analysis = analysisEngine.analyze(userId, now, days);
+
         long total = 0L;
         long count = 0L;
         for (String code : categories) {
             AnalysisResult.CategoryStat stat = analysis.categoryStats().get(code);
             if (stat == null) continue;
-            monthly += stat.monthlyAmount().longValue();
-            period += stat.amountOver(days).longValue();
             total += stat.totalAmount().setScale(0, RoundingMode.HALF_UP).longValue();
             count += stat.count();
         }
-        return new Baseline(monthly, period, count > 0 ? total / count : null);
+        // 사용자가 뺀 결제만큼 기준에서 덜어낸다. 창 안·고른 카테고리 안의 것만 센다 —
+        // 화면이 보여준 목록이 정확히 그 범위였기 때문이다.
+        Kept kept = keptOf(userId, categories, now, days, keptPaymentIds);
+        total = Math.max(0L, total - kept.amount());
+        count = Math.max(0L, count - kept.count());
+
+        // 창이 곧 챌린지 기간이므로 **창 안의 실제 합계**가 그대로 기준 지출이다.
+        // 예전에는 monthlyAmount(총액÷관측월)와 amountOver(days)를 따로 냈는데, 창을 쓰는
+        // 지금은 둘 다 같은 값이 되고 환산이 오히려 오차를 만든다.
+        return new Baseline(total, total, count > 0 ? total / count : null);
+    }
+
+    /** 사용자가 뺀 결제의 합계와 건수. */
+    private record Kept(long amount, long count) {}
+
+    /**
+     * 뺀 결제들 중 <b>창 안에 있고 고른 카테고리에 속한 것</b>만 센다.
+     *
+     * <p>화면이 보여준 목록이 정확히 그 범위였다. 범위를 넓히면 화면에 없던 결제까지 빠져
+     * 기준이 설명 불가능해지고, 좁히면 사용자가 뺀 것이 반영되지 않는다.
+     *
+     * <p>기준은 {@code Consumption}에서 나오는데 결제 id는 {@code UserPayment}에만 있다.
+     * 마이데이터 소비는 결제에서 투영된 것이라 금액이 1:1로 대응한다.
+     */
+    private Kept keptOf(Long userId, List<String> categories, LocalDateTime now, int days,
+                        List<String> keptPaymentIds) {
+        if (keptPaymentIds == null || keptPaymentIds.isEmpty()) return new Kept(0L, 0L);
+        LocalDateTime from = now.minusDays(days);
+        Set<String> cats = new HashSet<>(categories);
+        long amount = 0L, count = 0L;
+        for (var p : userPaymentRepository.findAllById(keptPaymentIds)) {
+            if (!userId.equals(p.getUserId())) continue;                 // 남의 결제는 세지 않는다
+            if (p.getPaymentDate().isBefore(from) || p.getPaymentDate().isAfter(now)) continue;
+            if (p.getCategory2() != null && !cats.contains(p.getCategory2())) continue;
+            amount += p.getAmount();
+            count++;
+        }
+        return new Kept(amount, count);
     }
 
     // ======================================================================
