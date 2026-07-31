@@ -97,8 +97,19 @@ gbm.fit(Xtr_g,ytr); results.append(evaluate("GBM(HGB)",gbm.predict_proba(Xte_g)[
 
 log("EBM(프로덕션, 순수 GAM)")
 from interpret.glassbox import ExplainableBoostingClassifier
+# amt_vs_typical 만 **증가 단조**로 묶는다(+1). 나머지는 제약 없음(0).
+#
+# 왜 이 특징만인가: "평소보다 얼마나 더 썼나"는 사람에게 그대로 설명되는 축이라, 형상함수가
+# 뒤집히면 말이 안 된다 — 실제로 `평소의 15.76배`가 그 직전 구간보다 **낮은 점수**를 받고
+# 있었다(+2.367 → +2.081). "15배를 쓰면 14배보다 덜 낭비"는 화면에 내보낼 수 없는 문장이다.
+# 데이터가 그렇게 말하더라도(고액 표본이 적어 생기는 흔들림) 판단 축은 단조여야 한다.
+#
+# 다른 특징에는 걸지 않는다. 시각(hour_sin/cos)은 순환이라 단조가 성립하지 않고,
+# user_disc_ratio·log_amount 는 방향이 자명하지 않아 제약이 곧 편향이 된다.
+_MONO=[1 if f=="amt_vs_typical" else 0 for f in FEATS]
 ebm=ExplainableBoostingClassifier(feature_names=FEATS,feature_types=["nominal"]+["continuous"]*(len(FEATS)-1),
-        interactions=0,max_bins=256,outer_bags=1,max_rounds=2000,random_state=0,n_jobs=1)  # n_jobs=1: 교착 회피 / outer_bags=1·max_rounds·서브샘플 축소로 신속 학습
+        interactions=0,max_bins=256,outer_bags=1,max_rounds=2000,random_state=0,n_jobs=1,
+        monotone_constraints=_MONO)  # n_jobs=1: 교착 회피 / outer_bags=1·max_rounds·서브샘플 축소로 신속 학습
 _n=min(len(Xtr),120_000)  # 속도: 순수 가법(GAM) 형상함수는 대량표본에서 안정 → TRAIN 서브샘플(지표 거의 동일·결정론)
 _idx=np.random.RandomState(0).permutation(len(Xtr))[:_n]
 log(f"EBM 학습표본 {_n:,}행(서브샘플)")
