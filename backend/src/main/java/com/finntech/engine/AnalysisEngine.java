@@ -48,7 +48,24 @@ public class AnalysisEngine {
 
     @Transactional(readOnly = true)
     public AnalysisResult analyze(Long userId, LocalDateTime referenceTime) {
-        List<Consumption> all = consumptionRepository.findAllForUser(userId);
+        return analyze(userId, referenceTime, 0);
+    }
+
+    /**
+     * 최근 {@code windowDays}일만 보고 분석한다. 0 이하면 전 기간이다.
+     *
+     * <p><b>왜 창이 필요한가.</b> 온보딩은 "이 중에서 무엇을 줄일까"를 묻는데, 그 답을 고르려면
+     * 화면에 뜬 금액과 <b>실제로 훑을 수 있는 결제 목록</b>이 같은 구간이어야 한다. 전 기간
+     * 월평균은 목록으로 펼칠 수가 없다 — 어느 결제를 빼야 그 금액이 줄어드는지 대응이 안 된다.
+     *
+     * <p>기존 호출부(리포트·점수·취향)는 전 기간을 그대로 쓴다. 창을 쓰는 곳은 온보딩과
+     * 챌린지 기준 지출뿐이다.
+     */
+    @Transactional(readOnly = true)
+    public AnalysisResult analyze(Long userId, LocalDateTime referenceTime, int windowDays) {
+        List<Consumption> all = windowDays > 0
+                ? consumptionRepository.findInRange(userId, referenceTime.minusDays(windowDays), referenceTime)
+                : consumptionRepository.findAllForUser(userId);
 
         if (all.isEmpty()) {
             return empty(userId, "기록된 소비 내역이 없습니다.");
