@@ -70,14 +70,20 @@ public class GuardianController {
             String rewardName,
             Long rewardPrice,
             Integer durationDays,
-            List<String> keptPaymentIds) {}
+            List<String> keptPaymentIds,
+            /**
+             * 카테고리 → 그 카테고리에서 지킬 돈. 온보딩3의 강도가 카테고리마다 다르므로
+             * 한 숫자로는 표현할 수 없다. 비어 있으면 {@code targetSaving}을 균등분할한다.
+             */
+            Map<String, Long> categoryTargets) {}
 
     @PostMapping("/challenges")
     public Map<String, Object> createChallenge(@RequestParam Long userId,
                                                @Valid @RequestBody CreateChallengeRequest req) {
         GuardianChallenge ch = guardianService.createChallenge(userId, req.categories(),
                 req.sanctuaryCategories(), req.targetSaving(), req.rewardName(),
-                req.rewardPrice(), req.durationDays(), req.keptPaymentIds());
+                req.rewardPrice(), req.durationDays(), req.keptPaymentIds(),
+                req.categoryTargets());
         return Map.of("challenge", challengeView(ch),
                 "snapshot", snapshotView(guardianService.snapshotOf(ch, clock.today(userId))));
     }
@@ -173,6 +179,19 @@ public class GuardianController {
 
         Map<String, Object> challenge = challengeView(ch);
         challenge.put("categoryLabel", h.categoryLabel());
+        // 카테고리별 사용액 — 화면이 '지킴 현황'을 갈라 그린다. 한도는 묶음 하나이므로
+        // 카테고리별 한도는 내려보내지 않는다(없는 것을 있는 척하면 화면이 거짓말을 한다).
+        challenge.put("categorySpend", h.categorySpend().stream().map(c -> {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("code", c.code());
+            m.put("label", c.label());
+            m.put("spent", c.spent());
+            m.put("share", Math.round(c.share() * 1000.0) / 1000.0);
+            m.put("cap", c.cap());
+            m.put("remaining", c.remaining());
+            m.put("ratio", Math.round(c.ratio() * 1000.0) / 1000.0);
+            return m;
+        }).toList());
         challenge.putAll(snapshotView(s));
 
         Map<String, Object> out = new LinkedHashMap<>();

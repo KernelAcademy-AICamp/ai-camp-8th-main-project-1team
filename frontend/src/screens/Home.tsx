@@ -183,13 +183,16 @@ export function Home() {
             </button>
           )}
 
-          {/* 지킴 현황 — 서버가 관리하는 단위(챌린지 한도·기간)로 */}
+          {/* 지킴 현황 — 한도는 챌린지 묶음 하나로 관리하지만, **어디서 썼는지**는 갈라 보여준다.
+              예전에는 합계 한 줄뿐이라 두 카테고리를 고른 사용자가 무엇을 줄여야 할지 알 수 없었다
+              (사용자 요청 2026-07-31). 카테고리별 '한도'는 서버에 없으므로 만들지 않는다 —
+              막대는 **그 카테고리가 사용액에서 차지하는 몫**이다. */}
           <SectionTitle aux={CHALLENGE_STATE_LABEL[ch.state] ?? ch.state}>지킴 현황</SectionTitle>
           <div className="bank-list">
             <div className="bank-row">
               <span className="ic" style={{ background: catBg }}><Icon id={catIcon} /></span>
               <div className="mid">
-                <b>{ch.categoryLabel || '선택 카테고리'}</b>
+                <b>{ch.categoryLabel || '선택 카테고리'} <span style={{ fontSize: 12, color: 'var(--t3)', fontWeight: 600 }}>합계</span></b>
                 <div className="bar"><i style={{ width: `${Math.round(spent * 100)}%`, background: barColor }} /></div>
               </div>
               <div className="right">
@@ -197,6 +200,30 @@ export function Home() {
                 <span>{Math.round(spent * 100)}% 사용</span>
               </div>
             </div>
+            {(ch.categorySpend ?? []).map((c) => {
+              const ci = iconOf(c.label);
+              return (
+                <div className="bank-row" key={c.code}>
+                  <span className="ic" style={{ background: ci.bg }}><Icon id={ci.icon} /></span>
+                  <div className="mid">
+                    <b style={{ fontWeight: 600 }}>{c.label}</b>
+                    <div className="bar">
+                      <i style={{
+                        width: `${Math.min(100, Math.round((c.ratio ?? 0) * 100))}%`,
+                        background: (c.ratio ?? 0) >= 1 ? 'var(--red)'
+                          : (c.ratio ?? 0) >= 0.8 ? 'var(--amber)' : 'var(--blue)',
+                      }} />
+                    </div>
+                  </div>
+                  <div className="right">
+                    <b>{c.cap > 0 ? `${won(c.remaining)} 남음` : won(c.spent)}</b>
+                    <span>{c.cap > 0
+                      ? `${won(c.spent)} / ${won(c.cap)}`
+                      : (c.spent > 0 ? '한도 없음' : '아직 없어요')}</span>
+                  </div>
+                </div>
+              );
+            })}
             <div className="bank-row">
               <span className="ic" style={{ background: 'var(--blue-weak)' }}><Icon id="i-chart" /></span>
               <div className="mid">

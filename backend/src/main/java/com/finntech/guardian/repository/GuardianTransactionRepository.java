@@ -36,6 +36,23 @@ public interface GuardianTransactionRepository extends JpaRepository<GuardianTra
         return sumByState(challengeId, TxState.COUNTED);
     }
 
+    /**
+     * 카테고리별 집계 합 — 홈의 '지킴 현황'을 카테고리로 갈라 보여주는 데 쓴다.
+     *
+     * <p>예전에는 챌린지 전체 한 줄만 보여줬다. 두 카테고리를 고른 사용자는 "어디서 더 썼는지"를
+     * 알 수 없어, 무엇을 줄여야 할지 화면이 답해 주지 못했다(사용자 요청 2026-07-31).
+     *
+     * <p>정렬은 카테고리 이름으로 고정한다 — 조회 정렬은 결정론이어야 한다(마스터 §4 원칙 3).
+     */
+    @Query("select t.category, coalesce(sum(t.amount), 0) from GuardianTransaction t "
+            + "where t.challengeId = :challengeId and t.state = :state "
+            + "group by t.category order by t.category asc")
+    List<Object[]> sumByCategory(@Param("challengeId") Long challengeId, @Param("state") TxState state);
+
+    default List<Object[]> sumCountedByCategory(Long challengeId) {
+        return sumByCategory(challengeId, TxState.COUNTED);
+    }
+
     @Query("select t from GuardianTransaction t where t.challengeId = :challengeId "
             + "and t.state = :state and t.countedDate = :date order by t.occurredAt asc, t.id asc")
     List<GuardianTransaction> findByChallengeAndCountedDate(@Param("challengeId") Long challengeId,

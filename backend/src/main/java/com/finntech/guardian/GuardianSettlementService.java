@@ -7,6 +7,7 @@ import com.finntech.guardian.domain.GuardianEnums.TxState;
 import com.finntech.guardian.domain.GuardianTransaction;
 import com.finntech.guardian.domain.RoomObject;
 import com.finntech.guardian.repository.DailyVerdictRepository;
+import com.finntech.guardian.repository.GuardianChallengeCategoryRepository;
 import com.finntech.guardian.repository.GuardianChallengeRepository;
 import com.finntech.guardian.repository.GuardianPointEventRepository;
 import com.finntech.guardian.repository.GuardianTransactionRepository;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,17 +50,20 @@ public class GuardianSettlementService {
     private final DailyVerdictRepository verdictRepository;
     private final RoomObjectRepository roomObjectRepository;
     private final GuardianPointEventRepository pointEventRepository;
+    private final GuardianChallengeCategoryRepository challengeCategoryRepository;
 
     public GuardianSettlementService(GuardianChallengeRepository challengeRepository,
                                      GuardianTransactionRepository txRepository,
                                      DailyVerdictRepository verdictRepository,
                                      RoomObjectRepository roomObjectRepository,
-                                     GuardianPointEventRepository pointEventRepository) {
+                                     GuardianPointEventRepository pointEventRepository,
+                                     GuardianChallengeCategoryRepository challengeCategoryRepository) {
         this.challengeRepository = challengeRepository;
         this.txRepository = txRepository;
         this.verdictRepository = verdictRepository;
         this.roomObjectRepository = roomObjectRepository;
         this.pointEventRepository = pointEventRepository;
+        this.challengeCategoryRepository = challengeCategoryRepository;
     }
 
     // ======================================================================
@@ -110,15 +115,23 @@ public class GuardianSettlementService {
             if (c != null && spentBy.containsKey(c)) spentBy.merge(c, t.getAmount(), Long::sum);
         }
 
-        // 한도는 챌린지 전체 캡을 카테고리 수로 나눈 값이다 — 카테고리별 캡을 따로 저장하지 않는다.
-        // (사용자는 "배달·카페를 합쳐 얼마"로 정하고, 화면이 나눠 보여준다.)
-        long perCap = cats.isEmpty() ? 0 : ch.getChallengeCap() / cats.size();
+        // 카테고리별 한도는 챌린지를 만들 때 저장한다(V13). 예전에는 전체 캡을 카테고리 수로
+        // **균등분할**했는데, 온보딩에서 배달 50%·카페 20%처럼 다르게 정해도 화면은 같은 값을
+        // 보여줬다. 이제 사용자가 정한 그대로다.
+        //
+        // 옛 챌린지(V13 이전)에는 행이 없을 수 있다 — 그때는 예전처럼 균등분할해 값이 바뀌지 않게 한다.
+        Map<String, Long> capBy = new HashMap<>();
+        for (var cc : challengeCategoryRepository.findByChallenge(ch.getId())) {
+            capBy.put(cc.getCategory(), cc.getCap());
+        }
+        long evenCap = cats.isEmpty() ? 0 : ch.getChallengeCap() / cats.size();
         List<CategoryResult> results = new ArrayList<>();
         for (String c : cats) {
             long spent = spentBy.getOrDefault(c, 0L);
-            long kept = Math.max(0, perCap - spent);
-            results.add(new CategoryResult(c, perCap, spent, kept,
-                    perCap == 0 ? 0.0 : (double) kept / perCap));
+            long cap = capBy.getOrDefault(c, evenCap);
+            long kept = Math.max(0, cap - spent);
+            results.add(new CategoryResult(c, cap, spent, kept,
+                    cap == 0 ? 0.0 : (double) kept / cap));
         }
 
         // '지킨 날' = 무지출이거나 페이스를 지킨 날. OFF_PACE(초과)와 NO_GRANT(미판정)는 뺀다.

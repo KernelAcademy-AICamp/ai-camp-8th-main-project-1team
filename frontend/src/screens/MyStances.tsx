@@ -37,22 +37,28 @@ export function MyStances() {
 
   const items: MerchantStance[] = list.data?.items ?? [];
 
+  /**
+   * 되돌리기 — 버튼 하나로 합쳤다.
+   *
+   * 예전에는 '역시 낭비였어요'(한 단계)와 '설정 지우기'(전부)를 나란히 뒀는데,
+   * <b>LENIENT 상태에서는 둘의 결과가 같아서</b> 사용자가 구분할 수 없었다(사용자 지적 2026-07-31).
+   * 내부의 '한 칸씩' 규칙을 버튼으로 노출한 것이 잘못이었다.
+   *
+   * 이제 하나만 둔다 — '낭비로 안 봄'이면 한 칸 내려 '확실할 때만'이 되고,
+   * '확실할 때만'이면 기록째 지워 평소대로 돌아간다. 사용자는 <b>되돌린다</b>만 알면 되고,
+   * 지금 어느 단계인지는 오른쪽 배지가 말해 준다.
+   */
   async function revert(s: MerchantStance) {
     setBusy(s.businessNumber); setError(null); setMsg(null);
+    const name = s.merchantName ?? '이 가맹점';
     try {
-      const r = await api.revertStance(userId, s.businessNumber);
-      setMsg(r.stance === 'NORMAL'
-        ? `${s.merchantName ?? '이 가맹점'} — 이제 평소대로 판정해요`
-        : `${s.merchantName ?? '이 가맹점'} — 한 단계 되돌렸어요`);
-      await list.reload();
-    } catch (e) { setError(e); } finally { setBusy(null); }
-  }
-
-  async function clear(s: MerchantStance) {
-    setBusy(s.businessNumber); setError(null); setMsg(null);
-    try {
-      await api.clearStance(userId, s.businessNumber);
-      setMsg(`${s.merchantName ?? '이 가맹점'} — 설정을 지웠어요`);
+      if (s.stance === 'EXCLUDED') {
+        await api.revertStance(userId, s.businessNumber);
+        setMsg(`${name} — 이제 확실할 때만 알려드려요`);
+      } else {
+        await api.clearStance(userId, s.businessNumber);
+        setMsg(`${name} — 이제 평소대로 판정해요`);
+      }
       await list.reload();
     } catch (e) { setError(e); } finally { setBusy(null); }
   }
@@ -104,10 +110,9 @@ export function MyStances() {
                     <div className="form-inline" style={{ margin: '0 0 10px' }}>
                       <button type="button" className="btn btn-ghost btn-sm" disabled={busy !== null}
                         onClick={() => void revert(s)}>
-                        {busy === s.businessNumber ? '바꾸는 중…' : '역시 낭비였어요'}
+                        {busy === s.businessNumber ? '바꾸는 중…'
+                          : s.stance === 'EXCLUDED' ? '다시 지켜볼래요' : '평소대로 되돌리기'}
                       </button>
-                      <button type="button" className="btn btn-ghost btn-sm" disabled={busy !== null}
-                        onClick={() => void clear(s)}>설정 지우기</button>
                     </div>
                     {i < items.length - 1 && <div className="divider" />}
                   </div>
@@ -115,8 +120,8 @@ export function MyStances() {
               })}
             </div>
             <div className="pv" style={{ margin: '10px 0 0' }}>
-              <b>역시 낭비였어요</b>를 누르면 한 단계만 되돌아가요. 쌓아 오신 판단을 통째로
-              지우지 않으려는 거예요 — 완전히 없애려면 <b>설정 지우기</b>를 눌러 주세요.
+              <b>낭비로 안 봄</b>에서 되돌리면 <b>확실할 때만</b>이 되고, 거기서 한 번 더 되돌리면
+              평소대로 돌아가요. 한 번에 다 지우지 않는 건, 쌓아 오신 판단을 함부로 버리지 않으려는 거예요.
             </div>
           </>
         )}

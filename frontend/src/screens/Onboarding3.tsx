@@ -13,7 +13,7 @@ import { useGuardian } from '../state/guardian';
 import { ApiError, api } from '../lib/api';
 import { CHALLENGE_DAYS } from '../lib/config';
 import {
-  won, wonShort, iconOf, shortDate, INTENSITY_TIERS, DEFAULT_INTENSITY,
+  won, wonShort, iconOf, shortDateTime, INTENSITY_TIERS, DEFAULT_INTENSITY,
   INTENSITY_MIN, INTENSITY_MAX, INTENSITY_STEP, round1,
 } from '../lib/format';
 
@@ -122,6 +122,10 @@ export function Onboarding3() {
         // 뺀 결제를 서버에도 알린다. 안 보내면 화면만 줄고 서버 한도는 그대로라
         // 사용자가 고른 의미가 사라진다.
         keptPaymentIds: draft.keptPaymentIds,
+        // 강도가 카테고리마다 다르므로 목표도 카테고리별로 보낸다. 하나로 보내면 서버가
+        // 균등분할해, 사용자가 정한 것과 화면이 보여준 것이 달라진다.
+        categoryTargets: Object.fromEntries(draft.cutCats.map((code) =>
+          [code, Math.round(baseOf(code) * (draft.intensities[code] ?? DEFAULT_INTENSITY))])),
       });
       await trackCutSelections();
       await reload();
@@ -215,7 +219,7 @@ export function Onboarding3() {
                               <button type="button" className={off ? 'pick off' : 'pick'}
                                 aria-pressed={!off} onClick={() => toggleKeep(p.paymentId)}>
                                 <span className="box" aria-hidden="true">{off ? '' : '✓'}</span>
-                                <span className="d">{shortDate(p.date)}</span>
+                                <span className="d">{shortDateTime(p.date)}</span>
                                 <span className="m">{p.merchantName ?? '가맹점 미상'}</span>
                                 <span className="a">{won(p.amount)}</span>
                               </button>
