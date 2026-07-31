@@ -119,12 +119,27 @@ jobs:
           [ -n "$BASE" ] && echo "기준 $(git log --oneline -1 "$BASE")" || echo "기준 없음 — 1단계를 건너뛴다"
 
       # ── 1단계 ── 지금 운영 상태를 재현한다. DB 볼륨이 '출시된 스키마'까지 올라간다.
+      #
+      # **기준 커밋이 무엇이든 이 단계는 이 잡을 죽이지 않는다.** 이 검사가 묻는 것은
+      # "이 커밋이 main에 올라가면 서버가 멈추는가"이지 "직전 커밋이 멀쩡했는가"가 아니다.
+      #
+      # 실제로 그것 때문에 한 번 막혔다(2026-07-31). 컴파일이 깨진 커밋이 develop 에 들어갔고,
+      # 바로 다음 커밋이 그것을 고쳤는데도 push 검사가 계속 빨간불이었다 — 1단계가 **직전 커밋**
+      # (= 깨진 그것)을 빌드하다 죽었기 때문이다. 고친 커밋은 잘못이 없는데 통과할 길이 없었다.
+      #
+      # 기준을 못 세우면 2단계는 '빈 DB에서 시작'이 된다. 증분 마이그레이션 검증력은 그만큼
+      # 줄지만, 그건 경고로 알리면 될 일이지 배포를 막을 일이 아니다.
       - name: 1단계 · 기준 커밋으로 기동
         if: steps.base.outputs.sha != ''
+        continue-on-error: true
         run: |
           git checkout --quiet --detach '${{ steps.base.outputs.sha }}'
           git checkout --quiet '${{ github.sha }}' -- deploy/ci.env 2>/dev/null || true
-          docker compose $CO up -d --build
+          if ! docker compose $CO up -d --build; then
+            echo "::warning::기준 커밋이 빌드되지 않는다 — 1단계를 건너뛴다. 2단계는 빈 DB에서 돈다"
+            docker compose $CO down -v || true
+            exit 0
+          fi
           ./.github/wait-healthy.sh 4 || { echo "::warning::기준 커밋도 기동하지 못했다 — 비교 기준을 세울 수 없어 1단계를 넘긴다"; }
           docker compose $CO ps
 
