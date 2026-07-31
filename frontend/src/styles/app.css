@@ -800,8 +800,6 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 .notice-ok { background: var(--green-weak); color: var(--green-t); border-radius: 12px; padding: 12px 14px; font-size: 13px; margin: 8px 0; line-height: 1.5; }
 /* 오류가 아니라 '지금은 안 된다'는 사실을 알릴 때. 붉은 오류 상자로 겁주지 않는다. */
 .notice-warn { background: #FFF6E5; color: var(--amber-t); border-radius: 12px; padding: 12px 14px; font-size: 13px; margin: 8px 0; line-height: 1.5; }
-/* 오류가 아니라 '지금은 안 된다'는 사실을 알릴 때. 붉은 오류 상자로 겁주지 않는다. */
-.notice-warn { background: #FFF6E5; color: var(--amber-t); border-radius: 12px; padding: 12px 14px; font-size: 13px; margin: 8px 0; line-height: 1.5; }
 .empty { color: var(--t3); font-size: 13.5px; line-height: 1.6; margin: 6px 0; }
 .muted { color: var(--t3); }
 .small { font-size: 12.5px; }
