@@ -53,6 +53,21 @@ SELECT a.id, (SELECT COUNT(*) FROM finntech_mydata.mydata_user m
 실행 결과: 11명 32초, 결제 525~2,279건, `legacy_rows=0` · `merchant_mismatch=0` ·
 `ksic_mismatch=0` · 중분류 정확히 15개.
 
+**CI 를 손으로 옮기면 `birth_year` 도 함께 옮긴다.** `app_user.birth_year` 는 본인인증이 주민번호에서
+계산해 넣는 값이라, CI 만 SQL 로 갈아끼우면 **앞사람의 생년이 그대로 남는다.** 실제로 12명 중 11명이
+어긋나 있었다(2026-07-31 발견 — 1990년생 자리에 2000년생이 앉는 식). 금융상품의 나이 자격 판정이
+이 값을 보므로 조용히 틀린 답을 낸다. CI 재배정 뒤 함께 돌린다.
+
+```sql
+UPDATE finntech.app_user a
+  JOIN finntech_mydata.mydata_user m ON m.mydata_user_id = a.ci
+   SET a.birth_year = CASE SUBSTR(m.mydata_user_social_number,7,1)
+                        WHEN '1' THEN 1900 WHEN '2' THEN 1900 WHEN '5' THEN 1900 WHEN '6' THEN 1900
+                        WHEN '3' THEN 2000 WHEN '4' THEN 2000 WHEN '7' THEN 2000 WHEN '8' THEN 2000
+                        ELSE 1800 END
+                      + CAST(SUBSTR(m.mydata_user_social_number,1,2) AS UNSIGNED);
+```
+
 **그리고 파생본을 SQL 로 손보지 않는다.** 교통 상호를 맞추겠다고
 `user_payment.merchant_name` 을 원장에서 조인해 덮었다가 **엉뚱한 값을 넣었다.** `payment_id`
 는 사람 해시 기반이라 재생성 뒤에도 *조인은 되지만* 가리키는 결제의 내용이 다르다.
