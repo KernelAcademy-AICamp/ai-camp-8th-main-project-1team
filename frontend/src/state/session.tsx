@@ -156,8 +156,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setLinkedState(v);
   }, []);
 
+  /**
+   * 처음으로 되돌린다(= 로그아웃).
+   *
+   * <b>userId 도 함께 버린다.</b> 예전에는 `mydata_onboarded` 만 지워서, 다음 사람이 같은 브라우저에서
+   * 인증해도 세션은 앞사람의 계정을 들고 있었다. 그 상태로 연동하면 앞사람 계정에 뒷사람 신원이
+   * 덮어써지고, 홈은 앞사람의 챌린지를 계속 보여줬다(2026-07-31 운영). 서버도 CI 로 계정을 고르도록
+   * 함께 고쳤지만, 신원을 끊는 일은 로그아웃이 먼저 해야 한다.
+   */
   const resetOnboarding = useCallback(() => {
     remove('mydata_onboarded');
+    remove('demo_user_id');
+    setUserIdState(DEFAULT_USER_ID);
     setLinkedState(false);
     setDraft(emptyDraft);
     setAnalysis(null);

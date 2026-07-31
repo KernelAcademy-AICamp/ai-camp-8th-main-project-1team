@@ -1,315 +1,315 @@
 {
- "_note": "기본 페르소나 5종(Stage B 확정). 생성기가 각 페르소나를 variantsPerBase개 변형(파라미터 섭동)으로 확장하고, populationShare 비율로 사용자를 인스턴스화(시작일 7/1~9/1 매일 균등). enum(LOW/MID/HIGH 등)은 생성기가 분포로 매핑. categoryMix=7대분류 비중(세부 category2는 생성기가 방문빈도로 자동배분). traits=하루활동 모델이 존중할 행동 특성.",
- "personas": [
-  {
-   "name": "절약형",
-   "populationShare": 0.08,
-   "monthlyTotalMean": 1000000,
-   "monthlyCV": 0.08,
-   "categoryMix": {
-    "건강/피트니스": 2.429,
-    "교통/자동차": 6.5,
-    "대형마트": 4.82,
-    "미용": 1.485,
-    "생활": 0.81,
-    "쇼핑": 8.773,
-    "술/유흥": 1.273,
-    "식비": 30.54,
-    "여행/숙박": 1.889,
-    "의료": 1.35,
-    "주거/통신": 3.528,
-    "취미/여가": 11.78,
-    "카테고리없음": 0.723,
-    "카페/간식": 9.64,
-    "편의점/잡화": 14.46
-   },
-   "txPerMonthMean": 90,
-   "ticketTendency": "SMALL_MANY",
-   "onlineRatio": 0.6,
-   "activeHours": [
-    9,
-    23
-   ],
-   "dayBias": "EVEN",
-   "plannedRatio": 0.6,
-   "impulsivity": 0.6,
-   "nightImpulse": "LOW",
-   "deliveryOveruse": "MID",
-   "subscriptionCount": [
-    2,
-    4
-   ],
-   "subscriptionLeak": "MID",
-   "hobbies": [
-    "반려동물",
-    "취미공예"
-   ],
-   "hobbyIntensity": "LOW",
-   "initialWasteLevel": "LOW_MID",
-   "improvementSpeed": "MID",
-   "noImprovementPct": 0.04,
-   "cards": [
-    4,
-    4
-   ],
-   "hasVehicle": "NO",
-   "region": {
-    "mode": "POP_WEIGHTED",
-    "commute": true,
-    "workCity": null
-   },
-   "traits": [
-    "소액 다건 지출"
-   ]
-  },
-  {
-   "name": "균형형",
-   "populationShare": 0.12,
-   "monthlyTotalMean": 1800000,
-   "monthlyCV": 0.15,
-   "categoryMix": {
-    "건강/피트니스": 1.757,
-    "교통/자동차": 6.5,
-    "대형마트": 2.44,
-    "미용": 2.147,
-    "생활": 1.171,
-    "쇼핑": 16.397,
-    "술/유흥": 2.987,
-    "식비": 30.197,
-    "여행/숙박": 1.366,
-    "의료": 1.952,
-    "주거/통신": 4.88,
-    "취미/여가": 10.15,
-    "카테고리없음": 0.976,
-    "카페/간식": 9.76,
-    "편의점/잡화": 7.32
-   },
-   "txPerMonthMean": 140,
-   "ticketTendency": "BALANCED",
-   "onlineRatio": 0.4,
-   "activeHours": [
-    7,
-    23
-   ],
-   "dayBias": "EVEN",
-   "plannedRatio": 0.5,
-   "impulsivity": 1.0,
-   "nightImpulse": "MID",
-   "deliveryOveruse": "MID",
-   "subscriptionCount": [
-    3,
-    5
-   ],
-   "subscriptionLeak": "MID",
-   "hobbies": [
-    "문화공연",
-    "독서문화"
-   ],
-   "hobbyIntensity": "MID",
-   "initialWasteLevel": "MID",
-   "improvementSpeed": "MID_SLOW",
-   "noImprovementPct": 0.08,
-   "cards": [
-    3,
-    6
-   ],
-   "hasVehicle": "MIXED",
-   "region": {
-    "mode": "METRO",
-    "commute": true,
-    "workCity": null
-   },
-   "traits": [
-    "프랜차이즈는 유사 브랜드를 유사 시간대에 반복 이용(브랜드 충성·시간 규칙성)"
-   ]
-  },
-  {
-   "name": "과소비형",
-   "populationShare": 0.4,
-   "monthlyTotalMean": 3700000,
-   "monthlyCV": 0.3,
-   "categoryMix": {
-    "건강/피트니스": 2.372,
-    "교통/자동차": 8.0,
-    "대형마트": 1.176,
-    "미용": 0.621,
-    "생활": 0.339,
-    "쇼핑": 34.632,
-    "술/유흥": 3.313,
-    "식비": 17.391,
-    "여행/숙박": 1.845,
-    "의료": 0.565,
-    "주거/통신": 3.52,
-    "취미/여가": 12.347,
-    "카테고리없음": 0.941,
-    "카페/간식": 9.411,
-    "편의점/잡화": 3.529
-   },
-   "txPerMonthMean": 290,
-   "ticketTendency": "MIXED",
-   "onlineRatio": 0.7,
-   "activeHours": [
-    9,
-    22
-   ],
-   "dayBias": "RANDOM",
-   "plannedRatio": 0.35,
-   "impulsivity": 1.6,
-   "nightImpulse": "HIGH",
-   "deliveryOveruse": "MID_HIGH",
-   "subscriptionCount": [
-    4,
-    7
-   ],
-   "subscriptionLeak": "HIGH",
-   "hobbies": [
-    "여행",
-    "문화공연",
-    "패션쇼핑"
-   ],
-   "hobbyIntensity": "HIGH",
-   "initialWasteLevel": "HIGH",
-   "improvementSpeed": "RANDOM",
-   "noImprovementPct": 0.1,
-   "cards": [
-    6,
-    6
-   ],
-   "hasVehicle": "YES",
-   "region": {
-    "mode": "POP_WEIGHTED",
-    "commute": true,
-    "workCity": null
-   },
-   "traits": [
-    "쇼핑이 오프라인·온라인 모두 다양(오프라인 비중 더 큼)"
-   ]
-  },
-  {
-   "name": "구독과다형",
-   "populationShare": 0.1,
-   "monthlyTotalMean": 2900000,
-   "monthlyCV": 0.18,
-   "categoryMix": {
-    "건강/피트니스": 2.597,
-    "교통/자동차": 6.5,
-    "대형마트": 1.202,
-    "미용": 1.058,
-    "생활": 0.577,
-    "쇼핑": 11.351,
-    "술/유흥": 2.963,
-    "식비": 39.362,
-    "여행/숙박": 2.02,
-    "의료": 0.962,
-    "주거/통신": 3.944,
-    "취미/여가": 13.275,
-    "카테고리없음": 0.962,
-    "카페/간식": 9.619,
-    "편의점/잡화": 3.607
-   },
-   "txPerMonthMean": 225,
-   "ticketTendency": "MIXED",
-   "onlineRatio": 0.8,
-   "activeHours": [
-    12,
-    24
-   ],
-   "dayBias": "EVEN",
-   "plannedRatio": 0.6,
-   "impulsivity": 1.3,
-   "nightImpulse": "MID",
-   "deliveryOveruse": "HIGH",
-   "subscriptionCount": [
-    6,
-    10
-   ],
-   "subscriptionLeak": "MID",
-   "hobbies": [
-    "디지털게임",
-    "영화관람"
-   ],
-   "hobbyIntensity": "MID",
-   "initialWasteLevel": "MID_HIGH",
-   "improvementSpeed": "MID_FAST",
-   "noImprovementPct": 0.05,
-   "cards": [
-    6,
-    6
-   ],
-   "hasVehicle": "NO",
-   "region": {
-    "mode": "POP_WEIGHTED",
-    "wideMovement": true,
-    "commute": true,
-    "workCity": null
-   },
-   "traits": [
-    "온라인 구독 정기결제 다양",
-    "지역 이동 잦음(이동범위 넓음)"
-   ]
-  },
-  {
-   "name": "외식형",
-   "populationShare": 0.3,
-   "monthlyTotalMean": 3200000,
-   "monthlyCV": 0.23,
-   "categoryMix": {
-    "건강/피트니스": 2.537,
-    "교통/자동차": 8.0,
-    "대형마트": 0.94,
-    "미용": 1.034,
-    "생활": 0.564,
-    "쇼핑": 10.713,
-    "술/유흥": 9.773,
-    "식비": 39.093,
-    "여행/숙박": 1.973,
-    "의료": 0.94,
-    "주거/통신": 2.349,
-    "취미/여가": 11.277,
-    "카테고리없음": 0.47,
-    "카페/간식": 7.518,
-    "편의점/잡화": 2.819
-   },
-   "txPerMonthMean": 250,
-   "ticketTendency": "LARGE_FEW",
-   "onlineRatio": 0.2,
-   "activeHours": [
-    10,
-    22
-   ],
-   "dayBias": "RANDOM",
-   "plannedRatio": 0.4,
-   "impulsivity": 1.4,
-   "nightImpulse": "MID",
-   "deliveryOveruse": "LOW",
-   "subscriptionCount": [
-    2,
-    4
-   ],
-   "subscriptionLeak": "LOW",
-   "hobbies": [
-    "미식탐방",
-    "아웃도어캠핑",
-    "스포츠레저"
-   ],
-   "hobbyIntensity": "HIGH",
-   "initialWasteLevel": "HIGH",
-   "improvementSpeed": "SLOW",
-   "noImprovementPct": 0.03,
-   "cards": [
-    3,
-    6
-   ],
-   "hasVehicle": "YES",
-   "region": {
-    "mode": "CAPITAL_SUBURB",
-    "workCity": "서울특별시",
-    "commute": true
-   },
-   "traits": [
-    "다양한 오프라인 음식점 순회 외식",
-    "거주=수도권(비서울), 근무=서울 통근"
-   ]
-  }
- ]
+  "_note": "기본 페르소나 5종(Stage B 확정). 생성기가 각 페르소나를 variantsPerBase개 변형(파라미터 섭동)으로 확장하고, populationShare 비율로 사용자를 인스턴스화(시작일 7/1~9/1 매일 균등). enum(LOW/MID/HIGH 등)은 생성기가 분포로 매핑. categoryMix=7대분류 비중(세부 category2는 생성기가 방문빈도로 자동배분). traits=하루활동 모델이 존중할 행동 특성.",
+  "personas": [
+    {
+      "name": "절약형",
+      "populationShare": 0.08,
+      "monthlyTotalMean": 1000000,
+      "monthlyCV": 0.08,
+      "categoryMix": {
+        "건강/피트니스": 2.429,
+        "교통/자동차": 6.5,
+        "대형마트": 4.82,
+        "미용": 1.485,
+        "생활": 0.81,
+        "쇼핑": 8.773,
+        "술/유흥": 1.273,
+        "식비": 30.54,
+        "여행/숙박": 1.889,
+        "의료": 1.35,
+        "주거/통신": 3.528,
+        "취미/여가": 11.78,
+        "카테고리없음": 0.723,
+        "카페/간식": 9.64,
+        "편의점/잡화": 14.46
+      },
+      "txPerMonthMean": 90,
+      "ticketTendency": "SMALL_MANY",
+      "onlineRatio": 0.6,
+      "activeHours": [
+        9,
+        23
+      ],
+      "dayBias": "EVEN",
+      "plannedRatio": 0.6,
+      "impulsivity": 0.6,
+      "nightImpulse": "LOW",
+      "deliveryOveruse": "MID",
+      "subscriptionCount": [
+        2,
+        4
+      ],
+      "subscriptionLeak": "MID",
+      "hobbies": [
+        "반려동물",
+        "취미공예"
+      ],
+      "hobbyIntensity": "LOW",
+      "initialWasteLevel": "LOW_MID",
+      "improvementSpeed": "MID",
+      "noImprovementPct": 0.04,
+      "cards": [
+        4,
+        4
+      ],
+      "hasVehicle": "NO",
+      "region": {
+        "mode": "POP_WEIGHTED",
+        "commute": true,
+        "workCity": null
+      },
+      "traits": [
+        "소액 다건 지출"
+      ]
+    },
+    {
+      "name": "균형형",
+      "populationShare": 0.12,
+      "monthlyTotalMean": 1800000,
+      "monthlyCV": 0.15,
+      "categoryMix": {
+        "건강/피트니스": 1.757,
+        "교통/자동차": 6.5,
+        "대형마트": 2.44,
+        "미용": 2.147,
+        "생활": 1.171,
+        "쇼핑": 16.397,
+        "술/유흥": 2.987,
+        "식비": 30.197,
+        "여행/숙박": 1.366,
+        "의료": 1.952,
+        "주거/통신": 4.88,
+        "취미/여가": 10.15,
+        "카테고리없음": 0.976,
+        "카페/간식": 9.76,
+        "편의점/잡화": 7.32
+      },
+      "txPerMonthMean": 140,
+      "ticketTendency": "BALANCED",
+      "onlineRatio": 0.4,
+      "activeHours": [
+        7,
+        23
+      ],
+      "dayBias": "EVEN",
+      "plannedRatio": 0.5,
+      "impulsivity": 1.0,
+      "nightImpulse": "MID",
+      "deliveryOveruse": "MID",
+      "subscriptionCount": [
+        3,
+        5
+      ],
+      "subscriptionLeak": "MID",
+      "hobbies": [
+        "문화공연",
+        "독서문화"
+      ],
+      "hobbyIntensity": "MID",
+      "initialWasteLevel": "MID",
+      "improvementSpeed": "MID_SLOW",
+      "noImprovementPct": 0.08,
+      "cards": [
+        3,
+        6
+      ],
+      "hasVehicle": "MIXED",
+      "region": {
+        "mode": "METRO",
+        "commute": true,
+        "workCity": null
+      },
+      "traits": [
+        "프랜차이즈는 유사 브랜드를 유사 시간대에 반복 이용(브랜드 충성·시간 규칙성)"
+      ]
+    },
+    {
+      "name": "과소비형",
+      "populationShare": 0.4,
+      "monthlyTotalMean": 3700000,
+      "monthlyCV": 0.3,
+      "categoryMix": {
+        "건강/피트니스": 2.372,
+        "교통/자동차": 8.0,
+        "대형마트": 1.176,
+        "미용": 0.621,
+        "생활": 0.339,
+        "쇼핑": 34.632,
+        "술/유흥": 3.313,
+        "식비": 17.391,
+        "여행/숙박": 1.845,
+        "의료": 0.565,
+        "주거/통신": 3.52,
+        "취미/여가": 12.347,
+        "카테고리없음": 0.941,
+        "카페/간식": 9.411,
+        "편의점/잡화": 3.529
+      },
+      "txPerMonthMean": 290,
+      "ticketTendency": "MIXED",
+      "onlineRatio": 0.7,
+      "activeHours": [
+        9,
+        22
+      ],
+      "dayBias": "RANDOM",
+      "plannedRatio": 0.35,
+      "impulsivity": 1.6,
+      "nightImpulse": "HIGH",
+      "deliveryOveruse": "MID_HIGH",
+      "subscriptionCount": [
+        4,
+        7
+      ],
+      "subscriptionLeak": "HIGH",
+      "hobbies": [
+        "여행",
+        "문화공연",
+        "패션쇼핑"
+      ],
+      "hobbyIntensity": "HIGH",
+      "initialWasteLevel": "HIGH",
+      "improvementSpeed": "RANDOM",
+      "noImprovementPct": 0.1,
+      "cards": [
+        6,
+        6
+      ],
+      "hasVehicle": "YES",
+      "region": {
+        "mode": "POP_WEIGHTED",
+        "commute": true,
+        "workCity": null
+      },
+      "traits": [
+        "쇼핑이 오프라인·온라인 모두 다양(오프라인 비중 더 큼)"
+      ]
+    },
+    {
+      "name": "구독과다형",
+      "populationShare": 0.1,
+      "monthlyTotalMean": 2900000,
+      "monthlyCV": 0.18,
+      "categoryMix": {
+        "건강/피트니스": 2.597,
+        "교통/자동차": 6.5,
+        "대형마트": 1.202,
+        "미용": 1.058,
+        "생활": 0.577,
+        "쇼핑": 11.351,
+        "술/유흥": 2.963,
+        "식비": 39.362,
+        "여행/숙박": 2.02,
+        "의료": 0.962,
+        "주거/통신": 3.944,
+        "취미/여가": 13.275,
+        "카테고리없음": 0.962,
+        "카페/간식": 9.619,
+        "편의점/잡화": 3.607
+      },
+      "txPerMonthMean": 225,
+      "ticketTendency": "MIXED",
+      "onlineRatio": 0.8,
+      "activeHours": [
+        12,
+        24
+      ],
+      "dayBias": "EVEN",
+      "plannedRatio": 0.6,
+      "impulsivity": 1.3,
+      "nightImpulse": "MID",
+      "deliveryOveruse": "HIGH",
+      "subscriptionCount": [
+        6,
+        10
+      ],
+      "subscriptionLeak": "MID",
+      "hobbies": [
+        "디지털게임",
+        "영화관람"
+      ],
+      "hobbyIntensity": "MID",
+      "initialWasteLevel": "MID_HIGH",
+      "improvementSpeed": "MID_FAST",
+      "noImprovementPct": 0.05,
+      "cards": [
+        6,
+        6
+      ],
+      "hasVehicle": "NO",
+      "region": {
+        "mode": "POP_WEIGHTED",
+        "wideMovement": true,
+        "commute": true,
+        "workCity": null
+      },
+      "traits": [
+        "온라인 구독 정기결제 다양",
+        "지역 이동 잦음(이동범위 넓음)"
+      ]
+    },
+    {
+      "name": "외식형",
+      "populationShare": 0.3,
+      "monthlyTotalMean": 3200000,
+      "monthlyCV": 0.23,
+      "categoryMix": {
+        "건강/피트니스": 2.537,
+        "교통/자동차": 8.0,
+        "대형마트": 0.94,
+        "미용": 1.034,
+        "생활": 0.564,
+        "쇼핑": 10.713,
+        "술/유흥": 9.773,
+        "식비": 39.093,
+        "여행/숙박": 1.973,
+        "의료": 0.94,
+        "주거/통신": 2.349,
+        "취미/여가": 11.277,
+        "카테고리없음": 0.47,
+        "카페/간식": 7.518,
+        "편의점/잡화": 2.819
+      },
+      "txPerMonthMean": 250,
+      "ticketTendency": "LARGE_FEW",
+      "onlineRatio": 0.2,
+      "activeHours": [
+        10,
+        22
+      ],
+      "dayBias": "RANDOM",
+      "plannedRatio": 0.4,
+      "impulsivity": 1.4,
+      "nightImpulse": "MID",
+      "deliveryOveruse": "LOW",
+      "subscriptionCount": [
+        2,
+        4
+      ],
+      "subscriptionLeak": "LOW",
+      "hobbies": [
+        "미식탐방",
+        "아웃도어캠핑",
+        "스포츠레저"
+      ],
+      "hobbyIntensity": "HIGH",
+      "initialWasteLevel": "HIGH",
+      "improvementSpeed": "SLOW",
+      "noImprovementPct": 0.03,
+      "cards": [
+        3,
+        6
+      ],
+      "hasVehicle": "YES",
+      "region": {
+        "mode": "CAPITAL_SUBURB",
+        "workCity": "서울특별시",
+        "commute": true
+      },
+      "traits": [
+        "다양한 오프라인 음식점 순회 외식",
+        "거주=수도권(비서울), 근무=서울 통근"
+      ]
+    }
+  ]
 }

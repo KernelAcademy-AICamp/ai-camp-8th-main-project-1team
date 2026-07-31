@@ -147,6 +147,10 @@ public class DailyActivitySimulator {
         Map<String, Double> w = new LinkedHashMap<>();
         double sum = 0;
         for (String code : sampler.ksicCodes()) {
+            // 보험은 **가입한 계약이 매달 같은 날 빠지는** 것이지 어쩌다 들르는 업종이 아니다.
+            // 여기 넣어 두면 '프로파일 밖 지출'이 아무 날에 보험료를 만들어, 차 없는 사람에게
+            // 자동차보험이 찍히고 출금일도 흩어진다(2026-07-31 실측 — 여기서 새고 있었다).
+            if (INSURANCE_KSIC.equals(code)) continue;
             double x = Math.max(1e-9, sampler.freqOf(code)) / Math.max(1000, avgPrice(code));
             w.put(code, x);
             sum += x;
@@ -215,6 +219,9 @@ public class DailyActivitySimulator {
         // 정기구독(고정일·고정 서비스)
         int subDay = 1 + r.nextInt(28);
         int subCount = GenSeed.uniformInt(r, v.subscriptionCount()[0], v.subscriptionCount()[1]);
+        // 보험 — 가입한 계약이 매달 같은 날 빠진다. 여러 개면 같은 날 여러 건이다(사용자 확인 2026-07-31).
+        int insDay = 1 + r.nextInt(28);
+        List<Policy> policies = samplePolicies(u);
 
         double baseDaily = v.txPerMonthMean() / 30.0;
         var day = props.getRandomness().getDay();
@@ -239,6 +246,16 @@ public class DailyActivitySimulator {
                 for (int s = 0; s < subCount; s++) {
                     out.add(subscriptionTxn(u, v, date, cf, r));
                 }
+            }
+
+            // 보험료(월 1회, 계약 수만큼) — 날짜·보험사·상품·금액이 전부 고정이다.
+            if (date.getDayOfMonth() == insDay) {
+                for (Policy pol : policies) out.add(insuranceTxn(u, v, date, cf, pol, r));
+            }
+
+            // 여행보험 — 떠나는 날 든다. 매달 나가는 계약이 아니라 그 여행 한 번짜리다.
+            if (away && !travel.containsKey(date.minusDays(1)) && r.nextDouble() < TRAVEL_INSURANCE_PROB) {
+                out.add(travelInsuranceTxn(u, v, date, cf, r));
             }
 
             // ── 출장 — 회사 일로 타지에 간다. 이동수단 결제 + 1박이면 숙박 ──
@@ -388,6 +405,149 @@ public class DailyActivitySimulator {
         return new GenTxn(cardIndex, date.atTime(hour, r.nextInt(60)), ksic, cat2, amount,
                 m.name(), m.channel(), p.name(), p.unitPrice(), 1, lab.label(), round4(lab.pWaste()),
                 m.address(), m.lat(), m.lon(), m.businessNumber());
+    }
+
+    /** 보험 카테고리 — 계약이 매달 같은 날 같은 금액으로 빠진다. */
+    private static final String INSURANCE_CATEGORY = "보험";
+
+    /**
+     * 가입한 보험 계약 하나. <b>사용자 단위로 한 번 뽑아 두고 매달 재사용한다.</b>
+     *
+     * <p>구독처럼 매달 새로 뽑으면 이번 달은 삼성화재 암보험, 다음 달은 AIG 골프보험이 된다.
+     * 계약은 그렇게 움직이지 않는다 — 한 번 들면 해지할 때까지 같은 보험사·같은 상품·같은 금액이다.
+     */
+    private record Policy(CatalogSampler.ResolvedMerchant merchant, CatalogSampler.ResolvedProduct product,
+                          int cardSlot) {}
+
+    /** 보험 맥락의 업종코드(손해보험업). 일상 추첨에서 빼는 데 쓴다. */
+    private static final String INSURANCE_KSIC = "6512";
+
+    /** 자동차를 몰아야 드는 보험인가 — 차가 없는 사람에게 나가면 안 된다. */
+    static boolean isVehicleInsurance(String n) {
+        return n != null && (n.contains("자동차보험") || n.contains("운전자"));
+    }
+    /** 여행 갈 때만 드는 보험 — 매달 나가는 계약이 아니라 그 여행 건당이다. */
+    static boolean isTravelInsurance(String n) { return n != null && n.contains("여행보험"); }
+    /** 반려동물이 있어야 드는 보험. */
+    static boolean isPetInsurance(String n) {
+        return n != null && (n.contains("펫") || n.contains("반려"));
+    }
+    /** 연금·저축성 — 보장이 아니라 목돈 마련이다. 보조로 하나쯤 든다. */
+    private static boolean isSavingInsurance(String n) {
+        return n != null && (n.contains("연금") || n.contains("저축"));
+    }
+    /** 사람이 가장 많이 드는 축 — 암·실손·건강·상해 계열. */
+    private static boolean isHealthInsurance(String n) {
+        if (n == null) return false;
+        for (String k : HEALTH_KEYS) if (n.contains(k)) return true;
+        return false;
+    }
+    private static final String[] HEALTH_KEYS = {
+            "암", "실손", "건강", "치아", "어린이", "자녀", "정기", "간병", "수술", "상해", "골키퍼"};
+
+    /**
+     * 이 사용자가 든 보험 계약들 (사용자 결정 2026-07-31).
+     *
+     * <ul>
+     *   <li>계약은 <b>0~3건</b>. 하나도 없는 사람도 있다.
+     *   <li><b>차가 있으면 운전자보험이 반드시 하나</b> 들어가고,
+     *       <b>차가 없으면 자동차·운전자보험은 하나도 안 나간다.</b>
+     *   <li>일반적으로는 <b>건강 계열</b>(암·실손·건강·상해)을 주로 들고, <b>연금·저축</b>은 보조로 든다.
+     *   <li><b>펫보험은 반려동물이 있는 사람만.</b>
+     *   <li><b>여행보험은 계약이 아니다</b> — 여행 가는 달에만 그때 든다({@link #travelInsuranceTxn}).
+     * </ul>
+     *
+     * <p>시드를 사용자에 고정하므로 몇 번을 돌려도 같은 계약이 나온다(마스터 §4 원칙 3).
+     */
+    private List<Policy> samplePolicies(GeneratedUser u) {
+        Random ir = GenSeed.rng(u.userSeed(), 61);
+        boolean vehicle = u.hasVehicle();
+        boolean pet = u.hasPet();
+        int count = GenSeed.uniformInt(ir, 0, 3);
+        List<Policy> out = new ArrayList<>(Math.max(1, count));
+        Set<String> taken = new HashSet<>();          // 같은 상품을 두 번 들지 않는다
+
+        // 차가 있으면 운전자보험부터 하나 확보한다(계약 수와 별개로 반드시 있다).
+        if (vehicle) addPolicy(out, taken, u, ir, n -> n.contains("운전자"));
+
+        for (int guard = 0; out.size() < count && guard < count * 8 + 8; guard++) {
+            double x = ir.nextDouble();
+            // 건강이 주력, 연금·저축이 보조. 펫은 반려동물이 있을 때만 후보가 된다.
+            //
+            // 0.62 로 뒀을 때 건강 가입자가 45.3%로 자동차(74.9%)보다 적었다(2026-07-31 실측).
+            // 차가 있으면 운전자보험이 계약 수와 별개로 한 건 더해지기 때문이다 — 그만큼 남은
+            // 슬롯에서 건강이 나올 확률을 올려야 "일반적으로 건강을 주로 든다"가 성립한다.
+            java.util.function.Predicate<String> want =
+                    x < 0.74 ? DailyActivitySimulator::isHealthInsurance
+                  : x < 0.88 ? DailyActivitySimulator::isSavingInsurance
+                  : (pet && x < 0.95) ? DailyActivitySimulator::isPetInsurance
+                  : n -> !isHealthInsurance(n) && !isSavingInsurance(n) && !isPetInsurance(n);
+            addPolicy(out, taken, u, ir, want.and(n -> allowed(n, vehicle, pet)));
+        }
+        return out;
+    }
+
+    /** 이 사용자가 들 수 있는 보험인가 — 차·반려동물 유무와 '여행은 계약이 아니다'를 함께 본다. */
+    private static boolean allowed(String n, boolean vehicle, boolean pet) {
+        if (isTravelInsurance(n)) return false;               // 여행 갈 때만 든다
+        if (!vehicle && isVehicleInsurance(n)) return false;
+        if (!pet && isPetInsurance(n)) return false;
+        return true;
+    }
+
+    /** 조건에 맞는 상품 하나를 뽑아 계약으로 담는다. 이미 든 상품이면 담지 않는다. */
+    private void addPolicy(List<Policy> out, Set<String> taken, GeneratedUser u, Random ir,
+                           java.util.function.Predicate<String> accept) {
+        var product = sampler.resolveProduct(INSURANCE_CATEGORY, ir, accept);
+        if (!accept.test(product.name()) || !taken.add(product.name())) return;
+        // 상품을 먼저 뽑고 그 상품을 파는 보험사를 고른다 — 삼성화재가 '펫블리반려견보험'(DB)을
+        // 팔면 안 된다. serves 가 그 짝을 카탈로그에 적어 둔다.
+        out.add(new Policy(sampler.resolveMerchant(INSURANCE_CATEGORY, null, product.name(), ir),
+                product, ir.nextInt(u.cardCount())));
+    }
+
+    /**
+     * 여행 한 번에 여행보험을 들 확률.
+     *
+     * <p><b>여행 건당 확률이라 관측 기간 전체로는 훨씬 커진다.</b> 0.45로 뒀더니 280일 동안
+     * 여행을 서너 번 가는 사이에 <b>95.3%가 한 번은 들어</b> 사실상 전원이 여행보험 결제를
+     * 갖게 됐다(2026-07-31 실측). 여행 4회면 1-(1-p)^4 이므로 0.10 이 사람 기준 35% 근처다.
+     */
+    private static final double TRAVEL_INSURANCE_PROB = 0.10;
+
+    /**
+     * 여행보험 — <b>떠나는 날 하루치</b>다(사용자 결정 2026-07-31).
+     *
+     * <p>매달 빠지는 계약으로 넣으면 여행을 안 가는 달에도 여행보험료가 나간다. 실제로는
+     * 출발 직전에 그 여행 기간만큼 든다.
+     */
+    private GenTxn travelInsuranceTxn(GeneratedUser u, PersonaVariant v, LocalDate date,
+                                      double cf, Random r) {
+        var ctx = sampler.context(INSURANCE_CATEGORY);
+        var product = sampler.resolveProduct(INSURANCE_CATEGORY, r,
+                DailyActivitySimulator::isTravelInsurance);
+        var m = sampler.resolveMerchant(INSURANCE_CATEGORY, null, product.name(), r);
+        int amount = product.unitPrice();
+        int hour = GenSeed.uniformInt(r, 7, 22);
+        var lab = labeler.label(INSURANCE_CATEGORY, amount, amount, hour, true, false, false, false, v, cf, r);
+        return new GenTxn(r.nextInt(u.cardCount()), date.atTime(hour, 0),
+                ctx != null ? ctx.ksicCode() : INSURANCE_KSIC, INSURANCE_CATEGORY, amount,
+                m.name(), "ONLINE", product.name(), amount, 1, lab.label(), round4(lab.pWaste()),
+                m.address(), m.lat(), m.lon(), m.businessNumber());
+    }
+
+    private GenTxn insuranceTxn(GeneratedUser u, PersonaVariant v, LocalDate date, double cf,
+                                Policy pol, Random r) {
+        var ctx = sampler.context(INSURANCE_CATEGORY);
+        int amount = pol.product().unitPrice();       // 보험료는 계약된 금액 그대로다
+        int hour = GenSeed.uniformInt(r, 0, 23);
+        var lab = labeler.label(INSURANCE_CATEGORY, amount, amount, hour, true, false, false, false, v, cf, r);
+        return new GenTxn(pol.cardSlot(), date.atTime(hour, 0),
+                ctx != null ? ctx.ksicCode() : "6512", INSURANCE_CATEGORY, amount,
+                pol.merchant().name(), "ONLINE", pol.product().name(), amount, 1,
+                lab.label(), round4(lab.pWaste()),
+                pol.merchant().address(), pol.merchant().lat(), pol.merchant().lon(),
+                pol.merchant().businessNumber());
     }
 
     private GenTxn subscriptionTxn(GeneratedUser u, PersonaVariant v, LocalDate date, double cf, Random r) {

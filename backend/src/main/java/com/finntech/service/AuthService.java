@@ -69,11 +69,27 @@ public class AuthService {
             return new VerifyResult(ci, false, true, Reason.CARRIER_MISMATCH.name(), actual.label());
         }
 
-        user.setCi(ci);
+        // ④ 어느 계정에 붙일 것인가. **클라이언트가 보낸 userId를 그대로 믿지 않는다.**
+        //
+        // 브라우저에 남은 userId는 '앞사람'일 수 있다. 로그아웃해도 지워지지 않았고(프론트 결함),
+        // 그 계정에 새 신원을 덮어쓰자 계정이 통째로 다른 사람이 됐다 — 앞사람의 챌린지·지킴이 원장은
+        // 그대로 남은 채 결제만 뒷사람 것으로 바뀌어, 홈이 남의 챌린지를 보여줬다(2026-07-31 운영).
+        //
+        // CI가 신원이므로 판단은 CI로 한다. 셋 중 하나다.
+        AppUser target = userRepository.findByCi(ci).orElse(null);
+        if (target == null) {
+            // 처음 보는 신원 — 이 계정이 비어 있으면 여기에 붙이고, 이미 남이 쓰고 있으면 새로 만든다.
+            boolean occupied = user.getCi() != null && !user.getCi().isBlank() && !user.getCi().equals(ci);
+            target = occupied
+                    ? new AppUser("user-" + ci.substring(0, 12), user.getMonthlyIncome(),
+                                  user.getGoalAmount(), user.getGoalMonths())
+                    : user;
+            target.setCi(ci);
+        }
         // 금융상품의 나이 자격 판정에 쓸 출생연도만 남긴다. 월·일과 성별세대코드는 여기서 버려진다.
-        user.setBirthYear(birthYearOf(social7));
-        userRepository.save(user);
-        return new VerifyResult(ci, true, true, Reason.OK.name(), actual.label());
+        target.setBirthYear(birthYearOf(social7));
+        target = userRepository.save(target);
+        return new VerifyResult(ci, true, true, Reason.OK.name(), actual.label(), target.getId());
     }
 
     /**
@@ -147,7 +163,16 @@ public class AuthService {
      * @param existsInMyData 그 신원이 마이데이터에 있는가 — 화면이 옛 방식으로도 읽을 수 있게 남긴다.
      * @param reason        {@link Reason} 이름. 화면이 사유별 문장을 고르는 근거다.
      * @param actualCarrier 번호 대역의 실제 통신사. 불일치 안내에 그대로 넣는다.
+     * @param userId        <b>이 신원의 계정</b>. 요청에 실려 온 userId와 다를 수 있다 — 클라이언트는
+     *                      인증에 성공하면 이 값으로 갈아타야 한다. 실패하면 null이다.
      */
     public record VerifyResult(String ci, boolean verified, boolean existsInMyData,
-                               String reason, String actualCarrier) {}
+                               String reason, String actualCarrier, Long userId) {
+
+        /** 인증 실패 응답 — 계정을 고르지 않았으므로 userId가 없다. */
+        public VerifyResult(String ci, boolean verified, boolean existsInMyData,
+                            String reason, String actualCarrier) {
+            this(ci, verified, existsInMyData, reason, actualCarrier, null);
+        }
+    }
 }
