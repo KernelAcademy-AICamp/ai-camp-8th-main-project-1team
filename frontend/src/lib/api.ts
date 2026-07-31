@@ -297,6 +297,11 @@ export interface VerifyResult {
   reason: VerifyReason;
   /** 번호 대역의 실제 통신사. 불일치 안내에 쓴다. */
   actualCarrier: string | null;
+  /**
+   * **이 신원의 계정.** 요청에 실어 보낸 userId와 다를 수 있다 — 서버는 CI로 계정을 고르므로,
+   * 앞사람이 쓰던 브라우저에서 인증하면 여기로 갈아타야 한다. 실패하면 null.
+   */
+  userId: number | null;
 }
 export interface MyDataCompany { id: number; name: string; imgUrl: string }
 export interface MyDataLinkResult { cardCount: number; paymentCount: number; bankCount: number }

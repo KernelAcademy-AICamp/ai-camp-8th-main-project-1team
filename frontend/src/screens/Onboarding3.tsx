@@ -22,6 +22,8 @@ export function Onboarding3() {
   const { reload } = useGuardian();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
+  /** 서버가 409로 거절했을 때의 안내 — 오류가 아니라 '지금은 못 바꾼다'는 사실이다. */
+  const [conflict, setConflict] = useState<string | null>(null);
   const inited = useRef(false);
 
   const baseOf = (code: string) => draft.baseline[code]?.monthlyAmount ?? 0;
@@ -80,7 +82,7 @@ export function Onboarding3() {
 
   async function start() {
     if (total <= 0) { setError(new Error('지킬 돈이 0원이에요. 강도를 올리거나 다른 카테고리를 골라주세요.')); return; }
-    setBusy(true); setError(null);
+    setBusy(true); setError(null); setConflict(null);
     try {
       await api.guardian.createChallenge(userId, {
         categories: draft.cutCats,
@@ -92,8 +94,15 @@ export function Onboarding3() {
       await reload();
       go('done');
     } catch (e) {
-      // 이미 진행 중인 챌린지가 있으면(409) 새로 만들 게 아니라 홈으로 돌아가면 된다.
-      if (e instanceof ApiError && e.status === 409) { await reload(); go('home'); return; }
+      // 이미 진행 중인 챌린지가 있으면(409) 새로 만들 수 없다. 예전에는 **말없이 홈으로 보냈는데**,
+      // 그러면 방금 고른 카테고리 대신 지난 챌린지가 떠 있어 "온보딩이 아무 소용 없다"로 보인다
+      // (2026-07-31 운영). 화면에 남아서 사실을 알리고, 홈으로 갈지는 사용자가 고른다.
+      if (e instanceof ApiError && e.status === 409) {
+        await reload();
+        setConflict('지금 지키는 중인 챌린지가 있어서 이번 선택은 저장되지 않았어요. '
+          + '지금 챌린지가 끝나면 새로 정할 수 있어요.');
+        return;
+      }
       setError(e);
     } finally {
       setBusy(false);
@@ -159,6 +168,14 @@ export function Onboarding3() {
           </div>
         </div>
 
+        {conflict != null && (
+          <>
+            <p className="notice-warn" role="alert">{conflict}</p>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => go('home')}>
+              지금 지키는 중인 챌린지 보기
+            </button>
+          </>
+        )}
         {error != null && (
           <>
             <ErrorBox error={error} />
