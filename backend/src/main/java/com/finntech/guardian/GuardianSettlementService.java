@@ -6,8 +6,8 @@ import com.finntech.guardian.domain.GuardianEnums.DailyResult;
 import com.finntech.guardian.domain.GuardianEnums.TxState;
 import com.finntech.guardian.domain.GuardianTransaction;
 import com.finntech.guardian.domain.RoomObject;
-import com.finntech.guardian.repository.GuardianChallengeCategoryRepository;
 import com.finntech.guardian.repository.DailyVerdictRepository;
+import com.finntech.guardian.repository.GuardianChallengeCategoryRepository;
 import com.finntech.guardian.repository.GuardianChallengeRepository;
 import com.finntech.guardian.repository.GuardianPointEventRepository;
 import com.finntech.guardian.repository.GuardianTransactionRepository;
@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
