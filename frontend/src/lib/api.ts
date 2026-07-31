@@ -532,6 +532,14 @@ export interface GuardianSnapshot {
   paceRatio: number;
   allowedRatio: number;
 }
+/** 카테고리 한 줄 — 홈의 '지킴 현황'을 갈라 그린다. 한도는 묶음 하나라 카테고리별 한도는 없다. */
+export interface CategorySpend {
+  code: string;
+  label: string;
+  spent: number;
+  /** 챌린지 전체 사용액에서 이 카테고리가 차지하는 비율(0~1). */
+  share: number;
+}
 export interface GuardianChallenge extends GuardianSnapshot {
   id: number;
   state: ChallengeState;
@@ -541,6 +549,7 @@ export interface GuardianChallenge extends GuardianSnapshot {
   baselineAmount: number;
   targetSaving: number;
   challengeCap: number;
+  categorySpend?: CategorySpend[];
   bufferRatio: number;
   startDate: string;
   endDate: string;

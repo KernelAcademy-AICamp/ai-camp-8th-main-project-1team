@@ -594,10 +594,20 @@ public class GuardianService {
     public record CeremonyView(LocalDate verdictDate, DailyResult result, String objectId,
                                Grade grade, String message, boolean rerollAvailable) {}
 
+    /**
+     * 카테고리 한 줄 — 홈의 '지킴 현황'을 갈라 보여준다.
+     *
+     * @param spent 그 카테고리에서 지금까지 집계된 금액
+     * @param share 챌린지 전체 사용액에서 이 카테고리가 차지하는 비율(0~1). 한도는 묶음 하나로
+     *              관리하므로 <b>카테고리별 한도는 없다</b> — 있는 척하면 화면이 거짓말을 한다.
+     */
+    public record CategorySpend(String code, String label, long spent, double share) {}
+
     public record HomeView(LocalDateTime asOf, GuardianChallenge challenge, String categoryLabel,
                            GuardianRules.Snapshot snapshot, int pendingCount, String pendingBadge,
                            CeremonyView ceremony, List<GrassCell> grass, GuardianItems items,
-                           int unreadNotifications, boolean demoMode) {}
+                           int unreadNotifications, boolean demoMode,
+                           List<CategorySpend> categorySpend) {}
 
     /** 홈 한 방 — 프론트가 그릴 값을 전부 계산해 내려준다. */
     @Transactional
@@ -623,10 +633,27 @@ public class GuardianService {
         String label = ch.getCategorySet().stream()
                 .map(this::categoryLabel).reduce((a, b) -> a + "·" + b).orElse("");
 
+        // 카테고리별 사용액 — 고른 카테고리는 하나도 빠뜨리지 않는다(0원이어도 줄을 만든다).
+        // 아직 안 쓴 곳이 화면에서 사라지면 "왜 없지"가 되고, 무엇을 지키고 있는지가 흐려진다.
+        Map<String, Long> spentByCat = new HashMap<>();
+        for (Object[] row : txRepository.sumCountedByCategory(ch.getId())) {
+            if (row[0] == null) continue;
+            spentByCat.put((String) row[0], ((Number) row[1]).longValue());
+        }
+        long spentTotal = Math.max(1L, snap.spentAmount());
+        List<CategorySpend> categorySpend = new ArrayList<>();
+        for (String code : ch.getCategorySet()) {
+            long spent = spentByCat.getOrDefault(code, 0L);
+            categorySpend.add(new CategorySpend(code, categoryLabel(code), spent,
+                    Math.min(1.0, (double) spent / spentTotal)));
+        }
+        categorySpend.sort(Comparator.comparingLong(CategorySpend::spent).reversed());
+
         return new HomeView(now, ch, label, snap, pending,
                 pending > 0 ? GuardianCopy.pendingBadge(pending) : null,
                 ceremony, grass, rewardService.items(userId, now),
-                notificationRepository.countUnread(userId), clock.isDemoMode(userId));
+                notificationRepository.countUnread(userId), clock.isDemoMode(userId),
+                categorySpend);
     }
 
     /** 세리머니를 열었다 — 이 시각이 기록돼야 홈의 미개봉 뱃지가 꺼진다. */

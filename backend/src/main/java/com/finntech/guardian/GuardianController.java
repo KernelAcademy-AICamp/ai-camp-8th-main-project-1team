@@ -173,6 +173,16 @@ public class GuardianController {
 
         Map<String, Object> challenge = challengeView(ch);
         challenge.put("categoryLabel", h.categoryLabel());
+        // 카테고리별 사용액 — 화면이 '지킴 현황'을 갈라 그린다. 한도는 묶음 하나이므로
+        // 카테고리별 한도는 내려보내지 않는다(없는 것을 있는 척하면 화면이 거짓말을 한다).
+        challenge.put("categorySpend", h.categorySpend().stream().map(c -> {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("code", c.code());
+            m.put("label", c.label());
+            m.put("spent", c.spent());
+            m.put("share", Math.round(c.share() * 1000.0) / 1000.0);
+            return m;
+        }).toList());
         challenge.putAll(snapshotView(s));
 
         Map<String, Object> out = new LinkedHashMap<>();

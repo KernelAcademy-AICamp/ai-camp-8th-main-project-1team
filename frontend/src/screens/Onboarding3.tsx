@@ -13,7 +13,7 @@ import { useGuardian } from '../state/guardian';
 import { ApiError, api } from '../lib/api';
 import { CHALLENGE_DAYS } from '../lib/config';
 import {
-  won, wonShort, iconOf, shortDate, INTENSITY_TIERS, DEFAULT_INTENSITY,
+  won, wonShort, iconOf, shortDateTime, INTENSITY_TIERS, DEFAULT_INTENSITY,
   INTENSITY_MIN, INTENSITY_MAX, INTENSITY_STEP, round1,
 } from '../lib/format';
 
@@ -215,7 +215,7 @@ export function Onboarding3() {
                               <button type="button" className={off ? 'pick off' : 'pick'}
                                 aria-pressed={!off} onClick={() => toggleKeep(p.paymentId)}>
                                 <span className="box" aria-hidden="true">{off ? '' : '✓'}</span>
-                                <span className="d">{shortDate(p.date)}</span>
+                                <span className="d">{shortDateTime(p.date)}</span>
                                 <span className="m">{p.merchantName ?? '가맹점 미상'}</span>
                                 <span className="a">{won(p.amount)}</span>
                               </button>
