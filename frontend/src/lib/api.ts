@@ -539,6 +539,11 @@ export interface CategorySpend {
   spent: number;
   /** 챌린지 전체 사용액에서 이 카테고리가 차지하는 비율(0~1). */
   share: number;
+  /** 그 카테고리의 한도. 온보딩에서 정한 강도가 그대로 반영된다. */
+  cap: number;
+  remaining: number;
+  /** 한도 대비 소진율(0~1). 1을 넘을 수 있다 — 넘긴 것도 보여야 한다. */
+  ratio: number;
 }
 export interface GuardianChallenge extends GuardianSnapshot {
   id: number;
@@ -761,6 +766,11 @@ export interface CreateChallengeInput {
    * 서버가 기준 지출에서 그만큼 뺀다 — 화면이 보여준 '지킬 돈'과 서버 한도가 어긋나지 않게.
    */
   keptPaymentIds?: string[];
+  /**
+   * 카테고리 → 그 카테고리에서 지킬 돈. 강도를 카테고리마다 다르게 잡을 수 있으므로
+   * 한 숫자로는 표현되지 않는다. 안 보내면 서버가 균등분할한다.
+   */
+  categoryTargets?: Record<string, number>;
 }
 export interface GuardianIngestResult {
   transaction: GuardianTransactionView;

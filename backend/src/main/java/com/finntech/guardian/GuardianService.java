@@ -5,6 +5,7 @@ import com.finntech.domain.Consumption;
 import com.finntech.engine.AnalysisEngine;
 import com.finntech.engine.AnalysisResult;
 import com.finntech.guardian.domain.*;
+import com.finntech.guardian.repository.GuardianChallengeCategoryRepository;
 import com.finntech.guardian.domain.GuardianEnums.*;
 import com.finntech.guardian.repository.*;
 import com.finntech.repository.CategoryRepository;
@@ -47,6 +48,7 @@ public class GuardianService {
     private final CategoryRepository categoryRepository;
     private final com.finntech.repository.UserPaymentRepository userPaymentRepository;
     private final com.finntech.repository.UserMerchantStanceRepository stanceRepository;
+    private final GuardianChallengeCategoryRepository challengeCategoryRepository;
 
     public GuardianService(GuardianChallengeRepository challengeRepository,
                            GuardianTransactionRepository txRepository,
@@ -60,7 +62,8 @@ public class GuardianService {
                            ConsumptionRepository consumptionRepository,
                            CategoryRepository categoryRepository,
                            com.finntech.repository.UserPaymentRepository userPaymentRepository,
-                           com.finntech.repository.UserMerchantStanceRepository stanceRepository) {
+                           com.finntech.repository.UserMerchantStanceRepository stanceRepository,
+                           GuardianChallengeCategoryRepository challengeCategoryRepository) {
         this.challengeRepository = challengeRepository;
         this.txRepository = txRepository;
         this.notificationRepository = notificationRepository;
@@ -74,6 +77,7 @@ public class GuardianService {
         this.categoryRepository = categoryRepository;
         this.userPaymentRepository = userPaymentRepository;
         this.stanceRepository = stanceRepository;
+        this.challengeCategoryRepository = challengeCategoryRepository;
     }
 
     // ======================================================================
@@ -93,7 +97,16 @@ public class GuardianService {
                                              Long targetSaving, String rewardName, Long rewardPrice,
                                              Integer durationDays) {
         return createChallenge(userId, categories, sanctuary, targetSaving, rewardName,
-                rewardPrice, durationDays, List.of());
+                rewardPrice, durationDays, List.of(), Map.of());
+    }
+
+    /** 카테고리별 목표 없이 부르는 호출부용 — 균등분할한다. */
+    @Transactional
+    public GuardianChallenge createChallenge(Long userId, List<String> categories, List<String> sanctuary,
+                                             Long targetSaving, String rewardName, Long rewardPrice,
+                                             Integer durationDays, List<String> keptPaymentIds) {
+        return createChallenge(userId, categories, sanctuary, targetSaving, rewardName,
+                rewardPrice, durationDays, keptPaymentIds, Map.of());
     }
 
     /**
@@ -104,7 +117,8 @@ public class GuardianService {
     @Transactional
     public GuardianChallenge createChallenge(Long userId, List<String> categories, List<String> sanctuary,
                                              Long targetSaving, String rewardName, Long rewardPrice,
-                                             Integer durationDays, List<String> keptPaymentIds) {
+                                             Integer durationDays, List<String> keptPaymentIds,
+                                             Map<String, Long> categoryTargets) {
         if (categories == null || categories.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "줄일 카테고리를 하나 이상 골라주세요");
         }
@@ -134,9 +148,11 @@ public class GuardianService {
                 baseline.periodAmount(), target, bufferRatio,
                 start, start.plusDays(days - 1L), rewardName, rewardPrice, now);
         rewardService.items(userId, now);   // 보유 아이템 레코드를 미리 만들어 둔다
+        GuardianChallenge saved = challengeRepository.save(ch);
+        saveCategoryCaps(saved, categories, now, days, keptPaymentIds, categoryTargets, target);
         // 뺀 결제가 가리킨 가맹점의 성향을 한 칸 올린다 — 다음 달에 같은 것을 또 빼지 않도록.
         promoteStances(userId, keptPaymentIds, now);
-        return challengeRepository.save(ch);
+        return saved;
     }
 
     /**
@@ -226,6 +242,64 @@ public class GuardianService {
             st.kept(toLenient, toExcluded, now);
             stanceRepository.save(st);
         }
+    }
+
+    /**
+     * 카테고리별 한도를 적재한다.
+     *
+     * <p>온보딩3은 카테고리마다 다른 강도를 받는다 — 배달은 50%, 카페는 20%처럼. 그런데 서버는
+     * 지금까지 <b>지킬 돈 하나</b>만 받았고, 화면이 카테고리별로 보여줄 때는 전체 캡을 균등분할했다.
+     * 사용자가 정한 것과 화면이 보여준 것이 달랐다(2026-07-31).
+     *
+     * <p>{@code categoryTargets}가 없으면(옛 클라이언트·테스트) 예전처럼 균등분할한다 —
+     * 그때는 값이 바뀌지 않으므로 안전하다.
+     *
+     * <p>여기서 만든 한도는 <b>판정에 쓰지 않는다.</b> 챌린지 성공/실패와 잔디는 합계 기준
+     * 그대로다(사용자 결정). 이 값은 어디서 새는지 보여주고 알리는 데 쓴다.
+     */
+    private void saveCategoryCaps(GuardianChallenge ch, List<String> categories, LocalDateTime now,
+                                  int days, List<String> keptPaymentIds,
+                                  Map<String, Long> categoryTargets, long totalTarget) {
+        Map<String, Long> baselines = baselineByCategory(ch.getUserId(), categories, now, days, keptPaymentIds);
+        boolean perCategory = categoryTargets != null && !categoryTargets.isEmpty();
+        int n = Math.max(1, categories.size());
+        List<GuardianChallengeCategory> rows = new ArrayList<>(categories.size());
+        for (String code : categories) {
+            long base = baselines.getOrDefault(code, 0L);
+            long tgt = perCategory
+                    ? categoryTargets.getOrDefault(code, 0L)
+                    : totalTarget / n;
+            // 지킬 돈이 기준을 넘으면 한도가 음수가 된다 — 한 칸 낮춰 0원 한도를 만들지 않는다.
+            if (tgt >= base && base > 0) tgt = base - 1;
+            rows.add(new GuardianChallengeCategory(ch.getId(), code, base, Math.max(0L, tgt), now));
+        }
+        challengeCategoryRepository.saveAll(rows);
+    }
+
+    /** 카테고리별 창 안 실측 — 뺀 결제는 그 카테고리에서 뺀다. */
+    private Map<String, Long> baselineByCategory(Long userId, List<String> categories,
+                                                 LocalDateTime now, int days,
+                                                 List<String> keptPaymentIds) {
+        AnalysisResult analysis = analysisEngine.analyze(userId, now, days);
+        Map<String, Long> out = new LinkedHashMap<>();
+        for (String code : categories) {
+            AnalysisResult.CategoryStat stat = analysis.categoryStats().get(code);
+            out.put(code, stat == null ? 0L
+                    : stat.totalAmount().setScale(0, RoundingMode.HALF_UP).longValue());
+        }
+        // 뺀 결제를 그 카테고리에서 덜어낸다.
+        if (keptPaymentIds != null && !keptPaymentIds.isEmpty()) {
+            LocalDateTime from = now.minusDays(days);
+            for (var p : userPaymentRepository.findAllById(keptPaymentIds)) {
+                if (!userId.equals(p.getUserId())) continue;
+                if (p.getPaymentDate().isBefore(from) || p.getPaymentDate().isAfter(now)) continue;
+                String c = p.getCategory2();
+                if (c == null || !out.containsKey(c)) continue;
+                out.merge(c, -(long) p.getAmount(), Long::sum);
+            }
+            out.replaceAll((k, v) -> Math.max(0L, v));
+        }
+        return out;
     }
 
     /** 사용자가 뺀 결제의 합계와 건수. */
@@ -601,7 +675,8 @@ public class GuardianService {
      * @param share 챌린지 전체 사용액에서 이 카테고리가 차지하는 비율(0~1). 한도는 묶음 하나로
      *              관리하므로 <b>카테고리별 한도는 없다</b> — 있는 척하면 화면이 거짓말을 한다.
      */
-    public record CategorySpend(String code, String label, long spent, double share) {}
+    public record CategorySpend(String code, String label, long spent, double share,
+                                long cap, long remaining, double ratio) {}
 
     public record HomeView(LocalDateTime asOf, GuardianChallenge challenge, String categoryLabel,
                            GuardianRules.Snapshot snapshot, int pendingCount, String pendingBadge,
@@ -640,12 +715,22 @@ public class GuardianService {
             if (row[0] == null) continue;
             spentByCat.put((String) row[0], ((Number) row[1]).longValue());
         }
+        // 카테고리별 한도 — 없으면(옛 챌린지) 전체 캡을 균등분할해 예전과 같은 값을 보인다.
+        Map<String, Long> capByCat = new HashMap<>();
+        for (var cc : challengeCategoryRepository.findByChallenge(ch.getId())) {
+            capByCat.put(cc.getCategory(), cc.getCap());
+        }
+        long evenCap = ch.getCategorySet().isEmpty() ? 0
+                : ch.getChallengeCap() / ch.getCategorySet().size();
         long spentTotal = Math.max(1L, snap.spentAmount());
         List<CategorySpend> categorySpend = new ArrayList<>();
         for (String code : ch.getCategorySet()) {
             long spent = spentByCat.getOrDefault(code, 0L);
+            long cap = capByCat.getOrDefault(code, evenCap);
             categorySpend.add(new CategorySpend(code, categoryLabel(code), spent,
-                    Math.min(1.0, (double) spent / spentTotal)));
+                    Math.min(1.0, (double) spent / spentTotal),
+                    cap, Math.max(0L, cap - spent),
+                    cap > 0 ? (double) spent / cap : 0.0));
         }
         categorySpend.sort(Comparator.comparingLong(CategorySpend::spent).reversed());
 

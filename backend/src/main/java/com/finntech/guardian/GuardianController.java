@@ -70,14 +70,20 @@ public class GuardianController {
             String rewardName,
             Long rewardPrice,
             Integer durationDays,
-            List<String> keptPaymentIds) {}
+            List<String> keptPaymentIds,
+            /**
+             * 카테고리 → 그 카테고리에서 지킬 돈. 온보딩3의 강도가 카테고리마다 다르므로
+             * 한 숫자로는 표현할 수 없다. 비어 있으면 {@code targetSaving}을 균등분할한다.
+             */
+            Map<String, Long> categoryTargets) {}
 
     @PostMapping("/challenges")
     public Map<String, Object> createChallenge(@RequestParam Long userId,
                                                @Valid @RequestBody CreateChallengeRequest req) {
         GuardianChallenge ch = guardianService.createChallenge(userId, req.categories(),
                 req.sanctuaryCategories(), req.targetSaving(), req.rewardName(),
-                req.rewardPrice(), req.durationDays(), req.keptPaymentIds());
+                req.rewardPrice(), req.durationDays(), req.keptPaymentIds(),
+                req.categoryTargets());
         return Map.of("challenge", challengeView(ch),
                 "snapshot", snapshotView(guardianService.snapshotOf(ch, clock.today(userId))));
     }
@@ -181,6 +187,9 @@ public class GuardianController {
             m.put("label", c.label());
             m.put("spent", c.spent());
             m.put("share", Math.round(c.share() * 1000.0) / 1000.0);
+            m.put("cap", c.cap());
+            m.put("remaining", c.remaining());
+            m.put("ratio", Math.round(c.ratio() * 1000.0) / 1000.0);
             return m;
         }).toList());
         challenge.putAll(snapshotView(s));

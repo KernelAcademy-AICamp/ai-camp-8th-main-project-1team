@@ -208,12 +208,18 @@ export function Home() {
                   <div className="mid">
                     <b style={{ fontWeight: 600 }}>{c.label}</b>
                     <div className="bar">
-                      <i style={{ width: `${Math.round(c.share * 100)}%`, background: 'var(--t3)' }} />
+                      <i style={{
+                        width: `${Math.min(100, Math.round((c.ratio ?? 0) * 100))}%`,
+                        background: (c.ratio ?? 0) >= 1 ? 'var(--red)'
+                          : (c.ratio ?? 0) >= 0.8 ? 'var(--amber)' : 'var(--blue)',
+                      }} />
                     </div>
                   </div>
                   <div className="right">
-                    <b>{won(c.spent)}</b>
-                    <span>{c.spent > 0 ? `사용액의 ${Math.round(c.share * 100)}%` : '아직 없어요'}</span>
+                    <b>{c.cap > 0 ? `${won(c.remaining)} 남음` : won(c.spent)}</b>
+                    <span>{c.cap > 0
+                      ? `${won(c.spent)} / ${won(c.cap)}`
+                      : (c.spent > 0 ? '한도 없음' : '아직 없어요')}</span>
                   </div>
                 </div>
               );
