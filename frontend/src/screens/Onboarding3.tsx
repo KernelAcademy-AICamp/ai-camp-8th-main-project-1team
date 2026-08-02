@@ -223,6 +223,20 @@ export function Onboarding3() {
                                 <span className="m">{p.merchantName ?? '가맹점 미상'}</span>
                                 <span className="a">{won(p.amount)}</span>
                               </button>
+                              {/* 왜 낭비로 봤는지 — **확인할 수 있는 숫자로** 말한다.
+                                  "평소보다 큰 금액"까지만 하면 동의도 반박도 할 수 없다.
+                                  "평소 23,000원 → 78,000원(3.4배)"이라야 "그날은 회식이었다"고
+                                  답할 수 있고, 그 답이 곧 이 화면이 받으려는 신호다. */}
+                              {p.factors?.length > 0 && (
+                                <ul className="why">
+                                  {p.factors.map((f, i) => (
+                                    <li key={i}>
+                                      <b>{f.label}</b>
+                                      {f.detail && <span>{f.detail}</span>}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
                             </li>
                           );
                         })}

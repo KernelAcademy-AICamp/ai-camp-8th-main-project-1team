@@ -64,4 +64,52 @@ public interface GuardianNotificationRepository extends JpaRepository<GuardianNo
     default int countUnread(Long userId) {
         return countUnread(userId, DeliveryKind.SILENT);
     }
+
+    // ======================================================================
+    //  관측 (2026-08-02) — 이 시스템은 자기 상태를 성실히 기록하는데 <b>보는 눈이 없었다</b>.
+    //  침묵도 남기고(delivery=SILENT + suppressedReason), LLM 폴백 여부도 남기고,
+    //  프롬프트 버전도 다는데, 그걸 세는 질의가 하나도 없었다. §8-U가 배운 것과 같은 형태다 —
+    //  <b>재지 않으면 통과로 보인다.</b>
+    //
+    //  정렬을 고정한다(마스터 §4 원칙 3). 집계도 조회이므로 같은 입력이면 같은 순서여야 한다.
+    // ======================================================================
+
+    /** 배달 유형별 건수 — 말한 것 대 침묵한 것. */
+    @Query("select n.delivery, count(n) from GuardianNotification n "
+            + "where n.sentAt >= :since group by n.delivery order by n.delivery asc")
+    List<Object[]> countByDeliverySince(@Param("since") LocalDateTime since);
+
+    /** 침묵 사유별 건수 — 예산 소진인가, 쿨다운인가, 야간인가, 원래 안 말하는 케이스인가. */
+    @Query("select n.suppressedReason, count(n) from GuardianNotification n "
+            + "where n.sentAt >= :since and n.suppressedReason is not null "
+            + "group by n.suppressedReason order by n.suppressedReason asc")
+    List<Object[]> countBySuppressedReasonSince(@Param("since") LocalDateTime since);
+
+    /** 케이스별 건수 — C3·C6이 실제로 얼마나 나가는지. */
+    @Query("select n.caseId, count(n) from GuardianNotification n "
+            + "where n.sentAt >= :since group by n.caseId order by n.caseId asc")
+    List<Object[]> countByCaseSince(@Param("since") LocalDateTime since);
+
+    /** LLM 폴백 건수 — 목표는 5% 이하다(GuardianNarrative). 재지 않으면 알 수 없다. */
+    @Query("select count(n) from GuardianNotification n "
+            + "where n.sentAt >= :since and n.delivery <> :silent and n.fallback = true")
+    long countFallbackSince(@Param("since") LocalDateTime since, @Param("silent") DeliveryKind silent);
+
+    @Query("select count(n) from GuardianNotification n "
+            + "where n.sentAt >= :since and n.delivery <> :silent")
+    long countSpokenSince(@Param("since") LocalDateTime since, @Param("silent") DeliveryKind silent);
+
+    default long countFallbackSince(LocalDateTime since) {
+        return countFallbackSince(since, DeliveryKind.SILENT);
+    }
+
+    default long countSpokenSince(LocalDateTime since) {
+        return countSpokenSince(since, DeliveryKind.SILENT);
+    }
+
+    /** 피드백 분포 — 도움이 됐다/안 됐다, 그리고 사유. 판정 품질의 유일한 사용자 신호다. */
+    @Query("select n.feedback, n.feedbackReason, count(n) from GuardianNotification n "
+            + "where n.sentAt >= :since and n.feedback is not null "
+            + "group by n.feedback, n.feedbackReason order by n.feedback asc, n.feedbackReason asc")
+    List<Object[]> countByFeedbackSince(@Param("since") LocalDateTime since);
 }

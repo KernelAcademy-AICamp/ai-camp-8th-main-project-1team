@@ -82,8 +82,32 @@ public class WasteScoringService {
     }
 
     /** 거래별 낭비 판정 + 설명. */
+    /**
+     * 판정을 밀어올린 축 하나 — <b>이름·실제 값·기여도(로그오즈)</b>.
+     *
+     * <p>기여도는 EBM이 원래 낼 수 있는 값인데(§8-O에서 이 축들에 단조 제약까지 걸었다),
+     * 지금까지는 그것을 <b>"평소보다 큰 금액" 한 마디로 뭉개고 숫자를 버렸다.</b>
+     * 마스터 §4 원칙 1이 "판단은 설명가능한 모델이"라고 한 이유의 절반만 쓰고 있던 셈이다 —
+     * 모델은 설명할 수 있는데 화면이 설명을 안 했다.
+     *
+     * <p>{@code detail} 이 그 숫자다. "평소보다 큰 금액"이 아니라
+     * <b>"평소 23,000원 → 78,000원(3.4배)"</b>. 사용자가 반박하려면 무엇에 반박하는지
+     * 알아야 하고, 그 반박이 성향(§8-S)의 교정 신호가 된다.
+     *
+     * @param contribution 로그오즈 기여. 양수면 낭비 쪽으로 민 것이다.
+     */
+    public record Factor(String label, String detail, double contribution) {}
+
     public record WasteJudgment(String paymentId, String category2, int amount, LocalDateTime date,
-                                double wasteProbability, boolean waste, String explanation) {}
+                                double wasteProbability, boolean waste, String explanation,
+                                List<Factor> factors) {
+
+        /** 근거 없이 만드는 옛 호출부용. */
+        public WasteJudgment(String paymentId, String category2, int amount, LocalDateTime date,
+                             double wasteProbability, boolean waste, String explanation) {
+            this(paymentId, category2, amount, date, wasteProbability, waste, explanation, List.of());
+        }
+    }
 
     public boolean modelReady() { return classifier.isReady(); }
 
@@ -109,18 +133,22 @@ public class WasteScoringService {
             double prob = classifier.wasteProbability(feats);
             boolean waste;
             String explanation;
+            List<Factor> factors = List.of();
             if (overrides.containsKey(p.getCategory2())) {                 // 개인화 우선
                 waste = overrides.get(p.getCategory2());
                 explanation = "개인화: 사용자가 " + (waste ? "낭비" : "필수") + "로 지정";
             } else {
                 double thr = thresholdFor(stances, p.getBusinessNumber());
                 waste = prob >= thr;
+                Map<String, Double> contrib = classifier.contributions(feats);
                 explanation = thr > classifier.threshold() && !waste
                         ? "이 가게는 낭비가 아니라고 하셔서, 확실할 때만 알려드려요"
-                        : explain(classifier.contributions(feats), waste);
+                        : explain(contrib, waste);
+                // 근거는 낭비로 본 것에만 붙인다 — 필수 판정에 "왜 필수인지"를 캐물을 사람은 없다.
+                if (waste) factors = factorsOf(contrib, feats, p, stats);
             }
             out.add(new WasteJudgment(p.getPaymentId(), p.getCategory2(), p.getAmount(),
-                    p.getPaymentDate(), prob, waste, explanation));
+                    p.getPaymentDate(), prob, waste, explanation, factors));
         }
         return out;
     }
@@ -194,6 +222,58 @@ public class WasteScoringService {
                 .reduce((a, b) -> a + "·" + b)
                 .map(s -> s + " 요인으로 낭비 판정")
                 .orElse("충동·과다 소비");
+    }
+
+    /**
+     * 기여도 상위 축을 <b>사람이 검증할 수 있는 문장</b>으로 바꾼다.
+     *
+     * <p>규칙 하나: <b>사용자가 사실 여부를 확인할 수 있는 것만 말한다.</b> "재량 지출 성향 0.62"는
+     * 반박할 수 없지만 "평소 23,000원 → 78,000원"은 반박할 수 있다. 검증 불가능한 근거는
+     * 설명이 아니라 권위이고, 그건 블랙박스와 다르지 않다.
+     *
+     * <p>그래서 {@code user_mean_log_amount}·{@code user_disc_ratio}(사용자 전반의 성향)와
+     * 삼각함수로 인코딩된 축은 <b>수치를 붙이지 않는다</b> — 이름만으로 충분하거나,
+     * 숫자를 보여줘 봐야 사용자가 확인할 방법이 없다.
+     *
+     * <p>품목이 있으면 맨 앞에 놓는다. 모델은 아직 품목을 안 보지만(그건 다음 단계다),
+     * <b>사용자가 판단하는 데는 이게 제일 크다</b> — "편의점 12,000원"과 "맥주 4캔"은 다르다.
+     */
+    private static List<Factor> factorsOf(Map<String, Double> contributions,
+                                          Map<String, Object> feats, UserPayment p,
+                                          WasteFeatureExtractor.UserStats stats) {
+        List<Factor> out = new ArrayList<>(3);
+        contributions.entrySet().stream()
+                .filter(e -> !e.getKey().equals("(기준)") && e.getValue() > 0.05)
+                .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
+                .limit(3)
+                .forEach(e -> out.add(new Factor(label(e.getKey()), detailOf(e.getKey(), feats, p, stats),
+                        Math.round(e.getValue() * 1000) / 1000.0)));
+        return List.copyOf(out);
+    }
+
+    /** 축의 실제 값 — 확인할 수 없는 축은 빈 문자열을 준다(화면이 이름만 쓴다). */
+    private static String detailOf(String feature, Map<String, Object> feats, UserPayment p,
+                                   WasteFeatureExtractor.UserStats stats) {
+        return switch (feature) {
+            case "amt_vs_typical" -> {
+                Object v = feats.get("amt_vs_typical");
+                double ratio = v instanceof Number n ? n.doubleValue() : 0;
+                long typical = ratio > 0 ? Math.round(p.getAmount() / ratio) : 0;
+                yield typical <= 0 ? "" : String.format("평소 %,d원 → %,d원 (%.1f배)",
+                        typical, p.getAmount(), ratio);
+            }
+            case "log_amount" -> String.format("%,d원", p.getAmount());
+            case "night" -> p.getPaymentDate().getHour() + "시 결제";
+            case "hour_sin", "hour_cos" -> p.getPaymentDate().getHour() + "시";
+            case "dow_sin", "dow_cos", "weekend" -> switch (p.getPaymentDate().getDayOfWeek()) {
+                case MONDAY -> "월요일"; case TUESDAY -> "화요일"; case WEDNESDAY -> "수요일";
+                case THURSDAY -> "목요일"; case FRIDAY -> "금요일";
+                case SATURDAY -> "토요일"; case SUNDAY -> "일요일";
+            };
+            case "cat2" -> p.getCategory2() == null ? "" : p.getCategory2();
+            // 사용자 전반의 성향 — 숫자를 보여줘도 확인할 방법이 없다. 이름만 쓴다.
+            default -> "";
+        };
     }
 
     private static String label(String feature) {
