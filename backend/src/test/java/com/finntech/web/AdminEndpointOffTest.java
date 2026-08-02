@@ -14,13 +14,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * <p>{@code /api/realdata/**} 는 <b>실제 개인정보</b>를 받고 {@code DELETE} 까지 있다.
  * {@code /api/ops/**} 는 알림 예산 소진률·모델 임계 같은 내부 상태를 낸다.
- * 둘 다 호스트 nginx의 경로 차단에 기대고 싶지만 그 차단은 <b>아직 적용 전</b>이다 —
- * {@code deploy/ec2-setup.md} §7이 "걸 때는"이라고만 적어 두었고, 실측하면 운영에서
- * {@code /actuator/health} 가 공개로 200을 준다(2026-08-02 확인).
+ * 둘 다 nginx가 막아 주기를 기대할 수 없다 — <b>nginx는 {@code /api/} 아래를 경로별 구분 없이
+ * 통째로 백엔드에 넘긴다.</b> allowlist가 없으므로 {@code /api/**} 에 매핑을 만들면
+ * 배포되는 순간 공개된다.
  *
- * <p>그래서 통제를 한 겹에 두지 않는다. W7-2가 8082 격리 뒤에 공유 시크릿을 둔 것과 같은 이유다 —
- * <b>격리는 설정 실수 하나면 무너지는 단층 방어</b>다. {@code @ConditionalOnProperty} 로
- * <b>빈 자체를 안 만든다</b>. 매핑이 없으니 경로도 없다.
+ * <p>운영에서 {@code /api/dev/seed} 가 404인 것도 nginx 덕이 아니라 <b>속성 게이트로 빈이 없기
+ * 때문</b>이다(2026-08-02 실측). 그 선례를 따라 {@code @ConditionalOnProperty} 로
+ * <b>빈 자체를 안 만든다</b> — 매핑이 없으니 경로도 없다. 통제를 nginx 한 겹에 두면
+ * 설정 실수 하나로 무너진다(W7-2가 8082 격리 뒤에 공유 시크릿을 둔 것과 같은 이유).
  *
  * <p>짝은 {@link AdminEndpointOnTest} 다 — 켰을 때 열리는 것까지 봐야
  * "언제나 닫힘"과 구별된다(tech_log §8-O: 통과만 보고 믿으면 테스트가 아니라 장식이다).
