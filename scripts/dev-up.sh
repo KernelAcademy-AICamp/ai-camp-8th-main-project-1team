@@ -36,14 +36,24 @@ echo "      기동 완료"
 echo "[3/4] 시드 삽입 (개발 전용 경로 — 일반 API로는 DUMMY_SEED가 생성되지 않는다)"
 # 이상거래 강도를 1.5~3.0배(경계 근처)로 둔다. 6~10배로 두면 분포에서 너무 멀어
 # z 임계를 2.0~6.0 어디에 둬도 결과가 같아져 캘리브레이션이 무의미해진다.
-curl -s -X POST "$API/api/dev/seed" -H 'Content-Type: application/json' -d '{
+# categoryMix의 키는 업종코드 대조표가 정하는 **우리 소비 중분류**다. 예전 FOOD·CAFE 같은 영문
+# 코드를 쓰면 분석 엔진·ML이 모르는 이름이 되어 재량성 판정이 전부 기본값(0.5)으로 떨어진다.
+#
+# 주석을 JSON 본문 밖에 두는 이유: `#`은 JSON 문법이 아니라, 본문 안에 있으면 Jackson이
+# `Unexpected character ('#')`로 400을 낸다. 그런데 이 curl은 `-s ... >/dev/null`이라
+# **실패해도 아무 표시가 안 났다** — 시드가 안 들어간 채로 스크립트가 "완료"를 찍고 있었다.
+# 그래서 아래에서 응답을 받아 검사한다(2026-08-02).
+SEED_RES=$(curl -s -w '\n%{http_code}' -X POST "$API/api/dev/seed" -H 'Content-Type: application/json' -d '{
   "nickname":"demo","monthlyIncome":3200000,"goalAmount":4000000,"goalMonths":12,
   "months":6,"txPerMonth":60,
-  # 카테고리는 업종코드 대조표가 정하는 **우리 소비 중분류**다. 예전 FOOD·CAFE 같은 영문 코드를
-  # 쓰면 분석 엔진·ML이 모르는 이름이 되어 재량성 판정이 전부 기본값(0.5)으로 떨어진다.
   "categoryMix":{"식비":0.35,"카페/간식":0.20,"쇼핑":0.25,"교통/자동차":0.20},
   "plannedRatio":0.65,"volatility":0.18,
-  "anomalyCount":6,"anomalyMagnitudeMin":1.5,"anomalyMagnitudeMax":3.0,"seed":7}' >/dev/null
+  "anomalyCount":6,"anomalyMagnitudeMin":1.5,"anomalyMagnitudeMax":3.0,"seed":7}')
+SEED_CODE=$(printf '%s' "$SEED_RES" | tail -1)
+if [ "$SEED_CODE" != "200" ]; then
+  echo "      ✗ 시드 실패(HTTP $SEED_CODE) — 응답: $(printf '%s' "$SEED_RES" | head -1 | cut -c1-200)" >&2
+  exit 1
+fi
 curl -s -X POST "$API/api/alert/rescan?userId=1" >/dev/null
 # 데모 사용자에 개인정보 동의를 부여한다 — 게임화 저축 루프의 '소비 기록'(§5-5)이 실제 Consumption을
 # 만들어 동의를 요구하기 때문. 데모가 바로 돌게 하려는 편의이며, 미동의 시엔 소비 기록이 403이 된다.
