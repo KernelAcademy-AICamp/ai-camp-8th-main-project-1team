@@ -2,6 +2,7 @@ package com.finntech.web;
 
 import com.finntech.service.RealDataService;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -21,9 +22,16 @@ import java.util.Map;
  *
  * <p><b>지우는 길을 같은 무게로 둔다</b>({@code DELETE}). 실제 개인정보를 넣는 길만 만들고
  * 빼는 길을 미루면, 미룬 그 상태가 기본값이 된다.
+ *
+ * <p><b>기본은 꺼져 있다.</b> 이 경로는 실제 개인정보를 받고 {@code DELETE}까지 있는데,
+ * 호스트 nginx의 접근 제한은 <b>아직 적용 전</b>이다(ec2-setup.md §7이 "걸 때는"이라고만 적어 뒀고,
+ * 실측하면 {@code /actuator/health}가 공개로 200을 준다). 통제를 nginx 한 겹에만 기대면
+ * <b>설정 실수 하나로 무너진다</b> — W7-2가 격리 뒤에 공유 시크릿을 둔 것과 같은 이유로,
+ * 여기서는 빈 자체를 안 만든다({@code DevSeedController}와 같은 방식). 쓸 때 명시적으로 켠다.
  */
 @RestController
 @RequestMapping("/api/realdata")
+@ConditionalOnProperty(name = "finntech.realdata.enabled", havingValue = "true")
 public class RealDataController {
 
     private final RealDataService service;

@@ -7,6 +7,7 @@ import com.finntech.guardian.repository.GuardianNotificationRepository;
 import com.finntech.ml.SpendingClassifier;
 import com.finntech.ml.WasteScoringService;
 import com.finntech.guardian.GuardianClock;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,9 +39,14 @@ import java.util.TreeMap;
  *
  * <p><b>개인 식별 정보를 내려주지 않는다.</b> 전부 집계 수치이고 사용자별로 쪼개지 않는다 —
  * 마스터 §4 원칙 1이 AI에 집계만 보내라고 한 것과 같은 이유로, 운영 지표도 집계면 충분하다.
+ *
+ * <p><b>기본은 꺼져 있다.</b> 개인 식별 정보는 안 나가지만 운영 내부 상태(알림 예산 소진률·
+ * 모델 임계·프롬프트 버전)는 밖에 보일 이유가 없다. 호스트 nginx의 경로 차단이 아직 적용 전이라
+ * (ec2-setup.md §7) 통제를 그 한 겹에만 기대지 않는다 — 운영에서 볼 때 명시적으로 켠다.
  */
 @RestController
 @RequestMapping("/api/ops")
+@ConditionalOnProperty(name = "finntech.ops.enabled", havingValue = "true")
 public class ObservabilityController {
 
     private final GuardianNotificationRepository notifications;
