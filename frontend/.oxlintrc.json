@@ -4,5 +4,29 @@
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+  },
+  "overrides": [
+    {
+      // only-export-components 는 "파일이 컴포넌트만 내보내야 Fast Refresh가 된다"는
+      // **개발 편의** 규칙이다. 운영 번들에는 아무 영향이 없다.
+      //
+      // 아래 파일들은 컨텍스트 프로바이더(컴포넌트)와 그 훅·상수를 한 파일에 둔다 —
+      // useSession/useGuardian, TAB_SCREENS, categoryColor, CAT_ACT_LABEL 같은 것들이다.
+      // 이건 실수가 아니라 React 컨텍스트의 표준 배치다. 프로바이더와 훅을 갈라 놓으면
+      // 타입이 두 파일을 오가고, 훅만 가져다 쓰는 화면이 프로바이더 파일을 import하게 된다.
+      //
+      // 그래서 **이 파일들에서만** 끈다. 규칙 자체는 살려 둔다 — 새로 만드는 파일이
+      // 같은 모양이 되는 것은 대개 의도가 아니라 실수이고, 그때는 경고가 떠야 한다.
+      // (2026-08-02, 회귀 체크리스트 R4 — DoD "lint 경고 0"을 채우면서)
+      "files": [
+        "src/state/session.tsx",
+        "src/state/guardian.tsx",
+        "src/components/Charts.tsx",
+        "src/components/IsoRoom.tsx"
+      ],
+      "rules": {
+        "react/only-export-components": "off"
+      }
+    }
+  ]
 }

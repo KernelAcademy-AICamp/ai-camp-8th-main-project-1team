@@ -22,6 +22,7 @@
  *   node scripts/audit-rendered.mjs
  */
 import { chromium } from 'playwright';
+import { readFileSync } from 'node:fs';
 
 const BASE = process.env.BASE ?? 'http://localhost:5173';
 const VIEWPORTS = [
@@ -31,16 +32,22 @@ const VIEWPORTS = [
   { name: '1280 (데스크톱)', width: 1280, height: 900 },
 ];
 
-/* 33개 화면 전부. 라우팅은 **해시**(`#/home`)이고 `mydata_onboarded` 플래그로 잠기므로,
-   경로(`/home`)로 열면 전부 스플래시로 튕긴다 — 처음 이 검사를 그렇게 짜서 화면당 조작 요소가
-   2개밖에 안 잡혔다. 세션을 심고 해시로 들어간다. */
-const ROUTES = [
-  'splash', 'auth', 'connect', 'loading', 'ob1', 'ob2', 'ob3', 'done',
-  'home', 'report', 'my', 'myroom', 'notifications', 'transactions',
-  'collection', 'shop', 'monthend', 'settle', 'renew',
-  'r-compare', 'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings',
-  'm-impulse', 'm-goals', 'm-connections', 'm-record', 'm-policy', 'm-survey', 'm-demo',
-];
+/* 화면 목록은 **앱에서 읽어 온다**. 라우팅은 해시(`#/home`)이고 `mydata_onboarded` 플래그로
+   잠기므로, 경로(`/home`)로 열면 전부 스플래시로 튕긴다 — 처음 이 검사를 그렇게 짜서 화면당
+   조작 요소가 2개밖에 안 잡혔다. 세션을 심고 해시로 들어간다.
+
+   목록을 여기 손으로 적어 두었더니 **화면을 새로 만들어도 검사가 모르고 지나갔다** —
+   7/31에 추가한 `m-stances`(낭비 판정 관리)가 한 번도 감사되지 않은 채 있었다(2026-08-02 발견).
+   검사 대상을 검사자가 손으로 관리하면, 빠뜨린 것은 영원히 "위반 0건"으로 보인다.
+   그래서 `session.tsx`의 `ALL_SCREENS`를 파싱한다. 못 읽으면 조용히 넘어가지 않고 죽는다. */
+const ROUTES = (() => {
+  const src = readFileSync(new URL('../src/state/session.tsx', import.meta.url), 'utf8');
+  const block = src.match(/ALL_SCREENS\s*=\s*\[([\s\S]*?)\]/);
+  if (!block) throw new Error('session.tsx 에서 ALL_SCREENS 를 못 찾았다 — 검사 대상을 셀 수 없다');
+  const list = [...block[1].matchAll(/'([a-z0-9-]+)'/g)].map((m) => m[1]);
+  if (list.length < 10) throw new Error(`ALL_SCREENS 파싱 결과가 ${list.length}개 — 형식이 바뀐 듯하다`);
+  return list;
+})();
 
 /** 온보딩을 통과한 상태로 만든다 — 안 하면 잠긴 화면이 전부 홈으로 튕긴다.
     `addInitScript` 로 **앱 스크립트보다 먼저** 심어야 한다. 페이지를 연 뒤에 심었더니
