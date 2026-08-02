@@ -93,6 +93,14 @@ public class OnboardingController {
             row.put("waste", j == null ? null : j.waste());
             row.put("wasteProbability", j == null ? null : j.wasteProbability());
             row.put("reason", j == null ? null : j.explanation());
+            /* 판정 근거 — 문구가 아니라 <b>확인할 수 있는 숫자</b>다(2026-08-02).
+               "평소보다 큰 금액"까지만 말하면 사용자는 동의도 반박도 할 수 없다.
+               "평소 23,000원 → 78,000원(3.4배)"이라야 "그날은 회식이었다"고 답할 수 있고,
+               그 답이 성향(§8-S)의 교정 신호가 된다. */
+            row.put("factors", j == null ? List.of() : j.factors().stream()
+                    .map(f -> Map.of("label", f.label(), "detail", f.detail(),
+                            "weight", f.contribution()))
+                    .toList());
             byCategory.computeIfAbsent(cat, k -> new ArrayList<>()).add(row);
         }
 

@@ -2,6 +2,8 @@ package com.finntech.guardian;
 
 import com.finntech.guardian.domain.GuardianEnums.PhrasingMode;
 import com.finntech.guardian.domain.GuardianEnums.Tone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,8 @@ import java.util.Map;
  */
 @Service
 public class GuardianNarrative {
+
+    private static final Logger log = LoggerFactory.getLogger(GuardianNarrative.class);
 
     /**
      * 케이스별 톤 지침 뒤에 붙는 공통 규칙. 설계서 §5의 금지 항목을 그대로 옮겼다.
@@ -170,20 +174,38 @@ public class GuardianNarrative {
                     .body(Map.class);
 
             String text = extractText(response);
-            if (text == null || text.isBlank()) return fallback;
+            if (text == null || text.isBlank()) return fellBack("빈 응답", null, fallback);
 
             Message parsed = parseJson(text);
             // 길이 위반은 프롬프트가 아니라 코드가 막는다 — LLM이 지키리라 믿고 두면 화면이 깨진다.
-            if (parsed == null
-                    || parsed.title().length() > GuardianCopy.MAX_TITLE_LEN
+            if (parsed == null) return fellBack("JSON 파싱 실패", null, fallback);
+            if (parsed.title().length() > GuardianCopy.MAX_TITLE_LEN
                     || parsed.body().length() > GuardianCopy.MAX_BODY_LEN) {
-                return fallback;
+                return fellBack("길이 초과(제목 " + parsed.title().length()
+                        + " / 본문 " + parsed.body().length() + ")", null, fallback);
             }
             return parsed;
         } catch (Exception e) {
-            // 시연 중 네트워크·쿼터 문제로 알림이 비면 안 된다. 조용히 템플릿으로 떨어진다.
-            return fallback;
+            // 시연 중 네트워크·쿼터 문제로 알림이 비면 안 된다. 문장은 템플릿으로 떨어지되,
+            // <b>이유는 남긴다</b> — 예전에는 조용히 삼켜서 폴백률이 100%여도 원인을 알 수 없었다.
+            return fellBack("호출 실패", e, fallback);
         }
+    }
+
+    /**
+     * 템플릿으로 떨어진 사실과 <b>그 이유</b>를 남긴다.
+     *
+     * <p>예전에는 {@code catch}가 예외를 통째로 삼켜서, 폴백률이 100%로 나와도
+     * 키가 없는 건지·쿼터가 끊긴 건지·응답 형식이 바뀐 건지 알 방법이 없었다.
+     * 시연이 안 죽는 것과 원인을 못 보는 것은 <b>다른 문제</b>인데 하나로 묶여 있었다.
+     * (`/api/ops/health` 가 폴백률을 세고, 이 로그가 그 이유를 댄다. 2026-08-02)
+     *
+     * <p>WARN이다 — 오류는 아니지만(설계된 폴백) 목표가 5% 이하라 자주 뜨면 봐야 한다.
+     */
+    private Message fellBack(String why, Exception cause, Message fallback) {
+        log.warn("지킴이 문장 생성이 템플릿으로 폴백 — {}{}", why,
+                cause == null ? "" : ": " + cause.getClass().getSimpleName() + " " + cause.getMessage());
+        return fallback;
     }
 
     /** 코드펜스로 감싸 오는 경우가 잦아 앞뒤를 걷어내고 중괄호 구간만 읽는다. */

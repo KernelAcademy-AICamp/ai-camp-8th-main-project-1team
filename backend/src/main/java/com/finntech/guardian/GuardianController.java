@@ -101,7 +101,13 @@ public class GuardianController {
             String category,
             Double categoryConfidence,
             TxType txType,
-            boolean isDemo) {}
+            boolean isDemo,
+            /**
+             * 가맹점 사업자번호 — 없어도 되지만, 없으면 이 거래에 대한 "낭비 아니에요"가
+             * 가맹점 성향(§8-S)으로 <b>쌓이지 않는다</b>. 묶을 신원이 없기 때문이다.
+             * 마이데이터 동기화 경로는 결제에서 자동으로 실어 온다(2026-08-02).
+             */
+            String businessNumber) {}
 
     /**
      * 거래가 들어왔을 때의 전체 흐름. 데모 모드의 "하루치 거래 주입" 버튼도 이걸 쓴다.
@@ -114,7 +120,8 @@ public class GuardianController {
         GuardianService.IngestResult r = guardianService.ingest(userId, new GuardianService.IngestCommand(
                 req.occurredAt(), req.merchantName(), req.merchantDisplayName(), req.amount(),
                 req.mcc(), req.category(), req.categoryConfidence(),
-                req.txType() == null ? TxType.EXPENSE : req.txType(), req.isDemo(), null));
+                req.txType() == null ? TxType.EXPENSE : req.txType(), req.isDemo(), null,
+                req.businessNumber()));
 
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("transaction", transactionView(r.transaction(), userId));

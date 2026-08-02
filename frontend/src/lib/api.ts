@@ -407,6 +407,23 @@ export interface OnboardingPayment {
   waste: boolean | null;
   wasteProbability: number | null;
   reason: string | null;
+  /**
+   * 판정을 밀어올린 축들 — **확인할 수 있는 숫자**로 온다(2026-08-02).
+   *
+   * `reason`("평소보다 큰 금액 요인으로 낭비 판정")까지만 있으면 사용자는 동의도 반박도
+   * 할 수 없다. `detail`이 그 숫자다 — "평소 23,000원 → 78,000원 (3.4배)".
+   * 반박할 수 있어야 그 반박이 가맹점 성향의 교정 신호가 된다.
+   *
+   * `detail`이 빈 문자열인 축은 **사용자가 확인할 방법이 없는 것**(전반적 소비 성향 등)이라
+   * 일부러 숫자를 안 붙인 것이다. 그때는 이름만 보여준다.
+   */
+  factors: WasteFactor[];
+}
+export interface WasteFactor {
+  label: string;
+  detail: string;
+  /** 로그오즈 기여. 양수면 낭비 쪽으로 민 것. 품목 축은 0(모델이 아직 안 본다). */
+  weight: number;
 }
 /** 카테고리 하나 — `amount`는 창 안의 **실제 합계**다(월 환산·관측월 나눗셈을 하지 않는다). */
 export interface OnboardingCategory {
