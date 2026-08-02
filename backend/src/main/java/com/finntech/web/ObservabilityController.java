@@ -1,6 +1,7 @@
 package com.finntech.web;
 
 import com.finntech.guardian.GuardianCopy;
+import com.finntech.guardian.GuardianNarrative;
 import com.finntech.guardian.domain.GuardianEnums.DeliveryKind;
 import com.finntech.guardian.repository.GuardianNotificationRepository;
 import com.finntech.ml.SpendingClassifier;
@@ -45,14 +46,17 @@ public class ObservabilityController {
     private final GuardianNotificationRepository notifications;
     private final WasteScoringService wasteScoringService;
     private final SpendingClassifier classifier;
+    private final GuardianNarrative narrative;
     private final GuardianClock clock;
 
     public ObservabilityController(GuardianNotificationRepository notifications,
                                    WasteScoringService wasteScoringService,
-                                   SpendingClassifier classifier, GuardianClock clock) {
+                                   SpendingClassifier classifier, GuardianNarrative narrative,
+                                   GuardianClock clock) {
         this.notifications = notifications;
         this.wasteScoringService = wasteScoringService;
         this.classifier = classifier;
+        this.narrative = narrative;
         this.clock = clock;
     }
 
@@ -92,11 +96,21 @@ public class ObservabilityController {
         long fallback = notifications.countFallbackSince(since);
         long spokenForFallback = notifications.countSpokenSince(since);
         Map<String, Object> llm = new LinkedHashMap<>();
+        /* <b>AI가 켜져 있는지를 먼저 말한다.</b> 이게 없으면 폴백률 100%가 두 가지 정반대 상황을
+           똑같이 가리킨다 — "키가 없어 애초에 안 불렀다"(정상·설계된 D-02 폴백)와
+           "불렀는데 전부 실패했다"(운영 장애). 처음 이 지표를 만들 때 둘을 뭉갰고,
+           로컬에서 폴백률 1.0을 보고 원인을 못 짚어 바로 드러났다(2026-08-02).
+           <b>해석할 수 없는 지표는 없는 것보다 나쁘다</b> — 있으면 봤다고 착각하게 만든다. */
+        llm.put("aiEnabled", narrative.aiEnabled());
         llm.put("fallback", fallback);
         llm.put("spoken", spokenForFallback);
         llm.put("fallbackRatio", ratio(fallback, spokenForFallback));
         // 목표 5% 이하 — 지금까지 코드 주석에만 있던 수치를 여기서 실제로 잰다.
-        llm.put("targetRatio", 0.05);
+        // AI가 꺼져 있으면 목표 자체가 무의미하므로 null을 준다(0.05와 비교하면 늘 위반으로 보인다).
+        llm.put("targetRatio", narrative.aiEnabled() ? 0.05 : null);
+        llm.put("note", narrative.aiEnabled()
+                ? "폴백은 호출 실패·형식 오류를 뜻한다. 이유는 GuardianNarrative 의 WARN 로그에 남는다."
+                : "AI 키가 없어 전부 고정 템플릿으로 나간다 — 설계된 폴백이지 장애가 아니다(D-02).");
         llm.put("promptVersion", GuardianCopy.PROMPT_VERSION);
         m.put("llm", llm);
 
