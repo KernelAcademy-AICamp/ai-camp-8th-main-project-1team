@@ -28,7 +28,8 @@ public final class GuardianCopy {
 
     private GuardianCopy() {}
 
-    public static final String PROMPT_VERSION = "v1.2.0";
+    /** v1.3: C3·C6에서 카테고리를 "한도"에서 떼고 "어디서 샜는지" 문장으로 옮겼다(2026-08-02). */
+    public static final String PROMPT_VERSION = "v1.3.0";
     public static final int MAX_TITLE_LEN = 20;
     /** v1.2: 조건부 표현이 길어져 80 → 90. */
     public static final int MAX_BODY_LEN = 90;
@@ -75,15 +76,21 @@ public final class GuardianCopy {
             case "C1" -> s(v, "category") + " " + money(v, "amount") + "원 결제가 들어왔어요. "
                     + "챌린지에 넣으면 한도는 " + money(v, "remaining") + "원 남아요.";
             case "C2" -> "이번 주 들어온 " + s(v, "category") + " 결제가 " + s(v, "count") + "번째예요.";
-            case "C3" -> "이 결제까지 넣으면 " + s(v, "category") + " 한도의 80%예요. "
-                    + "남는 건 " + money(v, "remaining") + "원이에요.";
+            /* 카테고리를 "한도"에 붙이지 않는다. 여기 쓰는 remaining·cap은 <b>합계</b> 기준인데
+               예전 문안은 "식비 한도의 80%"라고 읽혀, 방금 결제의 꼬리표를 카테고리 한도처럼 말했다.
+               카테고리별 한도가 실제로 생긴 뒤로는(tech_log §8-T) 홈의 "식비 198%"와 정면충돌한다.
+               카테고리는 지우지 않고 <b>어디서 새는지 지목</b>하는 자리로 옮겼다. (2026-08-02) */
+            case "C3" -> "이 결제까지 넣으면 한도의 80%예요. "
+                    + "남는 건 " + money(v, "remaining") + "원이에요."
+                    + leak(v);
             case "C8" -> "오늘 " + s(v, "category") + " 결제가 " + s(v, "count") + "건, "
                     + "합쳐서 " + money(v, "total") + "원이에요.";
 
             // DEFINITIVE — 이미 확정된 사실
             case "C5" -> s(v, "days") + "일째 " + s(v, "category") + " 결제가 없어요.";
-            case "C6" -> s(v, "category") + " 한도 " + money(v, "cap") + "원을 넘었어요. "
-                    + "지금까지 확보한 절약액은 " + money(v, "secured") + "원이에요.";
+            case "C6" -> "한도 " + money(v, "cap") + "원을 넘었어요. "
+                    + "지금까지 확보한 절약액은 " + money(v, "secured") + "원이에요."
+                    + leak(v);
             case "C7" -> "방금 " + money(v, "amount") + "원 결제, 어떤 소비였어요?";
             case "C9" -> s(v, "weekday") + " " + s(v, "timeRange") + "네요. "
                     + "지난 4주 중 " + s(v, "count") + "번은 이 시간에 " + s(v, "category") + "를 이용했어요.";
@@ -103,9 +110,10 @@ public final class GuardianCopy {
         return switch (caseId) {
             case "C1" -> trim(category + " 첫 결제");
             case "C2" -> trim(category + " 이번 주 " + s(v, "count") + "번째");
-            case "C3" -> trim(category + " 한도 80%");
+            // C3·C6의 한도는 합계 기준이다 — 제목에 카테고리를 붙이면 카테고리 한도로 읽힌다.
+            case "C3" -> "한도 80%";
             case "C5" -> trim("무지출 " + s(v, "days") + "일째");
-            case "C6" -> trim(category + " 한도 초과");
+            case "C6" -> "한도 초과";
             case "C7" -> "이 결제 분류할까요";
             case "C8" -> trim("오늘 " + category + " 잔돈");
             case "C9" -> trim(category + " 시간대예요");
@@ -142,6 +150,27 @@ public final class GuardianCopy {
     private static String s(Map<String, Object> v, String key) {
         Object o = v == null ? null : v.get(key);
         return o == null ? "" : String.valueOf(o);
+    }
+
+    /**
+     * "어디서 새고 있는지" 한 문장 — 한도 이야기(C3·C6) 뒤에만 붙인다.
+     *
+     * <p>알림을 카테고리별로 <b>쪼개지 않기로</b> 한 자리를 이 문장이 메운다. 푸시는 하루 2건으로
+     * 희소하고(`daily-push-limit`), 판정은 합계 기준이므로(tech_log §8-T) 카테고리마다 알리면
+     * 예산만 놓고 다투다 대부분 침묵하고, 합계는 멀쩡한데 "초과" 알림이 나가기도 한다.
+     * <b>알림 수를 늘리지 않고 정보만 늘리는</b> 방법이 이것이다 — 상세는 홈이 이미 보여준다.
+     *
+     * <p>{@code topCategory} 가 없으면(카테고리가 하나뿐이거나 집계가 비었으면) 아무것도 안 붙인다.
+     * 지목할 것이 없는데 지목하는 문장은 군더더기다.
+     *
+     * <p>조사는 <b>받침에 무관한 것만</b> 쓴다. 카테고리 이름이 데이터에서 오므로
+     * "식비<b>예요</b>"/"쇼핑<b>이에요</b>"를 가르려면 받침 판정이 필요한데, 그 헬퍼가 이 저장소에 없다.
+     * {@code 에서} 는 받침과 무관하니 어떤 이름이 와도 문장이 안 깨진다 —
+     * <b>없는 규칙을 지어내는 것보다 규칙이 필요 없는 표현을 고르는 편이 낫다.</b>
+     */
+    private static String leak(Map<String, Object> v) {
+        String top = s(v, "topCategory");
+        return top.isBlank() ? "" : " " + top + "에서 가장 많이 나갔어요.";
     }
 
     private static String money(Map<String, Object> v, String key) {

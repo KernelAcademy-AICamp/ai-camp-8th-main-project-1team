@@ -587,6 +587,7 @@ public class GuardianService {
         v.put("secured", snap.securedSaving());
         v.put("daysLeft", snap.daysLeft());
         v.put("days", ch.getNoSpendStreak());
+        topCategory(ch.getId()).ifPresent(top -> v.put("topCategory", top));
         if (tx != null) {
             v.put("amount", tx.getAmount());
             v.put("category", categoryLabel(tx.getCategory()));
@@ -594,6 +595,27 @@ public class GuardianService {
             v.put("total", txRepository.sumMicroOnDate(ch.getId(), today));
         }
         return v;
+    }
+
+    /**
+     * 이번 챌린지에서 가장 많이 쓴 카테고리 — 한도 알림(C3·C6)이 "어디서 새는지" 지목하는 데 쓴다.
+     *
+     * <p>알림을 카테고리별로 쪼개지 않기로 한 대신 넣는 값이다(2026-08-02). 판정은 합계 기준이므로
+     * (tech_log §8-T) <b>발화 단위는 합계 하나</b>로 두고, 카테고리는 본문 안에서 지목만 한다.
+     *
+     * <p><b>카테고리가 하나뿐이면 비운다.</b> 지목할 것이 없는데 "가장 많이 쓴 건 식비예요"라고
+     * 말하면 정보가 아니라 군더더기다. 동점이면 카테고리 코드 순으로 하나를 고른다 —
+     * 조회 정렬은 결정론이어야 한다(마스터 §4 원칙 3).
+     */
+    private Optional<String> topCategory(Long challengeId) {
+        List<Object[]> sums = txRepository.sumCountedByCategory(challengeId);
+        if (sums.size() < 2) return Optional.empty();
+        return sums.stream()
+                .filter(row -> row[0] != null)
+                .max(Comparator
+                        .<Object[]>comparingLong(row -> ((Number) row[1]).longValue())
+                        .thenComparing(row -> String.valueOf(row[0]), Comparator.reverseOrder()))
+                .map(row -> categoryLabel(String.valueOf(row[0])));
     }
 
     /** 카테고리 코드 → 사람이 읽는 이름. 코드에 카테고리 이름을 박지 않는다(마스터 §4 원칙 4). */
