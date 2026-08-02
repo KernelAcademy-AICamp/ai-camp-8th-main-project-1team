@@ -50,6 +50,17 @@ public class GuardianTransaction {
     @Column(name = "merchant_name", nullable = false, length = 120)
     private String merchantName;
 
+    /**
+     * 가맹점 사업자등록번호 — <b>판정 성향(§8-S)이 붙는 유일한 키</b>.
+     *
+     * <p>이게 없어서 사용자의 "이 결제는 챌린지랑 상관없어요"(undo NOT_MINE)가 갈 곳이 없었다.
+     * 온보딩에서 뺀 결제는 성향으로 쌓이는데, <b>같은 뜻의 신호가 원장에서는 버려지고 있었다.</b>
+     * 상호명으로 역산하지 않는 이유는 §8-S와 같다 — 복원율이 75.8%라 잘못 묶을 위험이 있고,
+     * <b>놓치는 비용보다 잘못 묶는 비용이 크다.</b> {@code null}이면 묶을 신원이 없다는 뜻이다. (2026-08-02)
+     */
+    @Column(name = "business_number", length = 10)
+    private String businessNumber;
+
     @Column(name = "merchant_display_name", length = 120)
     private String merchantDisplayName;
 
@@ -161,6 +172,8 @@ public class GuardianTransaction {
     public void setChallengeId(Long v) { this.challengeId = v; }
     public Long getSourceConsumptionId() { return sourceConsumptionId; }
     public void setSourceConsumptionId(Long v) { this.sourceConsumptionId = v; }
+    public String getBusinessNumber() { return businessNumber; }
+    public void setBusinessNumber(String v) { this.businessNumber = v; }
     public LocalDateTime getOccurredAt() { return occurredAt; }
     public LocalDateTime getReceivedAt() { return receivedAt; }
     public String getMerchantName() { return merchantName; }

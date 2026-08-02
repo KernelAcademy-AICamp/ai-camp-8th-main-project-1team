@@ -100,6 +100,10 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-capacitor://localhost,https://localhost,http://localhost}
       # 일반 API로 더미 시드가 생성되면 안 된다(문서 §5-2 ④). 운영에서는 켜지 않는다.
       FINNTECH_DEV_SEED_ENABLED: "false"
+      # 관리자용 경로는 운영에서 닫아 둔다. /api/realdata 는 실 개인정보를 받고 DELETE 까지 있고,
+      # /api/ops 는 내부 운영 상태를 낸다. 볼 일이 있으면 그때 명시적으로 켠다.
+      FINNTECH_OPS_ENABLED: "${FINNTECH_OPS_ENABLED:-false}"
+      FINNTECH_REALDATA_ENABLED: "${FINNTECH_REALDATA_ENABLED:-false}"
       # 시각 기준. 비우면 실시간. 고정할 때는 마이데이터의 MYDATA_NOW와 같은 날짜로 함께 넣는다(§8-D).
       FINNTECH_DEMO_TODAY: ${FINNTECH_DEMO_TODAY:-}
       FINNTECH_MYDATA_REFERENCE_DATE: ${FINNTECH_MYDATA_REFERENCE_DATE:-}

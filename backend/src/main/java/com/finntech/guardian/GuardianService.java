@@ -2,6 +2,7 @@ package com.finntech.guardian;
 
 import com.finntech.domain.Category;
 import com.finntech.domain.Consumption;
+import com.finntech.domain.UserPayment;
 import com.finntech.engine.AnalysisEngine;
 import com.finntech.engine.AnalysisResult;
 import com.finntech.guardian.domain.*;
@@ -230,6 +231,28 @@ public class GuardianService {
      *
      * <p>사업자번호가 없는 결제(해외 등)는 건너뛴다 — 묶을 신원이 없다.
      */
+    /**
+     * 원장에서 온 "이건 낭비가 아니다"를 성향으로 올린다 (2026-08-02).
+     *
+     * <p><b>왜 뒤늦게 붙었나.</b> 온보딩에서 뺀 결제는 처음부터 성향으로 쌓였는데(§8-S),
+     * <b>같은 뜻의 신호가 원장에서는 버려지고 있었다</b> — {@code undo(NOT_MINE)} 은 거래를
+     * 챌린지에서 빼기만 했고, 알림 피드백은 컬럼에만 남았다. 사용자는 매달 같은 판단을
+     * 되풀이해야 했다. 원장이 사업자번호를 갖게 된 뒤에야(V15) 이을 수 있게 됐다.
+     *
+     * <p><b>{@code EXEMPTION}은 부르지 않는다.</b> "인정하지만 이번은 봐달라"는
+     * <b>낭비임을 인정하는</b> 말이다. 이걸 관대함으로 세면, 면제권을 쓸수록 그 가게가
+     * 낭비에서 빠지는 정반대 결과가 된다. 되돌리기 두 사유는 <b>뜻이 반대다.</b>
+     */
+    private void promoteStanceOf(Long userId, GuardianTransaction tx, LocalDateTime now) {
+        String biz = tx.getBusinessNumber();
+        if (biz == null || biz.isBlank()) return;   // 묶을 신원이 없다
+        var st = stanceRepository.findByUserIdAndBusinessNumber(userId, biz)
+                .orElseGet(() -> new com.finntech.domain.UserMerchantStance(
+                        userId, biz, tx.getMerchantName(), now));
+        st.kept(toLenient, toExcluded, now);
+        stanceRepository.save(st);
+    }
+
     private void promoteStances(Long userId, List<String> keptPaymentIds, LocalDateTime now) {
         if (keptPaymentIds == null || keptPaymentIds.isEmpty()) return;
         for (var p : userPaymentRepository.findAllById(keptPaymentIds)) {
@@ -336,7 +359,18 @@ public class GuardianService {
 
     public record IngestCommand(LocalDateTime occurredAt, String merchantName, String merchantDisplayName,
                                 long amount, String mcc, String category, Double categoryConfidence,
-                                TxType txType, boolean demo, Long sourceConsumptionId) {}
+                                TxType txType, boolean demo, Long sourceConsumptionId,
+                                /** 가맹점 사업자번호 — 판정 성향(§8-S)이 붙는 키. 모르면 null. */
+                                String businessNumber) {
+
+        /** 사업자번호를 모르는 옛 호출부용. 그때는 성향에 묶지 않는다. */
+        public IngestCommand(LocalDateTime occurredAt, String merchantName, String merchantDisplayName,
+                             long amount, String mcc, String category, Double categoryConfidence,
+                             TxType txType, boolean demo, Long sourceConsumptionId) {
+            this(occurredAt, merchantName, merchantDisplayName, amount, mcc, category,
+                    categoryConfidence, txType, demo, sourceConsumptionId, null);
+        }
+    }
 
     public record IngestResult(GuardianTransaction transaction, GuardianRules.Snapshot snapshot,
                                ChallengeState state, GuardianNotification notification) {}
@@ -360,6 +394,7 @@ public class GuardianService {
                 cmd.merchantName(), cmd.merchantDisplayName(), cmd.amount(), cmd.mcc(),
                 cmd.category(), cmd.categoryConfidence(), cmd.txType(), micro, cmd.demo());
         tx.setSourceConsumptionId(cmd.sourceConsumptionId());
+        tx.setBusinessNumber(cmd.businessNumber());
 
         // 챌린지가 없거나 정산 단계면 원장만 남기고 조용히 끝낸다.
         if (ch == null || !ch.isRunning()) {
@@ -473,6 +508,9 @@ public class GuardianService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "챌린지를 찾을 수 없어요"));
 
         tx.undo(reason, now);
+        // "내 소비가 아니다"는 §8-S가 받는 것과 같은 신호다 — 다음 달에 또 묻지 않도록 성향에 쌓는다.
+        // EXEMPTION은 부르지 않는다. 그건 낭비를 인정하고 봐달라는 뜻이라 방향이 반대다.
+        if (reason == UndoReason.NOT_MINE) promoteStanceOf(userId, tx, now);
         ch.setSpentAmount(ch.getSpentAmount() - tx.getAmount());
         // 이 거래 때문에 일어난 상태 전이를 취소한다.
         ch.setState(GuardianRules.nextStateOnSpend(
@@ -536,10 +574,19 @@ public class GuardianService {
         for (Consumption c : consumptionRepository.findInRange(userId, from, to)) {
             if (txRepository.existsByUserIdAndSourceConsumptionId(userId, c.getId())) continue;
             Category cat = c.getCategory();
+            /* 가맹점을 되찾는다. 예전에는 가맹점명 자리에 <b>카테고리 이름</b>을 넣었다 —
+               화면에 "식비"가 가게 이름으로 떴고, 사업자번호가 없어 사용자의 "이 결제는
+               챌린지랑 상관없어요"가 성향(§8-S)으로 이어지지 못했다. 결제 키를 달아 뒀으므로
+               (V15) 역산 없이 정확히 찾는다. 못 찾으면 예전처럼 카테고리 이름으로 둔다. */
+            UserPayment src = c.getSourcePaymentId() == null ? null
+                    : userPaymentRepository.findById(c.getSourcePaymentId()).orElse(null);
+            String merchant = src != null && src.getMerchantName() != null
+                    ? src.getMerchantName() : cat.getDisplayName();
             ingest(userId, new IngestCommand(
-                    c.getOccurredAt(), cat.getDisplayName(), cat.getDisplayName(),
+                    c.getOccurredAt(), merchant, merchant,
                     c.getAmount().setScale(0, RoundingMode.HALF_UP).longValue(),
-                    null, cat.getCode(), 1.0, TxType.EXPENSE, false, c.getId()));
+                    null, cat.getCode(), 1.0, TxType.EXPENSE, false, c.getId(),
+                    src == null ? null : src.getBusinessNumber()));
             added++;
         }
         return added;
@@ -587,6 +634,7 @@ public class GuardianService {
         v.put("secured", snap.securedSaving());
         v.put("daysLeft", snap.daysLeft());
         v.put("days", ch.getNoSpendStreak());
+        topCategory(ch.getId()).ifPresent(top -> v.put("topCategory", top));
         if (tx != null) {
             v.put("amount", tx.getAmount());
             v.put("category", categoryLabel(tx.getCategory()));
@@ -594,6 +642,27 @@ public class GuardianService {
             v.put("total", txRepository.sumMicroOnDate(ch.getId(), today));
         }
         return v;
+    }
+
+    /**
+     * 이번 챌린지에서 가장 많이 쓴 카테고리 — 한도 알림(C3·C6)이 "어디서 새는지" 지목하는 데 쓴다.
+     *
+     * <p>알림을 카테고리별로 쪼개지 않기로 한 대신 넣는 값이다(2026-08-02). 판정은 합계 기준이므로
+     * (tech_log §8-T) <b>발화 단위는 합계 하나</b>로 두고, 카테고리는 본문 안에서 지목만 한다.
+     *
+     * <p><b>카테고리가 하나뿐이면 비운다.</b> 지목할 것이 없는데 "가장 많이 쓴 건 식비예요"라고
+     * 말하면 정보가 아니라 군더더기다. 동점이면 카테고리 코드 순으로 하나를 고른다 —
+     * 조회 정렬은 결정론이어야 한다(마스터 §4 원칙 3).
+     */
+    private Optional<String> topCategory(Long challengeId) {
+        List<Object[]> sums = txRepository.sumCountedByCategory(challengeId);
+        if (sums.size() < 2) return Optional.empty();
+        return sums.stream()
+                .filter(row -> row[0] != null)
+                .max(Comparator
+                        .<Object[]>comparingLong(row -> ((Number) row[1]).longValue())
+                        .thenComparing(row -> String.valueOf(row[0]), Comparator.reverseOrder()))
+                .map(row -> categoryLabel(String.valueOf(row[0])));
     }
 
     /** 카테고리 코드 → 사람이 읽는 이름. 코드에 카테고리 이름을 박지 않는다(마스터 §4 원칙 4). */
@@ -766,7 +835,23 @@ public class GuardianService {
         GuardianNotification n = notificationRepository.findById(notificationId)
                 .filter(x -> x.getUserId().equals(userId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "알림을 찾을 수 없어요"));
-        n.recordFeedback(feedback, reason, clock.now(userId));
+        LocalDateTime now = clock.now(userId);
+        n.recordFeedback(feedback, reason, now);
         notificationRepository.save(n);
+
+        /* 피드백을 판정으로 되먹인다 (2026-08-02). 예전에는 여기서 끝났다 — 컬럼에만 남고
+           아무것도 안 바꿨다. 그런데 온보딩의 "이건 낭비 아님"은 성향으로 쌓이고 있었다.
+           같은 신호인데 한쪽만 쓰고 있던 것이다.
+
+           <b>사유를 가려서 받는다.</b> NOT_MINE("내 소비가 아님")만이 판정에 대한 반박이고,
+           TIMING·TONE·TOO_OFTEN·ALREADY_KNEW는 <b>전달 방식</b>에 대한 불만이다.
+           "밤에 보내지 마세요"를 "이 가게는 낭비가 아니다"로 읽으면, 알림이 성가실수록
+           판정이 무뎌지는 엉뚱한 고리가 생긴다. */
+        if (feedback == Feedback.NOT_USEFUL && reason == FeedbackReason.NOT_MINE
+                && n.getTransactionId() != null) {
+            txRepository.findById(n.getTransactionId())
+                    .filter(tx -> userId.equals(tx.getUserId()))
+                    .ifPresent(tx -> promoteStanceOf(userId, tx, now));
+        }
     }
 }

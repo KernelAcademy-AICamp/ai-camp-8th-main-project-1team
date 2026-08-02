@@ -155,9 +155,11 @@ public class MyDataLinkService {
                     String mid = industryMapper.midOf(payment.ksicCode());
                     Category category = categoryRepository.findByCode(mid)
                             .orElseGet(() -> categoryRepository.save(new Category(mid, mid)));
+                    // 결제 키를 달고 간다 — 원장이 나중에 이 소비의 가맹점을 되찾는 유일한 길이다(V15).
                     consumptionRepository.save(new Consumption(userId, category,
                             BigDecimal.valueOf(payment.amount()), payment.date(), false,
-                            Enums.DataSource.MYDATA));
+                            Enums.DataSource.MYDATA)
+                            .withSourcePayment(UserPayment.rowId(userId, payment.id())));
                     paymentCount++;
                     if (lastPayment == null || payment.date().isAfter(lastPayment)) lastPayment = payment.date();
                 }
@@ -262,8 +264,10 @@ public class MyDataLinkService {
                     String mid = industryMapper.midOf(payment.ksicCode());
                     Category category = categoryRepository.findByCode(mid)
                             .orElseGet(() -> categoryRepository.save(new Category(mid, mid)));
+                    // 결제 키를 달고 간다 — 원장이 나중에 이 소비의 가맹점을 되찾는 유일한 길이다(V15).
                     consumptionRepository.save(new Consumption(userId, category,
-                            BigDecimal.valueOf(payment.amount()), payment.date(), false, Enums.DataSource.MYDATA));
+                            BigDecimal.valueOf(payment.amount()), payment.date(), false, Enums.DataSource.MYDATA)
+                            .withSourcePayment(UserPayment.rowId(userId, payment.id())));
                     added++;
                     if (payment.date().isAfter(maxDate)) maxDate = payment.date();
                 }
