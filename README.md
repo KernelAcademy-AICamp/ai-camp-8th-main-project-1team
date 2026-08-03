@@ -341,7 +341,7 @@ Supabase나 Firebase는 관리형 서버 한 개를 쓰는 구조라, 이렇게 
 
 - [기획 자료 전체](reference/기획/README.md) — 고객 · 시장 · 솔루션 · 스펙
 - [서비스 개요](reference/기획/00_서비스개요.md) — 10분 안에 서비스를 파악하는 문서
-- [화면 설계(IA)](reference/기획/04_스펙/09_IA.md)
+- [화면 설계(IA)](reference/기획/04_스펙/04_IA.md)
 
 ---
 

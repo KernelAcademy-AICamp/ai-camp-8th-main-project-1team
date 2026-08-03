@@ -1,4 +1,4 @@
-# 13. 소비 분석 Agent 설계 — ① 소비 분석 내부 명세
+# 05. 소비 분석 Agent 설계 — ① 소비 분석 내부 명세
 
 > 프로젝트명: MOA
 > 문서 목적: ① 소비 분석 Agent의 집계 규칙·판정 임계·산출물을 확정한다
@@ -7,7 +7,7 @@
 > 담당: ① 소비 분석(상현)
 > 구현: `backend/src/main/java/com/finntech/engine/` · `ml/` · `web/ConsumptionAnalysisController.java`
 
-`07_에이전트_연결부.md`가 "①이 소유한다"고만 적어둔 영역의 **내부 설계**다. ②의 짝 문서는 `11_지킴이_Agent_설계.md`, ③은 `13_취향 분석 및 추천_Agent_설계.md`다. 세 문서가 같은 구조를 갖는다 — 연결부가 계약이고, 이 문서가 그 계약을 지키는 방식이다.
+`02_에이전트_연결부.md`가 "①이 소유한다"고만 적어둔 영역의 **내부 설계**다. ②의 짝 문서는 `06_지킴이_Agent_설계.md`, ③은 `07_취향분석및추천_Agent_설계.md`다. 세 문서가 같은 구조를 갖는다 — 연결부가 계약이고, 이 문서가 그 계약을 지키는 방식이다.
 
 ---
 
@@ -586,11 +586,11 @@ TEMPLATE_FALLBACK 호출 실패 — 템플릿으로 회수
 
 ## 11. 참고
 
-- `07_에이전트_연결부.md` — Agent 계약 (이 문서가 §0.2를 개정)
-- `11_지킴이_Agent_설계.md` — ② 내부 명세 (짝 문서)
-- `13_취향 분석 및 추천_Agent_설계.md` — ③ 내부 명세 (짝 문서)
-- `06_prd.md` §10 — 카테고리 분류 파이프라인 (§3이 개정)
-- `08_기획점검워크시트.md` — Agent 정의서 3-1
-- `09_IA.md` — MD-01~05 · AN-01·AN-02 · CT-01·CT-01A · NT-03·NT-04
+- `02_에이전트_연결부.md` — Agent 계약 (이 문서가 §0.2를 개정)
+- `06_지킴이_Agent_설계.md` — ② 내부 명세 (짝 문서)
+- `07_취향분석및추천_Agent_설계.md` — ③ 내부 명세 (짝 문서)
+- `01_prd.md` §10 — 카테고리 분류 파이프라인 (§3이 개정)
+- `03_기획점검워크시트.md` — Agent 정의서 3-1
+- `04_IA.md` — MD-01~05 · AN-01·AN-02 · CT-01·CT-01A · NT-03·NT-04
 - 구현: `backend/src/main/java/com/finntech/engine/` · `ml/` · `service/{CutCandidate,Calibration,Narrative,MyDataLink}Service.java`
 - 검증: `backend/src/test/java/com/finntech/engine/` (5건) · `ml/` (3건)

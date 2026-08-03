@@ -522,7 +522,7 @@ export interface CutSelection {
 export interface Narrative { text: string; source: string }
 
 /* ══════════════════════════════════════════════════════════════════════
-   지킴이 Agent (§/api/guardian) — 설계서 11_지킴이_Agent_설계.md
+   지킴이 Agent (§/api/guardian) — 설계서 06_지킴이_Agent_설계.md
    ══════════════════════════════════════════════════════════════════════ */
 
 export type ChallengeState =
