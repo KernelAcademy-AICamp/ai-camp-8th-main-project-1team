@@ -1,4 +1,4 @@
--- V6 — 지킴이 Agent 스키마 (설계서 11_지킴이_Agent_설계.md · 구현 backend/src/main/java/com/finntech/guardian/)
+-- V6 — 지킴이 Agent 스키마 (설계서 06_지킴이_Agent_설계.md · 구현 backend/src/main/java/com/finntech/guardian/)
 --
 -- 지킴이 커밋(cb24cfd)이 엔티티 9종만 추가하고 이 마이그레이션을 빠뜨려, mysql 프로파일
 -- (ddl-auto=validate + Flyway가 스키마 소유자, §3-B)에서 기동이 막혔다:
