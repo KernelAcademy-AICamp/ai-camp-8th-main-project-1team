@@ -64,7 +64,12 @@ finntech:
     # 고정의 위험은 "그 모델이 은퇴하면 문장이 조용히 사라진다"인데, 이번에 두 가지로 막았다.
     #   ① 이 값이 환경변수라 **배포 없이** 서버 .env 에서 갈아탄다(GEMINI_MODEL).
     #   ② 폴백하면 WARN 로그가 이유를 남긴다 — 예전에는 catch 가 예외를 통째로 삼켰다.
-    model: ${GEMINI_MODEL:gemini-3.1-flash-lite}
+    #
+    # **여기에 기본값을 쓰지 않는다.** `${VAR:기본값}` 은 변수가 *없을 때만* 기본값을 쓰는데,
+    # compose 는 `${GEMINI_MODEL:-}` 로 **빈 값을 넣어 준다**(변수를 지우는 문법이 없다).
+    # 그러면 모델 이름이 빈 문자열이 되어 URI 가 `/v1beta/models/:generateContent` 로 나가고
+    # 404 → 폴백이다. 기본값은 GeminiModels.DEFAULT 한 곳에만 둔다.
+    model: ${GEMINI_MODEL:}
     base-url: https://generativelanguage.googleapis.com
 
   # ---- 마이데이터 서버 연동 (§13) ------------------------------------------
