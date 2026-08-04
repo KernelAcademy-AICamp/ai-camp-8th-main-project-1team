@@ -109,6 +109,31 @@ jobs:
           FSS_API_KEY=
           EOF
 
+      # `.env` 에 넣은 값이 컨테이너까지 가는가.
+      #
+      # compose 는 `--env-file` 의 변수를 **자동으로 주입하지 않는다** — 서비스의 `environment:` 에
+      # 그 이름을 한 줄 적어야 전달된다. 그 줄이 없으면 키를 아무리 정확히 넣어도 앱에는 안 온다.
+      # 실제로 `FSS_API_KEY` 가 그랬다(2026-08-04 운영 실측): `.env.example` 도, CI 환경파일도,
+      # compose 의 네트워크 주석("edge로 …금리조회 아웃바운드")도 그 키를 안다고 적어 놨는데
+      # 정작 전달하는 줄만 없어서, 통장 비교가 몇 주 동안 조용히 더미 금리로 나갔다.
+      #
+      # 조용한 실패라 아무도 모른다 — 화면은 '예시 데이터'라고 정직하게 뜨고 로그도 안 남는다.
+      # 그래서 사람이 아니라 검사가 본다.
+      - name: 환경변수 전달 누락 검사
+        run: |
+          promised=$(grep -oE '^[A-Z][A-Z0-9_]*' deploy/.env.example | sort -u)
+          passed=$(grep -hoE '\$\{[A-Z][A-Z0-9_]*' \
+                     docker-compose.prod.yml docker-compose.prod.local-db.yml docker-compose.prod.large.yml \
+                   | grep -oE '[A-Z][A-Z0-9_]*$' | sort -u)
+          missing=$(comm -23 <(echo "$promised") <(echo "$passed"))
+          if [ -n "$missing" ]; then
+            echo "::error::deploy/.env.example 이 약속했는데 compose 가 컨테이너로 전달하지 않는 변수가 있다:"
+            echo "$missing" | sed 's/^/  - /'
+            echo "해당 서비스의 environment: 에 `KEY: \${KEY:-}` 한 줄을 추가한다."
+            exit 1
+          fi
+          echo "전달 누락 없음 — .env.example 의 $(echo "$promised" | wc -l | tr -d ' ')개 변수 전부 compose 에 있다"
+
       # 비교 기준점 = **지금 운영에 떠 있는 것** = `main`.
       #
       # PR이면 병합될 대상(base)이 곧 그것이다. 그런데 develop **푸시**는 예전에 `HEAD~1`을 썼고,

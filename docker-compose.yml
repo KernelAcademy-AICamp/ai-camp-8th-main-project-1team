@@ -72,6 +72,8 @@ services:
       FINNTECH_DEMO_TODAY: ${FINNTECH_DEMO_TODAY:-}
       # 비워두면 고정 템플릿으로 폴백한다 (D-02 포기 순서 1번)
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      # 금감원 오픈API 인증키. 비면 통장 비교가 더미로 폴백한다.
+      FSS_API_KEY: ${FSS_API_KEY:-}
       # 일반 API로 DUMMY_SEED가 생성되면 안 된다 (문서 §5-2 ④).
       # 시연용으로 잠깐 켜야 하면 FINNTECH_DEV_SEED_ENABLED=true 를 환경변수로 넘긴다.
       FINNTECH_DEV_SEED_ENABLED: "${FINNTECH_DEV_SEED_ENABLED:-false}"
