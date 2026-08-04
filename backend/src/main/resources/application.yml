@@ -99,12 +99,15 @@ finntech:
       base-url: https://finlife.fss.or.kr
       path: /finlifeapi
       service-name: savingProductsSearch
+      # 정기예금 — FP-01의 예금 그룹. 적금과 서비스명만 다르고 응답 구조는 같다(rsrv_type_nm만 없다).
+      deposit-service-name: depositProductsSearch
       # ★ UA 필수 — 없으면 WAF가 상태코드도 없이 연결을 끊는다(curl 52 Empty reply).
       user-agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
       # 권역코드: 020000 은행 · 030300 저축은행 · 050000 보험 · 060000 금융투자
       top-fin-grp-no: "020000"
-      # MOA의 '지킨 돈'은 매달 금액이 달라져 정액적립식과 맞지 않는다. 실측상 금리 손해도 없다.
-      reserve-type: 자유적립식
+      # (적립방식 필터는 뺐다 — FP-01 M4가 "정액적립식도 항상 노출"이라 자유·정액을 모두 담고
+      #  어느 그룹인지는 rsrv_type_nm 값으로 매퍼가 가른다. 예전 reserve-type: 자유적립식 설정 때문에
+      #  정액 상품이 조회조차 되지 않아 M4의 후보가 0건이었다.)
 
     # 통장 비교 섹션의 기본 기간(개월). 목표별 추천은 계획 개월수를 6·12·24·36 버킷으로 매핑해 각각 조회한다.
     default-period: 12
@@ -132,6 +135,25 @@ finntech:
     # L5 우대조건 — 상품이 요구하는 실적액은 spclCnd 자연어에만 있어 알 수 없다(D2).
     # 실제 적금 우대조건에 흔한 기준선을 둔다. 카드사별 전월 실적 중 최대값과 비교한다.
     card-performance-threshold: 300000      # 전월 카드실적이 30만원 이상이면 충족
+
+  # 파킹통장 후보 — FP-01의 PARKING 그룹. 금감원 공시에는 만기 없는 상품이 없어 여기서 따로 받는다.
+  # 비공식 API를 쓰는 근거는 ParkingAccountSource 클래스 주석에 적어 뒀다(가상 환경 학습용 서비스,
+  # 목적은 판매가 아니라 추천 규칙이 현실 상품 분포에서 제대로 갈리는지 확인). 실서비스로 가면
+  # 이 소스만 제휴 데이터로 갈아끼우고 매칭 규칙은 손대지 않는다.
+  parking-accounts:
+    enabled: true
+    base-url: https://new-m.pay.naver.com
+    path: /savings/api/v1/productList
+    # ★ depositPeriod를 보내면 0건이 온다 — 파킹통장은 만기가 없다(2026-08-04 실측).
+    #   productTypeCode 1001=파킹 · 1002=정기예금 · 1003=적금, 1004 이상은 400.
+    company-group-code: BA          # 은행
+    sort-type: INTEREST_RATE
+    deposit-amount: "30000"         # 금리 구간 산정용 예치금 가정액
+    user-agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    referer: https://new-m.pay.naver.com/savings/list/parking
+    max-pages: 5
+    # 금감원(30분)보다 길게 둔다 — 비공식 출처라 호출을 아낀다.
+    cache-ttl-minutes: 60
 
   # 저축 상품 매칭 FP-01 (M1~M9) — 07_취향분석및추천_Agent_설계.md §4.5
   savings-match:

@@ -127,10 +127,16 @@ public class SavingsMatchService {
      */
     static List<AccrualType> groupOrder(GroupOrderBasis basis) {
         return switch (basis) {
-            case LIQUIDITY_FIRST -> List.of(AccrualType.PARKING, AccrualType.FLEXIBLE, AccrualType.FIXED);
-            // 중립·수익률 우선 모두 자유적립식이 앞이다. 중립은 "근거가 없어 기본 순서"라는 뜻이며
-            // basis 값으로 화면·LLM이 그 사실을 그대로 말할 수 있다.
-            case YIELD_FIRST, NEUTRAL -> List.of(AccrualType.FLEXIBLE, AccrualType.PARKING, AccrualType.FIXED);
+            // 유동성이 급하면 묶이는 순서의 역순 — 파킹(수시) → 자유적립(안 넣어도 됨) → 예금(만기까지 묶임).
+            case LIQUIDITY_FIRST ->
+                    List.of(AccrualType.PARKING, AccrualType.FLEXIBLE, AccrualType.DEPOSIT, AccrualType.FIXED);
+            // 묶어도 되는 사람이라 예금이 파킹보다 앞이다(같은 기간이면 금리가 높다).
+            case YIELD_FIRST ->
+                    List.of(AccrualType.FLEXIBLE, AccrualType.DEPOSIT, AccrualType.PARKING, AccrualType.FIXED);
+            // 중립은 "근거가 없어 기본 순서"라는 뜻이다(basis로 화면·LLM이 그 사실을 그대로 말한다).
+            // 모를 때는 덜 묶는 쪽이 안전하므로 예금을 파킹보다 뒤에 둔다.
+            case NEUTRAL ->
+                    List.of(AccrualType.FLEXIBLE, AccrualType.PARKING, AccrualType.DEPOSIT, AccrualType.FIXED);
         };
     }
 

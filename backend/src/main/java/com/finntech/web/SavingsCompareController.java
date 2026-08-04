@@ -25,14 +25,15 @@ public class SavingsCompareController {
     }
 
     /**
-     * {@code userId}를 주면 그 사용자의 출생연도로 나이 자격까지 맞춰 거른다.
-     * 없거나 마이데이터 미연동이면 나이 조건은 따지지 않고 특수 신분 조건만 걸러 보여준다.
+     * {@code userId}를 주면 그 사용자의 출생연도로 나이 자격까지 맞춰 거르고, <b>자금흐름 5축으로
+     * FP-01 매칭(M1~M9)까지 붙여</b> {@code match}에 그룹별 추천을 내려보낸다.
+     * 없거나 마이데이터 미연동이면 나이 조건은 따지지 않고 특수 신분 조건만 걸러 목록만 보여준다.
      */
     @GetMapping("/compare")
     public SavingsCompareService.CompareResult compare(@RequestParam(required = false) Integer limit,
                                                        @RequestParam(required = false) Long userId) {
         Integer birthYear = userId == null ? null
                 : userRepository.findById(userId).map(AppUser::getBirthYear).orElse(null);
-        return service.compare(limit, birthYear);
+        return service.compare(limit, birthYear, userId);
     }
 }

@@ -78,6 +78,11 @@ class SavingsMatchServiceTest {
         return result.groups().get(result.groups().size() - 1).type();
     }
 
+    /** 그룹 나열 순서 — 이것 자체가 추천 결과다(M1). */
+    private static List<AccrualType> typesOf(MatchResult result) {
+        return result.groups().stream().map(SavingsMatchService.MatchGroup::type).toList();
+    }
+
     private static <T> List<T> reversed(List<T> list) {
         List<T> copy = new ArrayList<>(list);
         Collections.reverse(copy);
@@ -93,13 +98,43 @@ class SavingsMatchServiceTest {
                 inputs(List.of(
                         product("P1", "가은행", AccrualType.PARKING, 2.0, 2.0),
                         product("F1", "나은행", AccrualType.FLEXIBLE, 3.0, 3.0),
+                        product("D1", "라은행", AccrualType.DEPOSIT, 3.8, 3.8),
                         product("X1", "다은행", AccrualType.FIXED, 4.0, 4.0)), null));
 
-        assertThat(out.groups()).hasSize(3);
+        assertThat(out.groups()).hasSize(4);
         assertThat(out.groups()).allSatisfy(g ->
                 assertThat(g.matches()).allMatch(m -> m.product().accrualType() == g.type()));
         // 금리만 보면 정액(4.0)이 최상단이어야 하지만, 그룹을 가르므로 합쳐지지 않는다.
         assertThat(bottomGroup(out)).isEqualTo(AccrualType.FIXED);
+    }
+
+    /** 예금은 목돈을 만기까지 묶는다 — 유동성이 급하면 뒤로, 묶어도 되면 앞으로. */
+    @Test
+    void M1_예금은_유동성_상황에_따라_파킹통장_앞뒤로_움직인다() {
+        var liquidityFirst = service.match(
+                profile(StabilityLevel.THIN, null, LiquidityNeed.SMOOTH, l5(true, true)),
+                inputs(List.of(), null));
+        var yieldFirst = service.match(
+                profile(StabilityLevel.THICK, 12, LiquidityNeed.PREDICTABLE_LUMPY, l5(true, true)),
+                inputs(List.of(), null));
+
+        // 유동성 우선 — 파킹이 예금보다 앞
+        assertThat(typesOf(liquidityFirst)).containsExactly(AccrualType.PARKING, AccrualType.FLEXIBLE,
+                AccrualType.DEPOSIT, AccrualType.FIXED);
+        // 수익률 우선 — 묶어도 되니 예금이 파킹보다 앞
+        assertThat(typesOf(yieldFirst)).containsExactly(AccrualType.FLEXIBLE, AccrualType.DEPOSIT,
+                AccrualType.PARKING, AccrualType.FIXED);
+    }
+
+    /** 모를 때는 덜 묶는 쪽이 안전하다 — 중립에서는 예금이 파킹보다 뒤다. */
+    @Test
+    void M1_중립이면_예금은_파킹통장_뒤다() {
+        var neutral = service.match(
+                profile(StabilityLevel.UNKNOWN, null, LiquidityNeed.UNKNOWN, l5Unknown()),
+                inputs(List.of(), null));
+
+        assertThat(typesOf(neutral)).containsExactly(AccrualType.FLEXIBLE, AccrualType.PARKING,
+                AccrualType.DEPOSIT, AccrualType.FIXED);
     }
 
     // ── M2 유동성 우선 ───────────────────────────────────────────
@@ -175,7 +210,7 @@ class SavingsMatchServiceTest {
     void 프로필이_null이어도_그룹_뼈대는_유지된다() {
         MatchResult out = service.match(null, inputs(List.of(), null));
         assertThat(out.basis()).isEqualTo(GroupOrderBasis.NEUTRAL);
-        assertThat(out.groups()).hasSize(3);
+        assertThat(out.groups()).hasSize(4);
         assertThat(out.userId()).isNull();
     }
 
