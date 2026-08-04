@@ -51,7 +51,10 @@ export function ReportAnalysis() {
 
         {data && (() => {
           const { profile, recurring, pattern, cutCandidates } = data;
-          const fixed = recurring.filter((r) => r.type === 'FIXED');
+          // 끝난 구독을 '고정지출'과 같이 세면 지금 나가는 돈이 부풀려진다. 세는 것은 갈라 두고,
+          // 목록에는 함께 보여준다 — "언제부터 언제까지 무엇을 구독했나"가 그 자체로 정보다.
+          const fixed = recurring.filter((r) => r.type === 'FIXED' && r.status === 'ACTIVE');
+          const past = recurring.filter((r) => r.type === 'FIXED' && r.status === 'ENDED');
           const routine = recurring.filter((r) => r.type === 'ROUTINE');
           const maxFactor = Math.max(1, ...Object.values(profile.contributionPoints));
           // 글자로도, 막대로도 쓰이는 색이다. 큰 숫자(38px)라 3:1 이면 되지만 브랜드 그린은 2.49:1 이라
@@ -144,20 +147,29 @@ export function ReportAnalysis() {
               )}
 
               {/* ② 반복 결제 */}
-              <SectionTitle aux={`고정 ${fixed.length} · 루틴 ${routine.length}`}>반복되는 결제</SectionTitle>
+              <SectionTitle aux={`고정 ${fixed.length}${past.length > 0 ? ` · 지난 ${past.length}` : ''} · 루틴 ${routine.length}`}>
+                반복되는 결제
+              </SectionTitle>
               <div className="card" style={{ padding: '10px 18px' }}>
                 {recurring.length === 0 ? <Empty>아직 반복 패턴이 잡히지 않았어요.</Empty> : (
                   <>
-                    {fixed.map((r, i) => (
-                      <div className="txn" key={`f${i}`}>
-                        <span className="c">고정</span>
-                        <span className="m">{r.merchantName ?? r.category2}</span>
-                        <span className="muted small" style={{ flex: '0 0 auto' }}>
-                          {r.periodDays ? `${r.periodDays}일마다` : ''}{r.nextExpected ? ` · 다음 ${r.nextExpected.slice(5)}` : ''}
-                        </span>
-                        <span className="a">{won(r.representativeAmount)}</span>
-                      </div>
-                    ))}
+                    {[...fixed, ...past].map((r, i) => {
+                      const ended = r.status === 'ENDED';
+                      return (
+                        <div className="txn" key={`f${i}`}>
+                          <span className="c">{ended ? '지난' : '고정'}</span>
+                          <span className="m">{r.merchantName ?? r.category2}</span>
+                          <span className="muted small" style={{ flex: '0 0 auto' }}>
+                            {/* 끝난 것에는 '다음 예상일'이 없다 — 있으면 과거 날짜가 미래인 척 뜬다. 대신 구독 기간을 쓴다. */}
+                            {ended
+                              ? `${r.firstSeen.slice(5)}~${r.lastSeen.slice(5)} · ${r.occurrenceDays}회`
+                              : `${r.periodDays}일마다${r.nextExpected ? ` · 다음 ${r.nextExpected.slice(5)}` : ''}`}
+                            {r.priorAmount ? ` · 이전 ${won(r.priorAmount)}` : ''}
+                          </span>
+                          <span className="a">{r.amountVaries ? '최근 ' : ''}{won(r.representativeAmount)}</span>
+                        </div>
+                      );
+                    })}
                     {routine.map((r, i) => (
                       <div className="txn" key={`r${i}`}>
                         <span className="c">루틴</span>

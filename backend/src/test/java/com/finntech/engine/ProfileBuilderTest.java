@@ -71,7 +71,9 @@ class ProfileBuilderTest {
                 w, LocalDateTime.of(2026, 2, 1, 0, 0), LocalDateTime.of(2026, 3, 1, 0, 0), daypart);
         // 루틴형 배달(대표 10,000 × 등장 2일 = 20,000) → 심야(20,000)+루틴낭비(20,000) = 40,000 / 20,000 = 2.0 → clamp 1.0
         RecurringPayment routine = new RecurringPayment(
-                RecurringPayment.Type.ROUTINE, "배달", null, null, "심야", 10000, null, null, 2, 0.5);
+                RecurringPayment.Type.ROUTINE, RecurringPayment.Status.ACTIVE,
+                "배달", null, null, "심야", 10000, false, null, null, null,
+                java.time.LocalDate.of(2026, 2, 5), java.time.LocalDate.of(2026, 2, 6), 2, 0.5);
 
         UserProfile p = ProfileBuilder.buildFrom(w, List.of(routine), pattern, profile, cut, vol, ProfileBuilderTest::disc);
 

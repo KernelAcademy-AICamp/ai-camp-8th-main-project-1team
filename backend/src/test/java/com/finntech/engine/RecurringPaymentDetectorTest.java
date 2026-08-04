@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** 반복 결제 탐지(②) 순수함수 검증 — 고정형/루틴형 인식과 오탐 거부. */
@@ -65,15 +67,125 @@ class RecurringPaymentDetectorTest {
     }
 
     @Test
-    @DisplayName("금액이 들쭉날쭉하면 고정형 아님")
-    void rejectsVariableAmountFixed() {
+    @DisplayName("금액이 달라도 매달 같은 날 같은 곳이면 고정형 — 통신비는 사용량따라 변한다")
+    void acceptsVariableAmountMonthlyFixed() {
+        // 2026-08-04 전에는 이 케이스를 "변동금액은 FIXED 아님"으로 **거부**했다. 그 전제가 틀렸다 —
+        // 매달 5일에 같은 통신사에서 빠지면 금액이 흔들려도 고정지출이다. 오탐 방어는 금액이 아니라
+        // 주기 안정성(fixed-gap-cv-max)이 맡는다.
         int[] amts = {30000, 55000, 42000, 60000};
         List<UserPayment> t = new ArrayList<>();
         LocalDate d = LocalDate.of(2025, 12, 5);
         for (int i = 0; i < 4; i++) t.add(tx(d.plusMonths(i).atTime(9, 0), "통신비", amts[i], "이통사", "1112233334"));
 
-        assertTrue(detect(t, LocalDateTime.of(2026, 3, 10, 0, 0)).stream()
-                .noneMatch(r -> r.type() == RecurringPayment.Type.FIXED), "변동금액은 FIXED 아님");
+        RecurringPayment f = only(detect(t, LocalDateTime.of(2026, 3, 10, 0, 0)), RecurringPayment.Type.FIXED);
+        assertTrue(f.amountVaries(), "금액이 흔들린다고 표시해야");
+        assertEquals(60000, f.representativeAmount(), "흔들리면 최근 결제액이 대표금액");
+    }
+
+    @Test
+    @DisplayName("주기가 흩어지면 금액이 같아도 고정형 아님 — 오탐 방어선은 여기다")
+    void rejectsIrregularInterval() {
+        // 월간 범위 평균(≈30일) 안에 들어와도 간격이 12/48/30 처럼 흩어지면 계약이 아니다.
+        // 이것이 금액 게이트를 뺀 자리를 대신 막는 방어선이다.
+        List<UserPayment> t = List.of(
+                tx(LocalDateTime.of(2026, 1, 1, 9, 0), "쇼핑", 30000, "가게", "1112233334"),
+                tx(LocalDateTime.of(2026, 1, 13, 9, 0), "쇼핑", 30000, "가게", "1112233334"),
+                tx(LocalDateTime.of(2026, 3, 2, 9, 0), "쇼핑", 30000, "가게", "1112233334"),
+                tx(LocalDateTime.of(2026, 4, 1, 9, 0), "쇼핑", 30000, "가게", "1112233334"));
+
+        assertTrue(detect(t, LocalDateTime.of(2026, 4, 10, 0, 0)).stream()
+                .noneMatch(r -> r.type() == RecurringPayment.Type.FIXED), "간격이 흩어지면 FIXED 아님");
+    }
+
+    @Test
+    @DisplayName("요금 인상 1회로 탐지가 사라지지 않는다 — 이전 금액도 함께 준다")
+    void survivesPriceIncrease() {
+        // 예전에는 이 한 번의 인상으로 평균 CV 가 0.123 이 되어 6개월치가 통째로 사라졌다.
+        int[] amts = {13500, 13500, 13500, 13500, 17000, 17000};
+        List<UserPayment> t = new ArrayList<>();
+        LocalDate d = LocalDate.of(2026, 2, 15);
+        for (int i = 0; i < 6; i++) t.add(tx(d.plusMonths(i).atTime(9, 0), "취미/여가", amts[i], "넷플릭스", "1658700119"));
+
+        RecurringPayment f = only(detect(t, LocalDateTime.of(2026, 7, 20, 0, 0)), RecurringPayment.Type.FIXED);
+        assertEquals(17000, f.representativeAmount(), "지금 내는 금액");
+        assertEquals(13500L, f.priorAmount(), "올리기 전 금액");
+        assertTrue(f.amountVaries());
+        assertEquals(RecurringPayment.Status.ACTIVE, f.status());
+    }
+
+    @Test
+    @DisplayName("부분환불 1건이 섞여도 잡고, 대표금액이 환불액에 끌려가지 않는다")
+    void survivesOneOffRefund() {
+        int[] amts = {13500, 13500, 2000, 13500, 13500, 13500};
+        List<UserPayment> t = new ArrayList<>();
+        LocalDate d = LocalDate.of(2026, 2, 15);
+        for (int i = 0; i < 6; i++) t.add(tx(d.plusMonths(i).atTime(9, 0), "취미/여가", amts[i], "넷플릭스", "1658700119"));
+
+        RecurringPayment f = only(detect(t, LocalDateTime.of(2026, 7, 20, 0, 0)), RecurringPayment.Type.FIXED);
+        assertEquals(13500, f.representativeAmount(), "이상치 한 건에 끌려가면 안 된다");
+    }
+
+    @Test
+    @DisplayName("사업자번호가 같으면 표기가 달라도 한 건으로 묶인다")
+    void mergesMerchantNameVariantsByBusinessNumber() {
+        // 실 카드명세서는 같은 가맹점을 여러 표기로 찍는다(넷플릭스 / NETFLIX.COM / 넷플릭스서비시스코리아).
+        // 예전 그룹 키는 category2 를 포함해, 제공자가 업종을 갱신하면 한 구독이 두 그룹으로 쪼개졌다.
+        String[] names = {"넷플릭스", "NETFLIX.COM", "넷플릭스서비시스코리아", "넷플릭스"};
+        String[] cats = {"취미/여가", "취미/여가", "쇼핑", "취미/여가"};   // 업종이 한 번 흔들려도
+        List<UserPayment> t = new ArrayList<>();
+        LocalDate d = LocalDate.of(2026, 3, 15);
+        for (int i = 0; i < 4; i++) {
+            t.add(tx(d.plusMonths(i).atTime(9, 0), cats[i], 13500, names[i], "1658700119"));
+        }
+
+        RecurringPayment f = only(detect(t, LocalDateTime.of(2026, 7, 1, 0, 0)), RecurringPayment.Type.FIXED);
+        assertEquals(4, f.occurrenceDays(), "네 건이 한 그룹이어야");
+        assertEquals("1658700119", f.businessNumber());
+    }
+
+    @Test
+    @DisplayName("주간은 금액이 흔들리면 여전히 거부 — 습관과 계약을 가른다")
+    void rejectsWeeklyWithVariableAmount() {
+        int[] amts = {4500, 9800, 3200, 12000, 5100};
+        List<UserPayment> t = new ArrayList<>();
+        LocalDate d = LocalDate.of(2026, 2, 3);
+        for (int i = 0; i < 5; i++) t.add(tx(d.plusDays(7L * i).atTime(8, 0), "카페", amts[i], "카페", "2223344445"));
+
+        assertTrue(detect(t, LocalDateTime.of(2026, 3, 5, 0, 0)).stream()
+                .noneMatch(r -> r.type() == RecurringPayment.Type.FIXED), "주간 변동금액은 습관이지 계약이 아니다");
+    }
+
+    @Test
+    @DisplayName("해지한 구독은 ENDED — 과거 날짜를 '다음 예상일'이라고 하지 않는다")
+    void endedSubscriptionHasNoNextExpected() {
+        // 2026-08-04 운영에서 실제로 발견: user 2 의 AIG손해보험이 마지막 결제 07-04 인데
+        // 화면에 "다음 2026-08-03"(이미 지난 날)이 떠 있었다.
+        List<UserPayment> t = new ArrayList<>();
+        LocalDate d = LocalDate.of(2026, 1, 4);
+        for (int i = 0; i < 6; i++) t.add(tx(d.plusMonths(i).atTime(9, 0), "취미/여가", 13500, "넷플릭스", "1658700119"));
+
+        // 마지막 결제 2026-06-04. 기준일 2026-09-01 이면 주기(30일)의 1.5배를 훌쩍 넘는다.
+        RecurringPayment f = only(detect(t, LocalDateTime.of(2026, 9, 1, 0, 0)), RecurringPayment.Type.FIXED);
+        assertEquals(RecurringPayment.Status.ENDED, f.status());
+        assertNull(f.nextExpected(), "끝난 구독에 다음 예상일은 없다");
+        assertEquals(LocalDate.of(2026, 1, 4), f.firstSeen());
+        assertEquals(LocalDate.of(2026, 6, 4), f.lastSeen());
+    }
+
+    @Test
+    @DisplayName("진행 중인 구독은 ACTIVE — 구독 기간을 함께 준다")
+    void activeSubscriptionReportsSpan() {
+        List<UserPayment> t = new ArrayList<>();
+        LocalDate d = LocalDate.of(2026, 2, 4);
+        for (int i = 0; i < 6; i++) t.add(tx(d.plusMonths(i).atTime(9, 0), "취미/여가", 13500, "넷플릭스", "1658700119"));
+
+        RecurringPayment f = only(detect(t, LocalDateTime.of(2026, 7, 20, 0, 0)), RecurringPayment.Type.FIXED);
+        assertEquals(RecurringPayment.Status.ACTIVE, f.status());
+        assertEquals(LocalDate.of(2026, 2, 4), f.firstSeen());
+        assertEquals(LocalDate.of(2026, 7, 4), f.lastSeen());
+        assertEquals(f.lastSeen().plusDays(f.periodDays()), f.nextExpected());
+        assertFalse(f.amountVaries());
+        assertNull(f.priorAmount(), "변한 적이 없으면 이전 금액도 없다");
     }
 
     @Test
