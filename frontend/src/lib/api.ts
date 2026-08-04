@@ -477,13 +477,23 @@ export interface AnalysisProfile {
 }
 export interface RecurringPayment {
   type: 'FIXED' | 'ROUTINE';
+  /** 아직 빠져나가는 중인가. 끝난 구독은 `nextExpected`가 null이다. */
+  status: 'ACTIVE' | 'ENDED';
   category2: string;
   merchantName: string | null;
   businessNumber: string | null;
   daypart: string | null;
+  /** 금액이 안정적이면 중앙값, `amountVaries`면 최근 결제액. */
   representativeAmount: number;
+  amountVaries: boolean;
+  /** 요금이 바뀐 경우 그 이전 금액("13,500 → 17,000"의 앞자리). 안 바뀌었으면 null. */
+  priorAmount: number | null;
   periodDays: number | null;
   nextExpected: string | null;
+  /** 첫 결제일 — "언제부터 구독했나". */
+  firstSeen: string;
+  /** 마지막 결제일 — "언제까지 구독했나". */
+  lastSeen: string;
   occurrenceDays: number;
   perWeekFrequency: number;
 }
