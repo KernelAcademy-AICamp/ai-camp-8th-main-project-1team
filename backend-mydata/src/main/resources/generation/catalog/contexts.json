@@ -1,545 +1,545 @@
 {
-  "_note": "소비맥락 = 거래를 현실적으로 만드는 무대. ksicCode(KSIC 세분류 4자리)가 업종을 가리키고, 소비 카테고리는 앱이 scripts/ksic/ksic-mapping.tsv 로 붙인다. category1은 제거했다 — 한 축이 업종과 소비종류를 겸하던 것이 왜곡의 원인이었다. 이 파일은 scripts/ksic/build_contexts.py 가 만든다.",
-  "contexts": [
-    {
-      "category2": "공과금",
-      "ksicCode": "3520",
-      "channel": "ONLINE",
-      "locationType": "NONE",
-      "frequencyWeight": 0.5,
-      "discretionaryBase": 0.1,
-      "merchantSource": "ONLINE",
-      "fixedTariff": true
-    },
-    {
-      "category2": "보험",
-      "ksicCode": "6512",
-      "channel": "ONLINE",
-      "locationType": "NONE",
-      "frequencyWeight": 0.42,
-      "discretionaryBase": 0.1,
-      "merchantSource": "ONLINE",
-      "fixedTariff": true
-    },
-    {
-      "category2": "대형마트",
-      "ksicCode": "4711",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.62,
-      "discretionaryBase": 0.3,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "백화점",
-      "ksicCode": "4711",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.22,
-      "discretionaryBase": 0.75,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "드럭스토어",
-      "ksicCode": "4712",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.42,
-      "discretionaryBase": 0.6,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "편의점",
-      "ksicCode": "4712",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.92,
-      "discretionaryBase": 0.45,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "화장품",
-      "ksicCode": "4712",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.35,
-      "discretionaryBase": 0.65,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "디지털가전",
-      "ksicCode": "4732",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.15,
-      "discretionaryBase": 0.65,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "의류패션",
-      "ksicCode": "4741",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.4,
-      "discretionaryBase": 0.65,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "생활잡화",
-      "ksicCode": "4759",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.4,
-      "discretionaryBase": 0.45,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "키즈육아",
-      "ksicCode": "4759",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.14,
-      "discretionaryBase": 0.35,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "서점문구",
-      "ksicCode": "4761",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.2,
-      "discretionaryBase": 0.45,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "스포츠레저",
-      "ksicCode": "4763",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.16,
-      "discretionaryBase": 0.6,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "아웃도어캠핑",
-      "ksicCode": "4763",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.08,
-      "discretionaryBase": 0.7,
-      "merchantSource": "MIXED",
-      "fixedTariff": false
-    },
-    {
-      "category2": "취미공예",
-      "ksicCode": "4764",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.1,
-      "discretionaryBase": 0.65,
-      "merchantSource": "MIXED",
-      "fixedTariff": false
-    },
-    {
-      "category2": "주유소",
-      "ksicCode": "4771",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.45,
-      "discretionaryBase": 0.2,
-      "merchantSource": "MIXED",
-      "fixedTariff": false
-    },
-    {
-      "category2": "약국",
-      "ksicCode": "4781",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.45,
-      "discretionaryBase": 0.1,
-      "merchantSource": "MIXED",
-      "fixedTariff": false
-    },
-    {
-      "category2": "이커머스",
-      "ksicCode": "4791",
-      "channel": "ONLINE",
-      "locationType": "NONE",
-      "frequencyWeight": 0.88,
-      "discretionaryBase": 0.6,
-      "merchantSource": "ONLINE",
-      "fixedTariff": false
-    },
-    {
-      "category2": "철도",
-      "ksicCode": "4910",
-      "channel": "OFFLINE",
-      "locationType": "ROUTE",
-      "frequencyWeight": 0.14,
-      "discretionaryBase": 0.35,
-      "merchantSource": "OPERATOR",
-      "fixedTariff": true
-    },
-    {
-      "category2": "대중교통",
-      "ksicCode": "4921",
-      "channel": "OFFLINE",
-      "locationType": "ROUTE",
-      "frequencyWeight": 0.85,
-      "discretionaryBase": 0.05,
-      "merchantSource": "OPERATOR",
-      "fixedTariff": true
-    },
-    {
-      "category2": "고속버스",
-      "ksicCode": "4922",
-      "channel": "OFFLINE",
-      "locationType": "ROUTE",
-      "frequencyWeight": 0.12,
-      "discretionaryBase": 0.3,
-      "merchantSource": "OPERATOR",
-      "fixedTariff": true
-    },
-    {
-      "category2": "택시",
-      "ksicCode": "4923",
-      "channel": "OFFLINE",
-      "locationType": "ROUTE",
-      "frequencyWeight": 0.35,
-      "discretionaryBase": 0.55,
-      "merchantSource": "OPERATOR",
-      "fixedTariff": true
-    },
-    {
-      "category2": "항공",
-      "ksicCode": "5110",
-      "channel": "OFFLINE",
-      "locationType": "ROUTE",
-      "frequencyWeight": 0.08,
-      "discretionaryBase": 0.55,
-      "merchantSource": "OPERATOR",
-      "fixedTariff": true
-    },
-    {
-      "category2": "통행료",
-      "ksicCode": "5291",
-      "channel": "OFFLINE",
-      "locationType": "ROUTE",
-      "frequencyWeight": 0.18,
-      "discretionaryBase": 0.15,
-      "merchantSource": "OPERATOR",
-      "fixedTariff": true
-    },
-    {
-      "category2": "고기구이",
-      "ksicCode": "5611",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.55,
-      "discretionaryBase": 0.5,
-      "merchantSource": "INDEPENDENT",
-      "fixedTariff": false
-    },
-    {
-      "category2": "야식",
-      "ksicCode": "5611",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.21,
-      "discretionaryBase": 0.75,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "한식",
-      "ksicCode": "5611",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.95,
-      "discretionaryBase": 0.25,
-      "merchantSource": "MIXED",
-      "fixedTariff": false
-    },
-    {
-      "category2": "횟집",
-      "ksicCode": "5611",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.3,
-      "discretionaryBase": 0.6,
-      "merchantSource": "INDEPENDENT",
-      "fixedTariff": false
-    },
-    {
-      "category2": "뷔페",
-      "ksicCode": "5612",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.18,
-      "discretionaryBase": 0.7,
-      "merchantSource": "MIXED",
-      "fixedTariff": false
-    },
-    {
-      "category2": "아시안",
-      "ksicCode": "5612",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.42,
-      "discretionaryBase": 0.55,
-      "merchantSource": "INDEPENDENT",
-      "fixedTariff": false
-    },
-    {
-      "category2": "양식",
-      "ksicCode": "5612",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.55,
-      "discretionaryBase": 0.55,
-      "merchantSource": "MIXED",
-      "fixedTariff": false
-    },
-    {
-      "category2": "일식",
-      "ksicCode": "5612",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.55,
-      "discretionaryBase": 0.55,
-      "merchantSource": "MIXED",
-      "fixedTariff": false
-    },
-    {
-      "category2": "중식",
-      "ksicCode": "5612",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.62,
-      "discretionaryBase": 0.4,
-      "merchantSource": "MIXED",
-      "fixedTariff": false
-    },
-    {
-      "category2": "베이커리",
-      "ksicCode": "5615",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.55,
-      "discretionaryBase": 0.5,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "치킨",
-      "ksicCode": "5616",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.455,
-      "discretionaryBase": 0.6,
-      "merchantSource": "MIXED",
-      "fixedTariff": false
-    },
-    {
-      "category2": "패스트푸드",
-      "ksicCode": "5616",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.72,
-      "discretionaryBase": 0.55,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "피자",
-      "ksicCode": "5616",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.45,
-      "discretionaryBase": 0.6,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "배달",
-      "ksicCode": "5619",
-      "channel": "ONLINE",
-      "locationType": "NONE",
-      "frequencyWeight": 0.72,
-      "discretionaryBase": 0.7,
-      "merchantSource": "ONLINE",
-      "fixedTariff": false
-    },
-    {
-      "category2": "분식",
-      "ksicCode": "5619",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.8,
-      "discretionaryBase": 0.45,
-      "merchantSource": "MIXED",
-      "fixedTariff": false
-    },
-    {
-      "category2": "휴게음식",
-      "ksicCode": "5619",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.14,
-      "discretionaryBase": 0.55,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "주점",
-      "ksicCode": "5621",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.385,
-      "discretionaryBase": 0.8,
-      "merchantSource": "INDEPENDENT",
-      "fixedTariff": false
-    },
-    {
-      "category2": "카페",
-      "ksicCode": "5622",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.9,
-      "discretionaryBase": 0.5,
-      "merchantSource": "MIXED",
-      "fixedTariff": false
-    },
-    {
-      "category2": "영화",
-      "ksicCode": "5914",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.3,
-      "discretionaryBase": 0.65,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "스트리밍",
-      "ksicCode": "6031",
-      "channel": "ONLINE",
-      "locationType": "NONE",
-      "frequencyWeight": 0.55,
-      "discretionaryBase": 0.65,
-      "merchantSource": "ONLINE",
-      "fixedTariff": true
-    },
-    {
-      "category2": "통신비",
-      "ksicCode": "6122",
-      "channel": "ONLINE",
-      "locationType": "NONE",
-      "frequencyWeight": 0.5,
-      "discretionaryBase": 0.15,
-      "merchantSource": "ONLINE",
-      "fixedTariff": true
-    },
-    {
-      "category2": "간편결제",
-      "ksicCode": "6312",
-      "channel": "ONLINE",
-      "locationType": "NONE",
-      "frequencyWeight": 0.6,
-      "discretionaryBase": 0.55,
-      "merchantSource": "ONLINE",
-      "fixedTariff": false
-    },
-    {
-      "category2": "반려동물",
-      "ksicCode": "7310",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.18,
-      "discretionaryBase": 0.4,
-      "merchantSource": "MIXED",
-      "fixedTariff": false
-    },
-    {
-      "category2": "여행숙박",
-      "ksicCode": "7521",
-      "channel": "ONLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.12,
-      "discretionaryBase": 0.7,
-      "merchantSource": "ONLINE",
-      "fixedTariff": false
-    },
-    {
-      "category2": "렌터카",
-      "ksicCode": "7611",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.1,
-      "discretionaryBase": 0.55,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "공연전시",
-      "ksicCode": "9011",
-      "channel": "ONLINE",
-      "locationType": "NONE",
-      "frequencyWeight": 0.1,
-      "discretionaryBase": 0.7,
-      "merchantSource": "ONLINE",
-      "fixedTariff": false
-    },
-    {
-      "category2": "헬스장",
-      "ksicCode": "9113",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.32,
-      "discretionaryBase": 0.5,
-      "merchantSource": "INDEPENDENT",
-      "fixedTariff": false
-    },
-    {
-      "category2": "놀이공원",
-      "ksicCode": "9121",
-      "channel": "OFFLINE",
-      "locationType": "VENUE_CLUSTER",
-      "frequencyWeight": 0.1,
-      "discretionaryBase": 0.8,
-      "merchantSource": "BRAND",
-      "fixedTariff": false
-    },
-    {
-      "category2": "키즈카페",
-      "ksicCode": "9122",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.12,
-      "discretionaryBase": 0.6,
-      "merchantSource": "INDEPENDENT",
-      "fixedTariff": false
-    },
-    {
-      "category2": "미용실",
-      "ksicCode": "9611",
-      "channel": "OFFLINE",
-      "locationType": "POI",
-      "frequencyWeight": 0.4,
-      "discretionaryBase": 0.55,
-      "merchantSource": "MIXED",
-      "fixedTariff": false
-    }
-  ]
+ "_note": "소비맥락 = 거래를 현실적으로 만드는 무대. industryCode(국세청 업종코드 6자리)가 업종을 가리키고, 소비 카테고리는 앱이 scripts/ksic/ksic-mapping.tsv 로 붙인다. category1은 제거했다 — 한 축이 업종과 소비종류를 겸하던 것이 왜곡의 원인이었다. 이 파일은 scripts/ksic/build_contexts.py 가 만든다.",
+ "contexts": [
+  {
+   "category2": "공과금",
+   "channel": "ONLINE",
+   "locationType": "NONE",
+   "frequencyWeight": 0.5,
+   "discretionaryBase": 0.1,
+   "merchantSource": "ONLINE",
+   "fixedTariff": true,
+   "industryCode": "401006"
+  },
+  {
+   "category2": "보험",
+   "channel": "ONLINE",
+   "locationType": "NONE",
+   "frequencyWeight": 0.42,
+   "discretionaryBase": 0.1,
+   "merchantSource": "ONLINE",
+   "fixedTariff": true,
+   "industryCode": "660301"
+  },
+  {
+   "category2": "대형마트",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.62,
+   "discretionaryBase": 0.3,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "521912"
+  },
+  {
+   "category2": "백화점",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.22,
+   "discretionaryBase": 0.75,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "521910"
+  },
+  {
+   "category2": "드럭스토어",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.42,
+   "discretionaryBase": 0.6,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "521991"
+  },
+  {
+   "category2": "편의점",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.92,
+   "discretionaryBase": 0.45,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "521992"
+  },
+  {
+   "category2": "화장품",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.35,
+   "discretionaryBase": 0.65,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "523131"
+  },
+  {
+   "category2": "디지털가전",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.15,
+   "discretionaryBase": 0.65,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "523321"
+  },
+  {
+   "category2": "의류패션",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.4,
+   "discretionaryBase": 0.65,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "523237"
+  },
+  {
+   "category2": "생활잡화",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.4,
+   "discretionaryBase": 0.45,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "523332"
+  },
+  {
+   "category2": "키즈육아",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.14,
+   "discretionaryBase": 0.35,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "523223"
+  },
+  {
+   "category2": "서점문구",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.2,
+   "discretionaryBase": 0.45,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "523511"
+  },
+  {
+   "category2": "스포츠레저",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.16,
+   "discretionaryBase": 0.6,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "523931"
+  },
+  {
+   "category2": "아웃도어캠핑",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.08,
+   "discretionaryBase": 0.7,
+   "merchantSource": "MIXED",
+   "fixedTariff": false,
+   "industryCode": "523932"
+  },
+  {
+   "category2": "취미공예",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.1,
+   "discretionaryBase": 0.65,
+   "merchantSource": "MIXED",
+   "fixedTariff": false,
+   "industryCode": "523940"
+  },
+  {
+   "category2": "주유소",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.45,
+   "discretionaryBase": 0.2,
+   "merchantSource": "MIXED",
+   "fixedTariff": false,
+   "industryCode": "505001"
+  },
+  {
+   "category2": "약국",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.45,
+   "discretionaryBase": 0.1,
+   "merchantSource": "MIXED",
+   "fixedTariff": false,
+   "industryCode": "523111"
+  },
+  {
+   "category2": "이커머스",
+   "channel": "ONLINE",
+   "locationType": "NONE",
+   "frequencyWeight": 0.88,
+   "discretionaryBase": 0.6,
+   "merchantSource": "ONLINE",
+   "fixedTariff": false,
+   "industryCode": "525101"
+  },
+  {
+   "category2": "철도",
+   "channel": "OFFLINE",
+   "locationType": "ROUTE",
+   "frequencyWeight": 0.14,
+   "discretionaryBase": 0.35,
+   "merchantSource": "OPERATOR",
+   "fixedTariff": true,
+   "industryCode": "601001"
+  },
+  {
+   "category2": "대중교통",
+   "channel": "OFFLINE",
+   "locationType": "ROUTE",
+   "frequencyWeight": 0.85,
+   "discretionaryBase": 0.05,
+   "merchantSource": "OPERATOR",
+   "fixedTariff": true,
+   "industryCode": "602103"
+  },
+  {
+   "category2": "고속버스",
+   "channel": "OFFLINE",
+   "locationType": "ROUTE",
+   "frequencyWeight": 0.12,
+   "discretionaryBase": 0.3,
+   "merchantSource": "OPERATOR",
+   "fixedTariff": true,
+   "industryCode": "602101"
+  },
+  {
+   "category2": "택시",
+   "channel": "OFFLINE",
+   "locationType": "ROUTE",
+   "frequencyWeight": 0.35,
+   "discretionaryBase": 0.55,
+   "merchantSource": "OPERATOR",
+   "fixedTariff": true,
+   "industryCode": "602201"
+  },
+  {
+   "category2": "항공",
+   "channel": "OFFLINE",
+   "locationType": "ROUTE",
+   "frequencyWeight": 0.08,
+   "discretionaryBase": 0.55,
+   "merchantSource": "OPERATOR",
+   "fixedTariff": true,
+   "industryCode": "621000"
+  },
+  {
+   "category2": "통행료",
+   "channel": "OFFLINE",
+   "locationType": "ROUTE",
+   "frequencyWeight": 0.18,
+   "discretionaryBase": 0.15,
+   "merchantSource": "OPERATOR",
+   "fixedTariff": true,
+   "industryCode": "630311"
+  },
+  {
+   "category2": "고기구이",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.55,
+   "discretionaryBase": 0.5,
+   "merchantSource": "INDEPENDENT",
+   "fixedTariff": false,
+   "industryCode": "552115"
+  },
+  {
+   "category2": "야식",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.21,
+   "discretionaryBase": 0.75,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "552114"
+  },
+  {
+   "category2": "한식",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.95,
+   "discretionaryBase": 0.25,
+   "merchantSource": "MIXED",
+   "fixedTariff": false,
+   "industryCode": "552101"
+  },
+  {
+   "category2": "횟집",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.3,
+   "discretionaryBase": 0.6,
+   "merchantSource": "INDEPENDENT",
+   "fixedTariff": false,
+   "industryCode": "552116"
+  },
+  {
+   "category2": "뷔페",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.18,
+   "discretionaryBase": 0.7,
+   "merchantSource": "MIXED",
+   "fixedTariff": false,
+   "industryCode": "552105"
+  },
+  {
+   "category2": "아시안",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.42,
+   "discretionaryBase": 0.55,
+   "merchantSource": "INDEPENDENT",
+   "fixedTariff": false,
+   "industryCode": "552117"
+  },
+  {
+   "category2": "양식",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.55,
+   "discretionaryBase": 0.55,
+   "merchantSource": "MIXED",
+   "fixedTariff": false,
+   "industryCode": "552104"
+  },
+  {
+   "category2": "일식",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.55,
+   "discretionaryBase": 0.55,
+   "merchantSource": "MIXED",
+   "fixedTariff": false,
+   "industryCode": "552103"
+  },
+  {
+   "category2": "중식",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.62,
+   "discretionaryBase": 0.4,
+   "merchantSource": "MIXED",
+   "fixedTariff": false,
+   "industryCode": "552102"
+  },
+  {
+   "category2": "베이커리",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.55,
+   "discretionaryBase": 0.5,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "552301"
+  },
+  {
+   "category2": "치킨",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.455,
+   "discretionaryBase": 0.6,
+   "merchantSource": "MIXED",
+   "fixedTariff": false,
+   "industryCode": "552107"
+  },
+  {
+   "category2": "패스트푸드",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.72,
+   "discretionaryBase": 0.55,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "552118"
+  },
+  {
+   "category2": "피자",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.45,
+   "discretionaryBase": 0.6,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "552118"
+  },
+  {
+   "category2": "배달",
+   "channel": "ONLINE",
+   "locationType": "NONE",
+   "frequencyWeight": 0.72,
+   "discretionaryBase": 0.7,
+   "merchantSource": "ONLINE",
+   "fixedTariff": false,
+   "industryCode": "552119"
+  },
+  {
+   "category2": "분식",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.8,
+   "discretionaryBase": 0.45,
+   "merchantSource": "MIXED",
+   "fixedTariff": false,
+   "industryCode": "552108"
+  },
+  {
+   "category2": "휴게음식",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.14,
+   "discretionaryBase": 0.55,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "552123"
+  },
+  {
+   "category2": "주점",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.385,
+   "discretionaryBase": 0.8,
+   "merchantSource": "INDEPENDENT",
+   "fixedTariff": false,
+   "industryCode": "552207"
+  },
+  {
+   "category2": "카페",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.9,
+   "discretionaryBase": 0.5,
+   "merchantSource": "MIXED",
+   "fixedTariff": false,
+   "industryCode": "552303"
+  },
+  {
+   "category2": "영화",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.3,
+   "discretionaryBase": 0.65,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "921200"
+  },
+  {
+   "category2": "스트리밍",
+   "channel": "ONLINE",
+   "locationType": "NONE",
+   "frequencyWeight": 0.55,
+   "discretionaryBase": 0.65,
+   "merchantSource": "ONLINE",
+   "fixedTariff": true,
+   "industryCode": "724000"
+  },
+  {
+   "category2": "통신비",
+   "channel": "ONLINE",
+   "locationType": "NONE",
+   "frequencyWeight": 0.5,
+   "discretionaryBase": 0.15,
+   "merchantSource": "ONLINE",
+   "fixedTariff": true,
+   "industryCode": "642005"
+  },
+  {
+   "category2": "간편결제",
+   "channel": "ONLINE",
+   "locationType": "NONE",
+   "frequencyWeight": 0.6,
+   "discretionaryBase": 0.55,
+   "merchantSource": "ONLINE",
+   "fixedTariff": false,
+   "industryCode": "642004"
+  },
+  {
+   "category2": "반려동물",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.18,
+   "discretionaryBase": 0.4,
+   "merchantSource": "MIXED",
+   "fixedTariff": false,
+   "industryCode": "852000"
+  },
+  {
+   "category2": "여행숙박",
+   "channel": "ONLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.12,
+   "discretionaryBase": 0.7,
+   "merchantSource": "ONLINE",
+   "fixedTariff": false,
+   "industryCode": "551001"
+  },
+  {
+   "category2": "렌터카",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.1,
+   "discretionaryBase": 0.55,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "630304"
+  },
+  {
+   "category2": "공연전시",
+   "channel": "ONLINE",
+   "locationType": "NONE",
+   "frequencyWeight": 0.1,
+   "discretionaryBase": 0.7,
+   "merchantSource": "ONLINE",
+   "fixedTariff": false,
+   "industryCode": "921901"
+  },
+  {
+   "category2": "헬스장",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.32,
+   "discretionaryBase": 0.5,
+   "merchantSource": "INDEPENDENT",
+   "fixedTariff": false,
+   "industryCode": "924305"
+  },
+  {
+   "category2": "놀이공원",
+   "channel": "OFFLINE",
+   "locationType": "VENUE_CLUSTER",
+   "frequencyWeight": 0.1,
+   "discretionaryBase": 0.8,
+   "merchantSource": "BRAND",
+   "fixedTariff": false,
+   "industryCode": "921903"
+  },
+  {
+   "category2": "키즈카페",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.12,
+   "discretionaryBase": 0.6,
+   "merchantSource": "INDEPENDENT",
+   "fixedTariff": false,
+   "industryCode": "924309"
+  },
+  {
+   "category2": "미용실",
+   "channel": "OFFLINE",
+   "locationType": "POI",
+   "frequencyWeight": 0.4,
+   "discretionaryBase": 0.55,
+   "merchantSource": "MIXED",
+   "fixedTariff": false,
+   "industryCode": "930203"
+  }
+ ]
 }

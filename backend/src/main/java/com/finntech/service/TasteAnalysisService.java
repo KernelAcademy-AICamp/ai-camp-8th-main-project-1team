@@ -67,7 +67,7 @@ public class TasteAnalysisService {
     /**
      * 결제내역을 취미유형별로 집계해 건수 내림차순(→금액→이름)으로 정렬. 순수·결정론. (가맹점명 세분 없음)
      *
-     * @param payments      대상 결제 (ksicCode·amount·merchantName 사용)
+     * @param payments      대상 결제 (industryCode·amount·merchantName 사용)
      * @param reverseMap    업종코드 → 취미유형들 (1:N 허용)
      * @return 취미유형별 점수. 취미 신호가 없으면 빈 리스트.
      */
@@ -123,17 +123,17 @@ public class TasteAnalysisService {
      * <p>예: ("6031", "멜론 스트리밍") → "음악감상", ("6031", "넷플릭스") → "영상시청",
      * ("6031", "챗지피티플러스") → "6031"(매칭 없음, 취미 신호 아님), ("5611", …) → "5611"(세분 대상 아님).
      */
-    static String refineKsic(String ksicCode, String merchantName,
+    static String refineKsic(String industryCode, String merchantName,
                              Map<String, Map<String, List<String>>> refineByMerchant) {
-        if (ksicCode == null || refineByMerchant == null) return ksicCode;
-        Map<String, List<String>> subtypes = refineByMerchant.get(ksicCode);
-        if (subtypes == null || merchantName == null) return ksicCode;
+        if (industryCode == null || refineByMerchant == null) return industryCode;
+        Map<String, List<String>> subtypes = refineByMerchant.get(industryCode);
+        if (subtypes == null || merchantName == null) return industryCode;
         for (Map.Entry<String, List<String>> e : subtypes.entrySet()) {
             for (String keyword : e.getValue()) {
                 if (!keyword.isEmpty() && merchantName.contains(keyword)) return e.getKey();
             }
         }
-        return ksicCode;
+        return industryCode;
     }
 
     /**

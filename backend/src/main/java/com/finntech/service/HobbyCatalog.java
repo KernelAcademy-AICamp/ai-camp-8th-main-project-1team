@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 취미 성향 매핑 — {@code 취미유형 → signatureKsic}(업종코드)를 <b>역방향</b>
+ * 취미 성향 매핑 — {@code 취미유형 → signatureIndustry}(업종코드)를 <b>역방향</b>
  * (업종코드 → 취미유형)으로 뒤집어 소비내역에서 취향을 읽게 한다.
  *
  * <p><b>왜 업종코드인가.</b> 생성기는 취미를 소비맥락(일식·백화점·스트리밍…)으로 말하지만
@@ -19,7 +19,7 @@ import java.util.Map;
  * 복사해 두어 맥락 이름 27개가 전부 조회 불가였고, 아래 폴백이 조용히 삼켜
  * <b>취향 분석이 언제나 빈 결과</b>였다.
  *
- * <p>데이터는 {@code resources/taste/hobbies.json}이며 {@code scripts/ksic/build_taste.py}가
+ * <p>데이터는 {@code resources/taste/hobbies.json}이며 {@code scripts/ksic/build_taste.py}(KSIC 시절 도구, 지금은 가드로 막혀 있다)가
  * 생성기 카탈로그에서 파생한다(taste/README.md). 카테고리를 코드에 박지 않는다는 설계원칙 4에
  * 따라 매핑은 리소스로 두고 여기서 로드만 한다.
  *
@@ -41,7 +41,7 @@ public class HobbyCatalog {
     private static final String PATH = "taste/hobbies.json";
 
     /** 업종코드 → 그 업종이 signature인 취미유형들. */
-    private final Map<String, List<String>> hobbiesByKsic;
+    private final Map<String, List<String>> hobbiesByIndustry;
 
     /** 업종코드 → (세분유형 → 가맹점명 키워드들). 예: 6031 → (음악감상 → [멜론, 스포티파이…]). */
     private final Map<String, Map<String, List<String>>> refineByMerchant;
@@ -57,7 +57,7 @@ public class HobbyCatalog {
             if (hobbies != null) {
                 for (Map<String, Object> h : hobbies) {
                     String type = String.valueOf(h.get("type"));
-                    Object sig = h.get("signatureKsic");
+                    Object sig = h.get("signatureIndustry");
                     if (!(sig instanceof List<?> cats)) continue;
                     for (Object c : cats) {
                         reverse.computeIfAbsent(String.valueOf(c), k -> new ArrayList<>()).add(type);
@@ -86,19 +86,19 @@ public class HobbyCatalog {
             reverse = Map.of();
             refine = Map.of();
         }
-        this.hobbiesByKsic = reverse;
+        this.hobbiesByIndustry = reverse;
         this.refineByMerchant = refine;
     }
 
     /** 이 업종코드가 신호하는 취미유형들(없으면 빈 리스트). 일상 지출(식당·편의점 등)은 매핑에 없어 빈 값. */
-    public List<String> hobbiesFor(String ksicCode) {
-        if (ksicCode == null) return List.of();
-        return hobbiesByKsic.getOrDefault(ksicCode, List.of());
+    public List<String> hobbiesFor(String industryCode) {
+        if (industryCode == null) return List.of();
+        return hobbiesByIndustry.getOrDefault(industryCode, List.of());
     }
 
     /** 로드된 업종코드 → 취미유형 역매핑 전체(읽기 전용). 순수 집계 함수에 넘겨 테스트에 쓴다. */
     public Map<String, List<String>> reverseMapping() {
-        return hobbiesByKsic;
+        return hobbiesByIndustry;
     }
 
     /** 로드된 업종코드 → (세분유형 → 가맹점명 키워드) 전체(읽기 전용). 순수 집계 함수에 넘긴다. */

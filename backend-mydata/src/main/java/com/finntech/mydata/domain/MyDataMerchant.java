@@ -37,13 +37,13 @@ public class MyDataMerchant {
      * 한 가맹점의 결제는 전부 같은 업종이라 집계 때 대표값 하나면 된다.
      */
     @Column(name = "ksic_code", length = 8)
-    private String ksicCode;
+    private String industryCode;
 
     protected MyDataMerchant() {}
 
     public MyDataMerchant(String businessNumber, String merchantName, String address,
-                          Double lat, Double lng, boolean online, String ksicCode) {
-        this.ksicCode = ksicCode;
+                          Double lat, Double lng, boolean online, String industryCode) {
+        this.industryCode = industryCode;
         this.businessNumber = businessNumber;
         this.merchantName = merchantName;
         this.address = address;
@@ -58,5 +58,5 @@ public class MyDataMerchant {
     public Double getLat() { return lat; }
     public Double getLng() { return lng; }
     public boolean isOnline() { return online; }
-    public String getKsicCode() { return ksicCode; }
+    public String getKsicCode() { return industryCode; }
 }

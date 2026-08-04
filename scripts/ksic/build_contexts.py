@@ -10,6 +10,12 @@
 
   실행:  python3 scripts/ksic/build_contexts.py
 """
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _guard import blocked  # noqa: E402
+blocked('소비맥락을 4자리 KSIC 로 쓴다', 'contexts.json', 'industryCode')
+
 import json
 import os
 import sys

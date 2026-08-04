@@ -61,7 +61,7 @@ class WasteCalibrationTest {
                 for (GenTxn t : sim.simulate(u, end)) {
                     boolean waste = "WASTE".equals(t.wasteLabel());
                     all++; if (waste) allWaste++;
-                    if (!MOBILITY.contains(t.ksicCode())) { ex++; if (waste) exWaste++; }
+                    if (!MOBILITY.contains(t.industryCode())) { ex++; if (waste) exWaste++; }
                 }
             }
             return new double[]{100.0 * allWaste / all, 100.0 * exWaste / ex, all};

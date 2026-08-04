@@ -69,6 +69,17 @@ public class Consumption {
     public Long getId() { return id; }
     public Long getUserId() { return userId; }
     public Category getCategory() { return category; }
+
+    /**
+     * 분류를 바로잡는다 — 사람이 확정했거나 사전이 답했을 때.
+     *
+     * <p>이 칸이 <b>리포트·분석이 실제로 읽는 곳</b>이다({@code AnalysisEngine}). 결제 원장
+     * ({@code UserPayment.category2})만 고치면 화면의 카테고리 합계는 그대로라, 사용자가 보기엔
+     * 확정이 아무 일도 안 한 것이 된다. 둘을 함께 바꿔야 한다.
+     */
+    public void reclassify(Category category) {
+        this.category = category;
+    }
     public BigDecimal getAmount() { return amount; }
     public LocalDateTime getOccurredAt() { return occurredAt; }
     public boolean isPlanned() { return planned; }

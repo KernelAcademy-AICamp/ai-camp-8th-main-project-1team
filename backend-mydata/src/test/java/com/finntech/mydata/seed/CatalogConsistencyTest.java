@@ -52,10 +52,10 @@ class CatalogConsistencyTest {
     @Test
     @DisplayName("모든 소비맥락에 상호 풀이 있다")
     void everyContextHasMerchants() {
-        // 시드는 CONTEXTS_BY_KSIC 이 고른 맥락으로 MERCHANTS.get(맥락) 을 그대로 쓴다.
+        // 시드는 CONTEXTS_BY_INDUSTRY 이 고른 맥락으로 MERCHANTS.get(맥락) 을 그대로 쓴다.
         // 없으면 null 이 되어 NPE 로 기동이 죽는다 — 업종코드 재분류 때 맥락 이름을 바꾸면서
         // 한식·양식·분식·대중교통·통신비·화장품·의원 7개가 상호 없이 남아 실제로 밟았다.
-        List<String> missing = Catalog.CONTEXTS_BY_KSIC.values().stream()
+        List<String> missing = Catalog.CONTEXTS_BY_INDUSTRY.values().stream()
                 .flatMap(List::stream)
                 .distinct()
                 .filter(ctx -> Catalog.MERCHANTS.get(ctx) == null || Catalog.MERCHANTS.get(ctx).isEmpty())
@@ -68,9 +68,9 @@ class CatalogConsistencyTest {
     @Test
     @DisplayName("업종코드마다 맥락이 하나 이상 있다")
     void everyKsicHasContext() {
-        List<String> empty = Catalog.KSIC_CODES.stream()
+        List<String> empty = Catalog.INDUSTRY_CODES.stream()
                 .filter(k -> {
-                    List<String> c = Catalog.CONTEXTS_BY_KSIC.get(k);
+                    List<String> c = Catalog.CONTEXTS_BY_INDUSTRY.get(k);
                     return c == null || c.isEmpty();
                 })
                 .toList();

@@ -19,9 +19,9 @@ def log(m): print(f"[{time.time()-t0:6.1f}s] {m}", flush=True)
 # 업종코드 → 소비 중분류, 그리고 필수 중분류 — **대조표 하나에서 읽는다.**
 # 예전에는 ESSENTIAL 10개가 여기와 Java·yml에 손으로 복사돼 있어, 한 곳만 고치면
 # 학습과 추론의 user_disc_ratio가 조용히 갈라졌다.
-_KM=json.loads((REPO/"backend"/"src"/"main"/"resources"/"ksic-mid.json").read_text(encoding="utf-8"))
-KSIC2MID=_KM["midByKsic"]; ESSENTIAL=set(_KM["essentialCategories"])
-log(f"대조표 — 코드 {len(KSIC2MID)}개 · 필수 중분류 {sorted(ESSENTIAL)}")
+_KM=json.loads((REPO/"backend"/"src"/"main"/"resources"/"industry-mid.json").read_text(encoding="utf-8"))
+CODE2MID=_KM["midByIndustry"]; ESSENTIAL=set(_KM["essentialCategories"])
+log(f"대조표 — 코드 {len(CODE2MID)}개 · 필수 중분류 {sorted(ESSENTIAL)}")
 
 log("맵 로드")
 us=pd.read_csv(f"{ML}/user_split.tsv",sep="\t")
@@ -38,7 +38,7 @@ df=pd.read_csv(f"{ML}/payments.tsv",sep="\t",
 log(f"{len(df):,}행 — 매핑")
 # 제공자는 업종코드까지만 준다. 소비 카테고리는 앱이 붙이므로 학습도 같은 표를 거쳐야
 # 추론과 축이 맞는다(cat2 = 우리 소비 중분류).
-df["cat2"]=df["ksic"].map(KSIC2MID).fillna("카테고리없음").astype("category")
+df["cat2"]=df["ksic"].map(CODE2MID).fillna("카테고리없음").astype("category")
 df.drop(columns=["ksic"],inplace=True)
 log(f"중분류 {df['cat2'].cat.categories.size}종 — " + ", ".join(map(str,df['cat2'].cat.categories[:8])))
 df["ucode"]=df["card_id"].map(card2code).astype("int32"); df.drop(columns=["card_id"],inplace=True)

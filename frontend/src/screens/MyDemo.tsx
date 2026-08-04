@@ -16,7 +16,7 @@ import { DEMO_USERS } from '../lib/demoUsers';
 import { toLocalInputValue, won, CHALLENGE_STATE_LABEL, DAILY_RESULT_LABEL } from '../lib/format';
 
 const PERSONA_ORDER = ['절약형', '균형형', '과소비형', '구독과다형', '외식형'];
-// 우리 소비 중분류 16개. 백엔드 대조표(ksic-mid.json)와 같은 목록이어야 한다.
+// 우리 소비 중분류 16개. 백엔드 대조표(industry-mid.json)와 같은 목록이어야 한다.
 const DEV_CATS = ['건강/피트니스', '교통/자동차', '금융/보험', '대형마트', '미용', '생활', '쇼핑', '술/유흥', '식비', '여행/숙박', '의료', '주거/통신', '취미/여가', '카테고리없음', '카페/간식', '편의점/잡화'];
 
 export function MyDemo() {
