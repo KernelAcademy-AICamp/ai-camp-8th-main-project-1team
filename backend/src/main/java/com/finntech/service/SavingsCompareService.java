@@ -1,5 +1,6 @@
 package com.finntech.service;
 
+import com.finntech.guardian.GuardianSettlementService;
 import com.finntech.util.HttpClients;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -114,6 +115,8 @@ public class SavingsCompareService {
     private final FundFlowService fundFlowService;
     private final SavingsMatchService savingsMatchService;
     private final ParkingAccountSource parkingAccountSource;
+    /** ②의 확정 지킨 돈 이력 — 금액은 규칙을 가진 쪽이 계산해 넘긴다(R10). */
+    private final GuardianSettlementService guardianSettlementService;
 
     // (상품군·기간) 별 성공 조회를 TTL 동안 재사용한다. 적금과 예금은 서비스명이 달라 캐시도 나뉜다.
     private final Map<String, List<Account>> cacheByKey = new ConcurrentHashMap<>();
@@ -138,7 +141,9 @@ public class SavingsCompareService {
             FundFlowService fundFlowService,
             SavingsMatchService savingsMatchService,
             ParkingAccountSource parkingAccountSource,
+            GuardianSettlementService guardianSettlementService,
             Clock clock) {
+        this.guardianSettlementService = guardianSettlementService;
         this.eligibilityLabelService = eligibilityLabelService;
         this.fundFlowService = fundFlowService;
         this.savingsMatchService = savingsMatchService;
@@ -310,7 +315,25 @@ public class SavingsCompareService {
         // 적금·예금 추천은 그대로 산다(ParkingAccountSource 참조).
         candidates.addAll(parkingAccountSource.candidates());
         return savingsMatchService.match(fundFlowService.analyze(userId),
-                new SavingsMatchInputs(List.copyOf(candidates), null));
+                new SavingsMatchInputs(List.copyOf(candidates), keptMean(userId)));
+    }
+
+    /**
+     * M5 규모 필터의 기준 — <b>확정 지킨 돈의 월평균</b>(`kept_mean`, §4.5 입력값).
+     *
+     * <p>금액은 ②가 계산해서 넘긴 것을 그대로 평균만 낸다. ③이 거래를 다시 훑어 세지 않는다(R10) —
+     * 식이 갈라지면 결산 화면과 추천이 다른 숫자를 말한다.
+     *
+     * <p><b>이력이 없으면 {@code null}</b>이라 M5를 건너뛴다. 첫 챌린지를 아직 끝내지 않은 사용자를
+     * "규모가 0원인 사람"으로 읽으면 최소 가입금액이 있는 상품이 통째로 사라진다 — 콜드스타트는
+     * 재료 없음이지 금액 0이 아니다(§8 · §14).
+     */
+    private Long keptMean(Long userId) {
+        List<GuardianSettlementService.SettledChallenge> history = guardianSettlementService.history(userId);
+        if (history.isEmpty()) return null;
+        return Math.round(history.stream()
+                .mapToLong(GuardianSettlementService.SettledChallenge::securedSaving)
+                .average().orElse(0));
     }
 
     // ======================================================================

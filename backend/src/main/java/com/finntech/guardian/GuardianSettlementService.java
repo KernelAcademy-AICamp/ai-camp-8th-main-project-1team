@@ -2,6 +2,7 @@ package com.finntech.guardian;
 
 import com.finntech.guardian.domain.DailyVerdict;
 import com.finntech.guardian.domain.GuardianChallenge;
+import com.finntech.guardian.domain.GuardianEnums.ChallengeState;
 import com.finntech.guardian.domain.GuardianEnums.DailyResult;
 import com.finntech.guardian.domain.GuardianEnums.TxState;
 import com.finntech.guardian.domain.GuardianTransaction;
@@ -17,10 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 월간 결산 · 다음 달 갱신 (개편안 {@code s-settle} · {@code s-renew}).
@@ -85,6 +88,16 @@ public class GuardianSettlementService {
                                  List<CategoryResult> categories,
                                  int keptDays, int bestStreak, int pointsEarned,
                                  int objectsCollected, int completionBonus) {}
+
+    /**
+     * 결과가 확정된 챌린지 한 줄 — <b>②가 ③에게 넘기는 이력</b>이다
+     * (`07_취향분석및추천_Agent_설계.md` §11 · `02_에이전트_연결부.md` §8).
+     *
+     * <p>{@link SettlementView}를 그대로 쓰지 않는 이유는 그쪽이 포인트·수집물·카테고리별 결과까지
+     * 담아 챌린지마다 조회를 여러 번 더 타기 때문이다. ③이 필요한 것은 <b>확정 지킨 돈과 종료일</b>뿐이다.
+     */
+    public record SettledChallenge(Long challengeId, LocalDate startDate, LocalDate endDate,
+                                   long targetSaving, long securedSaving, double defenseRate) {}
 
     /**
      * 다음 달 조정안 한 줄.
@@ -156,6 +169,50 @@ public class GuardianSettlementService {
                 ch.getTargetSaving(), secured,
                 ch.getTargetSaving() == 0 ? 0.0 : (double) secured / ch.getTargetSaving(),
                 results, keptDays, ch.getNoSpendStreakBest(), points, objects, COMPLETION_BONUS);
+    }
+
+    /**
+     * <b>결과가 확정된</b> 챌린지 이력 — ③이 규모(`kept_mean`)와 월간 회고에 쓴다
+     * (`07_취향분석및추천_Agent_설계.md` §8 · §11의 요청분).
+     *
+     * <p><b>왜 ②가 내주나.</b> 확보 절약액은 저장된 컬럼이 아니라 `min(목표, 기준지출 − 지출)` 계산값이다.
+     * ③이 저장소를 직접 읽어 스스로 세면 R10(③은 ②의 금액을 재계산하지 않는다) 위반이고, 식이 갈라지면
+     * 화면끼리 숫자가 어긋난다. 그래서 <b>규칙을 가진 쪽이 계산해서 넘긴다.</b>
+     *
+     * <p><b>진행 중·정산 중·중도 포기는 뺀다.</b> 확정되지 않은 금액은 이력이 아니고, 포기한 챌린지는
+     * 기간을 다 채우지 않아 월 납입 규모의 표본이 될 수 없다. {@code SETTLING}도 아직 확정 전이다.
+     *
+     * <p>조회는 한 번이고 계산은 엔티티에 있는 값만 쓴다 — {@link #settle}처럼 거래를 다시 훑지 않는다.
+     * 최신순(저장소 정렬 그대로)이라 같은 입력이 같은 순서를 낸다(설계원칙 3).
+     */
+    @Transactional(readOnly = true)
+    public List<SettledChallenge> history(Long userId) {
+        return challengeRepository.findByUserIdOrderByIdDesc(userId).stream()
+                .filter(ch -> FINALIZED_STATES.contains(ch.getState()))
+                .map(GuardianSettlementService::toSettled)
+                .toList();
+    }
+
+    /** 결과가 확정된 상태들. 진행 중(SETUP·ACTIVE·AT_RISK·EXCEEDED)·SETTLING·ABANDONED는 뺀다. */
+    private static final Set<ChallengeState> FINALIZED_STATES = EnumSet.of(
+            ChallengeState.SUCCESS, ChallengeState.PARTIAL, ChallengeState.SHORTFALL,
+            ChallengeState.FAILED, ChallengeState.REWARD_PENDING,
+            ChallengeState.RESTART_OFFER, ChallengeState.CLOSED);
+
+    /**
+     * 확보 절약액은 {@link #settle}과 <b>같은 식</b>이다 — `min(목표, max(0, 기준지출 − 지출))`.
+     * 두 곳이 다른 식을 쓰면 결산 화면과 추천이 다른 숫자를 말하게 된다.
+     *
+     * <p>이 식은 결과를 {@code [0, 목표]}로 가둔다. 환불로 지출이 음수가 되어도 목표를 넘지 않고,
+     * 초과 지출이 커도 0 아래로 안 간다 — §8.1이 걱정한 `취소·환불이 kept_mean을 흔든다`는
+     * 여기서 상한·하한으로 막힌다.
+     */
+    private static SettledChallenge toSettled(GuardianChallenge ch) {
+        long secured = Math.min(ch.getTargetSaving(),
+                Math.max(0L, ch.getBaselineAmount() - ch.getSpentAmount()));
+        return new SettledChallenge(ch.getId(), ch.getStartDate(), ch.getEndDate(),
+                ch.getTargetSaving(), secured,
+                ch.getTargetSaving() == 0 ? 0.0 : (double) secured / ch.getTargetSaving());
     }
 
     // ======================================================================
