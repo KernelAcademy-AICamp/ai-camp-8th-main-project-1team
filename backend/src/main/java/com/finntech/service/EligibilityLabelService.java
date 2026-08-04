@@ -90,12 +90,12 @@ public class EligibilityLabelService {
     public EligibilityLabelService(
             ProductEligibilityRepository repository,
             @Value("${finntech.gemini.api-key:}") String apiKey,
-            @Value("${finntech.gemini.model:gemini-3.1-flash-lite}") String model,
+            @Value("${finntech.gemini.model:}") String model,
             @Value("${finntech.gemini.base-url:https://generativelanguage.googleapis.com}") String baseUrl,
             Clock clock) {
         this.repository = repository;
         this.apiKey = apiKey;
-        this.model = model;
+        this.model = com.finntech.config.GeminiModels.orDefault(model);
         // LLM은 사용자 요청 안에서 불린다 — 금감원(8초)보다 짧게 잡는다. 늦으면 규칙 파서가 대신한다.
         this.restClient = RestClient.builder().baseUrl(baseUrl)
                 .requestFactory(HttpClients.factory(Duration.ofSeconds(3), Duration.ofSeconds(5)))
