@@ -48,6 +48,14 @@ PY
   done
   aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE" --region "$REGION" \
     --query 'StandardOutputContent' --output text
+  # 표준오류도 함께 본다 — 삼키면 SQL 실패가 '0명'으로 보인다(2026-08-04 실측:
+  # CREATE TEMPORARY TABLE 이 'No database selected' 로 죽었는데 재배정 0명으로만 보였다).
+  local err
+  err=$(aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE" \
+        --region "$REGION" --query 'StandardErrorContent' --output text 2>/dev/null)
+  if [ -n "$err" ] && [ "$err" != "None" ]; then
+    printf '  \033[31mSQL 오류\033[0m %s\n' "$err" >&2
+  fi
 }
 
 echo "━━ 1/5 현재 신원 상태 ━━"
@@ -61,6 +69,9 @@ echo
 echo "━━ 2/5 CI 재배정 (원장에 없는 사용자에게 아직 아무도 안 쓴 사람을 id 순으로) ━━"
 # 결정론: app_user.id 순 ↔ 카드 4장 이상인 미사용 mydata_user 를 id 순으로 짝짓는다.
 REASSIGN="
+-- 기본 DB 를 정하지 않으면 CREATE TEMPORARY TABLE 이 'No database selected'(1046)로 죽는다.
+-- mysql 을 DB 인자 없이 부르기 때문이다. 2026-08-04 에 이것 때문에 재배정이 조용히 0명이었다.
+USE finntech;
 SET @rank := 0;
 CREATE TEMPORARY TABLE _free AS
   SELECT mydata_user_id, (@rank := @rank + 1) AS rn

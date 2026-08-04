@@ -87,6 +87,10 @@ def main():
         password=os.environ.get('DB_PASSWORD', 'finntech'),
         database=os.environ.get('DB_NAME', 'finntech'),
         charset='utf8mb4', autocommit=False)
+    # pymysql 은 charset 을 주면 연결 인코딩까지 맞춘다. **CLI 로 넣을 때는 반드시**
+    # `mysql --default-character-set=utf8mb4` 를 붙인다 — 빠뜨리면 latin1 로 읽어
+    # 한글이 이중 인코딩되고, 그 값이 사전 조회를 거쳐 Category 생성까지 번진다
+    # (2026-08-04 운영에서 실제로 1,523건이 깨진 카테고리로 들어갔다).
 
     # 멱등: 같은 (번호, 이름) 이 이미 있으면 분류만 맞춘다. 사람이 확인한 것(USER_CONFIRMED)은
     # **덮지 않는다** — 사람의 판단이 CSV 일괄 적재보다 뒤에 있으면 안 된다.
