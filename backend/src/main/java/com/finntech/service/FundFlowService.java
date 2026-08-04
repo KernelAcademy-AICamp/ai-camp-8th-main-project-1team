@@ -96,11 +96,18 @@ public class FundFlowService {
         return new Stability(aom, level);
     }
 
-    /** L4 유동성 필요 — 큰 1회성 지출의 유무·예측성. 큰 지출이 없으면 SMOOTH. */
-    static LiquidityNeed classifyLiquidity(LargeExpense l) {
-        if (l == null) return LiquidityNeed.UNKNOWN;
-        if (l.cycleMonths() == null) return LiquidityNeed.SMOOTH;
-        return l.predictable() ? LiquidityNeed.PREDICTABLE_LUMPY : LiquidityNeed.UNPREDICTABLE_LUMPY;
+    /**
+     * L4 유동성 필요 — 큰 1회성 지출의 유무·예측성. 큰 지출이 없으면 SMOOTH.
+     *
+     * <p><b>주기(cycleMonths)를 구간과 함께 남긴다.</b> FP-01의 M2는 `주기가 짧으면 파킹 상단`을 보는데,
+     * 구간(enum)으로 뭉개면 그 값이 사라져 규칙을 짤 수 없다. L3의 {@link Stability}가 {@code aomMonths}를
+     * 함께 남기는 것과 같은 이유다 — <b>판정은 구간으로, 임계 비교는 원값으로.</b>
+     */
+    static Liquidity classifyLiquidity(LargeExpense l) {
+        if (l == null) return new Liquidity(null, LiquidityNeed.UNKNOWN);
+        if (l.cycleMonths() == null) return new Liquidity(null, LiquidityNeed.SMOOTH);
+        return new Liquidity(l.cycleMonths(),
+                l.predictable() ? LiquidityNeed.PREDICTABLE_LUMPY : LiquidityNeed.UNPREDICTABLE_LUMPY);
     }
 
     /** L5 우대조건 충족 재료 — 재료가 없으면 known=false. */
@@ -119,6 +126,9 @@ public class FundFlowService {
     /** L3 산출 — aomMonths=버퍼 개월수(계산 불가면 null), level=구간. */
     public record Stability(Double aomMonths, StabilityLevel level) {}
 
+    /** L4 산출 — cycleMonths=큰 1회성 지출 주기(없거나 재료 없으면 null), level=구간. */
+    public record Liquidity(Integer cycleMonths, LiquidityNeed level) {}
+
     /** L5 산출 — 충족 플래그 + known(재료 수신 여부). known=false면 두 플래그는 의미 없음. */
     public record Preferential(boolean cardPerformanceMet, boolean salaryTransferMet, boolean known) {}
 
@@ -128,6 +138,6 @@ public class FundFlowService {
             IncomeRegularity l1Income,
             FixedCostLevel l2FixedCost,
             Stability l3Stability,
-            LiquidityNeed l4Liquidity,
+            Liquidity l4Liquidity,
             Preferential l5Preferential) {}
 }
