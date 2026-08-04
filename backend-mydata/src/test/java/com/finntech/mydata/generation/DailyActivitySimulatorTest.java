@@ -26,6 +26,7 @@ class DailyActivitySimulatorTest {
             props.getSeed(), loader.regions(), props.getAddress().getBubunProb()), props);
     private final DailyActivitySimulator sim = new DailyActivitySimulator(
             sampler, new WasteLabeler(props, sampler), loader, props);
+    private final IndustryCategoryMap industryMap = new IndustryCategoryMap(mapper);
     private final List<GeneratedUser> users = new PopulationBuilder(loader, props).build(20260721L, 500);
 
     private GeneratedUser first(String persona) {
@@ -108,12 +109,13 @@ class DailyActivitySimulatorTest {
         // 방문가중이 `지출비중 ÷ 평균단가`라 싼 업종일수록 자주 찍히는 것이 정상이다.
         // 페르소나가 말하는 것은 '지출비중'이므로 검증도 금액으로 해야 한다.
         Map<String, Long> amtByKsic = txns.stream()
-                .collect(Collectors.groupingBy(GenTxn::ksicCode,
+                .collect(Collectors.groupingBy(GenTxn::industryCode,
                         Collectors.summingLong(t -> (long) t.amount())));
         long total = amtByKsic.values().stream().mapToLong(Long::longValue).sum();
-        // 5611 한식 · 5612 외국식 · 5616 치킨피자 · 5619 간이 = 식비 중분류
-        long food = java.util.stream.Stream.of("5611", "5612", "5616", "5619")
-                .mapToLong(c -> amtByKsic.getOrDefault(c, 0L)).sum();
+        // 코드를 나열하지 않고 **중분류로** 센다 — 업종코드 체계가 바뀌어도 이 테스트는 안 깨진다.
+        long food = amtByKsic.entrySet().stream()
+                .filter(e -> "식비".equals(industryMap.midOf(e.getKey())))
+                .mapToLong(Map.Entry::getValue).sum();
         assertThat(food / (double) total).isGreaterThan(0.30);   // 외식형은 식비 지출이 지배적
     }
 }

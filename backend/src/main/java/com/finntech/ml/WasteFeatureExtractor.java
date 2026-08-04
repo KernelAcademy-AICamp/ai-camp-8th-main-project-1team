@@ -24,7 +24,7 @@ public final class WasteFeatureExtractor {
      * <p><b>대조표에서 읽는다.</b> 예전에는 이 목록이 네 곳(여기 · {@code ml/train.py} ·
      * {@code backend-mydata/application.yml} · {@code WasteLabeler})에 손으로 복사돼 있었다.
      * 한 곳만 고치면 학습과 추론의 {@code user_disc_ratio} 특징이 갈라지는데, 크래시가 안 나서
-     * 아무도 모른다. 이제 {@code scripts/ksic}가 카탈로그의 재량성에서 유도해 한 파일에 쓴다.
+     * 아무도 모른다. 이제 {@code scripts/industry}가 카탈로그의 재량성에서 유도해 한 파일에 쓴다.
      *
      * <p>정적 컨텍스트라 주입을 못 받아 직접 읽는다. 읽기 실패는 빈 집합 — 그러면
      * 모든 소비가 재량으로 잡혀 {@code user_disc_ratio}가 1.0이 되지만, 예외로 죽는 것보다 낫다.
@@ -33,7 +33,7 @@ public final class WasteFeatureExtractor {
 
     private static Set<String> loadEssential() {
         try (java.io.InputStream is = WasteFeatureExtractor.class
-                .getResourceAsStream("/ksic-mid.json")) {
+                .getResourceAsStream("/industry-mid.json")) {
             if (is == null) return Set.of();
             @SuppressWarnings("unchecked")
             Map<String, Object> root = new tools.jackson.databind.ObjectMapper().readValue(is, Map.class);

@@ -79,6 +79,51 @@ class MerchantProductMatchTest {
     }
 
     @Test
+    @DisplayName("계약 맥락도 상호와 요금제의 짝이 맞는다 — serves 가 비면 이 단정이 무너진다")
+    void contractMerchantsSellTheirOwnPlans() {
+        // 대중교통을 고칠 때 만든 `productName` 인자를 계약 셋(구독·통신비·공과금)은 안 쓰고 있었다.
+        // 게다가 **`serves` 가 비어 있으면 `canSell` 이 무조건 true** 라, 인자를 넘기도록 고쳐도
+        // 그것만으로는 아무 효과가 없다. 그래서 여기서 두 가지를 같이 못박는다 —
+        // ① serves 가 채워져 있을 것 ② 뽑힌 짝이 실제로 맞을 것.
+        //
+        // 2026-08-04 실측으로 이런 명세서가 있었다:
+        //   애플티비플러스 · 넷플릭스 광고형 / 서울시상수도사업본부 · 정수기렌탈
+        for (String cat : List.of("스트리밍", "통신비", "공과금")) {
+            var brands = catalog.brands().get(cat);
+            assertThat(brands).as(cat + " 브랜드").isNotEmpty();
+            assertThat(brands).as(cat + " — serves 가 빈 상호가 있으면 아무 요금제나 받게 된다")
+                    .allMatch(b -> !b.serves().isEmpty(), "serves 가 비어 있지 않다");
+
+            Random r = new Random(20260804);
+            var mismatched = new TreeSet<String>();
+            for (int i = 0; i < 2000; i++) {
+                var p = sampler.resolveProduct(cat, r);
+                var m = sampler.resolveMerchant(cat, null, p.name(), r);
+                boolean ok = brands.stream()
+                        .filter(b -> b.name().equals(m.name()) || b.forms().contains(m.name()))
+                        .anyMatch(b -> b.canSell(p.name()));
+                if (!ok) mismatched.add(m.name() + " · " + p.name());
+            }
+            assertThat(mismatched).as(cat + " — 상호가 팔지 않는 요금제를 받았다").isEmpty();
+        }
+    }
+
+    @Test
+    @DisplayName("알뜰폰 사업자는 5G·인터넷결합 요금제를 팔지 않는다")
+    void mvnoDoesNotSellFlagshipPlans() {
+        // MVNO 는 망을 빌려 쓰는 재판매 사업자다. 5G 프리미엄 요금제나 인터넷+TV 결합은
+        // 망을 가진 MNO 의 상품이라, 알뜰폰 명세서에 그게 찍히면 거짓 데이터다.
+        for (var b : catalog.brands().get("통신비")) {
+            boolean mvno = List.of("KT엠모바일", "SK세븐모바일", "U+유모바일", "헬로모바일")
+                    .contains(b.name());
+            if (!mvno) continue;
+            assertThat(b.canSell("5G 6~7만원대")).as(b.name() + " 는 5G 요금제를 팔지 않는다").isFalse();
+            assertThat(b.canSell("인터넷+TV 결합")).as(b.name() + " 는 결합상품을 팔지 않는다").isFalse();
+            assertThat(b.canSell("알뜰폰 요금제")).as(b.name() + " 는 알뜰폰을 판다").isTrue();
+        }
+    }
+
+    @Test
     @DisplayName("serves 를 비워 두면 아무 품목이나 판다 — 기존 맥락은 영향받지 않는다")
     void emptyServesMatchesEverything() {
         var open = new CatalogModels.BrandEntry("아무데나", false, "OFFLINE", List.of(), List.of());

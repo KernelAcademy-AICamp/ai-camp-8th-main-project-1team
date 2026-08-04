@@ -56,12 +56,12 @@ public class RealPersonImportService {
     /**
      * 업종을 모를 때 쓰는 코드. 카드 명세서에는 업종코드가 없는 것이 보통이다.
      *
-     * <p>{@code 6312} 는 이 저장소가 이미 "알 수 없는 결제"에 쓰는 값이고
-     * ({@code UnknownPgPaymentRunner}), {@code ksic-mapping.tsv} 에 없으므로 본체의
-     * {@code midOf()} 가 <b>카테고리없음</b>을 준다 → ML 판정 대상에서 빠진다.
+     * <p>{@code 642004}(포털 및 기타 인터넷 정보 매개 서비스업)는 이 저장소가 이미
+     * "알 수 없는 결제"에 쓰는 값이고({@code UnknownPgPaymentRunner}), {@code nts-mid.tsv} 에
+     * 없으므로 본체의 {@code midOf()} 가 <b>카테고리없음</b>을 준다 → ML 판정 대상에서 빠진다.
      * <b>모르는 것을 아는 척 분류하지 않는다.</b> 스키마가 {@code NOT NULL} 이라 비워 둘 수는 없다.
      */
-    public static final String UNKNOWN_KSIC = "6312";
+    public static final String UNKNOWN_INDUSTRY = "642004";
     /** 업종을 모를 때의 소비맥락. 제공자 DB에만 남고 본체로는 안 나간다. */
     private static final String UNKNOWN_CATEGORY2 = "미분류";
 
@@ -158,7 +158,7 @@ public class RealPersonImportService {
                 continue;
             }
             String merchant = c[1].trim();
-            String ksic = c.length >= 4 && !c[3].isBlank() ? c[3].trim() : UNKNOWN_KSIC;
+            String industryCode = c.length >= 4 && !c[3].isBlank() ? c[3].trim() : UNKNOWN_INDUSTRY;
 
             // 결제 id는 (CI, 줄, 날짜)로 결정론이다 — 같은 파일을 두 번 올려도 행이 두 배가 되지 않는다.
             String id = "real-" + user.getId().substring(0, 8) + "-" + d.get().toString().replace("-", "")
@@ -168,7 +168,7 @@ public class RealPersonImportService {
             // 명세서는 시각을 안 준다. 정오로 둔다 — 0시로 채우면 night 축이 전부 켜져
             // **모든 결제가 심야 결제로** 판정된다. 모르는 값을 0으로 두는 건 중립이 아니다.
             paymentRepository.save(new MyDataPayment(id, card, d.get().atTime(12, 0),
-                    ksic, UNKNOWN_KSIC.equals(ksic) ? UNKNOWN_CATEGORY2 : null,
+                    industryCode, UNKNOWN_INDUSTRY.equals(industryCode) ? UNKNOWN_CATEGORY2 : null,
                     (int) amount, merchant, 0));
             accepted++;
         }

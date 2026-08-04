@@ -68,7 +68,8 @@ class MyDataLinkServiceTest {
                 ZoneId.systemDefault());
 
         new MyDataLinkService(client, users, cards, payments, consumptions, categories,
-                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()), links,
+                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
+                emptyDictionary(), links,
                 mock(UserBankRepository.class), reports, clock, "")
                 .linkCardCompanies(1L, List.of(9007L));
 
@@ -98,7 +99,8 @@ class MyDataLinkServiceTest {
 
         new MyDataLinkService(client, users, mock(UserCardRepository.class), mock(UserPaymentRepository.class),
                 mock(ConsumptionRepository.class), mock(CategoryRepository.class),
-                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()), links,
+                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
+                emptyDictionary(), links,
                 mock(UserBankRepository.class), mock(ReportRepository.class), clock, "")
                 .linkCardCompanies(1L, List.of(9007L));
 
@@ -106,5 +108,16 @@ class MyDataLinkServiceTest {
         verify(links).save(saved.capture());
         assertTrue(saved.getValue().getLastRenewalTime().isBefore(연동시각.minusMonths(6)),
                 "받아온 결제가 없으면 다음 증분이 무엇이든 집어올 수 있어야 한다");
+    }
+
+    /**
+     * 빈 확정 분류 사전. 이 테스트가 보는 것은 <b>증분 기준선</b>이라 사전은 관여하지 않는다 —
+     * 다만 적재 경로가 사전을 한 번 읽으므로 널이 아닌 것을 준다.
+     */
+    private static MerchantCategoryService emptyDictionary() {
+        var repo = mock(com.finntech.repository.MerchantCategoryRepository.class);
+        when(repo.findAll()).thenReturn(java.util.List.of());
+        return new MerchantCategoryService(repo,
+                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()));
     }
 }

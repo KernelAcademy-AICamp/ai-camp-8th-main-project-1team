@@ -351,8 +351,8 @@ export interface MyPaymentHistory {
 }
 /** 가맹점 조회(번호→주소). */
 export interface MyMerchant {
-  /** 제공자가 준 업종(KSIC 세분류). 표시용이 아니라 근거용이다. */
-  ksicCode: string | null;
+  /** 제공자가 준 업종(국세청 업종코드 6자리). 표시용이 아니라 근거용이다. */
+  industryCode: string | null;
   /** 우리가 붙인 소비 중분류. 화면에는 이걸 쓴다. */
   category: string | null;
   businessNumber: string;
@@ -871,6 +871,39 @@ const post = <T,>(path: string, body?: unknown) => request<T>('POST', path, body
 const put = <T,>(path: string, body?: unknown) => request<T>('PUT', path, body);
 const del = <T,>(path: string) => request<T>('DELETE', path);
 
+/** 아직 분류되지 않은 결제 한 건. `suggested` 는 **AI 추정**이라 판정에 쓰이지 않는다. */
+export interface UnclassifiedItem {
+  paymentId: string;
+  date: string;
+  amount: number;
+  merchantName: string | null;
+  businessNumber: string | null;
+  /** AI 추정 중분류. 명백하지 않으면 null — 억지로 붙이지 않는다. */
+  suggested: string | null;
+  /** NONE · LLM · USER · DICT */
+  source: string;
+  /**
+   * 확정이 **사전에 쌓일 수 있는가**. 더미 사용자의 사업자번호는 생성기가 만든 것이라
+   * 실재하지 않아 사전에 넣지 않는다(결제 자체의 분류는 그래도 바뀐다).
+   */
+  canConfirm: boolean;
+}
+
+export interface UnclassifiedResponse {
+  categories: string[];
+  aiEnabled: boolean;
+  items: UnclassifiedItem[];
+}
+
+export interface ConfirmCategoryResult {
+  paymentId: string;
+  category2: string;
+  /** 함께 바로잡힌 소비 건수. 리포트가 읽는 것은 이쪽이라 0이면 화면이 안 바뀐다. */
+  reclassifiedConsumptions: number;
+  /** 확정 분류 사전에 쌓였는가(실제 사람의 결제일 때만 쌓인다). */
+  storedInDictionary: boolean;
+}
+
 export const api = {
   recommend: (userId: number) => get<RecommendResponse>(`/api/products/recommend?userId=${userId}`),
   alerts: (userId: number) => get<AlertResponse>(`/api/alert/list?userId=${userId}`),
@@ -882,6 +915,19 @@ export const api = {
    */
   onboardingWindow: (userId: number, windowDays = 0) =>
     get<OnboardingWindow>(`/api/onboarding/window?userId=${userId}&windowDays=${windowDays}`),
+  /* ── 미분류 정리 (실데이터에는 업종코드가 없다) ── */
+  /**
+   * 아직 분류되지 않은 결제와 **AI 추정**을 함께 받는다.
+   * 추정은 표시 전용이라 판정에 쓰이지 않는다 — 사람이 확정해야 반영된다.
+   */
+  unclassified: (userId: number) =>
+    get<UnclassifiedResponse>(`/api/merchant-category/unclassified?userId=${userId}`),
+  /** 사람이 분류를 확정한다. 실제 사람의 결제면 확정 분류 사전에도 쌓인다. */
+  confirmCategory: (userId: number, paymentId: string, category2: string) =>
+    post<ConfirmCategoryResult>(
+      `/api/merchant-category/${encodeURIComponent(paymentId)}/confirm?userId=${userId}`,
+      { category2 }),
+
   /* ── 가맹점 판정 성향 (마이 > 낭비 판정 관리) ── */
   merchantStances: (userId: number) =>
     get<{ userId: number; items: MerchantStance[] }>(`/api/merchant-stance?userId=${userId}`),

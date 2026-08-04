@@ -465,7 +465,7 @@ public class GenerationRunner implements ApplicationRunner {
                 unitPrice = Math.max(100, amount / qty);
             }
             batch.add(new Object[]{
-                    payId, cardId, Timestamp.valueOf(t.date()), t.ksicCode(), t.category2(),
+                    payId, cardId, Timestamp.valueOf(t.date()), t.industryCode(), t.category2(),
                     amount, t.merchant(), 0, t.channel(), t.productName(), unitPrice,
                     t.quantity(), t.wasteLabel(), t.discretionaryScore(), t.address(), t.lat(), t.lon(),
                     t.businessNumber()

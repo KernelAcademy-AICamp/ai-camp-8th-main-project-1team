@@ -33,16 +33,33 @@ public class UnknownPgPaymentRunner implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(UnknownPgPaymentRunner.class);
 
-    /** 국내 대표 PG(전자지급결제대행)사 — 가맹점 자리에 이 이름이 찍힌다. */
-    private static final String[] PG = {"토스페이먼츠", "KG이니시스", "NHN KCP", "나이스페이먼츠", "다날", "헥토파이낸셜"};
+    /**
+     * 알 수 없는 결제의 업종코드 — 국세청 {@code 642004}(포털 및 기타 인터넷 정보 매개 서비스업).
+     *
+     * <p>대조표에 없으므로 본체의 {@code midOf()} 가 '카테고리없음'을 준다 → ML 판정에서 빠진다.
+     * <b>모르는 것을 아는 척 분류하지 않는다.</b> 스키마가 NOT NULL 이라 비워 둘 수는 없다.
+     */
+    private static final String UNKNOWN_INDUSTRY = "642004";
+
+    /**
+     * 사업자번호까지 함께 찍는다 — 실제 PG 사업자번호다.
+     *
+     * <p>예전에는 상호만 있고 번호가 NULL 이었다. 그러면 본체의 PG 차단
+     * ({@code IndustryCategoryMapper.isPaymentAgency})이 <b>더미에서는 한 번도 안 돌아</b>
+     * 실데이터에서 처음 돌게 된다 — 검증되지 않은 경로가 실전에서 처음 실행되는 셈이다.
+     * 목록의 원천은 {@code scripts/industry/pg-사업자번호.tsv} 하나이고, 여기서는
+     * 빌드된 {@code industry-mid.json} 을 읽는다(두 군데로 갈라지지 않게).
+     */
+    private final List<Map.Entry<String, String>> pgList;
+
     private static final String PAY_SQL = "INSERT INTO mydata_payment " +
             "(mydata_payment_id, mydata_card_id, mydata_payment_date, mydata_payment_ksic_code, " +
             "mydata_payment_category2, mydata_payment_amount, mydata_payment_merchant_name, " +
             "mydata_payment_received_benefit_amount, mydata_payment_channel, mydata_payment_product_name, " +
             "mydata_payment_product_price, mydata_payment_quantity, mydata_payment_waste_label, " +
             "mydata_payment_discretionary_score, mydata_payment_location_address, " +
-            "mydata_payment_location_lat, mydata_payment_location_lng) " +
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            "mydata_payment_location_lat, mydata_payment_location_lng, mydata_payment_business_number) " +
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
     private final JdbcTemplate jdbc;
     private final boolean enabled;
@@ -50,10 +67,11 @@ public class UnknownPgPaymentRunner implements ApplicationRunner {
     private final LocalDate rangeStart = LocalDate.parse("2025-12-15"); // 생성 이력 시작과 정합
     private final LocalDate rangeEnd = LocalDate.parse("2026-09-30");   // 커트오프 이후 일부 미래까지
 
-    public UnknownPgPaymentRunner(JdbcTemplate jdbc,
+    public UnknownPgPaymentRunner(JdbcTemplate jdbc, IndustryCategoryMap industryMap,
                                   @Value("${mydata.unknown-pg.enabled:false}") boolean enabled,
                                   @Value("${mydata.seed.seed:20260721}") long seed) {
         this.jdbc = jdbc;
+        this.pgList = industryMap.paymentAgencies();
         this.enabled = enabled;
         this.seed = seed;
     }
@@ -86,12 +104,13 @@ public class UnknownPgPaymentRunner implements ApplicationRunner {
             while (d.isBefore(rangeEnd)) {
                 String cardId = cards.get(r.nextInt(cards.size()));
                 int amount = snap(1000 + r.nextInt(150_000), r); // 랜덤 금액, 끝자리 00(1원 단위 없음)
-                String pg = PG[r.nextInt(PG.length)];
+                var pg = pgList.get(r.nextInt(pgList.size()));
                 String payId = "u" + uid.substring(0, 16) + "-" + (seq++);
                 LocalDateTime when = d.atTime(r.nextInt(24), r.nextInt(60));
                 batch.add(new Object[]{
-                        payId, cardId, Timestamp.valueOf(when), "6312", "미분류",
-                        amount, pg, 0, "ONLINE", "알 수 없는 결제", null, 1, null, null, null, null, null});
+                        payId, cardId, Timestamp.valueOf(when), UNKNOWN_INDUSTRY, "미분류",
+                        amount, pg.getValue(), 0, "ONLINE", "알 수 없는 결제", null, 1,
+                        null, null, null, null, null, pg.getKey()});
                 total++;
                 if (batch.size() >= 5000) { jdbc.batchUpdate(PAY_SQL, batch); batch.clear(); }
                 d = d.plusWeeks(1L + r.nextInt(8)); // 다음 결제는 1~8주 뒤(가끔씩)

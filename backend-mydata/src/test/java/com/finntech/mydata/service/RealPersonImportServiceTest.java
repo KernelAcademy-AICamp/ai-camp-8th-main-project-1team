@@ -150,7 +150,7 @@ class RealPersonImportServiceTest {
         service.importCsv(NAME, SOCIAL7, PHONE, null, "2026-07-01,어떤가게,10000\n");
         assertThat(결제들().get(0).getKsicCode())
                 .as("매핑에 없는 코드라 본체가 '카테고리없음'으로 받아 판정에서 뺀다")
-                .isEqualTo(RealPersonImportService.UNKNOWN_KSIC);
+                .isEqualTo(RealPersonImportService.UNKNOWN_INDUSTRY);
     }
 
     @Test

@@ -14,8 +14,8 @@ import numpy as np, pandas as pd
 
 ML = os.environ.get("FINNTECH_ML_DIR", str(pathlib.Path.home() / "Downloads" / "finntech-ml"))
 REPO = pathlib.Path(__file__).resolve().parent.parent
-_KM = json.loads((REPO / "backend" / "src" / "main" / "resources" / "ksic-mid.json").read_text(encoding="utf-8"))
-KSIC2MID = _KM["midByKsic"]; ESSENTIAL = set(_KM["essentialCategories"])
+_KM = json.loads((REPO / "backend" / "src" / "main" / "resources" / "industry-mid.json").read_text(encoding="utf-8"))
+CODE2MID = _KM["midByIndustry"]; ESSENTIAL = set(_KM["essentialCategories"])
 
 # ── train.py 와 **같은 순서로** 특징을 만든다. 어긋나면 점수가 통째로 달라진다. ──
 us = pd.read_csv(f"{ML}/user_split.tsv", sep="\t")
@@ -32,7 +32,7 @@ card2code = {c: codes[u] for c, u in zip(cu[cu.columns[0]], cu[cu.columns[1]]) i
 df = pd.read_csv(f"{ML}/payments.tsv", sep="\t",
                  dtype={"card_id": "string", "ksic": "string", "amount": "int32", "label": "string"},
                  parse_dates=["dt"])
-df["cat2"] = df["ksic"].map(KSIC2MID).fillna("카테고리없음").astype("category")
+df["cat2"] = df["ksic"].map(CODE2MID).fillna("카테고리없음").astype("category")
 df["is_disc"] = (~df["cat2"].astype(str).isin(ESSENTIAL)).astype("int8")
 df.drop(columns=["ksic"], inplace=True)
 df["ucode"] = df["card_id"].map(card2code).astype("int32"); df.drop(columns=["card_id"], inplace=True)

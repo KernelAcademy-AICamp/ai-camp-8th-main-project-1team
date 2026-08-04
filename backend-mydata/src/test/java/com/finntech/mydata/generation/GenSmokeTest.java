@@ -24,8 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 })
 class GenSmokeTest {
 
+    /** 알 수 없는 결제(간편결제·PG)의 업종코드 — 대조표에 일부러 없다. */
+    private static final String UNKNOWN_INDUSTRY = "642004";
+
     @Autowired MyDataPaymentRepository payments;
-    @Autowired KsicCategoryMap ksicToMid;
+    @Autowired IndustryCategoryMap ksicToMid;
     @Autowired CatalogSampler sampler;
 
     @Test
@@ -34,18 +37,25 @@ class GenSmokeTest {
         List<MyDataPayment> all = payments.findAll();
         assertThat(all).isNotEmpty();
 
-        // ① 모든 결제가 유효한 4자리 업종코드를 갖는가
+        // ① 모든 결제가 유효한 6자리 국세청 업종코드를 갖는가
         Set<String> codes = all.stream().map(MyDataPayment::getKsicCode).collect(Collectors.toSet());
-        assertThat(codes).allMatch(c -> c != null && c.matches("\\d{4}"));
+        assertThat(codes).allMatch(c -> c != null && c.matches("\\d{6}"));
 
-        // ② 모든 코드가 대조표에 있는가 (없으면 앱이 '카테고리없음'으로 흘림)
+        // ② 대조표에 없는 코드는 '알 수 없는 결제'뿐이어야 한다.
+        //
+        // 642004(포털 및 기타 인터넷 정보 매개 서비스업)는 **일부러 빼 둔다** — 간편결제·PG 를 거친
+        // 결제는 무엇을 샀는지 모르므로 분류하면 안 된다. 그 밖의 코드가 여기 뜨면 대조표 누락이고,
+        // 그 업종의 소비가 통째로 '카테고리없음'으로 새는데 크래시가 안 나서 알아채기 어렵다.
         List<String> unmapped = codes.stream().filter(c -> ksicToMid.midOf(c) == null).sorted().toList();
         System.out.println("  대조표에 없는 코드: " + unmapped);
-        assertThat(unmapped).isEmpty();
+        assertThat(unmapped).containsAnyOf(UNKNOWN_INDUSTRY).isSubsetOf(UNKNOWN_INDUSTRY);
 
         // ③ 중분류 분포와 미분류 비율
         Map<String, Long> byMid = all.stream().collect(Collectors.groupingBy(
-                p -> ksicToMid.midOf(p.getKsicCode()), TreeMap::new, Collectors.counting()));
+                p -> {
+                    String m = ksicToMid.midOf(p.getKsicCode());
+                    return m == null ? "카테고리없음" : m;
+                }, TreeMap::new, Collectors.counting()));
         long total = all.size();
         System.out.println("  결제 " + total + "건 · 중분류 " + byMid.size() + "종");
         byMid.forEach((m, n) -> System.out.printf("    %-14s%7d  %5.1f%%%n", m, n, n * 100.0 / total));
@@ -82,10 +92,10 @@ class GenSmokeTest {
 
         // ⑤ 상호가 업종과 맞는가 — 표본 출력(육안)
         System.out.println("  상호 표본:");
-        for (String c : List.of("5611", "5621", "5622", "4781", "9611", "9691")) {
-            all.stream().filter(p -> c.equals(p.getKsicCode())).limit(4)
+        for (String mid : List.of("식비", "술/유흥", "카페/간식", "의료", "미용", "생활")) {
+            all.stream().filter(p -> mid.equals(ksicToMid.midOf(p.getKsicCode()))).limit(4)
                     .forEach(p -> System.out.printf("    %s %-10s %s%n",
-                            c, ksicToMid.midOf(c), p.getMerchantName()));
+                            p.getKsicCode(), mid, p.getMerchantName()));
         }
     }
 }

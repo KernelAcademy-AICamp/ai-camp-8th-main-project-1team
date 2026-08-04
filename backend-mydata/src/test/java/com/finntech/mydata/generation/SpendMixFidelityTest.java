@@ -53,7 +53,7 @@ class SpendMixFidelityTest {
     private static final double TOO_SMALL_TO_JUDGE = 0.01;
 
     @Autowired MyDataPaymentRepository payments;
-    @Autowired KsicCategoryMap ksicToMid;
+    @Autowired IndustryCategoryMap ksicToMid;
     @Autowired CatalogLoader catalog;
 
     @Test
@@ -77,7 +77,9 @@ class SpendMixFidelityTest {
         Map<String, Long> amountByMid = new TreeMap<>();
         long total = 0;
         for (MyDataPayment p : all) {
-            amountByMid.merge(ksicToMid.midOf(p.getKsicCode()), (long) p.getAmount(), Long::sum);
+            // 대조표에 없는 코드(간편결제 642004)는 '카테고리없음'이다 — TreeMap 은 null 키를 못 받는다.
+            String mid = ksicToMid.midOf(p.getKsicCode());
+            amountByMid.merge(mid == null ? "카테고리없음" : mid, (long) p.getAmount(), Long::sum);
             total += p.getAmount();
         }
 

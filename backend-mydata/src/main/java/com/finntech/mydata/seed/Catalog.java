@@ -12,34 +12,38 @@ public final class Catalog {
     private Catalog() {}
 
     /**
-     * 업종코드(KSIC 세분류) → 소비맥락 목록. 순서 고정(재현성).
+     * 업종코드(국세청 6자리) → 소비맥락 목록. 순서 고정(재현성).
      *
      * <p>예전에는 7대분류를 키로 썼는데, 그 축이 소비 카테고리를 겸하고 있어 없앴다.
      * 이 시드는 소규모 데모용이라 대량 생성기({@code generation/})의 52맥락 전체를 담지 않고
-     * 대표 맥락만 둔다 — 코드는 같은 체계를 쓴다(scripts/ksic/ksic-mapping.tsv).
+     * 대표 맥락만 둔다 — 코드는 같은 체계를 쓴다(scripts/industry/nts-mid.tsv — 국세청 업종코드 6자리).
      */
-    public static final Map<String, List<String>> CONTEXTS_BY_KSIC = Map.ofEntries(
-            Map.entry("5611", List.of("한식")),
-            Map.entry("5612", List.of("양식")),
-            Map.entry("5619", List.of("배달", "분식")),
-            Map.entry("5622", List.of("카페")),
-            Map.entry("4712", List.of("편의점", "화장품")),
-            Map.entry("4711", List.of("대형마트", "백화점")),
-            Map.entry("4781", List.of("약국")),
-            Map.entry("4771", List.of("주유소")),
-            Map.entry("4921", List.of("대중교통")),
-            Map.entry("6122", List.of("통신비")),
-            Map.entry("6031", List.of("스트리밍")),
-            Map.entry("6312", List.of("간편결제")),
-            Map.entry("5914", List.of("영화")),
-            Map.entry("9113", List.of("헬스장")),
-            Map.entry("8620", List.of("의원"))
+    public static final Map<String, List<String>> CONTEXTS_BY_INDUSTRY = Map.ofEntries(
+            Map.entry("552101", List.of("한식")),
+            Map.entry("552104", List.of("양식")),
+            Map.entry("552108", List.of("분식")),
+            Map.entry("552119", List.of("배달")),
+            Map.entry("552303", List.of("카페")),
+            Map.entry("521992", List.of("편의점")),
+            Map.entry("523131", List.of("화장품")),
+            Map.entry("521912", List.of("대형마트")),
+            Map.entry("521910", List.of("백화점")),
+            Map.entry("523111", List.of("약국")),
+            Map.entry("505001", List.of("주유소")),
+            Map.entry("602103", List.of("대중교통")),
+            Map.entry("642005", List.of("통신비")),
+            Map.entry("724000", List.of("스트리밍")),
+            Map.entry("642004", List.of("간편결제")),
+            Map.entry("921200", List.of("영화")),
+            Map.entry("924305", List.of("헬스장")),
+            Map.entry("851201", List.of("의원"))
     );
 
     /** 순서 고정용 업종코드 배열. */
-    public static final List<String> KSIC_CODES = List.of(
-            "5611", "5612", "5619", "5622", "4712", "4711", "4781", "4771",
-            "4921", "6122", "6031", "6312", "5914", "9113", "8620");
+    public static final List<String> INDUSTRY_CODES = List.of(
+            "552101", "552104", "552108", "552119", "552303", "521992", "523131",
+            "521912", "521910", "523111", "505001", "602103", "642005", "724000",
+            "642004", "921200", "924305", "851201");
 
     /** 중분류 → 가맹점 후보. */
     public static final Map<String, List<String>> MERCHANTS = Map.ofEntries(
@@ -61,7 +65,7 @@ public final class Catalog {
             Map.entry("헬스장", List.of("애니타임피트니스", "짐박스")),
             Map.entry("카페", List.of("스타벅스", "이디야", "투썸플레이스", "메가커피")),
             Map.entry("편의점", List.of("CU", "GS25", "세븐일레븐")),
-            // 업종코드 재분류로 CONTEXTS_BY_KSIC 의 맥락 이름이 바뀌었는데 여기를 안 맞춰
+            // 업종코드 재분류로 CONTEXTS_BY_INDUSTRY 의 맥락 이름이 바뀌었는데 여기를 안 맞춰
             // 아래 7개가 상호 없이 남았다. 시드가 MERCHANTS.get(맥락) 을 그대로 쓰므로
             // null 이 되어 **앱이 기동 실패했다**(NPE: "merchants" is null).
             Map.entry("한식", List.of("김밥천국", "본죽", "한솥도시락")),
