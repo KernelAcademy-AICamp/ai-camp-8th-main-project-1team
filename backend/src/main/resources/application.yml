@@ -133,6 +133,12 @@ finntech:
     # 실제 적금 우대조건에 흔한 기준선을 둔다. 카드사별 전월 실적 중 최대값과 비교한다.
     card-performance-threshold: 300000      # 전월 카드실적이 30만원 이상이면 충족
 
+  # 저축 상품 매칭 FP-01 (M1~M9) — 07_취향분석및추천_Agent_설계.md §4.5
+  savings-match:
+    # M2의 "large_expense_cycle이 짧음" 기준(개월). 이 값 이하이면 짧다고 보고 파킹통장을 상단에 둔다.
+    # 분기마다 큰 지출이 오는 사람(§4.3의 B 사례)을 잡는 자리라 분기=3을 잠정값으로 뒀다. §8 미정.
+    short-large-expense-cycle-months: 3
+
   # 감사로그 계층 3 — RFC 3161 TSA 앵커링
   tsa:
     # 기본 false. 외부 네트워크에 의존하므로 시연 직전에 켜서 앵커를 만들어 둔다.
