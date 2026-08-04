@@ -3,6 +3,9 @@ package com.finntech.service;
 import com.finntech.engine.AnalysisResult;
 import com.finntech.engine.CutCandidate;
 import com.finntech.engine.UserProfile;
+import com.finntech.util.Redact;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -27,13 +30,15 @@ import java.util.Map;
 @Service
 public class NarrativeService {
 
+    private static final Logger log = LoggerFactory.getLogger(NarrativeService.class);
+
     private final String apiKey;
     private final String model;
     private final RestClient restClient;
 
     public NarrativeService(
             @Value("${finntech.gemini.api-key:}") String apiKey,
-            @Value("${finntech.gemini.model:gemini-2.0-flash}") String model,
+            @Value("${finntech.gemini.model:gemini-3.1-flash-lite}") String model,
             @Value("${finntech.gemini.base-url:https://generativelanguage.googleapis.com}") String baseUrl) {
         this.apiKey = apiKey;
         this.model = model;
@@ -130,10 +135,21 @@ public class NarrativeService {
                     .body(Map.class);
 
             String text = extractText(response);
-            if (text == null || text.isBlank()) return new Narrative(fallback, "TEMPLATE_FALLBACK");
+            if (text == null || text.isBlank()) {
+                log.warn("소비 서술이 템플릿으로 폴백 — 응답에 문장이 없다(형식 변경 의심)");
+                return new Narrative(fallback, "TEMPLATE_FALLBACK");
+            }
             return new Narrative(text.trim(), "AI");
         } catch (Exception e) {
-            // 시연 중 네트워크·쿼터 문제로 화면이 비면 안 된다. 조용히 템플릿으로 떨어진다.
+            // 시연 중 네트워크·쿼터 문제로 화면이 비면 안 된다. 템플릿으로 떨어뜨리되 **이유는 남긴다**.
+            //
+            // 예전에는 이 catch가 예외를 통째로 삼켰다. 그래서 운영에서 문장이 하나도 안 나오는데도
+            // 로그가 비어 있었고, 원인(`gemini-2.0-flash` 할당량 0)을 찾으려고 컨테이너에서 API를
+            // **손으로 재현**해야 했다(2026-08-04). 폴백이 시연을 살리는 것과 원인을 못 보는 것은
+            // 다른 문제인데 하나로 묶여 있었다 — 지킴이 쪽은 이미 §8-V에서 같은 이유로 고쳤다.
+            //
+            // 키가 URI 질의문자열에 실리므로 반드시 가린다.
+            log.warn("소비 서술이 템플릿으로 폴백 — {}", Redact.cause(e));
             return new Narrative(fallback, "TEMPLATE_FALLBACK");
         }
     }

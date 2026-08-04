@@ -109,6 +109,8 @@ services:
       FINNTECH_DEMO_TODAY: ${FINNTECH_DEMO_TODAY:-}
       FINNTECH_MYDATA_REFERENCE_DATE: ${FINNTECH_MYDATA_REFERENCE_DATE:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      # 모델이 사라지거나 할당량이 0이 되면 배포 없이 여기서 갈아탄다(2026-08-04 실제로 필요했다).
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
       # 금감원 오픈API 인증키. 비면 통장 비교가 더미로 폴백한다(화면에 '예시 데이터'로 표시).
       # 이 줄이 없어서 .env 에 키를 넣어도 컨테이너까지 오지 못했다 — 운영에서 실측(2026-08-04).
       FSS_API_KEY: ${FSS_API_KEY:-}

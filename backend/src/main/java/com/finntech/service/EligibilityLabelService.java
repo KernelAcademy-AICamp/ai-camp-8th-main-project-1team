@@ -90,7 +90,7 @@ public class EligibilityLabelService {
     public EligibilityLabelService(
             ProductEligibilityRepository repository,
             @Value("${finntech.gemini.api-key:}") String apiKey,
-            @Value("${finntech.gemini.model:gemini-2.0-flash}") String model,
+            @Value("${finntech.gemini.model:gemini-3.1-flash-lite}") String model,
             @Value("${finntech.gemini.base-url:https://generativelanguage.googleapis.com}") String baseUrl,
             Clock clock) {
         this.repository = repository;
