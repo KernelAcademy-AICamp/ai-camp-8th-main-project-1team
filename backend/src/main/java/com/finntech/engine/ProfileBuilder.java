@@ -99,7 +99,10 @@ public class ProfileBuilder {
         contribution.put("변동", pVol);
         contribution.put("심야충동", pNight);
 
-        int fixedCount = (int) recurring.stream().filter(r -> r.type() == RecurringPayment.Type.FIXED).count();
+        // 끝난 구독은 세지 않는다 — "고정지출 N건"은 지금 나가는 돈을 말하는 숫자다.
+        int fixedCount = (int) recurring.stream()
+                .filter(r -> r.type() == RecurringPayment.Type.FIXED
+                        && r.status() == RecurringPayment.Status.ACTIVE).count();
         int routineCount = (int) recurring.stream().filter(r -> r.type() == RecurringPayment.Type.ROUTINE).count();
 
         return new UserProfile(pWaste + pConc + pVol + pNight, wasteRatio, concentration, volatility, nightImpulse,

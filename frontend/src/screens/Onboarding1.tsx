@@ -45,7 +45,8 @@ export function Onboarding1() {
     );
   }
 
-  const fixed = a.recurring.filter((r) => r.type === 'FIXED').slice(0, 6);
+  // 끝난 구독은 뺀다 — 이 화면은 "그동안 꼬박꼬박 빠져나간" 지금의 고정지출을 말한다.
+  const fixed = a.recurring.filter((r) => r.type === 'FIXED' && r.status === 'ACTIVE').slice(0, 6);
   const topDow = DOW_KR[a.pattern.peak?.dayOfWeek ?? topKey(a.pattern.amountByDayOfWeek)] ?? '금';
   const topPart = a.pattern.peak?.daypart ?? topKey(a.pattern.amountByDaypart) ?? '저녁';
   const candidates = a.cutCandidates.slice(0, 5);
@@ -110,7 +111,7 @@ export function Onboarding1() {
             <div className="chips">
               {fixed.map((f, i) => (
                 <span key={`${f.merchantName ?? f.category2}-${i}`} className="chip static">
-                  {f.merchantName ?? f.category2} · {won(f.representativeAmount)}
+                  {f.merchantName ?? f.category2} · {f.amountVaries ? '최근 ' : ''}{won(f.representativeAmount)}
                   {f.periodDays ? ` · ${f.periodDays}일마다` : ''}
                 </span>
               ))}
