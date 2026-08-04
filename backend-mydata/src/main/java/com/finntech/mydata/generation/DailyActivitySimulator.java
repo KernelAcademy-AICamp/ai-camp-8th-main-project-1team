@@ -89,7 +89,7 @@ public class DailyActivitySimulator {
             // 편의점·대형마트·이커머스는 한 번에 1~3개를 사므로 결제액이 단가의 평균 2배다.
             double qty = MULTI_QTY.contains(c.category2()) ? EXPECTED_MULTI_QTY : 1.0;
             double fw = Math.max(1e-9, c.frequencyWeight());
-            double[] a = acc.computeIfAbsent(c.ksicCode(), k -> new double[2]);
+            double[] a = acc.computeIfAbsent(c.industryCode(), k -> new double[2]);
             a[0] += priceSum / wsumP * qty * fw;            // ① 맥락을 빈도로 합친다
             a[1] += fw;
         }
@@ -101,17 +101,17 @@ public class DailyActivitySimulator {
     }
 
     /** 업종 평균 단가. 카탈로그에 품목이 없는 업종은 중간값으로 둔다. */
-    private int avgPrice(String ksicCode) {
-        return avgPriceByKsic.getOrDefault(ksicCode, 20000);
+    private int avgPrice(String industryCode) {
+        return avgPriceByKsic.getOrDefault(industryCode, 20000);
     }
 
     /**
      * '평소 이 정도 쓴다'의 기준액 — 맥락의 실제 품목가 평균. 맥락에 품목이 없으면 업종 평균.
      * 같은 업종 안에서 상대 비교가 되도록, 대분류 상수가 아니라 여기서 낸다.
      */
-    private double typicalOf(String category2, String ksicCode) {
+    private double typicalOf(String category2, String industryCode) {
         var items = sampler.productsOf(category2);
-        if (items.isEmpty()) return compressTypical(avgPrice(ksicCode));
+        if (items.isEmpty()) return compressTypical(avgPrice(industryCode));
         long sum = 0;
         for (var p : items) sum += (p.priceLow() + p.priceHigh()) / 2L;
         return compressTypical(Math.max(1000.0, (double) sum / items.size()));
@@ -142,15 +142,32 @@ public class DailyActivitySimulator {
     private Map<String, Double> globalVisitW;
     private double globalVisitSum;
 
+    /**
+     * 계약으로만 나가는 업종인가 — 구독·통신비·공과금·보험.
+     *
+     * <p><b>일상 추첨에서 뺀다.</b> 이것들은 가입한 계약이 매달 같은 날 빠지는 것이지 어쩌다
+     * 들르는 업종이 아니다. 추첨에 남겨 두면 계약 결제 사이에 랜덤한 날짜의 같은 업종 결제가
+     * 끼어들어 <b>주기가 흐트러지고 반복결제로 안 잡힌다.</b>
+     *
+     * <p>보험은 2026-07-31에 이미 뺐다 — 안 빼 두었을 때 차 없는 사람에게 자동차보험이 찍히고
+     * 출금일이 흩어졌다(실측). 구독·통신비·공과금은 그때 같이 빼지 않아 같은 증상이 남아 있었다.
+     */
+    private boolean isContractIndustry(String code) {
+        if (code == null) return false;
+        for (String cat : new String[]{INSURANCE_CATEGORY, SUBSCRIPTION_CATEGORY,
+                                       TELECOM_CATEGORY, UTILITY_CATEGORY}) {
+            var ctx = sampler.context(cat);
+            if (ctx != null && code.equals(ctx.industryCode())) return true;
+        }
+        return false;
+    }
+
     private void ensureGlobalVisitWeights() {
         if (globalVisitW != null) return;
         Map<String, Double> w = new LinkedHashMap<>();
         double sum = 0;
-        for (String code : sampler.ksicCodes()) {
-            // 보험은 **가입한 계약이 매달 같은 날 빠지는** 것이지 어쩌다 들르는 업종이 아니다.
-            // 여기 넣어 두면 '프로파일 밖 지출'이 아무 날에 보험료를 만들어, 차 없는 사람에게
-            // 자동차보험이 찍히고 출금일도 흩어진다(2026-07-31 실측 — 여기서 새고 있었다).
-            if (INSURANCE_KSIC.equals(code)) continue;
+        for (String code : sampler.industryCodes()) {
+            if (isContractIndustry(code)) continue;
             double x = Math.max(1e-9, sampler.freqOf(code)) / Math.max(1000, avgPrice(code));
             w.put(code, x);
             sum += x;
@@ -187,8 +204,14 @@ public class DailyActivitySimulator {
         double hobbySum = 0;
         for (String c : hobbyCats) {
             var hc = sampler.context(c);
-            if (hc == null) continue;
-            double x = Math.max(1e-9, hc.frequencyWeight()) / Math.max(1000, avgPrice(hc.ksicCode()));
+            // 계약 맥락은 **취미 주입에서도** 뺀다 — 같은 필터가 필요한 네 번째 자리다.
+            // '영화관람'·'디지털게임' 의 signature 에 스트리밍이 들어 있어, 두 취미를 다 가진
+            // 구독과다형은 계약으로 든 구독 위에 랜덤한 날짜의 스트리밍 결제가 더 얹혔다
+            // (2026-08-04 실측: 451명 **전원**, 가맹점 15~26곳. 다른 페르소나는 0명).
+            // 계약이 매달 같은 날 빠져도 사이사이 랜덤 결제가 끼면 간격이 흐트러져,
+            // 정작 구독을 보여 줘야 할 페르소나에서 구독이 반복결제로 안 잡힌다.
+            if (hc == null || isContractIndustry(hc.industryCode())) continue;
+            double x = Math.max(1e-9, hc.frequencyWeight()) / Math.max(1000, avgPrice(hc.industryCode()));
             hobbyW.put(c, x);
             hobbySum += x;
         }
@@ -202,7 +225,9 @@ public class DailyActivitySimulator {
         Map<String, Double> visitW = new LinkedHashMap<>();
         double wsum = 0;
         for (var e : v.categoryMix().entrySet()) {
-            List<String> codes = sampler.ksicOf(e.getKey());
+            // 계약 업종은 페르소나 믹스에서도 뺀다 — 매달 정해진 날 빠지는 것이지 어쩌다 들르는 곳이 아니다.
+            List<String> codes = sampler.industryOf(e.getKey()).stream()
+                    .filter(c -> !isContractIndustry(c)).toList();
             if (codes.isEmpty()) continue;                 // 맥락이 없는 중분류는 건너뛴다
             double freqTotal = 0;
             for (String code : codes) freqTotal += sampler.freqOf(code);
@@ -216,9 +241,8 @@ public class DailyActivitySimulator {
 
         // 개선 곡선 파라미터(사용자 1회 표본)
         WasteCurve.Params curve = sampleCurve(v, r);
-        // 정기구독(고정일·고정 서비스)
-        int subDay = 1 + r.nextInt(28);
-        int subCount = GenSeed.uniformInt(r, v.subscriptionCount()[0], v.subscriptionCount()[1]);
+        // 계약 — 구독·통신비·공과금. 가맹점·요금제·표시명·출금일이 사용자당 한 번 정해진다.
+        List<Contract> contracts = sampleContracts(u, v);
         // 보험 — 가입한 계약이 매달 같은 날 빠진다. 여러 개면 같은 날 여러 건이다(사용자 확인 2026-07-31).
         int insDay = 1 + r.nextInt(28);
         List<Policy> policies = samplePolicies(u);
@@ -241,11 +265,9 @@ public class DailyActivitySimulator {
             boolean away = travel.containsKey(date);
             Boolean trip = trips.get(date);
 
-            // 정기구독(월 1회)
-            if (date.getDayOfMonth() == subDay) {
-                for (int s = 0; s < subCount; s++) {
-                    out.add(subscriptionTxn(u, v, date, cf, r));
-                }
+            // 계약(월 1회) — 구독·통신비·공과금. 각자 정해진 날에 빠진다.
+            for (Contract c : contracts) {
+                if (isContractDay(date, c.dayOfMonth())) out.add(contractTxn(u, v, date, cf, c, r));
             }
 
             // 보험료(월 1회, 계약 수만큼) — 날짜·보험사·상품·금액이 전부 고정이다.
@@ -321,7 +343,7 @@ public class DailyActivitySimulator {
         if (!hobbyW.isEmpty() && r.nextDouble() < 0.06 * v.hobbyIntensityMult()) {
             cat2 = pickWeighted(hobbyW, hobbySum, r);
             var ctx = sampler.context(cat2);
-            ksic = ctx != null ? ctx.ksicCode() : null;
+            ksic = ctx != null ? ctx.industryCode() : null;
         } else if (r.nextDouble() < amt.getOutOfProfileProb()) {
             // 프로파일 밖 지출 — 페르소나가 평소 안 쓰는 업종에서도 가끔 결제한다.
             // 예전에는 이 분기와 아래 일반 분기의 본문이 **완전히 같아서** 난수만 소모하고
@@ -391,7 +413,7 @@ public class DailyActivitySimulator {
                                String cat2, RegionEntry anchor, int cardIndex, boolean planned,
                                double cf, String productHint, Random r) {
         var ctx = sampler.context(cat2);
-        String ksic = ctx != null ? ctx.ksicCode() : "4921";
+        String ksic = ctx != null ? ctx.industryCode() : "4921";
         ResolvedProduct p = sampler.resolveProduct(cat2, productHint, r);
         ResolvedMerchant m = sampler.resolveMerchant(cat2, anchor, p.name(), r);
         int amount = ctx != null && ctx.fixedTariff()
@@ -419,8 +441,7 @@ public class DailyActivitySimulator {
     private record Policy(CatalogSampler.ResolvedMerchant merchant, CatalogSampler.ResolvedProduct product,
                           int cardSlot) {}
 
-    /** 보험 맥락의 업종코드(손해보험업). 일상 추첨에서 빼는 데 쓴다. */
-    private static final String INSURANCE_KSIC = "6512";
+
 
     /** 자동차를 몰아야 드는 보험인가 — 차가 없는 사람에게 나가면 안 된다. */
     static boolean isVehicleInsurance(String n) {
@@ -531,7 +552,7 @@ public class DailyActivitySimulator {
         int hour = GenSeed.uniformInt(r, 7, 22);
         var lab = labeler.label(INSURANCE_CATEGORY, amount, amount, hour, true, false, false, false, v, cf, r);
         return new GenTxn(r.nextInt(u.cardCount()), date.atTime(hour, 0),
-                ctx != null ? ctx.ksicCode() : INSURANCE_KSIC, INSURANCE_CATEGORY, amount,
+                ctx == null ? null : ctx.industryCode(), INSURANCE_CATEGORY, amount,
                 m.name(), "ONLINE", product.name(), amount, 1, lab.label(), round4(lab.pWaste()),
                 m.address(), m.lat(), m.lon(), m.businessNumber());
     }
@@ -543,27 +564,112 @@ public class DailyActivitySimulator {
         int hour = GenSeed.uniformInt(r, 0, 23);
         var lab = labeler.label(INSURANCE_CATEGORY, amount, amount, hour, true, false, false, false, v, cf, r);
         return new GenTxn(pol.cardSlot(), date.atTime(hour, 0),
-                ctx != null ? ctx.ksicCode() : "6512", INSURANCE_CATEGORY, amount,
+                ctx != null ? ctx.industryCode() : "6512", INSURANCE_CATEGORY, amount,
                 pol.merchant().name(), "ONLINE", pol.product().name(), amount, 1,
                 lab.label(), round4(lab.pWaste()),
                 pol.merchant().address(), pol.merchant().lat(), pol.merchant().lon(),
                 pol.merchant().businessNumber());
     }
 
-    private GenTxn subscriptionTxn(GeneratedUser u, PersonaVariant v, LocalDate date, double cf, Random r) {
-        String cat2 = "스트리밍";
-        var ctx = sampler.context(cat2);
-        ResolvedMerchant m = sampler.resolveMerchant(cat2, null, r);
-        ResolvedProduct p = sampler.resolveProduct(cat2, r);
-        // 구독료는 정찰가다 — 넷플릭스가 이번 달만 13,400원일 수 없다.
-        int amount = p.unitPrice();
+    /**
+     * 매달 같은 곳에서 같은 날 빠지는 <b>계약</b> 하나 — 구독·통신비·공과금.
+     *
+     * <p>보험의 {@link Policy}와 같은 모양이다. 다른 점은 <b>표시명을 함께 고정</b>한다는 것 —
+     * 카탈로그의 표기 변형(forms)을 결제마다 새로 뽑으면 명세서에서 같은 가맹점이
+     * `넷플릭스` / `NETFLIX.COM` / `넷플릭스서비시스코리아` 로 흩어져, 사업자번호가 없는
+     * 해외 가맹점은 반복결제 탐지에서 세 그룹으로 쪼개진다. 실제 명세서는 같은 가맹점이면
+     * 매달 같은 문자열로 찍힌다.
+     *
+     * @param amountFixed 금액까지 고정인가. 구독·통신비는 요금제가 정해져 있어 고정이고,
+     *                    공과금은 사용량에 따라 매달 다르다 — 사업자와 출금일만 같다.
+     */
+    private record Contract(String category2, ResolvedMerchant merchant, ResolvedProduct product,
+                            String displayName, int cardSlot, int dayOfMonth, boolean amountFixed) {}
+
+    /** 계약이 걸리는 맥락 — contexts.json 의 {@code fixedTariff: true} 넷 중 보험을 뺀 셋. */
+    private static final String SUBSCRIPTION_CATEGORY = "스트리밍";
+    private static final String TELECOM_CATEGORY = "통신비";
+    private static final String UTILITY_CATEGORY = "공과금";
+
+    /**
+     * 이 사용자가 매달 내는 계약들. <b>사용자당 한 번 뽑아 매달 재사용한다.</b>
+     *
+     * <p>예전에는 구독이 매달 {@code resolveMerchant} + {@code resolveProduct} 를 다시 불렀다.
+     * 그래서 한 사람이 스트리밍 26곳을 구독하고 금액이 7,000~29,000원으로 튀었고, 통신사는
+     * 7곳에 냈다. 반복결제 탐지가 간격의 규칙성을 보므로 <b>정기결제가 하나도 안 잡혔다</b>
+     * (2026-08-04 운영 실측: 고정 15건이 전부 보험).
+     *
+     * <p>보험을 고칠 때 남긴 주석이 *"구독처럼 매달 새로 뽑으면…"* 이라고 구독을 반례로
+     * 지목해 놓고 정작 구독은 그대로였다 — 같은 결함을 한 번 고쳤다고 다른 자리가 고쳐지지는 않는다.
+     */
+    private List<Contract> sampleContracts(GeneratedUser u, PersonaVariant v) {
+        Random cr = GenSeed.rng(u.userSeed(), 62);
+        List<Contract> out = new ArrayList<>();
+
+        // ── 구독 — 페르소나가 정한 개수만큼. 같은 서비스를 두 번 들지 않는다.
+        int subCount = GenSeed.uniformInt(cr, v.subscriptionCount()[0], v.subscriptionCount()[1]);
+        // 1~31 로 뽑는다 — 실제 구독은 29·30·31일에도 빠지고, 그 달에 그 날이 없으면
+        // 말일로 당겨진다(isContractDay). 28로 잘라 두면 그 보정이 **한 번도 안 타는 죽은 가지**가 된다.
+        int subDay = 1 + cr.nextInt(31);
+        // 상호는 **요금제에 맞춰** 뽑는다(`productName` 을 넘긴다). 따로 뽑으면 애플티비플러스가
+        // '넷플릭스 광고형' 을, 서울시상수도사업본부가 '정수기렌탈' 을 받는다 — 2026-08-04 실측이다.
+        // 대중교통에서 이미 같은 결함을 고쳐 두고(지하철이 시내버스 요금을 받던 것) 계약만 빠져 있었다.
+        // 중복은 **상호**로 막는다. 요금제로 막으면 '넷플릭스 광고형'과 '넷플릭스 스탠다드'가
+        // 다른 상품이라 통과해 같은 서비스를 두 번 구독하게 된다.
+        Set<String> taken = new HashSet<>();
+        for (int i = 0, guard = 0; i < subCount && guard < subCount * 8 + 8; guard++) {
+            ResolvedProduct p = sampler.resolveProduct(SUBSCRIPTION_CATEGORY, cr);
+            ResolvedMerchant m = sampler.resolveMerchant(SUBSCRIPTION_CATEGORY, null, p.name(), cr);
+            if (!taken.add(m.name())) continue;
+            out.add(new Contract(SUBSCRIPTION_CATEGORY, m, p, m.name(), cr.nextInt(u.cardCount()), subDay, true));
+            i++;
+        }
+
+        // ── 통신비 — 한 사람은 통신사 하나에 낸다. 요금제도 하나다.
+        ResolvedProduct tp = sampler.resolveProduct(TELECOM_CATEGORY, cr);
+        ResolvedMerchant tm = sampler.resolveMerchant(TELECOM_CATEGORY, null, tp.name(), cr);
+        out.add(new Contract(TELECOM_CATEGORY, tm, tp, tm.name(), cr.nextInt(u.cardCount()),
+                1 + cr.nextInt(31), true));
+
+        // ── 공과금 — 사업자와 출금일은 고정, **금액은 사용량따라 변한다.**
+        //    전기요금이 매달 같을 수 없다. 여기서 금액을 고정하면 데이터가 거짓이 된다.
+        ResolvedProduct up = sampler.resolveProduct(UTILITY_CATEGORY, cr);
+        ResolvedMerchant um = sampler.resolveMerchant(UTILITY_CATEGORY, null, up.name(), cr);
+        out.add(new Contract(UTILITY_CATEGORY, um, up, um.name(), cr.nextInt(u.cardCount()),
+                1 + cr.nextInt(31), false));
+        return out;
+    }
+
+    /**
+     * 계약 결제 한 건.
+     *
+     * <p><b>결제일이 없는 달은 말일로 당긴다</b> — 31일 계약은 2월에 28일에 빠진다.
+     * <b>주말 이월은 하지 않는다</b>: 이 원장은 카드사용내역이고 카드 승인은 24/7 이라
+     * 주말에도 지정일에 빠진다. 영업일로 밀리는 것은 계좌 자동이체(CMS)의 규칙이다.
+     */
+    private GenTxn contractTxn(GeneratedUser u, PersonaVariant v, LocalDate date, double cf,
+                               Contract c, Random r) {
+        var ctx = sampler.context(c.category2());
+        int base = c.product().unitPrice();
+        // 공과금만 사용량 변동을 준다(±35%). 구독·통신비는 정찰가 그대로.
+        int amount = c.amountFixed() ? base
+                : Math.max(1000, (int) Math.round(base * GenSeed.uniform(r, 0.65, 1.35) / 100.0) * 100);
         int hour = GenSeed.uniformInt(r, 0, 23);
-        boolean leak = r.nextDouble() < 0.2 * v.subscriptionLeakMult();
-        var lab = labeler.label(cat2, amount, p.unitPrice(), hour, true, false, false, leak, v, cf, r);
-        return new GenTxn(r.nextInt(u.cardCount()), date.atTime(hour, 0),
-                ctx != null ? ctx.ksicCode() : "6031", cat2, amount,
-                m.name(), "ONLINE", p.name(), p.unitPrice(), 1, lab.label(), round4(lab.pWaste()),
-                m.address(), m.lat(), m.lon(), m.businessNumber());
+        boolean leak = SUBSCRIPTION_CATEGORY.equals(c.category2())
+                && r.nextDouble() < 0.2 * v.subscriptionLeakMult();
+        var lab = labeler.label(c.category2(), amount, base, hour, true, false, false, leak, v, cf, r);
+        return new GenTxn(c.cardSlot(), date.atTime(hour, 0),
+                ctx == null ? null : ctx.industryCode(), c.category2(), amount,
+                c.displayName(), "ONLINE", c.product().name(), base, 1,
+                lab.label(), round4(lab.pWaste()),
+                c.merchant().address(), c.merchant().lat(), c.merchant().lon(),
+                c.merchant().businessNumber());
+    }
+
+    /** 이 달에 계약이 빠지는 날 — 지정일이 없는 달(2월 30일 등)은 말일로 당긴다. */
+    private static boolean isContractDay(LocalDate date, int dayOfMonth) {
+        int last = date.lengthOfMonth();
+        return date.getDayOfMonth() == Math.min(dayOfMonth, last);
     }
 
     /**

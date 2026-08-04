@@ -424,6 +424,128 @@ class GenerationRegressionTest {
         }
     }
 
+    // ── 계약(구독·통신비·공과금) — 2026-08-04 추가 ─────────────────────────────
+
+    /**
+     * 구독은 <b>계약</b>이다 — 매달 같은 서비스에서 같은 요금이 같은 날 빠진다.
+     *
+     * <p>예전에는 매달 {@code resolveMerchant}+{@code resolveProduct} 를 다시 불러
+     * 한 사람이 스트리밍 26곳을 구독하고 금액이 7,000~29,000원으로 튀었다. 그 결과
+     * 반복결제 탐지에서 <b>정기결제가 하나도 안 잡혔다</b>(운영 실측: 고정 15건이 전부 보험).
+     */
+    @Test
+    @DisplayName("구독은 매달 같은 서비스·같은 요금·같은 날 — 표시명까지 고정")
+    void 구독은_계약이다() {
+        assertContract("스트리밍", true);
+    }
+
+    @Test
+    @DisplayName("통신비는 통신사 하나·요금제 하나 — 한 사람이 7곳에 내지 않는다")
+    void 통신비는_계약이다() {
+        assertContract("통신비", true);
+    }
+
+    /** 공과금은 사업자·출금일만 고정이다. 전기요금이 매달 같을 수 없다. */
+    @Test
+    @DisplayName("공과금은 사업자·날짜만 고정이고 금액은 사용량따라 변한다")
+    void 공과금은_금액이_변한다() {
+        assertContract("공과금", false);
+        var sim = new DailyActivitySimulator(sampler, new WasteLabeler(props, sampler), loader, props);
+        var users = new PopulationBuilder(loader, props).build(props.getSeed(), 200);
+        boolean varied = false;
+        for (var u : users) {
+            var amounts = sim.simulate(u, u.startDate().plusDays(240)).stream()
+                    .filter(t -> "공과금".equals(t.category2())).map(GenTxn::amount).distinct().toList();
+            if (amounts.size() > 1) { varied = true; break; }
+        }
+        assertThat(varied).as("공과금이 전원 정액이면 사용량 변동이 죽은 것이다").isTrue();
+    }
+
+    /**
+     * 계약 맥락은 <b>계약으로만</b> 나간다 — 추첨으로 한 건도 새지 않는다.
+     *
+     * <p><b>{@link #assertContract} 로는 못 잡는다.</b> 그것은 요금제별로 묶어서 보는데,
+     * 추첨으로 새어 든 결제는 저마다 다른 요금제라 "요금제 하나에 상호 하나"를 그대로 통과한다.
+     * 실제로 통과한 채 1,090만 건이 생성됐다.
+     *
+     * <p>새는 자리는 {@code isContractIndustry} 필터가 빠진 곳이었다. 일상 추첨과 페르소나 믹스에는
+     * 있었는데 <b>취미 주입</b>에는 없었고, {@code 영화관람}·{@code 디지털게임} 의 signature 에
+     * 스트리밍이 들어 있어 구독과다형(두 취미를 다 가진다) <b>451명 전원</b>이 계약 위에 랜덤한
+     * 날짜의 스트리밍 결제를 더 받았다 — 가맹점 15~26곳, 다른 페르소나는 0명(2026-08-04 실측).
+     *
+     * <p>그래서 여기서는 <b>날짜</b>를 본다. 한 사람의 구독은 출금일이 하나이므로(말일 보정 제외),
+     * 다른 날짜가 섞이면 그건 계약이 아닌 경로로 들어온 것이다.
+     */
+    @Test
+    @DisplayName("계약 맥락은 추첨으로 새지 않는다 — 취미 signature 로 들어오던 구멍")
+    void 계약은_추첨으로_새지_않는다() {
+        var sim = new DailyActivitySimulator(sampler, new WasteLabeler(props, sampler), loader, props);
+        var users = new PopulationBuilder(loader, props).build(props.getSeed(), 300);
+        int checked = 0;
+        for (var u : users) {
+            var txns = sim.simulate(u, u.startDate().plusDays(240)).stream()
+                    .filter(t -> "스트리밍".equals(t.category2())).toList();
+            if (txns.size() < 4) continue;
+
+            // 한 사람의 구독은 전부 같은 날 빠진다. 말일 보정(2월 28일 등)만 예외라 28 이상은 허용한다.
+            Set<Integer> days = new HashSet<>();
+            for (var t : txns) days.add(t.date().getDayOfMonth());
+            assertThat(days).as("%s 의 구독 출금일 — 여러 날이면 추첨이 끼어든 것이다",
+                            u.userSeed())
+                    .allMatch(dd -> dd >= 28 || days.size() == 1);
+
+            // 페르소나가 정한 구독 개수를 넘을 수 없다(최대 10). 넘으면 추첨분이 얹힌 것이다.
+            long merchants = txns.stream().map(GenTxn::merchant).distinct().count();
+            assertThat(merchants).as("%s 의 구독 서비스 수 — 페르소나 상한(10)을 넘었다", u.userSeed())
+                    .isLessThanOrEqualTo(10);
+            if (++checked >= 40) break;
+        }
+        assertThat(checked).as("구독을 가진 사용자가 하나도 없다").isPositive();
+    }
+
+    /**
+     * 계약 불변식 — 사용자마다 상호·표시명·출금일이 하나이고, 요금제도 하나다.
+     *
+     * @param amountFixed 금액까지 고정인가(구독·통신비 true, 공과금 false)
+     */
+    private void assertContract(String category2, boolean amountFixed) {
+        var sim = new DailyActivitySimulator(sampler, new WasteLabeler(props, sampler), loader, props);
+        var users = new PopulationBuilder(loader, props).build(props.getSeed(), 200);
+        int checked = 0;
+        for (var u : users) {
+            var txns = sim.simulate(u, u.startDate().plusDays(240)).stream()
+                    .filter(t -> category2.equals(t.category2())).toList();
+            if (txns.size() < 2) continue;
+
+            // 상품(요금제)마다 상호·표시명이 하나여야 한다 — 표기 변형이 결제마다 바뀌면
+            // 사업자번호 없는 해외 가맹점이 반복결제에서 여러 그룹으로 쪼개진다.
+            Map<String, Set<String>> merchByProduct = new HashMap<>();
+            Map<String, Set<Integer>> amtByProduct = new HashMap<>();
+            for (var t : txns) {
+                merchByProduct.computeIfAbsent(t.productName(), k -> new HashSet<>()).add(t.merchant());
+                amtByProduct.computeIfAbsent(t.productName(), k -> new HashSet<>()).add(t.amount());
+            }
+            merchByProduct.forEach((p, m) ->
+                    assertThat(m).as("%s / '%s' 의 표시 상호", category2, p).hasSize(1));
+            if (amountFixed) {
+                amtByProduct.forEach((p, a) ->
+                        assertThat(a).as("%s / '%s' 의 요금", category2, p).hasSize(1));
+            }
+
+            // 상품(계약) 하나당 출금일이 하나 — 말일 보정으로 28/29/30/31 이 섞이는 것은 허용한다.
+            Map<String, Set<Integer>> dayByProduct = new HashMap<>();
+            for (var t : txns) {
+                dayByProduct.computeIfAbsent(t.productName(), k -> new HashSet<>())
+                        .add(t.date().getDayOfMonth());
+            }
+            dayByProduct.forEach((p, days) -> assertThat(days)
+                    .as("%s / '%s' 출금일(말일 보정만 허용)", category2, p)
+                    .allMatch(dd -> dd >= 28 || days.size() == 1));
+            if (++checked >= 25) break;
+        }
+        assertThat(checked).as("%s 계약을 가진 사용자가 하나도 없다", category2).isPositive();
+    }
+
     @Test
     @DisplayName("보험료는 매달 같은 날 같은 금액이다 — 계약은 달마다 바뀌지 않는다")
     void 보험료는_고정이다() {
