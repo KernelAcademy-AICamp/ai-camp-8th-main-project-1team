@@ -55,15 +55,17 @@ ls -lh /opt/finntech/restore/${DB}.before.sql.gz" | tail -2
 echo
 echo "[3/4] 적재 시작 (분리 실행)"
 # 외래키·유니크 검사를 끄면 대량 적재가 몇 배 빠르다. 덤프 자체가 일관된 스냅샷이라 안전하다.
+# `nohup … &` 만으로는 **SSM 세션이 끝날 때 같이 죽는다**(2026-08-04 실측 — 적재가 시작조차
+# 안 됐다). `setsid` 로 세션에서 떼어내야 명령이 반환된 뒤에도 산다.
 ssm "rm -f $DONE $LOG
 set -a; . /opt/finntech/.env; set +a
-nohup sh -c \"
+setsid nohup sh -c \"
   date '+시작 %H:%M:%S' > $LOG
   { echo 'SET FOREIGN_KEY_CHECKS=0; SET UNIQUE_CHECKS=0; SET SESSION sql_log_bin=0;'; gunzip -c $GZ; } \
     | docker exec -i -e MYSQL_PWD='\$MYSQL_ROOT_PASSWORD' app-mysql-1 mysql -uroot --binary-mode $DB >> $LOG 2>&1
   echo \\\$? > $DONE
   date '+끝 %H:%M:%S' >> $LOG
-\" >/dev/null 2>&1 &
+\" >/dev/null 2>&1 < /dev/null &
 echo '분리 실행 시작'" | tail -1
 
 echo
