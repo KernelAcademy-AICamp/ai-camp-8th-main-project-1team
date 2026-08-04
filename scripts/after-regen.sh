@@ -11,22 +11,27 @@ cd "$(dirname "$0")/.."
 
 step() { printf '\n\033[1m━━ %s ━━\033[0m\n' "$1"; }
 
-step "1/5 데이터 검증"
+step "1/6 데이터 검증"
 bash scripts/verify-regen.sh
 verify=$?
 
-step "2/5 ML 재학습 + 정답 대조"
+step "2/6 ML 재학습 + 정답 대조"
 bash scripts/retrain-ml.sh || { echo "재학습 실패"; exit 1; }
 
-step "3/5 백엔드 테스트 (새 모델·새 대조표)"
+step "3/6 백엔드 테스트 (새 모델·새 대조표)"
 (cd backend && ./mvnw -B -q test 2>&1 | tail -20) || { echo "backend 테스트 실패"; exit 1; }
 echo "  backend ✓"
 
-step "4/5 생성기 테스트"
+step "4/6 생성기 테스트"
 (cd backend-mydata && ./mvnw -B -q test 2>&1 | tail -20) || { echo "backend-mydata 테스트 실패"; exit 1; }
 echo "  backend-mydata ✓"
 
-step "5/5 덤프"
+step "5/6 데모 사용자 목록 갱신"
+# 재생성하면 CI 가 통째로 바뀐다. 이 목록을 안 고치면 frontend 의 데모 전환이 죽는데,
+# 화면에는 "결제 0건"으로만 보여 원인을 찾기 어렵다 — 실제로 낡은 채 남아 있었다(2026-08-04).
+python3 scripts/build-demo-users.py || { echo "데모 사용자 목록 갱신 실패"; exit 1; }
+
+step "6/6 덤프"
 ./scripts/dump-mydata.sh
 ls -lh deploy/dump/*.gz
 

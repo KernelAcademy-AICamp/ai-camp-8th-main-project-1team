@@ -122,7 +122,7 @@ public class CatalogLoader {
     /**
      * 우리 중분류 → 업종코드 목록. 페르소나가 말하는 지출비중(중분류 단위)을
      * 실제 거래가 일어나는 업종 단위로 푸는 데 쓴다.
-     * scripts/ksic 가 대조표와 contexts에서 생성하므로 손으로 고치지 않는다.
+     * scripts/industry 가 대조표와 contexts에서 생성하므로 손으로 고치지 않는다.
      */
     @SuppressWarnings("unchecked")
     public Map<String, Object> midmap() {

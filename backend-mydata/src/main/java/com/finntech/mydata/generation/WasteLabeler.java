@@ -22,7 +22,7 @@ public class WasteLabeler {
      * <p>예전에는 필수 <b>맥락 이름 10개</b>가 yml에 박혀 있었고, 같은 목록이 Java·Python에도
      * 손으로 복사돼 있었다. 이제 카탈로그가 이미 갖고 있는 {@code discretionaryBase}로 판단한다 —
      * 맥락을 추가할 때 목록을 따로 고칠 일이 없고, 학습(train.py)과 기준이 갈라지지 않는다.
-     * 값은 {@code scripts/ksic/build_resources.py}의 ESSENTIAL_THRESHOLD와 같아야 한다.
+     * 값은 {@code scripts/industry/build_industry.py}의 ESSENTIAL_THRESHOLD와 같아야 한다.
      */
     private static final double ESSENTIAL_MAX_DISCRETIONARY = 0.30;
 

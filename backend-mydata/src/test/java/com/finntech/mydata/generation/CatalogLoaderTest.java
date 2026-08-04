@@ -27,8 +27,8 @@ class CatalogLoaderTest {
         List<CatalogContext> ctx = loader.contexts();
         assertThat(ctx).hasSizeGreaterThanOrEqualTo(40);
         assertThat(ctx).allSatisfy(c -> {
-            // 대분류는 없앴다 — 맥락은 업종코드(KSIC 세분류 4자리)를 가리킨다.
-            assertThat(c.ksicCode()).matches("\\d{4}");
+            // 대분류는 없앴다 — 맥락은 국세청 업종코드 6자리를 가리킨다.
+            assertThat(c.industryCode()).matches("\\d{6}");
             assertThat(c.channel()).isIn("ONLINE", "OFFLINE");
             assertThat(c.frequencyWeight()).isBetween(0.0, 1.0);
             assertThat(c.discretionaryBase()).isBetween(0.0, 1.0);
@@ -125,11 +125,11 @@ class CatalogLoaderTest {
     @Test
     void independentsAreLargeRealNamePool() {
         @SuppressWarnings("unchecked")
-        Map<String, Object> pool = (Map<String, Object>) loader.independents().get("namePoolByKsic");
+        Map<String, Object> pool = (Map<String, Object>) loader.independents().get("namePoolByIndustry");
         int total = pool.values().stream().mapToInt(v -> ((List<?>) v).size()).sum();
         assertThat(total).isGreaterThanOrEqualTo(10_000);   // 공공데이터 실상호(인허가·심평원)
-        // 키는 업종코드 4자리 — 예전에는 소비맥락 이름이었다.
-        assertThat(pool.keySet()).allMatch(k -> k.matches("\\d{4}"));
+        // 키는 국세청 업종코드 6자리 — 예전에는 소비맥락 이름이었다.
+        assertThat(pool.keySet()).allMatch(k -> k.matches("\\d{6}"));
         // dongWeights·coordBBoxTM은 뺐다. 로드만 되고 읽는 곳이 없던 데이터다(호출부 0건).
         assertThat(loader.fares()).containsKey("대중교통");
     }

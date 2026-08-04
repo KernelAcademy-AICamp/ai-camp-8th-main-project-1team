@@ -1,6 +1,6 @@
 # taste/hobbies.json — 취향 분석용 취미 신호표
 
-**생성**: `python3 scripts/ksic/build_taste.py` (원천 = `backend-mydata/.../catalog/hobbies.json` + `contexts.json`)
+**생성**: `python3 scripts/ksic/build_taste.py` — **지금은 가드로 막혀 있다**(KSIC 4자리로 되돌리므로, scripts/ksic/README.md 참조) (원천 = `backend-mydata/.../catalog/hobbies.json` + `contexts.json`)
 
 생성기는 취미를 **소비맥락**(일식·백화점·스트리밍…)으로 말한다. 그런데 그 축은 제공자 DB에만
 남고 앱에는 넘어오지 않는다 — 앱이 받는 것은 **업종코드**까지다. 그래서 이 파일은 생성기

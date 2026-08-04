@@ -28,7 +28,7 @@ public class CatalogSampler {
     /** KSIC 세분류 → 실제 상호. 키가 업종코드라 맥락이 바뀌어도 풀을 다시 가를 필요가 없다. */
     private final Map<String, List<String>> independents;
     /** 우리 중분류 → 그 중분류에 속하며 맥락이 있는 업종코드들(midmap.json). */
-    private final Map<String, List<String>> ksicByMid;
+    private final Map<String, List<String>> industryByMid;
     /** 업종코드 → 그 업종 맥락들의 빈도가중 합. 중분류 비중을 업종별로 나눌 때 쓴다. */
     private final Map<String, Double> freqByKsic = new LinkedHashMap<>();
     private final MerchantRegistry registry;
@@ -51,14 +51,14 @@ public class CatalogSampler {
         }
         this.brands = catalog.brands();
         this.products = catalog.products();
-        this.independents = (Map<String, List<String>>) catalog.independents().get("namePoolByKsic");
-        this.ksicByMid = (Map<String, List<String>>) catalog.midmap().get("ksicByMid");
+        this.independents = (Map<String, List<String>>) catalog.independents().get("namePoolByIndustry");
+        this.industryByMid = (Map<String, List<String>>) catalog.midmap().get("industryByMid");
         Map<String, List<Double>> weights = new LinkedHashMap<>();
         for (CatalogContext c : catalog.contexts()) {
             ctxByCat2.put(c.category2(), c);
-            cat2ByKsic.computeIfAbsent(c.ksicCode(), k -> new ArrayList<>()).add(c.category2());
-            weights.computeIfAbsent(c.ksicCode(), k -> new ArrayList<>()).add(c.frequencyWeight());
-            freqByKsic.merge(c.ksicCode(), c.frequencyWeight(), Double::sum);
+            cat2ByKsic.computeIfAbsent(c.industryCode(), k -> new ArrayList<>()).add(c.category2());
+            weights.computeIfAbsent(c.industryCode(), k -> new ArrayList<>()).add(c.frequencyWeight());
+            freqByKsic.merge(c.industryCode(), c.frequencyWeight(), Double::sum);
         }
         for (var e : weights.entrySet()) {
             List<Double> w = e.getValue();
@@ -73,16 +73,16 @@ public class CatalogSampler {
     public CatalogContext context(String category2) { return ctxByCat2.get(category2); }
 
     /** 업종코드 목록 — 페르소나 가중이 이 위에서 돈다. */
-    public java.util.Set<String> ksicCodes() { return cat2ByKsic.keySet(); }
+    public java.util.Set<String> industryCodes() { return cat2ByKsic.keySet(); }
 
     /** 중분류에 속하며 <b>맥락이 존재하는</b> 업종코드들. midmap.json이 원천이다. */
-    public List<String> ksicOf(String mid) {
-        List<String> codes = ksicByMid.get(mid);
+    public List<String> industryOf(String mid) {
+        List<String> codes = industryByMid.get(mid);
         return codes == null ? List.of() : codes;
     }
 
     /** 업종코드의 빈도가중 합 — 중분류 비중을 업종별로 배분할 때 쓴다. */
-    public double freqOf(String ksicCode) { return freqByKsic.getOrDefault(ksicCode, 0.0); }
+    public double freqOf(String industryCode) { return freqByKsic.getOrDefault(industryCode, 0.0); }
 
     /** 맥락의 상품 목록 — 업종 평균 단가를 실측할 때 쓴다. */
     public List<ProductEntry> productsOf(String category2) {
@@ -96,10 +96,10 @@ public class CatalogSampler {
      * <p>예전에는 대분류(7개)를 받았다. 그 축이 소비 카테고리를 겸하고 있어서, 대분류를 손대면
      * 생성과 판정이 함께 흔들렸다. 이제 업종코드로 묶으므로 소비 카테고리는 앱이 따로 붙인다.
      */
-    public String pickCategory2(String ksicCode, Random r) {
-        List<String> cats = cat2ByKsic.get(ksicCode);
+    public String pickCategory2(String industryCode, Random r) {
+        List<String> cats = cat2ByKsic.get(industryCode);
         if (cats == null || cats.isEmpty()) return null;
-        double[] cum = cat2Cumul.get(ksicCode);
+        double[] cum = cat2Cumul.get(industryCode);
         double x = r.nextDouble();
         for (int i = 0; i < cum.length; i++) if (x < cum[i]) return cats.get(i);
         return cats.get(cats.size() - 1);
@@ -141,8 +141,8 @@ public class CatalogSampler {
         };
 
         // 독립 상호는 **업종코드**로 찾는다. 상호를 분류한 근거가 인허가 업태이고,
-        // 업태는 업종코드로 정리돼 있기 때문이다(scripts/ksic/ksic-mapping.tsv).
-        String ksic = ctx == null ? null : ctx.ksicCode();
+        // 업태는 업종코드로 정리돼 있기 때문이다(scripts/industry/nts-mid.tsv).
+        String ksic = ctx == null ? null : ctx.industryCode();
 
         // 브랜드에서 뽑았을 때만 non-null. 채널·주소 규칙이 브랜드에 붙어 있다.
         BrandEntry brand = (useBrand || !hasIndependents(ksic)) && hasBrands(category2)

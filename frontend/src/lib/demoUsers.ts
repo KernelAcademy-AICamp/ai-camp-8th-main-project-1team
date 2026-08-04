@@ -1,30 +1,34 @@
 /**
- * 데모/개발용 테스트 사용자 표본 (§13-11). MySQL `finntech_mydata`의 SERVICE 분리 사용자에서
- * 페르소나별 2명씩 결정론 선정한 고정 10명. 사람마다 소비 성향이 달라(절약형 vs 과소비형 …) 리포트·ML 판정이
- * 어떻게 달라지는지 교체 연결로 확인한다. 랜덤 전환 버튼은 이 목록에서 무작위 선택(App.tsx). 재생성 시 갱신.
+ * 데모/개발용 테스트 사용자 표본 (§13-11). `finntech_mydata` 의 SERVICE 분리 사용자에서
+ * 페르소나별 2명씩 CI 사전순으로 뽑은 고정 목록이다. 사람마다 소비 성향이 달라
+ * (절약형 vs 과소비형 …) 리포트·ML 판정이 어떻게 달라지는지 교체 연결로 확인한다.
+ * 랜덤 전환 버튼은 이 목록에서 무작위 선택(App.tsx).
+ *
+ * **손으로 고치지 않는다** — `python3 scripts/build-demo-users.py` 가 만든다.
+ * 재생성하면 CI 가 통째로 바뀌므로 반드시 다시 돌린다. 안 돌리면 목록의 CI 가 제공자에 없어
+ * 데모 전환이 죽는데, 화면에는 "결제 0건"으로만 보여 원인을 찾기 어렵다.
  */
 export interface DemoUser {
   persona: string;
   ci: string;
   name: string;
-  /** 커트오프(2026-07-21) 이하 가시 결제 건수 */
+  /** 커트오프(2026-07-23) 이하 가시 결제 건수 */
   visible: number;
 }
 
 export const DEMO_USERS: DemoUser[] = [
-  { persona: '절약형', ci: '21769e175bf008f8c85fbe4540ccd83faf47cdeb3c57ce919a902794f4f81112', name: '절약형_21769e', visible: 703 },
-  { persona: '절약형', ci: '2480fa2c635c2a29f887f170010828cdaea26fba90bf138ee2b3c36aac96f363', name: '절약형_2480fa', visible: 789 },
+  { persona: '과소비형', ci: '005f88efafa4958c3cb193c242d9e1289e459d40df055d3f4dc4bab174f5202a', name: '과소비형_005f88', visible: 1874 },
+  { persona: '과소비형', ci: '040c3c8fc93d0b5bf6b5fcdf6366e5c9e620a5b4b6bd7c647373423f59594f7e', name: '과소비형_040c3c', visible: 1343 },
 
-  { persona: '균형형', ci: '184becce2ac8e2df10195c9eee1e490c6efa08cc2010e7b53b7075d255f3a095', name: '균형형_184bec', visible: 956 },
-  { persona: '균형형', ci: '32378db97b12b121f2a759396d6c8bfd3d452e74f516b0dc634b7078dcd75dd6', name: '균형형_32378d', visible: 721 },
+  { persona: '구독과다형', ci: '0cd7110abcac3cf954f066a8bf7e05d830a3ac52c774494b3253ec72b66c1778', name: '구독과다형_0cd711', visible: 1505 },
+  { persona: '구독과다형', ci: '155531fb59ad8fc67fcfc71157e52ba560e22ca7b5fa58135d9ec7c5ada2c4dc', name: '구독과다형_155531', visible: 1762 },
 
-  { persona: '과소비형', ci: '0425067025c6269453e1064c51bcee791557bc26aeb27a180296b695065942a1', name: '과소비형_042506', visible: 1565 },
-  { persona: '과소비형', ci: '2c8c418a398d8c0c41abe482bc97ed45ee3ecc2a9404d2af8d14bf65f891e0f6', name: '과소비형_2c8c41', visible: 2278 },
+  { persona: '균형형', ci: '115e3a4f212fc9794c18b0a78987169609afbb3c2d699000e6ee020f9f893d80', name: '균형형_115e3a', visible: 819 },
+  { persona: '균형형', ci: '14b84e65648ea6a32189dcae131d185206cf541635b7c54812380ea43d6243cd', name: '균형형_14b84e', visible: 1186 },
 
-  { persona: '구독과다형', ci: '167f7c5ae6eb9fae69dd3981d8a85dd0591ca315a632546c93ab484d16b8db23', name: '구독과다형_167f7c', visible: 1218 },
-  { persona: '구독과다형', ci: '229a46cc2769dd324c14a332ca59a8530f3ed066734d3b800723c2c2b8e43f89', name: '구독과다형_229a46', visible: 1683 },
+  { persona: '외식형', ci: '0161ba5d6793ef94549cc7f1c6d50312df3388ec8911fd36db270c5fb4d6f9cf', name: '외식형_0161ba', visible: 1641 },
+  { persona: '외식형', ci: '016b221cc6f0e408a1517ff504cfee2de59bb17abe60f58657404c6562216ffe', name: '외식형_016b22', visible: 2164 },
 
-  { persona: '외식형', ci: '0282cdf995ed72cbc1abc4922e3de6451c525c344909c5e33c8529d92ece05cf', name: '외식형_0282cd', visible: 1887 },
-  { persona: '외식형', ci: '05ac237a4725d9e9369c7fc86f7d8db682cb5ad0371eec3a5684b15a6eb5f9bc', name: '외식형_05ac23', visible: 1896 },
-
+  { persona: '절약형', ci: '09d9d666961c336a683e47ab86953b01c266085e63107e506df9e361231b1ac7', name: '절약형_09d9d6', visible: 841 },
+  { persona: '절약형', ci: '0c966b45f96a230821966f9365133be831db58d10afeca0e829a067fcc4a0ce9', name: '절약형_0c966b', visible: 956 },
 ];
