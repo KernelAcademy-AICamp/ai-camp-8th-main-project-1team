@@ -70,6 +70,9 @@ services:
       MYDATA_SHARED_SECRET: ${MYDATA_SHARED_SECRET:?deploy/.env 에 MYDATA_SHARED_SECRET 를 넣어라}
       # 비우면 실시간(system)이 서빙 커트오프가 된다. 고정할 때는 본체의 FINNTECH_DEMO_TODAY와 짝을 맞춘다(§8-D).
       MYDATA_NOW: ${MYDATA_NOW:-}
+      # 실제 사람 1명의 카드내역 입력구(/admin/realdata). **실 개인정보**를 받고 파기까지 있다.
+      # 기본 꺼짐 — 넣을 때만 켠다. 8082는 외부 미발행이지만 그 격리는 단층 방어라 여기서도 막는다.
+      MYDATA_REALDATA_ENABLED: "${MYDATA_REALDATA_ENABLED:-false}"
     mem_limit: 768m             # 힙 ≈ 460m. 조회 응답만 만들면 되는 서버라 이 정도면 충분하다.
     networks: [internal]        # 아웃바운드 없음 — 이 서버는 밖으로 나갈 일이 없다
     healthcheck:
@@ -100,10 +103,8 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-capacitor://localhost,https://localhost,http://localhost}
       # 일반 API로 더미 시드가 생성되면 안 된다(문서 §5-2 ④). 운영에서는 켜지 않는다.
       FINNTECH_DEV_SEED_ENABLED: "false"
-      # 관리자용 경로는 운영에서 닫아 둔다. /api/realdata 는 실 개인정보를 받고 DELETE 까지 있고,
-      # /api/ops 는 내부 운영 상태를 낸다. 볼 일이 있으면 그때 명시적으로 켠다.
-      FINNTECH_OPS_ENABLED: "${FINNTECH_OPS_ENABLED:-false}"
-      FINNTECH_REALDATA_ENABLED: "${FINNTECH_REALDATA_ENABLED:-false}"
+      # 운영 관측(/api/ops/health)은 켜 둔다 — 개인정보가 없고, 켜야 볼 수 있는 관측은 안 보게 된다.
+      FINNTECH_OPS_ENABLED: "${FINNTECH_OPS_ENABLED:-true}"
       # 시각 기준. 비우면 실시간. 고정할 때는 마이데이터의 MYDATA_NOW와 같은 날짜로 함께 넣는다(§8-D).
       FINNTECH_DEMO_TODAY: ${FINNTECH_DEMO_TODAY:-}
       FINNTECH_MYDATA_REFERENCE_DATE: ${FINNTECH_MYDATA_REFERENCE_DATE:-}

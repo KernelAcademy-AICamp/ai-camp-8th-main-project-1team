@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
- * 자금 흐름 축(L1~L5) 분석 (③ 취향·추천) — `13_취향 분석 및 추천_Agent_설계.md` §4.1.
+ * 자금 흐름 축(L1~L5) 분석 (③ 취향·추천) — `07_취향분석및추천_Agent_설계.md` §4.1.
  *
  * <p>재료({@link FundFlowInputs})는 {@link FundFlowSource}(seam)가 실어 오고, 이 서비스는 <b>판정만</b> 한다
  * (판단은 코드가·표현은 AI가, 마스터 §4). 저축 상품 매칭(FP-01, M1~M9)은 이 프로필을 <b>입력</b>으로 받는 별도

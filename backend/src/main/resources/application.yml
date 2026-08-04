@@ -39,12 +39,11 @@ finntech:
     seed-enabled: true
   ops:
     # 운영 관측(/api/ops/health) — 침묵률·폴백률·모델 임계 같은 내부 상태를 낸다.
-    # 개인 식별 정보는 없지만 밖에 보일 이유도 없다. 운영에서는 켤 때만 켠다.
-    enabled: true
-  realdata:
-    # 실제 사람의 카드내역 입력(/api/realdata). **실 개인정보**를 받고 DELETE까지 있다.
-    # 호스트 nginx의 경로 차단이 아직 적용 전이라(deploy/ec2-setup.md §7) 서버에서도 막는다.
-    enabled: true
+    #
+    # **운영에서도 켜 둔다.** 개인정보가 없고 사용자별로 쪼개지 않으며, 모델 임계(0.495)는
+    # 이미 이 파일에 커밋돼 있어 숨겨서 얻는 게 없다. 결정적으로 **켜야 볼 수 있는 관측은
+    # 안 보게 된다** — 이상을 눈치채라고 만든 것이 이상할 때만 켜러 가는 물건이 되면 순서가 뒤집힌다.
+    enabled: ${FINNTECH_OPS_ENABLED:true}
   gemini:
     # 비워두면 고정 템플릿 문장으로 폴백한다 (D-02 포기 순서 1번).
     api-key: ${GEMINI_API_KEY:}
@@ -118,7 +117,7 @@ finntech:
     exclude-keywords: [간부, 청년, 장병, 미소, 청약]
 
   # ---- 자금 흐름 5축(L1~L5) 분류 임계치 (FundFlowService) --------------------
-  # AoM 버퍼 구간(θ_buffer)은 13_취향 분석 및 추천_Agent_설계.md §8 미정 → 아래는 잠정값이다.
+  # AoM 버퍼 구간(θ_buffer)은 07_취향분석및추천_Agent_설계.md §8 미정 → 아래는 잠정값이다.
   # 재료(B)가 실데이터로 붙으면 분포 보고 재역산한다(설계원칙 4: 임계치는 전부 여기).
   fund-flow:
     aom-thin-max-months: 1.0    # 평균잔고가 월지출의 1개월치 미만 → THIN(유동성 취약)
@@ -325,9 +324,4 @@ finntech:
     # 운영 프로파일은 기본이 안전해야 한다. 공유 블록의 true를 덮어쓴다 (문서 §5-2 ④).
     # 일반 API로 DUMMY_SEED가 생성되면 더미/실데이터 분리가 무너진다.
     seed-enabled: ${FINNTECH_DEV_SEED_ENABLED:false}
-  ops:
-    # 같은 이유로 운영에서는 기본 꺼짐. 볼 일이 있을 때 env로 켠다.
-    enabled: ${FINNTECH_OPS_ENABLED:false}
-  realdata:
-    # 실 개인정보 입력구는 **켤 때만 열린다**. 켜 두고 잊으면 그 상태가 기본값이 된다.
-    enabled: ${FINNTECH_REALDATA_ENABLED:false}
+
