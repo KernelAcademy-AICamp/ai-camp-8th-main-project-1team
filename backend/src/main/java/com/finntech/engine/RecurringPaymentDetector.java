@@ -49,33 +49,43 @@ public class RecurringPaymentDetector {
 
     private final UserPaymentRepository payments;
     private final AnalysisProperties props;
+    private final IndustryCategoryMapper industryMapper;
 
-    public RecurringPaymentDetector(UserPaymentRepository payments, AnalysisProperties props) {
+    public RecurringPaymentDetector(UserPaymentRepository payments, AnalysisProperties props,
+                                    IndustryCategoryMapper industryMapper) {
         this.payments = payments;
         this.props = props;
+        this.industryMapper = industryMapper;
     }
 
     /** 사용자의 반복 결제(고정형+루틴형)를 탐지한다. */
     public List<RecurringPayment> detect(Long userId, LocalDateTime referenceTime) {
         return detectFrom(payments.findByUserIdOrderByPaymentDateDesc(userId), referenceTime,
-                props.getRecurring(), props.getDaypart());
+                props.getRecurring(), props.getDaypart(), industryMapper::isPaymentAgency);
     }
 
-    /** 순수 탐지 — 테스트 진입점(저장소·Spring 무관). */
+    /** 순수 탐지 — 테스트 진입점(저장소·Spring 무관). PG 목록이 없으면 번호를 그대로 쓴다. */
     static List<RecurringPayment> detectFrom(List<UserPayment> txns, LocalDateTime referenceTime,
                                              AnalysisProperties.Recurring cfg, AnalysisProperties.Daypart daypart) {
+        return detectFrom(txns, referenceTime, cfg, daypart, biz -> false);
+    }
+
+    static List<RecurringPayment> detectFrom(List<UserPayment> txns, LocalDateTime referenceTime,
+                                             AnalysisProperties.Recurring cfg, AnalysisProperties.Daypart daypart,
+                                             java.util.function.Predicate<String> isPaymentAgency) {
         List<RecurringPayment> out = new ArrayList<>();
-        out.addAll(detectFixed(txns, referenceTime, cfg));
+        out.addAll(detectFixed(txns, referenceTime, cfg, isPaymentAgency));
         out.addAll(detectRoutine(txns, referenceTime, cfg, daypart));
         return out;
     }
 
     // ── 고정형: 한 가맹점에서 일정 주기로 반복. 월간은 금액을 묻지 않는다 ──────────────────
     private static List<RecurringPayment> detectFixed(List<UserPayment> txns, LocalDateTime referenceTime,
-                                                      AnalysisProperties.Recurring cfg) {
+                                                      AnalysisProperties.Recurring cfg,
+                                                      java.util.function.Predicate<String> isPaymentAgency) {
         TreeMap<String, List<UserPayment>> groups = new TreeMap<>();
         for (UserPayment p : txns) {
-            String key = groupKey(p);
+            String key = groupKey(p, isPaymentAgency);
             if (key == null) continue;
             groups.computeIfAbsent(key, k -> new ArrayList<>()).add(p);
         }
@@ -211,11 +221,27 @@ public class RecurringPaymentDetector {
      * <p>사업자번호가 없을 때(해외 본사 등)만 {@code category2 + 표시명}으로 물러난다 —
      * 표시명은 표기가 흔들리므로 최소한 카테고리라도 함께 묶어 둔다.
      */
-    private static String groupKey(UserPayment p) {
+    /**
+     * 같은 계약을 한 묶음으로 모으는 키.
+     *
+     * <p><b>PG 번호는 키로 쓰지 않는다.</b> 번호가 결제를 대행한 회사의 것이라, 같은 구독이
+     * 대행사가 바뀔 때마다 다른 묶음으로 흩어진다. 실측(2026-08-05): 넷플릭스가 매달 22일
+     * 22,000원씩 7회 결제됐는데 KG이니시스 5건·NHNKCP 2건으로 갈렸다. 앞은 2월이 비어 주기가
+     * 수렴하지 않고 뒤는 최소 건수에 못 미쳐, <b>완벽한 월 구독이 어느 쪽에서도 안 잡혔다.</b>
+     * 번호를 버리면 가맹점명으로 모여 7건이 한 묶음이 된다 —
+     * {@code MerchantCategoryService.lookup} 이 PG 에서 번호를 버리는 것과 같은 이유다.
+     *
+     * <p>그래서 키는 <b>사업자번호(PG 가 아닐 때) 또는 가맹점명 완전일치</b> 둘 중 하나다.
+     * <b>카테고리는 키에 넣지 않는다.</b> 넣으면 분류가 바뀌는 순간 묶음이 쪼개진다 —
+     * 사용자가 "이건 식비예요"를 누르거나 추정이 확정으로 승격되기만 해도 그때까지 잡히던
+     * 정기결제가 사라진다. 계약이 계약인 것은 <b>어디서 얼마를 언제</b> 냈느냐이지
+     * 우리가 그것을 무엇으로 분류했느냐가 아니다.
+     */
+    private static String groupKey(UserPayment p, java.util.function.Predicate<String> isPaymentAgency) {
         String biz = p.getBusinessNumber();
-        if (biz != null && !biz.isBlank()) return biz;
-        if (p.getCategory2() == null || p.getMerchantName() == null) return null;
-        return p.getCategory2() + SEP + p.getMerchantName();
+        if (biz != null && !biz.isBlank() && !isPaymentAgency.test(biz)) return biz;
+        String name = p.getMerchantName();
+        return name == null || name.isBlank() ? null : SEP + name;
     }
 
     private static boolean inRange(double v, int[] range) {
