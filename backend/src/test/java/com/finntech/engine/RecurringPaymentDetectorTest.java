@@ -68,6 +68,50 @@ class RecurringPaymentDetectorTest {
     }
 
     @Test
+    @DisplayName("한 가맹점에 구독이 둘이면 금액으로 갈라 본다 — 앱마켓")
+    void 앱마켓의_두_구독() {
+        // 2026-08-05 실사용자: `Apple` 15건이 통째로는 어느 주기에도 안 맞았는데,
+        // 금액으로 나누니 매달 5일 2,500원과 매달 11일 14,000원 두 구독이 드러났다.
+        List<UserPayment> txns = new java.util.ArrayList<>();
+        for (int m = 4; m <= 7; m++) {
+            txns.add(tx(LocalDateTime.of(2026, m, 5, 12, 0), "취미/여가", 2500, "Apple", "5278800686"));
+            txns.add(tx(LocalDateTime.of(2026, m, 11, 12, 0), "취미/여가", 14000, "Apple", "5278800686"));
+        }
+        // 사이사이 일회성 결제 — 통째로 보면 주기를 흐트러뜨리는 잡음이다.
+        txns.add(tx(LocalDateTime.of(2026, 5, 19, 12, 0), "취미/여가", 3800, "Apple", "5278800686"));
+        txns.add(tx(LocalDateTime.of(2026, 6, 29, 12, 0), "취미/여가", 3500, "Apple", "5278800686"));
+
+        List<RecurringPayment> fixed = RecurringPaymentDetector
+                .detectFrom(txns, LocalDateTime.of(2026, 8, 1, 12, 0), recurring, daypart,
+                        biz -> "5278800686".equals(biz))
+                .stream().filter(r -> r.type() == RecurringPayment.Type.FIXED).toList();
+
+        assertEquals(2, fixed.size(), "두 구독이 각각 잡혀야 한다: " + fixed);
+        assertTrue(fixed.stream().anyMatch(r -> r.representativeAmount() == 2500 && r.occurrenceDays() == 4));
+        assertTrue(fixed.stream().anyMatch(r -> r.representativeAmount() == 14000 && r.occurrenceDays() == 4));
+    }
+
+    @Test
+    @DisplayName("요금 인상은 금액이 달라도 한 구독이다 — 통째로 먼저 본다")
+    void 요금인상은_갈라지지_않는다() {
+        // 금액으로 **먼저** 나누면 13,500×4 와 17,000×2 가 별개 구독이 된다. 통째로 먼저
+        // 보는 순서가 그것을 막는다(§8-W 계단 변화).
+        List<UserPayment> txns = List.of(
+                tx(LocalDateTime.of(2026, 2, 15, 12, 0), "취미/여가", 13500, "어떤구독", ""),
+                tx(LocalDateTime.of(2026, 3, 15, 12, 0), "취미/여가", 13500, "어떤구독", ""),
+                tx(LocalDateTime.of(2026, 4, 15, 12, 0), "취미/여가", 13500, "어떤구독", ""),
+                tx(LocalDateTime.of(2026, 5, 15, 12, 0), "취미/여가", 13500, "어떤구독", ""),
+                tx(LocalDateTime.of(2026, 6, 15, 12, 0), "취미/여가", 17000, "어떤구독", ""),
+                tx(LocalDateTime.of(2026, 7, 15, 12, 0), "취미/여가", 17000, "어떤구독", ""));
+
+        RecurringPayment r = only(detect(txns, LocalDateTime.of(2026, 8, 1, 12, 0)),
+                RecurringPayment.Type.FIXED);
+        assertEquals(6, r.occurrenceDays(), "여섯 번이 한 구독이어야 한다");
+        assertEquals(17000, r.representativeAmount(), "인상 뒤 금액이 대표금액이다");
+        assertEquals(13500L, r.priorAmount(), "이전 요금을 말할 수 있어야 한다");
+    }
+
+    @Test
     @DisplayName("분류가 바뀌어도 한 묶음이다 — 카테고리는 키가 아니다")
     void 분류가_묶음을_깨지_못한다() {
         // 사용자가 중간에 "이건 식비예요"를 누르거나 추정이 확정으로 승격되기만 해도
