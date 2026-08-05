@@ -110,10 +110,10 @@ public class GuardianNarrative {
 
     public GuardianNarrative(
             @Value("${finntech.gemini.api-key:}") String apiKey,
-            @Value("${finntech.gemini.model:gemini-2.0-flash}") String model,
+            @Value("${finntech.gemini.model:}") String model,
             @Value("${finntech.gemini.base-url:https://generativelanguage.googleapis.com}") String baseUrl) {
         this.apiKey = apiKey;
-        this.model = model;
+        this.model = com.finntech.config.GeminiModels.orDefault(model);
         this.restClient = RestClient.builder().baseUrl(baseUrl).build();
     }
 
@@ -203,8 +203,10 @@ public class GuardianNarrative {
      * <p>WARN이다 — 오류는 아니지만(설계된 폴백) 목표가 5% 이하라 자주 뜨면 봐야 한다.
      */
     private Message fellBack(String why, Exception cause, Message fallback) {
+        // 인증키가 URI 질의문자열에 실리고, 연결 실패 예외는 메시지에 URI를 통째로 담는다 —
+        // 사유를 그대로 찍으면 로그 파일에 키가 박힌다. 사유는 남기되 키만 지운다.
         log.warn("지킴이 문장 생성이 템플릿으로 폴백 — {}{}", why,
-                cause == null ? "" : ": " + cause.getClass().getSimpleName() + " " + cause.getMessage());
+                cause == null ? "" : ": " + com.finntech.util.Redact.cause(cause));
         return fallback;
     }
 

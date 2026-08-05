@@ -38,7 +38,7 @@ public class MydataSeedGenerator implements CommandLineRunner {
     private final CardCompanyRepository companyRepo;
     private final CardProductRepository productRepo;
     /** 업종코드 → 중분류. 혜택이 중분류에 걸려 있어 결제(업종코드)와 맞추려면 필요하다. */
-    private final com.finntech.mydata.generation.KsicCategoryMap ksicToMid;
+    private final com.finntech.mydata.generation.IndustryCategoryMap ksicToMid;
 
     private final boolean enabled;
     private final String mode;
@@ -52,7 +52,7 @@ public class MydataSeedGenerator implements CommandLineRunner {
     public MydataSeedGenerator(MyDataUserRepository userRepo, MyDataCardRepository cardRepo,
                                MyDataPaymentRepository paymentRepo, CardCompanyRepository companyRepo,
                                CardProductRepository productRepo,
-                               com.finntech.mydata.generation.KsicCategoryMap ksicToMid,
+                               com.finntech.mydata.generation.IndustryCategoryMap ksicToMid,
                                @Value("${mydata.seed.enabled:true}") boolean enabled,
                                @Value("${mydata.seed.mode:keep}") String mode,
                                @Value("${mydata.generation.enabled:false}") boolean generationEnabled,
@@ -152,8 +152,8 @@ public class MydataSeedGenerator implements CommandLineRunner {
 
                 int paymentCount = paymentsMin + rnd.nextInt(Math.max(1, paymentsMax - paymentsMin + 1));
                 for (int paymentIndex = 0; paymentIndex < paymentCount; paymentIndex++) {
-                    String ksicCode = Catalog.KSIC_CODES.get(rnd.nextInt(Catalog.KSIC_CODES.size()));
-                    List<String> subCategories = Catalog.CONTEXTS_BY_KSIC.get(ksicCode);
+                    String industryCode = Catalog.INDUSTRY_CODES.get(rnd.nextInt(Catalog.INDUSTRY_CODES.size()));
+                    List<String> subCategories = Catalog.CONTEXTS_BY_INDUSTRY.get(industryCode);
                     String category2 = subCategories.get(rnd.nextInt(subCategories.size()));
                     List<String> merchants = Catalog.MERCHANTS.get(category2);
                     String merchant = merchants.get(rnd.nextInt(merchants.size()));
@@ -162,9 +162,9 @@ public class MydataSeedGenerator implements CommandLineRunner {
                             .minusDays(rnd.nextInt(windowDays))
                             .plusHours(8 + rnd.nextInt(14))
                             .plusMinutes(rnd.nextInt(60));
-                    int benefit = calculateBenefit(product, ksicCode, amount, prevMonthAmount);
+                    int benefit = calculateBenefit(product, industryCode, amount, prevMonthAmount);
                     paymentRepo.save(new MyDataPayment("pay-" + (paymentCounter++), card, paidAt,
-                            ksicCode, category2, amount, merchant, benefit));
+                            industryCode, category2, amount, merchant, benefit));
                 }
             }
         }
@@ -177,11 +177,11 @@ public class MydataSeedGenerator implements CommandLineRunner {
      * 카드 상품의 혜택에서 결제 1건의 받은 혜택 계산(실적구간 대조).
      *
      * <p>혜택은 <b>우리 중분류</b>에 걸려 있고 결제는 <b>업종코드</b>를 갖는다.
-     * 그래서 대조표(ksic-mid.json)를 한 번 거친다 — 카드사가 502개 업종코드를 각각
+     * 그래서 대조표(industry-mid.json)를 한 번 거친다 — 카드사가 502개 업종코드를 각각
      * 정의하지 않아도 되고, 실제 카드 혜택도 소비자가 아는 묶음 단위로 준다.
      */
-    private int calculateBenefit(CardProduct product, String ksicCode, int amount, int prevMonthAmount) {
-        String mid = ksicToMid.midOf(ksicCode);
+    private int calculateBenefit(CardProduct product, String industryCode, int amount, int prevMonthAmount) {
+        String mid = ksicToMid.midOf(industryCode);
         if (mid == null) return 0;
         for (CardBenefit benefit : product.getBenefits()) {
             if (benefit.getMidCategory().equals(mid) && benefit.coversPerformance(prevMonthAmount)) {

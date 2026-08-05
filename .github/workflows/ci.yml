@@ -109,12 +109,68 @@ jobs:
           FSS_API_KEY=
           EOF
 
-      # 비교 기준점. PR이면 병합될 대상(base), develop 푸시면 직전 커밋이 '지금 떠 있는 것'이다.
+      # `.env` 에 넣은 값이 컨테이너까지 가는가.
+      #
+      # compose 는 `--env-file` 의 변수를 **자동으로 주입하지 않는다** — 서비스의 `environment:` 에
+      # 그 이름을 한 줄 적어야 전달된다. 그 줄이 없으면 키를 아무리 정확히 넣어도 앱에는 안 온다.
+      # 실제로 `FSS_API_KEY` 가 그랬다(2026-08-04 운영 실측): `.env.example` 도, CI 환경파일도,
+      # compose 의 네트워크 주석("edge로 …금리조회 아웃바운드")도 그 키를 안다고 적어 놨는데
+      # 정작 전달하는 줄만 없어서, 통장 비교가 몇 주 동안 조용히 더미 금리로 나갔다.
+      #
+      # 조용한 실패라 아무도 모른다 — 화면은 '예시 데이터'라고 정직하게 뜨고 로그도 안 남는다.
+      # 그래서 사람이 아니라 검사가 본다.
+      - name: 환경변수 전달 누락 검사
+        run: |
+          promised=$(grep -oE '^[A-Z][A-Z0-9_]*' deploy/.env.example | sort -u)
+          passed=$(grep -hoE '\$\{[A-Z][A-Z0-9_]*' \
+                     docker-compose.prod.yml docker-compose.prod.local-db.yml docker-compose.prod.large.yml \
+                   | grep -oE '[A-Z][A-Z0-9_]*$' | sort -u)
+          missing=$(comm -23 <(echo "$promised") <(echo "$passed"))
+          if [ -n "$missing" ]; then
+            echo "::error::deploy/.env.example 이 약속했는데 compose 가 컨테이너로 전달하지 않는 변수가 있다:"
+            echo "$missing" | sed 's/^/  - /'
+            echo "해당 서비스의 environment: 에 `KEY: \${KEY:-}` 한 줄을 추가한다."
+            exit 1
+          fi
+          echo "전달 누락 없음 — .env.example 의 $(echo "$promised" | wc -l | tr -d ' ')개 변수 전부 compose 에 있다"
+
+      # 확정 분류 사전의 씨앗은 **실제 사람의 카드 명세서**에서 나온다. 값 자체는 국세청 공개
+      # 정보지만, "하필 이 목록이 뽑혔다"는 사실이 그 사람의 소비 습관을 드러낸다. 그래서 데이터는
+      # 저장소 밖(`_archive/`)에 두는데, **테스트를 쓰다 그럴듯한 번호가 필요해 씨앗에서 하나
+      # 집어 오는** 자리에서 손이 미끄러진다. 실제로 한 번 그랬다(2026-08-04, 백화점 자리표).
+      #
+      # git 히스토리는 지워지지 않으므로 들어간 뒤에는 되돌릴 방법이 없다. 커밋 전에 막는다.
+      # (씨앗이 없는 러너에서는 검사할 것이 없어 통과한다 — 그게 정상 상태다.)
+      - name: 실제 결제처 유출 검사
+        run: python3 scripts/industry/check_no_real_numbers.py
+
+      # 비교 기준점 = **지금 운영에 떠 있는 것** = `main`.
+      #
+      # PR이면 병합될 대상(base)이 곧 그것이다. 그런데 develop **푸시**는 예전에 `HEAD~1`을 썼고,
+      # 그건 "develop ≈ main"일 때만 맞는 근사였다. develop이 main보다 앞서 있으면
+      # `HEAD~1`은 **운영에 올라간 적이 없는 커밋**이라, 존재한 적 없는 상태를 기준선으로 삼는다.
+      #
+      # 실제로 그것 때문에 막혔다(2026-08-04). 문서 일괄 치환이 적용이 끝난 `V6__guardian.sql`의
+      # 주석을 건드려 Flyway 체크섬이 바뀌었고, 그 커밋이 develop에 들어갔다. 그것을 **되돌린**
+      # 커밋을 올렸더니 1단계가 `HEAD~1`(=깨진 그것)로 DB를 채워 **잘못된 체크섬**을 기록했고,
+      # 2단계에서 되돌린(=운영과 같은) 파일과 안 맞아 죽었다. 운영에는 원래 값이 그대로 있는데
+      # CI만 자기가 만든 가짜 상태와 싸운 것이다.
+      #
+      # `main`으로 잡으면 검사력이 줄지 않는다 — main은 develop을 **통째로** 받으므로
+      # "develop 안에서의 증분"은 배포에 존재하지 않는 시나리오다. 물어야 할 것은 언제나
+      # **"운영 위에 이게 얹히는가"** 하나다.
       - name: 기준 커밋 확인
         id: base
         run: |
           BASE='${{ github.event.pull_request.base.sha }}'
-          [ -n "$BASE" ] || BASE=$(git rev-parse HEAD~1 2>/dev/null || echo "")
+          if [ -z "$BASE" ]; then
+            git fetch --no-tags origin main 2>/dev/null || true
+            BASE=$(git rev-parse origin/main 2>/dev/null || echo "")
+          fi
+          # 기준이 지금 커밋과 같으면(=main에 이미 들어간 내용) 비교할 것이 없다.
+          # `[ … ] && BASE=""` 로 쓰면 안 된다 — 조건이 거짓일 때 그 줄이 1을 돌려주고
+          # Actions 의 기본 셸이 `bash -e` 라 **step 자체가 실패**한다.
+          if [ "$BASE" = "${{ github.sha }}" ]; then BASE=""; fi
           echo "sha=$BASE" >> "$GITHUB_OUTPUT"
           [ -n "$BASE" ] && echo "기준 $(git log --oneline -1 "$BASE")" || echo "기준 없음 — 1단계를 건너뛴다"
 

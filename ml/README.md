@@ -14,7 +14,7 @@ user_mean_log_amount · user_disc_ratio(페르소나 프록시)`.
 
 > **cat2의 축이 바뀌었다(2026-07-29).** 예전에는 제공자가 준 소비맥락 52종이었다. 이제 제공자는
 > **업종코드(KSIC 세분류)까지만** 넘기고 소비 카테고리는 앱이 붙이므로, 학습도 같은 대조표
-> (`backend/src/main/resources/ksic-mid.json`)를 거쳐 **중분류 16종**을 쓴다.
+> (`backend/src/main/resources/industry-mid.json`)를 거쳐 **중분류 16종**을 쓴다.
 > `ESSENTIAL`도 같은 파일에서 읽는다 — 예전에는 이 목록이 네 곳에 손으로 복사돼 있었다.
 > 재학습 전까지 `SpendingClassifier`가 체계 불일치를 감지해 **규칙 baseline으로 폴백**한다.
 

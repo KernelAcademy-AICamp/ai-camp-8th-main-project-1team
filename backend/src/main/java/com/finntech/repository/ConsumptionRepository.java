@@ -40,4 +40,12 @@ public interface ConsumptionRepository extends JpaRepository<Consumption, Long> 
             + "where c.userId = :userId and c.source = :source")
     LocalDateTime findEarliest(@Param("userId") Long userId,
                                @Param("source") Enums.DataSource source);
+
+    /**
+     * 결제 한 건에서 생긴 소비를 되찾는다 — 분류를 고칠 때 짝을 맞추기 위해서다.
+     *
+     * <p>{@code sourcePaymentId} 는 적재할 때 달아 둔 결제 키다(V15 주석). 원장이 나중에 이 소비의
+     * 가맹점을 되찾는 유일한 길이고, 분류 확정이 리포트까지 닿는 길이기도 하다.
+     */
+    java.util.List<Consumption> findBySourcePaymentId(String sourcePaymentId);
 }

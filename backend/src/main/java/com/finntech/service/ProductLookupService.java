@@ -45,12 +45,12 @@ public class ProductLookupService {
 
     public ProductLookupService(
             @Value("${finntech.gemini.api-key:}") String apiKey,
-            @Value("${finntech.gemini.model:gemini-2.0-flash}") String model,
+            @Value("${finntech.gemini.model:}") String model,
             @Value("${finntech.gemini.base-url:https://generativelanguage.googleapis.com}") String baseUrl,
             com.finntech.engine.IndustryCategoryMapper industryMapper) {
         this.industryMapper = industryMapper;
         this.apiKey = apiKey;
-        this.model = model;
+        this.model = com.finntech.config.GeminiModels.orDefault(model);
         this.gemini = RestClient.builder().baseUrl(baseUrl).build();
     }
 

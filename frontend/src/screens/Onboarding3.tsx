@@ -180,7 +180,14 @@ export function Onboarding3() {
             const goal = Math.round(baseOf(code) * inten);
             const name = nameOf(code);
             const { icon, bg } = iconOf(name);
-            const rows = paymentsOf(code).filter((p) => p.waste === true);
+            // 낭비로 판정된 결제를 보여준다. **하나도 없으면 그 카테고리의 결제 전부**를
+            // 금액 큰 순으로 보여준다 — 예전에는 빈 목록이라, 고를 수는 있는데 무슨 내역인지
+            // 확인할 길이 없었다(교통처럼 판정이 0건인 카테고리에서 늘 그랬다).
+            const judged = paymentsOf(code).filter((p) => p.waste === true);
+            const rows = judged.length > 0
+              ? judged
+              : [...paymentsOf(code)].sort((x, y) => y.amount - x.amount);
+            const unjudged = judged.length === 0;
             const open = expanded === code;
             const keptCount = rows.filter((p) => kept.has(p.paymentId)).length;
             return (
@@ -206,7 +213,7 @@ export function Onboarding3() {
                   <>
                     <button type="button" className="pick-toggle" aria-expanded={open}
                       onClick={() => setExpanded(open ? null : code)}>
-                      <span>줄일 수 있는 소비 {rows.length}건 · 기준 {won(baseOf(code))}
+                      <span>{unjudged ? '이 카테고리 소비' : '줄일 수 있는 소비'} {rows.length}건 · 기준 {won(baseOf(code))}
                         {keptCount > 0 && <b> · {keptCount}건 뺐어요</b>}</span>
                       <span className="chev" aria-hidden="true">{open ? '⌃' : '⌄'}</span>
                     </button>

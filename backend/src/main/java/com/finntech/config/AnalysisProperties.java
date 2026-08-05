@@ -189,12 +189,53 @@ public class AnalysisProperties {
         public void setLunchEnd(int v) { this.lunchEnd = v; }
     }
 
-    /** 반복 결제 탐지(②) — 고정형(Fixed)·루틴형(Routine) 이원화 임계. 값은 잠정(튜닝 예정). */
+    /**
+     * 반복 결제 탐지(②) — 고정형(Fixed)·루틴형(Routine) 이원화 임계.
+     *
+     * <p><b>고정지출은 '금액이 같은 것'이 아니라 '주기가 같은 것'이다</b>(2026-08-04 개정).
+     * 예전에는 월간에도 금액 게이트({@code fixedCvMax})를 걸었는데, 그러면 넷플릭스가 요금을
+     * <b>한 번만 올려도</b> 6개월치 탐지가 통째로 사라졌다(13,500×4 → 17,000×2 의 CV 0.123).
+     * 통신비·공과금은 사용량 때문에 애초에 못 넘었다 — 그런데 그것들이야말로 고정지출이다.
+     * 운영 데이터 실측으로 <b>금액이 아니라 주기의 규칙성이 진짜 신호</b>임을 확인했다:
+     * 금액 게이트를 빼고 {@code fixedMinCount} 4 · {@code fixedGapCvMax} 0.20 으로 조이면
+     * 오탐이 0이고, 반대로 3·0.30 이면 커피빈·미니스톱이 '정기결제'로 올라왔다.
+     */
     public static class Recurring {
-        /** 고정형 최소 발생 건수. */
-        private int fixedMinCount = 3;
-        /** 고정형 금액 변동계수(CV) 상한 — 이 이하면 '고정 금액'. */
-        private double fixedCvMax = 0.05;
+        /**
+         * 고정형 최소 발생 건수.
+         *
+         * <p>3이면 <b>간격이 2개</b>뿐이라 주기 안정성 판정이 사실상 무의미하다. 실측에서 완화 시
+         * 들어온 오탐이 전부 3건짜리였고 4로 올리자 사라졌다(2026-08-04).
+         */
+        private int fixedMinCount = 4;
+        /**
+         * <b>주간</b> 고정형 금액 산포 상한 — median 대비 MAD 비율. 월간에는 걸지 않는다.
+         *
+         * <p>주간 반복은 습관(매주 화요일 카페)과 계약(주 1회 요가원)이 섞이는데 계약 쪽은 실제로
+         * 금액이 고정이라, 이 게이트가 둘을 갈라 준다. 월 단위로 같은 곳에서 빠지는 것은 그냥 계약이다.
+         *
+         * <p>평균 CV가 아니라 MAD를 쓴다 — {@link com.finntech.engine.Stats} 가 존재하는 이유가
+         * 그것이고, 루틴형은 이미 그렇게 하고 있었다.
+         */
+        private double weeklyDispersionMax = 0.05;
+        /**
+         * 고정형 간격 규칙성 상한 — 간격 표준편차 ÷ 평균. 이것이 <b>오탐을 막는 주 방어선</b>이다.
+         */
+        private double fixedGapCvMax = 0.20;
+        /**
+         * 금액이 '변동'인지 가르는 선 — median 대비 MAD 비율이 이보다 크면 변동으로 본다.
+         *
+         * <p>변동이면 대표금액을 중앙값이 아니라 <b>최근 결제액</b>으로 준다. 다음 결제일을 말하면서
+         * 금액만 과거 중앙값을 말하면 짝이 안 맞는다.
+         */
+        private double amountVariesAbove = 0.05;
+        /**
+         * 마지막 결제가 주기의 몇 배를 넘으면 <b>끝난 것</b>으로 보는가.
+         *
+         * <p>탐지 자체는 계속 전 기간을 본다 — 창으로 잘라 끊긴 구독을 안 보이게 하면
+         * "언제부터 언제까지 구독했나"에 답할 수 없다. <b>보여주되 끝났다고 말한다.</b>
+         */
+        private double endedAfterPeriods = 1.5;
         /** 고정형 주간 주기 허용(일). */
         private int[] weeklyIntervalDays = {6, 8};
         /** 고정형 월간 주기 허용(일). */
@@ -210,8 +251,14 @@ public class AnalysisProperties {
 
         public int getFixedMinCount() { return fixedMinCount; }
         public void setFixedMinCount(int v) { this.fixedMinCount = v; }
-        public double getFixedCvMax() { return fixedCvMax; }
-        public void setFixedCvMax(double v) { this.fixedCvMax = v; }
+        public double getWeeklyDispersionMax() { return weeklyDispersionMax; }
+        public void setWeeklyDispersionMax(double v) { this.weeklyDispersionMax = v; }
+        public double getFixedGapCvMax() { return fixedGapCvMax; }
+        public void setFixedGapCvMax(double v) { this.fixedGapCvMax = v; }
+        public double getAmountVariesAbove() { return amountVariesAbove; }
+        public void setAmountVariesAbove(double v) { this.amountVariesAbove = v; }
+        public double getEndedAfterPeriods() { return endedAfterPeriods; }
+        public void setEndedAfterPeriods(double v) { this.endedAfterPeriods = v; }
         public int[] getWeeklyIntervalDays() { return weeklyIntervalDays; }
         public void setWeeklyIntervalDays(int[] v) { this.weeklyIntervalDays = v; }
         public int[] getMonthlyIntervalDays() { return monthlyIntervalDays; }

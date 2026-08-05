@@ -42,7 +42,7 @@ public class UserPayment {
 
 /** 제공자가 준 업종코드(KSIC 세분류 4자리). 분류의 원본 근거라 그대로 보관한다. */
     @Column(name = "ksic_code", nullable = false, length = 8)
-    private String ksicCode;
+    private String industryCode;
 
 /**
      * 우리 소비 중분류 — 업종코드를 대조표로 옮긴 결과.
@@ -67,6 +67,25 @@ public class UserPayment {
     private String businessNumber;
 
     /**
+     * LLM 이 가맹점명만 보고 추정한 중분류 — <b>표시 전용이다.</b>
+     *
+     * <p>{@code category2} 를 덮지 않는 것이 요점이다. {@code WasteScoringService} 가 그 필드를
+     * 직접 읽어 낭비를 판정하므로, 덮는 순간 <i>"판단은 설명가능한 모델이"</i>(마스터 §4-1)가
+     * 깨진다. 화면에는 "AI 추정" 배지로 보이고, 사람이 "맞아요"를 눌러야 확정 분류가 된다.
+     */
+    @Column(name = "category2_llm", length = 30)
+    private String category2Llm;
+
+    /**
+     * {@code category2} 가 어디서 왔나 — {@code NONE}·{@code LLM}·{@code USER}·{@code DICT}.
+     *
+     * <p>{@code DICT}(확정 분류 사전)와 {@code USER}(사람이 확인)는 <b>처음부터 확정</b>이라
+     * 판정에 그대로 참여한다. {@code LLM} 만 격리 대상이다.
+     */
+    @Column(name = "category2_source", nullable = false, length = 10)
+    private String category2Source = "NONE";
+
+    /**
      * 적재 키를 만든다. 적재하는 쪽과 중복을 확인하는 쪽이 <b>같은 함수</b>를 써야 한다 —
      * 한쪽만 규칙이 다르면 이미 있는 행을 못 찾아 같은 결제가 두 번 쌓인다.
      */
@@ -74,17 +93,35 @@ public class UserPayment {
         return userId + ":" + providerPaymentId;
     }
 
+    /** 실제 사람이 넣은 결제에만 붙는 제공자 키 접두사({@code RealPersonImportService}). */
+    private static final String REAL_PREFIX = "real-";
+
+    /**
+     * 실제 사람의 명세서에서 온 결제인가 — <b>확정 분류 사전에 들어갈 자격</b>이다.
+     *
+     * <p>더미 사용자의 사업자번호는 생성기가 만들어 낸 것이라 <b>실재하지 않는다.</b> 데모로
+     * 앱을 둘러보다 "맞아요"를 누르면 그 가짜 번호가 사전에 쌓이고, 사전은 그 순간
+     * <i>"실제 사업자번호와 중분류"</i> 라는 약속을 어긴다. 그래서 쓰기 앞에 이 관문을 둔다.
+     *
+     * <p>읽기는 막지 않는다 — 사전에 실물만 있으면 더미가 그것을 읽어도 오염되지 않는다.
+     */
+    public boolean isFromRealPerson() {
+        if (paymentId == null) return false;
+        int colon = paymentId.indexOf(':');
+        return colon >= 0 && paymentId.startsWith(REAL_PREFIX, colon + 1);
+    }
+
     protected UserPayment() {}
 
     public UserPayment(String paymentId, Long userId, String cardSerial, Long cardCode,
-                       LocalDateTime paymentDate, String ksicCode, String category2,
+                       LocalDateTime paymentDate, String industryCode, String category2,
                        int amount, String merchantName, int receivedBenefit, String businessNumber) {
         this.paymentId = paymentId;
         this.userId = userId;
         this.cardSerial = cardSerial;
         this.cardCode = cardCode;
         this.paymentDate = paymentDate;
-        this.ksicCode = ksicCode;
+        this.industryCode = industryCode;
         this.category2 = category2;
         this.amount = amount;
         this.merchantName = merchantName;
@@ -97,10 +134,27 @@ public class UserPayment {
     public String getCardSerial() { return cardSerial; }
     public Long getCardCode() { return cardCode; }
     public LocalDateTime getPaymentDate() { return paymentDate; }
-    public String getKsicCode() { return ksicCode; }
+    public String getKsicCode() { return industryCode; }
     public String getCategory2() { return category2; }
     public int getAmount() { return amount; }
     public String getMerchantName() { return merchantName; }
     public int getReceivedBenefit() { return receivedBenefit; }
     public String getBusinessNumber() { return businessNumber; }
+    public String getCategory2Llm() { return category2Llm; }
+    public String getCategory2Source() { return category2Source; }
+
+    /** AI 추정을 담는다 — {@code category2} 는 건드리지 않는다. */
+    public void suggestCategory2(String llmCategory2) {
+        this.category2Llm = llmCategory2;
+        this.category2Source = "LLM";
+    }
+
+    /**
+     * 확정 분류를 적용한다 — 사전에서 왔거나({@code DICT}) 사람이 확인한 것({@code USER})이다.
+     * 이때는 {@code category2} 를 바꾼다. 근거가 사람이라 판정에 참여해도 원칙이 깨지지 않는다.
+     */
+    public void confirmCategory2(String category2, String source) {
+        this.category2 = category2;
+        this.category2Source = source;
+    }
 }

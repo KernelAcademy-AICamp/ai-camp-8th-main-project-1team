@@ -32,7 +32,7 @@ public final class MyDataResponses {
      * ({@link com.finntech.engine.IndustryCategoryMapper}). 제공자가 소비 카테고리를 정해 주면
      * 앱의 분류 품질을 검증할 방법이 없고, 실제 마이데이터도 업종까지만 준다.
      */
-    public record PaymentView(String id, LocalDateTime date, String ksicCode,
+    public record PaymentView(String id, LocalDateTime date, String industryCode,
                               int amount, String merchantName, int receivedBenefitAmount, Long cardCode,
                               String businessNumber) {}
 
@@ -54,10 +54,10 @@ public final class MyDataResponses {
     /**
      * 가맹점 조회(번호→주소) 응답 — mydata의 MerchantView와 필드명 일치.
      *
-     * <p>{@code ksicCode}는 제공자가 준 업종이고 {@code category}는 <b>우리가 붙인</b> 소비 중분류다.
+     * <p>{@code industryCode}는 제공자가 준 업종이고 {@code category}는 <b>우리가 붙인</b> 소비 중분류다.
      * 제공자 응답에는 category가 없어 역직렬화 직후엔 null이며, 프록시가 매핑해 채운다
      * (결제와 같은 경계 — 제공자는 업종까지, 소비 분류는 앱이 한다).
      */
-    public record MerchantView(String ksicCode, String category, String businessNumber, String merchantName,
+    public record MerchantView(String industryCode, String category, String businessNumber, String merchantName,
                                String address, Double lat, Double lng, boolean online) {}
 }

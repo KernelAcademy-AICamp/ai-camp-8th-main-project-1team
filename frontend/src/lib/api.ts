@@ -341,6 +341,8 @@ export interface MyPaymentHistory {
   /** 소비 중분류. 제공자는 업종코드까지만 주고 이 값은 앱이 붙인다. */
   category: string;
   category2: string | null;
+  /** 확정이 없을 때의 **AI 추정**. 화면이 배지로 보여주고 사용자가 눌러 확정한다. */
+  category2Llm?: string | null;
   amount: number;
   merchantName: string | null;
   receivedBenefit: number;
@@ -351,8 +353,8 @@ export interface MyPaymentHistory {
 }
 /** 가맹점 조회(번호→주소). */
 export interface MyMerchant {
-  /** 제공자가 준 업종(KSIC 세분류). 표시용이 아니라 근거용이다. */
-  ksicCode: string | null;
+  /** 제공자가 준 업종(국세청 업종코드 6자리). 표시용이 아니라 근거용이다. */
+  industryCode: string | null;
   /** 우리가 붙인 소비 중분류. 화면에는 이걸 쓴다. */
   category: string | null;
   businessNumber: string;
@@ -407,6 +409,8 @@ export interface OnboardingPayment {
   waste: boolean | null;
   wasteProbability: number | null;
   reason: string | null;
+  /** 확정 분류가 없어 **AI 추정 자리**에 놓인 결제. 화면은 배지로 구분해 보여준다. */
+  categoryEstimated?: boolean;
   /**
    * 판정을 밀어올린 축들 — **확인할 수 있는 숫자**로 온다(2026-08-02).
    *
@@ -432,6 +436,8 @@ export interface OnboardingCategory {
   amount: number;
   count: number;
   wasteAmount: number;
+  /** 재량성이 낮아 **줄이라고 권하지 않는** 카테고리(교통·통신·의료). 서버가 판정한다. */
+  protectedCategory: boolean;
   payments: OnboardingPayment[];
 }
 export interface OnboardingWindow {
@@ -477,13 +483,23 @@ export interface AnalysisProfile {
 }
 export interface RecurringPayment {
   type: 'FIXED' | 'ROUTINE';
+  /** 아직 빠져나가는 중인가. 끝난 구독은 `nextExpected`가 null이다. */
+  status: 'ACTIVE' | 'ENDED';
   category2: string;
   merchantName: string | null;
   businessNumber: string | null;
   daypart: string | null;
+  /** 금액이 안정적이면 중앙값, `amountVaries`면 최근 결제액. */
   representativeAmount: number;
+  amountVaries: boolean;
+  /** 요금이 바뀐 경우 그 이전 금액("13,500 → 17,000"의 앞자리). 안 바뀌었으면 null. */
+  priorAmount: number | null;
   periodDays: number | null;
   nextExpected: string | null;
+  /** 첫 결제일 — "언제부터 구독했나". */
+  firstSeen: string;
+  /** 마지막 결제일 — "언제까지 구독했나". */
+  lastSeen: string;
   occurrenceDays: number;
   perWeekFrequency: number;
 }
@@ -861,6 +877,44 @@ const post = <T,>(path: string, body?: unknown) => request<T>('POST', path, body
 const put = <T,>(path: string, body?: unknown) => request<T>('PUT', path, body);
 const del = <T,>(path: string) => request<T>('DELETE', path);
 
+/** 아직 분류되지 않은 결제 한 건. `suggested` 는 **AI 추정**이라 판정에 쓰이지 않는다. */
+export interface UnclassifiedItem {
+  paymentId: string;
+  date: string;
+  amount: number;
+  merchantName: string | null;
+  businessNumber: string | null;
+  /** AI 추정 중분류. 명백하지 않으면 null — 억지로 붙이지 않는다. */
+  suggested: string | null;
+  /** NONE · LLM · USER · DICT */
+  source: string;
+  /**
+   * 상호 자체가 결제대행사인가 — <b>그러면 무엇을 샀는지 원리적으로 알 수 없다.</b>
+   * '내가 알려주면 되는 것'과 '앱이 못 하는 것'을 화면에서 갈라 보여주기 위한 값이다.
+   */
+  paymentAgency?: boolean;
+  /**
+   * 확정이 **사전에 쌓일 수 있는가**. 더미 사용자의 사업자번호는 생성기가 만든 것이라
+   * 실재하지 않아 사전에 넣지 않는다(결제 자체의 분류는 그래도 바뀐다).
+   */
+  canConfirm: boolean;
+}
+
+export interface UnclassifiedResponse {
+  categories: string[];
+  aiEnabled: boolean;
+  items: UnclassifiedItem[];
+}
+
+export interface ConfirmCategoryResult {
+  paymentId: string;
+  category2: string;
+  /** 함께 바로잡힌 소비 건수. 리포트가 읽는 것은 이쪽이라 0이면 화면이 안 바뀐다. */
+  reclassifiedConsumptions: number;
+  /** 확정 분류 사전에 쌓였는가(실제 사람의 결제일 때만 쌓인다). */
+  storedInDictionary: boolean;
+}
+
 export const api = {
   recommend: (userId: number) => get<RecommendResponse>(`/api/products/recommend?userId=${userId}`),
   alerts: (userId: number) => get<AlertResponse>(`/api/alert/list?userId=${userId}`),
@@ -872,6 +926,19 @@ export const api = {
    */
   onboardingWindow: (userId: number, windowDays = 0) =>
     get<OnboardingWindow>(`/api/onboarding/window?userId=${userId}&windowDays=${windowDays}`),
+  /* ── 미분류 정리 (실데이터에는 업종코드가 없다) ── */
+  /**
+   * 아직 분류되지 않은 결제와 **AI 추정**을 함께 받는다.
+   * 추정은 표시 전용이라 판정에 쓰이지 않는다 — 사람이 확정해야 반영된다.
+   */
+  unclassified: (userId: number) =>
+    get<UnclassifiedResponse>(`/api/merchant-category/unclassified?userId=${userId}`),
+  /** 사람이 분류를 확정한다. 실제 사람의 결제면 확정 분류 사전에도 쌓인다. */
+  confirmCategory: (userId: number, paymentId: string, category2: string) =>
+    post<ConfirmCategoryResult>(
+      `/api/merchant-category/${encodeURIComponent(paymentId)}/confirm?userId=${userId}`,
+      { category2 }),
+
   /* ── 가맹점 판정 성향 (마이 > 낭비 판정 관리) ── */
   merchantStances: (userId: number) =>
     get<{ userId: number; items: MerchantStance[] }>(`/api/merchant-stance?userId=${userId}`),

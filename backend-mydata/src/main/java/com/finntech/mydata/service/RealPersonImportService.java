@@ -9,6 +9,7 @@ import com.finntech.mydata.repository.MyDataCardRepository;
 import com.finntech.mydata.repository.MyDataPaymentRepository;
 import com.finntech.mydata.repository.MyDataUserRepository;
 import com.finntech.mydata.util.Ci;
+import com.finntech.mydata.util.Msisdn;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,12 +57,12 @@ public class RealPersonImportService {
     /**
      * 업종을 모를 때 쓰는 코드. 카드 명세서에는 업종코드가 없는 것이 보통이다.
      *
-     * <p>{@code 6312} 는 이 저장소가 이미 "알 수 없는 결제"에 쓰는 값이고
-     * ({@code UnknownPgPaymentRunner}), {@code ksic-mapping.tsv} 에 없으므로 본체의
-     * {@code midOf()} 가 <b>카테고리없음</b>을 준다 → ML 판정 대상에서 빠진다.
+     * <p>{@code 642004}(포털 및 기타 인터넷 정보 매개 서비스업)는 이 저장소가 이미
+     * "알 수 없는 결제"에 쓰는 값이고({@code UnknownPgPaymentRunner}), {@code nts-mid.tsv} 에
+     * 없으므로 본체의 {@code midOf()} 가 <b>카테고리없음</b>을 준다 → ML 판정 대상에서 빠진다.
      * <b>모르는 것을 아는 척 분류하지 않는다.</b> 스키마가 {@code NOT NULL} 이라 비워 둘 수는 없다.
      */
-    public static final String UNKNOWN_KSIC = "6312";
+    public static final String UNKNOWN_INDUSTRY = "642004";
     /** 업종을 모를 때의 소비맥락. 제공자 DB에만 남고 본체로는 안 나간다. */
     private static final String UNKNOWN_CATEGORY2 = "미분류";
 
@@ -92,7 +93,12 @@ public class RealPersonImportService {
     /** 안 들어간 줄은 <b>줄 번호와 사유를 달고</b> 돌아온다 — 조용히 버리면 몇 건이 왜 빠졌는지 모른다. */
     public record RowResult(int line, String reason, String raw) {}
 
+    /**
+     * @param backfilled          이미 있던 행에 사업자번호를 <b>채워 넣은</b> 수
+     * @param withBusinessNumber  사업자번호가 실린 결제 수 — <b>사전이 붙을 수 있는 건수</b>다
+     */
     public record ImportResult(String ci, String cardId, int accepted, int rejected,
+                               int backfilled, int withBusinessNumber,
                                List<RowResult> problems) {}
 
     /**
@@ -104,8 +110,13 @@ public class RealPersonImportService {
     @Transactional
     public MyDataUser ensurePerson(String name, String social7, String phone, Long cardCode) {
         String ci = Ci.of(name, social7, phone);
+        // 원장 표기(010-1234-5678)로 저장한다. **본인인증이 전화번호로 명의자를 찾는데 그 조회가
+        // 정확일치**라, 숫자만으로 넣으면 있는 사람을 못 찾아 `PHONE_MISMATCH` 가 뜬다 —
+        // 실제 사람이 자기 번호를 정확히 넣고 "전화번호가 다릅니다"를 듣게 된다(2026-08-05 실측).
+        // CI 는 숫자만 남겨 만드므로(Ci.of) 표기를 바꿔도 신원은 그대로다.
+        String stored = Msisdn.format(phone);
         MyDataUser user = userRepository.findById(ci).orElseGet(() -> {
-            MyDataUser u = new MyDataUser(ci, name, social7, digits(phone));
+            MyDataUser u = new MyDataUser(ci, name, social7, stored);
             // 페르소나는 비운다 — 실제 사람에게 생성용 꼬리표를 붙이지 않는다.
             u.setDataSplit(SPLIT);
             return userRepository.save(u);
@@ -115,15 +126,24 @@ public class RealPersonImportService {
             user.setDataSplit(SPLIT);
             userRepository.save(user);
         }
+        // 숫자만으로 저장돼 있던 사람도 여기서 표기를 맞춘다 — 위와 같은 태도의 재실행 안전이다.
+        if (!stored.equals(user.getPhoneNumber())) {
+            user.setPhoneNumber(stored);
+            userRepository.save(user);
+        }
         ensureCard(user, cardCode);
         return user;
     }
 
     /**
-     * 명세서 CSV를 적재한다. 형식: {@code 날짜,가맹점,금액[,업종코드]}.
+     * 명세서 CSV를 적재한다. 형식: {@code 날짜,가맹점,금액[,업종코드][,사업자번호]}.
      *
      * <p>업종코드는 선택이다 — 명세서에 없는 것이 보통이고, 없으면 비워 둔다.
      * <b>모르는 것을 아는 척 분류하지 않는다.</b>
+     *
+     * <p><b>사업자번호는 확정 분류 사전의 키다.</b> 명세서에 있으면 반드시 실어야 한다 —
+     * 없으면 사전 조회가 '번호 없음' 갈래로 빠져, 사전이 아무리 차 있어도 안 붙는다.
+     * 뒤에 붙인 칸이라 <b>기존 4칸 파일은 그대로 읽힌다.</b>
      */
     @Transactional
     public ImportResult importCsv(String name, String social7, String phone, Long cardCode, String csv) {
@@ -132,7 +152,7 @@ public class RealPersonImportService {
                 .orElseThrow(() -> new IllegalStateException("카드가 없다 — ensurePerson 이 실패했다"));
 
         List<RowResult> problems = new ArrayList<>();
-        int accepted = 0, rejected = 0;
+        int accepted = 0, rejected = 0, backfilled = 0, withBusinessNumber = 0;
         String[] lines = csv == null ? new String[0] : csv.split("\\r?\\n");
 
         for (int i = 0; i < lines.length; i++) {
@@ -150,29 +170,56 @@ public class RealPersonImportService {
                 rejected++; problems.add(new RowResult(i + 1, "날짜를 못 읽음: " + c[0], line));
                 continue;
             }
+            // 취소·환불(음수)도 <b>그대로 받는다.</b> 버리면 원결제만 남아 <b>안 쓴 돈이 소비로
+            // 잡힌다</b> — 이 명세서 하나에서만 59건 246만원이 그렇게 부풀려져 있었다
+            // (2026-08-05 실측). 짝을 찾아 원결제를 지우는 방식은 쓰지 않는다: 부분취소가 있고
+            // 원결제가 명세서 기간 밖일 수도 있어, 짝짓기는 틀릴 때 조용히 틀린다.
+            // 음수 한 줄로 넣어 두면 합계가 알아서 상쇄되고, 부분취소도 그만큼만 빠진다.
             long amount = parseAmount(c[2]);
-            if (amount <= 0) {
+            if (amount == 0) {
                 rejected++;
-                problems.add(new RowResult(i + 1,
-                        amount < 0 ? "취소·환불(음수)은 아직 안 받아요" : "금액을 못 읽음: " + c[2], line));
+                problems.add(new RowResult(i + 1, "금액을 못 읽음: " + c[2], line));
                 continue;
             }
             String merchant = c[1].trim();
-            String ksic = c.length >= 4 && !c[3].isBlank() ? c[3].trim() : UNKNOWN_KSIC;
+            String industryCode = c.length >= 4 && !c[3].isBlank() ? c[3].trim() : UNKNOWN_INDUSTRY;
+            String businessNumber = c.length >= 5 ? normalizeBusinessNumber(c[4]) : null;
 
             // 결제 id는 (CI, 줄, 날짜)로 결정론이다 — 같은 파일을 두 번 올려도 행이 두 배가 되지 않는다.
             String id = "real-" + user.getId().substring(0, 8) + "-" + d.get().toString().replace("-", "")
                     + "-" + String.format("%04d", i);
-            if (paymentRepository.existsById(id)) continue;
+
+            // 같은 파일을 두 번 올려도 행이 두 배가 되지 않는다. 다만 **그냥 건너뛰면 안 된다** —
+            // 결제 id 에 칸 수가 안 들어가므로, 사업자번호를 붙여 다시 올려도 전건이 skip 되어
+            // `accepted=0` 만 뜨고 번호는 영영 null 로 남는다. "다 들어갔다"와 "아무 일도 안
+            // 일어났다"가 똑같아 보이는 침묵이다(§8-U). 비어 있으면 채운다.
+            Optional<MyDataPayment> existing = paymentRepository.findById(id);
+            if (existing.isPresent()) {
+                MyDataPayment old = existing.get();
+                if (businessNumber != null && old.getBusinessNumber() == null) {
+                    old.setBusinessNumber(businessNumber);
+                    paymentRepository.save(old);
+                    backfilled++;
+                }
+                if (old.getBusinessNumber() != null) withBusinessNumber++;
+                continue;
+            }
 
             // 명세서는 시각을 안 준다. 정오로 둔다 — 0시로 채우면 night 축이 전부 켜져
             // **모든 결제가 심야 결제로** 판정된다. 모르는 값을 0으로 두는 건 중립이 아니다.
-            paymentRepository.save(new MyDataPayment(id, card, d.get().atTime(12, 0),
-                    ksic, UNKNOWN_KSIC.equals(ksic) ? UNKNOWN_CATEGORY2 : null,
-                    (int) amount, merchant, 0));
+            MyDataPayment row = new MyDataPayment(id, card, d.get().atTime(12, 0),
+                    industryCode, UNKNOWN_INDUSTRY.equals(industryCode) ? UNKNOWN_CATEGORY2 : null,
+                    (int) amount, merchant, 0);
+            // 사업자번호가 **확정 분류 사전의 키**다. 이걸 안 실으면 사전이 아무리 차 있어도
+            // 실데이터에는 영영 안 붙는다 — 조회가 '번호 없음' 갈래로 빠지기 때문이다
+            // (`MerchantCategoryService.lookup` ②). 2026-08-05 에 그 상태를 실측으로 확인했다.
+            row.setBusinessNumber(businessNumber);
+            paymentRepository.save(row);
             accepted++;
+            if (businessNumber != null) withBusinessNumber++;
         }
-        return new ImportResult(user.getId(), card.getId(), accepted, rejected, List.copyOf(problems));
+        return new ImportResult(user.getId(), card.getId(), accepted, rejected,
+                backfilled, withBusinessNumber, List.copyOf(problems));
     }
 
     /** 이 사람의 결제를 전부 지운다 — 실 개인정보라 넣는 길과 같은 무게로 둔다. */
@@ -201,6 +248,23 @@ public class RealPersonImportService {
                 + h.substring(8, 12) + "-" + h.substring(12, 16);
         MyDataCard card = new MyDataCard(serial, user, product, LocalDate.now().plusYears(4), 0);
         cardRepository.save(card);
+    }
+
+    /**
+     * 사업자등록번호를 숫자 10자리로 정규화한다. 아니면 {@code null}.
+     *
+     * <p>명세서마다 표기가 다르다 — {@code 012-34-56789}, {@code 0123456789}, 공백 섞인 것.
+     * (예시 번호는 <b>0 으로 시작</b>한다 — 국세청이 발급하지 않는 대역이라 실물과 겹치지 않는다.)
+     * 사전의 키가 이 번호라, 표기가 갈리면 <b>같은 사업자가 다른 사업자가 된다</b>.
+     * 앱 쪽 {@code MerchantCategory.normalize} 와 같은 규칙을 쓴다.
+     *
+     * <p><b>10자리가 아니면 비운다.</b> 잘린 번호나 오타를 그대로 넣으면 사전이 엉뚱한
+     * 사업자에 붙는다 — 업종코드를 모를 때 넘겨짚지 않는 것과 같은 이유다.
+     */
+    static String normalizeBusinessNumber(String raw) {
+        if (raw == null) return null;
+        String digits = raw.replaceAll("\\D", "");
+        return digits.length() == 10 ? digits : null;
     }
 
     /** 따옴표 안의 쉼표를 살린다 — 가맹점명에 흔하다("스타벅스 강남R점, 1층"). */
@@ -239,9 +303,5 @@ public class RealPersonImportService {
         } catch (RuntimeException e) {
             return 0;
         }
-    }
-
-    private static String digits(String v) {
-        return v == null ? "" : v.replaceAll("[^0-9]", "");
     }
 }

@@ -38,6 +38,7 @@ public class MyDataLinkService {
     private final CategoryRepository categoryRepository;
     /** 업종코드 → 소비 중분류. 제공자는 업종까지만 주므로 분류는 우리가 한다. */
     private final com.finntech.engine.IndustryCategoryMapper industryMapper;
+    private final MerchantCategoryService merchantCategoryService;
     private final UserCardCompanyRepository userCardCompanyRepository;
     private final UserBankRepository userBankRepository;
     private final ReportRepository reportRepository;
@@ -49,6 +50,7 @@ public class MyDataLinkService {
                              UserCardRepository userCardRepository, UserPaymentRepository userPaymentRepository,
                              ConsumptionRepository consumptionRepository, CategoryRepository categoryRepository,
                              com.finntech.engine.IndustryCategoryMapper industryMapper,
+                             MerchantCategoryService merchantCategoryService,
                              UserCardCompanyRepository userCardCompanyRepository,
                              UserBankRepository userBankRepository, ReportRepository reportRepository,
                              java.time.Clock clock,
@@ -60,6 +62,7 @@ public class MyDataLinkService {
         this.consumptionRepository = consumptionRepository;
         this.categoryRepository = categoryRepository;
         this.industryMapper = industryMapper;
+        this.merchantCategoryService = merchantCategoryService;
         this.userCardCompanyRepository = userCardCompanyRepository;
         this.userBankRepository = userBankRepository;
         this.reportRepository = reportRepository;
@@ -126,6 +129,8 @@ public class MyDataLinkService {
         YearMonth referenceMonth = YearMonth.from(today);
         LocalDateTime linkTime = LocalDateTime.now(clock);
         int cardCount = 0, paymentCount = 0;
+        // 사전은 루프 밖에서 **한 번만** 읽는다. 결제마다 조회하면 수천 번 질의가 나간다.
+        MerchantCategoryService.Snapshot dict = merchantCategoryService.snapshot();
 
         for (Long companyId : companyIds) {
             String companyName = null;
@@ -144,15 +149,21 @@ public class MyDataLinkService {
                 cardCount++;
 
                 for (PaymentView payment : card.payments()) {
-                    userPaymentRepository.save(new UserPayment(
-                            UserPayment.rowId(userId, payment.id()), userId, card.cardId(),
-                            payment.cardCode(), payment.date(), payment.ksicCode(),
-                            industryMapper.midOf(payment.ksicCode()),
-                            payment.amount(), payment.merchantName(), payment.receivedBenefitAmount(),
-                            payment.businessNumber()));
                     // 업종코드 → 우리 소비 중분류(결정론 1:1). 예전에는 제공자의 7대분류를 그대로
                     // 카테고리 코드로 썼는데, 그 축이 업종과 소비종류를 겸해 왜곡이 났다.
-                    String mid = industryMapper.midOf(payment.ksicCode());
+                    // 그 앞에 **확정 분류 사전**을 둔다 — 실제 명세서에는 업종코드가 없기 때문이다.
+                    var fromDict = dict.lookup(payment.businessNumber(), payment.merchantName());
+                    String mid = fromDict.orElseGet(
+                            () -> industryMapper.midOf(payment.industryCode(), payment.businessNumber()));
+                    UserPayment row = new UserPayment(
+                            UserPayment.rowId(userId, payment.id()), userId, card.cardId(),
+                            payment.cardCode(), payment.date(), payment.industryCode(), mid,
+                            payment.amount(), payment.merchantName(), payment.receivedBenefitAmount(),
+                            payment.businessNumber());
+                    // 사전에서 붙은 것은 근거가 사람이라 **처음부터 확정**이다(§F 격리 대상이 아니다).
+                    if (fromDict.isPresent()) row.confirmCategory2(mid, "DICT");
+                    else applyRemembered(dict, row);
+                    userPaymentRepository.save(row);
                     Category category = categoryRepository.findByCode(mid)
                             .orElseGet(() -> categoryRepository.save(new Category(mid, mid)));
                     // 결제 키를 달고 간다 — 원장이 나중에 이 소비의 가맹점을 되찾는 유일한 길이다(V15).
@@ -206,7 +217,7 @@ public class MyDataLinkService {
         MyDataResponses.MerchantView m = myDataClient.findMerchant(businessNumber);
         if (m == null) return null;
         // 업종코드는 사용자에게 보여줄 말이 아니다. 결제와 같은 표로 소비 중분류를 붙여 준다.
-        return new MyDataResponses.MerchantView(m.ksicCode(), industryMapper.midOf(m.ksicCode()),
+        return new MyDataResponses.MerchantView(m.industryCode(), industryMapper.midOf(m.industryCode(), m.businessNumber()),
                 m.businessNumber(), m.merchantName(), m.address(), m.lat(), m.lng(), m.online());
     }
 
@@ -248,6 +259,7 @@ public class MyDataLinkService {
                     org.springframework.http.HttpStatus.FORBIDDEN, "개인정보 수집 동의가 필요합니다");
         }
         int added = 0;
+        MerchantCategoryService.Snapshot dict = merchantCategoryService.snapshot();
         for (UserCardCompany link : userCardCompanyRepository.findByUserIdOrderByCompanyIdAsc(userId)) {
             LocalDateTime since = link.getLastRenewalTime();
             LocalDateTime maxDate = since;
@@ -255,13 +267,17 @@ public class MyDataLinkService {
                 for (PaymentView payment : card.payments()) {
                     // 멱등 — 계정별 키로 확인한다. 제공자 id로 보면 남의 행을 내 것으로 착각한다.
                     if (userPaymentRepository.existsById(UserPayment.rowId(userId, payment.id()))) continue;
-                    userPaymentRepository.save(new UserPayment(
+                    var fromDict = dict.lookup(payment.businessNumber(), payment.merchantName());
+                    String mid = fromDict.orElseGet(
+                            () -> industryMapper.midOf(payment.industryCode(), payment.businessNumber()));
+                    UserPayment row = new UserPayment(
                             UserPayment.rowId(userId, payment.id()), userId, card.cardId(),
-                            payment.cardCode(), payment.date(), payment.ksicCode(),
-                            industryMapper.midOf(payment.ksicCode()),
+                            payment.cardCode(), payment.date(), payment.industryCode(), mid,
                             payment.amount(), payment.merchantName(), payment.receivedBenefitAmount(),
-                            payment.businessNumber()));
-                    String mid = industryMapper.midOf(payment.ksicCode());
+                            payment.businessNumber());
+                    if (fromDict.isPresent()) row.confirmCategory2(mid, "DICT");
+                    else applyRemembered(dict, row);
+                    userPaymentRepository.save(row);
                     Category category = categoryRepository.findByCode(mid)
                             .orElseGet(() -> categoryRepository.save(new Category(mid, mid)));
                     // 결제 키를 달고 간다 — 원장이 나중에 이 소비의 가맹점을 되찾는 유일한 길이다(V15).
@@ -344,7 +360,7 @@ public class MyDataLinkService {
                             card != null ? card.getCardName() : null,
                             card != null ? card.getCardColor() : null,
                             card != null ? card.getCompanyName() : null,
-                            payment.getBusinessNumber());
+                            payment.getBusinessNumber(), payment.getCategory2Llm());
                 })
                 .toList();
     }
@@ -381,8 +397,26 @@ public class MyDataLinkService {
                              String businessNumber) {}
 
     /** 결제내역 모아보기 1건 — 결제 정보 + 어느 카드(실카드명·색·카드사)인지 + 가맹점 사업자번호. */
+    /**
+     * @param category2Llm 확정이 아직 없을 때의 <b>AI 추정</b>. 화면이 "카테고리없음" 덩어리를
+     *                     쪼개 보여 주고 사용자가 고르게 하려면 이 값이 함께 내려가야 한다.
+     *                     {@code category2} 를 덮지 않는다 — 확정은 사람이 하는 것이다.
+     */
+    /**
+     * <b>예전에 물어본 추정을 다시 칠한다.</b> 재연동은 결제 행을 통째로 지우고 다시 만들어서,
+     * 추정이 결제 행에만 있으면 그때 전부 날아간다 — 사전에는 남아 있는데도 화면에서 사라지고,
+     * 사용자는 "AI가 분류했다더니 안 보인다"를 겪는다(2026-08-05 운영 실측: 82건이 0건이 됐다).
+     *
+     * <p>복구를 '분류 정리' 화면 방문에 맡기지 않는다 — 거래내역만 보는 사용자는 영영 못 본다.
+     * {@code category2} 는 건드리지 않는다. 추정은 여전히 추정이다(마스터 §4 원칙 1).
+     */
+    private static void applyRemembered(MerchantCategoryService.Snapshot dict, UserPayment row) {
+        dict.guess(row.getBusinessNumber(), row.getMerchantName())
+                .ifPresent(row::suggestCategory2);
+    }
+
     public record PaymentHistoryRow(String paymentId, java.time.LocalDateTime date, String category,
                                     String category2, int amount, String merchantName, int receivedBenefit,
                                     String cardName, String cardColor, String companyName,
-                                    String businessNumber) {}
+                                    String businessNumber, String category2Llm) {}
 }

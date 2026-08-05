@@ -12,6 +12,12 @@
   실행:  python3 scripts/ksic/build_pools.py
   산출:  backend-mydata/src/main/resources/generation/catalog/merchants_independent.json
 """
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _guard import blocked  # noqa: E402
+blocked('상호 풀을 4자리 KSIC 키로 쓴다', 'merchants_independent.json', 'namePoolByIndustry')
+
 import collections
 import json
 import os

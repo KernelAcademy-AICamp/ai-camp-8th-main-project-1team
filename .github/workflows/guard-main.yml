@@ -84,11 +84,28 @@ jobs:
             const paths = files.map((f) => f.filename);
             const touchedEntity = paths.some((p) => /backend\/src\/main\/java\/.*\/domain\//.test(p));
             const migrations = files.filter((f) => /db\/migration\/V\d+__/.test(f.filename));
+            // 엔티티 파일이 바뀌었다고 늘 스키마가 바뀌는 것은 아니다 — 메서드 추가, 주석,
+            // **String 컬럼에 매핑된 enum 에 상수 추가** 같은 것은 DDL 을 건드리지 않는다.
+            // 그래서 예외를 둔다. 다만 **말로 적게** 한다 — 사람이 한 줄로 근거를 남기지 않으면
+            // 통과하지 않는다. 그래야 "귀찮아서 넘겼다"와 "확인하고 넘겼다"가 구분된다.
+            // (예전에는 메시지만 "본문에 이유를 적으라"고 하고 정작 읽는 코드가 없어,
+            //  스키마가 안 바뀐 PR 도 통과할 길이 없었다 — 2026-08-05.)
+            // 글머리표(`- `)·굵게(`**`)·전각 콜론까지 받는다. 사람이 체크리스트 안에 적는 것이
+            // 자연스러운데, 형식이 조금 달라 안 걸리면 "적었는데 왜 막히지"가 된다.
+            const WAIVER = /^[ \t]*(?:[-*>]\s*)*(?:\[.\]\s*)?(?:\*\*)?\s*스키마 변경 없음\s*(?:\*\*)?\s*[:：]\s*(\S.*)$/m;
             if (touchedEntity && migrations.length === 0) {
-              fail.push(
-                '**엔티티를 바꿨는데 Flyway 마이그레이션이 없습니다.**\n' +
-                '  운영은 `ddl-auto=validate`라 스키마가 어긋나면 기동 자체가 막힙니다(V6·V8 전례).\n' +
-                '  컬럼·테이블 추가가 아니라면 이 PR 본문에 그 이유를 적고 다시 실행하세요.');
+              const waiver = body.match(WAIVER);
+              if (waiver) {
+                note.push(
+                  '**엔티티가 바뀌었지만 마이그레이션이 없습니다** — 작성자가 근거를 적었습니다.\n' +
+                  `  > ${waiver[1].trim()}\n` +
+                  '  CI의 **운영 조건 기동**(`ddl-auto=validate`)이 최종 확인입니다.');
+              } else {
+                fail.push(
+                  '**엔티티를 바꿨는데 Flyway 마이그레이션이 없습니다.**\n' +
+                  '  운영은 `ddl-auto=validate`라 스키마가 어긋나면 기동 자체가 막힙니다(V6·V8 전례).\n' +
+                  '  컬럼·테이블 추가가 아니라면 PR 본문에 `스키마 변경 없음: <이유>` 한 줄을 적으세요.');
+              }
             }
 
             // 이미 적용된 마이그레이션을 고치면 운영의 체크섬과 어긋나 **Flyway가 기동을 거부한다.**

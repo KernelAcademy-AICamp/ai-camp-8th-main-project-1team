@@ -47,7 +47,29 @@ finntech:
   gemini:
     # 비워두면 고정 템플릿 문장으로 폴백한다 (D-02 포기 순서 1번).
     api-key: ${GEMINI_API_KEY:}
-    model: gemini-2.0-flash
+    # 모델 이름을 **환경변수로 뺀다** — 모델은 우리가 통제하지 못하는 쪽에서 사라진다.
+    #
+    # 2026-08-04 운영에서 실제로 겪었다. 키도 유효하고 네트워크도 되는데 문장이 하나도 안 나왔다.
+    # 컨테이너에서 API를 손으로 재현해서야 원인이 나왔다(당시 이 자리에 로그가 없었다):
+    #
+    #   gemini-2.0-flash        429 RESOURCE_EXHAUSTED · limit: 0  ← 다 쓴 게 아니라 배정이 0
+    #   gemini-2.5-flash-lite   404 "no longer available to new users"  ← 신규 키에는 이미 닫힘
+    #   gemini-3.1-flash-lite   200 · 정상 문장
+    #   gemini-flash-latest     200 · 정상 문장 (실제로는 gemini-3.6-flash 로 붙는다)
+    #
+    # **3.1-flash-lite 로 고정한다.** 여기서 하는 일은 집계 수치를 한 문장으로 옮기는 것뿐이라
+    # lite 로 충분하고(품질 실측 차이 없음), `-latest` 는 어느 등급에 붙을지 우리가 정하지 못한다 —
+    # 지금은 full flash 라 호출당 비용이 더 든다.
+    #
+    # 고정의 위험은 "그 모델이 은퇴하면 문장이 조용히 사라진다"인데, 이번에 두 가지로 막았다.
+    #   ① 이 값이 환경변수라 **배포 없이** 서버 .env 에서 갈아탄다(GEMINI_MODEL).
+    #   ② 폴백하면 WARN 로그가 이유를 남긴다 — 예전에는 catch 가 예외를 통째로 삼켰다.
+    #
+    # **여기에 기본값을 쓰지 않는다.** `${VAR:기본값}` 은 변수가 *없을 때만* 기본값을 쓰는데,
+    # compose 는 `${GEMINI_MODEL:-}` 로 **빈 값을 넣어 준다**(변수를 지우는 문법이 없다).
+    # 그러면 모델 이름이 빈 문자열이 되어 URI 가 `/v1beta/models/:generateContent` 로 나가고
+    # 404 → 폴백이다. 기본값은 GeminiModels.DEFAULT 한 곳에만 둔다.
+    model: ${GEMINI_MODEL:}
     base-url: https://generativelanguage.googleapis.com
 
   # ---- 마이데이터 서버 연동 (§13) ------------------------------------------
@@ -292,10 +314,18 @@ finntech:
       night-end: 4
       morning-end: 11   # 아침 (4,11)
       lunch-end: 17     # 점심 [11,17), 저녁 [17,23)
-    # 반복결제 탐지(②) — 고정형/루틴형 임계(잠정, 튜닝 예정).
+    # 반복결제 탐지(②) — 고정형/루틴형 임계.
+    #
+    # 고정지출은 '금액이 같은 것'이 아니라 '주기가 같은 것'이다(2026-08-04 개정).
+    # 월간에는 금액 게이트를 걸지 않는다 — 넷플릭스가 요금을 한 번만 올려도(13,500→17,000)
+    # 6개월치 탐지가 통째로 사라졌고, 통신비·공과금은 사용량 때문에 애초에 못 넘었다.
+    # 오탐은 금액이 아니라 fixed-gap-cv-max(간격 규칙성)와 fixed-min-count 가 막는다.
     recurring:
-      fixed-min-count: 3
-      fixed-cv-max: 0.05
+      fixed-min-count: 4          # 3이면 간격이 2개뿐이라 주기 판정이 무의미(오탐이 전부 3건짜리였다)
+      fixed-gap-cv-max: 0.20      # 오탐을 막는 주 방어선. 0.30이면 커피빈·미니스톱이 올라온다
+      weekly-dispersion-max: 0.05 # 주간에만 거는 금액 게이트(습관과 계약을 가른다). MAD/median
+      amount-varies-above: 0.05   # 이보다 흔들리면 대표금액을 중앙값 아닌 '최근 결제액'으로
+      ended-after-periods: 1.5    # 마지막 결제가 주기의 이 배를 넘으면 끝난 것으로 본다
       weekly-interval-days: [6, 8]
       monthly-interval-days: [27, 33]
       routine-window-days: 28
