@@ -16,7 +16,9 @@
 - **마스터 문서**: `reference/finntech_things.md` — 결정·구현의 단일 기준(Part I/II/III). 코드와 다르면 문서가 기준.
 - **실행 계획서**: `reference/launch_plan.md` — 최종 배포까지의 작업 계획(진단·W1~W7·Phase 5~11). 마스터와 어긋나면 마스터가 우선.
 - **스택**: Spring Boot 4.0.7(Java 17, Maven/mvnw, Jackson 3) + JPA / 개발 H2·운영 MySQL / React+Vite / RFC 3161은 BouncyCastle.
-- **마이데이터(진행 중, §13)**: 별도 서버 `backend-mydata`(8082, 더미 제공자)에서 본인인증(**가상 CI**, 실 NICE 아님)으로 카드사용내역을 불러와 `Consumption(MYDATA)`로 기존 엔진에 재사용. 현 단계는 실 SMS 없는 '가상 인증' 스텁(전화번호 미저장), 실 coolsms는 후속.
+- **마이데이터(§13)**: 별도 서버 `backend-mydata`(8082)에서 본인인증(**가상 CI**, 실 NICE 아님)으로 카드사용내역을 불러와 `Consumption(MYDATA)`로 기존 엔진에 재사용. 실 SMS 없는 '가상 인증' 스텁(전화번호 미저장), 실 coolsms는 후속. **생성 1,100만 건 + 실제 사람 1명의 명세서**가 운영에 올라가 있다(2026-08-05).
+- **소비 분류(§13-12)**: 실 명세서에는 **업종코드가 없다**. 그래서 ①확정 분류 사전(`merchant_category`) → ②업종코드 대조표 → ③LLM 추정(표시만) → ④카테고리없음 순으로 답을 찾고, **순위는 `MerchantCategoryService` 한 곳에만** 둔다. **PG 번호는 키가 아니다** — 한 번호에 업종이 제각각인 가맹점이 붙으므로 번호를 버리고 이름으로 본다(읽기·쓰기 양쪽). 사전은 확정/추정 두 층이고 **추정은 판정에 참여하지 않는다**(원칙 1). 기준표는 `reference/D24_데이터분류기준표.md`.
+- **실 개인정보**: 실제 사람의 명세서는 **저장소 밖**(`_archive/`, gitignore)에 두고 `scripts/import-realperson.py` 로 넣는다. 제공자의 유입구는 `mydata.realdata.enabled` 로 **기본 꺼져 있다** — 켤 일이 있으면 넣고 **반드시 다시 끈다**.
 - **실행**: `./scripts/dev-up.sh`(빌드→기동→시드). 시연: `./scripts/demo-tamper.sh break|restore|regenerate`. 테스트: `cd backend && ./mvnw test`(외부 TSA는 `-Dtsa.live=true`).
 - **법무 정본**: `legal/privacy-policy.md`·`legal/terms-of-service.md`. 앱은 `GET /api/privacy/policy`로 방침을 읽으므로, 정본을 고치면 `PrivacyService.policy()`도 정합시킨다.
 
