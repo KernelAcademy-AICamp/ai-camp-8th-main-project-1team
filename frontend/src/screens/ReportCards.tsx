@@ -103,6 +103,16 @@ export function ReportCards() {
                 </div>
               );
             })}
+
+            {/* 카드 펼침은 **최근 30건**만 보여준다. 그 앞을 볼 길이 없으면 화면이 거짓말을
+                하는 셈이라(실사용자 414건 중 7월 19일 이전이 통째로 가려졌다, 2026-08-05),
+                전 기간을 일시·가맹점·중분류까지 보는 화면으로 나가는 문을 둔다. */}
+            <button type="button" onClick={() => go('transactions')}
+              style={{ width: '100%', marginTop: 12, padding: '13px 0', cursor: 'pointer',
+                       background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12,
+                       fontFamily: 'inherit', fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>
+              전체 소비내역 보기 →
+            </button>
           </>
         )}
 

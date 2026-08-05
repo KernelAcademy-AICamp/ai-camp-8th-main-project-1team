@@ -358,7 +358,7 @@ public class MyDataLinkService {
                             card != null ? card.getCardName() : null,
                             card != null ? card.getCardColor() : null,
                             card != null ? card.getCompanyName() : null,
-                            payment.getBusinessNumber());
+                            payment.getBusinessNumber(), payment.getCategory2Llm());
                 })
                 .toList();
     }
@@ -395,8 +395,13 @@ public class MyDataLinkService {
                              String businessNumber) {}
 
     /** 결제내역 모아보기 1건 — 결제 정보 + 어느 카드(실카드명·색·카드사)인지 + 가맹점 사업자번호. */
+    /**
+     * @param category2Llm 확정이 아직 없을 때의 <b>AI 추정</b>. 화면이 "카테고리없음" 덩어리를
+     *                     쪼개 보여 주고 사용자가 고르게 하려면 이 값이 함께 내려가야 한다.
+     *                     {@code category2} 를 덮지 않는다 — 확정은 사람이 하는 것이다.
+     */
     public record PaymentHistoryRow(String paymentId, java.time.LocalDateTime date, String category,
                                     String category2, int amount, String merchantName, int receivedBenefit,
                                     String cardName, String cardColor, String companyName,
-                                    String businessNumber) {}
+                                    String businessNumber, String category2Llm) {}
 }
