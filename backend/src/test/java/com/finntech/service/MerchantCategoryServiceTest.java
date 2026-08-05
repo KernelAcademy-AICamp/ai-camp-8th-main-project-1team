@@ -62,6 +62,15 @@ class MerchantCategoryServiceTest {
                                 && m.getMerchantName().equals(inv.getArgument(0)))
                         .toList());
 
+        // 저장은 표에 담고 그대로 돌려준다 — 쌓은 것이 곧바로 조회에 보여야 하기 때문이다.
+        // (쌓는 키와 찾는 키가 어긋나는 사고를 시험에서 잡으려면 이 왕복이 있어야 한다.)
+        when(repo.save(org.mockito.ArgumentMatchers.any(MerchantCategory.class)))
+                .thenAnswer(inv -> {
+                    MerchantCategory m = inv.getArgument(0);
+                    table.add(m);
+                    return m;
+                });
+
         service = new MerchantCategoryService(repo, mapper);
     }
 
@@ -96,6 +105,88 @@ class MerchantCategoryServiceTest {
     }
 
     @Test
+    @DisplayName("PG 를 거친 결제는 번호를 버리고 이름으로 붙는다 — PG 가 달라도 같은 답")
+    void paymentAgencyFallsBackToNameOnly() {
+        // 넷플릭스 한 곳이 명세서에서 KG이니시스 8건·NHNKCP 4건으로 갈라져 있었다(2026-08-05).
+        // PG 별 복합키로 넣으면 PG 가 늘 때마다 따라 넣어야 하고, 하나 빠뜨리면 그만큼 조용히
+        // 미분류가 된다. **이름 한 행**이 어느 PG 를 거치든 붙어야 한다.
+        seed("", "넷플릭스서비시스코리아 유한회사", "취미/여가");
+
+        for (String pgNumber : new String[]{"2208155597", "1138521083", "5278800686"}) {
+            assertThat(mapper.isPaymentAgency(pgNumber)).as(pgNumber + " 는 PG 다").isTrue();
+            assertThat(service.lookup(pgNumber, "넷플릭스서비시스코리아 유한회사"))
+                    .as("PG 가 무엇이든 가맹점명이 같으면 같은 분류다").contains("취미/여가");
+            assertThat(new MerchantCategoryService.Snapshot(table, mapper)
+                    .lookup(pgNumber, "넷플릭스서비시스코리아 유한회사"))
+                    .as("적재용 스냅샷도 같은 답을 준다").contains("취미/여가");
+        }
+
+        // 그래도 **이름이 다르면 안 붙는다** — PG 오염을 막는 경계는 그대로다.
+        assertThat(service.lookup("2208155597", "스타벅스코리아"))
+                .as("같은 PG 라도 이름이 다르면 남의 분류를 물려받지 않는다").isEmpty();
+    }
+
+    @Test
+    @DisplayName("LLM 추정은 사전에 남되 판정에는 안 쓰인다 — 다시 묻지 않기 위한 자리다")
+    void llmGuessesAreRememberedButNeverJudge() {
+        UserPayment real = realPayment("2208155597", "넷플릭스서비시스코리아 유한회사");
+
+        assertThat(service.guess("2208155597", "넷플릭스서비시스코리아 유한회사"))
+                .as("아직 물어본 적이 없다").isEmpty();
+
+        service.rememberGuess(real, "취미/여가");
+
+        // ① 판정에는 안 쓴다 — 사람이 확인해야 확정이다(마스터 §4 원칙 1).
+        assertThat(service.lookup("2208155597", "넷플릭스서비시스코리아 유한회사"))
+                .as("추정은 lookup 이 돌려주지 않는다").isEmpty();
+        assertThat(new MerchantCategoryService.Snapshot(table, mapper)
+                .lookup("2208155597", "넷플릭스서비시스코리아 유한회사"))
+                .as("적재 스냅샷에도 안 담긴다 — 담기면 Consumption 카테고리로 굳는다").isEmpty();
+
+        // ② 그러나 "이미 물어봤다"는 것은 남는다 — 다음 달 새 결제에서 또 묻지 않는다.
+        assertThat(service.guess("1138521083", "넷플릭스서비시스코리아 유한회사"))
+                .as("PG 가 달라도 같은 가맹점이면 이미 물어본 것이다").contains("취미/여가");
+    }
+
+    @Test
+    @DisplayName("추정은 확정을 덮지 못한다 — 사실과 사람의 확인이 위다")
+    void guessesNeverOverwriteConfirmedRows() {
+        seed("", "넷플릭스서비시스코리아 유한회사", "취미/여가");   // USER_CSV = 사실
+
+        UserPayment real = realPayment("2208155597", "넷플릭스서비시스코리아 유한회사");
+        assertThat(service.rememberGuess(real, "쇼핑"))
+                .as("확정이 이미 있으면 추정을 남기지 않는다").isEmpty();
+
+        assertThat(service.lookup("2208155597", "넷플릭스서비시스코리아 유한회사"))
+                .as("확정이 그대로 남는다").contains("취미/여가");
+    }
+
+    @Test
+    @DisplayName("더미 결제의 추정은 사전에 안 쌓인다 — 사업자번호가 실재하지 않는다")
+    void guessesFromSyntheticPaymentsAreRejected() {
+        UserPayment dummy = payment("77:gen-8a3f-0012");
+
+        assertThat(service.rememberGuess(dummy, "식비"))
+                .as("더미의 번호가 사전에 실리면 '실제 사업자번호' 라는 약속이 깨진다").isEmpty();
+        assertThat(table).isEmpty();
+    }
+
+    @Test
+    @DisplayName("PG 결제를 확정하면 번호 없이 쌓인다 — 쌓는 자리와 찾는 자리가 같아야 한다")
+    void confirmingAPgPaymentStoresItByNameOnly() {
+        // 사람이 KG이니시스를 거친 넷플릭스에 "맞아요"를 눌렀다.
+        MerchantCategory saved = service.confirm("2208155597", "넷플릭스서비시스코리아 유한회사",
+                "취미/여가", MerchantCategory.Source.USER_CONFIRMED, 7L);
+
+        assertThat(saved.getBusinessNumber())
+                .as("PG 번호는 키가 아니다 — 무엇을 샀는지 말해 주지 않는다").isEmpty();
+
+        // 그래서 **다른 PG** 를 거친 같은 가맹점에도 곧바로 붙는다. 이것이 목적이다.
+        assertThat(service.lookup("1138521083", "넷플릭스서비시스코리아 유한회사"))
+                .as("NHNKCP 를 거친 넷플릭스에도 붙는다").contains("취미/여가");
+    }
+
+    @Test
     @DisplayName("PG 가 아니면 같은 번호의 다른 행을 쓴다 — 택시처럼 표시명이 매번 다른 가맹점")
     void nonAgencyReusesSiblingRow() {
         // 카카오T 는 표시명 뒤에 차량번호가 붙어 결제마다 풀네임이 다르다.
@@ -104,6 +195,22 @@ class MerchantCategoryServiceTest {
         assertThat(service.lookup("0000000022", "카카오T경기33아6084"))
                 .as("한 사업자의 업종은 하나라 풀네임이 달라도 같은 분류다")
                 .contains("교통/자동차");
+    }
+
+    @Test
+    @DisplayName("씨앗 모양 — 이름이 빈 행도 번호로 붙는다 (실데이터가 닿는 유일한 경로)")
+    void seedRowsWithoutMerchantNameStillMatch() {
+        // `realdatas.csv` 에는 사업자번호와 업종만 있고 **가맹점 풀네임이 없다.** 그래서 씨앗은
+        // 이름이 빈 채로 쌓인다. 실데이터 결제는 이름이 있으므로 정확 일치는 절대 안 맞고,
+        // **번호로 붙는 완화(③)만이 유일한 경로**다 — 그 경로가 죽으면 사전 144곳이 통째로
+        // 무용지물이 되는데 아무 오류도 안 난다. 그래서 여기서 못박는다.
+        seed("0000000055", "", "생활");
+
+        assertThat(service.lookup("0000000055", "어느 택배회사"))
+                .as("이름이 뭐든 그 사업자의 업종이 붙는다").contains("생활");
+        assertThat(new MerchantCategoryService.Snapshot(table, mapper)
+                .lookup("0000000055", "어느 택배회사"))
+                .as("적재용 스냅샷도 같은 답을 준다").contains("생활");
     }
 
     @Test
@@ -172,6 +279,13 @@ class MerchantCategoryServiceTest {
         assertThat(svc.confirmFrom(real, "식비", 7L)).isPresent();
         assertThat(table).hasSize(1);
         assertThat(table.get(0).getSource()).isEqualTo("USER_CONFIRMED");
+    }
+
+    /** 실제 사람의 결제 — 번호와 가맹점명을 지정한다(사전에 쌓이는 유일한 출처다). */
+    private static UserPayment realPayment(String biz, String name) {
+        return new UserPayment("77:real-9c2b1d04-20260805-1", 77L, "S1", 9001L,
+                LocalDateTime.now(), null, IndustryCategoryMapper.UNCLASSIFIED,
+                5000, name, 0, biz);
     }
 
     private static UserPayment payment(String rowId) {
