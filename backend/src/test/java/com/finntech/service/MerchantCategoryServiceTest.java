@@ -75,7 +75,7 @@ class MerchantCategoryServiceTest {
                     return m;
                 });
 
-        service = new MerchantCategoryService(repo, mapper);
+        service = new MerchantCategoryService(repo, mapper, kinds());
     }
 
     /** 리포지토리의 {@code ORDER BY CASE source … , id} 를 그대로 옮긴 것. id 가 null 인
@@ -87,6 +87,17 @@ class MerchantCategoryServiceTest {
                         case "USER_CSV" -> 1;
                         default -> 2;
                     });
+
+    /**
+     * 관측 판정 서비스 — 시험에서는 <b>표가 비어 있다</b>. 그러면 완화가 허용되는데,
+     * 그것이 "상호가 하나뿐이라 판정 대상이 아니다"와 같은 상태라 기존 시험의 전제와 맞는다.
+     * 판정이 완화를 막는 경우는 {@code 복합_사업자는_번호로_묶지_않는다} 가 따로 본다.
+     */
+    private BusinessNumberKindService kinds() {
+        var repo = mock(com.finntech.repository.BusinessNumberKindRepository.class);
+        when(repo.findById(anyString())).thenReturn(Optional.empty());
+        return new BusinessNumberKindService(repo, 5, 2, 0.10);
+    }
 
     private void seed(String biz, String name, String cat) {
         table.add(new MerchantCategory(biz, name, cat, MerchantCategory.Source.USER_CSV, null));
@@ -219,22 +230,27 @@ class MerchantCategoryServiceTest {
     }
 
     @Test
-    @DisplayName("사람이 확인한 것이 씨앗을 이긴다 — 고쳤는데 안 고쳐지면 안 된다")
-    void 사람의_확인이_먼저다() {
+    @DisplayName("사전이 갈리면 완화를 멈춘다 — 한 번의 교정이 남의 분류를 바꾸지 못한다")
+    void 갈린_번호는_완화하지_않는다() {
         // 2026-08-05 운영: 티머니(396-87-03587)가 등록 업종 '전자상거래 소매업' 때문에 씨앗에
-        // '쇼핑'으로 들어갔다. 사용자가 한 건을 '교통/자동차'로 고쳤는데, 완화가 id 오름차순이라
-        // **먼저 들어온 씨앗이 계속 이겨** 나머지 16건이 그대로 쇼핑이었다. 오류도 안 났다.
-        seed("0000000099", "", "쇼핑");                       // 씨앗(USER_CSV) — 먼저 들어온다
+        // '쇼핑'으로 들어갔고, 사용자가 한 건을 '교통/자동차'로 고쳤다.
+        //
+        // **고친 것을 다른 차량에 번지게 하면 안 된다.** 한 번의 교정이 그 번호 전체를 바꾸면,
+        // 택시처럼 상호가 수천 종인 곳에서 누군가 한 번 실수하는 것만으로 전부 뒤집힌다.
+        // 그래서 사전이 두 중분류를 알게 된 순간 완화를 멈춘다 — 고친 것은 그 가맹점에만 남는다.
+        //
+        // (씨앗이 틀렸다면 **씨앗을 고치는 것**이 답이다. 실제로 그렇게 했다.)
+        seed("0000000099", "", "쇼핑");                       // 씨앗(USER_CSV)
         table.add(new MerchantCategory("0000000099", "티머니 택시-경북15바7380", "교통/자동차",
-                MerchantCategory.Source.USER_CONFIRMED, 7L)); // 사람이 나중에 고친다
+                MerchantCategory.Source.USER_CONFIRMED, 7L)); // 사람이 고친 한 대
 
+        assertThat(service.lookup("0000000099", "티머니 택시-경북15바7380"))
+                .as("고친 그 가맹점은 정확일치로 곧바로 보인다").contains("교통/자동차");
         assertThat(service.lookup("0000000099", "티머니 택시-서울31바3715"))
-                .as("같은 사업자의 다른 차량에도 **사람의 확인**이 붙어야 한다")
-                .contains("교통/자동차");
+                .as("다른 차량에는 번지지 않는다 — 업종코드·미분류로 내려간다").isEmpty();
         assertThat(new MerchantCategoryService.Snapshot(table, mapper)
                 .lookup("0000000099", "티머니 택시-서울31바3715"))
-                .as("적재 스냅샷도 같은 서열이라야 한다 — 갈리면 연동할 때마다 답이 달라진다")
-                .contains("교통/자동차");
+                .as("적재 스냅샷도 같아야 한다 — 갈리면 연동할 때마다 답이 달라진다").isEmpty();
     }
 
     @Test
@@ -345,7 +361,7 @@ class MerchantCategoryServiceTest {
                     table.add(inv.getArgument(0));
                     return inv.getArgument(0);
                 });
-        var svc = new MerchantCategoryService(repo, mapper);
+        var svc = new MerchantCategoryService(repo, mapper, kinds());
 
         var dummy = payment("77:gen-8a3f-0012");            // 생성기가 만든 결제
         assertThat(svc.confirmFrom(dummy, "식비", 7L)).as("더미는 거절된다").isEmpty();
@@ -411,7 +427,7 @@ class MerchantCategoryServiceTest {
                     table.add(inv.getArgument(0));
                     return inv.getArgument(0);
                 });
-        var svc = new MerchantCategoryService(repo, mapper);
+        var svc = new MerchantCategoryService(repo, mapper, kinds());
 
         var first = svc.confirm("0000000011", "어떤 가게", "쇼핑",
                 MerchantCategory.Source.USER_CSV, null);

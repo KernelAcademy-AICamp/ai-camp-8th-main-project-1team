@@ -69,7 +69,7 @@ class MyDataLinkServiceTest {
 
         new MyDataLinkService(client, users, cards, payments, consumptions, categories,
                 new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
-                emptyDictionary(), links,
+                emptyDictionary(), emptyKinds(), links,
                 mock(UserBankRepository.class), reports, clock, "")
                 .linkCardCompanies(1L, List.of(9007L));
 
@@ -100,7 +100,7 @@ class MyDataLinkServiceTest {
         new MyDataLinkService(client, users, mock(UserCardRepository.class), mock(UserPaymentRepository.class),
                 mock(ConsumptionRepository.class), mock(CategoryRepository.class),
                 new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
-                emptyDictionary(), links,
+                emptyDictionary(), emptyKinds(), links,
                 mock(UserBankRepository.class), mock(ReportRepository.class), clock, "")
                 .linkCardCompanies(1L, List.of(9007L));
 
@@ -114,10 +114,22 @@ class MyDataLinkServiceTest {
      * 빈 확정 분류 사전. 이 테스트가 보는 것은 <b>증분 기준선</b>이라 사전은 관여하지 않는다 —
      * 다만 적재 경로가 사전을 한 번 읽으므로 널이 아닌 것을 준다.
      */
+    /** 관측 판정 — 시험에서는 표가 비어 있다(상호가 하나뿐인 상태와 같아 완화가 통과한다). */
+    private static BusinessNumberKindService emptyKinds() {
+        var repo = mock(com.finntech.repository.BusinessNumberKindRepository.class);
+        when(repo.findById(org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(java.util.Optional.empty());
+        return new BusinessNumberKindService(repo, 5, 2, 0.10);
+    }
+
     private static MerchantCategoryService emptyDictionary() {
         var repo = mock(com.finntech.repository.MerchantCategoryRepository.class);
         when(repo.findAll()).thenReturn(java.util.List.of());
+        var kindRepo = mock(com.finntech.repository.BusinessNumberKindRepository.class);
+        when(kindRepo.findById(org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(java.util.Optional.empty());
         return new MerchantCategoryService(repo,
-                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()));
+                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
+                new BusinessNumberKindService(kindRepo, 5, 2, 0.10));
     }
 }

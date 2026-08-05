@@ -39,6 +39,8 @@ public class MyDataLinkService {
     /** 업종코드 → 소비 중분류. 제공자는 업종까지만 주므로 분류는 우리가 한다. */
     private final com.finntech.engine.IndustryCategoryMapper industryMapper;
     private final MerchantCategoryService merchantCategoryService;
+    /** 사업자번호가 한 사업인가 여러 사업인가 — 연동이 관측해 갱신한다(V16). */
+    private final BusinessNumberKindService businessNumberKindService;
     private final UserCardCompanyRepository userCardCompanyRepository;
     private final UserBankRepository userBankRepository;
     private final ReportRepository reportRepository;
@@ -51,6 +53,7 @@ public class MyDataLinkService {
                              ConsumptionRepository consumptionRepository, CategoryRepository categoryRepository,
                              com.finntech.engine.IndustryCategoryMapper industryMapper,
                              MerchantCategoryService merchantCategoryService,
+                             BusinessNumberKindService businessNumberKindService,
                              UserCardCompanyRepository userCardCompanyRepository,
                              UserBankRepository userBankRepository, ReportRepository reportRepository,
                              java.time.Clock clock,
@@ -63,6 +66,7 @@ public class MyDataLinkService {
         this.categoryRepository = categoryRepository;
         this.industryMapper = industryMapper;
         this.merchantCategoryService = merchantCategoryService;
+        this.businessNumberKindService = businessNumberKindService;
         this.userCardCompanyRepository = userCardCompanyRepository;
         this.userBankRepository = userBankRepository;
         this.reportRepository = reportRepository;
@@ -206,9 +210,42 @@ public class MyDataLinkService {
             user.setMonthlyIncome(BigDecimal.valueOf(account.salary()));
             userRepository.save(user);
         }
+        // **번호별로 상호를 관측해 판정을 갱신한다**(V16). 앱은 결제를 건별로 보므로 조회 시점에는
+        // 한 번호에 다른 상호가 있는지 알 수 없다 — **연동만이 그 사용자의 결제를 전부 본다.**
+        observeBusinessNumbers(userId);
+
         log.info("마이데이터 연동 완료 — userId={} 카드사 {}개, 카드 {}장, 결제 {}건, 은행 {}곳 적재",
                 userId, companyIds.size(), cardCount, paymentCount, bankCount);
         return new LinkResult(cardCount, paymentCount, bankCount);
+    }
+
+    /**
+     * 그 사용자의 결제를 훑어 <b>번호별 상호</b>를 관측하고 판정을 갱신한다(V16).
+     *
+     * <p>여기가 유일한 자리다. 조회는 결제 한 건만 보므로 "이 번호에 다른 상호가 있는가"를 알 수
+     * 없고, 그걸 아는 것은 <b>그 사용자의 결제를 전부 보는 연동</b>뿐이다.
+     *
+     * <p>사람이 확정한 것만 <b>뒤집는 증거</b>로 센다. 추정끼리 갈렸다고 굳은 판정을 뒤집으면,
+     * 모델이 한 번 흔들릴 때마다 완화가 꺼져 사전 재사용이 무너진다.
+     */
+    private void observeBusinessNumbers(Long userId) {
+        Map<String, Map<String, String>> byNumber = new java.util.HashMap<>();
+        Map<String, Map<String, String>> confirmed = new java.util.HashMap<>();
+        for (UserPayment p : userPaymentRepository.findByUserIdOrderByPaymentDateDesc(userId)) {
+            String biz = p.getBusinessNumber();
+            String name = p.getMerchantName();
+            if (biz == null || biz.isBlank() || name == null || name.isBlank()) continue;
+            if (industryMapper.isPaymentAgency(biz)) continue;   // PG 는 번호 자체가 남의 것이다
+            String mid = com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED.equals(p.getCategory2())
+                    ? null : p.getCategory2();
+            byNumber.computeIfAbsent(biz, k -> new java.util.HashMap<>()).put(name, mid);
+            if ("USER".equals(p.getCategory2Source())) {
+                confirmed.computeIfAbsent(biz, k -> new java.util.HashMap<>()).put(name, mid);
+            }
+        }
+        LocalDateTime now = LocalDateTime.now(clock);
+        byNumber.forEach((biz, observed) -> businessNumberKindService.observe(
+                biz, observed, confirmed.getOrDefault(biz, Map.of()), now));
     }
 
     /** 가맹점 조회(번호→주소) — 결제에 실린 사업자번호로 가맹점명·지번주소를 제공자에서 조회(프록시). 없으면 null. */
