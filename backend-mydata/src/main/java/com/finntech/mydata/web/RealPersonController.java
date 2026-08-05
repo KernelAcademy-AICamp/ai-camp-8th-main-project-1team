@@ -68,7 +68,10 @@ public class RealPersonController {
                              String phone, Long cardCode, String csv) {}
 
     /**
-     * 명세서 CSV 적재 — {@code 날짜,가맹점,금액[,업종코드]}.
+     * 명세서 CSV 적재 — {@code 날짜,가맹점,금액[,업종코드][,사업자번호]}.
+     *
+     * <p>사업자번호는 확정 분류 사전({@code merchant_category})이 찾는 키다. 명세서에 있으면
+     * 넣어야 사전이 붙는다. 뒤에 붙인 칸이라 기존 4칸 파일도 그대로 읽힌다.
      *
      * <p>못 읽은 줄은 <b>줄 번호와 사유를 달고</b> 돌아온다. 조용히 건너뛰면
      * "다 들어갔다"와 "절반만 들어갔다"가 화면에서 똑같아 보인다(tech_log §8-U).

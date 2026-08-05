@@ -56,6 +56,15 @@ public class MyDataUser {
     public String getName() { return name; }
     public String getSocialNumber() { return socialNumber; }
     public String getPhoneNumber() { return phoneNumber; }
+
+    /**
+     * 저장 표기를 바로잡는 자리 — <b>본인인증이 이 값으로 명의자를 찾는다</b>(정확일치).
+     *
+     * <p>실데이터 적재만 숫자로 저장하던 시절이 있었고, 그래서 실제 사람이 자기 번호를
+     * 정확히 넣어도 "전화번호가 다릅니다"가 떴다(2026-08-05). 표기는 {@link
+     * com.finntech.mydata.util.Msisdn#format} 한 벌만 쓴다.
+     */
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
     public String getPersona() { return persona; }
     public void setPersona(String persona) { this.persona = persona; }
     public String getDataSplit() { return dataSplit; }
