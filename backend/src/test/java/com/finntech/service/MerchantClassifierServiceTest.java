@@ -48,16 +48,44 @@ class MerchantClassifierServiceTest {
     }
 
     @Test
-    @DisplayName("축에 없는 분류는 버린다 — 모델이 이름을 지어내도 들어오지 못한다")
-    void inventedCategoriesAreRejected() {
-        var names = List.of("GS25 강남역점", "이상한가게", "스타벅스 역삼점");
+    @DisplayName("업종 이름을 중분류로 옮긴다 — 축은 우리 표가 정한다")
+    void industryNameBecomesCategory() {
+        // 모델은 "이 가게가 무엇을 파는가"만 답하고, 축 배정은 대조표가 한다.
+        // 그래서 표를 고치면 모델의 답도 함께 따라온다(백화점을 대형마트→쇼핑으로 옮긴 것처럼).
+        var names = List.of("GS25 강남역점", "이상한가게", "김밥천국 역삼점");
         var got = service.parseJson("""
-                {"1": "편의점/잡화", "2": "우주여행", "3": "카페/간식"}
+                {"1": "체인화 편의점", "2": "우주여행업", "3": "한식 일반 음식점업"}
                 """, names);
 
         assertThat(got).containsEntry("GS25 강남역점", "편의점/잡화")
-                .containsEntry("스타벅스 역삼점", "카페/간식");
-        assertThat(got).as("'우주여행' 은 우리 축에 없다").doesNotContainKey("이상한가게");
+                .containsEntry("김밥천국 역삼점", "식비");
+        assertThat(got).as("'우주여행업' 은 우리 표에 없다").doesNotContainKey("이상한가게");
+    }
+
+    @Test
+    @DisplayName("거의 맞는 이름은 회수한다 — 목록 밖 답의 대부분이 표기 차이다")
+    void nearMissNamesAreRecovered() {
+        // 2026-08-05 실측에서 버려진 6건이 이런 모양이었다. 오타·축약이라 사람이 보면 명백한데
+        // 정확일치만 받으면 통째로 잃는다.
+        assertThat(service.toMid("화장품, 비누 및 방향제 소매업")).isEqualTo("미용");
+        assertThat(service.toMid("화장품 비누 및 방향제 소매업")).as("쉼표가 빠져도").isEqualTo("미용");
+        assertThat(service.toMid("체인화편의점")).as("공백이 빠져도").isEqualTo("편의점/잡화");
+    }
+
+    @Test
+    @DisplayName("중분류를 곧장 답해도 받는다 — 모델이 대괄호 안의 것을 쓰기도 한다")
+    void answeringWithCategoryDirectlyWorks() {
+        assertThat(service.toMid("식비")).isEqualTo("식비");
+        assertThat(service.toMid("카페/간식")).isEqualTo("카페/간식");
+    }
+
+    @Test
+    @DisplayName("근사 일치가 갈리면 버린다 — 모르는 것을 아는 척하지 않는다")
+    void ambiguousNearMissIsDropped() {
+        // 너무 짧은 조각은 여러 업종에 걸린다. 그때는 어느 중분류인지 알 수 없으므로 안 받는다.
+        assertThat(service.toMid("업")).isNull();
+        assertThat(service.toMid("")).isNull();
+        assertThat(service.toMid(null)).isNull();
     }
 
     @Test
@@ -104,5 +132,17 @@ class MerchantClassifierServiceTest {
         p.confirmCategory2("편의점/잡화", "USER");
         assertThat(p.getCategory2()).isEqualTo("편의점/잡화");
         assertThat(p.getCategory2Source()).isEqualTo("USER");
+    }
+
+    @Test
+    @DisplayName("키가 없으면 재질문도 안 한다 — 중요하다고 없는 키를 부르지 않는다")
+    void retryAlsoRespectsMissingKey() {
+        assertThat(service.classify(List.of("넷플릭스"), java.util.Set.of("넷플릭스"))).isEmpty();
+    }
+
+    @Test
+    @DisplayName("중요 목록을 안 주면 예전과 같이 동작한다 — 기존 호출부가 안 깨진다")
+    void classifyWithoutImportanceStillWorks() {
+        assertThat(service.classify(List.of("GS25 강남역점"))).isEmpty();   // 키가 없어 빈 결과
     }
 }

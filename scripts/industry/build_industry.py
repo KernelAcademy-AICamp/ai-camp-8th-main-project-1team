@@ -46,7 +46,7 @@ def load_mid():
     with open(SOURCE, encoding='utf-8') as f:
         실재 = {r['업종코드'].strip(): r for r in csv.DictReader(f)}
 
-    mid, bad = {}, []
+    mid, names, bad = {}, {}, []
     for n, cols in read_tsv('nts-mid.tsv'):
         if len(cols) < 2:
             bad.append(f'{n}행: 칸이 2개 미만 — {cols}')
@@ -57,12 +57,23 @@ def load_mid():
         if code in mid:
             bad.append(f'{n}행: {code} 가 두 번 나온다')
         mid[code] = m
+        # 업종 **이름**도 모은다. LLM 보조 분류가 "이 가맹점은 어느 업종인가"를 이름으로
+        # 답하게 하려면 축이 필요하다 — 6자리 숫자는 불투명해서 모델이 추론하지 못하고
+        # 외운 것에 기대는데, 국세청은 구 분류 세대라 그 기억이 맞을 가능성이 낮다.
+        # 이름은 원천 CSV 의 세세분류를 정본으로 쓴다(TSV 3번째 칸은 사람이 읽는 사본이다).
+        if code in 실재:
+            nm = 실재[code]['세세분류'].strip()
+            if nm:
+                prev = names.get(nm)
+                if prev is not None and prev != m:
+                    bad.append(f'{n}행: 세세분류 "{nm}" 이 {prev} 와 {m} 두 중분류에 걸린다')
+                names[nm] = m
     if bad:
         print('대조표에 문제가 있다:', file=sys.stderr)
         for b in bad:
             print(f'  {b}', file=sys.stderr)
         sys.exit(1)
-    return mid, 실재
+    return mid, names, 실재
 
 
 def load_pg():
@@ -101,7 +112,7 @@ def discretionary_by_mid(mid_of):
 
 
 def main():
-    mid, 실재 = load_mid()
+    mid, names, 실재 = load_mid()
     pg = load_pg()
     disc = discretionary_by_mid(mid)
     essential = sorted(m for m, d in disc.items() if d < ESSENTIAL_THRESHOLD)
@@ -114,7 +125,12 @@ def main():
         '_pgNote': ('PG·간편결제 사업자번호. 이 번호가 붙은 결제는 업종코드를 분류 근거로 쓰지 않는다 — '
                     'PG 를 거치면 "사업자가 무슨 일을 하는가"와 "이 결제가 무엇에 쓴 돈인가"가 어긋난다. '
                     'scripts/industry/pg-사업자번호.tsv 가 원천.'),
+        '_nameNote': ('업종 **이름** → 중분류. LLM 보조 분류가 중분류를 직접 고르지 않고 '
+                      '"이 가맹점은 어느 업종인가"를 답하게 하려고 둔다 — 그러면 축 배정은 '
+                      '이 표가 하고 모델은 업종의 사실만 말한다(마스터 §4-1). '
+                      '이름 하나가 두 중분류에 걸치면 빌드가 실패하므로 1:1 이 보장된다.'),
         'midByIndustry': dict(sorted(mid.items())),
+        'midByIndustryName': dict(sorted(names.items())),
         'pgBusinessNumbers': dict(sorted(pg.items())),
         'discretionaryByMid': disc,
         'essentialThreshold': ESSENTIAL_THRESHOLD,
@@ -123,7 +139,7 @@ def main():
     for path in (os.path.join(CATALOG, 'industry-mid.json'), os.path.join(BACKEND, 'industry-mid.json')):
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(out, f, ensure_ascii=False, indent=1)
-        print(f'  {os.path.relpath(path, ROOT)} — 소비 코드 {len(mid)}개 · PG {len(pg)}곳 · 필수 {len(essential)}개')
+        print(f'  {os.path.relpath(path, ROOT)} — 소비 코드 {len(mid)}개 · 업종명 {len(names)}종 · PG {len(pg)}곳 · 필수 {len(essential)}개')
 
     # 맥락이 실제로 존재하는 코드만 담는다 — 없는 중분류에 페르소나 비중을 주면 그만큼 사라진다.
     contexts = json.load(open(CONTEXTS, encoding='utf-8'))['contexts']
