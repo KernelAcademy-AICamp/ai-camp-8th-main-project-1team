@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** 반복 결제 탐지(②) 순수함수 검증 — 고정형/루틴형 인식과 오탐 거부. */
 class RecurringPaymentDetectorTest {
@@ -34,6 +35,52 @@ class RecurringPaymentDetectorTest {
         List<RecurringPayment> f = rs.stream().filter(r -> r.type() == type).toList();
         assertEquals(1, f.size(), type + " 1건이어야 함: " + rs);
         return f.get(0);
+    }
+
+    @Test
+    @DisplayName("PG 가 바뀌어도 한 구독이다 — 번호가 아니라 가맹점명으로 모인다")
+    void 대행사가_갈라놓지_못한다() {
+        // 2026-08-05 운영 실측 그대로. 넷플릭스가 매달 22일 22,000원씩 7회 결제됐는데
+        // 사업자번호는 KG이니시스 5건·NHNKCP 2건으로 오갔다. 번호로 묶으면 앞은 2월이 비어
+        // 주기가 안 맞고 뒤는 최소 건수 미달이라 **완벽한 월 구독이 어느 쪽에서도 안 잡혔다.**
+        String KG = "2208155597", KCP = "1138521083";
+        List<UserPayment> txns = List.of(
+                tx(LocalDateTime.of(2026, 1, 22, 12, 0), "취미/여가", 22000, "넷플릭스서비시스코리아 유한회사", KG),
+                tx(LocalDateTime.of(2026, 2, 22, 12, 0), "취미/여가", 22000, "넷플릭스서비시스코리아 유한회사", KCP),
+                tx(LocalDateTime.of(2026, 3, 22, 12, 0), "취미/여가", 22000, "넷플릭스서비시스코리아 유한회사", KG),
+                tx(LocalDateTime.of(2026, 4, 22, 12, 0), "취미/여가", 22000, "넷플릭스서비시스코리아 유한회사", KG),
+                tx(LocalDateTime.of(2026, 5, 22, 12, 0), "취미/여가", 22000, "넷플릭스서비시스코리아 유한회사", KG),
+                tx(LocalDateTime.of(2026, 6, 22, 12, 0), "취미/여가", 22000, "넷플릭스서비시스코리아 유한회사", KG),
+                tx(LocalDateTime.of(2026, 7, 22, 12, 0), "취미/여가", 22000, "넷플릭스서비시스코리아 유한회사", KCP));
+
+        List<RecurringPayment> found = RecurringPaymentDetector.detectFrom(
+                txns, LocalDateTime.of(2026, 8, 5, 12, 0), recurring, daypart,
+                biz -> KG.equals(biz) || KCP.equals(biz));
+        RecurringPayment r = only(found, RecurringPayment.Type.FIXED);
+        assertEquals(7, r.occurrenceDays(), "일곱 번이 한 묶음이어야 한다");
+        assertEquals(22000, r.representativeAmount());
+
+        // 번호를 그대로 키로 쓰면(= PG 를 모르면) 갈라져서 안 잡힌다 — 회귀를 못박는다.
+        assertTrue(RecurringPaymentDetector.detectFrom(txns, LocalDateTime.of(2026, 8, 5, 12, 0),
+                        recurring, daypart).stream()
+                        .noneMatch(x -> x.type() == RecurringPayment.Type.FIXED),
+                "PG 를 모르면 갈라진다 — 이 사실이 바뀌면 위 단정의 의미도 바뀐다");
+    }
+
+    @Test
+    @DisplayName("분류가 바뀌어도 한 묶음이다 — 카테고리는 키가 아니다")
+    void 분류가_묶음을_깨지_못한다() {
+        // 사용자가 중간에 "이건 식비예요"를 누르거나 추정이 확정으로 승격되기만 해도
+        // 그때까지 잡히던 정기결제가 사라지면 안 된다. 계약인지는 어디서 얼마를 언제 냈느냐다.
+        List<UserPayment> txns = List.of(
+                tx(LocalDateTime.of(2026, 3, 10, 12, 0), "카테고리없음", 9900, "어떤구독", ""),
+                tx(LocalDateTime.of(2026, 4, 10, 12, 0), "카테고리없음", 9900, "어떤구독", ""),
+                tx(LocalDateTime.of(2026, 5, 10, 12, 0), "취미/여가", 9900, "어떤구독", ""),
+                tx(LocalDateTime.of(2026, 6, 10, 12, 0), "취미/여가", 9900, "어떤구독", ""));
+
+        RecurringPayment r = only(detect(txns, LocalDateTime.of(2026, 7, 1, 12, 0)),
+                RecurringPayment.Type.FIXED);
+        assertEquals(4, r.occurrenceDays(), "분류가 갈려도 네 번이 한 묶음이어야 한다");
     }
 
     @Test
