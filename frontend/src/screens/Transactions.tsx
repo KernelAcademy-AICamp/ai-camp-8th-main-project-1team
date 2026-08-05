@@ -22,7 +22,10 @@ const SPEND_FILTERS: { key: SpendFilter; label: string }[] = [
   { key: 'sanct', label: '성역' },
 ];
 /** 고정지출로 보는 중분류 — 달마다 같은 금액이 나가 줄이기 어려운 것들. */
-const FIXED_CATEGORIES = new Set(['주거/통신']);
+// 고정지출 판정은 **서버가 한다**(`/api/analysis` 의 recurring). 예전에는 여기에
+// `new Set(['주거/통신'])` 이 박혀 있었는데, 그러면 넷플릭스처럼 취미/여가로 분류된 구독은
+// 매달 같은 날 같은 금액이 나가도 영영 '고정'이 안 붙는다(2026-08-05 실사용자에서 확인).
+// 카테고리 이름을 화면에 박지 않는다 — 마스터 §4 원칙 4.
 
 /** 사업자등록번호 10자리 → XXX-YY-ZZZZZ 표시. */
 /** '카테고리없음'인가 — 이름을 코드에 박지 않기 위해 한 곳에 둔다. */
@@ -30,7 +33,7 @@ const isNone = (c: string | null | undefined) => !c || c === '카테고리없음
 const bizFmt = (b: string) => (b.length === 10 ? `${b.slice(0, 3)}-${b.slice(3, 5)}-${b.slice(5)}` : b);
 
 export function Transactions() {
-  const { back, userId } = useSession();
+  const { back, userId, analysis } = useSession();
   const { home, reload: reloadGuardian } = useGuardian();
   // 12개월 — 6개월로 두면 실데이터(1월부터)의 앞부분이 통째로 안 보인다. 카드 명세서는
   // 보통 1년치를 내려받으므로 창이 그보다 짧으면 넣은 것을 못 보는 일이 생긴다(2026-08-05).
@@ -48,6 +51,22 @@ export function Transactions() {
   // 고를 수 있는 중분류. **`/unclassified` 를 부르면 안 된다** — 그쪽은 들를 때마다 LLM 추정을
   // 돌리는 경로라, 목록 하나 얻자고 부르면 화면 진입마다 호출이 나간다.
   const cats = useAsync(() => api.categories().then((cs) => cs.map((c) => c.code)).catch(() => [] as string[]), []);
+  // 세션에 분석이 없을 수도 있다(온보딩을 안 거치고 들어온 경우). 그때는 직접 부른다 —
+  // 없으면 '고정' 태그가 통째로 안 나오는데, 화면은 그것을 오류로 보여주지 않으므로
+  // 조용히 비어 버린다.
+  const an = useAsync(
+    () => (analysis ? Promise.resolve(analysis) : api.analysis(userId).catch(() => null)),
+    [userId, analysis]);
+
+  // 서버가 잡은 고정 결제 — 가맹점명(없으면 중분류)으로 맞춘다.
+  const fixedOf = useMemo(() => {
+    const set = new Set<string>();
+    (an.data?.recurring ?? [])
+      .filter((r) => r.type === 'FIXED')
+      .forEach((r) => set.add(r.merchantName ?? r.category2));
+    return (p: { merchantName: string | null; category: string; category2: string | null }) =>
+      set.has(p.merchantName ?? '') || set.has(p.category2 ?? p.category);
+  }, [an.data]);
 
   /** 사용자가 확정한다 — **이 한 번이 사전에 쌓여 다음부터 안 묻는다.** */
   async function confirmCategory(paymentId: string, category2: string) {
@@ -83,7 +102,7 @@ export function Transactions() {
       if (filter === 'all') return true;
       const sanct = p.category ? sanctuary.has(p.category) : false;
       if (filter === 'sanct') return sanct;
-      const fixed = p.category ? FIXED_CATEGORIES.has(p.category) : false;
+      const fixed = fixedOf(p);
       if (filter === 'fixed') return fixed;
       return !sanct && !fixed;      // 재량 = 성역도 고정지출도 아닌 것
     });
@@ -94,7 +113,7 @@ export function Transactions() {
       rows: byMonth[m].slice().sort((a, b) => b.date.localeCompare(a.date)),
       total: byMonth[m].reduce((s, p) => s + p.amount, 0),
     }));
-  }, [payments.data, pickedDate, filter, sanctuary]);
+  }, [payments.data, pickedDate, filter, sanctuary, fixedOf]);
 
   // 화면에 들어오면 새 결제를 조용히 당겨온다. 목록을 먼저 그리고 결과가 오면 그때 다시 부른다 —
   // 상단 '동기화' 버튼은 결과 문구가 필요한 수동 경로라 그대로 둔다.
@@ -219,7 +238,7 @@ export function Transactions() {
                       {/* 성역·고정지출은 표시해 준다(개편안 `.sp-tag`) — 왜 이 결제가 챌린지에서
                           빠지는지 목록에서 바로 보여야 사용자가 판정을 의심하지 않는다. */}
                       {p.category && sanctuary.has(p.category) && <span className="sp-tag tag-sanct">성역</span>}
-                      {p.category && FIXED_CATEGORIES.has(p.category) && <span className="sp-tag tag-fixed">고정</span>}
+                      {fixedOf(p) && <span className="sp-tag tag-fixed">고정</span>}
                     </span>
                     {p.cardName && (
                       <span className="c" style={{ border: `1px solid ${p.cardColor || 'var(--line)'}`, color: p.cardColor || 'var(--t3)', background: 'transparent' }}>
