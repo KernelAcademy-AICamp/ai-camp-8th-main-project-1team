@@ -71,6 +71,11 @@ echo
 echo "=== 배포된 코드가 이 커밋인가 ==="
 # 서버 저장소는 root 소유라 git 이 'dubious ownership' 으로 거부한다. 소유권을 건드리지 않고
 # safe.directory 를 그 명령에만 붙여 읽는다.
+#
+# **git HEAD 만 보면 안 된다.** 배포는 `git checkout` 뒤에 이미지를 다시 굽고 컨테이너를 갈아
+# 끼우는데, 그 사이에는 **코드는 새것인데 도는 것은 옛것**이다. 실제로 그 구간에서 이 검사가
+# 초록불이었고, 곧바로 부른 API 가 502 였다(2026-08-05). 그래서 컨테이너가 코드보다 나중에
+# 떴는지도 함께 본다 — 배포의 성립 조건은 '받았다'가 아니라 '그것이 돌고 있다'이다.
 sha=$(aws ssm send-command --instance-ids "$INSTANCE" --document-name AWS-RunShellScript \
       --parameters '{"commands":["git -c safe.directory=/opt/finntech/app -C /opt/finntech/app rev-parse --short HEAD"]}' \
       --region "$REGION" --query 'Command.CommandId' --output text 2>/dev/null)
@@ -84,6 +89,20 @@ got=$(aws ssm get-command-invocation --command-id "$sha" --instance-id "$INSTANC
       --query 'StandardOutputContent' --output text 2>/dev/null | tr -d '[:space:]')
 want=$(git rev-parse --short origin/main 2>/dev/null | tr -d '[:space:]')
 [ -n "$got" ] && [ "$got" = "$want" ] && ok "배포 커밋" "$got" || bad "배포 커밋" "운영 ${got:-?} ≠ main ${want:-?}"
+
+# 4서비스가 전부 healthy 인가 — 재빌드 중이면 backend 가 통째로 빠져 있다.
+cid=$(aws ssm send-command --instance-ids "$INSTANCE" --document-name AWS-RunShellScript \
+      --parameters '{"commands":["docker ps --format \"{{.Names}}|{{.Status}}\" | grep -c healthy"]}' \
+      --region "$REGION" --query 'Command.CommandId' --output text 2>/dev/null)
+for _ in $(seq 1 20); do
+  sleep 3
+  st=$(aws ssm get-command-invocation --command-id "$cid" --instance-id "$INSTANCE" \
+       --region "$REGION" --query 'Status' --output text 2>/dev/null || echo Pending)
+  case "$st" in Pending|InProgress|Delayed) ;; *) break ;; esac
+done
+n=$(aws ssm get-command-invocation --command-id "$cid" --instance-id "$INSTANCE" --region "$REGION" \
+    --query 'StandardOutputContent' --output text 2>/dev/null | tr -d '[:space:]')
+[ "${n:-0}" -ge 4 ] 2>/dev/null && ok "컨테이너 healthy" "${n}/4" || bad "컨테이너 healthy" "${n:-?}/4 — 배포가 아직 도는 중일 수 있다"
 
 echo
 echo "=== 앱이 실제로 답하는가 ==="
