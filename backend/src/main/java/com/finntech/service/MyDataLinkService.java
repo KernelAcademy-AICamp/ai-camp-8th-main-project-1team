@@ -162,6 +162,7 @@ public class MyDataLinkService {
                             payment.businessNumber());
                     // 사전에서 붙은 것은 근거가 사람이라 **처음부터 확정**이다(§F 격리 대상이 아니다).
                     if (fromDict.isPresent()) row.confirmCategory2(mid, "DICT");
+                    else applyRemembered(dict, row);
                     userPaymentRepository.save(row);
                     Category category = categoryRepository.findByCode(mid)
                             .orElseGet(() -> categoryRepository.save(new Category(mid, mid)));
@@ -275,6 +276,7 @@ public class MyDataLinkService {
                             payment.amount(), payment.merchantName(), payment.receivedBenefitAmount(),
                             payment.businessNumber());
                     if (fromDict.isPresent()) row.confirmCategory2(mid, "DICT");
+                    else applyRemembered(dict, row);
                     userPaymentRepository.save(row);
                     Category category = categoryRepository.findByCode(mid)
                             .orElseGet(() -> categoryRepository.save(new Category(mid, mid)));
@@ -400,6 +402,19 @@ public class MyDataLinkService {
      *                     쪼개 보여 주고 사용자가 고르게 하려면 이 값이 함께 내려가야 한다.
      *                     {@code category2} 를 덮지 않는다 — 확정은 사람이 하는 것이다.
      */
+    /**
+     * <b>예전에 물어본 추정을 다시 칠한다.</b> 재연동은 결제 행을 통째로 지우고 다시 만들어서,
+     * 추정이 결제 행에만 있으면 그때 전부 날아간다 — 사전에는 남아 있는데도 화면에서 사라지고,
+     * 사용자는 "AI가 분류했다더니 안 보인다"를 겪는다(2026-08-05 운영 실측: 82건이 0건이 됐다).
+     *
+     * <p>복구를 '분류 정리' 화면 방문에 맡기지 않는다 — 거래내역만 보는 사용자는 영영 못 본다.
+     * {@code category2} 는 건드리지 않는다. 추정은 여전히 추정이다(마스터 §4 원칙 1).
+     */
+    private static void applyRemembered(MerchantCategoryService.Snapshot dict, UserPayment row) {
+        dict.guess(row.getBusinessNumber(), row.getMerchantName())
+                .ifPresent(row::suggestCategory2);
+    }
+
     public record PaymentHistoryRow(String paymentId, java.time.LocalDateTime date, String category,
                                     String category2, int amount, String merchantName, int receivedBenefit,
                                     String cardName, String cardColor, String companyName,
