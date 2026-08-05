@@ -92,17 +92,42 @@ public class RecurringPaymentDetector {
         LocalDate today = referenceTime.toLocalDate();
         List<RecurringPayment> out = new ArrayList<>();
         for (List<UserPayment> g : groups.values()) {
+            RecurringPayment whole = fixedFrom(g, today, cfg);
+            if (whole != null) { out.add(whole); continue; }
+
+            // 한 가맹점 아래 **구독이 여럿**일 수 있다 — 앱마켓이 그렇다. 통째로 보면 날짜와
+            // 금액이 뒤섞여 어느 주기에도 안 맞지만, 금액으로 나누면 각각 또렷한 월 구독이다.
+            // 2026-08-05 실사용자: `Apple` 15건이 통째로는 탈락했는데 금액별로 나누니
+            // **매달 5일 2,500원**과 **매달 11일 14,000원** 두 구독이 드러났다.
+            //
+            // **통째로 먼저 보는 순서가 중요하다.** 요금 인상(13,500→17,000)은 금액이 달라도
+            // 한 구독이므로, 금액으로 먼저 나누면 그것이 둘로 찢어진다(§8-W).
+            java.util.Map<Integer, List<UserPayment>> byAmount = new TreeMap<>();
+            for (UserPayment p : g) byAmount.computeIfAbsent(p.getAmount(), k -> new ArrayList<>()).add(p);
+            if (byAmount.size() < 2) continue;
+            for (List<UserPayment> sub : byAmount.values()) {
+                RecurringPayment r = fixedFrom(sub, today, cfg);
+                if (r != null) out.add(r);
+            }
+        }
+        return out;
+    }
+
+    /** 한 묶음이 고정 결제인가 — 아니면 {@code null}. 묶는 방법과 판정을 갈라 둔다. */
+    private static RecurringPayment fixedFrom(List<UserPayment> g, LocalDate today,
+                                              AnalysisProperties.Recurring cfg) {
+        {
             List<LocalDate> days = g.stream().map(p -> p.getPaymentDate().toLocalDate()).distinct().sorted().toList();
-            if (days.size() < cfg.getFixedMinCount()) continue;
+            if (days.size() < cfg.getFixedMinCount()) return null;
 
             double[] gaps = new double[days.size() - 1];
             for (int i = 1; i < days.size(); i++) gaps[i - 1] = ChronoUnit.DAYS.between(days.get(i - 1), days.get(i));
             double meanGap = Stats.mean(gaps);
-            if (meanGap <= 0) continue;
+            if (meanGap <= 0) return null;
             boolean weekly = inRange(meanGap, cfg.getWeeklyIntervalDays());
             boolean monthly = inRange(meanGap, cfg.getMonthlyIntervalDays());
-            if (!weekly && !monthly) continue;                                    // 주간·월간 어느 주기에도 안 맞음
-            if (Stats.stdDev(gaps) / meanGap > cfg.getFixedGapCvMax()) continue;  // 주기가 수렴하지 않음 — 오탐 방어선
+            if (!weekly && !monthly) return null;                                    // 주간·월간 어느 주기에도 안 맞음
+            if (Stats.stdDev(gaps) / meanGap > cfg.getFixedGapCvMax()) return null;  // 주기가 수렴하지 않음 — 오탐 방어선
 
             // 금액은 **결제일 오름차순**으로 본다. 변화점("13,500 → 17,000")을 말하려면 순서가 있어야 한다.
             double[] amounts = g.stream()
@@ -112,7 +137,7 @@ public class RecurringPaymentDetector {
             double dispersion = median <= 0 ? 0.0 : Stats.mad(amounts, median) / median;
 
             // 주간만 금액 게이트 — 습관과 계약을 가른다.
-            if (weekly && dispersion > cfg.getWeeklyDispersionMax()) continue;
+            if (weekly && dispersion > cfg.getWeeklyDispersionMax()) return null;
 
             // 금액이 '변했다'는 데는 두 가지가 있고, 산포 하나로는 둘 다 못 본다.
             //
@@ -142,15 +167,14 @@ public class RecurringPaymentDetector {
             boolean ended = ChronoUnit.DAYS.between(last, today) > periodDays * cfg.getEndedAfterPeriods();
 
             UserPayment sample = g.get(0);
-            out.add(new RecurringPayment(
+            return new RecurringPayment(
                     RecurringPayment.Type.FIXED,
                     ended ? RecurringPayment.Status.ENDED : RecurringPayment.Status.ACTIVE,
                     sample.getCategory2(), sample.getMerchantName(), sample.getBusinessNumber(), null,
                     representative, varies, prior,
                     periodDays, ended ? null : last.plusDays(periodDays),
-                    first, last, days.size(), round1(7.0 / meanGap)));
+                    first, last, days.size(), round1(7.0 / meanGap));
         }
-        return out;
     }
 
     /**
