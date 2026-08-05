@@ -238,6 +238,31 @@ class MerchantCategoryServiceTest {
     }
 
     @Test
+    @DisplayName("복합 사업자는 완화하지 않는다 — 하나를 고쳐도 나머지가 안 따라간다")
+    void 복합_사업자는_번호로_묶지_않는다() {
+        // 울릉크루즈(132-88-01755) 한 번호에 여객선과 배 안의 GS25 가 붙어 있다.
+        // 번호로 묶으면 GS25 를 '편의점'으로 고치는 순간 여객선까지 편의점이 된다.
+        String CRUISE = "1328801755";
+        assertThat(mapper.isMultiBusiness(CRUISE)).as("복합 사업자 목록에 있어야 한다").isTrue();
+
+        seed(CRUISE, "", "쇼핑");                       // 번호 전체
+        seed(CRUISE, "GS25 울룽크루즈점", "편의점/잡화");   // 그 가게만
+
+        assertThat(service.lookup(CRUISE, "GS25 울룽크루즈점"))
+                .as("정확일치는 된다").contains("편의점/잡화");
+        assertThat(service.lookup(CRUISE, "울릉크루즈 주식회사"))
+                .as("번호가 같아도 다른 가게에는 안 붙는다 — 업종코드·미분류로 내려간다").isEmpty();
+        assertThat(new MerchantCategoryService.Snapshot(table, mapper)
+                .lookup(CRUISE, "울릉크루즈 주식회사"))
+                .as("적재 스냅샷도 같아야 한다").isEmpty();
+
+        // 복합이 아닌 번호는 완화가 그대로 살아 있어야 한다 — 택시가 그것으로 산다.
+        seed("0000000077", "", "교통/자동차");
+        assertThat(service.lookup("0000000077", "카카오택시-서울12가3456"))
+                .as("복합이 아니면 완화는 유지된다").contains("교통/자동차");
+    }
+
+    @Test
     @DisplayName("PG 가 아니면 같은 번호의 다른 행을 쓴다 — 택시처럼 표시명이 매번 다른 가맹점")
     void nonAgencyReusesSiblingRow() {
         // 카카오T 는 표시명 뒤에 차량번호가 붙어 결제마다 풀네임이 다르다.

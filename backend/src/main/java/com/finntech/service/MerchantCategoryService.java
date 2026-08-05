@@ -94,8 +94,16 @@ public class MerchantCategoryService {
             return repository.findByNameOnly(merchantName).stream().filter(accept).findFirst();
         }
 
-        // ④ 같은 번호의 다른 행 — 택시처럼 표시명이 결제마다 달라지는 가맹점 때문이다.
-        //    PG 가 아닌 번호는 한 사업자의 것이라 업종이 하나여서 안전하다.
+        // ④ **복합 사업자는 완화하지 않는다.** 번호는 그 사업자의 것이 맞지만 성격이 다른
+        //    가게가 여럿 붙어 있어(백화점 입점, 배 안의 편의점), 번호로 분류하면 서로 다른
+        //    가게가 한 분류로 오염된다. 사용자가 하나를 고쳤을 때 나머지까지 따라 바뀌는 것도
+        //    막는다 — 정확일치만 인정하고 없으면 업종코드·미분류로 내려보낸다.
+        if (mapper.isMultiBusiness(biz)) {
+            return Optional.empty();
+        }
+
+        // ⑤ 같은 번호의 다른 행 — 택시처럼 표시명이 결제마다 달라지는 가맹점 때문이다.
+        //    복합이 아닌 번호는 한 사업자의 한 업종이라 안전하다.
         return repository.findByBusinessNumberOrdered(biz).stream().filter(accept).findFirst();
     }
 
@@ -252,9 +260,10 @@ public class MerchantCategoryService {
                         exact.putIfAbsent(key(biz, m.getMerchantName()), m.getCategory2());
                         if (biz.isEmpty()) {
                             byNameOnly.putIfAbsent(m.getMerchantName(), m.getCategory2());
-                        } else if (!mapper.isPaymentAgency(biz)) {
-                            // PG 번호는 여기 담지 않는다. 담는 순간 그 PG 를 거친 모든 결제가
-                            // 한 분류로 오염된다 — lookup 이 PG 를 걸러 내는 것과 같은 이유다.
+                        } else if (!mapper.isPaymentAgency(biz) && !mapper.isMultiBusiness(biz)) {
+                            // PG·복합 사업자 번호는 여기 담지 않는다. 담는 순간 그 번호를 거친
+                            // 모든 결제가 한 분류로 오염된다 — lookup 이 둘을 걸러 내는 것과
+                            // 같은 이유다. 두 곳의 규칙이 갈리면 연동할 때마다 답이 달라진다.
                             byBusiness.putIfAbsent(biz, m.getCategory2());
                         }
                     });
