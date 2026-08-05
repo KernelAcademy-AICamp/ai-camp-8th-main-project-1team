@@ -205,6 +205,14 @@ public class MerchantCategoryService {
         return new Snapshot(repository.findAll(), mapper);
     }
 
+    /** 조회 서열 — 사람의 확인이 먼저다. 리포지토리의 {@code ORDER BY CASE source} 와 같은 값. */
+    private static int sourceRank(MerchantCategory m) {
+        String src = m.getSource();
+        if (MerchantCategory.Source.USER_CONFIRMED.name().equals(src)) return 0;
+        if (MerchantCategory.Source.USER_CSV.name().equals(src)) return 1;
+        return 2;
+    }
+
     /** 한 시점의 사전 사본. 적재하는 동안만 산다. */
     public static final class Snapshot {
         private final Map<String, String> exact = new HashMap<>();       // key(번호, 풀네임) → 중분류
@@ -219,9 +227,13 @@ public class MerchantCategoryService {
 
         Snapshot(List<MerchantCategory> rows, IndustryCategoryMapper mapper) {
             this.mapper = mapper;
-            // id 오름차순으로 넣어 먼저 들어온 행이 이긴다 — lookup 의 ORDER BY id ASC 와 같다.
-            rows.stream().sorted(java.util.Comparator.comparing(MerchantCategory::getId,
-                            java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
+            // **사람의 확인 > 국세청 등록 > 추정**, 같은 등급이면 먼저 들어온 것 —
+            // 조회(`findByBusinessNumberOrdered`)와 **같은 서열**이라야 한다. id 순으로만 두면
+            // 먼저 들어온 씨앗이 영원히 이겨, 사용자가 고쳐도 안 고쳐진다(2026-08-05 티머니).
+            rows.stream().sorted(java.util.Comparator
+                            .comparingInt(MerchantCategoryService::sourceRank)
+                            .thenComparing(MerchantCategory::getId,
+                                    java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
                     .forEach(m -> {
                         // 추정은 스냅샷에 담지 않는다. 여기 담긴 값은 적재 때 Consumption 의
                         // 카테고리로 **굳어** 리포트·판정에 그대로 쓰이므로, 사람이 확인하지

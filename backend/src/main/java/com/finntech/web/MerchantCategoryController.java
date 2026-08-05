@@ -187,9 +187,33 @@ public class MerchantCategoryController {
         boolean storedInDictionary =
                 dictionary.confirmFrom(payment, request.category2(), userId).isPresent();
 
+        // **같은 가맹점의 나머지 결제도 함께 고친다.** 사전에만 쌓으면 다음 연동부터 반영되고,
+        // 지금 화면에는 고친 한 건만 바뀐다 — 사용자는 "고쳤는데 다른 건 그대로"를 본다
+        // (2026-08-05 운영: 티머니 17건 중 1건만 바뀌었다). 사전이 새 답을 주는 결제를 찾아
+        // 그 자리에서 맞춘다. 판정 근거는 여전히 사전 하나다(원칙 2).
+        int alsoFixed = 0;
+        if (storedInDictionary) {
+            for (UserPayment other : payments.findByUserIdOrderByPaymentDateDesc(userId)) {
+                if (other.getPaymentId().equals(paymentId)) continue;
+                // 사람이 이미 확정한 결제는 건드리지 않는다 — 남의 판단을 덮으면 안 된다.
+                if ("USER".equals(other.getCategory2Source())) continue;
+                String now = dictionary.lookup(other.getBusinessNumber(), other.getMerchantName())
+                        .orElse(null);
+                if (now == null || now.equals(other.getCategory2())) continue;
+                other.confirmCategory2(now, "DICT");
+                Category c2 = categories.findByCode(now)
+                        .orElseGet(() -> categories.save(new Category(now, now)));
+                for (Consumption c : consumptions.findBySourcePaymentId(other.getPaymentId())) {
+                    c.reclassify(c2);
+                }
+                alsoFixed++;
+            }
+        }
+
         return Map.of("paymentId", paymentId,
                       "category2", request.category2(),
                       "reclassifiedConsumptions", moved,
+                      "alsoFixed", alsoFixed,
                       "storedInDictionary", storedInDictionary);
     }
 

@@ -50,16 +50,20 @@ class MerchantCategoryServiceTest {
                         .filter(m -> m.getBusinessNumber().equals(inv.getArgument(0))
                                 && m.getMerchantName().equals(inv.getArgument(1)))
                         .findFirst());
+        // **대역이 쿼리의 ORDER BY 를 그대로 흉내내야 한다.** 예전에는 가맹점명 순으로 정렬해
+        // 두었는데, 실제 쿼리는 출처(사람의 확인 > 국세청 등록 > 추정) 순이다. 대역이 계약과
+        // 갈리면 테스트는 통과하는데 운영은 틀린다 — 실제로 그렇게 됐다(2026-08-05 티머니).
         when(repo.findByBusinessNumberOrdered(anyString()))
                 .thenAnswer(inv -> table.stream()
                         .filter(m -> !m.getBusinessNumber().isEmpty()
                                 && m.getBusinessNumber().equals(inv.getArgument(0)))
-                        .sorted(Comparator.comparing(MerchantCategory::getMerchantName))
+                        .sorted(BY_SOURCE_THEN_INSERTION)
                         .toList());
         when(repo.findByNameOnly(anyString()))
                 .thenAnswer(inv -> table.stream()
                         .filter(m -> m.getBusinessNumber().isEmpty()
                                 && m.getMerchantName().equals(inv.getArgument(0)))
+                        .sorted(BY_SOURCE_THEN_INSERTION)
                         .toList());
 
         // 저장은 표에 담고 그대로 돌려준다 — 쌓은 것이 곧바로 조회에 보여야 하기 때문이다.
@@ -73,6 +77,16 @@ class MerchantCategoryServiceTest {
 
         service = new MerchantCategoryService(repo, mapper);
     }
+
+    /** 리포지토리의 {@code ORDER BY CASE source … , id} 를 그대로 옮긴 것. id 가 null 인
+     *  시험 행은 표에 담은 순서로 본다(실제로는 auto increment 가 그 순서를 준다). */
+    private static final Comparator<MerchantCategory> BY_SOURCE_THEN_INSERTION =
+            Comparator.comparingInt((MerchantCategory m) ->
+                    switch (m.getSource()) {
+                        case "USER_CONFIRMED" -> 0;
+                        case "USER_CSV" -> 1;
+                        default -> 2;
+                    });
 
     private void seed(String biz, String name, String cat) {
         table.add(new MerchantCategory(biz, name, cat, MerchantCategory.Source.USER_CSV, null));
@@ -202,6 +216,25 @@ class MerchantCategoryServiceTest {
         // 그래서 **다른 PG** 를 거친 같은 가맹점에도 곧바로 붙는다. 이것이 목적이다.
         assertThat(service.lookup("1138521083", "넷플릭스서비시스코리아 유한회사"))
                 .as("NHNKCP 를 거친 넷플릭스에도 붙는다").contains("취미/여가");
+    }
+
+    @Test
+    @DisplayName("사람이 확인한 것이 씨앗을 이긴다 — 고쳤는데 안 고쳐지면 안 된다")
+    void 사람의_확인이_먼저다() {
+        // 2026-08-05 운영: 티머니(396-87-03587)가 등록 업종 '전자상거래 소매업' 때문에 씨앗에
+        // '쇼핑'으로 들어갔다. 사용자가 한 건을 '교통/자동차'로 고쳤는데, 완화가 id 오름차순이라
+        // **먼저 들어온 씨앗이 계속 이겨** 나머지 16건이 그대로 쇼핑이었다. 오류도 안 났다.
+        seed("0000000099", "", "쇼핑");                       // 씨앗(USER_CSV) — 먼저 들어온다
+        table.add(new MerchantCategory("0000000099", "티머니 택시-경북15바7380", "교통/자동차",
+                MerchantCategory.Source.USER_CONFIRMED, 7L)); // 사람이 나중에 고친다
+
+        assertThat(service.lookup("0000000099", "티머니 택시-서울31바3715"))
+                .as("같은 사업자의 다른 차량에도 **사람의 확인**이 붙어야 한다")
+                .contains("교통/자동차");
+        assertThat(new MerchantCategoryService.Snapshot(table, mapper)
+                .lookup("0000000099", "티머니 택시-서울31바3715"))
+                .as("적재 스냅샷도 같은 서열이라야 한다 — 갈리면 연동할 때마다 답이 달라진다")
+                .contains("교통/자동차");
     }
 
     @Test
