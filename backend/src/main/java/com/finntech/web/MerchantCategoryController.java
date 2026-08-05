@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 미분류 결제를 사람이 정리하는 창구 — <b>AI 는 제안만, 확정은 사람이.</b>
@@ -37,6 +38,10 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/merchant-category")
 public class MerchantCategoryController {
+
+    /** 못 잡았을 때 다시 물을 기준 — 이만큼 반복되거나(정기결제) 이만큼 크면 그냥 넘기지 않는다. */
+    private static final int RETRY_MIN_COUNT = 2;
+    private static final long RETRY_MIN_AMOUNT = 50_000L;
 
     private final UserPaymentRepository payments;
     private final ConsumptionRepository consumptions;
@@ -73,13 +78,49 @@ public class MerchantCategoryController {
                 userId, IndustryCategoryMapper.UNCLASSIFIED);
 
         // 같은 가맹점이 여러 번 나온다 — 이름당 한 번만 묻는다.
-        List<String> ask = rows.stream()
+        List<UserPayment> askable = rows.stream()
                 .filter(p -> p.getCategory2Llm() == null)
                 .filter(p -> classifier.worthAsking(p.getMerchantName(), p.getBusinessNumber()))
-                .map(UserPayment::getMerchantName)
-                .distinct()
                 .toList();
-        Map<String, String> guessed = classifier.classify(ask);
+        // **이미 물어본 가맹점은 다시 묻지 않는다.** 추정은 결제 행(`category2_llm`)에만 남기면
+        // 다음 달 같은 넷플릭스가 새 결제로 들어올 때 또 묻게 된다 — 행이 새것이라 비어 있기
+        // 때문이다. 그래서 사전에도 `LLM_GUESS` 로 남기고, 여기서 그것부터 꺼내 쓴다.
+        Map<String, String> remembered = new LinkedHashMap<>();
+        for (UserPayment p : askable) {
+            remembered.computeIfAbsent(p.getMerchantName(),
+                    n -> dictionary.guess(p.getBusinessNumber(), n).orElse(null));
+        }
+        remembered.values().removeIf(java.util.Objects::isNull);
+
+        List<String> ask = askable.stream().map(UserPayment::getMerchantName).distinct()
+                .filter(n -> !remembered.containsKey(n)).toList();
+
+        // **못 잡았을 때 다시 물을 값어치**를 여기서 정한다 — 건수·금액을 아는 것은 이쪽이다.
+        // 모델은 알면서도 큰 묶음에서 흘리므로(2026-08-05 실측: 넷플릭스), 중요한 것은 작게
+        // 나눠 한 번 더 묻는다. 다만 1건 200원짜리 카드 수수료까지 다시 물으면 호출만 쓴다 —
+        // 실측으로 이 기준이 못 잡은 금액의 93%를 덮었다.
+        Map<String, Integer> count = new LinkedHashMap<>();
+        Map<String, Long> total = new LinkedHashMap<>();
+        for (UserPayment p : askable) {
+            count.merge(p.getMerchantName(), 1, Integer::sum);
+            total.merge(p.getMerchantName(), (long) p.getAmount(), Long::sum);
+        }
+        Set<String> important = ask.stream()
+                .filter(n -> count.getOrDefault(n, 0) >= RETRY_MIN_COUNT
+                        || total.getOrDefault(n, 0L) >= RETRY_MIN_AMOUNT)
+                .collect(java.util.stream.Collectors.toSet());
+
+        Map<String, String> fresh = classifier.classify(ask, important);
+
+        // 새로 알아낸 것만 사전에 남긴다 — 다음 연동·다음 달 결제에서 재사용된다.
+        // (실제 사람의 결제일 때만 쌓인다. 더미의 사업자번호는 실재하지 않는다.)
+        for (UserPayment p : askable) {
+            String g = fresh.get(p.getMerchantName());
+            if (g != null) dictionary.rememberGuess(p, g);
+        }
+
+        Map<String, String> guessed = new LinkedHashMap<>(remembered);
+        guessed.putAll(fresh);
         for (UserPayment p : rows) {
             String g = guessed.get(p.getMerchantName());
             if (g != null) p.suggestCategory2(g);
@@ -95,6 +136,9 @@ public class MerchantCategoryController {
             item.put("businessNumber", p.getBusinessNumber());
             item.put("suggested", p.getCategory2Llm());
             item.put("source", p.getCategory2Source());
+            // 상호 자체가 결제대행사면 **원리적으로 알 수 없는 결제**다. 화면이 이것을 "정말
+            // 모르는 것"과 나눠 보여줘야, 남은 미분류가 사용자가 손댈 수 있는 것만 남는다.
+            item.put("paymentAgency", classifier.isPaymentAgencyMerchant(p.getMerchantName()));
             // 더미 사용자의 확정은 사전에 쌓이지 않는다. 화면이 미리 알 수 있게 함께 준다.
             item.put("canConfirm", p.isFromRealPerson());
             items.add(item);

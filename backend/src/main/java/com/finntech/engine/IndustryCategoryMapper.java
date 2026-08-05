@@ -44,6 +44,8 @@ public class IndustryCategoryMapper {
     private final Map<String, String> midByIndustry;
     private final Map<String, Double> discretionaryByMid;
     private final Map<String, String> pgBusinessNumbers;
+    /** 업종 <b>이름</b> → 중분류. LLM 이 축을 직접 고르지 않게 하려고 둔다. */
+    private final Map<String, String> midByIndustryName;
 
     @SuppressWarnings("unchecked")
     public IndustryCategoryMapper(ObjectMapper objectMapper) {
@@ -56,6 +58,8 @@ public class IndustryCategoryMapper {
             this.discretionaryByMid = d;
             Map<String, String> pg = (Map<String, String>) root.get("pgBusinessNumbers");
             this.pgBusinessNumbers = pg == null ? Map.of() : pg;
+            Map<String, String> names = (Map<String, String>) root.get("midByIndustryName");
+            this.midByIndustryName = names == null ? Map.of() : names;
         } catch (IOException e) {
             throw new UncheckedIOException("업종코드 대조표를 읽지 못했다: " + PATH, e);
         }
@@ -89,6 +93,30 @@ public class IndustryCategoryMapper {
      */
     public java.util.Collection<String> paymentAgencyNames() {
         return pgBusinessNumbers.values();
+    }
+
+    /**
+     * 업종 <b>이름</b>으로 중분류를 찾는다. 모르는 이름이면 {@link #UNCLASSIFIED}.
+     *
+     * <p>LLM 보조 분류가 우리 축(중분류)을 직접 고르지 않고 <b>"이 가맹점은 어느 업종인가"</b>를
+     * 답하게 하려고 둔다. 그러면 축 배정은 이 표가 하고 모델은 업종의 사실만 말한다 —
+     * 마스터 §4-1(판단은 설명가능한 모델이, 표현은 AI가)에 더 맞고, 표를 고치면 모델의 답도
+     * 함께 따라온다(백화점을 대형마트에서 쇼핑으로 옮긴 것 같은 일).
+     *
+     * <p>이름 하나가 두 중분류에 걸리면 빌드가 실패하므로 1:1 이 보장된다.
+     */
+    public String midOfIndustryName(String industryName) {
+        if (industryName == null) return UNCLASSIFIED;
+        return midByIndustryName.getOrDefault(industryName.trim(), UNCLASSIFIED);
+    }
+
+    /** 중분류로 묶은 업종 이름 — LLM 에게 보여 줄 목록이다. 정렬 고정(§4-3 재현성). */
+    public java.util.Map<String, java.util.List<String>> industryNamesByMid() {
+        java.util.Map<String, java.util.List<String>> out = new java.util.TreeMap<>();
+        midByIndustryName.forEach((name, mid) ->
+                out.computeIfAbsent(mid, k -> new java.util.ArrayList<>()).add(name));
+        out.values().forEach(java.util.Collections::sort);
+        return out;
     }
 
     /**

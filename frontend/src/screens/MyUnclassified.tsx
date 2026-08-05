@@ -25,7 +25,12 @@ export function MyUnclassified() {
 
   const items: UnclassifiedItem[] = list.data?.items ?? [];
   const categories: string[] = list.data?.categories ?? [];
-  const remaining = items.filter((it) => !done[it.paymentId]);
+  const notDone = items.filter((it) => !done[it.paymentId]);
+  // **알려주면 되는 것**과 **앱이 못 하는 것**을 나눈다. 섞어 두면 사용자가 결제대행 상호를
+  // 붙들고 "이게 뭐였더라" 하다 지치고, 정작 답할 수 있는 것에 손이 안 간다.
+  // 결제대행 건은 상호가 대행사 이름뿐이라 카드사가 준 정보로는 누구도 알 수 없다.
+  const remaining = notDone.filter((it) => !it.paymentAgency);
+  const unknowable = notDone.filter((it) => it.paymentAgency);
 
   async function confirm(it: UnclassifiedItem, category2: string) {
     setBusy(it.paymentId); setError(null); setMsg(null);
@@ -111,6 +116,37 @@ export function MyUnclassified() {
                 </div>
               </div>
             ))}
+
+            {/* 앱이 알 수 없는 결제 — 고를 수 있게 두지 않는다. 상호가 결제대행사 이름뿐이라
+                사용자도 무엇을 샀는지 되짚기 어렵고, 억지로 고르게 하면 사전에 틀린 값이 쌓인다.
+                대신 **왜 못 하는지 말해 준다** — 남은 '카테고리없음'이 이것뿐이면 그건 앱의
+                실패가 아니라 원본 정보의 한계다. */}
+            {unknowable.length > 0 && (
+              <div style={{ marginTop: 22 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--t2)', margin: '0 0 2px' }}>
+                  알 수 없는 결제 {unknowable.length}건
+                </p>
+                <p style={{ fontSize: 12, color: 'var(--t3)', margin: '0 0 10px' }}>
+                  결제대행사를 거친 결제예요. 카드사가 준 정보가 대행사 이름뿐이라
+                  어느 가게에서 썼는지 알 방법이 없어요.
+                </p>
+                {unknowable.map((it) => (
+                  <div key={it.paymentId} style={{ ...card, opacity: 0.72 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {it.merchantName ?? '이름 없는 결제'}
+                        </div>
+                        <div style={{ color: 'var(--t3)', fontSize: 12, marginTop: 2 }}>
+                          {shortDate(it.date)} · {it.amount.toLocaleString()}원
+                        </div>
+                      </div>
+                      <span style={{ ...badge, background: 'var(--bg2)', color: 'var(--t3)' }}>결제대행</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {msg && <p style={{ color: 'var(--t2)', fontSize: 13, marginTop: 12 }}>{msg}</p>}
             {!!error && <ErrorBox error={error} />}

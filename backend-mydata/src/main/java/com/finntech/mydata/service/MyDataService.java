@@ -140,9 +140,9 @@ public class MyDataService {
     }
 
     /** 저장 형식은 `010-1234-5678`이다. 입력이 하이픈 없이 와도 같은 사람을 찾게 맞춘다. */
+    /** 저장 표기와 <b>같은 규칙</b>을 쓴다 — 갈리면 있는 사람을 못 찾는다({@link Msisdn#format}). */
     private static String normalizePhone(String phone) {
-        String d = phone == null ? "" : phone.replaceAll("\\D", "");
-        return d.length() == 11 ? d.substring(0, 3) + "-" + d.substring(3, 7) + "-" + d.substring(7) : phone;
+        return com.finntech.mydata.util.Msisdn.format(phone);
     }
 
     /** 가맹점 조회(번호→주소) — 사용자가 결제의 사업자번호로 가맹점명·지번주소를 조회한다. 없으면 empty. */

@@ -40,35 +40,99 @@ public class MerchantCategoryService {
     /**
      * 사전에서 찾는다. 없으면 {@link Optional#empty()} — 부르는 쪽이 ②로 내려간다.
      *
-     * <p><b>완화는 PG 가 아닐 때만</b> 적용한다. PG(전자지급결제대행)는 한 번호에 업종이 제각각인
-     * 가맹점이 붙으므로, 같은 번호의 다른 행을 가져다 쓰면 그 PG 를 거친 모든 결제가 한 분류로
-     * 오염된다. PG 가 아닌 번호는 한 사업자의 것이라 업종이 하나여서 안전하다.
+     * <p><b>PG 번호는 조회에서 버린다.</b> PG(전자지급결제대행)는 한 번호에 업종이 제각각인
+     * 가맹점이 붙는다 — KG이니시스 하나에 넷플릭스·야놀자·스타벅스가 달려 있다. 같은 번호의
+     * 다른 행을 가져다 쓰면 그 PG 를 거친 모든 결제가 한 분류로 오염되고, 그렇다고 멈춰 버리면
+     * PG 결제는 사전이 영영 못 붙인다. 번호를 지우고 <b>이름</b>으로 보는 것이 답이다 — PG 를
+     * 거친 결제에서 가맹점명이 유일한 정보이기 때문이다.
      */
     @Transactional(readOnly = true)
     public Optional<String> lookup(String businessNumber, String merchantName) {
-        String biz = MerchantCategory.normalize(businessNumber);
+        return find(businessNumber, merchantName, MerchantCategory::isConfirmed)
+                .map(MerchantCategory::getCategory2);
+    }
+
+    /**
+     * <b>이 가맹점을 이미 LLM 에 물어봤는가</b> — 물어봤다면 그때의 추정을 준다.
+     *
+     * <p>{@link #lookup} 과 분리된 이유는 이것이 <b>판정이 아니기 때문</b>이다. 추정은
+     * 화면에 "AI 추정" 배지로만 나가고 사람이 확인해야 확정이 된다(마스터 §4 원칙 1).
+     * 그래도 <b>다시 묻지 않기 위해</b> 사전에 남긴다 — 추정을 결제 행에만 적어 두면
+     * 다음 달 같은 넷플릭스가 새 결제로 들어올 때 똑같은 질문을 또 하게 된다.
+     * 찾는 규칙은 {@link #lookup} 과 같다(PG 는 이름으로, 나머지는 번호 완화까지).
+     */
+    @Transactional(readOnly = true)
+    public Optional<String> guess(String businessNumber, String merchantName) {
+        return find(businessNumber, merchantName, m -> !m.isConfirmed())
+                .map(MerchantCategory::getCategory2);
+    }
+
+    /**
+     * 조회 순서는 <b>여기 한 곳에만</b> 있다 — 확정을 찾든 추정을 찾든 같은 길이라야 한다.
+     * 두 벌로 적으면 한쪽만 고쳐져 "쌓는 자리와 찾는 자리가 어긋나는" 조용한 실패가 난다.
+     */
+    private Optional<MerchantCategory> find(String businessNumber, String merchantName,
+                                            java.util.function.Predicate<MerchantCategory> accept) {
         if (merchantName == null || merchantName.isBlank()) {
             return Optional.empty();
         }
+        String biz = MerchantCategory.normalize(businessNumber);
 
         // ① 정확 일치 — (사업자번호, 풀네임). 번호가 없으면 빈 문자열이 키다.
         Optional<MerchantCategory> exact =
-                repository.findByBusinessNumberAndMerchantName(biz, merchantName);
+                repository.findByBusinessNumberAndMerchantName(biz, merchantName).filter(accept);
         if (exact.isPresent()) {
-            return exact.map(MerchantCategory::getCategory2);
+            return exact;
         }
 
-        // ② 번호가 없는 해외 가맹점은 풀네임만으로 한 번 더 본다.
-        if (biz.isEmpty()) {
-            return first(repository.findByNameOnly(merchantName));
+        // ② 번호가 없는 해외 가맹점, 그리고 ③ PG 를 거친 결제는 <b>이름</b>으로 본다.
+        //    PG 번호는 결제를 대행한 회사의 것이라 무엇을 샀는지 아무 말도 하지 않는다 —
+        //    정보가 아니라 잡음이다. 이름 한 행이면 어느 PG 를 거치든 붙는다. 실제로 이
+        //    명세서의 넷플릭스는 KG이니시스 8건과 NHNKCP 4건으로 갈라져 있어, PG 별
+        //    복합키로는 둘 다 넣어야 겨우 따라잡는다(2026-08-05 실측).
+        if (biz.isEmpty() || mapper.isPaymentAgency(biz)) {
+            return repository.findByNameOnly(merchantName).stream().filter(accept).findFirst();
         }
 
-        // ③ 같은 번호의 다른 행 — 택시처럼 표시명이 결제마다 달라지는 가맹점 때문이다.
-        //    PG 면 여기서 멈춘다. 이 완화가 PG 에 적용되는 순간 사전이 거짓말을 시작한다.
-        if (mapper.isPaymentAgency(biz)) {
+        // ④ 같은 번호의 다른 행 — 택시처럼 표시명이 결제마다 달라지는 가맹점 때문이다.
+        //    PG 가 아닌 번호는 한 사업자의 것이라 업종이 하나여서 안전하다.
+        return repository.findByBusinessNumberOrdered(biz).stream().filter(accept).findFirst();
+    }
+
+    /**
+     * LLM 추정을 사전에 남긴다 — <b>같은 가맹점을 두 번 묻지 않기 위해서다.</b>
+     *
+     * <p>확정 행은 절대 덮지 않는다. 사실(국세청 등록)과 사람의 확인이 추정보다 위다.
+     * 그리고 {@link #confirmFrom} 과 같은 이유로 <b>실제 사람의 결제일 때만</b> 쌓는다 —
+     * 더미 사용자의 사업자번호는 생성기가 만든 것이라 실재하지 않는다.
+     *
+     * @return 남겼으면 그 행, 확정이 이미 있거나 더미 결제라 남기지 않았으면 empty
+     */
+    @Transactional
+    public Optional<MerchantCategory> rememberGuess(UserPayment payment, String category2) {
+        if (payment == null || !payment.isFromRealPerson()
+                || category2 == null || category2.isBlank()) {
             return Optional.empty();
         }
-        return first(repository.findByBusinessNumberOrdered(biz));
+        String normalized = MerchantCategory.normalize(payment.getBusinessNumber());
+        final String biz = mapper.isPaymentAgency(normalized) ? "" : normalized;
+        String name = payment.getMerchantName();
+        if (name == null || name.isBlank()) {
+            return Optional.empty();
+        }
+
+        Optional<MerchantCategory> existing =
+                repository.findByBusinessNumberAndMerchantName(biz, name);
+        if (existing.isPresent()) {
+            MerchantCategory row = existing.get();
+            if (row.isConfirmed()) {
+                return Optional.empty();     // 사실·사람의 확인을 추정으로 덮지 않는다
+            }
+            row.reclassify(category2, MerchantCategory.Source.LLM_GUESS, null);
+            return Optional.of(row);
+        }
+        return Optional.of(repository.save(new MerchantCategory(
+                biz, name, category2, MerchantCategory.Source.LLM_GUESS, null)));
     }
 
     /**
@@ -114,7 +178,12 @@ public class MerchantCategoryService {
     public MerchantCategory confirm(String businessNumber, String merchantName,
                                     String category2, MerchantCategory.Source source,
                                     Long confirmedBy) {
-        String biz = MerchantCategory.normalize(businessNumber);
+        String normalized = MerchantCategory.normalize(businessNumber);
+        // PG 번호는 <b>키에서 지운다</b> — 조회가 PG 번호를 버리는 것과 같은 규칙이라야 한다.
+        // 지우지 않으면 사람이 "맞아요"를 눌러 준 넷플릭스가 (KG이니시스, 넷플릭스…) 로 박혀,
+        // 같은 넷플릭스인데 NHNKCP 를 거친 4건에는 안 붙는다. 쌓이는 자리와 찾는 자리가
+        // 어긋나면 사전이 커져도 적중이 안 는다 — 아무 오류도 없이.
+        final String biz = mapper.isPaymentAgency(normalized) ? "" : normalized;
         return repository.findByBusinessNumberAndMerchantName(biz, merchantName)
                 .map(existing -> {
                     existing.reclassify(category2, source, confirmedBy);
@@ -122,10 +191,6 @@ public class MerchantCategoryService {
                 })
                 .orElseGet(() -> repository.save(
                         new MerchantCategory(biz, merchantName, category2, source, confirmedBy)));
-    }
-
-    private static Optional<String> first(List<MerchantCategory> rows) {
-        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0).getCategory2());
     }
 
     /**
@@ -153,6 +218,10 @@ public class MerchantCategoryService {
             rows.stream().sorted(java.util.Comparator.comparing(MerchantCategory::getId,
                             java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
                     .forEach(m -> {
+                        // 추정은 스냅샷에 담지 않는다. 여기 담긴 값은 적재 때 Consumption 의
+                        // 카테고리로 **굳어** 리포트·판정에 그대로 쓰이므로, 사람이 확인하지
+                        // 않은 추정이 섞이면 원칙 1(판단은 설명가능한 모델이)이 깨진다.
+                        if (!m.isConfirmed()) return;
                         String biz = m.getBusinessNumber();
                         exact.putIfAbsent(key(biz, m.getMerchantName()), m.getCategory2());
                         if (biz.isEmpty()) {
@@ -171,7 +240,10 @@ public class MerchantCategoryService {
             String biz = MerchantCategory.normalize(businessNumber);
             String hit = exact.get(key(biz, merchantName));
             if (hit != null) return Optional.of(hit);
-            if (biz.isEmpty()) return Optional.ofNullable(byNameOnly.get(merchantName));
+            // 번호가 없거나(해외) PG 의 것이면 이름으로 본다 — lookup ②·③ 과 같은 규칙이다.
+            if (biz.isEmpty() || mapper.isPaymentAgency(biz)) {
+                return Optional.ofNullable(byNameOnly.get(merchantName));
+            }
             return Optional.ofNullable(byBusiness.get(biz));
         }
 

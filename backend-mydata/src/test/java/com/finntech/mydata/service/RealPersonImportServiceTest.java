@@ -135,13 +135,27 @@ class RealPersonImportServiceTest {
         var r = service.importCsv(NAME, SOCIAL7, PHONE, null, """
                 2026-07-01,정상,4500
                 날짜아님,가게,1000
-                2026-07-03,취소건,-5000
                 2026-07-04
                 """);
         assertThat(r.accepted()).isEqualTo(1);
-        assertThat(r.rejected()).isEqualTo(3);
+        assertThat(r.rejected()).isEqualTo(2);
         assertThat(r.problems()).extracting(RealPersonImportService.RowResult::line)
-                .as("줄 번호가 있어야 원본에서 찾아 고칠 수 있다").containsExactly(2, 3, 4);
+                .as("줄 번호가 있어야 원본에서 찾아 고칠 수 있다").containsExactly(2, 3);
+    }
+
+    @Test
+    @DisplayName("취소·환불(음수)도 받는다 — 버리면 안 쓴 돈이 소비로 남는다")
+    void 취소를_받는다() {
+        var r = service.importCsv(NAME, SOCIAL7, PHONE, null, """
+                2026-07-01,고속철도(KTX)포항-서울,53600
+                2026-07-03,고속철도(KTX)포항-서울,-53600
+                """);
+        assertThat(r.accepted()).as("원결제와 취소가 둘 다 들어간다").isEqualTo(2);
+        assertThat(r.rejected()).isZero();
+        // 짝을 찾아 원결제를 지우지 않는다 — 부분취소가 있고 원결제가 명세서 밖일 수도 있어
+        // 짝짓기는 틀릴 때 조용히 틀린다. 음수 한 줄로 두면 합계가 알아서 상쇄된다.
+        assertThat(결제들()).extracting(com.finntech.mydata.domain.MyDataPayment::getAmount)
+                .containsExactlyInAnyOrder(53600, -53600);
     }
 
     @Test
@@ -190,5 +204,87 @@ class RealPersonImportServiceTest {
     void 빈_입력() {
         assertThat(service.importCsv(NAME, SOCIAL7, PHONE, null, null).accepted()).isZero();
         assertThat(service.importCsv(NAME, SOCIAL7, PHONE, null, "\n\n# 주석\n").accepted()).isZero();
+    }
+
+    // ── 사업자번호 — 확정 분류 사전의 키 (2026-08-05) ─────────────────────────────
+    //
+    // 이 칸이 없으면 사전이 아무리 차 있어도 실데이터에는 **한 건도 안 붙는다**.
+    // 조회가 '번호 없음' 갈래로 빠져(`MerchantCategoryService.lookup` ②) 번호로 쌓아 둔
+    // 씨앗을 영영 못 만나기 때문이다. 자리표 번호는 **0으로 시작하는 것만** 쓴다 —
+    // 국세청이 발급하지 않는 대역이라 실재 사업자와 겹칠 수 없다(CI 가 유출을 검사한다).
+
+    @Test
+    @DisplayName("5번째 칸의 사업자번호를 싣는다 — 사전이 붙을 수 있는 유일한 길")
+    void 사업자번호를_싣는다() {
+        var r = service.importCsv(NAME, SOCIAL7, PHONE, null,
+                "2026-07-01,가게A,10000,,0000000011\n");
+        assertThat(r.accepted()).isEqualTo(1);
+        assertThat(r.withBusinessNumber()).isEqualTo(1);
+        assertThat(결제들().get(0).getBusinessNumber()).isEqualTo("0000000011");
+    }
+
+    @Test
+    @DisplayName("하이픈·공백이 섞여도 숫자 10자리로 맞춘다 — 표기가 갈리면 같은 사업자가 남이 된다")
+    void 사업자번호를_정규화한다() {
+        service.importCsv(NAME, SOCIAL7, PHONE, null,
+                "2026-07-01,가게A,10000,, 000-00-00011 \n");
+        assertThat(결제들().get(0).getBusinessNumber()).isEqualTo("0000000011");
+    }
+
+    @Test
+    @DisplayName("10자리가 아니면 안 싣는다 — 잘린 번호를 넣으면 엉뚱한 사업자에 붙는다")
+    void 사업자번호가_아니면_비운다() {
+        service.importCsv(NAME, SOCIAL7, PHONE, null,
+                "2026-07-01,가게A,10000,,1234\n2026-07-02,가게B,20000,,\n");
+        assertThat(결제들()).allSatisfy(p -> assertThat(p.getBusinessNumber()).isNull());
+    }
+
+    @Test
+    @DisplayName("기존 4칸 파일이 그대로 읽힌다 — 칸을 뒤에 붙인 이유")
+    void 네칸_파일_회귀() {
+        var r = service.importCsv(NAME, SOCIAL7, PHONE, null,
+                "2026-07-01,가게A,10000,523131\n");
+        assertThat(r.accepted()).isEqualTo(1);
+        assertThat(결제들().get(0).getKsicCode()).isEqualTo("523131");
+        assertThat(결제들().get(0).getBusinessNumber()).isNull();
+    }
+
+    @Test
+    @DisplayName("이미 넣은 행에 사업자번호를 채운다 — 건너뛰면 '아무 일도 안 일어남'이 성공처럼 보인다")
+    void 사업자번호_채워넣기() {
+        service.importCsv(NAME, SOCIAL7, PHONE, null, "2026-07-01,가게A,10000\n");
+        assertThat(결제들().get(0).getBusinessNumber()).isNull();
+
+        var again = service.importCsv(NAME, SOCIAL7, PHONE, null,
+                "2026-07-01,가게A,10000,,0000000011\n");
+        assertThat(again.accepted()).as("행이 늘지 않는다").isZero();
+        assertThat(again.backfilled()).as("채워 넣었다").isEqualTo(1);
+        assertThat(결제들()).hasSize(1);
+        assertThat(결제들().get(0).getBusinessNumber()).isEqualTo("0000000011");
+    }
+
+    @Test
+    @DisplayName("본인인증이 이 사람을 찾아낸다 — 전화번호 표기가 원장과 같아야 한다")
+    void 본인인증이_찾아낸다() {
+        service.importCsv(NAME, SOCIAL7, PHONE, null, "2026-07-01,가게A,10000\n");
+        // 원장은 010-1234-5678 로 저장하고 조회도 그 표기로 한다. 숫자만으로 넣으면
+        // 있는 사람을 못 찾아 실제 사람이 자기 번호를 정확히 넣고도 PHONE_MISMATCH 를 듣는다.
+        assertThat(userRepository.findByPhoneNumber(PHONE))
+                .as("하이픈 표기로 찾힌다").isPresent();
+        assertThat(userRepository.findByPhoneNumber("01044445555"))
+                .as("숫자만으로는 저장돼 있지 않다").isEmpty();
+    }
+
+    @Test
+    @DisplayName("숫자만으로 저장돼 있던 사람도 다음 실행에서 표기가 맞춰진다")
+    void 옛_표기를_고친다() {
+        service.importCsv(NAME, SOCIAL7, PHONE, null, "2026-07-01,가게A,10000\n");
+        var u = userRepository.findById(Ci.of(NAME, SOCIAL7, PHONE)).orElseThrow();
+        u.setPhoneNumber("01044445555");                 // 옛 형식으로 되돌려 놓고
+        userRepository.save(u);
+
+        service.ensurePerson(NAME, SOCIAL7, PHONE, null);  // 다시 부르면
+        assertThat(userRepository.findById(Ci.of(NAME, SOCIAL7, PHONE)).orElseThrow()
+                .getPhoneNumber()).isEqualTo(PHONE);       // 고쳐진다
     }
 }
