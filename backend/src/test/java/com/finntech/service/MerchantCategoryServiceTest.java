@@ -149,6 +149,24 @@ class MerchantCategoryServiceTest {
     }
 
     @Test
+    @DisplayName("적재 스냅샷도 '이미 물어본 것'을 안다 — 재연동이 추정을 지우지 못한다")
+    void 스냅샷이_추정을_들고_있다() {
+        // 재연동은 결제 행을 통째로 지우고 다시 만든다. 추정이 결제 행에만 있으면 그때 날아가고,
+        // 사전에 멀쩡히 남아 있는데도 화면에서 사라진다(2026-08-05 운영: 82건 → 0건).
+        // 그래서 적재 경로가 추정을 다시 칠할 수 있어야 한다.
+        UserPayment real = realPayment("2208155597", "넷플릭스서비시스코리아 유한회사");
+        service.rememberGuess(real, "취미/여가");
+
+        var snap = new MerchantCategoryService.Snapshot(table, mapper);
+        assertThat(snap.lookup("2208155597", "넷플릭스서비시스코리아 유한회사"))
+                .as("판정층에는 없다 — 추정은 확정이 아니다").isEmpty();
+        assertThat(snap.guess("1138521083", "넷플릭스서비시스코리아 유한회사"))
+                .as("PG 가 달라도 이미 물어본 것이다").contains("취미/여가");
+        assertThat(snap.guess("2208155597", "스타벅스코리아"))
+                .as("안 물어본 것은 없다고 답한다").isEmpty();
+    }
+
+    @Test
     @DisplayName("추정은 확정을 덮지 못한다 — 사실과 사람의 확인이 위다")
     void guessesNeverOverwriteConfirmedRows() {
         seed("", "넷플릭스서비시스코리아 유한회사", "취미/여가");   // USER_CSV = 사실
