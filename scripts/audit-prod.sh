@@ -21,21 +21,15 @@ bad() { printf '  \033[31m✗\033[0m %-44s %s\n' "$1" "${2:-}"; fail=$((fail+1))
 
 # 운영에서 SQL 한 줄. 결과는 표준출력 그대로.
 psql() {
-  local q="$1" json cid s
-  json=$(python3 -c '
-import json,sys
-q=sys.argv[1]
-print(json.dumps({"commands":[
-  "set -a; . /opt/finntech/.env; set +a",
-  "printf %s "+repr(q).replace("\x27","\x22")+" | docker exec -i -e MYSQL_PWD=\"$MYSQL_ROOT_PASSWORD\" app-mysql-1 mysql -uroot -N -B",
-]}))' "$q")
+  local q="$1" json cid st
+  json=$(python3 scripts/_ssm_sql.py "$q") || return 1
   cid=$(aws ssm send-command --instance-ids "$INSTANCE" --document-name AWS-RunShellScript \
         --parameters "$json" --region "$REGION" --query 'Command.CommandId' --output text 2>/dev/null) || return 1
   for _ in $(seq 1 100); do
     sleep 3
-    s=$(aws ssm get-command-invocation --command-id "$cid" --instance-id "$INSTANCE" \
-        --region "$REGION" --query 'Status' --output text 2>/dev/null || echo Pending)
-    case "$s" in Pending|InProgress|Delayed) ;; *) break ;; esac
+    st=$(aws ssm get-command-invocation --command-id "$cid" --instance-id "$INSTANCE" \
+         --region "$REGION" --query 'Status' --output text 2>/dev/null | head -1)
+    case "${st:-Pending}" in Pending|InProgress|Delayed) ;; *) break ;; esac
   done
   aws ssm get-command-invocation --command-id "$cid" --instance-id "$INSTANCE" --region "$REGION" \
     --query 'StandardOutputContent' --output text 2>/dev/null | tr -d '\r'
@@ -62,23 +56,15 @@ cmp_both "가맹점"      "SELECT COUNT(*) FROM finntech_mydata.mydata_merchant;
 
 echo
 echo "=== 계약이 운영에서도 온전한가 ==="
-cmp_both "구독 서비스 종수" \
-  "SELECT COUNT(DISTINCT mydata_payment_merchant_name) FROM finntech_mydata.mydata_payment
-    WHERE mydata_payment_category2='스트리밍';"
-n=$(psql "SELECT COUNT(*) FROM (
-      SELECT c.mydata_user_id u FROM finntech_mydata.mydata_card c
-        JOIN finntech_mydata.mydata_payment p ON p.mydata_card_id=c.mydata_card_id
-       WHERE p.mydata_payment_category2='스트리밍' GROUP BY 1
-      HAVING COUNT(DISTINCT p.mydata_payment_merchant_name) > 10) t;" | tr -d '[:space:]')
+cmp_both "구독 서비스 종수" "SELECT COUNT(DISTINCT mydata_payment_merchant_name) FROM finntech_mydata.mydata_payment WHERE mydata_payment_category2='스트리밍';"
+n=$(psql "SELECT COUNT(*) FROM (SELECT c.mydata_user_id u FROM finntech_mydata.mydata_card c JOIN finntech_mydata.mydata_payment p ON p.mydata_card_id=c.mydata_card_id WHERE p.mydata_payment_category2='스트리밍' GROUP BY 1 HAVING COUNT(DISTINCT p.mydata_payment_merchant_name) > 10) t;" | tr -d '[:space:]')
 [ "${n:-x}" = "0" ] && ok "구독 11곳 이상인 사용자" "0명" || bad "구독 11곳 이상인 사용자" "${n:-조회실패}명"
 
 echo
 echo "=== 스키마가 새 코드와 맞는가 ==="
 v=$(psql "SELECT MAX(CAST(version AS UNSIGNED)) FROM finntech.flyway_schema_history WHERE success=1;" | tr -d '[:space:]')
 [ "${v:-0}" = "15" ] && ok "Flyway 최신 버전" "v$v" || bad "Flyway 최신 버전" "v${v:-?} (15이어야 한다)"
-c=$(psql "SELECT COUNT(*) FROM information_schema.COLUMNS
-          WHERE TABLE_SCHEMA='finntech' AND TABLE_NAME='user_payment'
-            AND COLUMN_NAME IN ('category2_llm','category2_source');" | tr -d '[:space:]')
+c=$(psql "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='finntech' AND TABLE_NAME='user_payment' AND COLUMN_NAME IN ('category2_llm','category2_source');" | tr -d '[:space:]')
 [ "${c:-0}" = "2" ] && ok "user_payment 새 칸 2개" || bad "user_payment 새 칸" "${c:-?}개"
 
 echo

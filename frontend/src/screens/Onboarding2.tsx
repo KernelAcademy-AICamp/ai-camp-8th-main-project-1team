@@ -11,7 +11,7 @@
  *
  * 추천은 ML 낭비 판정 금액(`wasteAmount`)이 큰 카테고리다.
  */
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '../components/Icons';
 import { AppBar, ProgressBar, Cta, Scroll, Screen, ErrorBox, Loading, Empty } from '../components/ui';
 import { useSession } from '../state/session';
@@ -26,17 +26,32 @@ export function Onboarding2() {
   const report = useAsync(() => api.onboardingWindow(userId), [userId]);
   const inited = useRef(false);
 
-  const { options, recommended } = useMemo(() => {
+  const { options, folded, recommended, noJudgment } = useMemo(() => {
     const r = report.data;
-    if (!r) return { options: [] as Option[], recommended: [] as string[] };
-    // 낭비로 판정된 금액이 그 카테고리 지출의 3분의 1을 넘으면 '줄여볼 만한 곳'으로 본다.
-    // 비율로 보는 이유: 금액만 보면 식비처럼 원래 큰 카테고리가 늘 1등이 된다.
-    const all: Option[] = r.categories
-      .filter((c) => c.amount > 0)
-      .map((c) => ({ ...c, rec: c.wasteAmount > 0 && c.wasteAmount / c.amount >= 0.33 }))
-      .sort((x, y) => y.wasteAmount - x.wasteAmount || y.amount - x.amount);
-    return { options: all, recommended: all.filter((c) => c.rec).slice(0, 2).map((c) => c.categoryCode) };
+    const none = { options: [] as Option[], folded: [] as Option[], recommended: [] as string[], noJudgment: false };
+    if (!r) return none;
+
+    // **낭비로 판정된 것만 올린다.** 이 화면이 묻는 것은 "얼마 썼나"가 아니라 "얼마를 줄일 수
+    // 있나"다. 지출액을 띄우면 교통비 526,600원이 맨 위에 앉는데, 줄일 수 없는 돈이라
+    // 사용자가 할 수 있는 일이 없다. 그래서 금액도 정렬도 **낭비 금액**으로 통일한다.
+    const withWaste = r.categories.filter((c) => c.wasteAmount > 0);
+
+    // 모델이 아직 판정을 못 하면(학습 전·근거 없음) 전부 0이 되어 화면이 텅 빈다. 그때는
+    // 지출 기준으로 되돌려 보여준다 — 조언을 지우는 것보다 예전 모습이 덜 놀랍다.
+    const base = withWaste.length > 0 ? withWaste : r.categories.filter((c) => c.amount > 0);
+    const byWaste = (x: Option, y: Option) => y.wasteAmount - x.wasteAmount || y.amount - x.amount;
+    const all: Option[] = base.map((c) => ({ ...c, rec: !c.protectedCategory && c.wasteAmount > 0 }));
+
+    return {
+      // 줄이라고 권하지 않는 카테고리(교통·통신·의료)는 접어 둔다 — 없애지는 않는다.
+      // 본인이 굳이 줄이겠다면 막을 이유가 없고, 다만 기본 화면을 어지럽히지는 않는다.
+      options: all.filter((c) => !c.protectedCategory).sort(byWaste),
+      folded: all.filter((c) => c.protectedCategory).sort(byWaste),
+      recommended: all.filter((c) => c.rec).slice(0, 2).map((c) => c.categoryCode),
+      noJudgment: withWaste.length === 0,
+    };
   }, [report.data]);
+  const [showFolded, setShowFolded] = useState(false);
 
   /** ① 분석의 절약 후보(category2 단위) 근거 문장을 카테고리 이름으로 이어 붙인다. */
   const reasonOf = useMemo(() => {
@@ -52,10 +67,10 @@ export function Onboarding2() {
 
   // 첫 진입 시 AI 추천 상위 2개를 미리 선택한다(사용자가 해제 가능 — IA CT-01).
   useEffect(() => {
-    if (inited.current || options.length === 0) return;
+    if (inited.current || options.length + folded.length === 0) return;
     inited.current = true;
     const baseline: typeof draft.baseline = {};
-    options.forEach((o) => {
+    [...options, ...folded].forEach((o) => {
       baseline[o.categoryCode] = {
         displayName: catLabel(o.categoryCode, o.displayName),
         monthlyAmount: o.amount,
@@ -66,11 +81,49 @@ export function Onboarding2() {
       };
     });
     patchDraft({ baseline, cutCats: draft.cutCats.length ? draft.cutCats : recommended });
-  }, [options, recommended, reasonOf, patchDraft, draft.cutCats, draft.baseline]);
+  }, [options, folded, recommended, reasonOf, patchDraft, draft.cutCats, draft.baseline]);
 
   const toggle = (code: string) => {
     const on = draft.cutCats.includes(code);
     patchDraft({ cutCats: on ? draft.cutCats.filter((k) => k !== code) : [...draft.cutCats, code] });
+  };
+
+  /** 카드 한 장 — 접힌 목록도 같은 모양이라야 "같은 걸 고르는 것"으로 읽힌다. */
+  const card = (c: Option) => {
+    const on = draft.cutCats.includes(c.categoryCode);
+    const name = catLabel(c.categoryCode, c.displayName);
+    const { icon, bg } = iconOf(name);
+    return (
+      <button type="button" key={c.categoryCode} onClick={() => toggle(c.categoryCode)} aria-pressed={on}
+        className="card" style={{
+          margin: 0, padding: 16, cursor: 'pointer', position: 'relative', textAlign: 'left',
+          fontFamily: 'inherit', width: '100%',
+          border: `1.5px solid ${on ? 'var(--blue)' : 'var(--line)'}`,
+          background: on ? 'var(--blue-weak)' : 'var(--card)',
+        }}>
+        {c.rec && (
+          <span style={{ position: 'absolute', top: -8, right: 14, fontSize: 10, fontWeight: 700, background: 'var(--blue-surface)', color: '#fff', padding: '2px 8px', borderRadius: 20 }}>
+            AI 추천
+          </span>
+        )}
+        <span className="list-item" style={{ padding: 0 }}>
+          <span className="ic" style={{ background: bg }}><Icon id={icon} /></span>
+          <span className="tx">
+            <b>{name} <span style={{ fontSize: 12, color: 'var(--t3)', fontWeight: 600 }}>
+              {c.protectedCategory ? '줄이라고 권하지 않아요' : '줄이면 좋아요'}</span></b>
+            {/* 큰 숫자가 '줄일 수 있는 돈'이므로, 설명줄이 '쓴 돈'을 맡는다 — 둘을 같은 크기로
+                나란히 두면 어느 쪽이 목표인지 흐려진다. */}
+            <span>{`최근 30일 ${won(c.amount)} 씀 · ${c.count.toLocaleString('ko-KR')}건`}</span>
+          </span>
+          <span style={{ textAlign: 'right', flex: '0 0 auto' }}>
+            <b style={{ color: 'var(--t1)', fontSize: 15, display: 'block' }}>
+              {won(noJudgment ? c.amount : c.wasteAmount)}</b>
+            <span style={{ fontSize: 11, color: 'var(--t3)' }}>
+              {noJudgment ? '최근 30일' : '줄일 수 있어요'}</span>
+          </span>
+        </span>
+      </button>
+    );
   };
 
   return (
@@ -81,52 +134,41 @@ export function Onboarding2() {
         <p className="h-title">뭘 줄여볼까요?</p>
         <p className="h-sub">
           지킴이가 <b style={{ color: 'var(--blue-t)' }}>AI 추천</b>으로 골라봤어요. 1~2개 권장.
-          금액은 <b>최근 30일 실제 지출</b>이에요 — 다음에서 어떤 결제를 뺄지 고르고 강도를 정해요.
+          금액은 <b>{noJudgment ? '최근 30일 실제 지출' : '줄일 수 있는 최대 금액'}</b>이에요 —
+          다음에서 어떤 결제를 뺄지 고르고 강도를 정해요.
         </p>
 
         <ErrorBox error={report.error} onRetry={report.reload} />
         {report.loading && <Loading label="카테고리를 불러오는 중" rows={4} />}
-        {!report.loading && options.length === 0 && !report.error && (
-          <Empty>아직 카테고리별 소비가 쌓이지 않았어요. 카드 연결 뒤 결제가 들어오면 후보가 생겨요.</Empty>
+        {!report.loading && options.length + folded.length === 0 && !report.error && (
+          <Empty>아직 줄일 만한 소비를 찾지 못했어요. 결제가 더 쌓이면 후보가 생겨요.</Empty>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {options.map((c) => {
-            const on = draft.cutCats.includes(c.categoryCode);
-            const name = catLabel(c.categoryCode, c.displayName);
-            const { icon, bg } = iconOf(name);
-            const reason = reasonOf(c.displayName);
-            return (
-              <button type="button" key={c.categoryCode} onClick={() => toggle(c.categoryCode)} aria-pressed={on}
-                className="card" style={{
-                  margin: 0, padding: 16, cursor: 'pointer', position: 'relative', textAlign: 'left',
-                  fontFamily: 'inherit', width: '100%',
-                  border: `1.5px solid ${on ? 'var(--blue)' : 'var(--line)'}`,
-                  background: on ? 'var(--blue-weak)' : 'var(--card)',
-                }}>
-                {c.rec && (
-                  <span style={{ position: 'absolute', top: -8, right: 14, fontSize: 10, fontWeight: 700, background: 'var(--blue-surface)', color: '#fff', padding: '2px 8px', borderRadius: 20 }}>
-                    AI 추천
-                  </span>
-                )}
-                <span className="list-item" style={{ padding: 0 }}>
-                  <span className="ic" style={{ background: bg }}><Icon id={icon} /></span>
-                  <span className="tx">
-                    <b>{name} <span style={{ fontSize: 12, color: 'var(--t3)', fontWeight: 600 }}>
-                      {c.rec ? '줄이면 좋아요' : '잘 관리 중'}</span></b>
-                    <span>{reason ?? (c.wasteAmount > 0
-                      ? `${c.count.toLocaleString('ko-KR')}건 중 ${won(c.wasteAmount)}이 줄일 수 있는 소비`
-                      : `최근 ${c.count.toLocaleString('ko-KR')}건`)}</span>
-                  </span>
-                  <span style={{ textAlign: 'right', flex: '0 0 auto' }}>
-                    <b style={{ color: 'var(--t1)', fontSize: 15, display: 'block' }}>{won(c.amount)}</b>
-                    <span style={{ fontSize: 11, color: 'var(--t3)' }}>최근 30일</span>
-                  </span>
-                </span>
-              </button>
-            );
-          })}
+          {options.map(card)}
         </div>
+
+        {/* 줄이라고 권하지 않는 카테고리 — 접어 둔다. 없애면 본인 의지로 줄일 길이 막히고,
+            펼쳐 두면 첫 화면이 "줄일 수 없는 돈"으로 채워진다. */}
+        {folded.length > 0 && (
+          <div style={{ marginTop: 14 }}>
+            <button type="button" onClick={() => setShowFolded((v) => !v)}
+              style={{ background: 'none', border: 'none', padding: '6px 0', cursor: 'pointer',
+                       fontFamily: 'inherit', fontSize: 13, color: 'var(--t3)', fontWeight: 600 }}>
+              {showFolded ? '▾' : '▸'} 줄이라고 권하지 않는 {folded.length}개 (교통·통신·의료 등)
+            </button>
+            {showFolded && (
+              <>
+                <p style={{ fontSize: 12, color: 'var(--t3)', margin: '2px 0 10px' }}>
+                  생활에 꼭 필요한 소비예요. 그래도 직접 줄여보고 싶다면 고를 수 있어요.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {folded.map(card)}
+                </div>
+              </>
+            )}
+          </div>
+        )}
         <div className="spacer" />
       </div></Scroll>
       <Cta>

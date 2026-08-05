@@ -40,6 +40,10 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, '..', '..')
 SRC = os.path.join(ROOT, '_archive', 'realdatas.csv')
+# 사람이 직접 정한 것 — `realdatas.csv` 에 없거나, 등록 업종이 도매·제조라 자동으로는
+# 못 넣던 곳이다(국세청은 **주업종만** 등록하므로 소매도 하는 곳은 등록만으로는 모른다).
+# 실제 명세서의 가맹점명을 보고 사람이 판단한 값이라 **자동 산출보다 우선한다.**
+MANUAL = os.path.join(ROOT, '_archive', 'merchant-manual.tsv')
 OUT = os.path.join(ROOT, '_archive', 'merchant-seed.tsv')
 NTS = os.path.join(ROOT, 'reference', '업종코드-국세청-2025.csv')
 
@@ -128,7 +132,43 @@ def main():
                 # 실제로는 떡집에서 산 것일 수 있다(주업종만 등록되기 때문이다).
                 non_consumer.append((biz, 업종))
                 continue
-            rows.append((biz, mids.pop(), 업종))
+            rows.append((biz, mids.pop(), 업종, ''))
+
+    # 수동 지정은 마지막에 덮어쓴다 — 사람이 본 것이 등록 업종보다 정확하다.
+    manual, manual_bad = 0, []
+    if os.path.exists(MANUAL):
+        auto = {b: i for i, (b, _, _, _) in enumerate(rows)}
+        for line in io.open(MANUAL, encoding='utf-8'):
+            if line.startswith('#') or not line.strip():
+                continue
+            col = line.rstrip('\n').split('\t')
+            if len(col) < 2:
+                continue
+            biz, code, why = col[0].strip(), col[1].strip(), (col[2].strip() if len(col) > 2 else '')
+            # 4번째 칸(가맹점 풀네임)이 있으면 **번호 없이 이름으로만** 붙는 행이다.
+            # PG 를 거친 결제가 그렇다 — 1번째 칸은 어디서 봤는지의 근거일 뿐 키가 아니다.
+            name = col[3].strip() if len(col) > 3 else ''
+            if code not in 실재:
+                manual_bad.append((biz, code))
+                continue
+            cat = mid.get(code, '카테고리없음')
+            if cat == '카테고리없음':
+                manual_bad.append((biz, code + ' → 소비 업종이 아니다'))
+                continue
+            if name:
+                rows.append(('', cat, why, name))
+            elif biz in pg:
+                # 수동 지정도 PG 검사를 받는다. 자동 경로만 막아 두었더니 사람이 적은 번호가
+                # 그대로 통과했고, KSNET(120-81-97322) 이 'CJ올리브영'이라는 표시명만 보고
+                # 미용으로 실렸다 — 그 PG 를 거친 모든 결제가 미용이 될 뻔했다(2026-08-05).
+                # PG 를 거친 결제는 4번째 칸에 가맹점명을 적어 **이름 단독 행**으로 넣는다.
+                manual_bad.append((biz, f'{code} → PG({pg[biz]}) 다. 4번째 칸에 가맹점명을 적어라'))
+                continue
+            elif biz in auto:
+                rows[auto[biz]] = (biz, cat, why or rows[auto[biz]][2], '')
+            else:
+                rows.append((biz, cat, why, ''))
+            manual += 1
 
     rows.sort()
     with io.open(OUT, 'w', encoding='utf-8') as f:
@@ -136,13 +176,16 @@ def main():
                 '# scripts/industry/build_merchant_seed.py 가 _archive/realdatas.csv 에서 만든다.\n'
                 '# 출처는 국세청 등록 업종이라 LLM 추정이 아니라 **사실**이다.\n'
                 '# PG·업종코드 없음(지자체 등)은 뺐다 — 사업자번호만으로 결제 성격을 말할 수 없다.\n'
-                '#\n# 사업자번호\t중분류\t등록 업종(근거)\n')
-        for biz, m, 업종 in rows:
-            f.write(f'{biz}\t{m}\t{업종}\n')
+                '# 사업자번호가 빈 행은 **이름으로만** 붙는다 — PG 를 거친 결제가 그렇다.\n'
+                '#\n# 사업자번호\t중분류\t등록 업종(근거)\t가맹점명(이름 단독일 때만)\n')
+        for biz, m, 업종, name in rows:
+            f.write(f'{biz}\t{m}\t{업종}\t{name}\n')
 
-    print(f'  {os.path.relpath(OUT, ROOT)} — 확정 {len(rows)}곳')
+    print(f'  {os.path.relpath(OUT, ROOT)} — 확정 {len(rows)}곳 (수동 지정 {manual}곳 포함)')
+    if manual_bad:
+        print(f'   ⚠ 수동 지정에서 못 쓴 것 {len(manual_bad)}: {manual_bad}', file=sys.stderr)
     dist = {}
-    for _, m, _ in rows:
+    for _, m, _, _ in rows:
         dist[m] = dist.get(m, 0) + 1
     print('   중분류 분포: ' + ' · '.join(f'{k} {v}' for k, v in sorted(dist.items(), key=lambda x: -x[1])))
     print(f'   PG 라 제외: {len(skipped_pg)}곳 — ' + ', '.join(n for _, n, _ in skipped_pg))

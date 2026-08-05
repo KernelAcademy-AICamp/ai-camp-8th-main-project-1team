@@ -47,9 +47,16 @@ def rows(path):
             if len(c) < 2:
                 continue
             biz = ''.join(ch for ch in c[0] if ch.isdigit())
-            if len(biz) != 10 or not c[1].strip():
+            # 4번째 칸(가맹점명)이 있으면 **번호 없이 이름으로만** 붙는 행이다 — PG 경유 결제.
+            name = c[3].strip() if len(c) > 3 else ''
+            if not c[1].strip():
                 continue
-            out.append((biz, c[1].strip()))
+            if name:
+                out.append(('', c[1].strip(), name))
+                continue
+            if len(biz) != 10:
+                continue
+            out.append((biz, c[1].strip(), ''))
     return out
 
 
@@ -65,9 +72,11 @@ def main():
         sys.exit(1)
 
     dist = {}
-    for _, m in data:
+    for _, m, _ in data:
         dist[m] = dist.get(m, 0) + 1
-    print(f'  {os.path.relpath(src, ROOT)} — {len(data)}곳')
+    byname = sum(1 for b, _, _ in data if not b)
+    print(f'  {os.path.relpath(src, ROOT)} — {len(data)}곳'
+          + (f' (그중 이름으로만 붙는 것 {byname}곳 — PG 경유)' if byname else ''))
     print('   ' + ' · '.join(f'{k} {v}' for k, v in sorted(dist.items(), key=lambda x: -x[1])))
 
     if DRY:
@@ -87,22 +96,30 @@ def main():
         password=os.environ.get('DB_PASSWORD', 'finntech'),
         database=os.environ.get('DB_NAME', 'finntech'),
         charset='utf8mb4', autocommit=False)
+    # pymysql 은 charset 을 주면 연결 인코딩까지 맞춘다. **CLI 로 넣을 때는 반드시**
+    # `mysql --default-character-set=utf8mb4` 를 붙인다 — 빠뜨리면 latin1 로 읽어
+    # 한글이 이중 인코딩되고, 그 값이 사전 조회를 거쳐 Category 생성까지 번진다
+    # (2026-08-04 운영에서 실제로 1,523건이 깨진 카테고리로 들어갔다).
 
     # 멱등: 같은 (번호, 이름) 이 이미 있으면 분류만 맞춘다. 사람이 확인한 것(USER_CONFIRMED)은
     # **덮지 않는다** — 사람의 판단이 CSV 일괄 적재보다 뒤에 있으면 안 된다.
     sql = """
         INSERT INTO merchant_category
             (business_number, merchant_name, category2, source, created_at, updated_at)
-        VALUES (%s, '', %s, %s, NOW(6), NOW(6))
+        VALUES (%s, %s, %s, %s, NOW(6), NOW(6))
         ON DUPLICATE KEY UPDATE
             category2  = IF(source = 'USER_CONFIRMED', category2, VALUES(category2)),
+            -- **source 도 함께 올린다.** 같은 가맹점에 LLM 추정(LLM_GUESS)이 먼저 쌓여 있을 수
+            -- 있는데, 분류만 사실로 바꾸고 출처를 그대로 두면 그 행은 여전히 '추정'이라
+            -- 조회에서 걸러진다 — 값은 맞는데 안 붙는, 오류 없는 실패가 된다.
+            source     = IF(source = 'USER_CONFIRMED', source, VALUES(source)),
             updated_at = IF(source = 'USER_CONFIRMED', updated_at, NOW(6))
     """
     try:
         with conn.cursor() as cur:
             cur.execute("SELECT COUNT(*) FROM merchant_category")
             before = cur.fetchone()[0]
-            cur.executemany(sql, [(b, m, SOURCE) for b, m in data])
+            cur.executemany(sql, [(b, n, m, SOURCE) for b, m, n in data])
             cur.execute("SELECT COUNT(*) FROM merchant_category")
             after = cur.fetchone()[0]
         conn.commit()

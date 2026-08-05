@@ -99,12 +99,16 @@ public class AnalysisEngine {
                     .map(Consumption::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
             double ratio = total.signum() == 0 ? 0.0
                     : sum.divide(total, 10, RoundingMode.HALF_UP).doubleValue();
-            boolean sufficient = e.getValue().size() >= props.getFds().getMinSamplesPerCategory();
+            // 건수는 <b>실제 소비 건만</b> 센다 — 취소 한 줄이 "이 카테고리를 한 번 더 썼다"로
+            // 세어지면 표본이 부풀고, 그 표본으로 충분·불충분을 가르면 판정 근거가 흔들린다.
+            // 금액(sum)은 취소를 포함해 상쇄시킨다 — 세는 것과 더하는 것은 목적이 다르다.
+            int count = (int) e.getValue().stream().filter(c -> c.getAmount().signum() > 0).count();
+            boolean sufficient = count >= props.getFds().getMinSamplesPerCategory();
             Set<String> catMonths = monthsByCategory.getOrDefault(e.getKey(), Set.of());
             int observedMonths = Math.max(1, catMonths.size());
             int observedMonthDays = catMonths.stream().mapToInt(AnalysisEngine::daysInMonth).sum();
             stats.put(e.getKey(), new AnalysisResult.CategoryStat(
-                    e.getKey(), displayNames.get(e.getKey()), sum, ratio, e.getValue().size(),
+                    e.getKey(), displayNames.get(e.getKey()), sum, ratio, count,
                     sufficient, observedMonths, Math.max(1, observedMonthDays)));
             if (ratio > props.getOverspending().getRatioThreshold()) {
                 overspending.add(e.getKey());
@@ -183,6 +187,11 @@ public class AnalysisEngine {
         List<Consumption> evaluated = new ArrayList<>();
 
         for (Consumption c : all) {
+            // 취소·환불(음수)은 <b>소비 한 건이 아니다.</b> 합계에서는 상쇄돼야 하므로 위쪽
+            // 카테고리 집계에는 그대로 들어가지만, 건별 판정의 대상은 아니다. 게다가 아래는
+            // 금액에 로그를 취하는데 음수를 넣으면 NaN 이 되어 그 카테고리의 기준선이 통째로
+            // 망가진다 — 예외도 경고도 없이 판정만 조용히 어긋난다.
+            if (c.getAmount().signum() <= 0) continue;
             LocalDateTime t = c.getOccurredAt();
             String code = c.getCategory().getCode();
             if (!t.isBefore(evalFrom) && !t.isAfter(ref)) {

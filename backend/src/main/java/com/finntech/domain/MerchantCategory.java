@@ -35,7 +35,22 @@ public class MerchantCategory {
         /** 사용자가 업종코드를 직접 준 것. 국세청 등록 정보라 추정이 아니라 사실이다. */
         USER_CSV,
         /** LLM 추정을 사람이 "맞다"고 확인한 것. */
-        USER_CONFIRMED
+        USER_CONFIRMED,
+        /**
+         * <b>LLM 이 추정만 한 것 — 확정이 아니다.</b> 판정에 참여하지 않으며
+         * {@code lookup} 이 이 행을 돌려주지 않는다. 여기 있는 이유는 하나다:
+         * <b>같은 가맹점을 두 번 묻지 않기 위해서</b>. 추정을 결제 행에만 적어 두면
+         * 다음 달 같은 넷플릭스가 새 결제로 들어올 때 또 묻게 된다.
+         *
+         * <p>사람이 나중에 "맞아요"를 누르면 이 행이 {@link #USER_CONFIRMED} 로 승격되고,
+         * 국세청 등록 정보가 들어오면 {@link #USER_CSV} 가 덮는다 — 사실이 추정을 이긴다.
+         */
+        LLM_GUESS
+    }
+
+    /** 판정에 참여할 수 있는 출처인가 — 추정은 아니다(마스터 §4 원칙 1). */
+    public boolean isConfirmed() {
+        return !Source.LLM_GUESS.name().equals(source);
     }
 
     @Id
