@@ -53,10 +53,25 @@ class AccountFundFlowSourceTest {
                 "BLUE", company, prevPerformance, 0, 300_000);
     }
 
-    /** 고정형 반복 결제 1건 — 월 주기(30일)가 기본. */
+    /**
+     * 고정형 반복 결제 1건 — 월 주기(30일)가 기본.
+     *
+     * <p>businessNumber·daypart·priorAmount·firstSeen·lastSeen은 {@link AccountFundFlowSource}가
+     * 읽지 않으므로 null로 둔다. status는 {@code ACTIVE} — L2는 <b>지금도 나가는</b> 고정비다.
+     */
     private static RecurringPayment fixed(String merchant, long amount, int periodDays, int nextDay) {
-        return new RecurringPayment(RecurringPayment.Type.FIXED, "category2", merchant, null, null,
-                amount, periodDays, LocalDate.of(2026, 8, nextDay), 3, 7.0 / periodDays);
+        return new RecurringPayment(RecurringPayment.Type.FIXED, RecurringPayment.Status.ACTIVE,
+                "category2", merchant, null, null,
+                amount, false, null, periodDays, LocalDate.of(2026, 8, nextDay), null, null,
+                3, 7.0 / periodDays);
+    }
+
+    /** 이미 해지된 고정형 — 탐지는 전 기간을 보므로 목록에는 남는다. nextExpected는 없다. */
+    private static RecurringPayment ended(String merchant, long amount, int periodDays) {
+        return new RecurringPayment(RecurringPayment.Type.FIXED, RecurringPayment.Status.ENDED,
+                "category2", merchant, null, null,
+                amount, false, null, periodDays, null, null, null,
+                3, 7.0 / periodDays);
     }
 
     private static FundFlowInputs assemble(MyDataResponses.AccountView account, List<UserPayment> payments,
@@ -193,9 +208,28 @@ class AccountFundFlowSourceTest {
     /** 루틴형(아침 커피 같은 습관)은 고정비가 아니다 — 끊을 수 있는 소비다. */
     @Test
     void L2_루틴형은_고정비에서_제외한다() {
-        RecurringPayment routine = new RecurringPayment(RecurringPayment.Type.ROUTINE, "카페",
-                null, null, "아침", 5_000, null, null, 12, 3.0);
+        RecurringPayment routine = new RecurringPayment(RecurringPayment.Type.ROUTINE,
+                RecurringPayment.Status.ACTIVE, "카페",
+                null, null, "아침", 5_000, false, null, null, null, null, null, 12, 3.0);
         assertThat(AccountFundFlowSource.fixedExpense(List.of(routine))).isNull();
+    }
+
+    /**
+     * 해지한 구독은 지금 매달 나가는 돈이 아니다 — 더하면 고정비/소득 비율 판정까지 부풀어 오른다.
+     * 탐지가 전 기간을 보게 되면서(develop, 2026-08-04) 목록에 ENDED가 섞여 들어온다.
+     */
+    @Test
+    void L2_끝난_고정형은_고정비에서_뺀다() {
+        var fixedExpense = AccountFundFlowSource.fixedExpense(List.of(
+                fixed("통신사", 50_000, 30, 5),
+                ended("작년에_해지한_구독", 90_000, 30)));
+
+        assertThat(fixedExpense.total()).isEqualTo(50_000);          // 90,000은 안 더해진다
+    }
+
+    @Test
+    void L2_전부_끝난_고정형이면_0원이_아니라_UNKNOWN이다() {
+        assertThat(AccountFundFlowSource.fixedExpense(List.of(ended("해지한_구독", 90_000, 30)))).isNull();
     }
 
     /** "고정비 0원"과 "고정비를 모른다"는 다르다. */
@@ -254,6 +288,23 @@ class AccountFundFlowSourceTest {
                 List.of(fixed("월세", 600_000, 30, 1)), 1_000_000, NOW.minusMonths(6), TH);
 
         assertThat(large.cycleMonths()).isNull();   // 전부 반복으로 제외 → 큰 지출 없음
+    }
+
+    /**
+     * L2와 반대로 <b>끝난 구독도 빼야 한다.</b> 해지 전 청구는 여전히 반복 결제지 "어쩌다 한 번 큰돈"이
+     * 아니다. 여기서 빼지 않으면 해지한 구독이 있지도 않은 목돈 수요로 되살아난다.
+     */
+    @Test
+    void L4_끝난_고정형_가맹점도_큰지출에서_뺀다() {
+        List<UserPayment> payments = List.of(
+                card(LocalDateTime.of(2026, 7, 1, 9, 0), 600_000, "월세"),
+                card(LocalDateTime.of(2026, 6, 1, 9, 0), 600_000, "월세"),
+                card(LocalDateTime.of(2026, 5, 1, 9, 0), 600_000, "월세"));
+
+        var large = AccountFundFlowSource.largeExpense(payments,
+                List.of(ended("월세", 600_000, 30)), 1_000_000, NOW.minusMonths(6), TH);
+
+        assertThat(large.cycleMonths()).isNull();
     }
 
     @Test

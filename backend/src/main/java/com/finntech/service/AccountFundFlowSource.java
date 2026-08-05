@@ -186,9 +186,16 @@ public class AccountFundFlowSource implements FundFlowSource {
      *
      * <p>주기가 제각각(주간·월간)이라 <b>월 환산</b>해 더한다 — 주간 1만원은 월 4.3만원이다.
      * 고정형을 하나도 못 찾으면 {@code null}(=UNKNOWN)이다. "고정비 0원"이라고 말하지 않는다.
+     *
+     * <p><b>끝난 구독({@link RecurringPayment.Status#ENDED})은 뺀다.</b> 탐지는 전 기간을 보므로
+     * 작년에 해지한 구독도 목록에 남는데, 그것까지 더하면 지금 매달 나가지도 않는 돈이 고정비로 잡혀
+     * {@code fixed-cost-high-ratio}(고정비/소득 ≥ 0.40 → HIGH) 판정까지 함께 틀어진다.
+     * L4의 {@link #fixedMerchantIdentities}는 반대로 ENDED도 포함해야 한다 — 이유는 그쪽 주석 참조.
      */
     static FundFlowInputs.FixedExpenseSummary fixedExpense(List<RecurringPayment> recurring) {
-        List<RecurringPayment> fixed = fixedOnly(recurring);
+        List<RecurringPayment> fixed = fixedOnly(recurring).stream()
+                .filter(r -> r.status() == RecurringPayment.Status.ACTIVE)
+                .toList();
         if (fixed.isEmpty()) return null;
 
         long monthlyTotal = 0;
@@ -198,6 +205,10 @@ public class AccountFundFlowSource implements FundFlowSource {
         return new FundFlowInputs.FixedExpenseSummary(monthlyTotal, withdrawalDaySpread(fixed));
     }
 
+    /**
+     * 고정형이면서 주기를 아는 것 — <b>status는 보지 않는다.</b> 걸러야 하는 쪽(L2)에서 따로 건다.
+     * L4는 끝난 구독도 필요하기 때문이다.
+     */
     private static List<RecurringPayment> fixedOnly(List<RecurringPayment> recurring) {
         if (recurring == null) return List.of();
         return recurring.stream()
@@ -266,7 +277,13 @@ public class AccountFundFlowSource implements FundFlowSource {
         return new FundFlowInputs.LargeExpense(cycleMonths, predictable);
     }
 
-    /** 고정형 반복으로 이미 잡힌 가맹점들 — 큰 지출에서 빼기 위한 집합. */
+    /**
+     * 고정형 반복으로 이미 잡힌 가맹점들 — 큰 지출에서 빼기 위한 집합.
+     *
+     * <p><b>끝난 구독도 넣는다</b>(L2와 반대). 해지한 구독이 남긴 과거 결제는 여전히 반복 결제지
+     * "어쩌다 한 번 큰돈"이 아니다. 여기서 빼지 않으면 해지 전 청구들이 L4의 큰 1회성 지출로 잡혀
+     * 있지도 않은 목돈 수요가 생긴다.
+     */
     private static Set<String> fixedMerchantIdentities(List<RecurringPayment> recurring) {
         Set<String> out = new HashSet<>();
         for (RecurringPayment r : fixedOnly(recurring)) {
