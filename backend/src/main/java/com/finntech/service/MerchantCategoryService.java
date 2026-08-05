@@ -210,6 +210,11 @@ public class MerchantCategoryService {
         private final Map<String, String> exact = new HashMap<>();       // key(번호, 풀네임) → 중분류
         private final Map<String, String> byBusiness = new HashMap<>();  // 번호 → 중분류(PG 아닌 것만)
         private final Map<String, String> byNameOnly = new HashMap<>();  // 번호 없는 해외 가맹점
+        // 추정층 — 확정과 **같은 키 규칙**으로 따로 담는다. 판정에는 안 쓰고, 연동할 때
+        // 결제 행의 `category2_llm` 을 다시 칠하는 데만 쓴다.
+        private final Map<String, String> guessExact = new HashMap<>();
+        private final Map<String, String> guessByBusiness = new HashMap<>();
+        private final Map<String, String> guessByNameOnly = new HashMap<>();
         private final IndustryCategoryMapper mapper;
 
         Snapshot(List<MerchantCategory> rows, IndustryCategoryMapper mapper) {
@@ -221,8 +226,17 @@ public class MerchantCategoryService {
                         // 추정은 스냅샷에 담지 않는다. 여기 담긴 값은 적재 때 Consumption 의
                         // 카테고리로 **굳어** 리포트·판정에 그대로 쓰이므로, 사람이 확인하지
                         // 않은 추정이 섞이면 원칙 1(판단은 설명가능한 모델이)이 깨진다.
-                        if (!m.isConfirmed()) return;
                         String biz = m.getBusinessNumber();
+                        if (!m.isConfirmed()) {
+                            // 추정은 판정층에 담지 않는다 — 담기면 Consumption 카테고리로 굳는다.
+                            guessExact.putIfAbsent(key(biz, m.getMerchantName()), m.getCategory2());
+                            if (biz.isEmpty()) {
+                                guessByNameOnly.putIfAbsent(m.getMerchantName(), m.getCategory2());
+                            } else if (!mapper.isPaymentAgency(biz)) {
+                                guessByBusiness.putIfAbsent(biz, m.getCategory2());
+                            }
+                            return;
+                        }
                         exact.putIfAbsent(key(biz, m.getMerchantName()), m.getCategory2());
                         if (biz.isEmpty()) {
                             byNameOnly.putIfAbsent(m.getMerchantName(), m.getCategory2());
@@ -245,6 +259,25 @@ public class MerchantCategoryService {
                 return Optional.ofNullable(byNameOnly.get(merchantName));
             }
             return Optional.ofNullable(byBusiness.get(biz));
+        }
+
+        /**
+         * <b>이 가맹점을 이미 물어봤는가</b> — 물어봤다면 그때의 추정.
+         *
+         * <p>재연동은 결제 행을 통째로 지우고 다시 만든다. 추정이 결제 행에만 있으면 그때
+         * 전부 날아가고, 사용자는 <i>"AI가 분류했다더니 안 보인다"</i>를 겪는다 —
+         * 사전에는 멀쩡히 남아 있는데도 그렇다(2026-08-05 운영에서 실제로 발생).
+         * 복구를 별도 화면 방문에 맡기지 않고 <b>연동할 때 같이 칠한다.</b>
+         */
+        public Optional<String> guess(String businessNumber, String merchantName) {
+            if (merchantName == null || merchantName.isBlank()) return Optional.empty();
+            String biz = MerchantCategory.normalize(businessNumber);
+            String hit = guessExact.get(key(biz, merchantName));
+            if (hit != null) return Optional.of(hit);
+            if (biz.isEmpty() || mapper.isPaymentAgency(biz)) {
+                return Optional.ofNullable(guessByNameOnly.get(merchantName));
+            }
+            return Optional.ofNullable(guessByBusiness.get(biz));
         }
 
         /** 사전에 있으면 그 분류를, 없으면 업종코드가 정한 분류를 준다. */
