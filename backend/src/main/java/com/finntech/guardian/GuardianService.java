@@ -426,22 +426,28 @@ public class GuardianService {
     /**
      * 거래를 분류해 상태를 세운다. 집계했으면 true.
      *
-     * <p>{@link GuardianRules#evaluateIntervention}의 앞쪽 분기와 같은 조건을 본다.
-     * 판정 함수는 순수하게(DB 접근 없이) 두어야 단위 테스트가 가능하므로, 원장을 실제로
-     * 움직이는 쪽은 여기서 따로 처리한다.
+     * <p><b>판정 축은 {@link GuardianRules#resolveKind} 하나다</b>(스펙 v1.5 §5.1).
+     * 예전에는 여기와 {@code evaluateIntervention}이 같은 조건을 각자 적어 두 곳이
+     * 조금씩 어긋날 수 있었다. 이제 종류는 순수 함수가 정하고, 원장을 실제로 움직이는
+     * 일만 여기서 한다.
      */
     private boolean classify(GuardianChallenge ch, GuardianTransaction tx, LocalDateTime now) {
         if (tx.getTxType() == TxType.REFUND) {
             restoreRefund(ch, tx);
             return false;
         }
+
+        TxKind kind = GuardianRules.resolveKind(
+                new GuardianRules.TxView(tx.getCategory(), tx.getCategoryConfidence(),
+                        tx.getTxType(), tx.getAmount(), tx.isFixedExpense()),
+                viewOf(ch), props.getCategoryConfidenceThreshold());
+        tx.setKind(kind);
+
         // 분류가 확정되지 않았으면 보류. 나중에 분류가 붙으면 그때 집계한다.
-        if (tx.getCategory() == null
-                || orZero(tx.getCategoryConfidence()) < props.getCategoryConfidenceThreshold()) {
-            return false;
-        }
-        if (ch.getSanctuarySet().contains(tx.getCategory())
-                || !ch.getCategorySet().contains(tx.getCategory())) {
+        if (kind == TxKind.UNKNOWN) return false;
+
+        // 성역·고정지출·관리 밖 지출은 원장에 남기되 예산에서 빼지 않는다.
+        if (!kind.countsAgainstCap()) {
             tx.exclude();
             return false;
         }
@@ -708,7 +714,8 @@ public class GuardianService {
     private GuardianRules.InterventionContext context(GuardianChallenge ch, GuardianRules.Snapshot snap,
                                                       GuardianTransaction tx, LocalDate today, LocalDateTime now) {
         GuardianRules.TxView txView = tx == null ? null : new GuardianRules.TxView(
-                tx.getCategory(), tx.getCategoryConfidence(), tx.getTxType(), tx.getAmount());
+                tx.getCategory(), tx.getCategoryConfidence(), tx.getTxType(), tx.getAmount(),
+                tx.isFixedExpense());
 
         String category = tx == null ? null : tx.getCategory();
         int weekly = category == null ? 0 : txRepository.countCountedByCategoryInRange(

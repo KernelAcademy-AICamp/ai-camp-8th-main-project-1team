@@ -170,6 +170,22 @@ finntech:
     category-confidence-threshold: 0.70
     # 이번 주 같은 카테고리 결제가 이 건수에 이르면 C2(패턴 지적)
     repeat-weekly-count: 3
+    # ── v1.5 신설 ──────────────────────────────────────────────────────
+    # C5 — 무지출 연속이 이 값의 '배수'일 때만 칭찬한다(3·6·9일…).
+    # v1.2는 "3일 이상"이라 넷째 날부터 매일 걸렸다. 매일 울리면 칭찬이 닳는다.
+    no-spend-praise-interval: 3
+    # C10·C11 — 종료 임박 판정에 들어가는 남은 일수
+    ending-soon-days-left: 3
+    # C10(격려)과 C11(사실 통보)을 가르는 사용률. v1.2는 "초과했는가(1.0)"로 갈랐는데,
+    # 0.9에서 사흘 남은 사람에게 격려를 보내면 어긋난다.
+    ending-soon-ratio: 0.85
+    # C9 — 최근 4주 중 이 횟수 이상 반복된 시간대만 사전 넛지 대상.
+    # 근거 없이 보내면 "지난 4주 중 3번"을 지어내게 된다.
+    nudge-frequency-4w: 3
+    nudge-lead-minutes: 30
+    # 세리머니 모달 자동 노출 — 이 일수 안에는 매일, 그 뒤로는 희귀 이상만.
+    # 매일 띄우면 연출이 광고처럼 읽힌다.
+    ceremony-auto-open-first-days: 7
     # 단건 이 금액 미만은 잔돈 버킷으로 모은다(개별 알림 대신)
     micro-tx-threshold: 5000
     # 잔돈 버킷 합계가 이 금액을 넘으면 C8을 하루 1회
@@ -195,13 +211,22 @@ finntech:
       game-events-use-push: false
     point:
       # 미션 30 + 위기 방어 20 + 라벨링 최대 50(25건) = 주간 상한 100
+      # weekly-mission은 '총액'이다 — 진행 중 미션이 나눠 갖는다(1개 30 · 2개 15 · 3개 10, v1.5 §5.5).
+      # 미션마다 정액을 주면 "두 개 하면 두 배"가 되어 수집형 플레이로 변질된다.
       weekly-mission: 30
+      max-active-missions: 3
       risk-defense: 20
       labeling: 2
+      labeling-weekly-cap: 50
       monthly-complete: 100
       weekly-cap: 100
       # 완주는 장기 보상이라 주간 상한과 별도로 지급한다
       monthly-exempt-from-cap: true
+      # 중복 사물 전환(v1.5 §5.5) — 등급별. 주간 상한 '밖'이다.
+      # 상한에 걸려 0이 되면 "또 같은 게 나왔다"가 아무 보상도 없는 일이 되어 뽑기가 벌처럼 읽힌다.
+      duplicate-common: 5
+      duplicate-rare: 15
+      duplicate-epic: 30
       # 출석·로그인 보상은 없다. 포인트는 절약 행동의 증명이어야 한다.
       attendance-reward: 0
     shop:

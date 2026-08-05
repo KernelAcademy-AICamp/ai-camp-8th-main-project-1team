@@ -193,6 +193,23 @@ public class GuardianRewardService {
             case RISK_DEFENSE -> p.getRiskDefense();
             case LABELING -> p.getLabeling();
             case MONTHLY_COMPLETE -> p.getMonthlyComplete();
+            // 등급별로 달라 여기서는 정할 수 없다 — duplicateAmount()가 정한 값을 그대로 받는다.
+            case DUPLICATE_OBJECT -> 0;
+        };
+    }
+
+    /**
+     * 중복 사물 전환 포인트 (스펙 v1.5 §5.5). 이미 가진 사물이 나왔을 때 등급대로 바꿔 준다.
+     *
+     * <p>주간 상한 밖이다 — 상한에 걸려 중복 보상이 0이 되면 "또 같은 게 나왔다"가
+     * 아무 보상도 없는 일이 되어, 뽑기 자체가 벌처럼 읽힌다.
+     */
+    public int duplicateAmount(Grade grade) {
+        GuardianProperties.Point p = props.getPoint();
+        return switch (grade) {
+            case COMMON -> p.getDuplicateCommon();
+            case RARE -> p.getDuplicateRare();
+            case EPIC -> p.getDuplicateEpic();
         };
     }
 

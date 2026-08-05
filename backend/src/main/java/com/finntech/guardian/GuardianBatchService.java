@@ -126,8 +126,15 @@ public class GuardianBatchService {
         long spentUntil = txRepository.sumCountedUntil(ch.getId(), target);
         int streakAfter = countedOnDate == 0 ? ch.getNoSpendStreak() + 1 : 0;
 
-        GuardianRules.DailyJudgment j = GuardianRules.dailyJudgment(
-                guardianService.viewOf(ch), ch.daysElapsedOn(target), spentUntil, countedOnDate, streakAfter);
+        // 챌린지별로 판정한 뒤 **사용자 하나의 결과로 합친다**(스펙 v1.5 §5.3).
+        // 아침 사물은 챌린지 개수와 무관하게 하루 1개다 — 여러 개 걸었다고 여러 개 받으면
+        // 안 지킬 챌린지를 늘리는 것이 이득이 된다.
+        //
+        // 지금은 사용자당 진행 중인 챌린지가 하나라 합산이 항등이다. 카테고리별 한도를
+        // 별도 챌린지로 쪼개는 날 이 자리가 그대로 맞는 답을 낸다.
+        List<GuardianRules.DailyJudgment> perChallenge = List.of(GuardianRules.dailyJudgment(
+                guardianService.viewOf(ch), ch.daysElapsedOn(target), spentUntil, countedOnDate, streakAfter));
+        GuardianRules.DailyJudgment j = GuardianRules.combineDailyVerdicts(perChallenge, streakAfter);
 
         ch.setNoSpendStreak(streakAfter);
         ch.setGrassStreak(applyGrassGuard(userId, ch, j, streakAfter, now));
@@ -145,6 +152,8 @@ public class GuardianBatchService {
             if (granted != null) {
                 verdict.grant(granted.objectId(), granted.grade());
                 verdict.setCeremonyMessage(ceremonyMessage(granted));
+                verdict.setCeremonyAutoOpen(GuardianRules.ceremonyAutoOpen(
+                        ch.daysElapsedOn(target), granted.grade(), props));
                 verdictRepository.save(verdict);
             }
         }
@@ -202,22 +211,24 @@ public class GuardianBatchService {
     // ======================================================================
 
     /**
-     * 배치에서만 평가하는 케이스. C9(위험 시간대 사전 넛지)는 시간대 패턴 분석이 필요해
-     * 이번 범위에서 제외했다 — 근거 없이 보내면 "지난 4주 중 몇 번"을 지어내게 된다.
+     * 배치에서만 평가하는 케이스 (스펙 v1.5 §6.2). 어느 하나를 고를지는 순수 함수가 정한다.
+     *
+     * <p>v1.5에서 셋이 바뀌었다 — C5는 "3일 이상"에서 <b>3의 배수일 때만</b>(매일 울리면
+     * 칭찬이 닳는다), C10·C11은 "초과했는가"에서 <b>사용률 0.85</b>로(0.9에서 사흘 남은
+     * 사람에게 격려를 보내면 어긋난다), C6는 거래 시점에서 <b>이 배치로</b> 옮겨왔다.
+     *
+     * <p>C9(위험 시간대 사전 넛지)는 조건({@link GuardianRules#shouldNudgeAhead})은 준비됐으나
+     * 시간대 패턴을 분석 Agent가 아직 넘겨주지 않아 호출부가 없다.
      */
     private void evaluateBatchCases(GuardianChallenge ch, LocalDate target, LocalDateTime now,
                                     List<GuardianNotification> sent) {
         GuardianRules.Snapshot snap = guardianService.snapshotOf(ch, target);
         Map<String, List<LocalDateTime>> sentAt = guardianService.caseSentAt(ch.getId());
 
-        // C5 — 무지출이 사흘 이상 이어졌다.
-        if (ch.getNoSpendStreak() >= 3) {
-            fire("C5", ch, snap, sentAt, target, now, sent);
-        }
-
-        // C10 / C11 — 종료가 임박했다. 한도를 넘겼으면 사실 통보(C11), 아니면 격려(C10).
-        if (snap.daysLeft() > 0 && snap.daysLeft() <= 3) {
-            fire(snap.spentRatio() > 1.0 ? "C11" : "C10", ch, snap, sentAt, target, now, sent);
+        // 초과 확정(C6)은 ①에서 이미 처리했으므로 여기서는 false를 넘긴다.
+        String caseId = GuardianRules.batchCase(snap, ch.getState(), ch.getNoSpendStreak(), false, props);
+        if (caseId != null) {
+            fire(caseId, ch, snap, sentAt, target, now, sent);
         }
     }
 
@@ -248,8 +259,13 @@ public class GuardianBatchService {
 
         missionRepository.findCurrent(userId, weekStart).ifPresent(m -> {
             int current = switch (m.getConditionType()) {
-                case CATEGORY_COUNT_MAX -> txRepository.countCountedByCategoryInRange(
+                case MAX_COUNT -> txRepository.countCountedByCategoryInRange(
                         ch.getId(), m.getCategory(), m.getPeriodStart(), m.getPeriodEnd());
+                // AVOID_SLOT — 요일·시간은 반드시 KST로 재야 한다. UTC로 재면 금요일 밤 22시
+                // 주문이 토요일로 넘어가 미션이 통과해 버린다.
+                case AVOID_SLOT -> GuardianRules.countInSlot(
+                        weekSlotTxs(ch, m), m.getCategory(),
+                        m.getAvoidWeekday(), m.getAvoidHourStart(), m.getAvoidHourEnd());
                 case NO_SPEND_STREAK_MIN -> ch.getNoSpendStreakBest();
                 case LABELING_COUNT_MIN -> 0;
             };
@@ -290,8 +306,25 @@ public class GuardianBatchService {
         if (threshold <= 0) return;   // 0이면 주간 미션을 쓰지 않겠다는 뜻
 
         missionRepository.save(new WeeklyMission(userId, ch.getId(),
-                MissionCondition.NO_SPEND_STREAK_MIN, null, threshold,
+                MissionType.NO_SPEND_STREAK_MIN, null, threshold,
                 weekStart, weekStart.plusDays(6), now));
+    }
+
+    /**
+     * AVOID_SLOT 판정용 — 그 주 집계 거래를 요일·시간(KST)으로 펼친다.
+     *
+     * <p>거래 시각은 이미 KST({@code Asia/Seoul}) 기준으로 저장돼 있으므로 그대로 읽는다.
+     * 이 전제가 깨지면 슬롯 판정이 통째로 어긋나므로, 시간대를 바꾸는 날 여기부터 확인한다.
+     */
+    private List<GuardianRules.MissionTx> weekSlotTxs(GuardianChallenge ch, WeeklyMission m) {
+        List<GuardianRules.MissionTx> out = new ArrayList<>();
+        for (LocalDate d = m.getPeriodStart(); !d.isAfter(m.getPeriodEnd()); d = d.plusDays(1)) {
+            for (GuardianTransaction t : txRepository.findCountedOn(ch.getId(), d)) {
+                out.add(new GuardianRules.MissionTx(
+                        t.getCategory(), t.getOccurredAt().getDayOfWeek(), t.getOccurredAt().getHour()));
+            }
+        }
+        return out;
     }
 
     /**

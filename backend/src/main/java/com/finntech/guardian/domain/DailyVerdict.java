@@ -87,6 +87,14 @@ public class DailyVerdict {
     @Column(nullable = false)
     private boolean rerolled;
 
+    /**
+     * 세리머니 모달을 자동으로 띄울지 (스펙 v1.5 §5.3).
+     * 매일 띄우면 연출이 광고처럼 읽힌다 — 처음 일주일과 희귀 이상일 때만 자동이고,
+     * 나머지는 미개봉 뱃지로 쌓아 두고 사용자가 열게 한다.
+     */
+    @Column(name = "ceremony_auto_open", nullable = false)
+    private boolean ceremonyAutoOpen;
+
     // ---- 아침 세리머니 (푸시 아님 — 앱을 열면 뜨는 모달) --------------------
 
     @Column(name = "ceremony_message", length = 200)
@@ -157,6 +165,8 @@ public class DailyVerdict {
     public Grade getGrantedGrade() { return grantedGrade; }
     public boolean isRerolled() { return rerolled; }
     public void setRerolled(boolean v) { this.rerolled = v; }
+    public boolean isCeremonyAutoOpen() { return ceremonyAutoOpen; }
+    public void setCeremonyAutoOpen(boolean v) { this.ceremonyAutoOpen = v; }
     public String getCeremonyMessage() { return ceremonyMessage; }
     public void setCeremonyMessage(String v) { this.ceremonyMessage = v; }
     public LocalDateTime getCeremonySeenAt() { return ceremonySeenAt; }

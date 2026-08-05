@@ -1,5 +1,7 @@
 package com.finntech.guardian.domain;
 
+import com.finntech.guardian.domain.GuardianEnums.SpendChip;
+import com.finntech.guardian.domain.GuardianEnums.TxKind;
 import com.finntech.guardian.domain.GuardianEnums.TxState;
 import com.finntech.guardian.domain.GuardianEnums.TxType;
 import com.finntech.guardian.domain.GuardianEnums.UndoReason;
@@ -81,6 +83,33 @@ public class GuardianTransaction {
     @Column(name = "tx_type", nullable = false, length = 10)
     private TxType txType = TxType.EXPENSE;
 
+    /**
+     * 판정 종류 (스펙 v1.5 §5.1). 예산 차감·개입·일 판정이 전부 이 값에서 갈린다.
+     * 분류가 확정되기 전에는 {@code UNKNOWN}이다.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private TxKind kind = TxKind.UNKNOWN;
+
+    /**
+     * 고정지출(통신·구독·통근) 여부 — 분석 Agent가 붙여 보낸다.
+     * 줄일 수 있는 소비가 아니므로 예산에서 빼지 않는다.
+     */
+    @Column(name = "is_fixed_expense", nullable = false)
+    private boolean fixedExpense;
+
+    /**
+     * 사용자가 남긴 소비 맥락 (스펙 v1.5 §5.1). <b>라벨은 차감을 바꾸지 않는다.</b>
+     * {@code kind}가 시스템의 판정이라면 이쪽은 사용자의 기록이다.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 12)
+    private SpendChip chip;
+
+    /** 칩을 붙여 라벨링 포인트를 이미 받았는가 — 거래당 1회만 준다. */
+    @Column(name = "chip_rewarded", nullable = false)
+    private boolean chipRewarded;
+
     /** 환불이면 원 거래. 한도를 조용히 복원한다(C12). */
     @Column(name = "original_tx_id")
     private Long originalTxId;
@@ -158,6 +187,17 @@ public class GuardianTransaction {
         this.categoryConfidence = confidence;
     }
 
+    /**
+     * 소비 맥락 칩을 붙인다. 라벨링 포인트를 처음 받는 거래면 true.
+     * <b>차감에는 영향을 주지 않는다</b> — 유리한 칩을 고를 유인이 없어야 데이터가 정직해진다.
+     */
+    public boolean applyChip(SpendChip chip) {
+        this.chip = chip;
+        if (chipRewarded) return false;
+        chipRewarded = true;
+        return true;
+    }
+
     @Transient
     public boolean isCounted() { return state == TxState.COUNTED; }
 
@@ -183,6 +223,12 @@ public class GuardianTransaction {
     public String getCategory() { return category; }
     public Double getCategoryConfidence() { return categoryConfidence; }
     public TxType getTxType() { return txType; }
+    public TxKind getKind() { return kind; }
+    public void setKind(TxKind v) { this.kind = v; }
+    public boolean isFixedExpense() { return fixedExpense; }
+    public void setFixedExpense(boolean v) { this.fixedExpense = v; }
+    public SpendChip getChip() { return chip; }
+    public boolean isChipRewarded() { return chipRewarded; }
     public Long getOriginalTxId() { return originalTxId; }
     public void setOriginalTxId(Long v) { this.originalTxId = v; }
     public TxState getState() { return state; }
