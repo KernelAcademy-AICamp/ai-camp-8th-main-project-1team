@@ -47,9 +47,16 @@ def rows(path):
             if len(c) < 2:
                 continue
             biz = ''.join(ch for ch in c[0] if ch.isdigit())
-            if len(biz) != 10 or not c[1].strip():
+            # 4번째 칸(가맹점명)이 있으면 **번호 없이 이름으로만** 붙는 행이다 — PG 경유 결제.
+            name = c[3].strip() if len(c) > 3 else ''
+            if not c[1].strip():
                 continue
-            out.append((biz, c[1].strip()))
+            if name:
+                out.append(('', c[1].strip(), name))
+                continue
+            if len(biz) != 10:
+                continue
+            out.append((biz, c[1].strip(), ''))
     return out
 
 
@@ -65,9 +72,11 @@ def main():
         sys.exit(1)
 
     dist = {}
-    for _, m in data:
+    for _, m, _ in data:
         dist[m] = dist.get(m, 0) + 1
-    print(f'  {os.path.relpath(src, ROOT)} — {len(data)}곳')
+    byname = sum(1 for b, _, _ in data if not b)
+    print(f'  {os.path.relpath(src, ROOT)} — {len(data)}곳'
+          + (f' (그중 이름으로만 붙는 것 {byname}곳 — PG 경유)' if byname else ''))
     print('   ' + ' · '.join(f'{k} {v}' for k, v in sorted(dist.items(), key=lambda x: -x[1])))
 
     if DRY:
@@ -97,16 +106,20 @@ def main():
     sql = """
         INSERT INTO merchant_category
             (business_number, merchant_name, category2, source, created_at, updated_at)
-        VALUES (%s, '', %s, %s, NOW(6), NOW(6))
+        VALUES (%s, %s, %s, %s, NOW(6), NOW(6))
         ON DUPLICATE KEY UPDATE
             category2  = IF(source = 'USER_CONFIRMED', category2, VALUES(category2)),
+            -- **source 도 함께 올린다.** 같은 가맹점에 LLM 추정(LLM_GUESS)이 먼저 쌓여 있을 수
+            -- 있는데, 분류만 사실로 바꾸고 출처를 그대로 두면 그 행은 여전히 '추정'이라
+            -- 조회에서 걸러진다 — 값은 맞는데 안 붙는, 오류 없는 실패가 된다.
+            source     = IF(source = 'USER_CONFIRMED', source, VALUES(source)),
             updated_at = IF(source = 'USER_CONFIRMED', updated_at, NOW(6))
     """
     try:
         with conn.cursor() as cur:
             cur.execute("SELECT COUNT(*) FROM merchant_category")
             before = cur.fetchone()[0]
-            cur.executemany(sql, [(b, m, SOURCE) for b, m in data])
+            cur.executemany(sql, [(b, n, m, SOURCE) for b, m, n in data])
             cur.execute("SELECT COUNT(*) FROM merchant_category")
             after = cur.fetchone()[0]
         conn.commit()
