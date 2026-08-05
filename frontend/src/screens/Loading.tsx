@@ -31,7 +31,15 @@ export function Loading() {
     let alive = true;
     setError(null);
     setReady(false);
-    api.analysis(userId)
+    // **여기서 미분류를 한 번 채운다.** 온보딩 전 과정에서 `/unclassified` 를 부르는 곳이
+    // 여기밖에 없다 — 안 부르면 새 사용자는 모르는 가맹점이 전부 '카테고리없음'인 채로
+    // 온보딩을 마치고, 마이 > 분류 정리를 스스로 찾아 들어가야만 채워진다.
+    // 이 화면은 이미 "소비 패턴을 분석하는 중…"으로 기다리는 자리라 몇 초가 자연스럽다.
+    //
+    // **실패해도 온보딩을 막지 않는다.** AI 추정은 있으면 좋은 것이지 없으면 못 가는 것이
+    // 아니다 — 확정 분류(사전)는 이미 붙어 있고, 추정이 없으면 미분류로 보일 뿐이다.
+    api.unclassified(userId).catch(() => null)
+      .then(() => api.analysis(userId))
       .then((a) => { if (alive) { setAnalysis(a); setReady(true); } })
       .catch((e) => { if (alive) setError(e); });
     return () => { alive = false; };
