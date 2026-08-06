@@ -42,14 +42,10 @@ ALTER TABLE guardian_transaction
 ALTER TABLE guardian_transaction
     ADD COLUMN is_fixed_expense BIT NOT NULL DEFAULT 0;
 
--- 화면에 붙는 칩. 없을 수 있으므로 NULL 을 허용한다.
-ALTER TABLE guardian_transaction
-    ADD COLUMN chip ENUM('PLANNED','REDUCING','SETUP','SUCCESS') NULL;
-
--- 그 칩으로 보상을 이미 줬는가. **중복 지급을 막는 자리**라 기본값이 false 여야 한다 —
--- true 로 두면 과거 행이 "이미 줬다"가 되어 받을 것을 못 받고, 그것은 조용히 손해다.
-ALTER TABLE guardian_transaction
-    ADD COLUMN chip_rewarded BIT NOT NULL DEFAULT 0;
+-- 소비 맥락 칩(`chip`·`chip_rewarded`)은 **칼럼을 만들지 않는다.** v1.5 초안에만 있었고 붙이는
+-- API 도 읽는 화면도 없었다 — 라벨링 포인트는 분류 확정이 이미 준다. 엔티티에서 걷어냈으므로
+-- 스키마도 만들지 않는다. 안 쓰는 칼럼을 미리 파 두면 다음 사람이 "쓰는 데가 있나 보다"로
+-- 읽고, `validate` 는 그것을 영영 요구한다. 되살릴 일이 생기면 그때 새 마이그레이션을 만든다.
 
 -- ── guardian_weekly_mission ──────────────────────────────────────────────────
 -- 미션 종류가 바뀌었다. 기존 8행(NO_SPEND_STREAK_MIN)은 새 목록에도 있어 그대로 산다.

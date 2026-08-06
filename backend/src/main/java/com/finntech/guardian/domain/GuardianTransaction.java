@@ -1,6 +1,5 @@
 package com.finntech.guardian.domain;
 
-import com.finntech.guardian.domain.GuardianEnums.SpendChip;
 import com.finntech.guardian.domain.GuardianEnums.TxKind;
 import com.finntech.guardian.domain.GuardianEnums.TxState;
 import com.finntech.guardian.domain.GuardianEnums.TxType;
@@ -98,19 +97,7 @@ public class GuardianTransaction {
     @Column(name = "is_fixed_expense", nullable = false)
     private boolean fixedExpense;
 
-    /**
-     * 사용자가 남긴 소비 맥락 (스펙 v1.5 §5.1). <b>라벨은 차감을 바꾸지 않는다.</b>
-     * {@code kind}가 시스템의 판정이라면 이쪽은 사용자의 기록이다.
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(length = 12)
-    private SpendChip chip;
-
-    /** 칩을 붙여 라벨링 포인트를 이미 받았는가 — 거래당 1회만 준다. */
-    @Column(name = "chip_rewarded", nullable = false)
-    private boolean chipRewarded;
-
-    /** 환불이면 원 거래. 한도를 조용히 복원한다(C12). */
+    /** 환불이면 원 거래. 예산을 조용히 복원한다(C12). */
     @Column(name = "original_tx_id")
     private Long originalTxId;
 
@@ -187,16 +174,10 @@ public class GuardianTransaction {
         this.categoryConfidence = confidence;
     }
 
-    /**
-     * 소비 맥락 칩을 붙인다. 라벨링 포인트를 처음 받는 거래면 true.
-     * <b>차감에는 영향을 주지 않는다</b> — 유리한 칩을 고를 유인이 없어야 데이터가 정직해진다.
-     */
-    public boolean applyChip(SpendChip chip) {
-        this.chip = chip;
-        if (chipRewarded) return false;
-        chipRewarded = true;
-        return true;
-    }
+    // 소비 맥락 칩(applyChip)은 v1.5 초안에만 있었고 붙이는 API도 읽는 화면도 없었다.
+    // 라벨링 포인트는 분류 확정(classifyPending)이 이미 주므로, 칩 없이도 그 자리는 메워져 있다.
+    // 필드까지 지운 이유는 `ddl-auto=validate`가 아무도 안 쓰는 칼럼을 계속 요구하게 되기
+    // 때문이다 — 죽은 칼럼은 다음 사람에게 "쓰는 데가 있나 보다"로 읽힌다. (2026-08-06)
 
     @Transient
     public boolean isCounted() { return state == TxState.COUNTED; }
@@ -227,8 +208,6 @@ public class GuardianTransaction {
     public void setKind(TxKind v) { this.kind = v; }
     public boolean isFixedExpense() { return fixedExpense; }
     public void setFixedExpense(boolean v) { this.fixedExpense = v; }
-    public SpendChip getChip() { return chip; }
-    public boolean isChipRewarded() { return chipRewarded; }
     public Long getOriginalTxId() { return originalTxId; }
     public void setOriginalTxId(Long v) { this.originalTxId = v; }
     public TxState getState() { return state; }
