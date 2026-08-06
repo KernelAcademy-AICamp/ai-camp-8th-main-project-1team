@@ -16,7 +16,7 @@ export type ScreenId =
   // L0 최초 온보딩
   | 'boot' | 'walk' | 'auth' | 'connect' | 'loading'
   // 이번 챌린지 정하기 (최초 · 월초 재진입 공용)
-  | 'ob1' | 'ob2' | 'ob3' | 'done'
+  | 'ob1' | 'ob2' | 'ob3' | 'ob4' | 'done'
   // 상시 탐색 3탭
   | 'home' | 'report' | 'my'
   // 홈 하위
@@ -47,7 +47,7 @@ export const isTab = (s: ScreenId): s is TabId => (TAB_SCREENS as readonly strin
  * 아래 위성 타입이 그 누락을 컴파일 단계에서 잡는다.
  */
 const ALL_SCREENS = [
-  'boot', 'walk', 'auth', 'connect', 'loading', 'ob1', 'ob2', 'ob3', 'done',
+  'boot', 'walk', 'auth', 'connect', 'loading', 'ob1', 'ob2', 'ob3', 'ob4', 'done',
   'home', 'report', 'my', 'myroom', 'notifications', 'transactions',
   'collection', 'shop', 'monthend', 'settle', 'renew',
   'r-compare', 'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings',

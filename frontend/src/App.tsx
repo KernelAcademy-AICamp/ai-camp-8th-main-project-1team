@@ -4,7 +4,7 @@
  * 목업(frontend-moa)의 개발 보드(폰 목업 + 검정 버튼 4개)는 걷어냈다. 어느 화면을 처음 보여줄지는
  * 이제 버튼이 아니라 **상태**가 정한다:
  *   연결 안 함        → 최초 온보딩(스플래시부터)
- *   연결됨·챌린지 없음 → 이번 챌린지 정하기(ob1~ob3)  ← IA의 '월초 인터럽트'와 같은 자리
+ *   연결됨·챌린지 없음 → 이번 챌린지 정하기(ob1~ob4)  ← IA의 '월초 인터럽트'와 같은 자리
  *   연결됨·챌린지 있음 → 홈
  */
 import { useEffect, type ComponentType } from 'react';
@@ -21,6 +21,7 @@ import { Loading } from './screens/Loading';
 import { Onboarding1 } from './screens/Onboarding1';
 import { Onboarding2 } from './screens/Onboarding2';
 import { Onboarding3 } from './screens/Onboarding3';
+import { Onboarding4 } from './screens/Onboarding4';
 import { Done } from './screens/Done';
 import { Home } from './screens/Home';
 import { Myroom } from './screens/Myroom';
@@ -59,13 +60,13 @@ import { MyParked } from './screens/MyParked';
 /** 최초 온보딩(마이데이터 연결 전)에만 열리는 화면. */
 const LINK_FLOW: ScreenId[] = ['boot', 'walk', 'auth', 'connect'];
 /** 이번 챌린지를 정하는 흐름 — 이 화면들에서는 하단 탭을 감춘다(중간에 빠져나가면 흐름이 끊긴다). */
-const SETUP_FLOW: ScreenId[] = ['loading', 'ob1', 'ob2', 'ob3', 'done',
+const SETUP_FLOW: ScreenId[] = ['loading', 'ob1', 'ob2', 'ob3', 'ob4', 'done',
   // 월말 사이클도 같은 성격의 흐름이다 — 축하→결산→갱신을 중간에 끊으면 다음 달 목표가 안 정해진다.
   'monthend', 'settle', 'renew'];
 
 const SCREENS: Record<ScreenId, ComponentType> = {
   boot: Boot, walk: Walk, auth: Auth, connect: Connect, loading: Loading,
-  ob1: Onboarding1, ob2: Onboarding2, ob3: Onboarding3, done: Done,
+  ob1: Onboarding1, ob2: Onboarding2, ob3: Onboarding3, ob4: Onboarding4, done: Done,
   home: Home, report: Report, my: My,
   myroom: Myroom, notifications: Notifications, transactions: Transactions,
   collection: Collection, shop: Shop,
