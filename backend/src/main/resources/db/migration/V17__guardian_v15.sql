@@ -69,3 +69,11 @@ ALTER TABLE guardian_weekly_mission
 -- 값을 채워 넣으면 지난 주가 소급 지급된 것처럼 보인다.
 ALTER TABLE guardian_weekly_mission
     ADD COLUMN point_share INTEGER NOT NULL DEFAULT 0;
+
+-- ── guardian_point_event ─────────────────────────────────────────────────────
+-- v1.5 가 `DUPLICATE_OBJECT`(중복 오브젝트 보상)를 더했다. 운영 ENUM 은 네 값뿐이라
+-- **그 보상이 저장되지 않는다** — 오류 없이 잘린 채 들어가거나 거부된다. 값을 늘려 준다.
+-- (기존 네 값은 그대로 두므로 지난 포인트 이력은 온전하다.)
+ALTER TABLE guardian_point_event
+    MODIFY COLUMN type
+        ENUM('DUPLICATE_OBJECT','LABELING','MONTHLY_COMPLETE','RISK_DEFENSE','WEEKLY_MISSION') NOT NULL;
