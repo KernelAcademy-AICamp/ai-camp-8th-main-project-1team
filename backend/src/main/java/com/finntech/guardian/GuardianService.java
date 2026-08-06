@@ -112,7 +112,7 @@ public class GuardianService {
 
     /**
      * @param keptPaymentIds 온보딩에서 <b>"이건 낭비가 아니다"</b>로 뺀 결제 id. 기준 지출에서 뺀다.
-     *                       화면이 그만큼 줄여 보여줬는데 서버가 안 빼면 한도만 넉넉해져,
+     *                       화면이 그만큼 줄여 보여줬는데 서버가 안 빼면 예산만 넉넉해져,
      *                       사용자가 고른 의미가 사라진다.
      */
     @Transactional
@@ -160,7 +160,7 @@ public class GuardianService {
      * 기준 지출과 평균 결제액.
      *
      * @param monthlyAmount 카테고리 월평균의 합(설계서 §1). 안내 문구·화면 표시에 쓴다.
-     * @param periodAmount  그것을 <b>챌린지 일수로 환산</b>한 값. 한도·달성률 산수는 이쪽을 쓴다.
+     * @param periodAmount  그것을 <b>챌린지 일수로 환산</b>한 값. 예산·달성률 산수는 이쪽을 쓴다.
      */
     record Baseline(long monthlyAmount, long periodAmount, Long avgTransactionAmount) {}
 
@@ -171,7 +171,7 @@ public class GuardianService {
      * <p>예전에는 분모로 {@code monthlySpend().size()}(사용자가 <b>아무거나</b> 결제한 달의 수)를
      * 썼다. 분자는 카테고리 하나의 총액인데 분모가 전체 기간이라, 최근 시작한 습관일수록
      * 크게 과소평가됐다 — 12개월 이력자가 지난달 배달 30만원을 썼으면 기준이 2.5만원이 되어
-     * 챌린지 시작 직후 한도를 넘겼다. 이제 분모를 엔진이 카테고리별로 세어 준다.
+     * 챌린지 시작 직후 예산을 넘겼다. 이제 분모를 엔진이 카테고리별로 세어 준다.
      *
      * <p><b>창을 챌린지 기간과 같게 잡는다</b>(2026-07-31). 전 기간 월평균을 쓰면 화면이
      * 보여준 금액과 사용자가 훑을 수 있는 결제 목록이 어긋난다 — 온보딩에서 "이 결제는 낭비가
@@ -188,7 +188,7 @@ public class GuardianService {
     /**
      * @param keptPaymentIds 사용자가 <b>"이건 낭비가 아니다"</b>로 뺀 결제 id. 그 금액을 기준에서 뺀다.
      *                       화면은 이미 뺀 금액으로 '지킬 돈'을 계산해 보여줬으므로, 서버가 안 빼면
-     *                       한도만 넉넉해져 사용자가 고른 의미가 사라진다.
+     *                       예산만 넉넉해져 사용자가 고른 의미가 사라진다.
      */
     Baseline baselineFor(Long userId, List<String> categories, LocalDateTime now, int days,
                          List<String> keptPaymentIds) {
@@ -268,7 +268,7 @@ public class GuardianService {
     }
 
     /**
-     * 카테고리별 한도를 적재한다.
+     * 카테고리별 예산을 적재한다.
      *
      * <p>온보딩3은 카테고리마다 다른 강도를 받는다 — 배달은 50%, 카페는 20%처럼. 그런데 서버는
      * 지금까지 <b>지킬 돈 하나</b>만 받았고, 화면이 카테고리별로 보여줄 때는 전체 캡을 균등분할했다.
@@ -277,7 +277,7 @@ public class GuardianService {
      * <p>{@code categoryTargets}가 없으면(옛 클라이언트·테스트) 예전처럼 균등분할한다 —
      * 그때는 값이 바뀌지 않으므로 안전하다.
      *
-     * <p>여기서 만든 한도는 <b>판정에 쓰지 않는다.</b> 챌린지 성공/실패와 잔디는 합계 기준
+     * <p>여기서 만든 예산은 <b>판정에 쓰지 않는다.</b> 챌린지 성공/실패와 잔디는 합계 기준
      * 그대로다(사용자 결정). 이 값은 어디서 새는지 보여주고 알리는 데 쓴다.
      */
     private void saveCategoryCaps(GuardianChallenge ch, List<String> categories, LocalDateTime now,
@@ -292,7 +292,7 @@ public class GuardianService {
             long tgt = perCategory
                     ? categoryTargets.getOrDefault(code, 0L)
                     : totalTarget / n;
-            // 지킬 돈이 기준을 넘으면 한도가 음수가 된다 — 한 칸 낮춰 0원 한도를 만들지 않는다.
+            // 지킬 돈이 기준을 넘으면 예산이 음수가 된다 — 한 칸 낮춰 0원 예산을 만들지 않는다.
             if (tgt >= base && base > 0) tgt = base - 1;
             rows.add(new GuardianChallengeCategory(ch.getId(), code, base, Math.max(0L, tgt), now));
         }
@@ -452,7 +452,7 @@ public class GuardianService {
             return false;
         }
         // 챌린지 기간 밖의 거래는 이 챌린지의 지출이 아니다. 예전에는 발생일을 보지 않아
-        // 2년 전 결제 한 건으로도 한도를 태울 수 있었다(수신 API가 occurredAt을 검증하지 않는다).
+        // 2년 전 결제 한 건으로도 예산을 태울 수 있었다(수신 API가 occurredAt을 검증하지 않는다).
         LocalDate occurredOn = tx.getOccurredAt().toLocalDate();
         if (occurredOn.isBefore(ch.getStartDate()) || occurredOn.isAfter(ch.getEndDate())) {
             tx.exclude();
@@ -465,7 +465,7 @@ public class GuardianService {
         return true;
     }
 
-    /** 환불 — 원 거래를 찾아 한도를 조용히 복원한다(C12). 알림은 만들지 않는다. */
+    /** 환불 — 원 거래를 찾아 예산을 조용히 복원한다(C12). 알림은 만들지 않는다. */
     private void restoreRefund(GuardianChallenge ch, GuardianTransaction refund) {
         refund.exclude();
         txRepository.findByChallenge(ch.getId()).stream()
@@ -606,6 +606,20 @@ public class GuardianService {
     GuardianNotification deliver(GuardianChallenge ch, GuardianTransaction tx,
                                  GuardianRules.InterventionDecision decision,
                                  GuardianRules.Snapshot snap, LocalDate today, LocalDateTime now) {
+        return deliver(ch, tx, decision, snap, today, now, Map.of());
+    }
+
+    /**
+     * 문장에 넣을 값을 호출부가 <b>덧붙이는</b> 전달.
+     *
+     * <p>{@link #numbersFor}는 챌린지·거래·스냅샷에서 나오는 값만 안다. C9(위험 시간대 넛지)의
+     * 요일·시간대·4주 횟수처럼 <b>그 케이스에서만 나오는 값</b>은 계산한 쪽이 넘긴다 —
+     * 반대로 numbersFor 가 모든 케이스의 사정을 알게 만들면 그 메서드가 케이스 목록이 된다.
+     */
+    GuardianNotification deliver(GuardianChallenge ch, GuardianTransaction tx,
+                                 GuardianRules.InterventionDecision decision,
+                                 GuardianRules.Snapshot snap, LocalDate today, LocalDateTime now,
+                                 Map<String, Object> extras) {
         Long txId = tx == null ? null : tx.getId();
         if (decision.silent()) {
             return notificationRepository.save(GuardianNotification.silent(
@@ -613,13 +627,14 @@ public class GuardianService {
         }
 
         GuardianRules.CaseDef def = GuardianRules.caseById(decision.caseId());
-        // 야간에는 미루되, 한도 초과 통보(C6)처럼 미룰 수 없는 건은 예외다.
+        // 야간에는 미루되, 예산 초과 통보(C6)처럼 미룰 수 없는 건은 예외다.
         if (!def.bypassBudget() && GuardianRules.isNight(now, props)) {
             return notificationRepository.save(GuardianNotification.silent(
                     ch.getUserId(), ch.getId(), txId, decision.caseId(), SuppressedReason.NIGHT, now));
         }
 
         Map<String, Object> numbers = numbersFor(ch, tx, snap, today);
+        if (extras != null) numbers.putAll(extras);
         GuardianNarrative.Message msg = narrative.compose(
                 decision.caseId(), decision.tone(), decision.phrasingMode(),
                 numbers, recentKeyPhrases(ch.getId(), now), false);
@@ -651,7 +666,7 @@ public class GuardianService {
     }
 
     /**
-     * 이번 챌린지에서 가장 많이 쓴 카테고리 — 한도 알림(C3·C6)이 "어디서 새는지" 지목하는 데 쓴다.
+     * 이번 챌린지에서 가장 많이 쓴 카테고리 — 예산을 말하는 알림(C3·C6)이 "어디서 새는지" 지목하는 데 쓴다.
      *
      * <p>알림을 카테고리별로 쪼개지 않기로 한 대신 넣는 값이다(2026-08-02). 판정은 합계 기준이므로
      * (tech_log §8-T) <b>발화 단위는 합계 하나</b>로 두고, 카테고리는 본문 안에서 지목만 한다.
@@ -748,17 +763,24 @@ public class GuardianService {
      * 카테고리 한 줄 — 홈의 '지킴 현황'을 갈라 보여준다.
      *
      * @param spent 그 카테고리에서 지금까지 집계된 금액
-     * @param share 챌린지 전체 사용액에서 이 카테고리가 차지하는 비율(0~1). 한도는 묶음 하나로
-     *              관리하므로 <b>카테고리별 한도는 없다</b> — 있는 척하면 화면이 거짓말을 한다.
+     * @param share 챌린지 전체 사용액에서 이 카테고리가 차지하는 비율(0~1). 예산은 묶음 하나로
+     *              관리하므로 <b>카테고리별 예산은 없다</b> — 있는 척하면 화면이 거짓말을 한다.
      */
     public record CategorySpend(String code, String label, long spent, double share,
                                 long cap, long remaining, double ratio) {}
+
+    /**
+     * 홈 한마디 — 지금 이 사람에게 걸린 케이스 하나와 그 문장.
+     *
+     * <p>개입이 아니라 <b>상태 표시</b>다. 알림 예산을 쓰지 않고 알림함에도 남지 않는다.
+     */
+    public record Oneline(String caseId, String text) {}
 
     public record HomeView(LocalDateTime asOf, GuardianChallenge challenge, String categoryLabel,
                            GuardianRules.Snapshot snapshot, int pendingCount, String pendingBadge,
                            CeremonyView ceremony, List<GrassCell> grass, GuardianItems items,
                            int unreadNotifications, boolean demoMode,
-                           List<CategorySpend> categorySpend) {}
+                           List<CategorySpend> categorySpend, Oneline oneline) {}
 
     /** 홈 한 방 — 프론트가 그릴 값을 전부 계산해 내려준다. */
     @Transactional
@@ -791,7 +813,7 @@ public class GuardianService {
             if (row[0] == null) continue;
             spentByCat.put((String) row[0], ((Number) row[1]).longValue());
         }
-        // 카테고리별 한도 — 없으면(옛 챌린지) 전체 캡을 균등분할해 예전과 같은 값을 보인다.
+        // 카테고리별 예산 — 없으면(옛 챌린지) 전체 캡을 균등분할해 예전과 같은 값을 보인다.
         Map<String, Long> capByCat = new HashMap<>();
         for (var cc : challengeCategoryRepository.findByChallenge(ch.getId())) {
             capByCat.put(cc.getCategory(), cc.getCap());
@@ -814,7 +836,46 @@ public class GuardianService {
                 pending > 0 ? GuardianCopy.pendingBadge(pending) : null,
                 ceremony, grass, rewardService.items(userId, now),
                 notificationRepository.countUnread(userId), clock.isDemoMode(userId),
-                categorySpend);
+                categorySpend, oneline(ch, snap));
+    }
+
+    /**
+     * 홈 한마디를 고른다 — 어느 케이스가 이기는지는 {@link GuardianRules#resolveOneline}이 정한다.
+     *
+     * <p><b>여기 있는 값만 후보로 올린다.</b> C1(첫 결제)·C2(주 3회 반복)는 우선순위표에 있지만
+     * 카테고리별 건수를 세야 나오고, 홈은 카테고리마다 질의를 더 하지 않는다. 둘은 결제가 들어온
+     * 순간 알림으로 이미 전달됐고, 홈이 며칠 뒤까지 "첫 결제예요"를 붙들고 있을 이유도 없다.
+     *
+     * <p>초과는 <b>상태가 아니라 비율로</b> 잡는다. 늦게 분류된 결제는 사용률이 1을 넘어도 상태를
+     * {@code AT_RISK}에 묶어 두는데({@code classifyPending}), 상태만 보면 그 사람에게
+     * "잘 지키고 있어요"가 뜬다.
+     */
+    private Oneline oneline(GuardianChallenge ch, GuardianRules.Snapshot snap) {
+        Map<String, Double> candidates = new LinkedHashMap<>();
+        if (ch.getState() == ChallengeState.EXCEEDED || snap.spentRatio() >= 1.0) {
+            candidates.put("C6", snap.spentRatio());
+        }
+        if (snap.spentRatio() >= props.getAtRiskRatio()) {
+            candidates.put("C3", snap.spentRatio());
+        }
+        if (snap.daysLeft() > 0 && snap.daysLeft() <= props.getEndingSoonDaysLeft()
+                && snap.spentRatio() >= props.getEndingSoonRatio()) {
+            candidates.put("C11", snap.spentRatio());
+        }
+        if (ch.getNoSpendStreak() > 0
+                && ch.getNoSpendStreak() % props.getNoSpendPraiseInterval() == 0) {
+            candidates.put("C5", snap.spentRatio());
+        }
+
+        String caseId = GuardianRules.resolveOneline(candidates);
+        Map<String, Object> v = new LinkedHashMap<>();
+        v.put("cap", ch.getChallengeCap());
+        v.put("percent", Math.round(snap.spentRatio() * 100));
+        v.put("remaining", Math.max(0L, snap.remainingCap()));
+        v.put("daysLeft", snap.daysLeft());
+        v.put("secured", snap.securedSaving());
+        v.put("days", ch.getNoSpendStreak());
+        return new Oneline(caseId, GuardianCopy.oneline(caseId, v));
     }
 
     /** 세리머니를 열었다 — 이 시각이 기록돼야 홈의 미개봉 뱃지가 꺼진다. */

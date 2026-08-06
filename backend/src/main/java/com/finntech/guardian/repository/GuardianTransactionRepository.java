@@ -63,6 +63,39 @@ public interface GuardianTransactionRepository extends JpaRepository<GuardianTra
         return findByChallengeAndCountedDate(challengeId, TxState.COUNTED, date);
     }
 
+    @Query("select t from GuardianTransaction t where t.challengeId = :challengeId "
+            + "and t.state = :state and t.countedDate between :from and :to "
+            + "order by t.occurredAt asc, t.id asc")
+    List<GuardianTransaction> findByChallengeAndCountedRange(@Param("challengeId") Long challengeId,
+                                                             @Param("state") TxState state,
+                                                             @Param("from") LocalDate from,
+                                                             @Param("to") LocalDate to);
+
+    /**
+     * 기간 전체를 <b>한 번에</b> 읽는다. 하루씩 {@link #findCountedOn}을 도는 자리가 있었는데,
+     * 주간 미션 판정은 그 방식이면 7번을 질의한다.
+     */
+    default List<GuardianTransaction> findCountedBetween(Long challengeId, LocalDate from, LocalDate to) {
+        return findByChallengeAndCountedRange(challengeId, TxState.COUNTED, from, to);
+    }
+
+    @Query("select t from GuardianTransaction t where t.challengeId = :challengeId "
+            + "and t.state = :state and t.occurredAt >= :since order by t.occurredAt asc, t.id asc")
+    List<GuardianTransaction> findByChallengeAndOccurredSince(@Param("challengeId") Long challengeId,
+                                                              @Param("state") TxState state,
+                                                              @Param("since") LocalDateTime since);
+
+    /**
+     * <b>발생 시각</b> 기준 조회 — 시간대 습관(C9)을 재는 자리는 집계일로 세면 안 된다.
+     *
+     * <p>다른 질의가 {@code countedDate}를 쓰는 것은 "그날의 지출로 얼마를 셌나"를 묻기 때문이다.
+     * 여기서 묻는 것은 "그 사람이 언제 결제하나"이고, 늦게 도착한 결제는 집계일이 도착일로 밀린다.
+     * 그것을 세면 "금요일 19시에 3번"의 근거가 실제 습관이 아니라 전송 지연이 된다.
+     */
+    default List<GuardianTransaction> findCountedOccurredSince(Long challengeId, LocalDateTime since) {
+        return findByChallengeAndOccurredSince(challengeId, TxState.COUNTED, since);
+    }
+
     @Query("select coalesce(sum(t.amount), 0) from GuardianTransaction t "
             + "where t.challengeId = :challengeId and t.countedDate <= :date and t.state = :state")
     long sumUntil(@Param("challengeId") Long challengeId, @Param("date") LocalDate date,

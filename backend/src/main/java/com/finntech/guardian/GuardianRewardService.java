@@ -171,7 +171,19 @@ public class GuardianRewardService {
     @Transactional
     public int award(Long userId, Long challengeId, PointType type, LocalDate date,
                      Long sourceRef, LocalDateTime now) {
-        int amount = ruleAmount(type);
+        return award(userId, challengeId, type, ruleAmount(type), date, sourceRef, now);
+    }
+
+    /**
+     * 액수를 호출부가 정하는 적립.
+     *
+     * <p>규칙표({@link #ruleAmount})로 액수가 안 나오는 종류가 있다. 주간 미션은 진행 중인
+     * 개수만큼 총액을 나눠 갖고({@link GuardianRules#missionShare}), 중복 사물은 등급이 정한다.
+     * <b>그 나눗셈을 여기서 다시 하지 않는다</b> — 규칙이 두 곳에 있으면 한쪽만 고쳐진다.
+     */
+    @Transactional
+    public int award(Long userId, Long challengeId, PointType type, int amount, LocalDate date,
+                     Long sourceRef, LocalDateTime now) {
         boolean exempt = type == PointType.MONTHLY_COMPLETE && props.getPoint().isMonthlyExemptFromCap();
 
         LocalDate week = exempt ? null : weekStart(date);
