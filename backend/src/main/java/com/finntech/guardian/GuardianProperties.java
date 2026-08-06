@@ -75,6 +75,13 @@ public class GuardianProperties {
      * 같은 기준을 써서 사용자가 이미 아는 목표를 그대로 미션으로 삼는다.
      */
     private int weeklyMissionNoSpendDays = 3;
+    /**
+     * 횟수 줄이기 미션의 감축 비율. 0.2면 "지난 4주 주당 평균의 80%".
+     *
+     * <p>한 번 줄이기(-1)로 두면 자주 쓰는 카테고리에서 미션이 무의미해진다 — 주 18회를
+     * 17회로 줄이라는 것은 통계지 미션이 아니다.
+     */
+    private double weeklyMissionCutRatio = 0.2;
 
     private Notification notification = new Notification();
     private Point point = new Point();
@@ -205,6 +212,8 @@ public class GuardianProperties {
     public int getDefaultDurationDays() { return defaultDurationDays; }
     public void setDefaultDurationDays(int v) { this.defaultDurationDays = v; }
 
+    public double getWeeklyMissionCutRatio() { return weeklyMissionCutRatio; }
+    public void setWeeklyMissionCutRatio(double v) { this.weeklyMissionCutRatio = v; }
     public int getWeeklyMissionNoSpendDays() { return weeklyMissionNoSpendDays; }
     public void setWeeklyMissionNoSpendDays(int v) { this.weeklyMissionNoSpendDays = v; }
     public Notification getNotification() { return notification; }

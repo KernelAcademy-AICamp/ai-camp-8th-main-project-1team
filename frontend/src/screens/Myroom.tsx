@@ -11,6 +11,8 @@ import { Modal } from '../components/Sheet';
 import { IsoRoom, CAT_ACT_LABEL, type CatAct, type RoomSel } from '../components/IsoRoom';
 import { KeptDays } from '../components/KeptDays';
 import { DecoSheet, type DecoTab, type DecoItem } from '../components/DecoSheet';
+import { ItemGlyph } from '../components/ItemGlyph';
+import { MissionSheet } from '../components/MissionSheet';
 import { AppBar, Scroll, Screen, ErrorBox, Loading, SectionTitle } from '../components/ui';
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
@@ -62,6 +64,22 @@ const TRAY_INV: Record<string, { label: string; items: { k: string; n: string }[
 /** 냥지킴이 행동 후보 — 소파가 있으면 소파에서도 논다(개편안 openMyroom). */
 const CAT_ACTS: CatAct[] = ['nap', 'read', 'rug'];
 
+/** 미션 종류 → 아이콘·바탕색. 카테고리 이름이 아니라 **조건 유형**으로 가른다(원칙 4). */
+const MISSION_KIND: Record<string, { icon: string; bg: string }> = {
+  MAX_COUNT: { icon: 'i-card', bg: 'var(--blue-weak)' },
+  AVOID_SLOT: { icon: 'i-bell', bg: 'var(--c-cafe)' },
+  NO_SPEND_STREAK_MIN: { icon: 'i-flame', bg: 'var(--c-shop)' },
+  LABELING_COUNT_MIN: { icon: 'i-doc', bg: 'var(--c-cvs)' },
+};
+const missionIcon = (t: string) => MISSION_KIND[t]?.icon ?? 'i-shield';
+const missionBg = (t: string) => MISSION_KIND[t]?.bg ?? 'var(--bg)';
+/** 미션 줄 위에 얹는 한 마디 — 개편안은 목적을 위, 미션명을 아래에 둔다. */
+const MISSION_STATUS: Record<string, string> = {
+  ONGOING: '이번 주 진행 중',
+  SUCCESS: '이번 주 성공',
+  FAILED: '이번 주 아쉬웠어요',
+};
+
 export function Myroom() {
   const { go, userId } = useSession();
   const [editing, setEditing] = useState(false);
@@ -106,6 +124,11 @@ export function Myroom() {
   const room = useAsync(() => api.guardian.room(userId).catch(() => ({ objects: [], slotCount: 20 })), [userId]);
   /** 고를 수 있는 털색과 지금 고른 것. 서버가 보유를 판정한다(안 산 색은 못 고른다). */
   const skins = useAsync(() => api.guardian.catSkins(userId).catch(() => []), [userId]);
+  /** 주간 미션 보드. 못 불러와도 방은 그려야 하므로 실패를 삼킨다. */
+  const board = useAsync(() => api.guardian.missions(userId).catch(() => null), [userId]);
+  const [msOpen, setMsOpen] = useState(false);
+  /** 지금 담아 둔 다음 주 미션의 후보 키 — 시트를 열면 여기에 표시가 가 있다. */
+  const pickedKey = board.data?.next[0]?.candidateKey ?? null;
   const catSkin = skins.data?.find((s) => s.selected)?.key ?? 'cat';
 
   /** 털색을 바꾼다. 서버가 막으면 목록이 그대로라 화면도 안 바뀐다. */
@@ -378,6 +401,51 @@ export function Myroom() {
           </div>
         </div>
 
+        {/* 주간 미션 보드 (개편안 `#msnList`) — 이번 주 걸린 미션과 다음 주에 담아 둔 것.
+            <b>미래 시제는 시트 안에만</b> 둔다. 보드는 "지금 무엇이 걸려 있나"만 말하고,
+            "다음 주에 뭘 할까"는 눌러서 여는 시트가 묻는다. */}
+        <SectionTitle aux={`성공하면 +${board.data?.weeklyPointPool ?? 30}P`}>주간 미션</SectionTitle>
+        <div className="card" style={{ padding: '4px 20px' }} id="msnList">
+          {(board.data?.active ?? []).map((m) => (
+            <div className="list-item" key={m.id}>
+              <span className="ic" style={{ background: missionBg(m.type) }}>
+                <Icon id={missionIcon(m.type)} className="ci" />
+              </span>
+              <div className="tx">
+                <span className="mcap">{MISSION_STATUS[m.status]}</span>
+                <b>{m.text}</b>
+              </div>
+              <span className={`mchip ${m.status === 'SUCCESS' ? 'c-green'
+                : m.status === 'FAILED' ? 'c-amber' : 'c-blue'}`}>
+                {m.status === 'ONGOING' ? `+${m.reward || (board.data?.weeklyPointPool ?? 30)}P`
+                  : m.status === 'SUCCESS' ? '성공' : '아쉬워요'}
+              </span>
+            </div>
+          ))}
+          {(board.data?.active ?? []).length === 0 && (
+            <p className="empty">이번 주에 걸린 미션이 없어요.</p>
+          )}
+
+          {(board.data?.next ?? []).length > 0 && (
+            <>
+              <div className="mdiv">다음 주에 시작해요</div>
+              {board.data!.next.map((m) => (
+                <div className="list-item" key={m.id}>
+                  <span className="ic" style={{ background: missionBg(m.type) }}>
+                    <Icon id={missionIcon(m.type)} className="ci" />
+                  </span>
+                  <div className="tx"><b>{m.text}</b></div>
+                </div>
+              ))}
+            </>
+          )}
+
+          <button type="button" className="madd" onClick={() => setMsOpen(true)}>
+            <Icon id="i-plus" />
+            {(board.data?.next ?? []).length > 0 ? '다음 주 미션 바꾸기' : '다음 주 미션 고르기'}
+          </button>
+        </div>
+
         {/* 지킨 날 — 개편안은 이번 주 7칸을 먼저 보이고 월 달력은 접어 둔다.
             30일 격자를 늘 펼치면 화면이 격자로 차서 "오늘 지켰나"가 묻힌다. */}
         <SectionTitle>지킨 날</SectionTitle>
@@ -481,23 +549,38 @@ export function Myroom() {
         )}
       </div>
 
+      {/* 다음 주 미션 고르기 (개편안 `#msSheet`) */}
+      <MissionSheet open={msOpen} candidates={board.data?.candidates ?? []}
+        picked={pickedKey} reward={board.data?.weeklyPointPool ?? 30}
+        onClose={() => setMsOpen(false)}
+        onConfirm={async (key) => {
+          await api.guardian.pickMission(userId, key).catch(() => undefined);
+          board.reload();
+          setMsOpen(false);
+        }} />
+
       {/* 아침 세리머니 — 방에 들어왔을 때 소품이 도착한다(개편안 openMyroom). */}
       <Modal open={ceremonyOpen && !!ceremony} onClose={closeCeremony} title="지킴이 세리머니">
         {ceremony && (
           <>
-            <div className="orb orb-bob" />
+            {/* 영웅샷 — 받은 그 소품을 크게 띄운다(개편안 `.cere-hero`). 오브를 띄우면 무엇을
+                받았는지가 안 보여, 세리머니가 '알림'이 되고 만다. */}
+            <div className="cere-hero float-bob">
+              <ItemGlyph glyph={ceremony.glyph ?? 'plant'} size={56} />
+            </div>
             <h3>{ceremony.result === 'NO_SPEND_DAY' ? '어젯밤을 지켜냈어요!' : '어제도 잘 지켰어요'}</h3>
-            <p>
-              {ceremony.message ?? '새 소품이 도착했어요'}
-              {ceremony.objectId && (
-                <><br /><b style={{ color: 'var(--blue-t)' }}>
-                  {GRADE_EMOJI[ceremony.grade ?? 'COMMON']} {ceremony.objectId}
-                </b> · {GRADE_LABEL[ceremony.grade ?? 'COMMON']} 등급</>
-              )}
-            </p>
+            <p>{ceremony.message ?? '새 소품이 도착했어요'}</p>
+            {/* 이름표. 예전에는 여기에 서버 코드(`mug_01`)가 그대로 나왔다 — 이제 서버가
+                카탈로그에서 찾은 이름을 보낸다. */}
+            {ceremony.objectName && (
+              <div className="cere-name">
+                {GRADE_EMOJI[ceremony.grade ?? 'COMMON']} {ceremony.objectName}
+                {' · '}{GRADE_LABEL[ceremony.grade ?? 'COMMON']}
+              </div>
+            )}
             <p className="fine">포인트는 방 꾸미기 전용이에요 · 내 돈은 그대로 내 계좌에</p>
-            <button type="button" className="btn btn-primary" style={{ padding: 14 }}
-              onClick={() => { closeCeremony(); void reload(); }}>방에 두기</button>
+            <button type="button" className="btn btn-primary" style={{ padding: 16 }}
+              onClick={() => { closeCeremony(); void reload(); }}>방에 놓기</button>
           </>
         )}
       </Modal>

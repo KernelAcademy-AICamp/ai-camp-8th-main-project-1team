@@ -202,7 +202,7 @@ public class GuardianWeeklyReportService {
             boolean judged = v != null && v.getResult() != DailyResult.NO_GRANT;
             boolean kept = judged && v != null
                     && (v.getResult() == DailyResult.NO_SPEND_DAY || v.getResult() == DailyResult.ON_PACE_DAY);
-            out.add(new DayPoint(d, weekdayLabel(d.getDayOfWeek()), spent.getOrDefault(d, 0L), kept, judged));
+            out.add(new DayPoint(d, GuardianCopy.weekday(d.getDayOfWeek()), spent.getOrDefault(d, 0L), kept, judged));
         }
         return out;
     }
@@ -245,29 +245,18 @@ public class GuardianWeeklyReportService {
     //  내부
     // ======================================================================
 
-    /** 요일 한 글자. 화면 문구는 44자 제한이 빡빡해 "금요일"보다 "금"이 낫다. */
-    private static String weekdayLabel(java.time.DayOfWeek d) {
-        return switch (d) {
-            case MONDAY -> "월"; case TUESDAY -> "화"; case WEDNESDAY -> "수"; case THURSDAY -> "목";
-            case FRIDAY -> "금"; case SATURDAY -> "토"; case SUNDAY -> "일";
-        };
-    }
-
-    /** 그 주의 미션을 사람이 읽는 문장으로. 없으면 빈 목록이라 화면이 절을 통째로 감춘다. */
+    /**
+     * 그 주의 미션을 사람이 읽는 문장으로. 없으면 빈 목록이라 화면이 절을 통째로 감춘다.
+     *
+     * <p>문구 규칙은 {@link GuardianCopy#missionText} 한 곳에 있다 — 리포트(끝난 미션)와
+     * 마이룸(고를 미션)이 같은 미션을 서로 다르게 부르면 같은 것인지 알 수가 없다.
+     */
     private List<MissionLine> missionLines(Long userId, LocalDate weekStart) {
         List<MissionLine> out = new ArrayList<>();
         for (WeeklyMission m : missionRepository.findByUserAndPeriod(userId, weekStart)) {
-            String text = switch (m.getConditionType()) {
-                case MAX_COUNT -> m.getCategory() + " 주 " + m.getThreshold() + "회 이하";
-                case AVOID_SLOT -> m.getAvoidWeekday() == null ? m.getCategory() + " 시간대 피하기"
-                        : weekdayLabel(m.getAvoidWeekday()) + " "
-                          + m.getAvoidHourStart() + "~" + m.getAvoidHourEnd() + "시 " + m.getCategory() + " 안 쓰기";
-                case NO_SPEND_STREAK_MIN -> "무지출 " + m.getThreshold() + "일 연속";
-                case LABELING_COUNT_MIN -> "소비 성격 " + m.getThreshold() + "건 답하기";
-            };
             String status = m.getAchieved() == null ? "ONGOING"
                     : m.getAchieved() ? "SUCCESS" : "FAILED";
-            out.add(new MissionLine(text, status, missionPoint));
+            out.add(new MissionLine(GuardianCopy.missionText(m), status, missionPoint));
         }
         return out;
     }
