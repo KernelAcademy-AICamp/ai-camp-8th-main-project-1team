@@ -457,6 +457,19 @@ public class GuardianController {
     }
 
     /** 구매 — 포인트로만. 잔액이 모자라거나 이미 가진 물건이면 400. */
+    /** 고를 수 있는 털색과 지금 고른 것 (프로토타입_0806 꾸미기 &gt; 캐릭터). */
+    @GetMapping("/cat-skins")
+    public List<GuardianCollectionService.CatSkin> catSkins(@RequestParam Long userId) {
+        return collectionService.catSkins(userId);
+    }
+
+    /** 털색을 고른다. 가지지 않은 색이면 400. */
+    @PostMapping("/cat-skins/{key}")
+    public List<GuardianCollectionService.CatSkin> chooseCatSkin(@RequestParam Long userId,
+                                                                 @PathVariable String key) {
+        return collectionService.chooseCatSkin(userId, key);
+    }
+
     @PostMapping("/shop/{code}/buy")
     public GuardianCollectionService.ShopView buy(@RequestParam Long userId, @PathVariable String code) {
         return collectionService.buy(userId, code);

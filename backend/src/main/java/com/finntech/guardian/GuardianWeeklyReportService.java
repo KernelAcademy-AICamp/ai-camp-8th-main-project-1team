@@ -39,6 +39,9 @@ public class GuardianWeeklyReportService {
     /** 추이에 보여줄 주 수 — 4주면 한 달치라 '이번 달 흐름'으로 읽힌다. */
     private static final int TREND_WEEKS = 4;
 
+    /** 지난 챌린지를 몇 회차까지 보여줄지. 개편안이 두 줄만 그리고, 더 내려가면 옛일이라 참고가 안 된다. */
+    private static final int PAST_CHALLENGES = 3;
+
     private final GuardianChallengeRepository challengeRepository;
     private final DailyVerdictRepository verdictRepository;
     private final GuardianTransactionRepository txRepository;
@@ -80,6 +83,31 @@ public class GuardianWeeklyReportService {
     public record MissionLine(String text, String status, Integer reward) {}
 
     /**
+     * 그 주 하루치 (프로토타입_0806 '요일별' 토글).
+     *
+     * <p><b>왜 주별만으로는 부족한가.</b> 4주 추이는 "나아지고 있나"에는 답하지만 "언제 무너지나"에는
+     * 답하지 못한다. 금요일마다 새는 사람과 주말에 몰아 쓰는 사람은 주별 막대가 똑같이 생겼는데
+     * 고쳐야 할 것이 다르다. 요일이 드러나야 다음 주 미션을 어디에 걸지 정할 수 있다.
+     *
+     * @param amount   그날 집계된 지출. 판정 대상(COUNTED)만 센다
+     * @param kept     그날을 지켰는가. 판정이 없는 날(미래·시작 전)은 false 이고 {@code judged} 가 가른다
+     * @param judged   판정이 있었는가 — 없으면 화면이 막대를 비워 둔다
+     */
+    public record DayPoint(LocalDate date, String label, long amount, boolean kept, boolean judged) {}
+
+    /**
+     * 끝난 챌린지 한 줄 (프로토타입_0806 '지난 챌린지 달성률').
+     *
+     * @param label     "6월" 처럼 사람이 읽는 이름
+     * @param period    "6.1 ~ 6.30" 기간
+     * @param keptDays  지킨 날 수
+     * @param totalDays 판정한 날 수
+     * @param rate      달성률 — 서버가 계산해 내려준다(프론트는 계산하지 않는다)
+     */
+    public record PastChallenge(Long challengeId, String label, String period,
+                                int keptDays, int totalDays, double rate) {}
+
+    /**
      * '지킴이가 본 이번 주' — 잘한 점 하나, 함께 볼 점 하나.
      *
      * <p><b>규칙이 만든다.</b> 지난주 대비 건수가 가장 많이 줄어든 카테고리가 잘한 점이고,
@@ -88,11 +116,16 @@ public class GuardianWeeklyReportService {
      */
     public record Coaching(String good, String watch) {}
 
+    /**
+     * @param days           그 주 7일치 — 화면의 '요일별' 토글이 쓴다. 늘 7칸이다(빈 날도 자리를 지킨다)
+     * @param pastChallenges 끝난 챌린지 달성률. 최근 것부터, 없으면 빈 목록이라 화면이 절을 감춘다
+     */
     public record WeeklyReport(LocalDate weekStart, LocalDate weekEnd, String weekLabel,
                                double defenseRate, Double deltaFromLastWeek,
-                               List<WeekPoint> trend, List<LabelSlice> labels,
+                               List<WeekPoint> trend, List<DayPoint> days, List<LabelSlice> labels,
                                int labeledCount, long exemptedAmount, String headline,
-                               List<MissionLine> missions, int missionReward, Coaching coaching) {}
+                               List<MissionLine> missions, int missionReward, Coaching coaching,
+                               List<PastChallenge> pastChallenges) {}
 
     @Transactional(readOnly = true)
     public WeeklyReport report(Long userId, int weeksAgo) {
@@ -138,8 +171,74 @@ public class GuardianWeeklyReportService {
         Coaching coaching = coaching(ch.getId(), start, end);
 
         return new WeeklyReport(start, end, weekLabel(start), cur.defenseRate(), delta,
-                trend, labels, labeled, exemptedAmount, headline(trend, delta),
-                missions, reward, coaching);
+                trend, dayPoints(ch.getId(), start), labels, labeled, exemptedAmount,
+                headline(trend, delta), missions, reward, coaching, pastChallenges(userId, ch.getId()));
+    }
+
+    /**
+     * 그 주 7일치 — 요일별 막대의 재료.
+     *
+     * <p><b>빈 날도 자리를 지킨다.</b> 판정이 없는 날을 빼면 막대가 여섯 개가 되어 '월~일'이
+     * 어긋난다. 대신 {@code judged=false} 로 표시해 화면이 비워 그리게 한다.
+     *
+     * <p>금액은 <b>집계된 것만</b> 센다. 되돌린 결제·성역·환불까지 넣으면 "지킨 날인데 금액이 크다"가
+     * 되어 막대와 판정이 서로 다른 말을 한다.
+     */
+    private List<DayPoint> dayPoints(Long challengeId, LocalDate weekStart) {
+        LocalDate weekEnd = weekStart.plusDays(6);
+        Map<LocalDate, DailyVerdict> byDate = new TreeMap<>();
+        for (DailyVerdict v : verdictRepository.findRange(challengeId, weekStart, weekEnd)) {
+            byDate.put(v.getVerdictDate(), v);
+        }
+        Map<LocalDate, Long> spent = new TreeMap<>();
+        for (GuardianTransaction t : txRepository.findCountedBetween(challengeId, weekStart, weekEnd)) {
+            if (t.getCountedDate() != null) spent.merge(t.getCountedDate(), t.getAmount(), Long::sum);
+        }
+
+        List<DayPoint> out = new ArrayList<>(7);
+        for (int i = 0; i < 7; i++) {
+            LocalDate d = weekStart.plusDays(i);
+            DailyVerdict v = byDate.get(d);
+            boolean judged = v != null && v.getResult() != DailyResult.NO_GRANT;
+            boolean kept = judged && v != null
+                    && (v.getResult() == DailyResult.NO_SPEND_DAY || v.getResult() == DailyResult.ON_PACE_DAY);
+            out.add(new DayPoint(d, weekdayLabel(d.getDayOfWeek()), spent.getOrDefault(d, 0L), kept, judged));
+        }
+        return out;
+    }
+
+    /**
+     * 끝난 챌린지의 달성률 — "6월 6.1~6.30 / 21일 지킴".
+     *
+     * <p><b>진행 중인 챌린지는 빼고</b> 최근 것부터 준다. 아직 안 끝난 회차를 달성률로 보여주면
+     * 지금까지의 성적이 최종 성적처럼 읽힌다 — 남은 날이 있는데 확정된 것처럼 말하면 안 된다.
+     *
+     * <p>이름은 <b>시작 달</b>로 짓는다. 한 회차가 달을 걸치면(6/20~7/19) '6월'이 되는데,
+     * 사용자가 "6월에 시작한 그거"로 기억하기 때문이다.
+     */
+    private List<PastChallenge> pastChallenges(Long userId, Long currentId) {
+        List<PastChallenge> out = new ArrayList<>();
+        for (GuardianChallenge c : challengeRepository.findByUserIdOrderByIdDesc(userId)) {
+            if (c.getId().equals(currentId) || c.isRunning()) continue;
+            List<DailyVerdict> vs = verdictRepository.findRange(c.getId(), c.getStartDate(), c.getEndDate());
+            int kept = 0, judged = 0;
+            for (DailyVerdict v : vs) {
+                if (v.getResult() == DailyResult.NO_GRANT) continue;
+                judged++;
+                if (v.getResult() == DailyResult.NO_SPEND_DAY || v.getResult() == DailyResult.ON_PACE_DAY) kept++;
+            }
+            out.add(new PastChallenge(c.getId(), c.getStartDate().getMonthValue() + "월",
+                    period(c.getStartDate(), c.getEndDate()), kept, judged,
+                    judged == 0 ? 0.0 : (double) kept / judged));
+            if (out.size() >= PAST_CHALLENGES) break;
+        }
+        return out;
+    }
+
+    /** "6.1 ~ 6.30". 연도는 뺀다 — 최근 것만 보여주므로 헷갈릴 일이 없고 자리는 좁다. */
+    private static String period(LocalDate from, LocalDate to) {
+        return from.getMonthValue() + "." + from.getDayOfMonth()
+                + " ~ " + to.getMonthValue() + "." + to.getDayOfMonth();
     }
 
     // ======================================================================
