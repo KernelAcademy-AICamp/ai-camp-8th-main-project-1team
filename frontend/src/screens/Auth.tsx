@@ -130,7 +130,11 @@ export function Auth() {
       if (!result.verified) { setFailure(failureMessage(result, vals.carrier ?? '')); return false; }
       // 인증된 신원의 계정으로 갈아탄다. 브라우저에 남아 있던 userId는 **앞사람**일 수 있다 —
       // 그대로 두면 홈이 앞사람의 챌린지를 보여준다(2026-07-31 운영에서 실제로 겪었다).
+      const uid = result.userId ?? userId;
       if (result.userId != null && result.userId !== userId) setUserId(result.userId);
+      // 이 화면에서 이미 동의를 받았다면 **그 계정에** 남긴다. 계정이 여기서 바뀌므로
+      // 동의 시트를 닫던 자리에서 보내면 앞사람 계정에 적히거나 아무 데도 안 적힌다.
+      if (consented) await sendConsent(uid);
       return true;
     } catch (e) {
       setError(e);
@@ -167,8 +171,25 @@ export function Auth() {
     if (step >= STEPS.length - 1) { go('connect'); return; }
     goStep(step + 1);
   }
+  /**
+   * 동의를 <b>서버에 남긴다.</b>
+   *
+   * <p>예전에는 화면 상태(`consented`)만 켜고 끝냈다. 그러면 사용자는 동의했는데 서버의
+   * `consent_given` 은 그대로 false 라, 다음 화면에서 자산을 연결하려는 순간
+   * <b>403</b> 이 난다 — 화면에는 "Forbidden" 만 뜨고 무엇이 빠졌는지 알 수 없다.
+   *
+   * <p>실패해도 흐름은 막지 않는다. 여기서 멈추면 인증까지 마친 사람이 되돌아갈 곳이 없고,
+   * 연결 시점에 서버가 다시 막아 주므로 안전 쪽 판정은 잃지 않는다.
+   */
+  async function sendConsent(uid: number) {
+    try { await api.setConsent(uid, true); }
+    catch { /* 연결 시점에 서버가 다시 확인한다 */ }
+  }
+
   function confirmConsent() {
     setConsented(true); setConsentOpen(false);
+    // 계정이 아직 안 정해졌을 수 있다(인증요청 전) — 그때는 `requestVerify` 가 보낸다.
+    if (userId) void sendConsent(userId);
     setTimeout(() => goStep(STEPS.findIndex((s) => s.key === 'code')), 200);
   }
   const reqOk = TERMS.filter((t) => t.req).every((t) => checked.has(t.id));

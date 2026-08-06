@@ -63,6 +63,8 @@ public class AppUser {
 
     public Long getId() { return id; }
     public String getNickname() { return nickname; }
+    /** 본인인증으로 확인된 이름을 계정 이름으로 쓴다 — 화면이 '○○님'이라 부를 근거다. */
+    public void setNickname(String nickname) { this.nickname = nickname; }
     public BigDecimal getMonthlyIncome() { return monthlyIncome; }
     public void setMonthlyIncome(BigDecimal v) { this.monthlyIncome = v; }
     public BigDecimal getGoalAmount() { return goalAmount; }

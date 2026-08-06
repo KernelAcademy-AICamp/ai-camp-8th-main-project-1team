@@ -23,10 +23,6 @@ export function Onboarding1() {
     () => (analysis ? Promise.resolve(analysis) : api.analysis(userId).then((a) => { setAnalysis(a); return a; })),
     [userId],
   );
-  const cats = useAsync(() => api.categories().catch(() => []), [userId]);
-  // 다음 화면(ob2)과 **같은 창**을 본다. 예전에는 여기가 최근 90일 환산, 저기가 전 기간 평균이라
-  // 같은 카테고리 금액이 화면을 넘길 때 튀었다(2026-07-31 실측 691,150 vs 745,118).
-  const win = useAsync(() => api.onboardingWindow(userId).catch(() => null), [userId]);
   /** 이미 답해 둔 가맹점 — 같은 것을 두 번 묻지 않는다. */
   const stances = useAsync(() => api.merchantStances(userId).catch(() => null), [userId]);
   const [askOpen, setAskOpen] = useState(false);
@@ -105,22 +101,15 @@ export function Onboarding1() {
   const topDow = DOW_KR[a.pattern.peak?.dayOfWeek ?? topKey(a.pattern.amountByDayOfWeek)] ?? '금';
   const topPart = a.pattern.peak?.daypart ?? topKey(a.pattern.amountByDaypart) ?? '저녁';
   const candidates = a.cutCandidates.slice(0, 5);
-  /** 창 응답에서 그 카테고리의 실측 금액. 아직 안 왔거나 없으면 null(그때만 옛 값으로 뒤로 물러난다). */
-  const windowAmount = (name: string) =>
-    win.data?.categories.find((c) => c.displayName === name)?.amount ?? null;
 
-  const toggleSanctuary = (code: string) => {
-    const on = draft.sanctuary.includes(code);
-    patchDraft({ sanctuary: on ? draft.sanctuary.filter((k) => k !== code) : [...draft.sanctuary, code] });
-  };
 
   return (
     <Screen title="소비 분석 요약">
       <AppBar title="분석 완료" steps="1 / 4" />
-      <ProgressBar value={0.25} />
+      <ProgressBar value={0.55} />
       <Scroll><div className="pad">
-        <p className="h-title">최근 소비를<br />이렇게 하고 있었어요</p>
-        <p className="h-sub">지킴이가 <b>최근 30일</b> 소비를 살펴봤어요. 이 중에서 함께 줄여볼 곳을 곧 골라요.</p>
+        <p className="h-title">지난 3개월,<br />이렇게 쓰고 계셨어요</p>
+        <p className="h-sub">월 평균 소비 상위 카테고리예요. 여기서 함께 줄일 곳을 찾아봐요.</p>
 
         {/* 소비 요약 — 습관 소비(줄일 후보 재료) */}
         {candidates.length > 0 ? (
@@ -132,9 +121,9 @@ export function Onboarding1() {
                   <div className="list-item">
                     <span className="ic" style={{ background: bg }}><Icon id={icon} /></span>
                     <div className="tx"><b>{c.category2}</b><span>{c.reason}</span></div>
-                    {/* 최근 30일 **실측**이다. ob2·서버 기준 지출과 같은 값이라야
-                        화면을 넘길 때 금액이 튀지 않는다. */}
-                    <span className="amt">{won(windowAmount(c.category2) ?? c.monthlySpend)}</span>
+                    {/* **3개월 월평균**이다(엔진의 `baseline-months`). 한 달치를 보이면 그달의
+                        우연이 습관처럼 읽힌다 — 여행 간 달의 식비가 평소로 보이는 식이다. */}
+                    <span className="amt">{won(c.monthlySpend)}</span>
                   </div>
                   {i < candidates.length - 1 && <div className="divider" />}
                 </div>
@@ -154,46 +143,38 @@ export function Onboarding1() {
           <b>{topDow}요일 {topPart}</b>에 소비가 몰려요. 이런 순간을 지킴이가 같이 지켜볼게요.
         </div>
 
-        {/* 고정지출 — 못 줄이는 소비로 분리 */}
+        {/* 고정지출 — **같은 목록 안에** 두고 배지로 가른다(개편안 `.ex-badge`).
+            따로 떼어 칩으로 늘어놓으면 "이건 뭐지"가 되는데, 위 줄들과 나란히 두고
+            "절약 후보에서 제외했어요"라고 적으면 왜 여기 있는지가 그 자리에서 설명된다.
+
+            '매달'이라고 쓰지 않는다 — FIXED 판정에는 주간 주기(6~8일)도 들어온다. 주 1회
+            7,000원이 "매달 7,000원"으로 보이면 실제 월 부담(약 3만원)의 1/4로 읽힌다. */}
         {fixed.length > 0 && (
-          <>
-            {/* '매달'이라고 쓰면 안 된다 — FIXED 판정에는 주간 주기(6~8일)도 들어온다.
-                주 1회 7,000원이 "매달 7,000원"으로 보이면 실제 월 부담(약 3만원)의 1/4로 읽힌다.
-                주기는 응답에 이미 있으므로 칩에 그대로 드러낸다. */}
-            <p className="label">
-              그동안 꼬박꼬박 빠져나간 고정지출이에요 <span style={{ color: 'var(--t3)', fontWeight: 600 }}>(못 줄여요)</span>
-            </p>
-            <div className="chips">
-              {fixed.map((f, i) => (
-                <span key={`${f.merchantName ?? f.category2}-${i}`} className="chip static">
-                  {f.merchantName ?? f.category2} · {f.amountVaries ? '최근 ' : ''}{won(f.representativeAmount)}
-                  {f.periodDays ? ` · ${f.periodDays}일마다` : ''}
-                </span>
-              ))}
-            </div>
-          </>
+          <div className="card" style={{ padding: '8px 20px' }}>
+            {fixed.map((f, i) => {
+              const name = f.merchantName ?? catLabel(f.category2);
+              const { icon, bg } = iconOf(catLabel(f.category2));
+              return (
+                <div key={`${name}-${i}`}>
+                  <div className="list-item excluded">
+                    <span className="ic" style={{ background: bg }}><Icon id={icon} /></span>
+                    <div className="tx">
+                      <b>{name}</b>
+                      <span>{f.periodDays ? `${f.periodDays}일마다 반복` : '규칙적으로 반복'}</span>
+                      <span className="ex-badge">고정지출로 분류 — 절약 후보에서 제외했어요</span>
+                    </div>
+                    <span className="amt">{f.amountVaries ? '최근 ' : ''}{won(f.representativeAmount)}</span>
+                  </div>
+                  {i < fixed.length - 1 && <div className="divider" />}
+                </div>
+              );
+            })}
+          </div>
         )}
 
-        {/* 가치 소비 칩(성역) — 선택 */}
-        <p className="label">
-          줄이고 싶지 않은 소비가 있나요? <span style={{ color: 'var(--green-t)' }}>(선택)</span>
-        </p>
-        <p className="h-sub" style={{ margin: '0 0 12px', fontSize: 13.5 }}>
-          고른 소비는 지킴이가 <b style={{ color: 'var(--green-t)' }}>먼저 침묵</b>해요. 이번 챌린지의 집계에서 빠져요.
-        </p>
-        <div className="chips">
-          {(cats.data ?? []).map((c) => {
-            const on = draft.sanctuary.includes(c.code);
-            const { icon } = iconOf(c.displayName);
-            return (
-              <button type="button" key={c.code} className={`chip sanctuary${on ? ' on' : ''}`}
-                aria-pressed={on} onClick={() => toggleSanctuary(c.code)}>
-                <Icon id={icon} className="ci" />{catLabel(c.code, c.displayName)}
-              </button>
-            );
-          })}
-          {cats.data?.length === 0 && <p className="empty">카테고리 목록을 불러오지 못했어요.</p>}
-        </div>
+        {/* 성역 고르기는 **다음 화면**(ob2)이 맡는다 — 개편안이 "절대 안 건드릴 소비를 먼저
+            정해요"를 독립 화면으로 뗐다. 분석을 읽는 일과 고르는 일을 한 화면에 겹치면
+            무엇을 하러 온 화면인지 흐려진다. */}
 
         <div className="spacer" />
       </div></Scroll>

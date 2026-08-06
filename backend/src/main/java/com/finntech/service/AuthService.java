@@ -81,11 +81,18 @@ public class AuthService {
             // 처음 보는 신원 — 이 계정이 비어 있으면 여기에 붙이고, 이미 남이 쓰고 있으면 새로 만든다.
             boolean occupied = user.getCi() != null && !user.getCi().isBlank() && !user.getCi().equals(ci);
             target = occupied
-                    ? new AppUser("user-" + ci.substring(0, 12), user.getMonthlyIncome(),
+                    ? new AppUser(name, user.getMonthlyIncome(),
                                   user.getGoalAmount(), user.getGoalMonths())
                     : user;
             target.setCi(ci);
         }
+        // **인증으로 확인된 이름을 계정 이름으로 쓴다.**
+        //
+        // 예전에는 `user-<ci 앞 12자>` 를 넣었다. 화면은 이 값을 '님' 앞에 붙이는데,
+        // 그러면 마이 화면이 "user-02ac85289fc9님"이 되거나, 그걸 피하려고 "지킴이와 함께"
+        // 같은 대체 문구를 쓰게 된다 — 방금 이름을 대고 인증한 사람에게 할 말이 아니다.
+        // 이름은 이미 통신사 대조를 통과한 값이라 새로 믿을 것도 없다.
+        target.setNickname(name);
         // 금융상품의 나이 자격 판정에 쓸 출생연도만 남긴다. 월·일과 성별세대코드는 여기서 버려진다.
         target.setBirthYear(birthYearOf(social7));
         target = userRepository.save(target);

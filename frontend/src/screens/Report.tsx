@@ -109,10 +109,22 @@ export function Report() {
 
         {empty ? (
           <div className="rp-sec">
-            <div className="rp-emp">
-              <b>이 주에는 분석할 소비가 없어요</b>
-              <p>기록이 있는 주로 이동하면 리포트를 보여드릴게요</p>
-            </div>
+            {/* **챌린지가 아예 없는 것과, 그 주에 소비가 없는 것은 다른 말이다.**
+                예전에는 둘 다 "기록이 있는 주로 이동하면"이라고 했는데, 챌린지가 없으면
+                어느 주로 옮겨도 영영 안 나온다 — 사용자는 없는 주를 찾아 헤매게 된다. */}
+            {ch ? (
+              <div className="rp-emp">
+                <b>이 주에는 분석할 소비가 없어요</b>
+                <p>기록이 있는 주로 이동하면 리포트를 보여드릴게요</p>
+              </div>
+            ) : (
+              <div className="rp-emp">
+                <b>아직 보여드릴 리포트가 없어요</b>
+                <p>챌린지를 시작하면 그 주부터 쌓여요</p>
+                <button type="button" className="btn btn-primary"
+                  style={{ marginTop: 16 }} onClick={() => go('ob1')}>챌린지 시작하기</button>
+              </div>
+            )}
           </div>
         ) : (
           <>
