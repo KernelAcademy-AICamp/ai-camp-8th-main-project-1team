@@ -1263,3 +1263,33 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 .oncheck { position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%;
   background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; }
 .oncheck svg { width: 11px; height: 11px; }
+
+/* ==========================================================================
+ * 도감 상세 — 프로토타입_0806 `s-collection` 의 사물 시트
+ *
+ * <b>왜 시트인가.</b> 도감은 격자로 훑는 화면이라 한 칸을 눌렀다고 화면을 옮기면 훑던 자리를
+ * 잃는다. 시트는 목록 위에 떠서 닫으면 그 자리로 돌아온다.
+ * ========================================================================== */
+
+/* 영웅샷 — 뒤에서 빛이 도는 것처럼. 사물이 '받은 것'으로 보이게 하는 연출이다. */
+.cd-hero { position: relative; width: 96px; height: 96px; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center; }
+.cd-hero::before { content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, #FFF3CC 0%, #FFF9E8 55%, rgba(255,249,232,0) 78%); }
+.cd-hero img, .cd-hero svg { position: relative; width: 64px; height: 64px; object-fit: contain;
+  filter: drop-shadow(0 8px 8px rgba(14,15,12,.16)); }
+.cd-name { text-align: center; font-size: 17px; font-weight: 700; }
+.cd-name .rar { margin-left: 4px; vertical-align: 2px; display: inline-block;
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.cd-meta { text-align: center; font-size: 12px; font-weight: 500; color: var(--t3); margin-top: 4px; }
+.cd-story { margin: 12px 0 8px; text-align: center; font-size: 14px; font-weight: 500;
+  color: var(--t2); line-height: 1.5; }
+
+/* 마일스톤 눈금 아래 라벨 — 점 위치에 맞춰 절대배치한다. 끝의 것은 화면 밖으로 나가지 않게 당긴다. */
+.mile-labs { position: relative; height: 32px; margin-top: 8px; }
+.mile-labs span { position: absolute; transform: translateX(-50%); text-align: center;
+  font-size: 11px; color: var(--t3); font-weight: 500; line-height: 1.3; white-space: nowrap; }
+.mile-labs span i { display: block; font-style: normal; }
+.mile-labs span.on i { color: var(--t1); font-weight: 600; }
+.mile-labs span.edge { transform: translateX(-80%); }
+.mile-dot.next { border-color: var(--blue); }
