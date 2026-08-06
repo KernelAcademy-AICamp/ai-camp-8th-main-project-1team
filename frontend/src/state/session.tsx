@@ -31,7 +31,7 @@ export type ScreenId =
   | 'm-impulse' | 'm-goals' | 'm-connections' | 'm-record' | 'm-policy' | 'm-survey' | 'm-demo'
   | 'm-stances' | 'm-unclassified'
   // 임시 — 프로토타입_0806 이 자리를 안 정한 화면들을 모아 둔 곳. 정해지면 없앤다.
-  | 'm-parked' | 'm-products';
+  | 'm-parked' | 'm-products' | 'm-sanctuary' | 'm-voice';
 
 export const TAB_SCREENS = ['home', 'report', 'my'] as const;
 export type TabId = (typeof TAB_SCREENS)[number];
@@ -51,7 +51,7 @@ const ALL_SCREENS = [
   'collection', 'shop', 'monthend', 'settle', 'renew',
   'r-compare', 'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings',
   'm-impulse', 'm-goals', 'm-connections', 'm-record', 'm-policy', 'm-survey', 'm-demo',
-  'm-stances', 'm-unclassified', 'm-parked', 'm-products',
+  'm-stances', 'm-unclassified', 'm-parked', 'm-products', 'm-sanctuary', 'm-voice',
 ] as const;
 
 // 하나라도 빠지면 여기서 타입 오류가 난다(빠진 ScreenId가 never에 배정되지 못한다).

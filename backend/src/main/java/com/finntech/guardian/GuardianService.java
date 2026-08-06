@@ -13,7 +13,10 @@ import com.finntech.repository.CategoryRepository;
 import com.finntech.repository.ConsumptionRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import com.finntech.domain.AppUser;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.LinkedHashMap;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.RoundingMode;
@@ -44,6 +47,8 @@ public class GuardianService {
     private final GuardianNarrative narrative;
     private final GuardianClock clock;
     private final GuardianCatalog catalog;
+    /** 사용자가 정한 말수 상한을 읽으려고 둔다 — 사람마다 다른 값은 설정 파일에 못 둔다. */
+    private final com.finntech.repository.AppUserRepository userRepository;
     private final GuardianProperties props;
     private final AnalysisEngine analysisEngine;
     private final ConsumptionRepository consumptionRepository;
@@ -66,8 +71,10 @@ public class GuardianService {
                            com.finntech.repository.UserPaymentRepository userPaymentRepository,
                            com.finntech.repository.UserMerchantStanceRepository stanceRepository,
                            GuardianChallengeCategoryRepository challengeCategoryRepository,
-                           GuardianCatalog catalog) {
+                           GuardianCatalog catalog,
+                           com.finntech.repository.AppUserRepository userRepository) {
         this.catalog = catalog;
+        this.userRepository = userRepository;
         this.challengeRepository = challengeRepository;
         this.txRepository = txRepository;
         this.notificationRepository = notificationRepository;
@@ -636,6 +643,31 @@ public class GuardianService {
                     ch.getUserId(), ch.getId(), txId, decision.caseId(), SuppressedReason.NIGHT, now));
         }
 
+        /*
+         * 하루 말수 상한 (C13).
+         *
+         * **이 판정이 죽어 있었다.** 규칙은 `GuardianRules` 안에 쓰여 있었는데 그 경로(`Ctx`)를
+         * 부르는 곳이 없어, 설정값 `daily-push-limit` 도 사용자 설정도 아무 효력이 없었다.
+         * 실제로 알림을 만드는 자리는 여기 하나뿐이므로 여기서 센다.
+         *
+         * 사람마다 정한 값이 우선이고(0이면 '설정 안 함'), 없으면 전역 기본값을 따른다.
+         * 예산 초과 통보처럼 미룰 수 없는 건은 상한을 넘겨도 나간다 — 말수를 줄인 것이지
+         * 위험을 알리지 말라고 한 것이 아니다.
+         */
+        if (!def.bypassBudget()) {
+            int limit = userRepository.findById(ch.getUserId())
+                    .map(u -> u.getNotifyDailyLimit())
+                    .filter(v -> v > 0)
+                    .orElse(props.getNotification().getDailyPushLimit());
+            int sent = notificationRepository.countPushToday(
+                    ch.getUserId(), today.atStartOfDay(), today.plusDays(1).atStartOfDay());
+            if (sent >= limit) {
+                return notificationRepository.save(GuardianNotification.silent(
+                        ch.getUserId(), ch.getId(), txId, decision.caseId(),
+                        SuppressedReason.BUDGET, now));
+            }
+        }
+
         Map<String, Object> numbers = numbersFor(ch, tx, snap, today);
         if (extras != null) numbers.putAll(extras);
         GuardianNarrative.Message msg = narrative.compose(
@@ -756,6 +788,61 @@ public class GuardianService {
     // ======================================================================
     //  7. 홈 (설계서 §API 3) — 프론트는 다시 계산하지 않는다
     // ======================================================================
+
+    // ======================================================================
+    //  설정 (마이 > 설정)
+    // ======================================================================
+
+    /**
+     * 성역을 다시 정한다.
+     *
+     * <p><b>줄이기로 한 곳은 성역이 될 수 없다.</b> 둘 다이면 "줄이라고 하면서 침묵한다"가 되어
+     * 앞뒤가 안 맞는다. 화면도 그 칸을 막아 두지만, 서버가 다시 본다 — 화면만 막으면 규칙이
+     * 화면에 있는 셈이다.
+     */
+    @Transactional
+    public java.util.Set<String> setSanctuary(Long userId, List<String> categories) {
+        GuardianChallenge ch = challengeRepository.findRunning(userId).orElseThrow(
+                () -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.BAD_REQUEST, "진행 중인 챌린지가 없어요"));
+        List<String> want = categories == null ? List.of() : categories;
+        List<String> clash = want.stream().filter(ch.getCategorySet()::contains).toList();
+        if (!clash.isEmpty()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    String.join("·", clash) + "은(는) 이번에 줄이기로 한 곳이라 성역으로 둘 수 없어요");
+        }
+        ch.setSanctuaryCategories(want);
+        challengeRepository.save(ch);
+        return ch.getSanctuarySet();
+    }
+
+    /** 지금 말수 설정과 전역 기본값. 0이면 '설정 안 함'이라 기본값을 따른다. */
+    @Transactional(readOnly = true)
+    public Map<String, Object> voice(Long userId) {
+        int mine = userRepository.findById(userId).map(AppUser::getNotifyDailyLimit).orElse(0);
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("dailyLimit", mine);
+        m.put("defaultLimit", props.getNotification().getDailyPushLimit());
+        m.put("effectiveLimit", mine > 0 ? mine : props.getNotification().getDailyPushLimit());
+        return m;
+    }
+
+    /**
+     * 말수를 정한다.
+     *
+     * <p>0은 '설정 안 함'이며 전역 기본값을 따른다. 위쪽은 막지 않는다 — 많이 듣고 싶다는
+     * 사람에게 우리가 정한 수를 강요할 이유가 없다. 다만 음수는 뜻이 없으므로 0으로 접는다.
+     */
+    @Transactional
+    public Map<String, Object> setVoice(Long userId, int dailyLimit) {
+        AppUser u = userRepository.findById(userId).orElseThrow(
+                () -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "사용자를 찾지 못했어요"));
+        u.setNotifyDailyLimit(Math.max(0, dailyLimit));
+        userRepository.save(u);
+        return voice(userId);
+    }
 
     public record GrassCell(LocalDate date, DailyResult result, boolean granted, boolean protectedDay) {}
 

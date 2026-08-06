@@ -154,6 +154,19 @@ public class GuardianChallenge {
     @Transient
     public Set<String> getSanctuarySet() { return parseCsv(sanctuaryCategories); }
 
+    /**
+     * 성역을 다시 정한다 (마이 &gt; 설정 &gt; 성역 관리).
+     *
+     * <p><b>진행 중에도 바꿀 수 있어야 한다.</b> 성역은 "지킴이가 침묵할 곳"이라는 약속인데,
+     * 챌린지를 만들 때 한 번만 정할 수 있으면 잘못 고른 사람은 한 달을 견뎌야 한다.
+     *
+     * <p><b>줄이기로 한 카테고리는 성역이 될 수 없다.</b> 둘 다이면 "줄이라고 하면서 침묵한다"가
+     * 되어 앞뒤가 안 맞는다. 겹치는 것은 호출부가 걸러 보낸다.
+     */
+    public void setSanctuaryCategories(List<String> categories) {
+        this.sanctuaryCategories = joinCsv(categories);
+    }
+
     @Transient
     public boolean isRunning() {
         return state == ChallengeState.ACTIVE || state == ChallengeState.AT_RISK

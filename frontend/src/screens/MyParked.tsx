@@ -28,6 +28,17 @@ const FROM_REPORT: Item[] = [
   { id: 'r-savings', emoji: '🏦', bg: 'var(--green-weak)', title: '통장 비교', desc: '아낀 돈을 어디에 모을까 · 정보성' },
 ];
 
+/** 마이 탭에 있던 것들 — 개편안 `s-my` 가 설정 세 줄만 그렸다. */
+const FROM_MY: Item[] = [
+  { id: 'm-impulse', emoji: '🎁', bg: 'var(--blue-weak)', title: '충동예산 절약통', desc: '참을수록 저절로 커지는 절약통' },
+  { id: 'm-goals', emoji: '🎯', bg: 'var(--c-food)', title: '목표와 고민 목록', desc: '아낀 돈이 쌓이는 곳 · 살까 말까 담아두기' },
+  { id: 'm-stances', emoji: '🧾', bg: 'var(--c-taxi)', title: '낭비 판정 관리', desc: "'낭비가 아니에요'로 빼 둔 곳 보기 · 되돌리기" },
+  { id: 'm-unclassified', emoji: '🏷️', bg: 'var(--c-cvs)', title: '분류 정리', desc: '무엇에 썼는지 모르는 결제 정리하기' },
+  { id: 'm-record', emoji: '✏️', bg: 'var(--c-cvs)', title: '소비 기록과 동의', desc: '직접 기록 · 동의 철회 · 내 기록 삭제' },
+  { id: 'm-policy', emoji: '📄', bg: 'var(--c-ott)', title: '개인정보 처리방침', desc: '무엇을 받아 어떻게 쓰는지' },
+  { id: 'm-survey', emoji: '💬', bg: 'var(--c-cafe)', title: '사용자 테스트', desc: '써보고 느낀 점을 남겨주세요' },
+];
+
 /** 마이에도 리포트에도 진입점이 없어진 것. */
 const OTHERS: Item[] = [
   { id: 'm-products', emoji: '📊', bg: 'var(--blue-weak)', title: '맞춤 상품 비교', desc: '예·적금·펀드 매칭 Top 3 · 전부 더미' },
@@ -62,6 +73,7 @@ export function MyParked() {
           <b> 기능은 전부 그대로 동작해요</b> — 어디에 둘지만 정하면 돼요.
         </p>
 
+        <Group title="마이에 있던 것" items={FROM_MY} go={go} />
         <Group title="리포트에 있던 것" items={FROM_REPORT} go={go} />
         <Group title="그 밖에" items={OTHERS} go={go} />
 

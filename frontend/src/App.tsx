@@ -38,6 +38,8 @@ import { ReportAccount } from './screens/ReportAccount';
 import { ReportCards } from './screens/ReportCards';
 import { Compare } from './screens/Compare';
 import { MyProducts } from './screens/MyProducts';
+import { MySanctuary } from './screens/MySanctuary';
+import { MyVoice } from './screens/MyVoice';
 import { ReportWaste } from './screens/ReportWaste';
 import { ReportSavings } from './screens/ReportSavings';
 import { My } from './screens/My';
@@ -69,6 +71,8 @@ const SCREENS: Record<ScreenId, ComponentType> = {
   'r-spending': ReportSpending, 'r-analysis': ReportAnalysis, 'r-cards': ReportCards,
   'r-compare': Compare,
   'm-products': MyProducts,
+  'm-sanctuary': MySanctuary,
+  'm-voice': MyVoice,
   'r-account': ReportAccount,
   'r-waste': ReportWaste, 'r-savings': ReportSavings,
   'm-impulse': MyImpulse, 'm-goals': MyGoals, 'm-connections': MyConnections,

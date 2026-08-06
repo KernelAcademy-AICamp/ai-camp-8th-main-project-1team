@@ -476,6 +476,34 @@ public class GuardianController {
         return collectionService.chooseCatSkin(userId, key);
     }
 
+    /**
+     * 성역을 다시 정한다 (마이 &gt; 설정 &gt; 성역 관리).
+     *
+     * <p>줄이기로 한 카테고리는 성역이 될 수 없다 — 그러면 "줄이라고 하면서 침묵한다"가 된다.
+     * 겹치면 400 으로 되돌려, 화면이 무엇이 문제인지 사용자에게 말하게 한다.
+     */
+    @PostMapping("/challenges/sanctuary")
+    public Map<String, Object> setSanctuary(@RequestParam Long userId,
+                                            @RequestBody SanctuaryRequest req) {
+        return Map.of("sanctuaryCategories",
+                guardianService.setSanctuary(userId, req.categories()));
+    }
+
+    public record SanctuaryRequest(List<String> categories) {}
+
+    /** 지킴이 말수 — 하루 알림 상한. 0이면 '설정 안 함'이고 전역 기본값을 따른다. */
+    @GetMapping("/voice")
+    public Map<String, Object> voice(@RequestParam Long userId) {
+        return guardianService.voice(userId);
+    }
+
+    @PostMapping("/voice")
+    public Map<String, Object> setVoice(@RequestParam Long userId, @RequestBody VoiceRequest req) {
+        return guardianService.setVoice(userId, req.dailyLimit());
+    }
+
+    public record VoiceRequest(int dailyLimit) {}
+
     // ======================================================================
     //  주간 미션 (개편안 s-myroom 의 미션 보드·고르기 시트)
     // ======================================================================

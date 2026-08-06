@@ -1595,3 +1595,13 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 .sp-card .list-item .c { flex: 0 1 auto; min-width: 0; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap; font-size: 11px; padding: 2px 7px;
   border-radius: 20px; font-weight: 700; }
+
+/* `.list-item` 을 <button> 으로 쓸 때 — UA 기본 배경·테두리·가운데정렬을 지운다.
+   안 지우면 회색 네모가 줄마다 남고, 글자가 가운데로 몰린다(마이 탭에서 실제로 겪었다). */
+button.list-item { width: 100%; border: none; background: none; font-family: inherit;
+  color: inherit; text-align: left; cursor: pointer; }
+button.list-item .tx { text-align: left; }
+button.list-item:active { opacity: .6; }
+/* 오른쪽 화살표 — 개편안의 `.arrow`. */
+.list-item .arrow { margin-left: auto; color: #C4C4C2; font-size: 15px; line-height: 1;
+  flex: 0 0 auto; }

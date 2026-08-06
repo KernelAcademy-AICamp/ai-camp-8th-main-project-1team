@@ -1248,6 +1248,17 @@ export const api = {
     shop: (userId: number) => get<GuardianShop>(`/api/guardian/shop?userId=${userId}`),
     catSkins: (userId: number) => get<CatSkin[]>(`/api/guardian/cat-skins?userId=${userId}`),
     missions: (userId: number) => get<MissionBoard>(`/api/guardian/missions?userId=${userId}`),
+    /** 지킴이 말수 — 하루 알림 상한. dailyLimit 0이면 '설정 안 함'이라 기본값을 따른다. */
+    voice: (userId: number) =>
+      get<{ dailyLimit: number; defaultLimit: number; effectiveLimit: number }>(
+        `/api/guardian/voice?userId=${userId}`),
+    setVoice: (userId: number, dailyLimit: number) =>
+      post<{ dailyLimit: number; defaultLimit: number; effectiveLimit: number }>(
+        `/api/guardian/voice?userId=${userId}`, { dailyLimit }),
+    /** 성역을 다시 정한다. 줄이기로 한 카테고리와 겹치면 서버가 400으로 막는다. */
+    setSanctuary: (userId: number, categories: string[]) =>
+      post<{ sanctuaryCategories: string[] }>(
+        `/api/guardian/challenges/sanctuary?userId=${userId}`, { categories }),
     pickMission: (userId: number, key: string) =>
       post<MissionBoard>(`/api/guardian/missions/pick?userId=${userId}&key=${encodeURIComponent(key)}`),
     /** 털색을 고른다. 가지지 않은 색이면 서버가 막는다. */
