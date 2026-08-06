@@ -19,10 +19,15 @@ user_mean_log_amount · user_disc_ratio(페르소나 프록시)`.
 > 재학습 전까지 `SpendingClassifier`가 체계 불일치를 감지해 **규칙 baseline으로 폴백**한다.
 
 ## 모델 (W8-2)
-- **프로덕션 = EBM**(순수 GAM, interactions=0 → Java 정확 재현). PR-AUC **0.438** · ROC-AUC 0.795 · Brier 0.110.
-- 비교 = GBM(HistGradientBoosting) PR-AUC 0.462(블랙박스 상한) → **글래스박스가 상한의 ~95%**.
-- baseline = 로지스틱 0.407.
-- 전역 중요도: **cat2(0.89) > 금액(0.47) > 재량지출성향(0.33) > 심야(0.30) > 소비규모(0.22)** — "왜 낭비"를 설명.
+- **프로덕션 = EBM**(순수 GAM, interactions=0 → Java 정확 재현).
+- 비교 = GBM(HistGradientBoosting)은 **정확도 상한을 재는 용도**다 — 학습만 하고 배포하지 않는다
+  (원칙 1: 블랙박스 금지). 로지스틱은 최소 baseline.
+
+**성능 수치는 여기 적지 않는다.** 회차마다 바뀌는 값을 문서에 박아 두면 반드시 낡는다 —
+실제로 이 줄에 7/22 회차 값(0.438/0.462)이 2주 넘게 남아 있었다. 최신 실측은 언제나
+[`metrics.json`](metrics.json) 을 본다.
+- 전역 중요도(2026-08-04 회차): **cat2(1.19) > amt_vs_typical(0.50) > night(0.23) > user_disc_ratio(0.19) > log_amount(0.10)** — "왜 낭비"를 설명한다.
+  이 줄도 회차마다 바뀐다. 정본은 `metrics.json` 의 `global_importance` 다.
 - 라벨이 베르누이 draw라 상한이 존재(관찰 불가한 페르소나 충동성·시간곡선·취미보호는 원리상 예측 불가).
 
 ## 실행
@@ -31,6 +36,18 @@ user_mean_log_amount · user_disc_ratio(페르소나 프록시)`.
    (예전에는 이 단계가 `"SELECT ..."`로만 적혀 있어 실제 쿼리가 저장소에 없었다 —
    재학습할 때마다 쿼리를 다시 짜야 했고, 학습 때 쓴 것과 같은 데이터인지 확인할 방법이 없었다.)
 3. 학습·내보내기: `python train.py` → `ebm_export.json`(형상함수 테이블)·`parity_samples.json`(Java 검증용)·`metrics.json`.
+   **산출물은 `$FINNTECH_ML_DIR`(기본 `~/Downloads/finntech-ml`)에 떨어진다 — 저장소로 옮겨야 반영된다.**
+
+   ```bash
+   D="${FINNTECH_ML_DIR:-$HOME/Downloads/finntech-ml}"
+   cp "$D/ebm_export.json"      backend/src/main/resources/ml/ebm_model.json   # 배포 모델
+   cp "$D/parity_samples.json"  backend/src/test/resources/ml/parity_samples.json
+   cp "$D/metrics.json"         ml/metrics.json                                # 성능 기록
+   ```
+
+   **셋을 함께 옮긴다.** 예전에 `ebm_export.json` 만 옮기고 `metrics.json` 을 두고 와서,
+   배포된 모델의 성능을 아무도 모르는 상태가 됐다(2026-08-06 발각). 배포 모델의
+   `decision_threshold` 와 `metrics.json` 의 EBM `threshold` 가 다르면 **다른 회차**라는 뜻이다.
 4. 배치: `ebm_export.json` → `backend/src/main/resources/ml/ebm_model.json`.
    Java 스코어러 `com.finntech.ml.SpendingClassifier`가 로드해 추론.
 

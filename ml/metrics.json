@@ -2,37 +2,43 @@
  "results": [
   {
    "model": "Logistic",
-   "pr_auc": 0.665,
-   "roc_auc": 0.788,
-   "brier": 0.1719,
-   "threshold": 0.367,
-   "precision": 0.562,
-   "recall": 0.688,
-   "f1": 0.619
+   "pr_auc": 0.6236,
+   "roc_auc": 0.7805,
+   "brier": 0.1736,
+   "threshold": 0.457,
+   "precision": 0.626,
+   "recall": 0.476,
+   "f1": 0.541,
+   "fired_rate": 0.252,
+   "base_rate": 0.331
   },
   {
    "model": "GBM(HGB)",
-   "pr_auc": 0.7297,
-   "roc_auc": 0.8261,
-   "brier": 0.1557,
-   "threshold": 0.327,
-   "precision": 0.584,
-   "recall": 0.757,
-   "f1": 0.659
+   "pr_auc": 0.6839,
+   "roc_auc": 0.8119,
+   "brier": 0.1605,
+   "threshold": 0.513,
+   "precision": 0.699,
+   "recall": 0.495,
+   "f1": 0.58,
+   "fired_rate": 0.234,
+   "base_rate": 0.331
   },
   {
    "model": "EBM",
-   "pr_auc": 0.7019,
-   "roc_auc": 0.8107,
-   "brier": 0.1637,
-   "threshold": 0.348,
-   "precision": 0.558,
-   "recall": 0.771,
-   "f1": 0.648
+   "pr_auc": 0.6455,
+   "roc_auc": 0.7935,
+   "brier": 0.1684,
+   "threshold": 0.479,
+   "precision": 0.661,
+   "recall": 0.485,
+   "f1": 0.559,
+   "fired_rate": 0.243,
+   "base_rate": 0.331
   }
  ],
- "n_train": 6829675,
- "n_test": 1615999,
+ "n_train": 6622123,
+ "n_test": 1616322,
  "features": [
   "cat2",
   "log_amount",
@@ -46,51 +52,51 @@
   "user_mean_log_amount",
   "user_disc_ratio"
  ],
- "waste_rate_test": 0.34518895123078663,
+ "waste_rate_test": 0.33119081470152606,
  "global_importance": [
   {
    "feature": "cat2",
-   "importance": 1.0985
-  },
-  {
-   "feature": "user_disc_ratio",
-   "importance": 0.3772
-  },
-  {
-   "feature": "log_amount",
-   "importance": 0.352
-  },
-  {
-   "feature": "night",
-   "importance": 0.2736
+   "importance": 1.1939
   },
   {
    "feature": "amt_vs_typical",
-   "importance": 0.2222
+   "importance": 0.5025
+  },
+  {
+   "feature": "night",
+   "importance": 0.227
+  },
+  {
+   "feature": "user_disc_ratio",
+   "importance": 0.1892
+  },
+  {
+   "feature": "log_amount",
+   "importance": 0.1031
   },
   {
    "feature": "user_mean_log_amount",
-   "importance": 0.0647
+   "importance": 0.0607
   },
   {
    "feature": "hour_sin",
-   "importance": 0.0284
-  },
-  {
-   "feature": "hour_cos",
    "importance": 0.0263
   },
   {
+   "feature": "hour_cos",
+   "importance": 0.0131
+  },
+  {
    "feature": "weekend",
-   "importance": 0.0038
+   "importance": 0.008
   },
   {
    "feature": "dow_sin",
-   "importance": 0.0026
+   "importance": 0.0051
   },
   {
    "feature": "dow_cos",
-   "importance": 0.001
+   "importance": 0.0031
   }
  ]
 }
