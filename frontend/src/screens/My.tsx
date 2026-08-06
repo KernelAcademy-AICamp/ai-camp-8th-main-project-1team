@@ -24,6 +24,9 @@ const DATA: Item[] = [
   { id: 'm-record', emoji: '✏️', bg: 'var(--c-cvs)', title: '소비 기록과 동의', desc: '직접 기록 · 동의 철회 · 내 기록 삭제' },
   { id: 'm-policy', emoji: '📄', bg: 'var(--c-ott)', title: '개인정보 처리방침', desc: '무엇을 받아 어떻게 쓰는지' },
   { id: 'm-survey', emoji: '💬', bg: 'var(--c-cafe)', title: '사용자 테스트', desc: '써보고 느낀 점을 남겨주세요' },
+  // 임시 — 새 디자인이 자리를 안 정한 화면들. 정해지면 각자 제자리로 가고 이 줄은 없어진다.
+  { id: 'm-parked', emoji: '📦', bg: 'var(--bg)', title: '임시 보관함',
+    desc: '새 디자인이 아직 자리를 안 정한 화면들' },
 ];
 
 function Menu({ items, onGo }: { items: Item[]; onGo: (id: ScreenId) => void }) {
