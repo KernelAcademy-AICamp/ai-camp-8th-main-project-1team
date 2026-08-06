@@ -82,7 +82,7 @@ export const INTENSITY_TIERS = [
   { key: 'hard', label: '많이', value: 0.8, caption: '기준의 80%를 아껴요 · 도전' },
 ] as const;
 export const DEFAULT_INTENSITY = 0.5;
-/** 강도 하한·상한. 상한이 1.0이 아닌 이유: 서버가 지킬 돈 < 기준 지출을 요구한다(0원 한도 금지). */
+/** 강도 하한·상한. 상한이 1.0이 아닌 이유: 서버가 지킬 돈 < 기준 지출을 요구한다(0원 예산 금지). */
 export const INTENSITY_MIN = 0.1;
 export const INTENSITY_MAX = 0.9;
 export const INTENSITY_STEP = 0.1;
@@ -98,7 +98,8 @@ export const DAILY_RESULT_LABEL: Record<string, string> = {
 
 /** 챌린지 상태 → 사용자 문구. 낙인 표현을 쓰지 않는다(기획 §5.1.5). */
 export const CHALLENGE_STATE_LABEL: Record<string, string> = {
-  SETUP: '시작 준비 중', ACTIVE: '지키는 중', AT_RISK: '한도 가까움', EXCEEDED: '한도 초과',
+  // '예산 가까움'은 낱말을 예산으로 통일하면서 어색해졌다 — 가까운 것은 예산이 아니라 그 끝이다.
+  SETUP: '시작 준비 중', ACTIVE: '지키는 중', AT_RISK: '예산 임박', EXCEEDED: '예산 초과',
   SETTLING: '정산 중', SUCCESS: '지켜냈어요', PARTIAL: '부분 달성', SHORTFALL: '조금 모자랐어요',
   FAILED: '이번엔 쉬어가요', ABANDONED: '중단됨', REWARD_PENDING: '보상 대기',
   RESTART_OFFER: '다시 시작할까요', CLOSED: '종료',

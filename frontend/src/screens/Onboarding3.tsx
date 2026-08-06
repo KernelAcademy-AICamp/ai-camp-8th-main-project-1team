@@ -1,7 +1,7 @@
 /**
  * 이번 챌린지 정하기 3/4 — CT-02 절약 강도 + CT-03 지킬 돈 확정.
  *
- * 지킬 돈 = 기준 지출 × 강도. 기준 지출·사용 한도 같은 내부값은 노출하지 않는다(IA §1.2).
+ * 지킬 돈 = 기준 지출 × 강도. 기준 지출·사용 예산 같은 내부값은 노출하지 않는다(IA §1.2).
  * 확정하면 `POST /api/guardian/challenges`로 실제 챌린지가 시작되고, 같은 선택을
  * ①의 절약 후보 추적(`/api/analysis/cut/choose`)에도 남겨 월말 재검증이 돌게 한다.
  */
@@ -88,7 +88,7 @@ export function Onboarding3() {
 
   const activeTier = INTENSITY_TIERS.find((t) =>
     draft.cutCats.length > 0 && draft.cutCats.every((n) => (draft.intensities[n] ?? DEFAULT_INTENSITY) === t.value));
-  // 서버는 지킬 돈이 기준 지출보다 **작을 것**을 요구한다(한도가 0원이 되는 챌린지는 만들지 않는다).
+  // 서버는 지킬 돈이 기준 지출보다 **작을 것**을 요구한다(예산이 0원이 되는 챌린지는 만들지 않는다).
   // 반올림 때문에 소액 카테고리에서 둘이 같아질 수 있어 한 칸 낮춰 둔다.
   //
   // 서버의 기준 지출은 월평균을 **챌린지 일수로 환산**한 값이라 여기 월평균과 살짝 다르다.
@@ -119,7 +119,7 @@ export function Onboarding3() {
         sanctuaryCategories: draft.sanctuary,
         targetSaving: total,
         durationDays: CHALLENGE_DAYS,
-        // 뺀 결제를 서버에도 알린다. 안 보내면 화면만 줄고 서버 한도는 그대로라
+        // 뺀 결제를 서버에도 알린다. 안 보내면 화면만 줄고 서버 예산은 그대로라
         // 사용자가 고른 의미가 사라진다.
         keptPaymentIds: draft.keptPaymentIds,
         // 강도가 카테고리마다 다르므로 목표도 카테고리별로 보낸다. 하나로 보내면 서버가

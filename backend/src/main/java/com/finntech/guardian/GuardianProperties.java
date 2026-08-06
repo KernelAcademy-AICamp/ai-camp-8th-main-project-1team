@@ -14,7 +14,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "finntech.guardian")
 public class GuardianProperties {
 
-    /** 챌린지 한도 대비 이 비율을 넘으면 AT_RISK(그리고 C3 발화). */
+    /** 챌린지 예산 대비 이 비율을 넘으면 AT_RISK(그리고 C3 발화). */
     private double atRiskRatio = 0.80;
 
     /** 부분 달성으로 인정하는 달성률 하한. 5주차 인터뷰로 검증할 가정값이다. */

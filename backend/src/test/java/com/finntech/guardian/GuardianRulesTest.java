@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class GuardianRulesTest {
 
-    /** 설계서 부록 A의 배달 챌린지: 기준 250,000 · 지킬 돈 100,000 · 한도 150,000 · 30일 · 버퍼 0.14 */
+    /** 설계서 부록 A의 배달 챌린지: 기준 250,000 · 지킬 돈 100,000 · 예산 150,000 · 30일 · 버퍼 0.14 */
     private static final GuardianRules.ChallengeView BASE = new GuardianRules.ChallengeView(
             ChallengeState.ACTIVE, Set.of("DELIVERY"), Set.of(),
             250_000L, 100_000L, 150_000L, 0.14, 30, 0L);
@@ -46,7 +46,7 @@ class GuardianRulesTest {
     // =====================================================================
 
     @Test
-    @DisplayName("버퍼는 min(0.20, 평균 결제액/한도) — 단가가 큰 카테고리일수록 여유가 넓다")
+    @DisplayName("버퍼는 min(0.20, 평균 결제액/예산) — 단가가 큰 카테고리일수록 여유가 넓다")
     void bufferRatio() {
         assertEquals(0.14, GuardianRules.computeBufferRatio(21_000L, 150_000L), 1e-9);   // 배달
         assertEquals(0.084, GuardianRules.computeBufferRatio(5_200L, 62_000L), 1e-9);    // 카페
@@ -130,7 +130,7 @@ class GuardianRulesTest {
     }
 
     @Test
-    @DisplayName("참는 날은 언제나 보상받는다 — 한도를 초과해도 무지출이면 지급")
+    @DisplayName("참는 날은 언제나 보상받는다 — 예산을 초과해도 무지출이면 지급")
     void noSpendAlwaysGrantsEvenWhenExceeded() {
         GuardianRules.DailyJudgment j = GuardianRules.dailyJudgment(
                 withState(ChallengeState.EXCEEDED, 180_000L), 20, 180_000L, 0, 3);
@@ -263,7 +263,7 @@ class GuardianRulesTest {
     }
 
     @Test
-    @DisplayName("한도 80% 도달 → C3")
+    @DisplayName("예산 80% 도달 → C3")
     void atRiskWarning() {
         assertEquals("C3", decide(spent(125_000L), 9, delivery(30_000L), 0, 1, 0, 0).caseId());
     }
@@ -312,7 +312,7 @@ class GuardianRulesTest {
     }
 
     @Test
-    @DisplayName("환불 → C12 침묵. 한도 복원은 조용히 한다")
+    @DisplayName("환불 → C12 침묵. 예산 복원은 조용히 한다")
     void refundIsSilent() {
         GuardianRules.InterventionDecision d = decide(spent(32_000L), 5,
                 new GuardianRules.TxView("DELIVERY", 0.94, TxType.REFUND, 32_000L), 0, 1, 0, 0);
@@ -383,7 +383,7 @@ class GuardianRulesTest {
     }
 
     @Test
-    @DisplayName("알림 예산을 무시하는 케이스는 C6 하나뿐 — 한도 초과는 미룰 수 없다")
+    @DisplayName("알림 예산을 무시하는 케이스는 C6 하나뿐 — 예산 초과는 미룰 수 없다")
     void onlyC6BypassesBudget() {
         List<String> bypass = GuardianRules.CASES.stream()
                 .filter(GuardianRules.CaseDef::bypassBudget)

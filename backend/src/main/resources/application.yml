@@ -162,7 +162,7 @@ finntech:
   # application.yml"(마스터 §4 원칙 4)을 요구한다. yml도 깃 안에 있으므로 둘 다 만족한다.
   # 케이스의 '구조'(우선순위·톤·쿨다운)는 값이 아니라 로직이라 GuardianRules.java에 남는다.
   guardian:
-    # 한도의 이 비율을 넘으면 AT_RISK + C3 발화
+    # 예산의 이 비율을 넘으면 AT_RISK + C3 발화
     at-risk-ratio: 0.80
     # 부분 달성 하한. 5주차 인터뷰로 검증할 가정값이다(설계서 §8).
     partial-unlock-threshold: 0.70

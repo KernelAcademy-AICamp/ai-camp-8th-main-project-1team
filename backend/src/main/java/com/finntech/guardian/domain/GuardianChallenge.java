@@ -13,7 +13,7 @@ import java.util.Set;
 /**
  * 지킴이 챌린지 — 설정 + 현재 상태 (지킴이 Agent 설계서 §3.3·§8).
  *
- * <p><b>한도 = 기준 지출 − 지킬 돈.</b> 설계서의 Postgres {@code generated always as} 컬럼은
+ * <p><b>예산 = 기준 지출 − 지킬 돈.</b> 설계서의 Postgres {@code generated always as} 컬럼은
  * JPA·H2·MySQL에서 이식성이 없으므로 생성 시점에 계산해 저장한다(불변값이라 안전하다).
  *
  * <p>사용자당 진행 중인 챌린지는 하나뿐이다. 설계서의 부분 유니크 인덱스
@@ -54,11 +54,11 @@ public class GuardianChallenge {
     @Column(name = "target_saving", nullable = false)
     private long targetSaving;
 
-    /** 챌린지 한도 = baselineAmount − targetSaving. 생성 시 확정. */
+    /** 챌린지 예산 = baselineAmount − targetSaving. 생성 시 확정. */
     @Column(name = "challenge_cap", nullable = false)
     private long challengeCap;
 
-    /** 페이스 버퍼 = min(0.20, 평균 결제액 / 한도). */
+    /** 페이스 버퍼 = min(0.20, 평균 결제액 / 예산). */
     @Column(name = "buffer_ratio", nullable = false)
     private double bufferRatio;
 
