@@ -44,14 +44,22 @@ function Bars({ days, sel, onPick }: { days: DayPoint[]; sel: number; onPick: (i
   const tip = useRef<HTMLDivElement>(null);
   const [tipPos, setTipPos] = useState<{ left: number; bottom: number; ax: number } | null>(null);
 
-  const shown = days.filter((d) => d.judged);
+  /**
+   * 막대 높이의 기준.
+   *
+   * <b>`judged` 가 아니라 금액이 있는 날을 본다.</b> `judged` 는 "하루가 끝나 판정이 났는가"라
+   * <b>오늘은 언제나 false</b>다. 그것으로 막대를 가르면 오늘 쓴 돈이 차트에서 사라져,
+   * 소비 내역에는 보이는데 리포트는 빈 그래프가 된다(2026-08-06 실측).
+   */
+  const shown = days.filter((d) => d.judged || d.amount > 0);
   const max = Math.max(...shown.map((d) => d.amount), 1) * 1.05;
 
   // 말풍선은 **그린 뒤 실측해서** 놓는다. 글자 폭이 값에 따라 달라져 미리 계산할 수 없고,
   // 좌우가 잘리면 안 되므로 차트 폭 안으로 밀어 넣는다. 꼬리는 막대 중심을 계속 가리킨다.
   useLayoutEffect(() => {
     const c = chart.current, t = tip.current;
-    if (!c || !t || sel < 0 || !days[sel]?.judged) { setTipPos(null); return; }
+    const d = days[sel];
+    if (!c || !t || sel < 0 || !d || (!d.judged && d.amount === 0)) { setTipPos(null); return; }
     const col = c.querySelectorAll<HTMLElement>('.bcol')[sel];
     if (!col) return;
     const bx = col.getBoundingClientRect(), cx = c.getBoundingClientRect();
@@ -67,13 +75,16 @@ function Bars({ days, sel, onPick }: { days: DayPoint[]; sel: number; onPick: (i
       <div className="chart" ref={chart}>
         <div className="bars">
           {days.map((d, i) => {
-            const h = !d.judged ? '4px'
-              : d.amount === 0 ? '4px' : `${Math.max(6, (d.amount / max) * 100).toFixed(1)}%`;
+            // 쓴 돈이 있으면 판정 전이라도 그린다 — 오늘 막대가 없으면 "안 썼다"로 읽힌다.
+            const h = d.amount > 0
+              ? `${Math.max(6, (d.amount / max) * 100).toFixed(1)}%`
+              : '4px';
             return (
-              <button type="button" key={d.date} disabled={!d.judged}
-                className={`bcol${i === sel ? ' sel' : ''}${d.judged ? '' : ' off'}`}
+              <button type="button" key={d.date} disabled={!d.judged && d.amount === 0}
+                className={`bcol${i === sel ? ' sel' : ''}${d.judged || d.amount > 0 ? '' : ' off'}`}
                 onClick={() => onPick(i)}
-                aria-label={`${d.label}요일 ${d.judged ? won(d.amount) : '판정 없음'}`}>
+                aria-label={`${d.label}요일 ${d.judged || d.amount > 0 ? won(d.amount)
+                  : '판정 없음'}${!d.judged && d.amount > 0 ? ' (오늘, 아직 집계 중)' : ''}`}>
                 <div className="bar" style={{ height: h }} />
               </button>
             );

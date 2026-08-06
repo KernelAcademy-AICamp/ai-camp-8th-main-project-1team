@@ -71,7 +71,9 @@ export function Report() {
   /** 차트 위 한 줄 요약. 모드마다 무엇을 견주는지가 다르다. */
   const lead = mode === 0
     ? (() => {
-      const shown = w?.days.filter((d) => d.judged) ?? [];
+      // 오늘은 `judged=false` 라 빠진다 — 쓴 돈이 있으면 오늘도 평균에 넣는다.
+      // 안 그러면 오늘 하루만 쓴 주가 "하루 평균 0원"으로 나온다.
+      const shown = w?.days.filter((d) => d.judged || d.amount > 0) ?? [];
       const avg = shown.length ? Math.round(shown.reduce((a, d) => a + d.amount, 0) / shown.length) : 0;
       return { label: '하루 평균', value: <><b>{won(avg)}</b> 썼어요</> };
     })()
@@ -163,48 +165,66 @@ export function Report() {
             <div className="rp-band" />
 
             {/* ── ③ 지킴이가 본 이번 주 + 미션 다리 ────────────────── */}
-            {(w?.coaching.good || w?.coaching.watch) && (
-              <>
-                <div className="rp-sec">
-                  <div className="t-sec">지킴이가 본 이번 주</div>
-                  <div className="ins">
-                    {w?.coaching.good && (
-                      <div className="ig"><span className="itag good">잘한 점</span><p>{w?.coaching.good}</p></div>
-                    )}
-                    {w?.coaching.watch && (
-                      <div className="ig"><span className="itag warn">살펴볼 점</span><p>{w?.coaching.watch}</p></div>
-                    )}
-                  </div>
-                  {(w?.missions.length ?? 0) > 0 && (
-                    <button type="button" className="bn msn" onClick={() => go('myroom')}>
-                      <div className="bnt">
-                        <b>이번 주 소비를 보고<br />다음 주 미션을 준비했어요</b>
-                        <span>마이룸에서 확인해 보세요<i className="chev" aria-hidden="true">›</i></span>
-                      </div>
-                      <CoinArt />
-                    </button>
+            <>
+              <div className="rp-sec">
+                <div className="t-sec">지킴이가 본 이번 주</div>
+                <div className="ins">
+                  {w?.coaching.good && (
+                    <div className="ig"><span className="itag good">잘한 점</span><p>{w.coaching.good}</p></div>
+                  )}
+                  {w?.coaching.watch && (
+                    <div className="ig"><span className="itag warn">살펴볼 점</span><p>{w.coaching.watch}</p></div>
+                  )}
+                  {/* 견줄 지난주가 없으면 두 문장 모두 비어 온다 — 그때도 절은 남긴다. */}
+                  {!w?.coaching.good && !w?.coaching.watch && (
+                    <p className="empty" style={{ margin: 0 }}>
+                      견줄 지난주가 아직 없어요. 한 주가 더 쌓이면 무엇이 달라졌는지 말해드릴게요.
+                    </p>
                   )}
                 </div>
-                <div className="rp-band" />
-              </>
-            )}
+                {/* **미션이 없을 때 더 필요한 문이다.** 예전에는 미션이 있을 때만 배너를 띄웠는데,
+                    미션을 고르러 가는 문이 미션이 없으면 사라지는 셈이었다. 개편안도 두 경우의
+                    문구를 각각 적어 두고 배너는 늘 보인다. */}
+                <button type="button" className="bn msn" onClick={() => go('myroom')}>
+                  <div className="bnt">
+                    {(w?.missions.length ?? 0) > 0 ? (
+                      <>
+                        <b>이번 주 미션 {w!.missions.length}개<br />진행 중이에요</b>
+                        <span>마이룸에서 확인해 보세요<i className="chev" aria-hidden="true">›</i></span>
+                      </>
+                    ) : (
+                      <>
+                        <b>이번 주 소비를 보고<br />다음 주 미션을 준비했어요</b>
+                        <span>마이룸에서 골라 보세요<i className="chev" aria-hidden="true">›</i></span>
+                      </>
+                    )}
+                  </div>
+                  <CoinArt />
+                </button>
+              </div>
+              <div className="rp-band" />
+            </>
 
             {/* ── ④ 지난 챌린지 달성률 ────────────────────────────── */}
-            {(w?.pastChallenges.length ?? 0) > 0 && (
-              <>
-                <div className="rp-sec">
-                  <div className="t-sec">지난 챌린지 달성률</div>
-                  {w?.pastChallenges.map((p) => (
-                    <div className="ch" key={p.challengeId}>
-                      <div className="chh"><b>{p.label}</b><span>{Math.round(p.rate * 100)}%</span></div>
-                      <div className="cbar"><i style={{ width: `${Math.round(p.rate * 100)}%` }} /></div>
-                      <div className="chs">{p.period} / {p.keptDays}일 지킴</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="rp-band" />
-              </>
-            )}
+            <>
+              <div className="rp-sec">
+                <div className="t-sec">지난 챌린지 달성률</div>
+                {(w?.pastChallenges.length ?? 0) > 0 ? w!.pastChallenges.map((p) => (
+                  <div className="ch" key={p.challengeId}>
+                    <div className="chh"><b>{p.label}</b><span>{Math.round(p.rate * 100)}%</span></div>
+                    <div className="cbar"><i style={{ width: `${Math.round(p.rate * 100)}%` }} /></div>
+                    <div className="chs">{p.period} / {p.keptDays}일 지킴</div>
+                  </div>
+                )) : (
+                  /* 진행 중인 회차는 여기 안 온다 — 확정되지 않은 성적을 최종처럼 보이면 안 된다.
+                     그래서 첫 챌린지를 끝내기 전까지는 비어 있는 것이 정상이고, 그 사실을 적는다. */
+                  <p className="empty" style={{ margin: 0 }}>
+                    아직 끝난 챌린지가 없어요. 이번 회차가 끝나면 여기에 달성률이 남아요.
+                  </p>
+                )}
+              </div>
+              <div className="rp-band" />
+            </>
 
             {/* ── ⑤ 카드 추천 ────────────────────────────────────── */}
             <div className="rp-sec">

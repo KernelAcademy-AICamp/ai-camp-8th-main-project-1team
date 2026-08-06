@@ -1103,7 +1103,10 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
  * 절마다 카드가 서면 화면이 상자로만 보이기 때문이다 — 띠는 "여기서 이야기가 바뀐다"만 말한다.
  * ========================================================================== */
 
-.rp-sec { padding: 0 var(--pad-x); }
+/* **다른 화면과 같은 열 폭을 쓴다.** `.pad` 는 `max-width: var(--col)` 로 가운데 열을 잡는데
+   리포트만 그 감쌈 없이 좌우 여백만 줘서, 넓은 화면에서 본문이 화면 끝까지 퍼졌다.
+   띠(`.rp-band`)는 반대로 **열 밖까지** 그어야 절이 갈린 것으로 보이므로 폭을 안 줄인다. */
+.rp-sec { width: 100%; max-width: var(--col); margin: 0 auto; padding: 0 var(--pad-x); }
 .rp-band { height: 8px; background: var(--bg); margin: 32px 0; }
 /* 맨 위 주차 내비 아래만 옅은 1px — 띠를 쓰면 머리가 잘려 보인다. */
 .rp-line { height: 1px; background: var(--line); margin: 16px 0; }
