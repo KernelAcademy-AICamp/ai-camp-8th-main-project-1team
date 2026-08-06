@@ -51,18 +51,11 @@ public final class AccountTxnGenerator {
     }
 
     // ── 사람 이름(이체 상대) ──────────────────────────────────────────────────
-    private static final String[] SURNAMES = {
-        "김","김","김","이","이","박","최","정","강","조","윤","장","임","한","오","서","신","권",
-        "황","안","송","전","홍","유","고","문","양","손","배","백","허","남","심","노","하","곽"
-    };
-    private static final String[] GIVEN1 = {
-        "민","서","지","예","하","도","시","주","유","준","현","승","은","다","소","태","재","성",
-        "진","채","수","우","규","연","가","나","선","형","정","윤"
-    };
-    private static final String[] GIVEN2 = {
-        "준","우","현","진","호","원","빈","석","훈","찬","영","복","희","린","아","은","연","율",
-        "경","미","지","수","혁","민","환","태","솔","겸","하","서"
-    };
+    // 목록을 여기 두지 않는다 — 성씨 인구가중과 성별 게이팅이 `KoreanName` 한 곳에 있고,
+    // 신원 재부여 스크립트도 같은 표를 읽는다. 예전에는 성씨·이름 배열 세 벌이 여기 박혀
+    // 있어서 사용자 신원과 이체 상대의 이름 규칙이 서로 달랐다. (2026-08-06)
+    private static final com.finntech.mydata.util.KoreanName NAMES =
+            com.finntech.mydata.util.KoreanName.instance();
 
     /** 정기 이체(급여·매달 고액입금)의 채널. 일회성 송금과 구분된다. */
     public static final String PAYROLL_CHANNEL = "펌뱅킹";
@@ -114,8 +107,7 @@ public final class AccountTxnGenerator {
     }
 
     private static String randomName(Random rng) {
-        return SURNAMES[rng.nextInt(SURNAMES.length)]
-                + GIVEN1[rng.nextInt(GIVEN1.length)] + GIVEN2[rng.nextInt(GIVEN2.length)];
+        return NAMES.full(rng);
     }
 
     /**
@@ -128,8 +120,7 @@ public final class AccountTxnGenerator {
         List<Row> out = new ArrayList<>();
         // 고액 입금을 보내는 사람은 계좌마다 하나로 고정한다(계좌번호가 시드라 늘 같은 이름).
         Random who = new Random(accountNumber.hashCode());
-        String payer = SURNAMES[who.nextInt(SURNAMES.length)]
-                + GIVEN1[who.nextInt(GIVEN1.length)] + GIVEN2[who.nextInt(GIVEN2.length)];
+        String payer = NAMES.full(who);
         YearMonth last = YearMonth.from(end);
         for (YearMonth ym = YearMonth.from(openedDate); !ym.isAfter(last); ym = ym.plusMonths(1)) {
             Random rng = new Random((accountNumber + "/" + ym).hashCode() & 0xffffffffL);

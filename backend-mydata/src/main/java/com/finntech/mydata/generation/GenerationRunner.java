@@ -355,10 +355,20 @@ public class GenerationRunner implements ApplicationRunner {
         return codes;
     }
 
+    /**
+     * 사용자 한 줄.
+     *
+     * <p><b>신원은 {@code PopulationBuilder} 가 이미 만들어 실어 보낸다</b> — 여기서 만들면
+     * {@code u.id()}(=CI)와 어긋난다. CI 는 그 신원의 해시라야 본인인증이 닿는다.
+     *
+     * <p>예전에는 이름이 {@code 과소비형_c4c0}, 주민번호·전화가 전원 같은 자리표시자였다.
+     * 그래서 생성된 4,511명은 **어떤 값을 입력해도 로그인할 수 없었고**, 그 사실이 화면에는
+     * "마이데이터에 없는 신원"으로만 보였다. (2026-08-06)
+     */
     private void insertUser(GeneratedUser u) {
         var v = u.variant();
-        jdbc.update(USER_SQL, u.id(), v.baseName() + "_" + Long.toHexString(u.userSeed()).substring(0, 4),
-                "900101-1000000", "010-0000-0000", v.baseName(), u.dataSplit());
+        jdbc.update(USER_SQL, u.id(), u.name(), u.fullSocial(), u.phone(),
+                v.baseName(), u.dataSplit());
     }
 
     /** 발급된 카드 1장 — 통장 출금의 비고에 카드사명이 필요해 함께 들고 다닌다. */

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -28,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 그대로 남아 있다</b>는 것을 함께 못박는다 — 리포트·점수·취향은 여전히 전 기간을 본다.
  */
 @SpringBootTest
+@ActiveProfiles("test")   // 인메모리 H2 — 파일 DB 를 쓰면 낡은 스키마가 남는다
 @Transactional
 class AnalysisWindowTest {
 

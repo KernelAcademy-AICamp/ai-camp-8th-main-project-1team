@@ -4,6 +4,7 @@ import com.finntech.guardian.domain.GuardianEnums.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class GuardianRulesTest {
 
-    /** 설계서 부록 A의 배달 챌린지: 기준 250,000 · 지킬 돈 100,000 · 한도 150,000 · 30일 · 버퍼 0.14 */
+    /** 설계서 부록 A의 배달 챌린지: 기준 250,000 · 지킬 돈 100,000 · 예산 150,000 · 30일 · 버퍼 0.14 */
     private static final GuardianRules.ChallengeView BASE = new GuardianRules.ChallengeView(
             ChallengeState.ACTIVE, Set.of("DELIVERY"), Set.of(),
             250_000L, 100_000L, 150_000L, 0.14, 30, 0L);
@@ -45,7 +46,7 @@ class GuardianRulesTest {
     // =====================================================================
 
     @Test
-    @DisplayName("버퍼는 min(0.20, 평균 결제액/한도) — 단가가 큰 카테고리일수록 여유가 넓다")
+    @DisplayName("버퍼는 min(0.20, 평균 결제액/예산) — 단가가 큰 카테고리일수록 여유가 넓다")
     void bufferRatio() {
         assertEquals(0.14, GuardianRules.computeBufferRatio(21_000L, 150_000L), 1e-9);   // 배달
         assertEquals(0.084, GuardianRules.computeBufferRatio(5_200L, 62_000L), 1e-9);    // 카페
@@ -129,7 +130,7 @@ class GuardianRulesTest {
     }
 
     @Test
-    @DisplayName("참는 날은 언제나 보상받는다 — 한도를 초과해도 무지출이면 지급")
+    @DisplayName("참는 날은 언제나 보상받는다 — 예산을 초과해도 무지출이면 지급")
     void noSpendAlwaysGrantsEvenWhenExceeded() {
         GuardianRules.DailyJudgment j = GuardianRules.dailyJudgment(
                 withState(ChallengeState.EXCEEDED, 180_000L), 20, 180_000L, 0, 3);
@@ -262,15 +263,35 @@ class GuardianRulesTest {
     }
 
     @Test
-    @DisplayName("한도 80% 도달 → C3")
+    @DisplayName("예산 80% 도달 → C3")
     void atRiskWarning() {
         assertEquals("C3", decide(spent(125_000L), 9, delivery(30_000L), 0, 1, 0, 0).caseId());
     }
 
     @Test
-    @DisplayName("한도 초과 → C6")
-    void exceededWarning() {
-        assertEquals("C6", decide(spent(160_000L), 12, delivery(30_000L), 0, 1, 0, 0).caseId());
+    @DisplayName("v1.5 — 초과는 거래 시점에 말하지 않는다. C6는 유예가 지난 뒤 배치가 보낸다")
+    void exceededIsNotAnnouncedAtTransactionTime() {
+        // 사용률 1.067. v1.2에서는 여기서 바로 C6가 나갔다.
+        // 그러면 사용자가 24시간 안에 "챌린지랑 상관없어요"로 되돌려도 이미 초과 통보가 나간 뒤가 된다.
+        GuardianRules.InterventionDecision d = decide(spent(160_000L), 12, delivery(30_000L), 0, 1, 0, 0);
+        assertNotEquals("C6", d.caseId(), "C6는 배치 전용이 됐다");
+
+        // C3도 아니다 — "80%예요"는 이미 넘긴 사람에게 뒤처진 말이다.
+        assertNotEquals("C3", d.caseId());
+    }
+
+    @Test
+    @DisplayName("v1.5 — 유예가 만료돼 초과가 확정되면 배치가 C6를 고른다")
+    void batchAnnouncesC6WhenConfirmed() {
+        GuardianRules.Snapshot snap = GuardianRules.computeSnapshot(spent(160_000L), 12);
+        assertEquals("C6", GuardianRules.batchCase(snap, ChallengeState.AT_RISK, 0, true, PROPS));
+    }
+
+    @Test
+    @DisplayName("v1.5 — C6만 알림 예산과 야간 침묵을 무시한다. 초과 사실은 미룰 수 없다")
+    void onlyC6BypassesBudgetAndNight() {
+        assertTrue(GuardianRules.caseById("C6").bypassBudget());
+        assertTrue(GuardianRules.caseById("C6").batchOnly(), "C6는 배치에서만 평가한다");
     }
 
     @Test
@@ -291,7 +312,7 @@ class GuardianRulesTest {
     }
 
     @Test
-    @DisplayName("환불 → C12 침묵. 한도 복원은 조용히 한다")
+    @DisplayName("환불 → C12 침묵. 예산 복원은 조용히 한다")
     void refundIsSilent() {
         GuardianRules.InterventionDecision d = decide(spent(32_000L), 5,
                 new GuardianRules.TxView("DELIVERY", 0.94, TxType.REFUND, 32_000L), 0, 1, 0, 0);
@@ -362,7 +383,7 @@ class GuardianRulesTest {
     }
 
     @Test
-    @DisplayName("알림 예산을 무시하는 케이스는 C6 하나뿐 — 한도 초과는 미룰 수 없다")
+    @DisplayName("알림 예산을 무시하는 케이스는 C6 하나뿐 — 예산 초과는 미룰 수 없다")
     void onlyC6BypassesBudget() {
         List<String> bypass = GuardianRules.CASES.stream()
                 .filter(GuardianRules.CaseDef::bypassBudget)
@@ -468,5 +489,237 @@ class GuardianRulesTest {
                 GuardianRules.dailyJudgment(spent(60_000L), 7, 60_000L, 1, 0).result());
         assertEquals(DailyResult.ON_PACE_DAY,
                 GuardianRules.dailyJudgment(spent(60_000L), 8, 60_000L, 1, 0).result());
+    }
+
+    // =====================================================================
+    //  v1.5 — 거래 판정 종류 (스펙 §5.1)
+    // =====================================================================
+
+    private static GuardianRules.ChallengeView withSanctuary(String... sanctuary) {
+        return new GuardianRules.ChallengeView(ChallengeState.ACTIVE, Set.of("DELIVERY"),
+                Set.of(sanctuary), 250_000L, 100_000L, 150_000L, 0.14, 30, 0L);
+    }
+
+    @Test
+    @DisplayName("kind — 줄이기로 한 카테고리만 예산을 깎는다")
+    void resolveKindTarget() {
+        GuardianRules.TxView tx = new GuardianRules.TxView("DELIVERY", 0.94, TxType.EXPENSE, 32_000L, false);
+        assertEquals(TxKind.TARGET, GuardianRules.resolveKind(tx, BASE, 0.70));
+        assertTrue(TxKind.TARGET.countsAgainstCap());
+    }
+
+    @Test
+    @DisplayName("kind — 분류가 확정되지 않으면 UNKNOWN. 무엇인지 모르면 차감할 수 없다")
+    void resolveKindUnknown() {
+        assertEquals(TxKind.UNKNOWN, GuardianRules.resolveKind(
+                new GuardianRules.TxView(null, null, TxType.EXPENSE, 32_000L, false), BASE, 0.70));
+        assertEquals(TxKind.UNKNOWN, GuardianRules.resolveKind(
+                new GuardianRules.TxView("DELIVERY", 0.69, TxType.EXPENSE, 32_000L, false), BASE, 0.70));
+        assertFalse(TxKind.UNKNOWN.countsAgainstCap());
+    }
+
+    @Test
+    @DisplayName("kind — 고정지출은 예산에서 빼지 않는다. 통신비를 줄이라고 말할 수는 없다")
+    void resolveKindFixed() {
+        GuardianRules.TxView tx = new GuardianRules.TxView("DELIVERY", 0.94, TxType.EXPENSE, 32_000L, true);
+        assertEquals(TxKind.FIXED, GuardianRules.resolveKind(tx, BASE, 0.70));
+        assertFalse(TxKind.FIXED.countsAgainstCap());
+    }
+
+    @Test
+    @DisplayName("kind — 성역이 고정지출보다 먼저다. 겹쳐도 '참견 안 함' 약속이 이긴다")
+    void sanctuaryBeatsFixed() {
+        GuardianRules.TxView fixedAndSanct =
+                new GuardianRules.TxView("DELIVERY", 0.94, TxType.EXPENSE, 32_000L, true);
+        assertEquals(TxKind.SANCT, GuardianRules.resolveKind(fixedAndSanct, withSanctuary("DELIVERY"), 0.70));
+    }
+
+    @Test
+    @DisplayName("kind — 챌린지 대상도 성역도 아니면 NORMAL. 다른 소비에는 참견하지 않는다")
+    void resolveKindNormal() {
+        GuardianRules.TxView tx = new GuardianRules.TxView("CAFE", 0.95, TxType.EXPENSE, 4_800L, false);
+        assertEquals(TxKind.NORMAL, GuardianRules.resolveKind(tx, BASE, 0.70));
+        assertFalse(TxKind.NORMAL.countsAgainstCap());
+    }
+
+    @Test
+    @DisplayName("고정지출 결제는 개입하지 않고 침묵한다")
+    void fixedExpenseIsSilent() {
+        GuardianRules.InterventionDecision d = decide(BASE, 5,
+                new GuardianRules.TxView("DELIVERY", 0.94, TxType.EXPENSE, 55_000L, true), 0, 1, 0, 0);
+        assertEquals("C4", d.caseId());
+        assertTrue(d.silent());
+    }
+
+    @Test
+    @DisplayName("대상 거래인데 할 말이 없으면 C4가 아니라 NONE으로 남긴다")
+    void nothingToSayIsNotC4() {
+        // 대상 카테고리, 사용률 0.4, 주 2회, 총 2건, 잔돈 없음 — 아무 조건도 안 걸린다.
+        GuardianRules.InterventionDecision d = decide(spent(60_000L), 7, delivery(20_000L), 2, 2, 0, 0);
+        assertEquals(GuardianRules.NO_CASE, d.caseId(), "'참견 안 함'과 '할 말 없음'을 구분해 기록한다");
+        assertTrue(d.silent());
+    }
+
+    // =====================================================================
+    //  v1.5 — 배치 케이스 (스펙 §6.2)
+    // =====================================================================
+
+    @Test
+    @DisplayName("C5는 3의 배수일 때만. 넷째 날부터 매일 울리면 칭찬이 닳는다")
+    void praiseOnlyOnMultiples() {
+        GuardianRules.Snapshot mid = GuardianRules.computeSnapshot(spent(30_000L), 10);
+        assertNull(GuardianRules.batchCase(mid, ChallengeState.ACTIVE, 2, false, PROPS));
+        assertEquals("C5", GuardianRules.batchCase(mid, ChallengeState.ACTIVE, 3, false, PROPS));
+        assertNull(GuardianRules.batchCase(mid, ChallengeState.ACTIVE, 4, false, PROPS));
+        assertNull(GuardianRules.batchCase(mid, ChallengeState.ACTIVE, 5, false, PROPS));
+        assertEquals("C5", GuardianRules.batchCase(mid, ChallengeState.ACTIVE, 6, false, PROPS));
+    }
+
+    @Test
+    @DisplayName("종료 임박 — 사용률 0.85로 격려(C10)와 사실 통보(C11)를 가른다")
+    void endingSoonSplitsAt085() {
+        // 28일차 = 남은 3일
+        assertEquals("C10", GuardianRules.batchCase(
+                GuardianRules.computeSnapshot(spent(120_000L), 28), ChallengeState.ACTIVE, 0, false, PROPS));
+        // 사용률 0.867 — 아직 넘기진 않았지만 격려할 자리가 아니다
+        assertEquals("C11", GuardianRules.batchCase(
+                GuardianRules.computeSnapshot(spent(130_000L), 28), ChallengeState.ACTIVE, 0, false, PROPS));
+    }
+
+    @Test
+    @DisplayName("C9 — 근거가 없으면 보내지 않는다. '지난 4주 중 3번'을 지어내지 않게")
+    void nudgeNeedsEvidence() {
+        LocalDateTime friday1830 = LocalDateTime.of(2026, 8, 7, 18, 30);   // 금요일
+        // 4주 중 3회 반복 + 19시 슬롯 30분 전 → 보낸다
+        assertTrue(GuardianRules.shouldNudgeAhead(DayOfWeek.FRIDAY, 19, 3, friday1830, PROPS));
+        // 반복이 부족하면 안 보낸다
+        assertFalse(GuardianRules.shouldNudgeAhead(DayOfWeek.FRIDAY, 19, 2, friday1830, PROPS));
+        // 요일이 다르면 안 보낸다
+        assertFalse(GuardianRules.shouldNudgeAhead(DayOfWeek.THURSDAY, 19, 3, friday1830, PROPS));
+        // 너무 이르거나(1시간 전) 이미 시작했으면 안 보낸다
+        assertFalse(GuardianRules.shouldNudgeAhead(DayOfWeek.FRIDAY, 19, 3,
+                LocalDateTime.of(2026, 8, 7, 18, 0), PROPS));
+        assertFalse(GuardianRules.shouldNudgeAhead(DayOfWeek.FRIDAY, 19, 3,
+                LocalDateTime.of(2026, 8, 7, 19, 0), PROPS));
+    }
+
+    // =====================================================================
+    //  v1.5 — 일 판정 합산 (스펙 §5.3)
+    // =====================================================================
+
+    private static GuardianRules.DailyJudgment judged(DailyResult r) {
+        return new GuardianRules.DailyJudgment(r, r != DailyResult.OFF_PACE_DAY && r != DailyResult.NO_GRANT,
+                null, null, new GuardianRules.VerdictSnapshot(0, 0, 0, 0));
+    }
+
+    @Test
+    @DisplayName("합산 — 한 곳이라도 페이스를 넘기면 지급하지 않는다")
+    void anyOffPaceBlocksGrant() {
+        GuardianRules.DailyJudgment c = GuardianRules.combineDailyVerdicts(
+                List.of(judged(DailyResult.NO_SPEND_DAY), judged(DailyResult.OFF_PACE_DAY)), 3);
+        assertEquals(DailyResult.OFF_PACE_DAY, c.result());
+        assertFalse(c.grantObject(), "배달을 아꼈다고 카페 초과가 상쇄되면 '지켰다'의 뜻이 흐려진다");
+    }
+
+    @Test
+    @DisplayName("합산 — 전부 무지출이어야 무지출 날이다. 사물은 하루 1개")
+    void allNoSpendGrantsStreakBonus() {
+        GuardianRules.DailyJudgment c = GuardianRules.combineDailyVerdicts(
+                List.of(judged(DailyResult.NO_SPEND_DAY), judged(DailyResult.NO_SPEND_DAY)), 4);
+        assertEquals(DailyResult.NO_SPEND_DAY, c.result());
+        assertTrue(c.grantObject());
+        assertEquals("NO_SPEND_STREAK_4", c.reasonCode());
+        // 챌린지가 2개여도 사물은 하나 — 안 지킬 챌린지를 늘리는 것이 이득이 되면 안 된다
+        assertEquals(1.0, c.gradeWeights().values().stream().mapToDouble(Double::doubleValue).sum(), 1e-9);
+    }
+
+    @Test
+    @DisplayName("합산 — 섞여 있으면 페이스 이내로 본다")
+    void mixedIsOnPace() {
+        GuardianRules.DailyJudgment c = GuardianRules.combineDailyVerdicts(
+                List.of(judged(DailyResult.NO_SPEND_DAY), judged(DailyResult.ON_PACE_DAY)), 2);
+        assertEquals(DailyResult.ON_PACE_DAY, c.result());
+        assertTrue(c.grantObject());
+    }
+
+    @Test
+    @DisplayName("합산 — 판정할 챌린지가 없으면 지급하지 않는다")
+    void noActiveChallengeNoGrant() {
+        assertEquals(DailyResult.NO_GRANT,
+                GuardianRules.combineDailyVerdicts(List.of(judged(DailyResult.NO_GRANT)), 0).result());
+        assertEquals(DailyResult.NO_GRANT, GuardianRules.combineDailyVerdicts(List.of(), 0).result());
+    }
+
+    // =====================================================================
+    //  v1.5 — 세리머니 자동 노출 (스펙 §5.3)
+    // =====================================================================
+
+    @Test
+    @DisplayName("세리머니는 첫 주와 희귀 이상만 자동. 매일 띄우면 연출이 광고처럼 읽힌다")
+    void ceremonyAutoOpen() {
+        assertTrue(GuardianRules.ceremonyAutoOpen(3, Grade.COMMON, PROPS), "첫 주는 매일");
+        assertTrue(GuardianRules.ceremonyAutoOpen(7, Grade.COMMON, PROPS), "7일차까지 포함");
+        assertFalse(GuardianRules.ceremonyAutoOpen(8, Grade.COMMON, PROPS), "그 뒤 일반은 뱃지로만");
+        assertTrue(GuardianRules.ceremonyAutoOpen(20, Grade.RARE, PROPS));
+        assertTrue(GuardianRules.ceremonyAutoOpen(20, Grade.EPIC, PROPS));
+        assertFalse(GuardianRules.ceremonyAutoOpen(20, null, PROPS), "못 받은 날은 띄울 것이 없다");
+    }
+
+    // =====================================================================
+    //  v1.5 — 주간 미션 (스펙 §5.5)
+    // =====================================================================
+
+    @Test
+    @DisplayName("미션 몫 = 30 나누기 개수. 두 개 한다고 두 배가 되면 수집형이 된다")
+    void missionShareSplitsTotal() {
+        assertEquals(30, GuardianRules.missionShare(1, PROPS));
+        assertEquals(15, GuardianRules.missionShare(2, PROPS));
+        assertEquals(10, GuardianRules.missionShare(3, PROPS));
+        assertEquals(10, GuardianRules.missionShare(9, PROPS), "최대 3개로 묶는다");
+        assertEquals(30, GuardianRules.missionShare(0, PROPS), "0개도 1개로 본다");
+    }
+
+    @Test
+    @DisplayName("AVOID_SLOT — 지정 요일·시간대에 걸린 건수를 센다")
+    void countInSlot() {
+        List<GuardianRules.MissionTx> week = List.of(
+                new GuardianRules.MissionTx("DELIVERY", DayOfWeek.FRIDAY, 20),   // 걸림
+                new GuardianRules.MissionTx("DELIVERY", DayOfWeek.FRIDAY, 18),   // 시간 밖
+                new GuardianRules.MissionTx("DELIVERY", DayOfWeek.SATURDAY, 20), // 요일 밖
+                new GuardianRules.MissionTx("CAFE", DayOfWeek.FRIDAY, 20));      // 카테고리 밖
+        assertEquals(1, GuardianRules.countInSlot(week, "DELIVERY", DayOfWeek.FRIDAY, 19, 22));
+        assertEquals(0, GuardianRules.countInSlot(week, "DELIVERY", DayOfWeek.MONDAY, 19, 22));
+        // 끝 시각은 제외 — 22시 주문은 19~22 슬롯에 들지 않는다
+        assertEquals(0, GuardianRules.countInSlot(
+                List.of(new GuardianRules.MissionTx("DELIVERY", DayOfWeek.FRIDAY, 22)),
+                "DELIVERY", DayOfWeek.FRIDAY, 19, 22));
+    }
+
+    // =====================================================================
+    //  v1.5 — 홈 한마디 (스펙 §7.3)
+    // =====================================================================
+
+    @Test
+    @DisplayName("홈 한마디 우선순위 — C6 > C3 > C11 > C2 > C1 > C5")
+    void onelinePriority() {
+        assertEquals("C6", GuardianRules.resolveOneline(Map.of("C6", 1.2, "C3", 0.9, "C1", 0.2)));
+        assertEquals("C3", GuardianRules.resolveOneline(Map.of("C3", 0.9, "C2", 0.4)));
+        assertEquals("C11", GuardianRules.resolveOneline(Map.of("C11", 0.9, "C1", 0.2)));
+        assertEquals("C5", GuardianRules.resolveOneline(Map.of("C5", 0.0)));
+    }
+
+    @Test
+    @DisplayName("홈 한마디 — C3는 이미 넘긴 사람에게 쓰지 않는다. 뒤처진 말이 된다")
+    void onelineC3OnlyBelowFull() {
+        assertEquals("C2", GuardianRules.resolveOneline(Map.of("C3", 1.05, "C2", 0.5)));
+    }
+
+    @Test
+    @DisplayName("홈 한마디 — 침묵이어도 자리를 비우지 않는다. 앱을 열었으면 상태는 알아야 한다")
+    void onelineNeverEmpty() {
+        assertEquals(GuardianRules.ONELINE_IDLE, GuardianRules.resolveOneline(Map.of()));
+        assertEquals(GuardianRules.ONELINE_IDLE, GuardianRules.resolveOneline(null));
+        // 우선순위에 없는 케이스만 걸려도 IDLE
+        assertEquals(GuardianRules.ONELINE_IDLE, GuardianRules.resolveOneline(Map.of("C8", 0.3)));
     }
 }

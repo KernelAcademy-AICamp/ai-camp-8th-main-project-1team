@@ -28,7 +28,7 @@ public final class GuardianCopy {
 
     private GuardianCopy() {}
 
-    /** v1.3: C3·C6에서 카테고리를 "한도"에서 떼고 "어디서 샜는지" 문장으로 옮겼다(2026-08-02). */
+    /** v1.3: C3·C6에서 카테고리를 "예산"에서 떼고 "어디서 샜는지" 문장으로 옮겼다(2026-08-02). */
     public static final String PROMPT_VERSION = "v1.3.0";
     public static final int MAX_TITLE_LEN = 20;
     /** v1.2: 조건부 표현이 길어져 80 → 90. */
@@ -47,7 +47,7 @@ public final class GuardianCopy {
     public static final String UNDO_EXPIRED = "이 결제는 이미 반영됐어요";
 
     public static String undoToast(long remainingCap) {
-        return "알려줘서 고마워요. 한도를 " + won(remainingCap) + "원으로 되돌렸어요.";
+        return "알려줘서 고마워요. 예산을 " + won(remainingCap) + "원으로 되돌렸어요.";
     }
 
     public static String pendingBadge(int count) {
@@ -74,13 +74,13 @@ public final class GuardianCopy {
         return switch (caseId) {
             // TENTATIVE — 되돌릴 수 있으므로 결과를 조건부로
             case "C1" -> s(v, "category") + " " + money(v, "amount") + "원 결제가 들어왔어요. "
-                    + "챌린지에 넣으면 한도는 " + money(v, "remaining") + "원 남아요.";
+                    + "챌린지에 넣으면 예산은 " + money(v, "remaining") + "원 남아요.";
             case "C2" -> "이번 주 들어온 " + s(v, "category") + " 결제가 " + s(v, "count") + "번째예요.";
-            /* 카테고리를 "한도"에 붙이지 않는다. 여기 쓰는 remaining·cap은 <b>합계</b> 기준인데
-               예전 문안은 "식비 한도의 80%"라고 읽혀, 방금 결제의 꼬리표를 카테고리 한도처럼 말했다.
-               카테고리별 한도가 실제로 생긴 뒤로는(tech_log §8-T) 홈의 "식비 198%"와 정면충돌한다.
+            /* 카테고리를 "예산"에 붙이지 않는다. 여기 쓰는 remaining·cap은 <b>합계</b> 기준인데
+               예전 문안은 "식비 예산의 80%"라고 읽혀, 방금 결제의 꼬리표를 카테고리 예산처럼 말했다.
+               카테고리별 예산이 실제로 생긴 뒤로는(tech_log §8-T) 홈의 "식비 198%"와 정면충돌한다.
                카테고리는 지우지 않고 <b>어디서 새는지 지목</b>하는 자리로 옮겼다. (2026-08-02) */
-            case "C3" -> "이 결제까지 넣으면 한도의 80%예요. "
+            case "C3" -> "이 결제까지 넣으면 예산의 80%예요. "
                     + "남는 건 " + money(v, "remaining") + "원이에요."
                     + leak(v);
             case "C8" -> "오늘 " + s(v, "category") + " 결제가 " + s(v, "count") + "건, "
@@ -88,18 +88,18 @@ public final class GuardianCopy {
 
             // DEFINITIVE — 이미 확정된 사실
             case "C5" -> s(v, "days") + "일째 " + s(v, "category") + " 결제가 없어요.";
-            case "C6" -> "한도 " + money(v, "cap") + "원을 넘었어요. "
+            case "C6" -> "예산 " + money(v, "cap") + "원을 넘었어요. "
                     + "지금까지 확보한 절약액은 " + money(v, "secured") + "원이에요."
                     + leak(v);
             case "C7" -> "방금 " + money(v, "amount") + "원 결제, 어떤 소비였어요?";
             case "C9" -> s(v, "weekday") + " " + s(v, "timeRange") + "네요. "
                     + "지난 4주 중 " + s(v, "count") + "번은 이 시간에 " + s(v, "category") + "를 이용했어요.";
-            case "C10" -> s(v, "daysLeft") + "일 남았고 한도는 " + money(v, "remaining") + "원 남았어요.";
+            case "C10" -> s(v, "daysLeft") + "일 남았고 예산은 " + money(v, "remaining") + "원 남았어요.";
             case "C11" -> s(v, "daysLeft") + "일 남았어요. 이번 회차는 여기까지고, "
                     + "확보한 절약액은 " + money(v, "secured") + "원이에요.";
             case "M1" -> "어제 잘 지키셔서 사물이 하나 도착했어요.";
             case "W1" -> "지난주 " + s(v, "category") + " 결제는 " + s(v, "count") + "건, "
-                    + "남은 한도는 " + money(v, "remaining") + "원이에요.";
+                    + "남은 예산은 " + money(v, "remaining") + "원이에요.";
             default -> throw new IllegalArgumentException("폴백 문구가 없는 케이스: " + caseId);
         };
     }
@@ -110,10 +110,10 @@ public final class GuardianCopy {
         return switch (caseId) {
             case "C1" -> trim(category + " 첫 결제");
             case "C2" -> trim(category + " 이번 주 " + s(v, "count") + "번째");
-            // C3·C6의 한도는 합계 기준이다 — 제목에 카테고리를 붙이면 카테고리 한도로 읽힌다.
-            case "C3" -> "한도 80%";
+            // C3·C6의 예산은 합계 기준이다 — 제목에 카테고리를 붙이면 카테고리 예산으로 읽힌다.
+            case "C3" -> "예산 80%";
             case "C5" -> trim("무지출 " + s(v, "days") + "일째");
-            case "C6" -> "한도 초과";
+            case "C6" -> "예산 초과";
             case "C7" -> "이 결제 분류할까요";
             case "C8" -> trim("오늘 " + category + " 잔돈");
             case "C9" -> trim(category + " 시간대예요");
@@ -124,17 +124,49 @@ public final class GuardianCopy {
         };
     }
 
+    // =====================================================================
+    //  홈 한마디 (스펙 v1.5 §7.3)
+    // =====================================================================
+
+    /**
+     * 홈 한마디의 최대 길이. 두 줄짜리 자리라 넘기면 레이아웃이 깨진다.
+     * 자르는 것은 <b>최후의 방어</b>다 — 문안 자체가 이 안에 들어와야 한다.
+     */
+    public static final int MAX_ONELINE_LEN = 44;
+
+    /**
+     * 홈 한마디 문안. 어떤 케이스를 걸지는 {@link GuardianRules#resolveOneline}이 정한다.
+     *
+     * <p><b>알림 문안을 그대로 쓰지 않는다.</b> 알림은 "방금 이런 일이 있었다"를 말하므로
+     * "이 결제까지 넣으면"처럼 <b>사건 시점</b>에 매인 문장이고, 홈은 앱을 연 아무 때나 읽히는
+     * <b>현재 상태</b>다. 같은 문장을 두 자리에 쓰면 홈이 지나간 일을 현재형으로 말하게 된다.
+     *
+     * <p>{@code IDLE}도 문장을 준다 — 알림을 안 보낸 것과 홈이 빈 것은 다르다.
+     */
+    public static String oneline(String caseId, Map<String, Object> v) {
+        String line = switch (caseId == null ? GuardianRules.ONELINE_IDLE : caseId) {
+            case "C6" -> "예산 " + money(v, "cap") + "원을 넘었어요.";
+            case "C3" -> "예산의 " + s(v, "percent") + "%를 썼어요. "
+                    + money(v, "remaining") + "원 남았어요.";
+            case "C11" -> s(v, "daysLeft") + "일 남았어요. "
+                    + "확보한 절약액은 " + money(v, "secured") + "원이에요.";
+            case "C5" -> s(v, "days") + "일째 결제가 없어요.";
+            default -> "오늘도 잘 지키고 있어요.";
+        };
+        return line.length() <= MAX_ONELINE_LEN ? line : line.substring(0, MAX_ONELINE_LEN);
+    }
+
     /** 문장에서 뽑은 특징 표현 — 반복 감지의 재료. 고정구는 호출부가 걸러낸다. */
     public static List<String> fallbackKeyPhrases(String caseId) {
         return switch (caseId) {
             case "C2" -> List.of("이번 주", "번째예요");
-            case "C3" -> List.of("한도의 80%", "남는 건");
+            case "C3" -> List.of("예산의 80%", "남는 건");
             case "C5" -> List.of("일째", "결제가 없어요");
-            case "C6" -> List.of("한도를 넘었어요", "확보한 절약액");
+            case "C6" -> List.of("예산을 넘었어요", "확보한 절약액");
             case "C8" -> List.of("합쳐서");
             case "C9" -> List.of("지난 4주 중", "이 시간에");
             case "C10", "C11" -> List.of("일 남았고");
-            case "W1" -> List.of("지난주", "남은 한도");
+            case "W1" -> List.of("지난주", "남은 예산");
             default -> List.of();
         };
     }
@@ -153,7 +185,7 @@ public final class GuardianCopy {
     }
 
     /**
-     * "어디서 새고 있는지" 한 문장 — 한도 이야기(C3·C6) 뒤에만 붙인다.
+     * "어디서 새고 있는지" 한 문장 — 예산 이야기(C3·C6) 뒤에만 붙인다.
      *
      * <p>알림을 카테고리별로 <b>쪼개지 않기로</b> 한 자리를 이 문장이 메운다. 푸시는 하루 2건으로
      * 희소하고(`daily-push-limit`), 판정은 합계 기준이므로(tech_log §8-T) 카테고리마다 알리면

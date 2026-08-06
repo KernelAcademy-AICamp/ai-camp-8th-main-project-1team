@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * <p>예전에는 소비자 쪽에서 {@code monthlySpend().size()}(사용자가 <b>아무거나</b> 결제한 달의
  * 수)로 나눴다. 분자는 카테고리 하나의 총액인데 분모가 전체 기간이라, 최근 시작한 습관일수록
- * 심하게 과소평가됐다 — 지킴이 챌린지가 시작 직후 한도를 넘기는 원인이었다.
+ * 심하게 과소평가됐다 — 지킴이 챌린지가 시작 직후 예산을 넘기는 원인이었다.
  *
  * <p>이 사실을 검증하는 테스트가 하나도 없었다. 그래서 회귀를 여기서 막는다.
  */
@@ -93,7 +93,7 @@ class CategoryObservedMonthsTest {
         assertEquals(280_000L, feb.monthlyAmount().longValue());
         assertEquals(310_000L, jul.monthlyAmount().longValue());
 
-        // 30일로 환산하면 같아진다. 예전에는 월평균을 그대로 챌린지 한도로 써서
+        // 30일로 환산하면 같아진다. 예전에는 월평균을 그대로 챌린지 예산으로 써서
         // 같은 습관인데도 관측한 달에 따라 예산이 10.7% 벌어지고 정산 등급까지 갈렸다.
         assertEquals(300_000L, feb.amountOver(30).longValue());
         assertEquals(300_000L, jul.amountOver(30).longValue());

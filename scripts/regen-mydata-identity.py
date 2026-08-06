@@ -44,20 +44,69 @@ import subprocess
 import sys
 from datetime import date, timedelta
 
-# 성씨 — 실제 분포를 대략 따른다(김·이·박이 흔하도록 앞쪽에 중복 배치).
-SURNAMES = (
-    ["김"] * 22 + ["이"] * 15 + ["박"] * 8 + ["최"] * 5 + ["정"] * 5 +
-    ["강", "조", "윤", "장", "임", "한", "오", "서", "신", "권",
-     "황", "안", "송", "전", "홍", "유", "고", "문", "양", "손",
-     "배", "백", "허", "남", "심", "노", "하", "곽", "성", "차",
-     "주", "우", "구", "민", "류", "나", "지", "엄", "채", "원"]
-)
-GIVEN1 = ["민", "서", "지", "예", "하", "도", "시", "주", "유", "준",
-          "현", "승", "은", "다", "소", "태", "재", "성", "진", "채",
-          "수", "우", "규", "연", "가", "나", "선", "형", "정", "윤"]
-GIVEN2 = ["준", "우", "현", "진", "호", "원", "빈", "석", "훈", "찬",
-          "영", "복", "희", "린", "아", "은", "연", "율", "경", "미",
-          "지", "수", "혁", "민", "환", "태", "솔", "겸", "하", "서"]
+# ── 이름 ─────────────────────────────────────────────────────────────────────
+# 표는 `scripts/identity/` 에 있고 `build_names.py` 가 굳힌 JSON 을 자바도 같이 읽는다.
+# 여기에 목록을 또 적으면 두 벌이 갈라진다 — 업종 표와 같은 이유다.
+#
+# 예전에는 성씨를 `["김"] * 22 + ["이"] * 15 …` 처럼 **중복 배치로** 분포를 흉내 냈고,
+# 이름은 성별과 무관한 30자 목록 둘이었다. 그래서 ① 비율의 근거를 되짚을 수 없었고
+# ② 「김철수」가 여성으로, 「이영희」가 남성으로 나왔다. 이제 인구수로 가중하고
+# 주민등록번호 7번째 자리로 성별을 가른다.
+_NAMES_JSON = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           '..', 'backend-mydata', 'src', 'main', 'resources', 'korean-names.json')
+
+
+def _load_names():
+    import json
+    with open(_NAMES_JSON, encoding='utf-8') as f:
+        d = json.load(f)
+    surnames = [(s['surname'], s['population']) for s in d['surnames']]
+    # 누적합 — 인구 비율대로 뽑으려면 이 배열 위에서 이분 탐색하면 된다.
+    acc, running = [], 0
+    for _, pop in surnames:
+        running += pop
+        acc.append(running)
+    syl = d['syllables']
+
+    def pick(gender, slot):
+        return [s['syllable'] for s in syl
+                if s['gender'] in (gender, 'N') and s['position'] in (slot, 'B')]
+
+    return {
+        'surnames': [s for s, _ in surnames],
+        'cumulative': acc,
+        'total': running,
+        # 만들 수 있는 이름을 **미리 다 펼쳐 둔다.** 뽑고 나서 걸러 다시 뽑는 방식은 시드가
+        # 같아도 재시도 횟수에 따라 난수 흐름이 달라져 재현성이 흔들린다(마스터 §4 원칙 3).
+        # 목록이 1,000가지 남짓이라 펼쳐도 부담이 없다.
+        'given': {g: sorted({a + b
+                             for a in pick(g, '1') for b in pick(g, '2')
+                             if a != b and a + b not in set(d.get('blocked', []))})
+                  for g in ('M', 'F')},
+    }
+
+
+NAMES = _load_names()
+
+
+def pick_surname(rng: random.Random) -> str:
+    """인구수에 비례해 성씨를 뽑는다. 김이 22%, 이가 15% 나온다."""
+    import bisect
+    return NAMES['surnames'][bisect.bisect_right(NAMES['cumulative'],
+                                                 rng.randrange(NAMES['total']))]
+
+
+def pick_given(rng: random.Random, gender_digit: str) -> str:
+    """이름 두 글자. 성별은 주민등록번호 7번째 자리가 정한다 — 1·3 남, 2·4 여.
+
+    겹말(「민민」)과 낱말이 되는 조합(「해석」·「유기」)은 목록에서 이미 빠져 있다.
+    """
+    return rng.choice(NAMES['given']['M' if gender_digit in '13' else 'F'])
+
+
+def full_name(rng: random.Random, social7: str) -> str:
+    """성씨 1 + 이름 2 = **언제나 세 글자**다."""
+    return pick_surname(rng) + pick_given(rng, social7[6])
 
 # 타깃이 20~30대 직장인이라 생년은 이 범위로 고정한다. 아래 REBIRTH_MIN/MAX 와 **같은 값**이어야
 # 한다 — 전에 여기만 1970~2005 로 남아 있어서 새로 만든 4,511명 중 2,100명(47%)이 범위 밖으로
@@ -73,11 +122,15 @@ def ci_of(name: str, social7: str, phone: str) -> str:
 
 
 def make_identity(old_ci: str, salt: int = 0):
-    """기존 CI를 시드로 사람다운 신원을 만든다. salt는 충돌 시에만 증가한다."""
+    """기존 CI를 시드로 사람다운 신원을 만든다. salt는 충돌 시에만 증가한다.
+
+    <b>순서가 바뀌었다</b> — 주민등록번호를 **먼저** 정한다. 이름의 성별이 7번째 자리에서
+    나오므로, 이름을 먼저 뽑으면 성별을 맞출 수가 없다.
+    """
     rng = random.Random(int(old_ci[:16], 16) + salt)
-    name = rng.choice(SURNAMES) + rng.choice(GIVEN1) + rng.choice(GIVEN2)
     birth = BIRTH_START + timedelta(days=rng.randrange(SPAN + 1))
     social7 = social7_of(birth, rng.randrange(2))
+    name = full_name(rng, social7)
     # 국번은 배정된 대역에서만 뽑는다 — 난수 4자리면 0xxx·1xxx 같은 없는 번호가 섞인다.
     phone = "010" + f"{random_exchange(rng):04d}" + "".join(str(rng.randrange(10)) for _ in range(4))
     return name, social7, phone, ci_of(name, social7, phone)
@@ -269,11 +322,23 @@ def main():
             mapping.append((old_ci, new_ci, name, new_s7, phone, persona, split))
         print(f"  범위 안이라 그대로 두는 사람 {kept:,}명 · 생년을 옮기는 사람 {len(mapping):,}명")
     else:
+        # **페르소나가 없는 사람은 건드리지 않는다.**
+        #
+        # 생성된 사람에게는 페르소나(과소비형·절약형…)가 붙고, 실제 사람의 명세서를 넣을 때는
+        # 일부러 안 붙인다(`RealPersonImportService`). 그 사람은 **실존 인물이고 이름·주민번호·
+        # 전화번호가 진짜다** — 여기서 덮어쓰면 실제 신원이 지어낸 값으로 바뀌고, 그 사람의
+        # 로그인 정보도 함께 사라진다. 신원을 새로 만드는 것은 **생성된 사람에게만** 할 일이다.
         rows = [l.split("\t") for l in mysql(
             "select mydata_user_id, mydata_user_persona, mydata_user_data_split "
-            "from finntech_mydata.mydata_user order by mydata_user_id"
+            "from finntech_mydata.mydata_user "
+            "where mydata_user_persona is not null "
+            "order by mydata_user_id"
         ).splitlines() if l.strip()]
-        print(f"대상 사용자 {len(rows):,}명")
+        skipped = int((mysql(
+            "select count(*) from finntech_mydata.mydata_user "
+            "where mydata_user_persona is null").strip() or "0"))
+        print(f"대상 사용자 {len(rows):,}명"
+              + (f" · 실제 사람 {skipped}명은 건드리지 않는다" if skipped else ""))
 
         mapping, used = [], set()
         for old_ci, persona, split in rows:

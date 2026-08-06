@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.TestPropertySource;
 
@@ -29,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class OpsEndpointGateTest {
 
     @SpringBootTest
+@ActiveProfiles("test")   // 인메모리 H2 — 파일 DB 를 쓰면 낡은 스키마가 남는다
     @TestPropertySource(properties = "finntech.ops.enabled=false")
     @DisplayName("끄면 빈이 없다")
     static class 꺼짐 {
