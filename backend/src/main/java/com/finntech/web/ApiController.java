@@ -34,6 +34,7 @@ public class ApiController {
 
     private final AnalysisEngine engine;
     private final RecommendService recommendService;
+    private final CardRecommendService cardRecommendService;
     private final ReportService reportService;
     private final AlertService alertService;
     private final ScoreService scoreService;
@@ -51,9 +52,11 @@ public class ApiController {
                          AuditService auditService, AppUserRepository userRepository,
                          CategoryRepository categoryRepository,
                          ConsumptionRepository consumptionRepository,
-                         AlertRepository alertRepository, Clock clock) {
+                         AlertRepository alertRepository, CardRecommendService cardRecommendService,
+                         Clock clock) {
         this.engine = engine;
         this.recommendService = recommendService;
+        this.cardRecommendService = cardRecommendService;
         this.reportService = reportService;
         this.alertService = alertService;
         this.scoreService = scoreService;
@@ -114,6 +117,18 @@ public class ApiController {
         body.put("dataSourceMode", rec.dataSourceMode());
         body.put("estimationReason", rec.estimationReason());
         return body;
+    }
+
+    /**
+     * 카드 추천 (개편안 {@code s-compare}).
+     *
+     * <p>여기 카드는 <b>전부 더미</b>다(마스터 §4 원칙 5). 응답에 소비 요약을 함께 싣는 이유는
+     * 순위의 근거를 화면에서 바로 대조할 수 있게 하기 위함이다 — 근거 없는 순위는 광고다.
+     */
+    @GetMapping("/products/recommend-cards")
+    public CardRecommendService.Result recommendCards(@RequestParam Long userId) {
+        user(userId);   // 없는 사용자면 404
+        return cardRecommendService.recommend(engine.analyze(userId, now()));
     }
 
     // ---- 리포트 -----------------------------------------------------------

@@ -87,6 +87,22 @@ public class UserMerchantStance {
     }
 
     /**
+     * <b>사용자가 직접 "이건 줄일 지출이 아니다"라고 말한 경우.</b> 한 칸씩 오르는 사다리를
+     * 건너뛰고 바로 제외로 간다.
+     *
+     * <p>왜 건너뛰는가: 사다리는 <i>추정</i>이다 — "세 번 뺐으니 이 사람에게는 필수인 듯하다".
+     * 여기서는 사용자가 "통근이에요"라고 <b>말했다</b>. 추정보다 강한 근거를 추정의 속도로
+     * 처리하면, 분명히 말한 것을 세 번 더 말하라는 셈이 된다.
+     *
+     * <p>되돌리는 길은 그대로다({@link #notKept}) — 통근이 끝나면 한 칸 내려온다.
+     */
+    public void excludedByUser(int toExcluded, LocalDateTime now) {
+        stance = Stance.EXCLUDED;
+        keptCount = Math.max(keptCount, toExcluded);
+        updatedAt = now;
+    }
+
+    /**
      * "역시 낭비였다" — 한 단계 내려오고 횟수를 문턱 아래로 되돌린다.
      *
      * <p>0으로 되돌리지 않는 이유: EXCLUDED에서 한 번 되돌렸는데 다시 0부터 세면, 사용자가

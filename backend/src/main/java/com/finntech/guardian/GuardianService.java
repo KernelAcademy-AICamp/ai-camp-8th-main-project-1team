@@ -13,7 +13,10 @@ import com.finntech.repository.CategoryRepository;
 import com.finntech.repository.ConsumptionRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import com.finntech.domain.AppUser;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.LinkedHashMap;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.RoundingMode;
@@ -43,6 +46,9 @@ public class GuardianService {
     private final GuardianRewardService rewardService;
     private final GuardianNarrative narrative;
     private final GuardianClock clock;
+    private final GuardianCatalog catalog;
+    /** 사용자가 정한 말수 상한을 읽으려고 둔다 — 사람마다 다른 값은 설정 파일에 못 둔다. */
+    private final com.finntech.repository.AppUserRepository userRepository;
     private final GuardianProperties props;
     private final AnalysisEngine analysisEngine;
     private final ConsumptionRepository consumptionRepository;
@@ -64,7 +70,11 @@ public class GuardianService {
                            CategoryRepository categoryRepository,
                            com.finntech.repository.UserPaymentRepository userPaymentRepository,
                            com.finntech.repository.UserMerchantStanceRepository stanceRepository,
-                           GuardianChallengeCategoryRepository challengeCategoryRepository) {
+                           GuardianChallengeCategoryRepository challengeCategoryRepository,
+                           GuardianCatalog catalog,
+                           com.finntech.repository.AppUserRepository userRepository) {
+        this.catalog = catalog;
+        this.userRepository = userRepository;
         this.challengeRepository = challengeRepository;
         this.txRepository = txRepository;
         this.notificationRepository = notificationRepository;
@@ -633,6 +643,31 @@ public class GuardianService {
                     ch.getUserId(), ch.getId(), txId, decision.caseId(), SuppressedReason.NIGHT, now));
         }
 
+        /*
+         * 하루 말수 상한 (C13).
+         *
+         * **이 판정이 죽어 있었다.** 규칙은 `GuardianRules` 안에 쓰여 있었는데 그 경로(`Ctx`)를
+         * 부르는 곳이 없어, 설정값 `daily-push-limit` 도 사용자 설정도 아무 효력이 없었다.
+         * 실제로 알림을 만드는 자리는 여기 하나뿐이므로 여기서 센다.
+         *
+         * 사람마다 정한 값이 우선이고(0이면 '설정 안 함'), 없으면 전역 기본값을 따른다.
+         * 예산 초과 통보처럼 미룰 수 없는 건은 상한을 넘겨도 나간다 — 말수를 줄인 것이지
+         * 위험을 알리지 말라고 한 것이 아니다.
+         */
+        if (!def.bypassBudget()) {
+            int limit = userRepository.findById(ch.getUserId())
+                    .map(u -> u.getNotifyDailyLimit())
+                    .filter(v -> v > 0)
+                    .orElse(props.getNotification().getDailyPushLimit());
+            int sent = notificationRepository.countPushToday(
+                    ch.getUserId(), today.atStartOfDay(), today.plusDays(1).atStartOfDay());
+            if (sent >= limit) {
+                return notificationRepository.save(GuardianNotification.silent(
+                        ch.getUserId(), ch.getId(), txId, decision.caseId(),
+                        SuppressedReason.BUDGET, now));
+            }
+        }
+
         Map<String, Object> numbers = numbersFor(ch, tx, snap, today);
         if (extras != null) numbers.putAll(extras);
         GuardianNarrative.Message msg = narrative.compose(
@@ -754,10 +789,183 @@ public class GuardianService {
     //  7. 홈 (설계서 §API 3) — 프론트는 다시 계산하지 않는다
     // ======================================================================
 
+    // ======================================================================
+    //  설정 (마이 > 설정)
+    // ======================================================================
+
+    /**
+     * 성역을 다시 정한다.
+     *
+     * <p><b>줄이기로 한 곳은 성역이 될 수 없다.</b> 둘 다이면 "줄이라고 하면서 침묵한다"가 되어
+     * 앞뒤가 안 맞는다. 화면도 그 칸을 막아 두지만, 서버가 다시 본다 — 화면만 막으면 규칙이
+     * 화면에 있는 셈이다.
+     */
+    @Transactional
+    public java.util.Set<String> setSanctuary(Long userId, List<String> categories) {
+        GuardianChallenge ch = challengeRepository.findRunning(userId).orElseThrow(
+                () -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.BAD_REQUEST, "진행 중인 챌린지가 없어요"));
+        List<String> want = categories == null ? List.of() : categories;
+        List<String> clash = want.stream().filter(ch.getCategorySet()::contains).toList();
+        if (!clash.isEmpty()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    String.join("·", clash) + "은(는) 이번에 줄이기로 한 곳이라 성역으로 둘 수 없어요");
+        }
+        ch.setSanctuaryCategories(want);
+        challengeRepository.save(ch);
+        return ch.getSanctuarySet();
+    }
+
+    /**
+     * 챌린지 카테고리 한 줄 — 관리 화면이 읽는 값.
+     *
+     * @param baseline 기준 지출(실측). 사용자가 정할 값이 아니다.
+     * @param target   지키기로 한 돈. 이 값만 사용자가 옮긴다.
+     * @param cap      예산 = 기준 − 지킬 돈.
+     * @param spent    지금까지 그 카테고리에서 쓴 돈 — 목표를 얼마나 낮출 수 있는지의 바닥이다.
+     */
+    public record ChallengeCategoryView(String category, String label,
+                                        long baseline, long target, long cap, long spent) {}
+
+    /** 그 챌린지에서 카테고리별로 집계된 사용액. 홈과 관리 화면이 같은 수를 본다. */
+    private Map<String, Long> spentByCategory(GuardianChallenge ch) {
+        Map<String, Long> out = new LinkedHashMap<>();
+        for (Object[] row : txRepository.sumCountedByCategory(ch.getId())) {
+            if (row[0] == null) continue;
+            out.put((String) row[0], ((Number) row[1]).longValue());
+        }
+        return out;
+    }
+
+    /** 진행 중 챌린지의 카테고리들. 없으면 빈 목록 — 화면이 "없다"를 스스로 말한다. */
+    @Transactional(readOnly = true)
+    public List<ChallengeCategoryView> challengeCategories(Long userId) {
+        GuardianChallenge ch = challengeRepository.findRunning(userId).orElse(null);
+        if (ch == null) return List.of();
+        Map<String, Long> spentBy = spentByCategory(ch);
+        List<ChallengeCategoryView> out = new ArrayList<>();
+        for (GuardianChallengeCategory c : challengeCategoryRepository.findByChallenge(ch.getId())) {
+            out.add(new ChallengeCategoryView(c.getCategory(), categoryLabel(c.getCategory()),
+                    c.getBaseline(), c.getTarget(), c.getCap(),
+                    spentBy.getOrDefault(c.getCategory(), 0L)));
+        }
+        return out;
+    }
+
+    /**
+     * 한 카테고리의 지킬 돈을 다시 정한다.
+     *
+     * <p><b>이미 쓴 돈보다 예산을 낮출 수는 없다.</b> 그러면 저장하는 순간 예산 초과가 되어
+     * 사용자가 한 적 없는 실패가 만들어진다. 바닥을 알려주고 거기서 멈춘다.
+     */
+    @Transactional
+    public List<ChallengeCategoryView> retarget(Long userId, String category, long target) {
+        GuardianChallenge ch = challengeRepository.findRunning(userId).orElseThrow(
+                () -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.BAD_REQUEST, "진행 중인 챌린지가 없어요"));
+        GuardianChallengeCategory row = challengeCategoryRepository.findByChallenge(ch.getId())
+                .stream().filter(c -> c.getCategory().equals(category)).findFirst()
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.BAD_REQUEST, "이번 챌린지에 없는 카테고리예요"));
+
+        long spent = spentByCategory(ch).getOrDefault(category, 0L);
+        long maxTarget = Math.max(0L, row.getBaseline() - spent);
+        if (target > maxTarget) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "이미 " + GuardianCopy.won(spent) + "원을 써서 그만큼은 못 지켜요");
+        }
+        row.retarget(target);
+        challengeCategoryRepository.save(row);
+        return challengeCategories(userId);
+    }
+
+    /**
+     * 진행 중 챌린지에 줄일 카테고리를 하나 더한다 (마이 &gt; 챌린지 관리 &gt; 새 챌린지 만들기).
+     *
+     * <p><b>새 챌린지를 만들지 않고 기존 것에 붙인다.</b> 카테고리마다 챌린지를 따로 만들면
+     * 기간이 제각각이 되어 "이번 달"이라는 말이 뜻을 잃고, 월말 결산도 여러 번 일어난다.
+     * 화면에서는 줄이 하나 느는 것으로 보이지만 안에서는 같은 챌린지가 넓어진 것이다.
+     *
+     * <p>기준 지출은 <b>남은 기간으로 환산</b>한다 — 한 달짜리 기준을 열흘 남은 챌린지에 그대로
+     * 얹으면 예산이 통째로 남아돌아 아무것도 지키지 않은 게 된다.
+     */
+    @Transactional
+    public List<ChallengeCategoryView> addCategory(Long userId, String category, Long targetSaving) {
+        GuardianChallenge ch = challengeRepository.findRunning(userId).orElseThrow(
+                () -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.BAD_REQUEST, "진행 중인 챌린지가 없어요"));
+        if (ch.getCategorySet().contains(category)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "이미 줄이고 있는 곳이에요");
+        }
+        if (ch.getSanctuarySet().contains(category)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "성역으로 둔 곳이에요. 성역 관리에서 먼저 빼주세요");
+        }
+
+        LocalDateTime now = clock.now(userId);
+        int remain = Math.max(1, (int) (ch.getEndDate().toEpochDay() - clock.today(userId).toEpochDay()) + 1);
+        long base = baselineByCategory(userId, List.of(category), now, remain, List.of())
+                .getOrDefault(category, 0L);
+        if (base <= 0) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "그 카테고리에는 줄일 만한 소비가 없어요");
+        }
+        long target = targetSaving != null && targetSaving > 0
+                ? Math.min(targetSaving, Math.max(0L, base - 1))
+                : base / 2;
+
+        challengeCategoryRepository.save(
+                new GuardianChallengeCategory(ch.getId(), category, base, target, now));
+        ch.addCategory(category);
+        ch.growBaseline(base, target);
+        challengeRepository.save(ch);
+        return challengeCategories(userId);
+    }
+
+    /** 지금 말수 설정과 전역 기본값. 0이면 '설정 안 함'이라 기본값을 따른다. */
+    @Transactional(readOnly = true)
+    public Map<String, Object> voice(Long userId) {
+        int mine = userRepository.findById(userId).map(AppUser::getNotifyDailyLimit).orElse(0);
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("dailyLimit", mine);
+        m.put("defaultLimit", props.getNotification().getDailyPushLimit());
+        m.put("effectiveLimit", mine > 0 ? mine : props.getNotification().getDailyPushLimit());
+        return m;
+    }
+
+    /**
+     * 말수를 정한다.
+     *
+     * <p>0은 '설정 안 함'이며 전역 기본값을 따른다. 위쪽은 막지 않는다 — 많이 듣고 싶다는
+     * 사람에게 우리가 정한 수를 강요할 이유가 없다. 다만 음수는 뜻이 없으므로 0으로 접는다.
+     */
+    @Transactional
+    public Map<String, Object> setVoice(Long userId, int dailyLimit) {
+        AppUser u = userRepository.findById(userId).orElseThrow(
+                () -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "사용자를 찾지 못했어요"));
+        u.setNotifyDailyLimit(Math.max(0, dailyLimit));
+        userRepository.save(u);
+        return voice(userId);
+    }
+
     public record GrassCell(LocalDate date, DailyResult result, boolean granted, boolean protectedDay) {}
 
-    public record CeremonyView(LocalDate verdictDate, DailyResult result, String objectId,
-                               Grade grade, String message, boolean rerollAvailable) {}
+    /**
+      * 아침 세리머니 한 장.
+      *
+      * <p><b>이름과 그림을 함께 보낸다.</b> 예전에는 {@code objectId} 만 보냈는데, 그 코드가
+      * 화면에 그대로 나가 "mug_01 이 도착했어요"가 됐다. 코드는 서버의 말이지 사용자의 말이
+      * 아니다. 카탈로그를 아는 쪽이 서버이므로 여기서 사람 말로 바꿔 보낸다.
+      */
+     public record CeremonyView(LocalDate verdictDate, DailyResult result, String objectId,
+                                String objectName, String glyph,
+                                Grade grade, String message, boolean rerollAvailable) {}
 
     /**
      * 카테고리 한 줄 — 홈의 '지킴 현황'을 갈라 보여준다.
@@ -799,8 +1007,13 @@ public class GuardianService {
         }
 
         CeremonyView ceremony = verdictRepository.findUnseenCeremonies(userId).stream().findFirst()
-                .map(v -> new CeremonyView(v.getVerdictDate(), v.getResult(), v.getGrantedObjectId(),
-                        v.getGrantedGrade(), v.getCeremonyMessage(), !v.isRerolled()))
+                .map(v -> {
+                    GuardianCatalog.Item item = v.getGrantedObjectId() == null ? null
+                            : catalog.find(v.getGrantedObjectId());
+                    return new CeremonyView(v.getVerdictDate(), v.getResult(), v.getGrantedObjectId(),
+                            item == null ? null : item.name(), item == null ? null : item.glyph(),
+                            v.getGrantedGrade(), v.getCeremonyMessage(), !v.isRerolled());
+                })
                 .orElse(null);
 
         String label = ch.getCategorySet().stream()

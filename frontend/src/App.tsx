@@ -4,7 +4,7 @@
  * 목업(frontend-moa)의 개발 보드(폰 목업 + 검정 버튼 4개)는 걷어냈다. 어느 화면을 처음 보여줄지는
  * 이제 버튼이 아니라 **상태**가 정한다:
  *   연결 안 함        → 최초 온보딩(스플래시부터)
- *   연결됨·챌린지 없음 → 이번 챌린지 정하기(ob1~ob3)  ← IA의 '월초 인터럽트'와 같은 자리
+ *   연결됨·챌린지 없음 → 이번 챌린지 정하기(ob1~ob4)  ← IA의 '월초 인터럽트'와 같은 자리
  *   연결됨·챌린지 있음 → 홈
  */
 import { useEffect, type ComponentType } from 'react';
@@ -13,13 +13,15 @@ import { BottomTab } from './components/BottomTab';
 import { SessionProvider, useSession, tabOf, type ScreenId } from './state/session';
 import { GuardianProvider } from './state/guardian';
 
-import { Splash } from './screens/Splash';
+import { Boot } from './screens/Boot';
+import { Walk } from './screens/Walk';
 import { Auth } from './screens/Auth';
 import { Connect } from './screens/Connect';
 import { Loading } from './screens/Loading';
 import { Onboarding1 } from './screens/Onboarding1';
 import { Onboarding2 } from './screens/Onboarding2';
 import { Onboarding3 } from './screens/Onboarding3';
+import { Onboarding4 } from './screens/Onboarding4';
 import { Done } from './screens/Done';
 import { Home } from './screens/Home';
 import { Myroom } from './screens/Myroom';
@@ -36,6 +38,11 @@ import { ReportAnalysis } from './screens/ReportAnalysis';
 import { ReportAccount } from './screens/ReportAccount';
 import { ReportCards } from './screens/ReportCards';
 import { Compare } from './screens/Compare';
+import { MyProducts } from './screens/MyProducts';
+import { MySanctuary } from './screens/MySanctuary';
+import { MyChallenge } from './screens/MyChallenge';
+import { MyChallengeNew } from './screens/MyChallengeNew';
+import { MyVoice } from './screens/MyVoice';
 import { ReportWaste } from './screens/ReportWaste';
 import { ReportSavings } from './screens/ReportSavings';
 import { My } from './screens/My';
@@ -48,29 +55,36 @@ import { MySurvey } from './screens/MySurvey';
 import { MyDemo } from './screens/MyDemo';
 import { MyStances } from './screens/MyStances';
 import { MyUnclassified } from './screens/MyUnclassified';
+import { MyParked } from './screens/MyParked';
 
 /** 최초 온보딩(마이데이터 연결 전)에만 열리는 화면. */
-const LINK_FLOW: ScreenId[] = ['splash', 'auth', 'connect'];
+const LINK_FLOW: ScreenId[] = ['boot', 'walk', 'auth', 'connect'];
 /** 이번 챌린지를 정하는 흐름 — 이 화면들에서는 하단 탭을 감춘다(중간에 빠져나가면 흐름이 끊긴다). */
-const SETUP_FLOW: ScreenId[] = ['loading', 'ob1', 'ob2', 'ob3', 'done',
+const SETUP_FLOW: ScreenId[] = ['loading', 'ob1', 'ob2', 'ob3', 'ob4', 'done',
   // 월말 사이클도 같은 성격의 흐름이다 — 축하→결산→갱신을 중간에 끊으면 다음 달 목표가 안 정해진다.
   'monthend', 'settle', 'renew'];
 
 const SCREENS: Record<ScreenId, ComponentType> = {
-  splash: Splash, auth: Auth, connect: Connect, loading: Loading,
-  ob1: Onboarding1, ob2: Onboarding2, ob3: Onboarding3, done: Done,
+  boot: Boot, walk: Walk, auth: Auth, connect: Connect, loading: Loading,
+  ob1: Onboarding1, ob2: Onboarding2, ob3: Onboarding3, ob4: Onboarding4, done: Done,
   home: Home, report: Report, my: My,
   myroom: Myroom, notifications: Notifications, transactions: Transactions,
   collection: Collection, shop: Shop,
   monthend: MonthEnd, settle: Settle, renew: Renew,
   'r-spending': ReportSpending, 'r-analysis': ReportAnalysis, 'r-cards': ReportCards,
   'r-compare': Compare,
+  'm-products': MyProducts,
+  'm-sanctuary': MySanctuary,
+  'm-challenge': MyChallenge,
+  'm-challenge-new': MyChallengeNew,
+  'm-voice': MyVoice,
   'r-account': ReportAccount,
   'r-waste': ReportWaste, 'r-savings': ReportSavings,
   'm-impulse': MyImpulse, 'm-goals': MyGoals, 'm-connections': MyConnections,
   'm-record': MyRecord, 'm-policy': MyPolicy, 'm-survey': MySurvey, 'm-demo': MyDemo,
   'm-stances': MyStances,
   'm-unclassified': MyUnclassified,
+  'm-parked': MyParked,
 };
 
 function ScreenHost() {
@@ -83,7 +97,7 @@ function ScreenHost() {
    */
   useEffect(() => {
     if (!linked) {
-      if (!LINK_FLOW.includes(screen)) go('splash');
+      if (!LINK_FLOW.includes(screen)) go('boot');
     } else if (LINK_FLOW.includes(screen)) {
       go('home');
     }

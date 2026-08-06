@@ -23,30 +23,32 @@ export interface InstCategory {
  * 기관 이름 → 실제 로고 파일(`public/logo`). 파일이 있는 곳만 로고를 쓰고,
  * 없으면 지금까지처럼 색 배지에 약칭을 그린다 — 빈 칸이 생기지 않게 하기 위함이다.
  *
- * 출처는 `reference/logo/`(각 사 CI). 파일명이 곧 기관명이라 표를 손으로 맞출 필요가 없다.
+ * 출처는 각 사 CI. 파일명이 곧 기관명이라 표를 손으로 맞출 필요가 없다.
+ *
+ * <p><b>워드마크가 아니라 심볼을 쓴다.</b> 옛 판본은 가로로 긴 글자형(중앙값 4.6:1, 가장
+ * 납작한 BNK부산은행은 7.4:1)이라 40px 원에 {@code contain} 하면 세로가 5~9px 로 눌려
+ * 글자가 사라졌다. 폭을 늘려 보면 줄마다 로고 크기가 제각각이 되어 더 어색했다.
+ * 지금 판본은 중앙값 1.00:1 의 심볼이라 원 안에 그대로 들어간다.
+ *
+ * <p>지주가 같으면 같은 파일을 쓴다 — KB(은행·카드), BNK(부산·경남), 하나(은행·카드),
+ * JB(광주·전북), 신한(은행·카드·제주). 각 사가 실제로 공통 심볼을 쓴다.
  */
 const LOGO: Record<string, string> = {
-  'BNK경남은행': '/logo/BNK경남은행.svg',
-  'BNK부산은행': '/logo/BNK부산은행.svg',
-  'IBK기업은행': '/logo/IBK기업은행.svg',
+  // 은행·카드사 — 심볼형. 워드마크였던 옛 판본은 40px 원 안에서 세로 5~9px 로
+  // 눌려 글자가 사라졌다(가장 납작한 것이 7.4:1). 지금 것은 중앙값 1.00:1 이라 원에 꽉 찬다.
+  'BNK경남은행': '/logo/BNK경남은행.webp',
+  'BNK부산은행': '/logo/BNK부산은행.webp',
+  'IBK기업은행': '/logo/IBK기업은행.webp',
   'KB국민은행': '/logo/KB국민은행.svg',
   'KB국민카드': '/logo/KB국민카드.svg',
   'NH농협은행': '/logo/NH농협은행.svg',
-  'SC제일은행': '/logo/SC제일은행.svg',
-  'cert-kakao': '/logo/cert-kakao.png',
-  'cert-naver': '/logo/cert-naver.jpeg',
-  'cert-pass': '/logo/cert-pass.png',
-  'cert-toss': '/logo/cert-toss.jpg',
-  'coupay': '/logo/coupay.png',
-  'iM뱅크': '/logo/iM뱅크.svg',
-  'kakaopay': '/logo/kakaopay.svg',
-  'naverpay': '/logo/naverpay.svg',
-  'payco': '/logo/payco.svg',
-  'tosspay': '/logo/tosspay.svg',
+  'SC제일은행': '/logo/SC제일은행.webp',
+  'iM뱅크': '/logo/iM뱅크.png',
   '광주은행': '/logo/광주은행.svg',
-  '롯데카드': '/logo/롯데카드.webp',
-  '삼성카드': '/logo/삼성카드.svg',
-  '수협은행': '/logo/수협은행.svg',
+  '롯데카드': '/logo/롯데카드.svg',
+  '비씨카드': '/logo/비씨카드.jpg',
+  '삼성카드': '/logo/삼성카드.png',
+  '수협은행': '/logo/수협은행.png',
   '신한은행': '/logo/신한은행.svg',
   '신한카드': '/logo/신한카드.svg',
   '우리은행': '/logo/우리은행.svg',
@@ -54,14 +56,40 @@ const LOGO: Record<string, string> = {
   '전북은행': '/logo/전북은행.svg',
   '제주은행': '/logo/제주은행.svg',
   '카카오뱅크': '/logo/카카오뱅크.svg',
-  '케이뱅크': '/logo/케이뱅크.svg',
-  '토스뱅크': '/logo/토스뱅크.svg',
+  '케이뱅크': '/logo/케이뱅크.webp',
+  '토스뱅크': '/logo/토스뱅크.webp',
   '하나은행': '/logo/하나은행.svg',
   '하나카드': '/logo/하나카드.svg',
-  '한국산업은행': '/logo/한국산업은행.svg',
+  '한국산업은행': '/logo/한국산업은행.jpeg',
+  '현대카드': '/logo/현대카드.svg',
+
+  // 아직 심볼형이 없는 곳 — 옛 워드마크를 그대로 쓴다.
   '한국수출입은행': '/logo/한국수출입은행.svg',
-  '현대카드': '/logo/현대카드.svg'
+  'coupay': '/logo/coupay.png',
+  'kakaopay': '/logo/kakaopay.svg',
+  'naverpay': '/logo/naverpay.svg',
+  'payco': '/logo/payco.svg',
+  'tosspay': '/logo/tosspay.svg',
+  // 간편인증 수단 — 앱 아이콘이라 원래부터 정사각이다.
+  'cert-kakao': '/logo/cert-kakao.png',
+  'cert-naver': '/logo/cert-naver.jpeg',
+  'cert-pass': '/logo/cert-pass.png',
+  'cert-toss': '/logo/cert-toss.jpg'
 };
+
+/**
+ * 로고 자체가 <b>흰 단색</b>이라 흰 바탕에서 사라지는 곳 — 뒤에 브랜드색을 깐다.
+ *
+ * 색을 칠하는 것이 아니라 <b>뒤에 놓는</b> 것이라 CI 를 훼손하지 않는다.
+ * 비어 있으면 아무 곳도 배경이 필요 없다는 뜻이다.
+ */
+const LOGO_BACKDROP: Record<string, string> = {};
+
+/** 이 기관의 로고가 흰 단색이면 뒤에 깔 색, 아니면 null. */
+export function logoBackdrop(name: string): string | null {
+  const hit = Object.keys(LOGO_BACKDROP).find((k) => name.includes(k));
+  return hit ? LOGO_BACKDROP[hit] : null;
+}
 
 /**
  * 파일명과 표기명이 다른 곳. 같은 회사인데 이름을 달리 부르는 경우만 손으로 적는다.

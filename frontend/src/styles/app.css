@@ -202,11 +202,8 @@ body{
 #recentCard .ctx3,.sp-card .ctx3{margin:0 0 12px 52px;}
 #recentCard .ctx-fb,.sp-card .ctx-fb{margin:0 0 12px 52px;}
 .sp-card{padding:0;}
-.day-t{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:24px 0 8px;}
-.day-t .dl{display:flex;align-items:baseline;gap:8px;}
-.day-t .dl b{font-size:15px;font-weight:700;color:var(--t1);}
-.day-t .dl span{font-size:12px;font-weight:500;color:var(--t3);letter-spacing:0;}
-.day-t .dsum{font-size:13px;font-weight:700;color:var(--t1);letter-spacing:0;}
+/* 날짜만 적고 일별 총액은 두지 않는다 — 하루 합계는 바로 위 달력에 이미 있다. */
+.day-t{margin:24px 0 8px;font-size:13px;font-weight:500;color:var(--t3);}
 .day-t:first-child{margin-top:0;}
 /* 소비 내역 달력 (접이식, 앱바 아래 고정) */
 /* 7칸 × 44px = 308px 이 들어가야 터치 타깃(6.1.3)을 지킨다. 좌우 24px 로 두면 320px 화면에서
@@ -244,7 +241,8 @@ body{
 .cal-leg .lg-td{width:12px;height:12px;border-radius:50%;border:1px solid #C4C4C2;}
 .cal-leg .lg-sel{width:12px;height:12px;border-radius:50%;background:var(--blue);}
 .cal-leg .lg-kp{width:4px;height:4px;border-radius:50%;background:var(--blue);}
-.cal-hd{display:flex;align-items:center;justify-content:center;min-height:44px;padding:12px 0;cursor:pointer;}
+/* 접기 손잡이. 버튼이라 UA 기본 테두리·배경을 지운다 — 안 지우면 회색 네모가 남는다. */
+.cal-hd{display:flex;width:100%;justify-content:center;padding:12px 0;cursor:pointer;border:none;background:none;font-family:inherit;min-height:44px;align-items:center;}
 .cal-hd i{display:block;width:40px;height:4px;border-radius:4px;background:#E9ECEF;}
 .fchips{display:flex;gap:8px;margin-bottom:16px;}
 .fchips button{border:1px solid var(--line);background:#fff;border-radius:20px;min-height:44px;padding:4px 12px;
@@ -269,15 +267,21 @@ body{
   padding:4px 8px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;font-family:inherit;transition:.15s;min-height:44px;}
 .ctx3 button.on{background:var(--t1);color:#fff;border-color:var(--t1);}
 .ctx-fb{font-size:12px;color:#054D28;font-weight:600;margin:0 0 8px 60px;display:none;}
-.sp-tag{display:inline-block;font-size:10px;font-weight:700;padding:0 8px;line-height:16px;border-radius:20px;margin-left:8px;vertical-align:1px;}
+/* 카테고리 태그. 버튼일 때는 44px 를 채운다 — 글자는 그대로 두고 위아래 여백만 늘린다
+   (KWCAG 6.1.3. 줄 안에 들어가는 표시라 line-height 를 키우면 목록 줄이 벌어진다). */
+.sp-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:0 8px;line-height:16px;border-radius:20px;margin-left:8px;vertical-align:1px;}
+button.sp-tag{min-height:44px;padding:0 8px;margin:-14px 0 -14px 8px;}
 .tag-sanct{background:var(--green-weak);color:var(--green-t);}      /* 4.64:1 */
 .tag-fixed{background:#F1F3F5;color:#5A5F5C;}                       /* 5.4:1 */
 /* 제목과 보조 문구(aux)를 양끝으로 벌린다. 규칙이 없으면 `이번 주지킨 날 기준`처럼 붙어 읽힌다. */
 .section-t{font-size:18px;font-weight:700;margin:24px 0 12px;
   display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
 .section-t.row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.sec-more{border:none;background:none;padding:0;font-family:inherit;font-size:14px;font-weight:500;
-  color:var(--t3);cursor:pointer;display:flex;align-items:center;gap:4px;}
+/* 절 제목 옆 '전체보기'. 글자만 두면 16px 높이라 못 누른다 — 여백으로 44px 를 채우되
+   음수 마진으로 제목 줄이 벌어지지 않게 한다(KWCAG 6.1.3). */
+.sec-more{border:none;background:none;font-family:inherit;font-size:14px;font-weight:500;
+  color:var(--t3);cursor:pointer;display:flex;align-items:center;gap:4px;
+  min-height:44px;min-width:44px;justify-content:flex-end;padding:0 4px;margin:-14px -4px;}
 .sec-more .chev{font-size:14px;line-height:1;color:var(--t3);}
 .sec-more:active{opacity:.6;}
 
@@ -442,13 +446,13 @@ body{
   box-shadow:0 2px 8px rgba(20,40,80,.14);font-size:17px;font-weight:700;color:var(--t2);
   cursor:pointer;font-family:inherit;line-height:1;}
 .zoom-ctl button:active{transform:scale(.92);}
-.mr-back{position:absolute;top:56px;left:16px;width:36px;height:36px;border-radius:50%;
+.mr-back{position:absolute;top:52px;left:12px;width:44px;height:44px;border-radius:50%;
   background:rgba(255,255,255,.92);box-shadow:0 2px 10px rgba(20,40,80,.14);border:none;
   font-size:18px;color:var(--t1);cursor:pointer;z-index:30;font-family:inherit;line-height:1;}
 .mr-back:active{transform:scale(.94);}
 .mr-title{position:absolute;top:64px;left:0;right:0;text-align:center;font-size:15px;font-weight:700;z-index:25;}
 /* 꾸미기 모드 */
-.mr-edit{position:absolute;top:56px;right:16px;height:36px;min-width:36px;border-radius:20px;
+.mr-edit{position:absolute;top:52px;right:12px;height:44px;min-width:44px;border-radius:22px;
   background:rgba(255,255,255,.92);box-shadow:0 2px 10px rgba(20,40,80,.14);border:none;
   display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:30;font-family:inherit;
   font-size:12px;font-weight:700;color:var(--t1);padding:0;}
@@ -900,7 +904,9 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 .icon-btn:hover { background: var(--bg); }
 .goal-meta { font-size: 13px; color: var(--t2); margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
 .goal-meta b { font-variant-numeric: tabular-nums; }
-.ms-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+/* 목표 마일스톤 칩줄. **`.ms-row` 를 쓰지 않는다** — 개편안이 그 이름을 미션 고르기 시트의
+   행에 쓰므로, 같은 이름을 두 뜻으로 두면 한쪽 스타일이 다른 쪽을 덮는다. */
+.mile-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .ms-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 5px 9px; min-height: 34px; border-radius: 20px; background: var(--bg); color: var(--t3); }
 .ms-chip.got { background: var(--green-weak); color: var(--green-t); }
 
@@ -908,7 +914,10 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 .txn { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--bg); font-size: 13.5px; }
 .txn:last-child { border-bottom: none; }
 .txn .d { width: 42px; flex: 0 0 auto; color: var(--t3); font-variant-numeric: tabular-nums; font-size: 12px; }
-.txn .m { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 가맹점 이름은 금액과 같은 무게로 — 개편안이 `<b>` 로 쓴다. 이름이 옅으면 목록이
+   금액표처럼 읽혀, 무엇을 샀는지가 아니라 얼마인지만 남는다. */
+.txn .m { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; font-weight: 700; font-size: 15px; }
 /* `flex:0 0 auto` 면 카드 이름이 길 때 줄어들지 않아 320px 화면에서 행이 밖으로 밀린다. */
 .txn .c { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   font-size: 11px; padding: 2px 7px; border-radius: 20px; background: var(--bg); color: var(--t3); font-weight: 700; }
@@ -994,3 +1003,608 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 @media (min-width: 620px) { .acct-list { grid-template-columns: repeat(2, 1fr); } }
 
 
+
+/* ==========================================================================
+ * 부팅 · 가치 소개 — 프로토타입_0806 신설
+ *
+ * 스플래시가 둘로 쪼개졌다. 예전에는 한 화면에서 로고를 보여주고 바로 인증으로 넘겼는데,
+ * 이제 **브랜드 화면(2초)** 과 **가치 소개 3장**이 따로다. 처음 오는 사람에게 무엇을 하는
+ * 앱인지 먼저 말하고 인증을 요구하는 순서다.
+ * ========================================================================== */
+
+@keyframes bootin { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* 브랜드 면 전체를 덮으므로 화면 자체에 배경을 준다. 흰 글자가 올라간다. */
+.boot { background: var(--blue); align-items: center; justify-content: center; padding: 0;
+  transition: opacity .45s ease; }
+.boot.out { opacity: 0; }
+.boot-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; color: #fff; }
+.boot-cap { font-size: 16px; font-weight: 600; letter-spacing: -.64px;
+  animation: bootin .6s ease .2s both; }
+.boot-logo { font-size: 60px; font-weight: 800; letter-spacing: -1.2px; line-height: 1.25;
+  animation: bootin .6s cubic-bezier(.2,.9,.3,1) .4s both; }
+
+.walk-top { display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px 0 8px; flex: 0 0 auto; }
+/* 44px — 개편안은 40px 인데 터치 타깃 기준에 미달한다(KWCAG 6.1.3). 디자인이 정본이지만
+   접근성은 tokens.css 가 정본이라는 원칙대로 여기서 올린다. */
+.walk-top .back { width: 44px; height: 44px; border: none; background: none; font-size: 22px;
+  color: var(--t1); cursor: pointer; border-radius: 12px; }
+.walk-skip { border: none; background: none; font-size: 13px; font-weight: 600;
+  color: var(--t3); cursor: pointer; padding: 12px 14px; min-height: 44px; }
+.walk-track { flex: 1; display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+  scrollbar-width: none; }
+.walk-track::-webkit-scrollbar { display: none; }
+.walk-slide { flex: 0 0 100%; scroll-snap-align: center; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center; padding: 0 32px; gap: 8px; }
+/* 아이콘이 `currentColor` 라 부모의 글자색을 따라간다 — 안 주면 본문색(검정)이 된다.
+   개편안은 svg 마다 인라인 색을 박았지만, 색은 CSS 가 정하는 편이 낫다. */
+.walk-art { width: 160px; height: 160px; border-radius: 50%; background: var(--blue-weak);
+  color: var(--blue); display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24px; }
+.walk-t { font-size: 22px; font-weight: 700; letter-spacing: -.88px; }
+.walk-s { font-size: 15px; color: var(--t2); line-height: 1.5; }
+.walk-dots { display: flex; justify-content: center; gap: 8px; padding: 16px 0 24px; flex: 0 0 auto; }
+.walk-dots i { width: 8px; height: 8px; border-radius: 8px; background: var(--line); transition: .25s; }
+.walk-dots i.on { width: 24px; background: var(--blue); }
+
+/* ==========================================================================
+ * 연결 흐름 — 프로토타입_0806
+ * ========================================================================== */
+
+/* 안심 문구 — 버튼 아래 조용히. 조회 권한만 받는다는 사실을 인증 직전에 다시 말한다.
+   개편안의 #AEB5BC 는 흰 배경에서 2.4:1 이라 글자로 쓰면 검사항목 5.4.3(4.5:1)에 미달한다.
+   색상은 두고 명도만 내렸다 — tokens.css 의 --t3 이 같은 이유로 존재한다. */
+.safe-note { margin: 12px 0 0; text-align: center; font-size: 12px; line-height: 1.4;
+  color: var(--t3); letter-spacing: -.48px; }
+
+/* 자산 연결 — 계좌를 훑는 중 */
+.conn-scan { flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 8px; padding: 0 40px 80px; }
+.conn-scan .spinner { margin-bottom: 16px; }
+
+/* 분석 로딩 — 카드 내역 서류를 스캔 밴드가 훑고 지나간다.
+   줄이 순서대로 초록으로 물드는 것은 "지금 이 줄을 읽고 있다"는 뜻이다. */
+.doc-load { overflow: visible; }
+.doc-load .dl-row { fill: var(--line); animation: dlrow 2.4s ease-in-out infinite; }
+.doc-load .dl-scan { animation: dlscan 2.4s ease-in-out infinite; }
+@keyframes dlrow { 0%, 100% { fill: #E9ECEF; } 14%, 34% { fill: #8FD9AA; } }
+@keyframes dlscan {
+  0%   { transform: translateY(0);    opacity: 0; }
+  10%  { opacity: 1; }
+  86%  { opacity: 1; }
+  100% { transform: translateY(46px); opacity: 0; }
+}
+
+/* 자산 연결 — 찾은 기관 행 (프로토타입_0806 `.fi`)
+   해제한 곳은 흐려지되 사라지지 않는다. 없어지면 "내가 뭘 뺐더라"를 알 수 없다. */
+.fi { display: flex; align-items: center; gap: 16px; padding: 16px 4px; width: 100%;
+  cursor: pointer; border: none; border-bottom: 1px solid var(--line); background: none;
+  text-align: left; font-family: inherit; }
+.fi:last-child { border-bottom: none; }
+.fi .logo { width: 40px; height: 40px; border-radius: 50%; flex: 0 0 40px; display: flex;
+  align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 13px;
+  letter-spacing: -.52px; overflow: hidden; }
+.fi .logo img { width: 100%; height: 100%; object-fit: contain; }
+.fi .tx { flex: 1; min-width: 0; }
+.fi .tx b { display: block; font-size: 16px; font-weight: 600; letter-spacing: -.64px; }
+.fi .tx span { display: block; margin-top: 2px; font-size: 13px; color: var(--t3); letter-spacing: -.52px; }
+.fi .box { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #D6D6D4; flex: 0 0 24px;
+  display: flex; align-items: center; justify-content: center; color: #fff; transition: .15s; }
+.fi .box svg { width: 14px; height: 14px; opacity: 0; }
+.fi.on .box { background: var(--blue); border-color: var(--blue); }
+.fi.on .box svg { opacity: 1; }
+.fi.off { opacity: .45; }
+
+/* ==========================================================================
+ * 주간 리포트 — 프로토타입_0806 `s-report`
+ *
+ * 화면 하나에 절이 다섯이라 `.rp-band`(8px 회색 띠)로 가른다. 카드 테두리를 쓰지 않는 이유는
+ * 절마다 카드가 서면 화면이 상자로만 보이기 때문이다 — 띠는 "여기서 이야기가 바뀐다"만 말한다.
+ * ========================================================================== */
+
+/* **다른 화면과 같은 열 폭을 쓴다.** `.pad` 는 `max-width: var(--col)` 로 가운데 열을 잡는데
+   리포트만 그 감쌈 없이 좌우 여백만 줘서, 넓은 화면에서 본문이 화면 끝까지 퍼졌다.
+   띠(`.rp-band`)는 반대로 **열 밖까지** 그어야 절이 갈린 것으로 보이므로 폭을 안 줄인다. */
+.rp-sec { width: 100%; max-width: var(--col); margin: 0 auto; padding: 0 var(--pad-x); }
+.rp-band { height: 8px; background: var(--bg); margin: 32px 0; }
+/* 맨 위 주차 내비 아래만 옅은 1px — 띠를 쓰면 머리가 잘려 보인다. */
+.rp-line { height: 1px; background: var(--line); margin: 16px 0; }
+
+.rp-sec .t-sec { font-size: 17px; font-weight: 700; margin: 0 0 16px; }
+.rp-sec .t-sec.row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 8px; }
+.rp-sec .t-cap { font-size: 13px; color: var(--t3); font-weight: 500; }
+
+/* ── 주차 이동 ─────────────────────────────────────────────────────────── */
+.wk-nav { display: flex; align-items: center; justify-content: center; gap: 20px; }
+/* 44px — 개편안은 여백만 줘 32px 남짓이다(KWCAG 6.1.3). */
+.wk-nav button { border: none; background: none; color: var(--t2); font-size: 22px; line-height: 1;
+  cursor: pointer; min-width: 44px; min-height: 44px; font-family: inherit; }
+.wk-nav button:disabled { color: #D8DCDA; cursor: default; }
+.wk-txt { text-align: center; min-width: 120px; border: none; background: none;
+  font-family: inherit; cursor: pointer; padding: 4px 8px; min-height: 44px; }
+.wk-txt b { display: block; font-size: 17px; font-weight: 700; white-space: nowrap; }
+.wk-txt b .car { display: inline; font-size: 11px; color: var(--t3); vertical-align: 2px; margin-left: 4px; }
+.wk-txt span { display: block; font-size: 12px; color: var(--t3); font-weight: 500;
+  margin-top: 4px; white-space: nowrap; }   /* 안 두면 "8.3 ~ 8.9"가 세 줄로 접힌다 */
+
+/* ── 히어로 + 차트 카드 ─────────────────────────────────────────────────── */
+.rp-keep { font-size: 28px; font-weight: 700; line-height: 1.2; margin-top: 8px; }
+.rp-keep em { font-style: normal; font-size: 20px; }
+
+.cmp { background: var(--bg); border-radius: var(--radius); padding: 24px 20px; margin-top: 20px; }
+.cmp-tabs { display: flex; gap: 8px; }
+.cmp-tabs button { border: 1px solid var(--line); background: var(--card); font-family: inherit;
+  font-size: 13px; font-weight: 600; color: var(--t3); padding: 11px 16px; border-radius: 20px;
+  cursor: pointer; transition: .15s; min-height: 44px; }
+.cmp-tabs button.on { background: var(--t1); border-color: var(--t1); color: #fff; }
+.cmp-lead { margin-top: 24px; }
+.cmp-lead .cf-lab { font-size: 14px; color: var(--t2); font-weight: 500; }
+.cmp-lead .cf-val { font-size: 20px; font-weight: 700; margin-top: 4px; color: var(--t1); }
+.cmp-lead .cf-val b { color: var(--blue-t); }
+
+/* 차트 — 막대(요일별)와 곡선(주별)이 같은 자리를 나눠 쓴다. */
+.chart { position: relative; height: 104px; margin-top: 64px; }
+.chart .bars { position: absolute; inset: 0; display: flex; align-items: flex-end;
+  justify-content: space-between; gap: 12px; }
+.bcol { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  height: 100%; cursor: pointer; border: none; background: none; padding: 0; }
+.bcol .bar { width: 100%; max-width: 20px; margin: 0; border-radius: 6px; background: #E9ECEA;
+  overflow: hidden; transition: height .4s cubic-bezier(.2,.8,.2,1), background .15s; }
+.bcol.sel .bar { background: var(--blue); }
+.bcol.off { cursor: default; }
+.bcol.off .bar { background: #F3F5F4; }
+
+/* 선택한 막대 위 말풍선. 꼬리는 막대 중심을 가리키므로 좌우가 잘려도 어디를 말하는지 남는다. */
+.btip { position: absolute; z-index: 5; background: #191D1B; color: #fff; border-radius: 8px;
+  padding: 8px 12px; text-align: center; white-space: nowrap; pointer-events: none;
+  /* 꼬리 위치 — 말풍선을 그린 뒤 실측해 컴포넌트가 덮어쓴다. 여기 기본값을 두는 이유는
+     ① 자리를 못 재도 꼬리가 가운데엔 붙고 ② 토큰 검사기가 '정의 없는 변수'로 보지 않기 때문이다. */
+  --ax: 50%; }
+.btip small { display: block; font-size: 11px; font-weight: 500; color: #B7BDB9; }
+.btip b { display: block; font-size: 12px; font-weight: 700; margin-top: 4px; }
+.btip::after { content: ''; position: absolute; left: var(--ax, 50%); top: 100%;
+  transform: translateX(-50%); border: 5px solid transparent; border-top-color: #191D1B; }
+
+.chart svg.line { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; overflow: visible; }
+.xlab { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; }
+.xlab span { flex: 1; text-align: center; font-size: 12px; color: var(--t3); font-weight: 500; }
+.xlab span.sel { color: var(--blue-t); font-weight: 600; }
+.lgd { display: flex; justify-content: center; gap: 16px; margin-top: 16px; }
+.lgd span { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--t3); font-weight: 500; }
+.lgd i { width: 6px; height: 6px; border-radius: 50%; display: block; }
+
+/* ── 지킴이가 본 이번 주 ───────────────────────────────────────────────── */
+.ins { border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+.ins .ig + .ig { margin-top: 20px; }
+.itag { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 8px; }
+.itag.good { background: var(--blue-weak); color: var(--blue-t); }
+.itag.warn { background: #FDECEE; color: var(--red-t); }
+.ins p { margin: 8px 0 0; font-size: 14px; line-height: 1.5; color: var(--t1); font-weight: 500; }
+
+/* ── 배너 (미션 · 카드 추천) ───────────────────────────────────────────── */
+.bn { border-radius: var(--radius); padding: 20px; display: flex; align-items: center; gap: 12px;
+  margin-top: 16px; width: 100%; border: none; font-family: inherit; text-align: left; }
+.bn b { font-size: 15px; font-weight: 700; line-height: 1.5; flex: 1; }
+.bn svg { flex: 0 0 auto; }
+.bn.msn { background: linear-gradient(105deg, #FFF6CC, #FFE07E); cursor: pointer; }
+.bn .bnt { flex: 1; }
+.bn .bnt b { display: block; font-size: 15px; font-weight: 700; line-height: 1.5; }
+.bn .bnt span { display: flex; align-items: center; gap: 4px; margin-top: 8px;
+  font-size: 13px; font-weight: 500; color: var(--t2); }
+.bn .bnt .chev { font-style: normal; font-size: 13px; line-height: 1; color: var(--t2); opacity: .6; }
+.bn.cardbn { background: linear-gradient(105deg, #EAF8E0, #D6F1C2); cursor: pointer; margin-top: 0; }
+
+/* ── 지난 챌린지 달성률 ────────────────────────────────────────────────── */
+.ch + .ch { margin-top: 24px; }
+.ch .chh { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.ch .chh b { font-size: 15px; font-weight: 700; }
+.ch .chh span { font-size: 15px; font-weight: 700; }
+.ch .cbar { height: 8px; background: #EDEFEE; border-radius: 8px; overflow: hidden; }
+.ch .cbar i { display: block; height: 100%; background: var(--blue); border-radius: 8px; }
+.ch .chs { margin-top: 8px; font-size: 12px; color: var(--t3); font-weight: 500; }
+
+/* ── 기록 없는 주 ──────────────────────────────────────────────────────── */
+.rp-emp { padding: 80px 0 96px; text-align: center; }
+.rp-emp b { display: block; font-size: 15px; font-weight: 700; }
+.rp-emp p { margin: 8px 0 0; font-size: 13px; font-weight: 500; color: var(--t3); line-height: 1.5; }
+
+/* ==========================================================================
+ * 마이룸 — 프로토타입_0806 `s-myroom`
+ * ========================================================================== */
+
+/* ── 지킨 날 ───────────────────────────────────────────────────────────────
+ * 개편안은 **이번 주 7칸을 먼저** 보이고 월 달력은 접어 둔다. 달력을 늘 펼쳐 두면 한 달치 격자가
+ * 화면을 채워 "오늘 지켰나"라는 물음이 묻힌다 — 그게 매일 확인하는 유일한 질문이다. */
+.kp-tiles { display: flex; gap: 8px; margin-bottom: 24px; }
+.kp-tile { flex: 1; background: var(--bg); border-radius: var(--radius-sm); padding: 12px 16px; }
+.kp-tile .cap { font-size: 12px; font-weight: 500; color: var(--t3); }
+.kp-tile .val { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 16px; font-weight: 700; }
+.kp-tile .val svg { width: 16px; height: 16px; }
+
+.kp-week { display: flex; justify-content: space-between; padding: 0 4px 24px; }
+.kp-day { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.kp-c { width: 32px; height: 32px; border-radius: 50%; background: var(--bg);
+  display: flex; align-items: center; justify-content: center; }
+.kp-day.kept .kp-c { background: var(--blue-weak); }
+.kp-day.kept .kp-c svg { width: 14px; height: 14px; color: var(--blue); }
+/* 오늘은 테두리로만 표시한다 — 채우면 '지킨 날'과 같아 보인다. 아직 안 끝난 날이다. */
+.kp-day.now .kp-c { background: var(--card); border: 1.5px solid var(--blue); }
+.kp-day.fut .kp-c { background: #F6F8F9; }
+.kp-day span { font-size: 12px; font-weight: 500; color: var(--t3); }
+.kp-day.now span { color: var(--blue-t); font-weight: 600; }
+.kp-day.fut span { color: var(--t3); }   /* #9A9A98 은 2.82:1 */
+
+/* 더보기 — 누르면 화살표가 돌아 접힘/펼침을 그림으로 말한다. */
+.madd { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 17px 0;
+  width: 100%; cursor: pointer; border: none; border-top: 1px solid var(--line); background: none;
+  font-family: inherit; font-size: 14px; font-weight: 500; color: var(--t2); min-height: 44px; }
+.kp-btn .chev { font-size: 14px; line-height: 1; color: var(--t3);
+  transform: rotate(90deg); transition: transform .22s; }
+.kp-btn.open .chev { transform: rotate(-90deg); }
+.gm { font-size: 13px; font-weight: 700; margin-bottom: 12px; }
+
+/* ── 꾸미기 시트 ───────────────────────────────────────────────────────────
+ * 씬 바로 아래까지만 올라온다 — 방을 보면서 고르지 못하면 무엇이 바뀌는지 알 수 없다. */
+.deco-sheet { position: fixed; left: 0; right: 0; bottom: 0; top: 46vh; z-index: 60;
+  background: var(--card); border-radius: 24px 24px 0 0; padding: 20px var(--pad-x) 0;
+  display: flex; flex-direction: column; box-shadow: 0 -8px 28px rgba(20,40,80,.10);
+  transform: translateY(110%); transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+.deco-sheet.open { transform: none; }
+.deco-head { display: flex; align-items: center; margin-bottom: 12px; }
+.deco-head b { font-size: 17px; font-weight: 700; }
+.deco-head button { margin-left: auto; border: none; background: #F1F3F5;
+  width: 44px; height: 44px; border-radius: 50%; font-size: 14px; color: var(--t2);
+  cursor: pointer; font-family: inherit; }
+.deco-seg { display: flex; gap: 8px; margin-bottom: 16px; flex: 0 0 auto; }
+.deco-seg button { flex: 0 0 auto; padding: 11px 16px; border: 1px solid var(--line);
+  background: var(--card); border-radius: 20px; font-size: 13px; font-weight: 600;
+  color: var(--t3); cursor: pointer; font-family: inherit; min-height: 44px; }
+.deco-seg button.on { background: var(--t1); border-color: var(--t1); color: #fff; }
+.deco-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 8px; align-content: start; padding-bottom: 32px; scrollbar-width: none; }
+.deco-grid::-webkit-scrollbar { display: none; }
+
+/* 고른 칸에 붙는 체크. 잠긴 칸은 자물쇠로 — 무엇이 남았는지 보여야 모을 마음이 생긴다. */
+.deco-card { position: relative; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--card); padding: 12px 8px; display: flex; flex-direction: column;
+  align-items: center; gap: 6px; cursor: pointer; font-family: inherit; }
+.deco-card.cur { border-color: var(--blue); background: var(--blue-weak); }
+.deco-card.lock { cursor: default; opacity: .55; }
+.deco-card img { width: 56px; height: 52px; object-fit: contain; }
+.deco-card b { font-size: 12px; font-weight: 600; }
+.oncheck { position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; }
+.oncheck svg { width: 11px; height: 11px; }
+
+/* ==========================================================================
+ * 도감 상세 — 프로토타입_0806 `s-collection` 의 사물 시트
+ *
+ * <b>왜 시트인가.</b> 도감은 격자로 훑는 화면이라 한 칸을 눌렀다고 화면을 옮기면 훑던 자리를
+ * 잃는다. 시트는 목록 위에 떠서 닫으면 그 자리로 돌아온다.
+ * ========================================================================== */
+
+/* 영웅샷 — 뒤에서 빛이 도는 것처럼. 사물이 '받은 것'으로 보이게 하는 연출이다. */
+.cd-hero { position: relative; width: 96px; height: 96px; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center; }
+.cd-hero::before { content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, #FFF3CC 0%, #FFF9E8 55%, rgba(255,249,232,0) 78%); }
+.cd-hero img, .cd-hero svg { position: relative; width: 64px; height: 64px; object-fit: contain;
+  filter: drop-shadow(0 8px 8px rgba(14,15,12,.16)); }
+.cd-name { text-align: center; font-size: 17px; font-weight: 700; }
+.cd-name .rar { margin-left: 4px; vertical-align: 2px; display: inline-block;
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.cd-meta { text-align: center; font-size: 12px; font-weight: 500; color: var(--t3); margin-top: 4px; }
+.cd-story { margin: 12px 0 8px; text-align: center; font-size: 14px; font-weight: 500;
+  color: var(--t2); line-height: 1.5; }
+
+/* 마일스톤 눈금 아래 라벨 — 점 위치에 맞춰 절대배치한다. 끝의 것은 화면 밖으로 나가지 않게 당긴다. */
+.mile-labs { position: relative; height: 32px; margin-top: 8px; }
+.mile-labs span { position: absolute; transform: translateX(-50%); text-align: center;
+  font-size: 11px; color: var(--t3); font-weight: 500; line-height: 1.3; white-space: nowrap; }
+.mile-labs span i { display: block; font-style: normal; }
+.mile-labs span.on i { color: var(--t1); font-weight: 600; }
+.mile-labs span.edge { transform: translateX(-80%); }
+.mile-dot.next { border-color: var(--blue); }
+
+/* ==========================================================================
+ * 공용 바텀시트 (프로토타입_0806 `.tp-dim` / `.tp-sheet`)
+ *
+ * 주차 선택·미션 고르기·도감 상세가 같은 껍데기를 쓴다. 이 앱은 `components/Sheet.tsx` 가
+ * 초점 가두기와 ESC 를 이미 다루므로 <b>여기서는 생김새만</b> 정한다 — 동작을 두 곳에 두면
+ * 한쪽만 고쳐진다.
+ * ========================================================================== */
+
+.tp-dim { position: fixed; inset: 0; background: rgba(14,15,12,.4); z-index: 80;
+  opacity: 0; visibility: hidden; transition: opacity .25s, visibility .25s; }
+.tp-dim.show { opacity: 1; visibility: visible; }
+.tp-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 81; background: var(--card);
+  border-radius: 24px 24px 0 0; padding: 24px var(--pad-x) 32px;
+  transform: translateY(100%); transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+.tp-sheet.show { transform: none; }
+.tp-head { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+.tp-cap { font-size: 13px; font-weight: 500; color: var(--t3); margin: 0 0 16px; }
+
+/* 주차 선택 휠 — 연·월·주 세 열이 각자 스크롤한다. 가운데 띠가 '지금 고른 것'이다. */
+.tp-wheels { position: relative; display: flex; gap: 8px; height: 200px; margin-bottom: 20px; }
+.tp-band { position: absolute; left: 0; right: 0; top: 80px; height: 40px;
+  background: var(--bg); border-radius: 12px; }
+.tp-col { flex: 1; overflow-y: auto; scroll-snap-type: y mandatory; position: relative;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.tp-col::-webkit-scrollbar { display: none; }
+/* 위아래 여백 — 첫 항목과 마지막 항목도 가운데 띠에 올 수 있어야 한다. */
+.tp-pad { height: 80px; flex: 0 0 auto; }
+.tp-it { height: 40px; display: flex; align-items: center; justify-content: center;
+  scroll-snap-align: center; font-size: 16px; font-weight: 500; color: var(--t3);
+  cursor: pointer; border: none; background: none; font-family: inherit; width: 100%; }
+.tp-it.on { color: var(--t1); font-weight: 700; }
+
+/* 마이룸 앱바 — 씬 위에 떠서 방을 가리지 않는다. */
+.mr-bar { position: absolute; top: 0; left: 0; right: 0; z-index: 25; background: none; }
+.mr-bar .title { position: absolute; left: 0; right: 0; text-align: center;
+  font-size: 16px; font-weight: 600; pointer-events: none; }
+.mr-bar .back { position: relative; z-index: 1; }
+
+/* ==========================================================================
+ * 알림함 (프로토타입_0806 `s-notify`)
+ *
+ * 같은 종류가 잇달아 오면 <b>한 장으로 접는다</b>(`.nt-card.stack`). 편의점 결제 알림이 세 번
+ * 따로 서면 알림함이 로그가 되고, 정작 읽어야 할 예산 초과가 묻힌다.
+ * ========================================================================== */
+
+.nt-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px;
+  margin-bottom: 12px; background: var(--card); }
+.nt-top { display: flex; align-items: center; gap: 8px; }
+.nt-top .ncat { font-size: 12px; font-weight: 600; color: var(--t3); }
+/* 안 읽음 점 — 색만으로 구분하지 않게 읽은 것은 아예 자리를 비운다. */
+.ndot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex: 0 0 auto; }
+.ntime { margin-left: auto; font-size: 12px; color: var(--t3); font-weight: 500; }
+.nt-card b { display: block; margin-top: 8px; font-size: 15px; font-weight: 700; }
+.nt-card p { margin: 6px 0 0; font-size: 14px; line-height: 1.5; color: var(--t2); }
+.nt-item { display: flex; align-items: center; gap: 8px; padding: 10px 0;
+  border-top: 1px solid var(--line); font-size: 14px; }
+.nt-item .ntime { font-size: 12px; }
+.nt-extra { margin-top: 8px; font-size: 13px; color: var(--t3); font-weight: 500; }
+.nt-more { display: flex; align-items: center; justify-content: center; gap: 4px;
+  width: 100%; padding: 12px 0 4px; border: none; background: none; font-family: inherit;
+  font-size: 13px; font-weight: 600; color: var(--t3); cursor: pointer; min-height: 44px; }
+
+/* ==========================================================================
+ * 소비내역 검색 (프로토타입_0806 `s-spend`)
+ *
+ * 앱바가 <b>검색창으로 바뀐다.</b> 돋보기를 누르면 제목 자리에 입력칸이 서고 달력은 접힌다 —
+ * 검색은 목록 전체를 다시 훑는 일이라, 그 사이에 달력이 남아 있으면 "이 달 안에서만 찾나"로 읽힌다.
+ * ========================================================================== */
+
+/* 달력 머리의 돋보기 — 44px. 개편안은 32px 인데 터치 기준에 미달한다(KWCAG 6.1.3). */
+.cal-search { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; padding: 0; color: var(--t2); border: none; background: none;
+  cursor: pointer; }
+.cal-search svg { width: 20px; height: 20px; }
+
+/* 검색 모드의 앱바 */
+.sp-abar { display: flex; align-items: center; padding: 8px var(--pad-x) 8px 8px; gap: 4px; }
+.sp-ipt { flex: 1; min-width: 0; border: none; background: none; outline: none; font-family: inherit;
+  font-size: 18px; font-weight: 700; color: var(--t1); letter-spacing: -.04em; padding: 0 4px; }
+.sp-ipt::placeholder { color: var(--t-placeholder); font-weight: 500; }
+/* 지우기 — 글자가 있을 때만 뜬다. 늘 보이면 빈 칸에서도 누를 것이 있는 것처럼 보인다. */
+.sp-clr { border: none; padding: 0; cursor: pointer; flex: 0 0 auto; width: 44px; height: 44px;
+  background: none; display: flex; align-items: center; justify-content: center; }
+.sp-clr span { width: 20px; height: 20px; border-radius: 50%; background: #9A9A98;
+  display: flex; align-items: center; justify-content: center; }
+.sp-clr svg { width: 12px; height: 12px; color: #fff; display: block; }
+.sp-abar-line { flex: 0 0 auto; height: 1px; background: var(--line); }
+
+/* 달력과 목록 사이 — 스크롤하면 함께 밀려 사라지는 옅은 띠. */
+.sp-div { height: 16px; background: linear-gradient(180deg, rgba(14,15,12,.03), rgba(14,15,12,0)); }
+
+/* 결과 아래 — 조회 기간을 밝히고 더 옛날로 넓힐 문을 준다. */
+.sp-foot { padding: 32px 0 0; text-align: center; }
+.sp-foot p { font-size: 13px; font-weight: 500; color: var(--t3); line-height: 1.6; margin: 0; }
+.sp-more { margin-top: 16px; width: 100%; min-height: 48px; border: 1px solid var(--line);
+  background: var(--card); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px;
+  font-weight: 500; color: var(--t2); cursor: pointer; display: flex; align-items: center;
+  justify-content: center; gap: 4px; }
+.sp-more .chev { font-size: 16px; line-height: 1; color: var(--t3); }
+
+/* ── 카드 추천 (개편안 `s-compare`) ───────────────────────────────────────────
+   리포트 아래 배너로 들어오는 화면. 추천이 광고가 되지 않으려면 **근거가 같은 화면에**
+   있어야 한다 — 그래서 카드보다 소비 요약(`.cr-sum`)이 먼저 온다. */
+.cr-head { font-size: 22px; font-weight: 700; line-height: 1.4; margin: 8px 0 20px; }
+
+.cr-sum { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 8px 16px 0; margin-bottom: 24px; }
+.cr-row { display: flex; align-items: center; gap: 12px; padding: 16px 4px; border-radius: 12px; }
+.cr-row i { font-style: normal; font-size: 14px; font-weight: 700; color: var(--blue);
+  width: 12px; text-align: center; flex: 0 0 auto; }
+.cr-row b { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 4px;
+  min-width: 0; }
+.cr-row b svg { width: 16px; height: 16px; flex: 0 0 auto; }
+.cr-row span { margin-left: auto; font-size: 14px; font-weight: 700; flex: 0 0 auto; }
+/* 1위만 테두리로 들어올린다 — 셋 다 강조하면 아무것도 강조되지 않는다. */
+.cr-row.top { border: 1.5px solid var(--blue); padding: 16px 12px; margin: 0 -8px; }
+.cr-note { font-size: 12px; color: var(--t3); font-weight: 500; padding: 12px 4px 16px;
+  border-top: 1px solid var(--line); margin-top: 4px; }
+
+.cr-offer { background: var(--card); border-radius: 20px; padding: 24px 20px;
+  margin-bottom: 16px; text-align: center; }
+.cr-offer .cap { font-size: 13px; font-weight: 500; color: var(--t3); }
+.cr-offer .nm { font-size: 18px; font-weight: 700; margin-top: 4px; }
+.cr-offer .art { width: 120px; margin: 20px auto 16px; display: block;
+  filter: drop-shadow(0 8px 16px rgba(14, 15, 12, .18)); }
+/* 개편안은 `--blue`(#00B14F)인데 흰 바탕에서 2.84:1 로 미달한다(KWCAG 5.4.3).
+   글자용 초록 토큰으로 바꾼다 — 색의 뜻은 같고 읽히기만 한다. */
+.cr-offer .save { display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 15px; font-weight: 700; color: var(--blue-t); }
+.cr-offer .save svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.cr-offer .rows { margin-top: 20px; }
+.cr-brow { display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding: 12px 0; font-size: 13px; }
+.cr-brow + .cr-brow { border-top: 1px solid var(--bg); }
+.cr-brow span { color: var(--t2); font-weight: 500; text-align: left; }
+.cr-brow b { font-weight: 700; flex: 0 0 auto; }
+
+.cr-btns { display: flex; gap: 8px; margin-top: 20px; }
+/* 개편안은 48px. KWCAG 6.1.3(44px 이상)을 이미 넘으므로 그대로 둔다. */
+.cr-btns button { flex: 1; min-height: 48px; border: none; border-radius: 12px;
+  font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.cr-btns .ghost { background: var(--bg); color: var(--t2); }
+.cr-btns .dark { background: var(--t1); color: #fff; }
+
+/* ── 홈 (개편안 `s-home`) ─────────────────────────────────────────────────── */
+/* 마이룸 진입 카드 (개편안 피그마 47:177 실측). 다른 스트립과 달리 **그림이 든 큰 카드**다 —
+   방을 꾸미는 곳이라 무엇이 기다리는지 보여야 눌러 볼 마음이 생긴다.
+   그림 원본 프레임 168×130 이 (188,-19)에 놓여 카드 밖 부분이 잘린다. 내장 판본은 투명
+   여백을 잘라낸 것이라 좌표를 환산해 (197,-8)·폭 149 로 둔다. */
+.strip.mr { display: block; position: relative; height: 100px; padding: 0;
+  background: linear-gradient(125deg, #FFFFFF 27.4%, #EDFFDD 89.2%); overflow: hidden; }
+/* 개편안은 세로 중앙 정렬이었다. 스트릭·포인트 줄을 아래에 얹으면서 위로 올린다 —
+   중앙에 둔 채로는 두 줄 설명과 메타가 겹쳤다. */
+.strip .mr-tx { position: absolute; left: 20px; top: 14px; }
+.strip .mr-tx b { display: block; font-size: 18px; font-weight: 700; }
+.strip .mr-tx p { margin: 6px 0 0; font-size: 13px; font-weight: 500; color: var(--t3);
+  line-height: 1.3; }
+.strip .mr-art { position: absolute; left: 197px; top: -8px; width: 149px;
+  filter: drop-shadow(4px 4px 12px rgba(2, 71, 0, .1)); }
+/* 스트릭·포인트는 카드 왼쪽 아래에 얹는다 — 개편안에는 없지만 이 앱에는 있는 값이라,
+   그림을 가리지 않는 자리에 작게 둔다. */
+.strip .mr-meta { position: absolute; left: 20px; bottom: 12px; display: flex; gap: 10px;
+  font-size: 12px; font-weight: 700; color: var(--t2); align-items: center; }
+.strip .mr-meta .fire { color: #C2410C; display: flex; align-items: center; gap: 3px; }
+
+/* 홈 종 아이콘 — 안 읽은 알림이 있으면 점을 찍는다. */
+.bell-wrap { position: relative; display: flex; align-items: center; justify-content: center;
+  border: none; background: none; padding: 0; cursor: pointer;
+  min-width: 44px; min-height: 44px; }   /* KWCAG 6.1.3 — 개편안은 아이콘 크기 그대로였다 */
+.bell-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px;
+  border-radius: 50%; background: var(--red); border: 2px solid var(--bg); }
+
+/* ── 마이 · 세리머니 (개편안 `s-my` / 아침 세리머니 모달) ────────────────── */
+.profile-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--blue-weak);
+  flex: 0 0 auto; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
+.profile-avatar img { width: 42px; display: block; margin-bottom: -2px; }
+
+/* 도착한 소품을 크게, 뒤에서 빛이 돌게. 작은 칸에 있을 때와 같은 그림인데
+   크게 놓고 빛을 주면 기념품이 된다. */
+.cere-hero { position: relative; width: 96px; height: 96px; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center; }
+.cere-hero::before { content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, #FFF3CC 0%, #FFF9E8 55%, rgba(255, 249, 232, 0) 78%); }
+.cere-hero svg, .cere-hero img { position: relative; width: 56px; height: 56px;
+  filter: drop-shadow(0 8px 8px rgba(14, 15, 12, .16)); }
+.cere-name { display: inline-block; margin: 12px 0 20px; padding: 4px 12px; border-radius: 20px;
+  background: var(--blue-weak); color: #054D28; font-size: 13px; font-weight: 700; }
+
+.float-bob { animation: bob 2.6s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+/* 움직임을 줄여 달라고 한 사람에게는 흔들지 않는다 (KWCAG 2.2 — 반짝임과 동작). */
+@media (prefers-reduced-motion: reduce) { .float-bob { animation: none; } }
+/* 검색 앱바 오른쪽 끝 돋보기 — 키보드를 접고 결과를 보게 한다. */
+.sp-abar .sp-mag { border: none; background: none; padding: 0; cursor: pointer; flex: 0 0 auto;
+  margin-left: 8px; width: 44px; height: 44px; display: flex; align-items: center;
+  justify-content: center; color: var(--t1); }   /* 개편안은 32px — KWCAG 6.1.3 으로 44px */
+.sp-abar .sp-mag svg { width: 24px; height: 24px; }
+
+/* ── 발표용 푸시 배너 (개편안 `.push-layer`) ─────────────────────────────── */
+/* 실제 푸시가 아니라 화면 안에 그린 그림이다. 데모 도구에서만 켠다. */
+.push-layer { position: fixed; top: 40px; left: 8px; right: 8px; z-index: 70;
+  display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+  max-width: 420px; margin: 0 auto; }
+.push { text-align: left; font-family: inherit; border: none;
+  background: rgba(250, 250, 250, .94); backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px); border-radius: 12px; padding: 12px;
+  display: flex; gap: 12px; align-items: flex-start; pointer-events: auto; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+  transform: translateY(-140px); opacity: 0;
+  /* 사라질 때는 등장보다 빠르게, 가속 곡선 */
+  transition: transform .32s cubic-bezier(.4, 0, .85, .4), opacity .24s; }
+.push.show { transform: none; opacity: 1;
+  /* 나타날 때는 조금 느리게, 감속 곡선 */
+  transition: transform .48s cubic-bezier(.2, .9, .3, 1), opacity .28s; }
+.push .ap { width: 36px; height: 36px; border-radius: 8px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff; }
+.push .pt { flex: 1; min-width: 0; }
+.push .row1 { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.push .pt b { font-size: 13px; font-weight: 600; color: #1c1f24; }
+.push .ago { font-size: 11px; color: #8b8b8f; font-weight: 500; flex: none; }
+.push .pt p { margin: 2px 0 0; font-size: 13px; line-height: 1.45; color: #3a3a3c;
+  font-weight: 500; }
+@media (prefers-reduced-motion: reduce) { .push, .push.show { transition: opacity .2s; } }
+
+/* ── 다음 주 미션 고르기 시트 (개편안 `#msSheet`) ────────────────────────── */
+/* 라디오 하나로 고른다. 여러 개를 담게 하면 포인트 몫이 쪼개져 "셋 다 해야 30P"가 되고,
+   그러면 고른 게 아니라 늘어난 것이 된다. */
+.ms-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; cursor: pointer;
+  width: 100%; min-height: 44px; border: none; background: none; font-family: inherit;
+  color: inherit; text-align: left; }
+.ms-row .mtx b { font-size: 14px; font-weight: 700; display: block; }
+.ms-row .mtx span { font-size: 12px; color: var(--t3); }
+.ms-radio { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line);
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: center; transition: .15s; }
+.ms-row.on .ms-radio { background: var(--blue); border-color: var(--blue); }
+.ms-radio svg { width: 12px; height: 12px; color: #fff; display: none; }
+.ms-row.on .ms-radio svg { display: block; }
+
+/* 미션 보드 — 게이지 없이 상태 칩 하나만. 목적이 위, 미션명이 아래(개편안 실측). */
+#msnList .list-item { gap: 12px; padding: 16px 0; }
+#msnList .list-item .ic { width: 40px; height: 40px; }
+#msnList .list-item .tx b { font-size: 14px; font-weight: 600; margin-bottom: 0; }
+#msnList .list-item .tx .mcap { display: block; font-size: 12px; font-weight: 400;
+  color: var(--t3); margin-bottom: 4px; }   /* 개편안 #8B95A1 은 3.04:1 로 미달 */
+#msnList .madd, #msnList .madd svg { color: var(--t3); }   /* 개편안 #8B95A1 은 3.04:1 */
+/* 대기 미션 구분 라벨 — 선 사이 가운데 글자. */
+.mdiv { display: flex; align-items: center; gap: 12px; font-size: 12px; font-weight: 500;
+  color: var(--t3); padding: 8px 0 0; }
+.mdiv::before, .mdiv::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+/* ── 소비 내역 (개편안 `s-spend`) ────────────────────────────────────────── */
+/* **이 화면만 흰 바탕이다.** 목록이 화면을 가득 채워 카드 경계가 뜻이 없다.
+   대신 달력과 목록 사이를 옅은 그라데이션 띠로 나눈다 — 선을 그으면 두 영역이
+   남남처럼 보이는데, 실제로는 위가 아래를 가리키는 관계다. */
+.sp-div { height: 16px; flex: 0 0 auto;
+  background: linear-gradient(180deg, rgba(14, 15, 12, .03), rgba(14, 15, 12, 0)); }
+/* 검색 결과에는 달력이 없으므로 띠도 없다. */
+.sp-empty { padding: 40px 0; text-align: center; font-size: 13px; color: var(--t3);
+  line-height: 1.6; }
+/* 찾은 글자만 파랗게 — 어디가 걸려서 이 줄이 나왔는지 보인다. */
+.hl { font-style: normal; color: var(--blue-t); }
+/* 소비 내역은 화면 전체가 흰 바탕이라 앱바·달력도 함께 희어야 한다 —
+   앱바만 회색으로 남으면 머리에 띠가 하나 얹힌 것처럼 보인다(개편안은 `background:#fff`). */
+.screen.sp-white .appbar,
+.screen.sp-white .cal { background: var(--card); }
+
+/* **달력은 앱바 아래에 붙어 있는다**(개편안: 목록만 내려간다).
+   이 앱은 문서 전체가 스크롤하므로 `position: sticky` 로 붙인다 — 앱바가 52px 이라
+   그 바로 아래(top:52px)가 달력 자리다. 접힌 한 줄이 기본이라 붙어 있어도 화면을 덜 먹는다. */
+.screen.sp-white .cal { position: sticky; top: 52px; z-index: 20; }
+/* 달력 아래 그림자도 함께 붙어 다녀야 경계가 유지된다. */
+.screen.sp-white .sp-shadow { position: sticky; z-index: 19; }
+
+/* 소비 줄 (개편안 `.sp-card .list-item`) — 왼쪽 카테고리 아이콘, 가운데 이름과 시각, 오른쪽 금액. */
+.sp-card .list-item { gap: 12px; padding: 12px 0; align-items: center; }
+.sp-card .list-item .ic { width: 40px; height: 40px; flex: 0 0 40px; }
+.sp-card .list-item .tx { flex: 1; min-width: 0; }
+.sp-card .list-item .tx b { display: block; font-size: 15px; font-weight: 700;
+  margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 시각·사업자번호·주소는 이름 아래 한 줄로. 길어도 줄을 넘기지 않는다. */
+.sp-card .list-item .tx .sub { display: block; font-size: 12px; font-weight: 400;
+  color: var(--t3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-card .list-item .tx .sub .biz-link { border: none; background: none; padding: 0;
+  font: inherit; color: inherit; text-decoration: underline; text-underline-offset: 2px;
+  cursor: pointer; }
+.sp-card .list-item .amt { font-size: 15px; font-weight: 700; white-space: nowrap;
+  flex: 0 0 auto; }
+.sp-card .list-item .c { flex: 0 1 auto; min-width: 0; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; font-size: 11px; padding: 2px 7px;
+  border-radius: 20px; font-weight: 700; }
+
+/* `.list-item` 을 <button> 으로 쓸 때 — UA 기본 배경·테두리·가운데정렬을 지운다.
+   안 지우면 회색 네모가 줄마다 남고, 글자가 가운데로 몰린다(마이 탭에서 실제로 겪었다). */
+button.list-item { width: 100%; border: none; background: none; font-family: inherit;
+  color: inherit; text-align: left; cursor: pointer; }
+button.list-item .tx { text-align: left; }
+button.list-item:active { opacity: .6; }
+/* 오른쪽 화살표 — 개편안의 `.arrow`. */
+.list-item .arrow { margin-left: auto; color: #C4C4C2; font-size: 15px; line-height: 1;
+  flex: 0 0 auto; }

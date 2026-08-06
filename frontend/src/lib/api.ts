@@ -44,6 +44,36 @@ export interface RecommendResponse {
   estimationReason: string | null;
 }
 
+/** 카드 추천(개편안 `s-compare`) — 카드보다 근거가 먼저 온다. */
+export interface CardSummaryRow {
+  rank: number;
+  categoryCode: string;
+  displayName: string;
+  count: number;
+  amount: number;
+}
+export interface CardBenefitRow { label: string; value: string }
+export interface CardOffer {
+  name: string;
+  tagline: string;
+  /** 카드 그림 색 갈래 — blue/gold/navy. 모르는 값이면 화면이 blue로 떨어뜨린다. */
+  tint: string;
+  mark: string;
+  footer: string;
+  /** 연 예상 절감액(원). 연회비를 뺀 값이다. */
+  yearlySaving: number;
+  /** 연간 혜택 한도에 걸렸으면 그 한도, 아니면 null. */
+  cappedAt: number | null;
+  rows: CardBenefitRow[];
+}
+export interface CardRecommend {
+  summary: CardSummaryRow[];
+  offers: CardOffer[];
+  /** "2026.05 ~ 2026.07" — 무엇을 근거로 셌는지. */
+  periodLabel: string;
+  months: number;
+}
+
 export interface AlertItem {
   alertId: number;
   consumptionId: number;
@@ -307,6 +337,8 @@ export interface MyDataCompany { id: number; name: string; imgUrl: string }
 export interface MyDataLinkResult { cardCount: number; paymentCount: number; bankCount: number }
 /** 연동 가능 은행. id는 제공자가 이름순으로 매긴 순번이라 조회마다 같다. */
 export interface MyDataBank { id: number; name: string }
+/** 인증 뒤 찾은 기관. 둘을 합친 수가 화면의 "N곳"이다. */
+export interface MyDataDiscovered { cards: MyDataCompany[]; banks: MyDataBank[] }
 /** 내가 연동한 은행. */
 export interface MyLinkedBank { id: number; bankId: number; bankName: string; linkedAt: string }
 /** 내 카드 — 실적 진행률 + 이번달 받은 혜택. */
@@ -610,6 +642,9 @@ export interface GuardianCeremony {
   verdictDate: string;
   result: DailyResult;
   objectId: string | null;
+  /** 사람이 읽는 이름. 서버가 카탈로그에서 찾아 보낸다 — 예전엔 코드가 그대로 화면에 나갔다. */
+  objectName: string | null;
+  glyph: string | null;
   grade: Grade | null;
   message: string | null;
   rerollAvailable: boolean;
@@ -679,6 +714,26 @@ export interface WeekPoint {
   current: boolean;
 }
 export interface LabelSlice { key: string; label: string; count: number; ratio: number }
+/**
+ * 그 주 하루치 — 요일별 막대의 재료. **늘 7칸**이다.
+ * `judged=false` 는 판정이 없는 날(미래·시작 전)이라 막대를 비워 그린다 — 빼면 월~일이 어긋난다.
+ */
+export interface DayPoint {
+  date: string;
+  label: string;
+  amount: number;
+  kept: boolean;
+  judged: boolean;
+}
+/** 끝난 챌린지 한 줄. 달성률은 서버가 계산해 내려준다(프론트는 계산하지 않는다). */
+export interface PastChallenge {
+  challengeId: number;
+  label: string;
+  period: string;
+  keptDays: number;
+  totalDays: number;
+  rate: number;
+}
 export interface WeeklyReport {
   weekStart: string;
   weekEnd: string;
@@ -687,6 +742,8 @@ export interface WeeklyReport {
   /** 지난주 대비 증감(비율 차). 지난주 판정이 없으면 null. */
   deltaFromLastWeek: number | null;
   trend: WeekPoint[];
+  /** 그 주 7일치 — '요일별' 토글이 쓴다. */
+  days: DayPoint[];
   labels: LabelSlice[];
   labeledCount: number;
   exemptedAmount: number;
@@ -697,6 +754,56 @@ export interface WeeklyReport {
   missionReward: number;
   /** '지킴이가 본 이번 주'. 견줄 지난주가 없으면 두 문장 모두 null. */
   coaching: { good: string | null; watch: string | null };
+  /** 끝난 챌린지 달성률. 진행 중인 회차는 빠진다 — 확정되지 않은 성적을 최종처럼 보이면 안 된다. */
+  pastChallenges: PastChallenge[];
+}
+
+/* ── 주간 미션 보드 (개편안 s-myroom) ──────────────────────────────────── */
+/** 보드에 걸린 미션 한 줄. */
+export interface MissionBoardLine {
+  id: number;
+  text: string;
+  status: 'SUCCESS' | 'FAILED' | 'ONGOING';
+  /** 이 미션 몫의 포인트. 만들 때 박아 둔 값이라 나중에 줄지 않는다. */
+  reward: number;
+  type: 'MAX_COUNT' | 'AVOID_SLOT' | 'NO_SPEND_STREAK_MIN' | 'LABELING_COUNT_MIN';
+  category: string | null;
+  /** 이 미션을 만든 후보의 키 — 시트를 다시 열 때 표시를 되살린다. */
+  candidateKey: string;
+}
+/** 고를 수 있는 미션 하나. `key`로 고른다 — 후보는 매번 다시 계산돼 id가 없다. */
+export interface MissionCandidate {
+  key: string;
+  type: 'MAX_COUNT' | 'AVOID_SLOT' | 'NO_SPEND_STREAK_MIN' | 'LABELING_COUNT_MIN';
+  category: string | null;
+  threshold: number;
+  weekday: string | null;
+  hourStart: number | null;
+  hourEnd: number | null;
+  text: string;
+  /** 왜 이걸 권하는지 — 근거 없는 추천은 숙제가 된다. */
+  why: string;
+}
+export interface MissionBoard {
+  active: MissionBoardLine[];
+  next: MissionBoardLine[];
+  candidates: MissionCandidate[];
+  nextWeekStart: string;
+  weeklyPointPool: number;
+}
+
+/** 챌린지 카테고리 한 줄 (마이 > 챌린지 관리). */
+export interface ChallengeCategory {
+  category: string;
+  label: string;
+  /** 기준 지출(실측) — 사용자가 정할 값이 아니다. */
+  baseline: number;
+  /** 지키기로 한 돈. 이 값만 사용자가 옮긴다. */
+  target: number;
+  /** 예산 = 기준 − 지킬 돈. */
+  cap: number;
+  /** 지금까지 쓴 돈 — 목표를 얼마나 올릴 수 있는지의 천장이다. */
+  spent: number;
 }
 
 /** 주간 미션 한 줄. ONGOING이면 아직 기간 중(일요일 배치가 정산한다). */
@@ -747,7 +854,22 @@ export interface ShopEntry {
   /** 서버가 잔액과 대조해 판단한 값 — 화면은 이걸 믿는다. */
   affordable: boolean;
 }
-export interface GuardianShop { points: number; items: ShopEntry[] }
+export interface GuardianShop { points: number; items: ShopEntry[]; catSkin: string }
+
+/**
+ * 고를 수 있는 지킴이 털색 (프로토타입_0806 꾸미기 > 캐릭터).
+ *
+ * `owned=false` 는 아직 안 산 색이라 자물쇠로 그린다 — 무엇이 남았는지 보여야 모을 마음이 생긴다.
+ * 크림·그레이·치즈·초코는 늘 `true`, 삼색이만 상점에서 산다.
+ */
+export interface CatSkin {
+  key: string;
+  name: string;
+  /** `public/room/` 의 파일 이름(확장자 없이). */
+  glyph: string;
+  owned: boolean;
+  selected: boolean;
+}
 
 /** 월간 결산의 카테고리 한 줄. rate = 지켜낸 금액 / 예산. */
 export interface SettlementCategory {
@@ -928,6 +1050,8 @@ export interface ConfirmCategoryResult {
 
 export const api = {
   recommend: (userId: number) => get<RecommendResponse>(`/api/products/recommend?userId=${userId}`),
+  recommendCards: (userId: number) =>
+    get<CardRecommend>(`/api/products/recommend-cards?userId=${userId}`),
   alerts: (userId: number) => get<AlertResponse>(`/api/alert/list?userId=${userId}`),
   rescan: (userId: number) => post<unknown>(`/api/alert/rescan?userId=${userId}`),
   report: (userId: number) => get<ReportResponse>(`/api/report/monthly?userId=${userId}`),
@@ -954,6 +1078,11 @@ export const api = {
   merchantStances: (userId: number) =>
     get<{ userId: number; items: MerchantStance[] }>(`/api/merchant-stance?userId=${userId}`),
   /** "역시 낭비였다" — 한 단계 되돌린다. */
+  /** "이건 줄일 지출이 아니에요" — 사다리를 건너뛰고 바로 제외로. */
+  excludeStance: (userId: number, businessNumber: string, merchantName?: string) =>
+    post<{ businessNumber: string; stance: StanceLevel; keptCount: number }>(
+      `/api/merchant-stance/${encodeURIComponent(businessNumber)}/exclude?userId=${userId}`
+      + (merchantName ? `&merchantName=${encodeURIComponent(merchantName)}` : ''), {}),
   revertStance: (userId: number, businessNumber: string) =>
     post<{ businessNumber: string; stance: StanceLevel; keptCount: number }>(
       `/api/merchant-stance/${encodeURIComponent(businessNumber)}/revert?userId=${userId}`, {}),
@@ -1063,6 +1192,11 @@ export const api = {
     post<VerifyResult>('/api/mydata/verify', { userId, name, social7, phone, carrier }),
   mydataCompanies: () => get<MyDataCompany[]>('/api/mydata/companies'),
   mydataBanks: () => get<MyDataBank[]>('/api/mydata/banks'),
+  /**
+   * 인증을 마친 사람이 **실제로 가진** 기관을 찾는다. 연결은 하지 않는다 —
+   * 화면이 "N곳을 찾았어요"로 보여 주고, 뺄 곳을 해제한 뒤 `mydataLink` 를 부른다.
+   */
+  mydataDiscover: (userId: number) => get<MyDataDiscovered>(`/api/mydata/discover?userId=${userId}`),
   myBanks: (userId: number) => get<MyLinkedBank[]>(`/api/mydata/my-banks?userId=${userId}`),
   /** 카드사와 은행을 함께 연동한다. 은행은 계좌가 있는 곳만 실제로 붙는다. */
   mydataLink: (userId: number, companyIds: number[], bankIds: number[] = []) =>
@@ -1126,6 +1260,36 @@ export const api = {
     claimMilestone: (userId: number, count: number) =>
       post<GuardianCollection>(`/api/guardian/collection/milestones/${count}/claim?userId=${userId}`, {}),
     shop: (userId: number) => get<GuardianShop>(`/api/guardian/shop?userId=${userId}`),
+    catSkins: (userId: number) => get<CatSkin[]>(`/api/guardian/cat-skins?userId=${userId}`),
+    missions: (userId: number) => get<MissionBoard>(`/api/guardian/missions?userId=${userId}`),
+    /** 진행 중 챌린지의 카테고리들 — 관리 화면이 읽는다. */
+    challengeCategories: (userId: number) =>
+      get<ChallengeCategory[]>(`/api/guardian/challenges/categories?userId=${userId}`),
+    /** 한 카테고리의 지킬 돈을 다시 정한다. 이미 쓴 돈보다 낮추면 서버가 400으로 막는다. */
+    retarget: (userId: number, category: string, target: number) =>
+      post<ChallengeCategory[]>(
+        `/api/guardian/challenges/categories/${encodeURIComponent(category)}/target?userId=${userId}`,
+        { target }),
+    /** 줄일 카테고리를 하나 더한다. 이미 줄이고 있거나 성역이면 서버가 400으로 막는다. */
+    addChallengeCategory: (userId: number, category: string, targetSaving?: number) =>
+      post<ChallengeCategory[]>(`/api/guardian/challenges/categories?userId=${userId}`,
+        { category, targetSaving: targetSaving ?? null }),
+    /** 지킴이 말수 — 하루 알림 상한. dailyLimit 0이면 '설정 안 함'이라 기본값을 따른다. */
+    voice: (userId: number) =>
+      get<{ dailyLimit: number; defaultLimit: number; effectiveLimit: number }>(
+        `/api/guardian/voice?userId=${userId}`),
+    setVoice: (userId: number, dailyLimit: number) =>
+      post<{ dailyLimit: number; defaultLimit: number; effectiveLimit: number }>(
+        `/api/guardian/voice?userId=${userId}`, { dailyLimit }),
+    /** 성역을 다시 정한다. 줄이기로 한 카테고리와 겹치면 서버가 400으로 막는다. */
+    setSanctuary: (userId: number, categories: string[]) =>
+      post<{ sanctuaryCategories: string[] }>(
+        `/api/guardian/challenges/sanctuary?userId=${userId}`, { categories }),
+    pickMission: (userId: number, key: string) =>
+      post<MissionBoard>(`/api/guardian/missions/pick?userId=${userId}&key=${encodeURIComponent(key)}`),
+    /** 털색을 고른다. 가지지 않은 색이면 서버가 막는다. */
+    chooseCatSkin: (userId: number, key: string) =>
+      post<CatSkin[]>(`/api/guardian/cat-skins/${encodeURIComponent(key)}?userId=${userId}`, {}),
     /** 구매 — 살 수 있는지는 서버가 판단한다(프론트의 P 비교는 표시용일 뿐). */
     buyItem: (userId: number, code: string) =>
       post<GuardianShop>(`/api/guardian/shop/${encodeURIComponent(code)}/buy?userId=${userId}`, {}),

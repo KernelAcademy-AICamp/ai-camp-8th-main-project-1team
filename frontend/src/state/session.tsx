@@ -14,9 +14,9 @@ import type { AnalysisSummary, OnboardingPayment } from '../lib/api';
 
 export type ScreenId =
   // L0 최초 온보딩
-  | 'splash' | 'auth' | 'connect' | 'loading'
+  | 'boot' | 'walk' | 'auth' | 'connect' | 'loading'
   // 이번 챌린지 정하기 (최초 · 월초 재진입 공용)
-  | 'ob1' | 'ob2' | 'ob3' | 'done'
+  | 'ob1' | 'ob2' | 'ob3' | 'ob4' | 'done'
   // 상시 탐색 3탭
   | 'home' | 'report' | 'my'
   // 홈 하위
@@ -29,7 +29,10 @@ export type ScreenId =
   | 'r-compare' | 'r-analysis' | 'r-spending' | 'r-cards' | 'r-account' | 'r-waste' | 'r-savings'
   // 마이 하위
   | 'm-impulse' | 'm-goals' | 'm-connections' | 'm-record' | 'm-policy' | 'm-survey' | 'm-demo'
-  | 'm-stances' | 'm-unclassified';
+  | 'm-stances' | 'm-unclassified'
+  // 임시 — 프로토타입_0806 이 자리를 안 정한 화면들을 모아 둔 곳. 정해지면 없앤다.
+  | 'm-parked' | 'm-products' | 'm-sanctuary' | 'm-voice'
+  | 'm-challenge' | 'm-challenge-new';
 
 export const TAB_SCREENS = ['home', 'report', 'my'] as const;
 export type TabId = (typeof TAB_SCREENS)[number];
@@ -44,12 +47,13 @@ export const isTab = (s: ScreenId): s is TabId => (TAB_SCREENS as readonly strin
  * 아래 위성 타입이 그 누락을 컴파일 단계에서 잡는다.
  */
 const ALL_SCREENS = [
-  'splash', 'auth', 'connect', 'loading', 'ob1', 'ob2', 'ob3', 'done',
+  'boot', 'walk', 'auth', 'connect', 'loading', 'ob1', 'ob2', 'ob3', 'ob4', 'done',
   'home', 'report', 'my', 'myroom', 'notifications', 'transactions',
   'collection', 'shop', 'monthend', 'settle', 'renew',
   'r-compare', 'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings',
   'm-impulse', 'm-goals', 'm-connections', 'm-record', 'm-policy', 'm-survey', 'm-demo',
-  'm-stances', 'm-unclassified',
+  'm-stances', 'm-unclassified', 'm-parked', 'm-products', 'm-sanctuary', 'm-voice',
+  'm-challenge', 'm-challenge-new',
 ] as const;
 
 // 하나라도 빠지면 여기서 타입 오류가 난다(빠진 ScreenId가 never에 배정되지 못한다).
@@ -119,6 +123,14 @@ interface Session {
   patchDraft: (patch: Partial<ChallengeDraft>) => void;
   analysis: AnalysisSummary | null;
   setAnalysis: (a: AnalysisSummary | null) => void;
+  /**
+   * 챌린지 관리에서 지금 열어 둔 카테고리.
+   *
+   * 주소에 담지 않는 이유: 이 앱은 해시 한 칸으로만 화면을 가르고, 카테고리 이름에는
+   * `/`·공백이 섞여 있어(`교통/자동차`) 주소로 옮기면 이스케이프 규칙이 하나 더 생긴다.
+   */
+  challengeCategory: string | null;
+  openChallenge: (category: string) => void;
 }
 
 const Ctx = createContext<Session | null>(null);
@@ -144,7 +156,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return v > 0 ? v : DEFAULT_USER_ID;
   });
   const [linked, setLinkedState] = useState<boolean>(() => read('mydata_onboarded') === 'true');
-  const [screen, setScreen] = useState<ScreenId>(() => hashScreen() ?? (read('mydata_onboarded') === 'true' ? 'home' : 'splash'));
+  const [challengeCategory, setChallengeCategory] = useState<string | null>(null);
+  const [screen, setScreen] = useState<ScreenId>(() => hashScreen() ?? (read('mydata_onboarded') === 'true' ? 'home' : 'boot'));
   const [draft, setDraft] = useState<ChallengeDraft>(emptyDraft);
   const [analysis, setAnalysis] = useState<AnalysisSummary | null>(null);
 
@@ -189,6 +202,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
    * 덮어써지고, 홈은 앞사람의 챌린지를 계속 보여줬다(2026-07-31 운영). 서버도 CI 로 계정을 고르도록
    * 함께 고쳤지만, 신원을 끊는 일은 로그아웃이 먼저 해야 한다.
    */
+  /** 그 카테고리의 관리 화면을 연다. */
+  const openChallenge = useCallback((category: string) => {
+    setChallengeCategory(category);
+    go('m-challenge');
+  }, [go]);
+
   const resetOnboarding = useCallback(() => {
     remove('mydata_onboarded');
     remove('demo_user_id');
@@ -196,8 +215,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setLinkedState(false);
     setDraft(emptyDraft);
     setAnalysis(null);
-    setScreen('splash');
-    window.history.pushState(null, '', '#/splash');
+    setScreen('boot');
+    window.history.pushState(null, '', '#/boot');
   }, []);
 
   /**
@@ -231,8 +250,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<Session>(() => ({
     userId, setUserId, linked, setLinked, screen, go, back, resetOnboarding,
-    draft, patchDraft, analysis, setAnalysis,
-  }), [userId, setUserId, linked, setLinked, screen, go, back, resetOnboarding, draft, patchDraft, analysis]);
+    draft, patchDraft, analysis, setAnalysis, challengeCategory, openChallenge,
+  }), [userId, setUserId, linked, setLinked, screen, go, back, resetOnboarding,
+       draft, patchDraft, analysis, challengeCategory, openChallenge]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

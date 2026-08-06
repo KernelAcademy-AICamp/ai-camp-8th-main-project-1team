@@ -1,94 +1,137 @@
 /**
- * 맞춤 상품 비교 (개편안 `s-compare`) — 소비 패턴과 맞는 순으로 Top 3.
+ * 카드 추천 (프로토타입_0806 `s-compare`) — 리포트 아래 배너로 들어오는 화면.
  *
- * <p><b>추천은 광고비가 아니라 매칭 점수 순이다.</b> 서버가 `matchScore`와 그 내역
- * (기간·위험·카테고리 적합도)을 함께 내려주므로, 화면은 순서를 다시 매기지 않고 왜 그 순위인지를
- * 그대로 보여준다 — 근거 없이 "추천"만 띄우면 그건 광고다.
+ * <p><b>근거가 카드보다 먼저 온다.</b> "이 카드를 추천해요"만 띄우면 그건 광고다. 그래서
+ * 화면 맨 위는 카드가 아니라 <b>최근 소비 요약</b>이다 — 무엇을 근거로 골랐는지 같은 화면에서
+ * 대조할 수 있어야 추천이 검증 가능해진다. 순서를 화면이 다시 매기지 않는 것도 같은 이유다.
  *
- * <p><b>여기 상품은 전부 더미다.</b> 가입 버튼도 외부 링크도 두지 않는다(금소법 — 판매·중개
- * 행위를 만들지 않는다). 실제 금리를 비교해 보고 싶으면 리포트의 예적금 비교로 간다.
+ * <p><b>카드는 전부 더미다</b>(마스터 §4 원칙 5 — 금소법). 이름 앞의 <code>[더미]</code>를
+ * 떼지 않고 그대로 내보내며, '빠른 신청'은 실제로 아무 데도 보내지 않고 그 사실을 말한다.
+ * 실제 금리를 보고 싶으면 통장 비교(무판매·무제휴라 예외)로 간다.
  */
+import { useEffect, useRef, useState } from 'react';
 import { AppBar, Scroll, Screen, ErrorBox, Loading, Empty } from '../components/ui';
+import { CardArt } from '../components/CardArt';
 import { useSession } from '../state/session';
 import { useAsync } from '../state/useAsync';
-import { api, type RecommendItem } from '../lib/api';
+import { api, type CardOffer } from '../lib/api';
 import { won } from '../lib/format';
 
-/** 상품 유형 → 한 줄 성격. 코드에 이름을 박지 않고 표시만 여기서 한다. */
-const TYPE_TAGLINE: Record<string, string> = {
-  DEPOSIT: '목돈을 묶어 두는 예금',
-  SAVINGS: '매달 붓는 적금',
-  FUND: '시장 수익을 노리는 펀드',
-  CASHBACK_CARD: '쓴 만큼 돌려받는 카드',
-};
-/** 유형별 로고 자리 색·글자 — 실제 금융사 로고를 쓰지 않는다(더미 상품이라 브랜드가 없다). */
-const TYPE_BADGE: Record<string, { bg: string; text: string; color?: string }> = {
-  DEPOSIT: { bg: '#3182F6', text: '예금' },
-  SAVINGS: { bg: '#00B14F', text: '적금' },
-  FUND: { bg: '#8B5CF6', text: '펀드' },
-  CASHBACK_CARD: { bg: '#FFCD00', text: '카드', color: '#3c1e1e' },
-};
+/** 초록 P 뱃지 — 절감액 앞에 서는 표시. */
+const SaveMark = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="9" fill="#00B14F" />
+    <text x="12" y="16.4" textAnchor="middle" fontSize="12" fontWeight="700"
+      fill="#fff" fontFamily="inherit">P</text>
+  </svg>
+);
+
+/** 1위 카테고리에 붙는 왕관 — 표에서 '가장 많이 쓴 곳'을 눈으로 찾게 한다. */
+const Crown = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M4 8l4.2 3.4L12 5.6l3.8 5.8L20 8l-1.6 9.2H5.6L4 8z" fill="#F5B73C" />
+    <rect x="5.6" y="18.4" width="12.8" height="2.4" rx="1.2" fill="#E0A028" />
+  </svg>
+);
 
 export function Compare() {
   const { back, userId } = useSession();
-  const { data, loading, error, reload } = useAsync(() => api.recommend(userId), [userId]);
+  const { data, loading, error, reload } = useAsync(() => api.recommendCards(userId), [userId]);
+  const [toast, setToast] = useState<string | null>(null);
+  const timer = useRef<number | undefined>(undefined);
 
-  if (loading) return <Loading label="맞는 상품을 고르는 중" />;
-  if (error) return <ErrorBox error={error} onRetry={reload} />;
+  // 화면을 떠날 때 타이머를 거둔다 — 안 그러면 사라진 화면에 setState 를 건다.
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  function say(msg: string) {
+    setToast(msg);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setToast(null), 2000);
+  }
 
-  const top = (data?.items ?? []).slice(0, 3);
+  const summary = data?.summary ?? [];
+  const offers = data?.offers ?? [];
 
   return (
-    <Screen title="맞춤 상품 비교">
-      <AppBar onBack={back} title="맞춤 상품 비교" />
-      <Scroll>
-        <div className="pad">
-          <div className="h-title">회원님 소비에 맞는<br />상품 Top {top.length || 3}</div>
-          <div className="h-sub">
-            더미 상품 중 <b>소비 패턴 매칭 상위</b>예요. 순서는 광고비가 아니라 매칭 점수로 정해요.
-            {data && ` 굴릴 수 있는 돈 ${won(data.availableFunds)} 기준이에요.`}
-          </div>
+    <Screen title="카드 추천">
+      <AppBar onBack={back} title="카드 추천" />
+      <Scroll><div className="pad">
+        {loading && <Loading label="카드를 고르는 중" rows={4} />}
+        <ErrorBox error={error} onRetry={reload} />
 
-          {top.length === 0 && (
-            <div className="card"><Empty>지금은 맞는 상품이 없어요. 소비가 더 쌓이면 다시 골라볼게요.</Empty></div>
-          )}
+        {data && (
+          <>
+            <div className="cr-head">소비를 더 줄일 수 있는<br />이 카드를 추천해요</div>
 
-          {top.map((item, i) => <RankCard key={item.productId} item={item} best={i === 0} />)}
+            {/* ── 근거: 최근 소비 요약 ── */}
+            {summary.length > 0 ? (
+              <div className="cr-sum">
+                {summary.map((s) => (
+                  <div key={s.categoryCode} className={`cr-row${s.rank === 1 ? ' top' : ''}`}>
+                    <i>{s.rank}</i>
+                    <b>
+                      <span className="ell">{s.displayName} {s.count.toLocaleString('ko-KR')}건</span>
+                      {s.rank === 1 && <Crown />}
+                    </b>
+                    <span>{won(s.amount)}</span>
+                  </div>
+                ))}
+                <div className="cr-note">
+                  카드 이용기간 {data.periodLabel}{data.months > 0 && ` (${data.months}개월)`}
+                </div>
+              </div>
+            ) : (
+              <div className="card" style={{ marginBottom: 24 }}>
+                <Empty>아직 소비가 적어 추천의 근거를 못 만들었어요. 며칠 더 쌓이면 골라볼게요.</Empty>
+              </div>
+            )}
 
-          <div className="pv">
-            전월 실적 조건과 한도는 상세에서 확인하세요. 여기 상품은 <b>전부 더미</b>라 가입 경로를 두지 않아요.
-          </div>
-          <div className="spacer" style={{ height: 32 }} />
-        </div>
-      </Scroll>
+            {/* ── 카드 ── */}
+            {offers.map((o, i) => <Offer key={o.name} offer={o} uid={String(i)} onApply={say} />)}
+
+            <div className="pv" style={{ textAlign: 'center' }}>
+              추천 순서는 광고비가 아니라 <b>최근 {data.months || 3}개월 소비에 그 카드를 썼다면
+              연 얼마가 남는지</b>로 정해요. 그래서 가장 많이 쓴 곳과 1위 카드가 다를 수 있어요.<br />
+              여기 카드는 <b>전부 더미</b>라 실제로 가입할 수 없어요.
+            </div>
+            <div className="spacer" style={{ height: 32 }} />
+          </>
+        )}
+      </div></Scroll>
+      {toast && <div className="mini-toast show" role="status">{toast}</div>}
     </Screen>
   );
 }
 
-function RankCard({ item, best }: { item: RecommendItem; best: boolean }) {
-  const badge = TYPE_BADGE[item.productType] ?? { bg: '#868685', text: '상품' };
-  // 기대 수익 = 굴릴 금액이 아니라 '연 이율'만 안다. 금액 환산은 사용자 자금에 달려 있어 서버가
-  // 내려주지 않으므로, 없는 숫자를 지어내지 않고 이율 그대로 보여준다.
-  const b = item.scoreBreakdown;
+function Offer({ offer, uid, onApply }: {
+  offer: CardOffer; uid: string; onApply: (msg: string) => void;
+}) {
   return (
-    <div className={`rank-card${best ? ' best' : ''}`} style={{ marginTop: best ? 8 : undefined }}>
-      <span className="rank-no">{item.rank}위, 매칭 {Math.round(item.matchScore * 100)}%</span>
-      <div className="rank-head" style={{ marginTop: 6 }}>
-        <span className="logo" style={{ background: badge.bg, color: badge.color }}>{badge.text}</span>
-        <div>
-          <b>{item.name}</b>
-          <span>{TYPE_TAGLINE[item.productType] ?? item.productType}</span>
+    <div className="cr-offer">
+      <div className="cap">{offer.tagline}</div>
+      <div className="nm">{offer.name}</div>
+      <CardArt tint={offer.tint} mark={offer.mark} footer={offer.footer} uid={uid} />
+      <div className="save">
+        <SaveMark />
+        {offer.yearlySaving > 0
+          ? <>연 {won(offer.yearlySaving)} 아껴요</>
+          : <>이 소비에는 아낄 게 거의 없어요</>}
+      </div>
+      {/* 한도에 걸렸으면 숨기지 않는다 — 숨기면 "더 쓰면 더 아낀다"로 잘못 읽힌다. */}
+      {offer.cappedAt !== null && (
+        <div className="pv" style={{ marginTop: 8 }}>
+          연간 혜택 한도 {won(offer.cappedAt)}까지예요
         </div>
+      )}
+      <div className="rows">
+        {offer.rows.map((r) => (
+          <div className="cr-brow" key={r.label}><span>{r.label}</span><b>{r.value}</b></div>
+        ))}
       </div>
-      <div className="rank-save">
-        연 {item.expectedRate}%
-        <small>최소 {won(item.minJoinAmount)} · {item.minPeriodMonths}개월</small>
-      </div>
-      <div className="why">
-        <b>왜 추천?</b>{' '}
-        기간 적합 {Math.round(b.periodFit * 100)}% · 위험 성향 {Math.round(b.riskFit * 100)}% ·
-        소비 카테고리 {Math.round(b.categoryFit * 100)}%로 맞았어요.
-        {item.gateReason && <> 다만 {item.gateReason}.</>}
+      <div className="cr-btns">
+        <button type="button" className="ghost"
+          onClick={() => onApply('더미 카드라 상세 페이지가 없어요')}>더 알아보기</button>
+        <button type="button" className="dark"
+          onClick={() => onApply('데모라서 신청은 진행되지 않아요')}>빠른 신청</button>
       </div>
     </div>
   );

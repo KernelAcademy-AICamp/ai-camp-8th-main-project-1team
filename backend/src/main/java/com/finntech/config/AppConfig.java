@@ -11,7 +11,8 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 
 @Configuration
-@EnableConfigurationProperties({AnalysisProperties.class, com.finntech.guardian.GuardianProperties.class})
+@EnableConfigurationProperties({AnalysisProperties.class, CardRecommendProperties.class,
+        com.finntech.guardian.GuardianProperties.class})
 public class AppConfig {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AppConfig.class);

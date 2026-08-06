@@ -71,7 +71,56 @@ public class GuardianCollectionService {
     public record ShopEntry(String code, String name, String glyph, String story,
                             String category, int price, boolean owned, boolean affordable) {}
 
-    public record ShopView(int points, List<ShopEntry> items) {}
+    /** @param catSkin 지금 고른 털색. 화면이 꾸미기에서 어느 칸에 체크를 칠지 정한다. */
+    public record ShopView(int points, List<ShopEntry> items, String catSkin) {}
+
+    /**
+     * 고를 수 있는 털색 한 줄.
+     *
+     * @param owned 사지 않아도 고를 수 있는가 — 기본 넷은 늘 true, 삼색이는 샀을 때만 true
+     */
+    public record CatSkin(String key, String name, String glyph, boolean owned, boolean selected) {}
+
+    /**
+     * 고를 수 있는 털색과 지금 고른 것.
+     *
+     * <p><b>기본 넷은 값으로 박는다.</b> 파는 물건이 아니라 카탈로그에 없고, 상점 항목으로 만들면
+     * 가격 0원짜리가 진열대에 서게 된다. 사는 것(삼색이)만 카탈로그에서 보유를 확인한다.
+     */
+    private static final List<String[]> BASE_SKINS = List.of(
+            new String[] {"cat", "크림", "catsit"},
+            new String[] {"gray", "그레이", "catsit_gray"},
+            new String[] {"cheese", "치즈", "catsit_cheese"},
+            new String[] {"choco", "초코", "catsit_choco"});
+
+    /** 삼색이의 카탈로그 코드 — 사야 고를 수 있는 유일한 색. */
+    private static final String CALICO_CODE = "char_cat_calico";
+
+    @Transactional(readOnly = true)
+    public List<CatSkin> catSkins(Long userId) {
+        GuardianItems it = items(userId);
+        String sel = it.getCatSkin();
+        List<CatSkin> out = new ArrayList<>();
+        for (String[] s : BASE_SKINS) out.add(new CatSkin(s[0], s[1], s[2], true, s[0].equals(sel)));
+        boolean hasCalico = ownedCodes(userId).contains(CALICO_CODE);
+        out.add(new CatSkin("calico", "삼색이", "catsit_calico", hasCalico, "calico".equals(sel)));
+        return out;
+    }
+
+    /**
+     * 털색을 고른다.
+     *
+     * <p><b>가지지 않은 색은 고를 수 없다.</b> 화면이 잠긴 칸을 눌러도 막고, 화면을 거치지 않는
+     * 호출도 막는다 — 사지 않고 삼색이가 되면 상점이 무의미해진다.
+     */
+    @Transactional
+    public List<CatSkin> chooseCatSkin(Long userId, String key) {
+        boolean ok = BASE_SKINS.stream().anyMatch(s -> s[0].equals(key))
+                || ("calico".equals(key) && ownedCodes(userId).contains(CALICO_CODE));
+        if (!ok) throw new IllegalStateException("아직 가지고 있지 않은 색이에요");
+        itemsForUpdate(userId).setCatSkin(key, LocalDateTime.now(clock));
+        return catSkins(userId);
+    }
 
     // ======================================================================
     //  도감
@@ -124,7 +173,7 @@ public class GuardianCollectionService {
             out.add(new ShopEntry(i.code(), i.name(), i.glyph(), i.story(),
                     i.shop().name(), i.price(), have, !have && points >= i.price()));
         }
-        return new ShopView(points, out);
+        return new ShopView(points, out, items(userId).getCatSkin());
     }
 
     /**

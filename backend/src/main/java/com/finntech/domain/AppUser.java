@@ -52,6 +52,15 @@ public class AppUser {
     @Column(name = "birth_year")
     private Integer birthYear;
 
+    /**
+     * 이 사용자가 정한 하루 알림 상한. <b>0이면 '설정 안 함'</b>이고 전역 기본값을 따른다.
+     *
+     * <p>전역값(`finntech.guardian.notification.daily-push-limit`)은 운영이 정하는 기본값이고,
+     * "나한테는 많다/적다"는 사람마다 다르다. 사람마다 다른 값을 설정 파일에 둘 수는 없다.
+     */
+    @Column(name = "notify_daily_limit", nullable = false)
+    private int notifyDailyLimit = 0;
+
     protected AppUser() {}
 
     public AppUser(String nickname, BigDecimal monthlyIncome, BigDecimal goalAmount, Integer goalMonths) {
@@ -63,6 +72,10 @@ public class AppUser {
 
     public Long getId() { return id; }
     public String getNickname() { return nickname; }
+    /** 본인인증으로 확인된 이름을 계정 이름으로 쓴다 — 화면이 '○○님'이라 부를 근거다. */
+    public void setNickname(String nickname) { this.nickname = nickname; }
+    public int getNotifyDailyLimit() { return notifyDailyLimit; }
+    public void setNotifyDailyLimit(int v) { this.notifyDailyLimit = v; }
     public BigDecimal getMonthlyIncome() { return monthlyIncome; }
     public void setMonthlyIncome(BigDecimal v) { this.monthlyIncome = v; }
     public BigDecimal getGoalAmount() { return goalAmount; }

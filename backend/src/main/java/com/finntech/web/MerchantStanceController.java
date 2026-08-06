@@ -81,6 +81,26 @@ public class MerchantStanceController {
                 "keptCount", s.getKeptCount());
     }
 
+    /**
+     * "이건 줄일 지출이 아니에요" — 온보딩에서 반복 지출을 짚어 물었을 때의 답(개편안 `sheet-ktx`).
+     *
+     * <p>사다리(느슨 → 제외)를 건너뛴다. 사다리는 "세 번 뺐으니 필수인 듯하다"는 <b>추정</b>인데,
+     * 여기서는 사용자가 통근이라고 <b>말했다</b>. 말한 것을 세 번 더 말하라고 할 이유가 없다.
+     */
+    @PostMapping("/{businessNumber}/exclude")
+    @Transactional
+    public Map<String, Object> exclude(@RequestParam Long userId, @PathVariable String businessNumber,
+                                       @RequestParam(required = false) String merchantName) {
+        LocalDateTime now = LocalDateTime.now(clock);
+        UserMerchantStance s = repository.findByUserIdAndBusinessNumber(userId, businessNumber)
+                .orElseGet(() -> new UserMerchantStance(userId, businessNumber, merchantName, now));
+        if (merchantName != null && !merchantName.isBlank()) s.setMerchantName(merchantName);
+        s.excludedByUser(toExcluded, now);
+        repository.save(s);
+        return Map.of("businessNumber", businessNumber, "stance", s.getStance().name(),
+                "keptCount", s.getKeptCount());
+    }
+
     /** 한 가맹점 설정을 통째로 지운다 — 다음부터 전역 임계로 돌아간다. */
     @DeleteMapping("/{businessNumber}")
     @Transactional

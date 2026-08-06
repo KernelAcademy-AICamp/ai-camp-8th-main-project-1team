@@ -1,5 +1,8 @@
 package com.finntech.guardian;
 
+import com.finntech.guardian.domain.GuardianEnums.MissionType;
+import com.finntech.guardian.domain.WeeklyMission;
+
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
@@ -214,5 +217,40 @@ public final class GuardianCopy {
     /** 13310544 → "13,310,544". 자릿수 구분이 없으면 사람이 읽지 못한다. */
     public static String won(long v) {
         return NumberFormat.getIntegerInstance(Locale.KOREA).format(v);
+    }
+
+    // =====================================================================
+    //  주간 미션 문구 (설계서 §9)
+    // =====================================================================
+
+    /** 요일 한 글자. 화면 문구는 44자 제한이 빡빡해 "금요일"보다 "금"이 낫다. */
+    public static String weekday(java.time.DayOfWeek d) {
+        return switch (d) {
+            case MONDAY -> "월"; case TUESDAY -> "화"; case WEDNESDAY -> "수"; case THURSDAY -> "목";
+            case FRIDAY -> "금"; case SATURDAY -> "토"; case SUNDAY -> "일";
+        };
+    }
+
+    /**
+     * 미션 한 줄을 사람이 읽는 문장으로.
+     *
+     * <p><b>여기 한 곳에만 둔다.</b> 리포트(끝난 미션)와 마이룸(고를 미션)이 같은 미션을
+     * 서로 다르게 부르면 같은 것인지 알 수가 없다. 예전에는 리포트 안에만 있어서
+     * 고르기 화면을 만들 때 규칙을 두 번 적을 뻔했다.
+     */
+    public static String missionText(MissionType type, String category, int threshold,
+                                     java.time.DayOfWeek weekday, Integer hourStart, Integer hourEnd) {
+        return switch (type) {
+            case MAX_COUNT -> category + " 주 " + threshold + "회 이하";
+            case AVOID_SLOT -> weekday == null ? category + " 시간대 피하기"
+                    : weekday(weekday) + " " + hourStart + "~" + hourEnd + "시 " + category + " 안 쓰기";
+            case NO_SPEND_STREAK_MIN -> "무지출 " + threshold + "일 연속";
+            case LABELING_COUNT_MIN -> "소비 성격 " + threshold + "건 답하기";
+        };
+    }
+
+    public static String missionText(WeeklyMission m) {
+        return missionText(m.getConditionType(), m.getCategory(), m.getThreshold(),
+                m.getAvoidWeekday(), m.getAvoidHourStart(), m.getAvoidHourEnd());
     }
 }
