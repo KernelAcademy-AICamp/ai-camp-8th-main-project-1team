@@ -6,6 +6,11 @@
  */
 
 export const won = (n: number) => Math.round(n).toLocaleString('ko-KR') + '원';
+/**
+ * 단위 없이 숫자만 — 개편안이 숫자와 '원'을 **다른 크기로** 그리는 자리에 쓴다
+ * (`28px` 숫자에 `20px` 단위). {@link won} 을 쓰면 '원'이 두 번 붙는다.
+ */
+export const wonNum = (n: number) => Math.round(n).toLocaleString('ko-KR');
 export const wonShort = (n: number) =>
   Math.abs(n) >= 10000
     ? `${(n / 10000).toLocaleString('ko-KR', { maximumFractionDigits: 1 })}만원`

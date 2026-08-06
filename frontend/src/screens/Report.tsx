@@ -1,254 +1,196 @@
 /**
- * 리포트 탭 허브 (RP-01 주간 리포트 성격) — "이번 주·이번 달에는 어떻게 지켰는가"에 답한다.
- * 지금 지키는 금액 · 소비 건강 점수 · 절약 리포트 한 문단을 얹고, 자세한 화면들로 보낸다(IA §1.1).
+ * 리포트 탭 (프로토타입_0806 `s-report`) — "이 주를 어떻게 지켰는가"에 답한다.
+ *
+ * <b>개편안의 다섯 절을 그대로 얹었다.</b> 주차 이동 → 지킨 금액과 차트 → 많이 쓴 곳 →
+ * 지킴이가 본 이번 주 → 지난 챌린지 달성률 → 카드 추천.
+ *
+ * <b>개편안에 없는 절은 뺐다.</b> 소비 건강 점수·절약 리포트·소비 성격 분석·주간 미션 정산과
+ * 자세히 보기 메뉴는 디자이너가 다시 그리지 않았다. 지우지는 않고 **마이 > 임시 보관함**으로
+ * 옮겼다(`m-parked`) — 이 화면은 개편안이 그린 것만 담고, 갈 곳은 나중에 정한다.
+ *
+ * <b>계산은 서버가 한다.</b> 방어율·요일별 금액·달성률은 `/api/guardian/report/weekly` 가
+ * 완성해 내려준다(마스터 §4 원칙 2). 여기서 하는 것은 그리기와 문장 조립뿐이다.
  */
 import { useState } from 'react';
-import { Orb, Scroll, Screen, ErrorBox, Loading, SectionTitle } from '../components/ui';
-import { ScoreGauge, Factor } from '../components/ScoreGauge';
-import { useSession, type ScreenId } from '../state/session';
+import { Scroll, Screen } from '../components/ui';
+import { WeekChart } from '../components/WeekChart';
+import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
 import { useAsync } from '../state/useAsync';
 import { api } from '../lib/api';
-import { won, pctNum } from '../lib/format';
+import { won, wonNum } from '../lib/format';
 
-/** 소비 성격 3종의 색 — 개편안 원본 값. */
-const LABEL_COLOR = ['#00804A', '#D97B22', '#8B7BC0'];
-/** "7.14~7.20" */
+/** "7.20 ~ 7.26" */
 const fmtRange = (a: string, b: string) =>
-  `${Number(a.slice(5, 7))}.${Number(a.slice(8, 10))}~${Number(b.slice(5, 7))}.${Number(b.slice(8, 10))}`;
+  `${Number(a.slice(5, 7))}.${Number(a.slice(8, 10))} ~ ${Number(b.slice(5, 7))}.${Number(b.slice(8, 10))}`;
 
-const MENU: { id: ScreenId; emoji: string; bg: string; title: string; desc: string }[] = [
-  { id: 'r-spending', emoji: '🍩', bg: 'var(--blue-weak)', title: '카테고리별 소비', desc: '어디에 얼마를 썼는지 · 월별 흐름' },
-  { id: 'r-analysis', emoji: '🔎', bg: 'var(--c-cafe)', title: '내 소비 분석', desc: '이상소비지수 · 반복 결제 · 언제 쓰나' },
-  { id: 'r-cards', emoji: '💳', bg: 'var(--c-taxi)', title: '내 카드', desc: '카드별 실적과 받은 혜택' },
-  { id: 'r-account', emoji: '🏧', bg: 'var(--c-cvs)', title: '내 통장', desc: '잔액·월급·이자 · 입출금 내역' },
-  { id: 'r-waste', emoji: '⚠️', bg: 'var(--c-shop)', title: '이상 소비', desc: 'AI가 짚은 낭비/필수 판정' },
-  { id: 'r-savings', emoji: '🏦', bg: 'var(--green-weak)', title: '통장 비교', desc: '아낀 돈을 어디에 모을까 · 정보성' },
-  { id: 'r-compare', emoji: '🎯', bg: 'var(--blue-weak)', title: '맞춤 상품 비교', desc: '소비 패턴과 맞는 순으로 Top 3 · 전부 더미' },
-];
+/** 미션 배너의 동전 그림 — 개편안 원본 SVG. */
+const CoinArt = () => (
+  <svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true">
+    <circle cx="34" cy="24" r="15" fill="#F5B73C" />
+    <circle cx="26" cy="30" r="17" fill="#FFCB3D" />
+    <circle cx="26" cy="30" r="12.5" fill="none" stroke="#F0A93B" strokeWidth="2" />
+    <text x="26" y="36" textAnchor="middle" fontSize="16" fontWeight="700" fill="#FFF">P</text>
+    <path d="M46 42l1.6 3.4L51 47l-3.4 1.6L46 52l-1.6-3.4L41 47l3.4-1.6z" fill="#FFB03A" />
+  </svg>
+);
+
+/** 카드 추천 배너의 카드 그림 — 개편안 원본 SVG. */
+const CardArt = () => (
+  <svg width="56" height="48" viewBox="0 0 56 48" aria-hidden="true">
+    <rect x="18" y="6" width="30" height="40" rx="5" fill="#00B14F" />
+    <rect x="14" y="10" width="30" height="40" rx="5" fill="#33C475" />
+    <rect x="22" y="18" width="10" height="10" rx="2.5" fill="#fff" />
+    <path d="M7 8l1.4 3L11.4 12.4l-3 1.4L7 16.8l-1.4-3-3-1.4 3-1.4z" fill="#FFC53D" />
+    <path d="M13 1l.9 1.9 1.9.9-1.9.9L13 6.6l-.9-1.9-1.9-.9 1.9-.9z" fill="#FFC53D" />
+  </svg>
+);
 
 export function Report() {
   const { go, userId } = useSession();
   const { home } = useGuardian();
   const [weeksAgo, setWeeksAgo] = useState(0);
+  const [mode, setMode] = useState<0 | 1>(0);
   // 챌린지가 없으면 404다 — 리포트 나머지는 멀쩡히 보여야 하므로 조용히 비운다.
   const weekly = useAsync(
     () => api.guardian.weeklyReport(userId, weeksAgo).catch(() => null),
     [userId, weeksAgo],
   );
-  const score = useAsync(() => api.score(userId), [userId]);
-  const report = useAsync(() => api.report(userId), [userId]);
 
+  const w = weekly.data;
   const ch = home?.challenge;
+  const isCur = weeksAgo === 0;
+  /** 판정이 하나도 없는 주 — 개편안의 `#rpEmpty`. */
+  const empty = !w || w.days.every((d) => !d.judged);
+
+  /** 차트 위 한 줄 요약. 모드마다 무엇을 견주는지가 다르다. */
+  const lead = mode === 0
+    ? (() => {
+      const shown = w?.days.filter((d) => d.judged) ?? [];
+      const avg = shown.length ? Math.round(shown.reduce((a, d) => a + d.amount, 0) / shown.length) : 0;
+      return { label: '하루 평균', value: <><b>{won(avg)}</b> 썼어요</> };
+    })()
+    : (() => {
+      const t = w?.trend ?? [];
+      const cur = t[t.length - 1]?.defenseRate ?? 0;
+      const prev = t[t.length - 2]?.defenseRate ?? 0;
+      const diff = Math.round((cur - prev) * 100);
+      return {
+        label: isCur ? '지난 주보다' : '그 전 주보다',
+        value: diff >= 0 ? <><b>{diff}%p 더</b> 지켰어요</> : <><b>{Math.abs(diff)}%p 덜</b> 지켰어요</>,
+      };
+    })();
 
   return (
     <Screen title="리포트" hasTabBar>
-      <Scroll><div className="pad" style={{ paddingTop: 20 }}>
-        {/* 주차 네비게이션 (개편안 `.wk-nav`) — 다음 주는 아직 오지 않아 막는다. */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <div style={{ fontSize: 22, fontWeight: 700 }}>주간 리포트</div>
+      <Scroll>
+        {/* ── 주차 이동 ─────────────────────────────────────────────── */}
+        <div className="rp-sec" style={{ paddingTop: 20 }}>
           <div className="wk-nav">
-            <button type="button" aria-label="지난주" onClick={() => setWeeksAgo((w) => w + 1)}>‹</button>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--t2)' }}>
-              {weekly.data?.weekLabel ?? '이번 주'}
-            </span>
-            <button type="button" aria-label="다음주" disabled={weeksAgo === 0}
-              onClick={() => setWeeksAgo((w) => Math.max(0, w - 1))}>›</button>
+            <button type="button" aria-label="지난주" onClick={() => setWeeksAgo((x) => x + 1)}>‹</button>
+            <div className="wk-txt">
+              <b>{w?.weekLabel ?? '이번 주'}</b>
+              <span>{w ? fmtRange(w.weekStart, w.weekEnd) : ''}</span>
+            </div>
+            <button type="button" aria-label="다음주" disabled={isCur}
+              onClick={() => setWeeksAgo((x) => Math.max(0, x - 1))}>›</button>
           </div>
         </div>
-        {weekly.data && (
-          <div style={{ fontSize: 13, color: 'var(--t3)', marginBottom: 16 }}>
-            {fmtRange(weekly.data.weekStart, weekly.data.weekEnd)}, 이번 주를 잘 지켰는지 정리했어요
-          </div>
-        )}
+        <div className="rp-line" />
 
-        {/* 주간 방어율 + 4주 추이 */}
-        {weekly.data && weekly.data.trend.some((t) => t.judgedDays > 0) && (
-          <div className="card">
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16 }}>
-              <div>
-                <div style={{ fontSize: 13, color: 'var(--t3)', fontWeight: 600 }}>이번 주 방어율</div>
-                <div style={{ fontSize: 36, fontWeight: 700, lineHeight: 1.1, margin: '4px 0 8px' }}>
-                  {Math.round(weekly.data.defenseRate * 100)}%
-                </div>
-                {weekly.data.deltaFromLastWeek !== null && (
-                  <span className={weekly.data.deltaFromLastWeek >= 0 ? 'tag-good' : 'tag-warn'}>
-                    지난주보다 {weekly.data.deltaFromLastWeek >= 0 ? '+' : ''}
-                    {Math.round(weekly.data.deltaFromLastWeek * 100)}%p
-                  </span>
-                )}
-              </div>
-              <div className="trend">
-                {weekly.data.trend.map((t) => (
-                  <div key={t.weekStart} className={`tc${t.current ? ' cur' : ''}`}
-                    title={`${t.label} ${Math.round(t.defenseRate * 100)}%`}>
-                    {/* 막대 높이는 최소 8px — 0%인 주도 자리는 보여야 '기록이 없다'가 읽힌다. */}
-                    <div className="tb" style={{ height: Math.max(8, Math.round(t.defenseRate * 56)) }} />
-                    <div className="tl">{t.current ? '이번 주' : t.label.replace(/^\d+월 /, '')}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="divider" style={{ margin: '16px 0 12px' }} />
-            <div style={{ fontSize: 13, color: 'var(--t2)' }}>{weekly.data.headline}</div>
-          </div>
-        )}
-
-        {/* 소비 성격 — 라벨링 구성비 */}
-        {weekly.data && weekly.data.labeledCount > 0 && (
-          <>
-            <SectionTitle>소비 성격 분석</SectionTitle>
-            <div className="card">
-              <div style={{ fontSize: 12, color: 'var(--t3)' }}>
-                이번 주 라벨링 {weekly.data.labeledCount}건 기준
-              </div>
-              <div className="stackbar">
-                {weekly.data.labels.map((l, i) => (
-                  <i key={l.key} style={{ width: `${l.ratio * 100}%`, background: LABEL_COLOR[i] }} />
-                ))}
-              </div>
-              {weekly.data.labels.map((l, i) => (
-                <div className="lg-row" key={l.key}>
-                  <span className="lg-dot" style={{ background: LABEL_COLOR[i] }} />
-                  {l.label} {l.count}건<b>{Math.round(l.ratio * 100)}%</b>
-                </div>
-              ))}
-              {weekly.data.exemptedAmount > 0 && (
-                <div className="pv" style={{ marginTop: 12 }}>
-                  불가피한 소비로 되돌린 <b>{won(weekly.data.exemptedAmount)}</b>은 저금통에 복원됐어요.
-                </div>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* 주간 미션 정산 (개편안 s-report) — 미션이 없으면 절 자체를 감춘다.
-            빈 카드를 띄우면 "미션이 없다"가 아니라 "고장났다"로 읽힌다. */}
-        {weekly.data && weekly.data.missions.length > 0 && (
-          <>
-            <SectionTitle>주간 미션 정산</SectionTitle>
-            <div className="card" style={{ padding: '16px 24px' }}>
-              <div style={{ fontSize: 14, color: 'var(--t2)', marginBottom: 8 }}>
-                <b>{weekly.data.missions.filter((m) => m.status === 'SUCCESS').length}개 성공</b>
-                {weekly.data.missionReward > 0
-                  ? `, 일요일에 +${weekly.data.missionReward}P가 정산돼요`
-                  : ', 아직 정산할 포인트가 없어요'}
-              </div>
-              {weekly.data.missions.map((m) => (
-                <div className="msn-row" key={m.text}>
-                  {m.text}
-                  <span className={`mchip ${m.status === 'SUCCESS' ? 'c-green' : m.status === 'FAILED' ? 'c-red' : 'c-amber'}`}>
-                    {m.status === 'SUCCESS' ? '성공' : m.status === 'FAILED' ? '아쉬움' : '진행 중'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* 지킴이가 본 이번 주 — 잘한 점 하나, 함께 볼 점 하나.
-            문장은 서버의 규칙 엔진이 만든다(마스터 §4 원칙 1). 견줄 지난주가 없으면 감춘다. */}
-        {weekly.data && (weekly.data.coaching.good || weekly.data.coaching.watch) && (
-          <>
-            <SectionTitle>지킴이가 본 이번 주</SectionTitle>
-            <div className="card">
-              {weekly.data.coaching.good && (
-                <div style={{ marginBottom: weekly.data.coaching.watch ? 14 : 0 }}>
-                  <span className="tag-good">잘한 점</span>
-                  <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--t2)', lineHeight: 1.4 }}>
-                    {weekly.data.coaching.good}
-                  </p>
-                </div>
-              )}
-              {weekly.data.coaching.good && weekly.data.coaching.watch && <div className="divider" />}
-              {weekly.data.coaching.watch && (
-                <div style={{ marginTop: weekly.data.coaching.good ? 14 : 0 }}>
-                  <span className="tag-warn">함께 볼 점</span>
-                  <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--t2)', lineHeight: 1.4 }}>
-                    {weekly.data.coaching.watch}
-                  </p>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* 이번 챌린지 — 지키는 금액이 주 지표다 */}
-        {ch ? (
-          <div className="hero">
-            <div className="cap">지금 지키고 있는 돈</div>
-            <div className="big">{won(ch.securedSaving)}</div>
-            <div className="sub">
-              {/* '달성'이 아니라 '지키는 중'이다 — Home.tsx의 히어로 주석 참고. */}
-              지킬 돈 {won(ch.targetSaving)} 중 {pctNum(ch.achievementRate)}% 지키는 중 · {ch.categoryLabel}
-              {ch.daysLeft > 0 ? ` · D-${ch.daysLeft}` : ''}
+        {empty ? (
+          <div className="rp-sec">
+            <div className="rp-emp">
+              <b>이 주에는 분석할 소비가 없어요</b>
+              <p>기록이 있는 주로 이동하면 리포트를 보여드릴게요</p>
             </div>
           </div>
         ) : (
-          <div className="guardian">
-            <Orb size={34} />
-            <div className="msg">
-              <b>지킴이</b>
-              <p>아직 이번 챌린지를 정하지 않았어요. 홈에서 줄일 카테고리를 골라 시작해요.</p>
+          <>
+            {/* ── ① 지킨 금액 + 차트 ──────────────────────────────── */}
+            <div className="rp-sec">
+              <div className="t-cap">{isCur ? '이번 주' : '이 주'} 동안 지킨 금액</div>
+              <div className="rp-keep">{wonNum(ch?.securedSaving ?? 0)}<em>원</em></div>
+              <WeekChart mode={mode} onMode={setMode} days={w.days} trend={w.trend} lead={lead} />
             </div>
-          </div>
+            <div className="rp-band" />
+
+            {/* ── ② 많이 쓴 곳 ───────────────────────────────────── */}
+            <div className="rp-sec">
+              <div className="t-sec row">많이 쓴 곳
+                <button type="button" className="sec-more" onClick={() => go('transactions')}>
+                  전체보기<span className="chev" aria-hidden="true">›</span>
+                </button>
+              </div>
+              {ch?.categorySpend?.length
+                ? ch.categorySpend.filter((c) => c.spent > 0).slice(0, 5).map((c) => (
+                  <div className="crow" key={c.code}>
+                    <span className="cn">{c.label}</span>
+                    <span className="cv">{won(c.spent)}</span>
+                    <div className="bar"><i style={{ width: `${Math.round(c.share * 100)}%`, background: 'var(--blue)' }} /></div>
+                  </div>
+                ))
+                : <p className="empty">이 주에 집계된 소비가 없어요.</p>}
+            </div>
+            <div className="rp-band" />
+
+            {/* ── ③ 지킴이가 본 이번 주 + 미션 다리 ────────────────── */}
+            {(w.coaching.good || w.coaching.watch) && (
+              <>
+                <div className="rp-sec">
+                  <div className="t-sec">지킴이가 본 이번 주</div>
+                  <div className="ins">
+                    {w.coaching.good && (
+                      <div className="ig"><span className="itag good">잘한 점</span><p>{w.coaching.good}</p></div>
+                    )}
+                    {w.coaching.watch && (
+                      <div className="ig"><span className="itag warn">살펴볼 점</span><p>{w.coaching.watch}</p></div>
+                    )}
+                  </div>
+                  {w.missions.length > 0 && (
+                    <button type="button" className="bn msn" onClick={() => go('myroom')}>
+                      <div className="bnt">
+                        <b>이번 주 소비를 보고<br />다음 주 미션을 준비했어요</b>
+                        <span>마이룸에서 확인해 보세요<i className="chev" aria-hidden="true">›</i></span>
+                      </div>
+                      <CoinArt />
+                    </button>
+                  )}
+                </div>
+                <div className="rp-band" />
+              </>
+            )}
+
+            {/* ── ④ 지난 챌린지 달성률 ────────────────────────────── */}
+            {w.pastChallenges.length > 0 && (
+              <>
+                <div className="rp-sec">
+                  <div className="t-sec">지난 챌린지 달성률</div>
+                  {w.pastChallenges.map((p) => (
+                    <div className="ch" key={p.challengeId}>
+                      <div className="chh"><b>{p.label}</b><span>{Math.round(p.rate * 100)}%</span></div>
+                      <div className="cbar"><i style={{ width: `${Math.round(p.rate * 100)}%` }} /></div>
+                      <div className="chs">{p.period} / {p.keptDays}일 지킴</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="rp-band" />
+              </>
+            )}
+
+            {/* ── ⑤ 카드 추천 ────────────────────────────────────── */}
+            <div className="rp-sec">
+              <button type="button" className="bn cardbn" onClick={() => go('r-compare')}>
+                <b>내 소비에 딱 맞는<br />카드를 추천해드릴게요</b>
+                <CardArt />
+              </button>
+            </div>
+            <div className="rp-band" />
+          </>
         )}
 
-        {/* 절약 리포트 한 문단 — 문장은 온디맨드 LLM, 숫자는 엔진 */}
-        <SectionTitle aux={report.data?.narrativeSource === 'AI' ? '✦ AI 요약' : '고정 템플릿'}>절약 리포트</SectionTitle>
-        <div className="card">
-          {report.loading && <div className="skeleton" style={{ width: '90%' }} />}
-          <ErrorBox error={report.error} onRetry={report.reload} />
-          {report.data && (
-            <>
-              <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--t1)' }}>{report.data.narrative}</p>
-              <div className="pv">
-                최근 총지출 <b>{won(report.data.totalSpend)}</b> ·
-                줄이면 좋은 소비 {report.data.negative.length}개 · 잘 관리한 소비 {report.data.positive.length}개
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* 소비 건강 점수 */}
-        <SectionTitle aux={score.data?.dataSourceMode === 'CONFIRMED' ? '실제 소비 데이터' : '참고용 추정치'}>
-          소비 건강 점수
-        </SectionTitle>
-        <div className="card">
-          {score.loading && <Loading label="점수를 불러오는 중" rows={2} />}
-          <ErrorBox error={score.error} onRetry={score.reload} />
-          {score.data && (
-            <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
-              <ScoreGauge score={score.data.score} grade={score.data.grade} />
-              <div style={{ flex: 1, minWidth: 190, display: 'flex', flexDirection: 'column', gap: 9 }}>
-                <Factor label="저축 진행률" value={score.data.breakdown.savingsProgress} />
-                <Factor label="소비 안정성" value={score.data.breakdown.stability} />
-                <Factor label="필수 소비 비율" value={score.data.breakdown.plannedRatio} />
-                {score.data.estimationReason && (
-                  <p className="empty" style={{ margin: 0 }}>{score.data.estimationReason}</p>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 자세히 보기 */}
-        <SectionTitle>자세히 보기</SectionTitle>
-        <div className="menu">
-          {MENU.map((m) => (
-            <button type="button" key={m.id} className="menu-item" onClick={() => go(m.id)}>
-              <span className="mi-ic" style={{ background: m.bg }} aria-hidden="true">{m.emoji}</span>
-              <span className="mi-tx"><b>{m.title}</b><span>{m.desc}</span></span>
-              <span className="chev" aria-hidden="true">›</span>
-            </button>
-          ))}
-        </div>
-
-        <p className="empty">
-          표시되는 금융상품 정보는 <b>정보성 비교</b>일 뿐 판매·중개가 아니에요. 가입은 각 금융사에서 진행해요.
-        </p>
         <div className="spacer" />
-      </div></Scroll>
+      </Scroll>
     </Screen>
   );
 }

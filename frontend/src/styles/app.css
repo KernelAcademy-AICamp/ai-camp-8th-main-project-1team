@@ -994,3 +994,204 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 @media (min-width: 620px) { .acct-list { grid-template-columns: repeat(2, 1fr); } }
 
 
+
+/* ==========================================================================
+ * 부팅 · 가치 소개 — 프로토타입_0806 신설
+ *
+ * 스플래시가 둘로 쪼개졌다. 예전에는 한 화면에서 로고를 보여주고 바로 인증으로 넘겼는데,
+ * 이제 **브랜드 화면(2초)** 과 **가치 소개 3장**이 따로다. 처음 오는 사람에게 무엇을 하는
+ * 앱인지 먼저 말하고 인증을 요구하는 순서다.
+ * ========================================================================== */
+
+@keyframes bootin { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* 브랜드 면 전체를 덮으므로 화면 자체에 배경을 준다. 흰 글자가 올라간다. */
+.boot { background: var(--blue); align-items: center; justify-content: center; padding: 0;
+  transition: opacity .45s ease; }
+.boot.out { opacity: 0; }
+.boot-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; color: #fff; }
+.boot-cap { font-size: 16px; font-weight: 600; letter-spacing: -.64px;
+  animation: bootin .6s ease .2s both; }
+.boot-logo { font-size: 60px; font-weight: 800; letter-spacing: -1.2px; line-height: 1.25;
+  animation: bootin .6s cubic-bezier(.2,.9,.3,1) .4s both; }
+
+.walk-top { display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px 0 8px; flex: 0 0 auto; }
+/* 44px — 개편안은 40px 인데 터치 타깃 기준에 미달한다(KWCAG 6.1.3). 디자인이 정본이지만
+   접근성은 tokens.css 가 정본이라는 원칙대로 여기서 올린다. */
+.walk-top .back { width: 44px; height: 44px; border: none; background: none; font-size: 22px;
+  color: var(--t1); cursor: pointer; border-radius: 12px; }
+.walk-skip { border: none; background: none; font-size: 13px; font-weight: 600;
+  color: var(--t3); cursor: pointer; padding: 12px 14px; min-height: 44px; }
+.walk-track { flex: 1; display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+  scrollbar-width: none; }
+.walk-track::-webkit-scrollbar { display: none; }
+.walk-slide { flex: 0 0 100%; scroll-snap-align: center; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center; padding: 0 32px; gap: 8px; }
+/* 아이콘이 `currentColor` 라 부모의 글자색을 따라간다 — 안 주면 본문색(검정)이 된다.
+   개편안은 svg 마다 인라인 색을 박았지만, 색은 CSS 가 정하는 편이 낫다. */
+.walk-art { width: 160px; height: 160px; border-radius: 50%; background: var(--blue-weak);
+  color: var(--blue); display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24px; }
+.walk-t { font-size: 22px; font-weight: 700; letter-spacing: -.88px; }
+.walk-s { font-size: 15px; color: var(--t2); line-height: 1.5; }
+.walk-dots { display: flex; justify-content: center; gap: 8px; padding: 16px 0 24px; flex: 0 0 auto; }
+.walk-dots i { width: 8px; height: 8px; border-radius: 8px; background: var(--line); transition: .25s; }
+.walk-dots i.on { width: 24px; background: var(--blue); }
+
+/* ==========================================================================
+ * 연결 흐름 — 프로토타입_0806
+ * ========================================================================== */
+
+/* 안심 문구 — 버튼 아래 조용히. 조회 권한만 받는다는 사실을 인증 직전에 다시 말한다.
+   개편안의 #AEB5BC 는 흰 배경에서 2.4:1 이라 글자로 쓰면 검사항목 5.4.3(4.5:1)에 미달한다.
+   색상은 두고 명도만 내렸다 — tokens.css 의 --t3 이 같은 이유로 존재한다. */
+.safe-note { margin: 12px 0 0; text-align: center; font-size: 12px; line-height: 1.4;
+  color: var(--t3); letter-spacing: -.48px; }
+
+/* 자산 연결 — 계좌를 훑는 중 */
+.conn-scan { flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 8px; padding: 0 40px 80px; }
+.conn-scan .spinner { margin-bottom: 16px; }
+
+/* 분석 로딩 — 카드 내역 서류를 스캔 밴드가 훑고 지나간다.
+   줄이 순서대로 초록으로 물드는 것은 "지금 이 줄을 읽고 있다"는 뜻이다. */
+.doc-load { overflow: visible; }
+.doc-load .dl-row { fill: var(--line); animation: dlrow 2.4s ease-in-out infinite; }
+.doc-load .dl-scan { animation: dlscan 2.4s ease-in-out infinite; }
+@keyframes dlrow { 0%, 100% { fill: #E9ECEF; } 14%, 34% { fill: #8FD9AA; } }
+@keyframes dlscan {
+  0%   { transform: translateY(0);    opacity: 0; }
+  10%  { opacity: 1; }
+  86%  { opacity: 1; }
+  100% { transform: translateY(46px); opacity: 0; }
+}
+
+/* 자산 연결 — 찾은 기관 행 (프로토타입_0806 `.fi`)
+   해제한 곳은 흐려지되 사라지지 않는다. 없어지면 "내가 뭘 뺐더라"를 알 수 없다. */
+.fi { display: flex; align-items: center; gap: 16px; padding: 16px 4px; width: 100%;
+  cursor: pointer; border: none; border-bottom: 1px solid var(--line); background: none;
+  text-align: left; font-family: inherit; }
+.fi:last-child { border-bottom: none; }
+.fi .logo { width: 40px; height: 40px; border-radius: 50%; flex: 0 0 40px; display: flex;
+  align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 13px;
+  letter-spacing: -.52px; overflow: hidden; }
+.fi .logo img { width: 100%; height: 100%; object-fit: contain; }
+.fi .tx { flex: 1; min-width: 0; }
+.fi .tx b { display: block; font-size: 16px; font-weight: 600; letter-spacing: -.64px; }
+.fi .tx span { display: block; margin-top: 2px; font-size: 13px; color: var(--t3); letter-spacing: -.52px; }
+.fi .box { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #D6D6D4; flex: 0 0 24px;
+  display: flex; align-items: center; justify-content: center; color: #fff; transition: .15s; }
+.fi .box svg { width: 14px; height: 14px; opacity: 0; }
+.fi.on .box { background: var(--blue); border-color: var(--blue); }
+.fi.on .box svg { opacity: 1; }
+.fi.off { opacity: .45; }
+
+/* ==========================================================================
+ * 주간 리포트 — 프로토타입_0806 `s-report`
+ *
+ * 화면 하나에 절이 다섯이라 `.rp-band`(8px 회색 띠)로 가른다. 카드 테두리를 쓰지 않는 이유는
+ * 절마다 카드가 서면 화면이 상자로만 보이기 때문이다 — 띠는 "여기서 이야기가 바뀐다"만 말한다.
+ * ========================================================================== */
+
+.rp-sec { padding: 0 var(--pad-x); }
+.rp-band { height: 8px; background: var(--bg); margin: 32px 0; }
+/* 맨 위 주차 내비 아래만 옅은 1px — 띠를 쓰면 머리가 잘려 보인다. */
+.rp-line { height: 1px; background: var(--line); margin: 16px 0; }
+
+.rp-sec .t-sec { font-size: 17px; font-weight: 700; margin: 0 0 16px; }
+.rp-sec .t-sec.row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 8px; }
+.rp-sec .t-cap { font-size: 13px; color: var(--t3); font-weight: 500; }
+
+/* ── 주차 이동 ─────────────────────────────────────────────────────────── */
+.wk-nav { display: flex; align-items: center; justify-content: center; gap: 20px; }
+/* 44px — 개편안은 여백만 줘 32px 남짓이다(KWCAG 6.1.3). */
+.wk-nav button { border: none; background: none; color: var(--t2); font-size: 22px; line-height: 1;
+  cursor: pointer; min-width: 44px; min-height: 44px; font-family: inherit; }
+.wk-nav button:disabled { color: #D8DCDA; cursor: default; }
+.wk-txt { text-align: center; min-width: 120px; border: none; background: none;
+  font-family: inherit; cursor: pointer; padding: 4px 8px; min-height: 44px; }
+.wk-txt b { display: block; font-size: 17px; font-weight: 700; white-space: nowrap; }
+.wk-txt b .car { display: inline; font-size: 11px; color: var(--t3); vertical-align: 2px; margin-left: 4px; }
+.wk-txt span { display: block; font-size: 12px; color: var(--t3); font-weight: 500; margin-top: 4px; }
+
+/* ── 히어로 + 차트 카드 ─────────────────────────────────────────────────── */
+.rp-keep { font-size: 28px; font-weight: 700; line-height: 1.2; margin-top: 8px; }
+.rp-keep em { font-style: normal; font-size: 20px; }
+
+.cmp { background: var(--bg); border-radius: var(--radius); padding: 24px 20px; margin-top: 20px; }
+.cmp-tabs { display: flex; gap: 8px; }
+.cmp-tabs button { border: 1px solid var(--line); background: var(--card); font-family: inherit;
+  font-size: 13px; font-weight: 600; color: var(--t3); padding: 11px 16px; border-radius: 20px;
+  cursor: pointer; transition: .15s; min-height: 44px; }
+.cmp-tabs button.on { background: var(--t1); border-color: var(--t1); color: #fff; }
+.cmp-lead { margin-top: 24px; }
+.cmp-lead .cf-lab { font-size: 14px; color: var(--t2); font-weight: 500; }
+.cmp-lead .cf-val { font-size: 20px; font-weight: 700; margin-top: 4px; color: var(--t1); }
+.cmp-lead .cf-val b { color: var(--blue-t); }
+
+/* 차트 — 막대(요일별)와 곡선(주별)이 같은 자리를 나눠 쓴다. */
+.chart { position: relative; height: 104px; margin-top: 64px; }
+.chart .bars { position: absolute; inset: 0; display: flex; align-items: flex-end;
+  justify-content: space-between; gap: 12px; }
+.bcol { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  height: 100%; cursor: pointer; border: none; background: none; padding: 0; }
+.bcol .bar { width: 100%; max-width: 20px; margin: 0; border-radius: 6px; background: #E9ECEA;
+  overflow: hidden; transition: height .4s cubic-bezier(.2,.8,.2,1), background .15s; }
+.bcol.sel .bar { background: var(--blue); }
+.bcol.off { cursor: default; }
+.bcol.off .bar { background: #F3F5F4; }
+
+/* 선택한 막대 위 말풍선. 꼬리는 막대 중심을 가리키므로 좌우가 잘려도 어디를 말하는지 남는다. */
+.btip { position: absolute; z-index: 5; background: #191D1B; color: #fff; border-radius: 8px;
+  padding: 8px 12px; text-align: center; white-space: nowrap; pointer-events: none;
+  /* 꼬리 위치 — 말풍선을 그린 뒤 실측해 컴포넌트가 덮어쓴다. 여기 기본값을 두는 이유는
+     ① 자리를 못 재도 꼬리가 가운데엔 붙고 ② 토큰 검사기가 '정의 없는 변수'로 보지 않기 때문이다. */
+  --ax: 50%; }
+.btip small { display: block; font-size: 11px; font-weight: 500; color: #B7BDB9; }
+.btip b { display: block; font-size: 12px; font-weight: 700; margin-top: 4px; }
+.btip::after { content: ''; position: absolute; left: var(--ax, 50%); top: 100%;
+  transform: translateX(-50%); border: 5px solid transparent; border-top-color: #191D1B; }
+
+.chart svg.line { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; overflow: visible; }
+.xlab { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; }
+.xlab span { flex: 1; text-align: center; font-size: 12px; color: var(--t3); font-weight: 500; }
+.xlab span.sel { color: var(--blue-t); font-weight: 600; }
+.lgd { display: flex; justify-content: center; gap: 16px; margin-top: 16px; }
+.lgd span { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--t3); font-weight: 500; }
+.lgd i { width: 6px; height: 6px; border-radius: 50%; display: block; }
+
+/* ── 지킴이가 본 이번 주 ───────────────────────────────────────────────── */
+.ins { border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+.ins .ig + .ig { margin-top: 20px; }
+.itag { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 8px; }
+.itag.good { background: var(--blue-weak); color: var(--blue-t); }
+.itag.warn { background: #FDECEE; color: var(--red-t); }
+.ins p { margin: 8px 0 0; font-size: 14px; line-height: 1.5; color: var(--t1); font-weight: 500; }
+
+/* ── 배너 (미션 · 카드 추천) ───────────────────────────────────────────── */
+.bn { border-radius: var(--radius); padding: 20px; display: flex; align-items: center; gap: 12px;
+  margin-top: 16px; width: 100%; border: none; font-family: inherit; text-align: left; }
+.bn b { font-size: 15px; font-weight: 700; line-height: 1.5; flex: 1; }
+.bn svg { flex: 0 0 auto; }
+.bn.msn { background: linear-gradient(105deg, #FFF6CC, #FFE07E); cursor: pointer; }
+.bn .bnt { flex: 1; }
+.bn .bnt b { display: block; font-size: 15px; font-weight: 700; line-height: 1.5; }
+.bn .bnt span { display: flex; align-items: center; gap: 4px; margin-top: 8px;
+  font-size: 13px; font-weight: 500; color: var(--t2); }
+.bn .bnt .chev { font-style: normal; font-size: 13px; line-height: 1; color: var(--t2); opacity: .6; }
+.bn.cardbn { background: linear-gradient(105deg, #EAF8E0, #D6F1C2); cursor: pointer; margin-top: 0; }
+
+/* ── 지난 챌린지 달성률 ────────────────────────────────────────────────── */
+.ch + .ch { margin-top: 24px; }
+.ch .chh { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.ch .chh b { font-size: 15px; font-weight: 700; }
+.ch .chh span { font-size: 15px; font-weight: 700; }
+.ch .cbar { height: 8px; background: #EDEFEE; border-radius: 8px; overflow: hidden; }
+.ch .cbar i { display: block; height: 100%; background: var(--blue); border-radius: 8px; }
+.ch .chs { margin-top: 8px; font-size: 12px; color: var(--t3); font-weight: 500; }
+
+/* ── 기록 없는 주 ──────────────────────────────────────────────────────── */
+.rp-emp { padding: 80px 0 96px; text-align: center; }
+.rp-emp b { display: block; font-size: 15px; font-weight: 700; }
+.rp-emp p { margin: 8px 0 0; font-size: 13px; font-weight: 500; color: var(--t3); line-height: 1.5; }

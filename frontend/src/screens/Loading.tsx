@@ -6,7 +6,8 @@
  * 사용자가 직접 넘어가거나 다시 시도할 수 있어야 한다(KWCAG 2.2.1 응답시간 조절).
  */
 import { useEffect, useRef, useState } from 'react';
-import { Orb, Screen, ErrorBox } from '../components/ui';
+import { Screen, ErrorBox } from '../components/ui';
+import { DocLoad } from '../components/DocLoad';
 import { useSession } from '../state/session';
 import { api } from '../lib/api';
 
@@ -64,7 +65,8 @@ export function Loading() {
   return (
     <Screen title="소비 분석 중">
       <div className="loadwrap">
-        <Orb size={72} bob={!error} />
+        {/* 오류일 때는 훑는 시늉을 멈춘다 — 안 읽고 있는데 읽는 그림을 보이면 거짓말이다. */}
+        {!error && <DocLoad />}
         {error ? (
           <div style={{ width: '100%', maxWidth: 360 }}>
             <p className="load-title">분석을 마치지 못했어요</p>

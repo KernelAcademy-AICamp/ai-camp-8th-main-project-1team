@@ -14,7 +14,7 @@ import type { AnalysisSummary, OnboardingPayment } from '../lib/api';
 
 export type ScreenId =
   // L0 최초 온보딩
-  | 'splash' | 'auth' | 'connect' | 'loading'
+  | 'boot' | 'walk' | 'auth' | 'connect' | 'loading'
   // 이번 챌린지 정하기 (최초 · 월초 재진입 공용)
   | 'ob1' | 'ob2' | 'ob3' | 'done'
   // 상시 탐색 3탭
@@ -29,7 +29,9 @@ export type ScreenId =
   | 'r-compare' | 'r-analysis' | 'r-spending' | 'r-cards' | 'r-account' | 'r-waste' | 'r-savings'
   // 마이 하위
   | 'm-impulse' | 'm-goals' | 'm-connections' | 'm-record' | 'm-policy' | 'm-survey' | 'm-demo'
-  | 'm-stances' | 'm-unclassified';
+  | 'm-stances' | 'm-unclassified'
+  // 임시 — 프로토타입_0806 이 자리를 안 정한 화면들을 모아 둔 곳. 정해지면 없앤다.
+  | 'm-parked';
 
 export const TAB_SCREENS = ['home', 'report', 'my'] as const;
 export type TabId = (typeof TAB_SCREENS)[number];
@@ -44,12 +46,12 @@ export const isTab = (s: ScreenId): s is TabId => (TAB_SCREENS as readonly strin
  * 아래 위성 타입이 그 누락을 컴파일 단계에서 잡는다.
  */
 const ALL_SCREENS = [
-  'splash', 'auth', 'connect', 'loading', 'ob1', 'ob2', 'ob3', 'done',
+  'boot', 'walk', 'auth', 'connect', 'loading', 'ob1', 'ob2', 'ob3', 'done',
   'home', 'report', 'my', 'myroom', 'notifications', 'transactions',
   'collection', 'shop', 'monthend', 'settle', 'renew',
   'r-compare', 'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings',
   'm-impulse', 'm-goals', 'm-connections', 'm-record', 'm-policy', 'm-survey', 'm-demo',
-  'm-stances', 'm-unclassified',
+  'm-stances', 'm-unclassified', 'm-parked',
 ] as const;
 
 // 하나라도 빠지면 여기서 타입 오류가 난다(빠진 ScreenId가 never에 배정되지 못한다).
@@ -144,7 +146,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return v > 0 ? v : DEFAULT_USER_ID;
   });
   const [linked, setLinkedState] = useState<boolean>(() => read('mydata_onboarded') === 'true');
-  const [screen, setScreen] = useState<ScreenId>(() => hashScreen() ?? (read('mydata_onboarded') === 'true' ? 'home' : 'splash'));
+  const [screen, setScreen] = useState<ScreenId>(() => hashScreen() ?? (read('mydata_onboarded') === 'true' ? 'home' : 'boot'));
   const [draft, setDraft] = useState<ChallengeDraft>(emptyDraft);
   const [analysis, setAnalysis] = useState<AnalysisSummary | null>(null);
 
@@ -196,8 +198,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setLinkedState(false);
     setDraft(emptyDraft);
     setAnalysis(null);
-    setScreen('splash');
-    window.history.pushState(null, '', '#/splash');
+    setScreen('boot');
+    window.history.pushState(null, '', '#/boot');
   }, []);
 
   /**

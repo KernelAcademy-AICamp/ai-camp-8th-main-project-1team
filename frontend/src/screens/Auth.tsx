@@ -272,6 +272,9 @@ export function Auth() {
         <button type="button" className="btn btn-primary" disabled={!curOk || busy} onClick={() => void next()}>
           {busy ? '확인 중…' : cur.cta}
         </button>
+        {/* 주민등록번호를 받는 화면이다. 무엇까지 할 수 있는 권한인지 **요구하는 자리에서**
+            말해야 한다 — 약관 안에만 있으면 아무도 안 읽는다. (프로토타입_0806) */}
+        <div className="safe-note">MOA는 조회 권한만 받아요. 결제나 송금은 할 수 없어요.</div>
       </Cta>
 
       <Sheet open={consentOpen} onClose={() => setConsentOpen(false)} title="가입하려면 동의가 필요해요">

@@ -13,7 +13,8 @@ import { BottomTab } from './components/BottomTab';
 import { SessionProvider, useSession, tabOf, type ScreenId } from './state/session';
 import { GuardianProvider } from './state/guardian';
 
-import { Splash } from './screens/Splash';
+import { Boot } from './screens/Boot';
+import { Walk } from './screens/Walk';
 import { Auth } from './screens/Auth';
 import { Connect } from './screens/Connect';
 import { Loading } from './screens/Loading';
@@ -48,16 +49,17 @@ import { MySurvey } from './screens/MySurvey';
 import { MyDemo } from './screens/MyDemo';
 import { MyStances } from './screens/MyStances';
 import { MyUnclassified } from './screens/MyUnclassified';
+import { MyParked } from './screens/MyParked';
 
 /** 최초 온보딩(마이데이터 연결 전)에만 열리는 화면. */
-const LINK_FLOW: ScreenId[] = ['splash', 'auth', 'connect'];
+const LINK_FLOW: ScreenId[] = ['boot', 'walk', 'auth', 'connect'];
 /** 이번 챌린지를 정하는 흐름 — 이 화면들에서는 하단 탭을 감춘다(중간에 빠져나가면 흐름이 끊긴다). */
 const SETUP_FLOW: ScreenId[] = ['loading', 'ob1', 'ob2', 'ob3', 'done',
   // 월말 사이클도 같은 성격의 흐름이다 — 축하→결산→갱신을 중간에 끊으면 다음 달 목표가 안 정해진다.
   'monthend', 'settle', 'renew'];
 
 const SCREENS: Record<ScreenId, ComponentType> = {
-  splash: Splash, auth: Auth, connect: Connect, loading: Loading,
+  boot: Boot, walk: Walk, auth: Auth, connect: Connect, loading: Loading,
   ob1: Onboarding1, ob2: Onboarding2, ob3: Onboarding3, done: Done,
   home: Home, report: Report, my: My,
   myroom: Myroom, notifications: Notifications, transactions: Transactions,
@@ -71,6 +73,7 @@ const SCREENS: Record<ScreenId, ComponentType> = {
   'm-record': MyRecord, 'm-policy': MyPolicy, 'm-survey': MySurvey, 'm-demo': MyDemo,
   'm-stances': MyStances,
   'm-unclassified': MyUnclassified,
+  'm-parked': MyParked,
 };
 
 function ScreenHost() {
@@ -83,7 +86,7 @@ function ScreenHost() {
    */
   useEffect(() => {
     if (!linked) {
-      if (!LINK_FLOW.includes(screen)) go('splash');
+      if (!LINK_FLOW.includes(screen)) go('boot');
     } else if (LINK_FLOW.includes(screen)) {
       go('home');
     }

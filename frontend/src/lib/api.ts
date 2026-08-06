@@ -307,6 +307,8 @@ export interface MyDataCompany { id: number; name: string; imgUrl: string }
 export interface MyDataLinkResult { cardCount: number; paymentCount: number; bankCount: number }
 /** 연동 가능 은행. id는 제공자가 이름순으로 매긴 순번이라 조회마다 같다. */
 export interface MyDataBank { id: number; name: string }
+/** 인증 뒤 찾은 기관. 둘을 합친 수가 화면의 "N곳"이다. */
+export interface MyDataDiscovered { cards: MyDataCompany[]; banks: MyDataBank[] }
 /** 내가 연동한 은행. */
 export interface MyLinkedBank { id: number; bankId: number; bankName: string; linkedAt: string }
 /** 내 카드 — 실적 진행률 + 이번달 받은 혜택. */
@@ -679,6 +681,26 @@ export interface WeekPoint {
   current: boolean;
 }
 export interface LabelSlice { key: string; label: string; count: number; ratio: number }
+/**
+ * 그 주 하루치 — 요일별 막대의 재료. **늘 7칸**이다.
+ * `judged=false` 는 판정이 없는 날(미래·시작 전)이라 막대를 비워 그린다 — 빼면 월~일이 어긋난다.
+ */
+export interface DayPoint {
+  date: string;
+  label: string;
+  amount: number;
+  kept: boolean;
+  judged: boolean;
+}
+/** 끝난 챌린지 한 줄. 달성률은 서버가 계산해 내려준다(프론트는 계산하지 않는다). */
+export interface PastChallenge {
+  challengeId: number;
+  label: string;
+  period: string;
+  keptDays: number;
+  totalDays: number;
+  rate: number;
+}
 export interface WeeklyReport {
   weekStart: string;
   weekEnd: string;
@@ -687,6 +709,8 @@ export interface WeeklyReport {
   /** 지난주 대비 증감(비율 차). 지난주 판정이 없으면 null. */
   deltaFromLastWeek: number | null;
   trend: WeekPoint[];
+  /** 그 주 7일치 — '요일별' 토글이 쓴다. */
+  days: DayPoint[];
   labels: LabelSlice[];
   labeledCount: number;
   exemptedAmount: number;
@@ -697,6 +721,8 @@ export interface WeeklyReport {
   missionReward: number;
   /** '지킴이가 본 이번 주'. 견줄 지난주가 없으면 두 문장 모두 null. */
   coaching: { good: string | null; watch: string | null };
+  /** 끝난 챌린지 달성률. 진행 중인 회차는 빠진다 — 확정되지 않은 성적을 최종처럼 보이면 안 된다. */
+  pastChallenges: PastChallenge[];
 }
 
 /** 주간 미션 한 줄. ONGOING이면 아직 기간 중(일요일 배치가 정산한다). */
@@ -747,7 +773,22 @@ export interface ShopEntry {
   /** 서버가 잔액과 대조해 판단한 값 — 화면은 이걸 믿는다. */
   affordable: boolean;
 }
-export interface GuardianShop { points: number; items: ShopEntry[] }
+export interface GuardianShop { points: number; items: ShopEntry[]; catSkin: string }
+
+/**
+ * 고를 수 있는 지킴이 털색 (프로토타입_0806 꾸미기 > 캐릭터).
+ *
+ * `owned=false` 는 아직 안 산 색이라 자물쇠로 그린다 — 무엇이 남았는지 보여야 모을 마음이 생긴다.
+ * 크림·그레이·치즈·초코는 늘 `true`, 삼색이만 상점에서 산다.
+ */
+export interface CatSkin {
+  key: string;
+  name: string;
+  /** `public/room/` 의 파일 이름(확장자 없이). */
+  glyph: string;
+  owned: boolean;
+  selected: boolean;
+}
 
 /** 월간 결산의 카테고리 한 줄. rate = 지켜낸 금액 / 예산. */
 export interface SettlementCategory {
@@ -1063,6 +1104,11 @@ export const api = {
     post<VerifyResult>('/api/mydata/verify', { userId, name, social7, phone, carrier }),
   mydataCompanies: () => get<MyDataCompany[]>('/api/mydata/companies'),
   mydataBanks: () => get<MyDataBank[]>('/api/mydata/banks'),
+  /**
+   * 인증을 마친 사람이 **실제로 가진** 기관을 찾는다. 연결은 하지 않는다 —
+   * 화면이 "N곳을 찾았어요"로 보여 주고, 뺄 곳을 해제한 뒤 `mydataLink` 를 부른다.
+   */
+  mydataDiscover: (userId: number) => get<MyDataDiscovered>(`/api/mydata/discover?userId=${userId}`),
   myBanks: (userId: number) => get<MyLinkedBank[]>(`/api/mydata/my-banks?userId=${userId}`),
   /** 카드사와 은행을 함께 연동한다. 은행은 계좌가 있는 곳만 실제로 붙는다. */
   mydataLink: (userId: number, companyIds: number[], bankIds: number[] = []) =>
@@ -1126,6 +1172,10 @@ export const api = {
     claimMilestone: (userId: number, count: number) =>
       post<GuardianCollection>(`/api/guardian/collection/milestones/${count}/claim?userId=${userId}`, {}),
     shop: (userId: number) => get<GuardianShop>(`/api/guardian/shop?userId=${userId}`),
+    catSkins: (userId: number) => get<CatSkin[]>(`/api/guardian/cat-skins?userId=${userId}`),
+    /** 털색을 고른다. 가지지 않은 색이면 서버가 막는다. */
+    chooseCatSkin: (userId: number, key: string) =>
+      post<CatSkin[]>(`/api/guardian/cat-skins/${encodeURIComponent(key)}?userId=${userId}`, {}),
     /** 구매 — 살 수 있는지는 서버가 판단한다(프론트의 P 비교는 표시용일 뿐). */
     buyItem: (userId: number, code: string) =>
       post<GuardianShop>(`/api/guardian/shop/${encodeURIComponent(code)}/buy?userId=${userId}`, {}),
