@@ -44,6 +44,13 @@ export interface IsoRoomProps {
   moodPlaced: boolean;
   /** 소파를 샀는지(포인트샵). 사기 전에는 자리가 비어 있다. */
   sofaOwned: boolean;
+  /**
+   * 고른 털색 (프로토타입_0806 꾸미기 &gt; 캐릭터). `cat`(크림)이면 접미사가 없다.
+   *
+   * 색은 <b>파일만 바꾼다</b> — 자세(`catnap`·`catread`…)가 크기와 자리를 정하고, 색은 같은
+   * 그림의 다른 칠이다. 그래서 크기표를 색마다 만들 필요가 없다.
+   */
+  catSkin?: string;
   /** 소품을 눌렀을 때 — 꾸미기 중이면 자리 이름, 아니면 소품 키가 온다. */
   onPick: (key: string) => void;
   /** 꾸미기 중 자리를 눌렀을 때. */
@@ -62,9 +69,15 @@ function Shadow({ rx, ry }: { rx: number; ry?: number }) {
 }
 
 /** 에셋 한 장. 바닥 기준으로 위로 세운다(`y = -높이`). */
-function Asset({ k, dy = 0 }: { k: string; dy?: number }) {
+/**
+ * @param k   크기표({@link IMGD})의 키 — 자리와 크기를 정한다
+ * @param src 실제 파일 이름. 안 주면 {@code k} 를 쓴다. 털색처럼 <b>같은 크기의 다른 그림</b>을
+ *            그릴 때만 갈라 쓴다 — 색마다 크기표를 만들지 않으려는 것이다.
+ */
+function Asset({ k, src, dy = 0 }: { k: string; src?: string; dy?: number }) {
   const [w, h] = IMGD[k];
-  return <image href={SRC(k)} x={-w / 2} y={-h + dy} width={w} height={h} preserveAspectRatio="xMidYMax meet" />;
+  return <image href={SRC(src ?? k)} x={-w / 2} y={-h + dy} width={w} height={h}
+    preserveAspectRatio="xMidYMax meet" />;
 }
 
 /** 격자 좌표에 무언가를 놓는다. */
@@ -96,7 +109,7 @@ const SLOTS = {
   table: { x: 0.6, y: 2.5, w: 1.5, d: 1.5 },
 } as const;
 
-export function IsoRoom({ sel, act, editing, moodPlaced, sofaOwned, onPick, onSlot }: IsoRoomProps) {
+export function IsoRoom({ sel, act, editing, moodPlaced, sofaOwned, catSkin = 'cat', onPick, onSlot }: IsoRoomProps) {
   // 바닥 타일은 36장 고정이라 한 번만 만든다.
   const floor = useMemo(() => {
     const out: React.ReactElement[] = [];
@@ -184,7 +197,8 @@ export function IsoRoom({ sel, act, editing, moodPlaced, sofaOwned, onPick, onSl
       <g className="catg" transform={`translate(${a.p[0]} ${a.p[1]})`}
          style={{ cursor: 'pointer' }} onClick={() => onPick('cat')}>
         {!a.floating && <ellipse cx={0} cy={2} rx={17} ry={5} fill="rgba(30,45,70,.13)" />}
-        <Asset k={a.k} />
+        {/* 크기는 자세가 정하고(`IMGD[a.k]`) 파일만 색을 따른다. */}
+        <Asset k={a.k} src={catSkin === 'cat' ? a.k : `${a.k}_${catSkin}`} />
       </g>
 
       {/* 꾸미기 모드 — 바꿀 수 있는 자리를 점선으로 */}

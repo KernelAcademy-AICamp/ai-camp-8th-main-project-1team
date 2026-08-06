@@ -1195,3 +1195,71 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 .rp-emp { padding: 80px 0 96px; text-align: center; }
 .rp-emp b { display: block; font-size: 15px; font-weight: 700; }
 .rp-emp p { margin: 8px 0 0; font-size: 13px; font-weight: 500; color: var(--t3); line-height: 1.5; }
+
+/* ==========================================================================
+ * 마이룸 — 프로토타입_0806 `s-myroom`
+ * ========================================================================== */
+
+/* ── 지킨 날 ───────────────────────────────────────────────────────────────
+ * 개편안은 **이번 주 7칸을 먼저** 보이고 월 달력은 접어 둔다. 달력을 늘 펼쳐 두면 한 달치 격자가
+ * 화면을 채워 "오늘 지켰나"라는 물음이 묻힌다 — 그게 매일 확인하는 유일한 질문이다. */
+.kp-tiles { display: flex; gap: 8px; margin-bottom: 24px; }
+.kp-tile { flex: 1; background: var(--bg); border-radius: var(--radius-sm); padding: 12px 16px; }
+.kp-tile .cap { font-size: 12px; font-weight: 500; color: var(--t3); }
+.kp-tile .val { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 16px; font-weight: 700; }
+.kp-tile .val svg { width: 16px; height: 16px; }
+
+.kp-week { display: flex; justify-content: space-between; padding: 0 4px 24px; }
+.kp-day { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.kp-c { width: 32px; height: 32px; border-radius: 50%; background: var(--bg);
+  display: flex; align-items: center; justify-content: center; }
+.kp-day.kept .kp-c { background: var(--blue-weak); }
+.kp-day.kept .kp-c svg { width: 14px; height: 14px; color: var(--blue); }
+/* 오늘은 테두리로만 표시한다 — 채우면 '지킨 날'과 같아 보인다. 아직 안 끝난 날이다. */
+.kp-day.now .kp-c { background: var(--card); border: 1.5px solid var(--blue); }
+.kp-day.fut .kp-c { background: #F6F8F9; }
+.kp-day span { font-size: 12px; font-weight: 500; color: var(--t3); }
+.kp-day.now span { color: var(--blue-t); font-weight: 600; }
+.kp-day.fut span { color: #9A9A98; }
+
+/* 더보기 — 누르면 화살표가 돌아 접힘/펼침을 그림으로 말한다. */
+.madd { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 17px 0;
+  width: 100%; cursor: pointer; border: none; border-top: 1px solid var(--line); background: none;
+  font-family: inherit; font-size: 14px; font-weight: 500; color: var(--t2); min-height: 44px; }
+.kp-btn .chev { font-size: 14px; line-height: 1; color: #9A9A98;
+  transform: rotate(90deg); transition: transform .22s; }
+.kp-btn.open .chev { transform: rotate(-90deg); }
+.gm { font-size: 13px; font-weight: 700; margin-bottom: 12px; }
+
+/* ── 꾸미기 시트 ───────────────────────────────────────────────────────────
+ * 씬 바로 아래까지만 올라온다 — 방을 보면서 고르지 못하면 무엇이 바뀌는지 알 수 없다. */
+.deco-sheet { position: fixed; left: 0; right: 0; bottom: 0; top: 46vh; z-index: 60;
+  background: var(--card); border-radius: 24px 24px 0 0; padding: 20px var(--pad-x) 0;
+  display: flex; flex-direction: column; box-shadow: 0 -8px 28px rgba(20,40,80,.10);
+  transform: translateY(110%); transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+.deco-sheet.open { transform: none; }
+.deco-head { display: flex; align-items: center; margin-bottom: 12px; }
+.deco-head b { font-size: 17px; font-weight: 700; }
+.deco-head button { margin-left: auto; border: none; background: #F1F3F5;
+  width: 44px; height: 44px; border-radius: 50%; font-size: 14px; color: var(--t2);
+  cursor: pointer; font-family: inherit; }
+.deco-seg { display: flex; gap: 8px; margin-bottom: 16px; flex: 0 0 auto; }
+.deco-seg button { flex: 0 0 auto; padding: 11px 16px; border: 1px solid var(--line);
+  background: var(--card); border-radius: 20px; font-size: 13px; font-weight: 600;
+  color: var(--t3); cursor: pointer; font-family: inherit; min-height: 44px; }
+.deco-seg button.on { background: var(--t1); border-color: var(--t1); color: #fff; }
+.deco-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 8px; align-content: start; padding-bottom: 32px; scrollbar-width: none; }
+.deco-grid::-webkit-scrollbar { display: none; }
+
+/* 고른 칸에 붙는 체크. 잠긴 칸은 자물쇠로 — 무엇이 남았는지 보여야 모을 마음이 생긴다. */
+.deco-card { position: relative; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--card); padding: 12px 8px; display: flex; flex-direction: column;
+  align-items: center; gap: 6px; cursor: pointer; font-family: inherit; }
+.deco-card.cur { border-color: var(--blue); background: var(--blue-weak); }
+.deco-card.lock { cursor: default; opacity: .55; }
+.deco-card img { width: 56px; height: 52px; object-fit: contain; }
+.deco-card b { font-size: 12px; font-weight: 600; }
+.oncheck { position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; }
+.oncheck svg { width: 11px; height: 11px; }
