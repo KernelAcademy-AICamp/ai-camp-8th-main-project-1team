@@ -720,12 +720,19 @@ DB에서 `Alert` 한 행의 `risk_score`를 직접 UPDATE로 바꾼 뒤 검증�
 
 ```
 GET  /api/products/recommend?userId=1     ← Top3 추천 (근거필드 + gatingRelaxed 포함)
+GET  /api/products/recommend-cards?userId=1  ← 카드 추천 (전부 더미, 소비 요약을 근거로 동봉)
 GET  /api/report/monthly?userId=1&month=2026-07
 GET  /api/alert/list?userId=1             ← FDS 경고 목록
 GET  /api/score/{userId}                  ← 소비건전성지수
 POST /api/consumption                     ← 실사용자 소비내역 입력 (source=USER_INPUT 고정)
 GET  /api/audit/verify                    ← 감사로그 체인·Merkle·앵커 검증 결과
 POST /api/dev/seed                        ← [개발/관리자 전용] DUMMY_SEED 삽입, 일반 접근 불가
+
+GET  /api/mydata/discover?userId=1        ← 통합인증으로 보유 기관 탐색 (§13 자산 연결)
+GET  /api/guardian/missions?userId=1      ← 주간 미션 보드 (진행 중 · 다음 주 · 고를 후보)
+POST /api/guardian/missions/pick?userId=1&key=...   ← 다음 주 미션 확정 (이미 담은 것은 교체)
+GET  /api/guardian/cat-skins?userId=1     ← 고양이 털색 목록과 지금 고른 것
+POST /api/merchant-stance/{bizno}/exclude?userId=1  ← "꼭 필요한 지출" — 사다리 건너뛰고 제외
 ```
 
 **공통 규약**

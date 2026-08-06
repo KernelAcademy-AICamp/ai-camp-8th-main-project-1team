@@ -8,6 +8,7 @@
  */
 import { useState } from 'react';
 import { AppBar, Scroll, Screen, ErrorBox, SectionTitle } from '../components/ui';
+import { PushDemo } from '../components/PushDemo';
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
 import { api } from '../lib/api';
@@ -20,7 +21,7 @@ const PERSONA_ORDER = ['절약형', '균형형', '과소비형', '구독과다�
 const DEV_CATS = ['건강/피트니스', '교통/자동차', '금융/보험', '대형마트', '미용', '생활', '쇼핑', '술/유흥', '식비', '여행/숙박', '의료', '주거/통신', '취미/여가', '카테고리없음', '카페/간식', '편의점/잡화'];
 
 export function MyDemo() {
-  const { back, userId, setUserId, setLinked } = useSession();
+  const { back, go, userId, setUserId, setLinked } = useSession();
   const { home, reload, setHome } = useGuardian();
 
   const [selectedCi, setSelectedCi] = useState<string>(() => {
@@ -29,6 +30,8 @@ export function MyDemo() {
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
+  /** 발표용 푸시가 떠 있는가. */
+  const [push, setPush] = useState(false);
 
   const [devCat, setDevCat] = useState('식비');
   const [devAmt, setDevAmt] = useState('');
@@ -201,8 +204,22 @@ export function MyDemo() {
           </p>
         </div>
 
+        {/* 발표용 푸시 (개편안 `.push-layer`) — 카드사 문자와 MOA 알림을 나란히 띄운다.
+            같은 결제 하나를 두고 기계의 말과 사람의 말이 어떻게 다른지가 이 앱의 논지라,
+            말로 설명하는 것보다 두 장을 겹쳐 보이는 편이 빠르다. */}
+        <SectionTitle aux="카드사 문자 → MOA">푸시 미리보기</SectionTitle>
+        <div className="card">
+          <button type="button" className="btn btn-primary btn-sm" disabled={push}
+            onClick={() => setPush(true)}>{push ? '보여주는 중…' : '푸시 두 장 띄우기'}</button>
+          <p className="empty">
+            실제 푸시가 아니라 화면 안에 그린 그림이에요. MOA 배너를 누르면 알림함으로 가요.
+          </p>
+        </div>
+
         <div className="spacer" />
       </div></Scroll>
+      <PushDemo open={push} onDone={() => setPush(false)}
+        onTapMoa={() => { setPush(false); go('notifications'); }} />
     </Screen>
   );
 }

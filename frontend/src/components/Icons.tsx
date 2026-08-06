@@ -146,6 +146,26 @@ export function IconSprite() {
           <path d="M20 4.4v15.2l-7.6-3.2H6a2.8 2.8 0 0 1-2.8-2.8v-2.8A2.8 2.8 0 0 1 6 8h6.4L20 4.4z" fill="#00B14F" />
           <path d="M6.8 17.2h2.9l.9 2.6a1.5 1.5 0 0 1-2.8 1l-1-3.6z" fill="#00804A" />
         </symbol>
+
+        {/* 선(stroke) 아이콘 — 위의 면(fill) 아이콘들과 달리 `currentColor` 를 따라간다.
+            글자색을 물려받으므로 버튼 안에서 상태에 따라 색이 같이 바뀐다.
+            프로토타입_0806 에서 온 넷이다(체크·더하기·검색·닫기). */}
+        <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+        </symbol>
+        <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </symbol>
+        <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+        </symbol>
       </defs>
     </svg>
   );

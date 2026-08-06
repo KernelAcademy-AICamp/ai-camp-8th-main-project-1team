@@ -258,7 +258,7 @@ export function MyGoals() {
                   )}
 
                   {g.milestones.length > 0 && (
-                    <div className="ms-row">
+                    <div className="mile-chips">
                       {g.milestones.map((m) => (
                         <span key={m.id} className={`ms-chip${m.acquired ? ' got' : ''}`}
                           title={m.acquired ? `${m.name} · ${won(m.cost)} ✓` : `${m.name} · ${won(m.remaining)} 남음`}>

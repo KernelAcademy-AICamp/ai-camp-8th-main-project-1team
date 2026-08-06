@@ -26,7 +26,11 @@ import java.util.Map;
 public class GuardianCatalog {
 
     /** 상점 분류 — 가구는 방에 놓고, 배경은 벽·바닥을 바꾼다. 소품은 지급 전용이라 팔지 않는다. */
-    public enum ShopCategory { FURNITURE, BACKGROUND, NONE }
+    /**
+     * 상점 진열대. {@code CHARACTER} 는 <b>방에 놓는 물건이 아니라 지킴이 자신</b>이라 따로 둔다 —
+     * 가구는 여러 개를 함께 놓지만 캐릭터는 언제나 하나만 고른다.
+     */
+    public enum ShopCategory { FURNITURE, BACKGROUND, CHARACTER, NONE }
 
     /**
      * 카탈로그 1행.
@@ -101,6 +105,14 @@ public class GuardianCatalog {
         shopItem("bg_wall_cream", "크림 벽지", "wall2", "따뜻한 톤으로 바뀌어요.", ShopCategory.BACKGROUND, 250);
         shopItem("bg_floor_dark", "다크우드 바닥", "floor1", "차분하게 가라앉는 바닥이에요.", ShopCategory.BACKGROUND, 380);
         shopItem("bg_floor_check", "체크 바닥", "floor2", "경쾌한 패턴의 바닥이에요.", ShopCategory.BACKGROUND, 380);
+
+        // ── 상점 캐릭터 — 지킴이의 털색
+        //
+        // 크림·그레이·치즈·초코는 **처음부터 준다**(프로토타입_0806 꾸미기 시트). 사는 것은 삼색이
+        // 하나뿐이다 — 고를 수 있는 것이 하나도 없으면 꾸미기가 상점 광고가 되고, 반대로 전부 팔면
+        // 기본 모습조차 돈을 내야 하는 것이 된다. 기본 넷 + 사는 하나가 그 사이다.
+        shopItem("char_cat_calico", "삼색이", "catsit_calico",
+                "포인트를 모아 데려온 세 가지 색 친구예요.", ShopCategory.CHARACTER, 300);
     }
 
     private void add(String code, String name, Grade grade, String glyph, String story) {

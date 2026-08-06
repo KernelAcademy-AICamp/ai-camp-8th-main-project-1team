@@ -6,6 +6,11 @@
  */
 
 export const won = (n: number) => Math.round(n).toLocaleString('ko-KR') + '원';
+/**
+ * 단위 없이 숫자만 — 개편안이 숫자와 '원'을 **다른 크기로** 그리는 자리에 쓴다
+ * (`28px` 숫자에 `20px` 단위). {@link won} 을 쓰면 '원'이 두 번 붙는다.
+ */
+export const wonNum = (n: number) => Math.round(n).toLocaleString('ko-KR');
 export const wonShort = (n: number) =>
   Math.abs(n) >= 10000
     ? `${(n / 10000).toLocaleString('ko-KR', { maximumFractionDigits: 1 })}만원`
@@ -118,3 +123,52 @@ export const SETTLED_STATES = new Set([
 /** 사물 등급 → 표시. */
 export const GRADE_LABEL: Record<string, string> = { COMMON: '보통', RARE: '희귀', EPIC: '영웅' };
 export const GRADE_EMOJI: Record<string, string> = { COMMON: '🪴', RARE: '🏮', EPIC: '💎' };
+
+/**
+ * 배경색 위에서 읽히는 글자색 — 흰색이냐 진회색이냐.
+ *
+ * <b>왜 필요한가.</b> 카드사 브랜드색은 우리가 고르는 값이 아니다. KB국민 노랑(#FFBC00) 위에
+ * 흰 글자를 얹으면 **1.69:1** 로, 읽으려면 눈을 찡그려야 한다(KWCAG 5.4.3 은 4.5:1 을 요구한다).
+ * 색을 바꾸면 브랜드가 아니게 되므로, <b>글자 쪽을 배경 밝기에 맞춘다.</b>
+ *
+ * 판정은 WCAG 상대휘도로 한다 — 눈이 초록을 가장 밝게 보므로 단순 평균으로는 노랑과 파랑이
+ * 같은 밝기로 잡힌다.
+ */
+export function inkOn(bg: string | null | undefined): string {
+  const rgb = hexToRgb(bg);
+  if (!rgb) return '#fff';
+  const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+  const [r, g, b] = rgb.map((v) => lin(v / 255));
+  const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  // 흰 글자의 대비 = 1.05/(L+0.05), 검은 글자 = (L+0.05)/0.05. 둘 중 나은 쪽.
+  return 1.05 / (L + 0.05) >= (L + 0.05) / 0.05 ? '#fff' : '#1A1A18';
+}
+
+/** `#RGB`·`#RRGGBB` → [r,g,b]. 모르는 형식이면 null. */
+function hexToRgb(hex: string | null | undefined): [number, number, number] | null {
+  if (!hex) return null;
+  const h = hex.trim().replace('#', '');
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  if (!/^[0-9a-fA-F]{6}$/.test(full)) return null;
+  return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16)) as [number, number, number];
+}
+
+/**
+ * 밝은 브랜드색을 <b>글자로</b> 쓸 때 어둡게 눌러 준다.
+ *
+ * 테두리·점 같은 장식에는 원색을 그대로 쓰지만(대비 규정 대상이 아니다), 같은 색을 글자에
+ * 쓰면 흰 바탕에서 읽히지 않는다. 색상(hue)은 지키고 밝기만 낮춘다 — 여전히 그 카드사 색이다.
+ */
+export function inkColor(hex: string | null | undefined, fallback = 'var(--t3)'): string {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return fallback;
+  const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+  const [r, g, b] = rgb.map((v) => lin(v / 255));
+  const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  if ((L + 0.05) / 0.05 >= 4.5) return hex!;      // 이미 흰 바탕에서 읽힌다
+  // 4.5:1 이 되는 상대휘도까지 눌러 내린다. 채널 비율을 유지해 색상은 그대로 둔다.
+  const target = 1.05 / 4.5 - 0.05;
+  const k = Math.sqrt(Math.max(0, target) / Math.max(L, 1e-6));
+  const out = rgb.map((v) => Math.max(0, Math.min(255, Math.round(v * k))));
+  return `#${out.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}

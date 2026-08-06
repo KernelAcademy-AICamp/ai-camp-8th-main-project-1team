@@ -51,6 +51,18 @@ public class GuardianItems {
     @Column(name = "claimed_milestones", nullable = false, length = 100)
     private String claimedMilestones = "";
 
+    /**
+     * 고른 지킴이 털색 (프로토타입_0806 꾸미기 시트).
+     *
+     * <p><b>보유와 선택은 다른 것이다.</b> 삼색이를 샀다고 늘 삼색이로 다녀야 하는 것은 아니고,
+     * 크림·그레이·치즈·초코는 사지 않아도 고를 수 있다. 그래서 '가진 것'({@code RoomObject})과
+     * 별개로 '지금 고른 것'을 여기 하나 둔다.
+     *
+     * <p>기본은 {@code cat}(크림)이다. 값이 비면 화면이 기본 그림을 쓰므로 옛 행도 그대로 동작한다.
+     */
+    @Column(name = "cat_skin", nullable = false, length = 20)
+    private String catSkin = "cat";
+
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
@@ -98,6 +110,13 @@ public class GuardianItems {
     public boolean isAutoUseGrassGuard() { return autoUseGrassGuard; }
     public void setAutoUseGrassGuard(boolean v) { this.autoUseGrassGuard = v; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    /** 비어 있으면 기본색으로 본다 — 옛 행에는 값이 없다. */
+    public String getCatSkin() { return catSkin == null || catSkin.isBlank() ? "cat" : catSkin; }
+    public void setCatSkin(String v, LocalDateTime now) {
+        this.catSkin = v == null || v.isBlank() ? "cat" : v;
+        this.updatedAt = now;
+    }
 
     /** 그 마일스톤을 이미 받았는가. */
     public boolean hasClaimed(int count) {

@@ -67,4 +67,20 @@ public class GuardianChallengeCategory {
     public long getBaseline() { return baseline; }
     public long getTarget() { return target; }
     public long getCap() { return cap; }
+
+    /**
+     * 이 카테고리에서 지킬 돈을 다시 정한다 (마이 &gt; 챌린지 관리).
+     *
+     * <p><b>진행 중에도 바꿀 수 있어야 한다.</b> 강도는 한 달을 견딜 수 있는지 해보기 전에는
+     * 모르는 값이라, 처음에 고른 것으로 못 박으면 너무 빡빡하게 잡은 사람은 포기하고
+     * 너무 헐겁게 잡은 사람은 아무것도 안 바뀐다.
+     *
+     * <p><b>기준 지출은 건드리지 않는다.</b> 그건 실측이라 사용자가 정할 값이 아니다.
+     * 지킬 돈은 [0, 기준) 안에서만 — 기준과 같아지면 예산이 0원이 되어 첫 결제에 바로 터진다.
+     */
+    public void retarget(long newTarget) {
+        long safe = Math.max(0L, Math.min(newTarget, Math.max(0L, baseline - 1)));
+        this.target = safe;
+        this.cap = Math.max(0L, baseline - safe);
+    }
 }

@@ -93,6 +93,55 @@ public class MyDataLinkService {
     }
 
     /**
+     * 이 사람이 <b>실제로 가진</b> 카드사·은행을 찾는다 (프로토타입_0806 자산 연결).
+     *
+     * <p><b>흐름이 뒤집혔다.</b> 예전 화면은 기관을 사용자가 먼저 고르고 인증했다. 그러면 자기가
+     * 어느 카드를 쓰는지 기억해 내야 하고, 빠뜨린 곳은 영영 연결되지 않는다. 개편안은 인증을
+     * 먼저 받고 <b>"N곳을 찾았어요"</b>를 보여준 뒤 뺄 것만 해제하게 한다 — 실제 마이데이터
+     * 통합인증이 그렇게 동작한다.
+     *
+     * <p><b>연결하지 않는다.</b> 이 조회는 읽기만 한다. 찾아 놓고 사용자가 확인 버튼을 눌러야
+     * {@code link} 가 돈다 — 보여주기 위해 먼저 연결해 두면 해제가 '되돌리기'가 되고,
+     * 그 사이에 동기화가 돌면 지우려던 데이터가 이미 퍼진다.
+     *
+     * <p>카드사는 하나씩 물어야 한다(제공자 API 가 카드사별이다). 8곳이면 왕복 8번 + 계좌 1번이다.
+     * 한 곳이 실패해도 나머지는 살린다 — 한 카드사가 죽었다고 연결 자체를 못 하면 안 된다.
+     */
+    @Transactional(readOnly = true)
+    public Discovered discover(Long userId) {
+        AppUser user = userRepository.findById(userId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user " + userId + " not found"));
+        String ci = user.getCi();
+        if (ci == null || ci.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "본인인증을 먼저 마쳐주세요");
+        }
+
+        List<CompanyView> cards = new ArrayList<>();
+        for (CompanyView c : myDataClient.findCompanies()) {
+            try {
+                if (!myDataClient.findCards(c.id(), ci).isEmpty()) cards.add(c);
+            } catch (RuntimeException e) {
+                log.warn("카드사 조회 실패 — 건너뛴다. companyId={} : {}", c.id(), e.toString());
+            }
+        }
+
+        List<BankView> allBanks = myDataClient.findBanks();
+        List<BankView> banks = new ArrayList<>();
+        try {
+            // 계좌를 가진 은행 이름만 추린다. 제공자는 계좌를 은행 '이름'으로 돌려준다.
+            var owned = myDataClient.findAccountsByBanks(ci, allBanks.stream().map(BankView::id).toList())
+                    .stream().map(AccountView::bank).collect(Collectors.toSet());
+            for (BankView b : allBanks) if (owned.contains(b.name())) banks.add(b);
+        } catch (RuntimeException e) {
+            log.warn("계좌 조회 실패 — 은행 없이 진행한다: {}", e.toString());
+        }
+        return new Discovered(cards, banks);
+    }
+
+    /** 찾은 기관. 화면은 이 둘을 합쳐 "N곳을 찾았어요"로 센다. */
+    public record Discovered(List<CompanyView> cards, List<BankView> banks) {}
+
+    /**
      * 카드사 연결 → 마이데이터에서 카드·결제 전체 조회 → UserCard/UserPayment 적재 + Consumption(MYDATA) 투영.
      * 전체 동기화: 기존 MYDATA 데이터(카드·결제·투영 소비)를 지우고 새로 적재한다.
      */
