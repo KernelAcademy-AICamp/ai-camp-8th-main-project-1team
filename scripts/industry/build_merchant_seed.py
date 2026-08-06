@@ -145,8 +145,12 @@ def main():
             if len(col) < 2:
                 continue
             biz, code, why = col[0].strip(), col[1].strip(), (col[2].strip() if len(col) > 2 else '')
-            # 4번째 칸(가맹점 풀네임)이 있으면 **번호 없이 이름으로만** 붙는 행이다.
-            # PG 를 거친 결제가 그렇다 — 1번째 칸은 어디서 봤는지의 근거일 뿐 키가 아니다.
+            # 4번째 칸(가맹점 풀네임)이 있으면 **그 가맹점만** 따로 붙는 행이다.
+            #   · 1번째 칸이 PG 번호  → 번호를 버리고 **이름 단독** 행(번호는 잡음이다)
+            #   · PG 가 아닌 실번호   → **(번호, 이름) 정확일치** 행. 한 번호에 다른 업종이
+            #     섞인 곳을 가른다(울릉크루즈 여객선 + 그 배의 GS25 — 2026-08-05).
+            #     정확일치가 완화보다 먼저 걸리므로 번호 전체의 분류는 그대로 두고
+            #     예외 하나만 떼어낼 수 있다.
             name = col[3].strip() if len(col) > 3 else ''
             if code not in 실재:
                 manual_bad.append((biz, code))
@@ -156,7 +160,7 @@ def main():
                 manual_bad.append((biz, code + ' → 소비 업종이 아니다'))
                 continue
             if name:
-                rows.append(('', cat, why, name))
+                rows.append(('' if biz in pg else biz, cat, why, name))
             elif biz in pg:
                 # 수동 지정도 PG 검사를 받는다. 자동 경로만 막아 두었더니 사람이 적은 번호가
                 # 그대로 통과했고, KSNET(120-81-97322) 이 'CJ올리브영'이라는 표시명만 보고
