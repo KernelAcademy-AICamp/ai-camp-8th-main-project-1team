@@ -11,6 +11,7 @@ import { autoSyncMyData } from '../state/autoSync';
 import { useAsync } from '../state/useAsync';
 import { api, catLabel, type MyMerchant } from '../lib/api';
 import { SpendCalendar } from '../components/SpendCalendar';
+import { Icon } from '../components/Icons';
 import { won, shortDate, monthLabel } from '../lib/format';
 
 type SpendFilter = 'all' | 'disc' | 'fixed' | 'sanct';
@@ -44,6 +45,13 @@ export function Transactions() {
   /** 달력에서 고른 날. null이면 전체 기간. */
   const [pickedDate, setPickedDate] = useState<string | null>(null);
   const [filter, setFilter] = useState<SpendFilter>('all');
+  /**
+   * 가맹점 이름 검색 (프로토타입_0806 `s-spend`). null 이면 검색 모드가 아니다.
+   *
+   * <b>검색 중에는 달력을 접는다.</b> 검색은 목록 전체를 다시 훑는 일인데 달력이 남아 있으면
+   * "이 달 안에서만 찾나"로 읽힌다. 날짜 필터도 함께 푼다 — 두 필터가 겹치면 왜 안 나오는지 모른다.
+   */
+  const [query, setQuery] = useState<string | null>(null);
   /** 카테고리를 고치는 중인 결제. 한 번에 한 줄만 연다. */
   const [editing, setEditing] = useState<string | null>(null);
   /** 이미 고친 것 — 목록을 다시 불러오기 전까지 화면에 바로 반영한다. */
@@ -97,7 +105,11 @@ export function Transactions() {
 
   const months = useMemo(() => {
     const all = payments.data ?? [];
+    const q = (query ?? '').trim().toLowerCase();
     const rows = all.filter((p) => {
+      // **검색 중에는 이름만 본다.** 날짜·성격 필터를 함께 걸면, 찾는 가게가 안 나올 때
+      // 그 가게가 없는 건지 필터에 걸린 건지 알 수가 없다.
+      if (q) return (p.merchantName ?? '').toLowerCase().includes(q);
       if (pickedDate && p.date.slice(0, 10) !== pickedDate) return false;
       if (filter === 'all') return true;
       const sanct = p.category ? sanctuary.has(p.category) : false;
@@ -113,7 +125,7 @@ export function Transactions() {
       rows: byMonth[m].slice().sort((a, b) => b.date.localeCompare(a.date)),
       total: byMonth[m].reduce((s, p) => s + p.amount, 0),
     }));
-  }, [payments.data, pickedDate, filter, sanctuary, fixedOf]);
+  }, [payments.data, pickedDate, filter, sanctuary, fixedOf, query]);
 
   // 화면에 들어오면 새 결제를 조용히 당겨온다. 목록을 먼저 그리고 결과가 오면 그때 다시 부른다 —
   // 상단 '동기화' 버튼은 결과 문구가 필요한 수동 경로라 그대로 둔다.
@@ -156,16 +168,37 @@ export function Transactions() {
   }
 
   const total = payments.data?.length ?? 0;
+  /** 지금 목록에 보이는 건수 — 검색 머리글이 말하는 수. */
+  const hits = months.reduce((s, m) => s + m.rows.length, 0);
 
   return (
     <Screen title="거래 내역" hasTabBar>
-      <AppBar onBack={back} title="거래 내역" action={
-        <button type="button" className="act" onClick={() => void doSync()} disabled={syncing}>
-          {syncing ? '동기화 중…' : '동기화'}
-        </button>
-      } />
-      {/* 달력 (개편안 `.cal`) — 날짜별 지출과 지킨 날. 누르면 그날만 본다. */}
-      {home && (
+      {query === null ? (
+        <AppBar onBack={back} title="거래 내역" action={
+          <button type="button" className="act" onClick={() => void doSync()} disabled={syncing}>
+            {syncing ? '동기화 중…' : '동기화'}
+          </button>
+        } />
+      ) : (
+        <>
+          {/* 검색 모드 — 앱바가 통째로 입력칸이 된다(개편안 `.sp-abar`). */}
+          <div className="appbar sp-abar">
+            <button type="button" className="back" onClick={() => setQuery(null)}
+              aria-label="검색 닫기">‹</button>
+            <input className="sp-ipt" type="text" placeholder="가맹점 이름" autoComplete="off"
+              autoFocus value={query} onChange={(e) => setQuery(e.target.value)}
+              aria-label="가맹점 이름으로 검색" />
+            {query !== '' && (
+              <button type="button" className="sp-clr" onClick={() => setQuery('')}
+                aria-label="입력 지우기"><span><Icon id="i-x" /></span></button>
+            )}
+          </div>
+          <div className="sp-abar-line" />
+        </>
+      )}
+      {/* 달력 (개편안 `.cal`) — 날짜별 지출과 지킨 날. 누르면 그날만 본다.
+          검색 중에는 접는다 — 달력이 남아 있으면 "이 달 안에서만 찾나"로 읽힌다. */}
+      {home && query === null && (
         <SpendCalendar
           today={home.asOf.slice(0, 10)}
           totalsByDate={totalsByDate}
@@ -175,23 +208,37 @@ export function Transactions() {
         />
       )}
       <Scroll><div className="pad" style={{ paddingTop: 12 }}>
-        {/* 필터 칩 (개편안 `.fchips`) — 성역·고정지출을 걷어내고 '내가 줄일 수 있는 것'만 보는 용도. */}
-        <div className="fchips">
-          {SPEND_FILTERS.map((f) => (
-            <button key={f.key} type="button" className={filter === f.key ? 'on' : ''}
-              aria-pressed={filter === f.key} onClick={() => setFilter(f.key)}>
-              {f.label}
-            </button>
-          ))}
-        </div>
+        {/* 필터 칩 (개편안 `.fchips`) — 성역·고정지출을 걷어내고 '내가 줄일 수 있는 것'만 보는 용도.
+            검색 진입은 그 줄 끝에 둔다. 개편안은 달력 머리에 뒀는데, 이 앱은 달력이 접힐 수
+            있어 거기 두면 접었을 때 검색까지 사라진다. */}
+        {query === null && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="fchips" style={{ flex: 1, marginBottom: 0 }}>
+              {SPEND_FILTERS.map((f) => (
+                <button key={f.key} type="button" className={filter === f.key ? 'on' : ''}
+                  aria-pressed={filter === f.key} onClick={() => setFilter(f.key)}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <button type="button" className="cal-search" onClick={() => setQuery('')}
+              aria-label="가맹점 이름으로 검색"><Icon id="i-search" /></button>
+          </div>
+        )}
         {pickedDate && (
           <button type="button" className="btn btn-ghost btn-sm" style={{ marginBottom: 12 }}
             onClick={() => setPickedDate(null)}>
             {shortDate(pickedDate)}만 보는 중 · 전체 보기
           </button>
         )}
-        <p className="h-sub" style={{ margin: '0 0 12px' }}>
-          연결한 모든 카드의 최근 6개월 결제예요{total ? ` · 총 ${total.toLocaleString('ko-KR')}건` : ''}.
+        {/* 검색 중에는 전체 건수 대신 **찾은 건수**를 말한다 — 눈앞의 목록은 걸러진 것인데
+            머리글만 총 2,398건이라 하면 목록이 잘려 보인 것처럼 읽힌다. */}
+        <p className="h-sub" style={{ margin: '0 0 12px' }} role={query !== null ? 'status' : undefined}>
+          {query !== null
+            ? (query.trim()
+              ? `'${query.trim()}' 검색 결과 ${hits.toLocaleString('ko-KR')}건이에요.`
+              : '찾을 가맹점 이름을 적어주세요.')
+            : <>연결한 모든 카드의 최근 6개월 결제예요{total ? ` · 총 ${total.toLocaleString('ko-KR')}건` : ''}.</>}
           {syncMsg && <span role="status" style={{ display: 'block', marginTop: 4, color: 'var(--blue-t)' }}>· {syncMsg}</span>}
         </p>
 
@@ -199,6 +246,10 @@ export function Transactions() {
         {payments.loading && <Loading label="결제 내역을 불러오는 중" rows={6} />}
         {!payments.loading && total === 0 && !payments.error && (
           <div className="card"><Empty>불러온 결제내역이 없어요. 마이 &gt; 연결 관리에서 기관을 연결해 보세요.</Empty></div>
+        )}
+        {/* 찾았는데 없는 것과, 애초에 없는 것은 다른 말이다. */}
+        {query !== null && query.trim() !== '' && hits === 0 && !payments.loading && (
+          <div className="card"><Empty>그 이름으로는 결제내역이 없어요. 가게 이름의 일부만 적어도 찾아요.</Empty></div>
         )}
 
         {months.map((m) => (
