@@ -1293,3 +1293,65 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 .mile-labs span.on i { color: var(--t1); font-weight: 600; }
 .mile-labs span.edge { transform: translateX(-80%); }
 .mile-dot.next { border-color: var(--blue); }
+
+/* ==========================================================================
+ * 공용 바텀시트 (프로토타입_0806 `.tp-dim` / `.tp-sheet`)
+ *
+ * 주차 선택·미션 고르기·도감 상세가 같은 껍데기를 쓴다. 이 앱은 `components/Sheet.tsx` 가
+ * 초점 가두기와 ESC 를 이미 다루므로 <b>여기서는 생김새만</b> 정한다 — 동작을 두 곳에 두면
+ * 한쪽만 고쳐진다.
+ * ========================================================================== */
+
+.tp-dim { position: fixed; inset: 0; background: rgba(14,15,12,.4); z-index: 80;
+  opacity: 0; visibility: hidden; transition: opacity .25s, visibility .25s; }
+.tp-dim.show { opacity: 1; visibility: visible; }
+.tp-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 81; background: var(--card);
+  border-radius: 24px 24px 0 0; padding: 24px var(--pad-x) 32px;
+  transform: translateY(100%); transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+.tp-sheet.show { transform: none; }
+.tp-head { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+.tp-cap { font-size: 13px; font-weight: 500; color: var(--t3); margin: 0 0 16px; }
+
+/* 주차 선택 휠 — 연·월·주 세 열이 각자 스크롤한다. 가운데 띠가 '지금 고른 것'이다. */
+.tp-wheels { position: relative; display: flex; gap: 8px; height: 200px; margin-bottom: 20px; }
+.tp-band { position: absolute; left: 0; right: 0; top: 80px; height: 40px;
+  background: var(--bg); border-radius: 12px; }
+.tp-col { flex: 1; overflow-y: auto; scroll-snap-type: y mandatory; position: relative;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.tp-col::-webkit-scrollbar { display: none; }
+/* 위아래 여백 — 첫 항목과 마지막 항목도 가운데 띠에 올 수 있어야 한다. */
+.tp-pad { height: 80px; flex: 0 0 auto; }
+.tp-it { height: 40px; display: flex; align-items: center; justify-content: center;
+  scroll-snap-align: center; font-size: 16px; font-weight: 500; color: var(--t3);
+  cursor: pointer; border: none; background: none; font-family: inherit; width: 100%; }
+.tp-it.on { color: var(--t1); font-weight: 700; }
+
+/* 마이룸 앱바 — 씬 위에 떠서 방을 가리지 않는다. */
+.mr-bar { position: absolute; top: 0; left: 0; right: 0; z-index: 25; background: none; }
+.mr-bar .title { position: absolute; left: 0; right: 0; text-align: center;
+  font-size: 16px; font-weight: 600; pointer-events: none; }
+.mr-bar .back { position: relative; z-index: 1; }
+
+/* ==========================================================================
+ * 알림함 (프로토타입_0806 `s-notify`)
+ *
+ * 같은 종류가 잇달아 오면 <b>한 장으로 접는다</b>(`.nt-card.stack`). 편의점 결제 알림이 세 번
+ * 따로 서면 알림함이 로그가 되고, 정작 읽어야 할 예산 초과가 묻힌다.
+ * ========================================================================== */
+
+.nt-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px;
+  margin-bottom: 12px; background: var(--card); }
+.nt-top { display: flex; align-items: center; gap: 8px; }
+.nt-top .ncat { font-size: 12px; font-weight: 600; color: var(--t3); }
+/* 안 읽음 점 — 색만으로 구분하지 않게 읽은 것은 아예 자리를 비운다. */
+.ndot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex: 0 0 auto; }
+.ntime { margin-left: auto; font-size: 12px; color: var(--t3); font-weight: 500; }
+.nt-card b { display: block; margin-top: 8px; font-size: 15px; font-weight: 700; }
+.nt-card p { margin: 6px 0 0; font-size: 14px; line-height: 1.5; color: var(--t2); }
+.nt-item { display: flex; align-items: center; gap: 8px; padding: 10px 0;
+  border-top: 1px solid var(--line); font-size: 14px; }
+.nt-item .ntime { font-size: 12px; }
+.nt-extra { margin-top: 8px; font-size: 13px; color: var(--t3); font-weight: 500; }
+.nt-more { display: flex; align-items: center; justify-content: center; gap: 4px;
+  width: 100%; padding: 12px 0 4px; border: none; background: none; font-family: inherit;
+  font-size: 13px; font-weight: 600; color: var(--t3); cursor: pointer; min-height: 44px; }
