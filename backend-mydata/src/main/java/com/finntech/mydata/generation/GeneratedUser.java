@@ -19,13 +19,37 @@ import java.time.LocalDate;
 public record GeneratedUser(
         String id, PersonaVariant variant, LocalDate startDate,
         RegionEntry home, RegionEntry work, boolean hasVehicle, int cardCount,
-        String dataSplit, long userSeed, int transitCard) {
+        String dataSplit, long userSeed, int transitCard,
+        String name, String social7, String phone) {
+
+    /**
+     * 신원 없이 만들던 시절의 표기 — 시험·옛 호출부용.
+     *
+     * <p><b>이 생성자로 만든 사용자는 로그인할 수 없다.</b> 본인인증은 이름·주민번호·전화번호로
+     * CI 를 계산하는데({@code Ci.of}) 여기서는 그 셋이 비어 있어 어떤 입력으로도 닿지 않는다.
+     * 실제 생성 경로({@code PopulationBuilder})는 신원을 채우는 쪽을 쓴다.
+     */
+    public GeneratedUser(String id, PersonaVariant variant, LocalDate startDate,
+                         RegionEntry home, RegionEntry work, boolean hasVehicle, int cardCount,
+                         String dataSplit, long userSeed, int transitCard) {
+        this(id, variant, startDate, home, work, hasVehicle, cardCount, dataSplit, userSeed,
+                transitCard, null, null, null);
+    }
 
     /** 교통카드를 따로 정하지 않던 시절의 표기 — 첫 카드를 교통카드로 본다. */
     public GeneratedUser(String id, PersonaVariant variant, LocalDate startDate,
                          RegionEntry home, RegionEntry work, boolean hasVehicle, int cardCount,
                          String dataSplit, long userSeed) {
         this(id, variant, startDate, home, work, hasVehicle, cardCount, dataSplit, userSeed, 0);
+    }
+
+    /** 주민등록번호 13자리 — 뒤 6자리는 시드에서 채운다(실제로 쓰이지 않는 자리다). */
+    public String fullSocial() {
+        if (social7 == null) return null;
+        java.util.Random r = GenSeed.rng(userSeed, 77);
+        StringBuilder sb = new StringBuilder(social7);
+        for (int i = 0; i < 6; i++) sb.append(r.nextInt(10));
+        return sb.toString();
     }
 
     /**

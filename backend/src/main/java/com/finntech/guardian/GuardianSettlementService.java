@@ -73,9 +73,9 @@ public class GuardianSettlementService {
     /**
      * 카테고리 한 줄의 성적.
      *
-     * @param cap     그 카테고리에 걸었던 한도
+     * @param cap     그 카테고리에 걸었던 예산
      * @param spent   실제 쓴 금액
-     * @param kept    지켜낸 금액(한도 − 지출, 음수면 0)
+     * @param kept    지켜낸 금액(예산 − 지출, 음수면 0)
      * @param rate    달성률 = kept / cap
      */
     public record CategoryResult(String category, long cap, long spent, long kept, double rate) {}
@@ -115,7 +115,7 @@ public class GuardianSettlementService {
             if (c != null && spentBy.containsKey(c)) spentBy.merge(c, t.getAmount(), Long::sum);
         }
 
-        // 카테고리별 한도는 챌린지를 만들 때 저장한다(V13). 예전에는 전체 캡을 카테고리 수로
+        // 카테고리별 예산은 챌린지를 만들 때 저장한다(V13). 예전에는 전체 캡을 카테고리 수로
         // **균등분할**했는데, 온보딩에서 배달 50%·카페 20%처럼 다르게 정해도 화면은 같은 값을
         // 보여줬다. 이제 사용자가 정한 그대로다.
         //
@@ -141,7 +141,7 @@ public class GuardianSettlementService {
                         || v.getResult() == DailyResult.ON_PACE_DAY).count();
 
         // **확보 절약액은 직접 세지 않는다**(마스터 §4 원칙 2 — 서비스는 재계산하지 않는다).
-        // `한도 − 지출`로 셌더니 방어율이 200%가 나왔다: 한도(444,992)는 쓸 수 있는 돈이고
+        // `예산 − 지출`로 셌더니 방어율이 200%가 나왔다: 예산(444,992)는 쓸 수 있는 돈이고
         // 목표(222,495)는 아껴야 할 돈이라 단위가 다르다. 규칙이 쓰는 식은
         // `min(목표, 기준지출 − 지출)`이고, 그래야 100%를 넘지 않는다.
         long secured = Math.min(ch.getTargetSaving(),
@@ -174,13 +174,13 @@ public class GuardianSettlementService {
             lines.add(line);
             total += line.suggestedCap();
         }
-        // 다음 달 저금 목표 = 기준 지출 − 새 한도 합. 한도를 내렸으면 저금 목표도 함께 내려간다.
+        // 다음 달 저금 목표 = 기준 지출 − 새 예산 합. 예산을 내렸으면 저금 목표도 함께 내려간다.
         long suggestedSaving = Math.max(0, ch.getBaselineAmount() - total);
         return new RenewalView(lines, suggestedSaving, csv(ch.getSanctuaryCategories()));
     }
 
     /**
-     * 카테고리 하나의 다음 달 한도를 정한다 — <b>순수 함수</b>.
+     * 카테고리 하나의 다음 달 예산을 정한다 — <b>순수 함수</b>.
      *
      * <p>규칙을 여기 한 곳에 모아 둔다. 잘 지켰으면 유지하고, 못 지켰으면 <b>실제로 쓴 만큼</b>에
      * 여유를 얹어 내린다. 올리지는 않는다: 성공했다고 더 조이면 성공이 벌이 된다.

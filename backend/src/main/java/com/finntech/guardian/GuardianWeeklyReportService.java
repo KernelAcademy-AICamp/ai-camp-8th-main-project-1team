@@ -146,12 +146,23 @@ public class GuardianWeeklyReportService {
     //  내부
     // ======================================================================
 
+    /** 요일 한 글자. 화면 문구는 44자 제한이 빡빡해 "금요일"보다 "금"이 낫다. */
+    private static String weekdayLabel(java.time.DayOfWeek d) {
+        return switch (d) {
+            case MONDAY -> "월"; case TUESDAY -> "화"; case WEDNESDAY -> "수"; case THURSDAY -> "목";
+            case FRIDAY -> "금"; case SATURDAY -> "토"; case SUNDAY -> "일";
+        };
+    }
+
     /** 그 주의 미션을 사람이 읽는 문장으로. 없으면 빈 목록이라 화면이 절을 통째로 감춘다. */
     private List<MissionLine> missionLines(Long userId, LocalDate weekStart) {
         List<MissionLine> out = new ArrayList<>();
         for (WeeklyMission m : missionRepository.findByUserAndPeriod(userId, weekStart)) {
             String text = switch (m.getConditionType()) {
-                case CATEGORY_COUNT_MAX -> m.getCategory() + " 주 " + m.getThreshold() + "회 이하";
+                case MAX_COUNT -> m.getCategory() + " 주 " + m.getThreshold() + "회 이하";
+                case AVOID_SLOT -> m.getAvoidWeekday() == null ? m.getCategory() + " 시간대 피하기"
+                        : weekdayLabel(m.getAvoidWeekday()) + " "
+                          + m.getAvoidHourStart() + "~" + m.getAvoidHourEnd() + "시 " + m.getCategory() + " 안 쓰기";
                 case NO_SPEND_STREAK_MIN -> "무지출 " + m.getThreshold() + "일 연속";
                 case LABELING_COUNT_MIN -> "소비 성격 " + m.getThreshold() + "건 답하기";
             };

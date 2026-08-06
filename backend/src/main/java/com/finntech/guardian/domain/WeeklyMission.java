@@ -1,6 +1,8 @@
 package com.finntech.guardian.domain;
 
-import com.finntech.guardian.domain.GuardianEnums.MissionCondition;
+import com.finntech.guardian.domain.GuardianEnums.MissionType;
+
+import java.time.DayOfWeek;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -30,14 +32,35 @@ public class WeeklyMission {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "condition_type", nullable = false, length = 30)
-    private MissionCondition conditionType;
+    private MissionType conditionType;
 
-    /** CATEGORY_COUNT_MAX일 때만 채워진다. */
+    /** 카테고리 기반 유형(MAX_COUNT·AVOID_SLOT)에서만 채워진다. */
     @Column(length = 40)
     private String category;
 
     @Column(nullable = false)
     private int threshold;
+
+    // ---- AVOID_SLOT 전용 (스펙 v1.5 §5.5) --------------------------------
+    // "금요일 저녁에는 배달을 안 시킨다" 같은 미션. 요일·시간은 반드시 KST로 판정한다 —
+    // UTC로 재면 금요일 저녁 22시 주문이 토요일로 넘어가 미션이 통과해 버린다.
+
+    /** 피해야 할 요일. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "avoid_weekday", length = 12)
+    private DayOfWeek avoidWeekday;
+
+    /** 피해야 할 시간대 시작(포함). */
+    @Column(name = "avoid_hour_start")
+    private Integer avoidHourStart;
+
+    /** 피해야 할 시간대 끝(제외). */
+    @Column(name = "avoid_hour_end")
+    private Integer avoidHourEnd;
+
+    /** 이 미션 몫의 포인트. 진행 중 미션이 주간 총액 30P를 나눠 갖는다. */
+    @Column(name = "point_share", nullable = false)
+    private int pointShare;
 
     @Column(name = "period_start", nullable = false)
     private LocalDate periodStart;
@@ -57,7 +80,7 @@ public class WeeklyMission {
 
     protected WeeklyMission() {}
 
-    public WeeklyMission(Long userId, Long challengeId, MissionCondition conditionType, String category,
+    public WeeklyMission(Long userId, Long challengeId, MissionType conditionType, String category,
                          int threshold, LocalDate periodStart, LocalDate periodEnd, LocalDateTime createdAt) {
         this.userId = userId;
         this.challengeId = challengeId;
@@ -69,15 +92,32 @@ public class WeeklyMission {
         this.createdAt = createdAt;
     }
 
+    /** AVOID_SLOT 미션 — "금요일 19~22시에는 배달 결제가 없을 것". */
+    public static WeeklyMission avoidSlot(Long userId, Long challengeId, String category,
+                                          DayOfWeek weekday, int hourStart, int hourEnd,
+                                          LocalDate periodStart, LocalDate periodEnd, LocalDateTime createdAt) {
+        WeeklyMission m = new WeeklyMission(userId, challengeId, MissionType.AVOID_SLOT, category,
+                0, periodStart, periodEnd, createdAt);
+        m.avoidWeekday = weekday;
+        m.avoidHourStart = hourStart;
+        m.avoidHourEnd = hourEnd;
+        return m;
+    }
+
     public void evaluate(boolean achieved, LocalDateTime at) {
         this.achieved = achieved;
         this.evaluatedAt = at;
     }
 
-    /** 현재 진행값이 조건을 만족하는가. 순수 판정 — 서비스가 진행값을 세어 넣는다. */
+    /**
+     * 현재 진행값이 조건을 만족하는가. 순수 판정 — 서비스가 진행값을 세어 넣는다.
+     *
+     * <p>{@code AVOID_SLOT}은 "슬롯에 걸린 결제 건수"를 받아 0이어야 통과한다.
+     */
     public boolean satisfiedBy(int current) {
         return switch (conditionType) {
-            case CATEGORY_COUNT_MAX -> current <= threshold;
+            case MAX_COUNT -> current <= threshold;
+            case AVOID_SLOT -> current == 0;
             case NO_SPEND_STREAK_MIN, LABELING_COUNT_MIN -> current >= threshold;
         };
     }
@@ -85,7 +125,12 @@ public class WeeklyMission {
     public Long getId() { return id; }
     public Long getUserId() { return userId; }
     public Long getChallengeId() { return challengeId; }
-    public MissionCondition getConditionType() { return conditionType; }
+    public MissionType getConditionType() { return conditionType; }
+    public DayOfWeek getAvoidWeekday() { return avoidWeekday; }
+    public Integer getAvoidHourStart() { return avoidHourStart; }
+    public Integer getAvoidHourEnd() { return avoidHourEnd; }
+    public int getPointShare() { return pointShare; }
+    public void setPointShare(int v) { this.pointShare = v; }
     public String getCategory() { return category; }
     public int getThreshold() { return threshold; }
     public LocalDate getPeriodStart() { return periodStart; }

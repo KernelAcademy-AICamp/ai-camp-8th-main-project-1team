@@ -73,20 +73,24 @@ public class GuardianDailyScheduler {
         List<GuardianChallenge> running = challengeRepository.findAllRunning();
         if (running.isEmpty()) return;
 
-        int judged = 0, settled = 0, failed = 0;
+        int judged = 0, settled = 0, nudged = 0, failed = 0;
         for (GuardianChallenge ch : running) {
             try {
                 judged += catchUp(ch);
                 // 정산은 runDaily ⑥이 종료일 판정과 함께 처리한다. 상태로 성사 여부를 센다.
                 if (!ch.isRunning()) settled++;
+                // C9는 "그 시간대 직전"이 조건이라 하루 배치에 넣으면 영영 참이 되지 않는다.
+                // 여기서 매 주기 보는 이유다 — 실제 발송은 4주 반복과 주 1회 쿨다운이 거른다.
+                nudged += batchService.runNudges(ch.getUserId(), clock.now(ch.getUserId())).size();
             } catch (Exception e) {
                 failed++;
                 log.warn("지킴이 일 판정 건너뜀 — challengeId={} userId={} : {}",
                         ch.getId(), ch.getUserId(), e.toString());
             }
         }
-        if (judged > 0 || settled > 0 || failed > 0) {
-            log.info("지킴이 새벽 배치 — 판정 {}일, 정산 {}건, 실패 {}건", judged, settled, failed);
+        if (judged > 0 || settled > 0 || nudged > 0 || failed > 0) {
+            log.info("지킴이 새벽 배치 — 판정 {}일, 정산 {}건, 넛지 {}건, 실패 {}건",
+                    judged, settled, nudged, failed);
         }
     }
 

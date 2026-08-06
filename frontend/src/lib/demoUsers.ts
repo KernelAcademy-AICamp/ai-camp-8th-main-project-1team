@@ -11,24 +11,29 @@
 export interface DemoUser {
   persona: string;
   ci: string;
+  /** 사람 이름 — 성씨 1글자 + 이름 2글자. `scripts/identity/` 의 표에서 나온다. */
   name: string;
+  /** 주민등록번호 앞 7자리. 7번째 자리가 성별이다(1·3 남, 2·4 여). */
+  social7: string;
+  /** 휴대폰 번호. **CI 는 이 셋의 해시**라 본인인증 화면에 그대로 입력해도 같은 사람에 닿는다. */
+  phone: string;
   /** 커트오프(2026-07-23) 이하 가시 결제 건수 */
   visible: number;
 }
 
 export const DEMO_USERS: DemoUser[] = [
-  { persona: '과소비형', ci: '005f88efafa4958c3cb193c242d9e1289e459d40df055d3f4dc4bab174f5202a', name: '과소비형_005f88', visible: 1874 },
-  { persona: '과소비형', ci: '040c3c8fc93d0b5bf6b5fcdf6366e5c9e620a5b4b6bd7c647373423f59594f7e', name: '과소비형_040c3c', visible: 1343 },
+  { persona: '과소비형', ci: '02ac85289fc905edc8cda5bde7c2bc2c3a5f7bf1d64f9c673b544aa26b206ced', name: '임나아', social7: '8709012', phone: '010-9246-0227', visible: 1916 },
+  { persona: '과소비형', ci: '052fbda26f6e1c83e4495da775b5f5c917ec56b7e14a1e2422be3000c780b8f2', name: '김영민', social7: '9712182', phone: '010-2096-4706', visible: 2100 },
 
-  { persona: '구독과다형', ci: '0cd7110abcac3cf954f066a8bf7e05d830a3ac52c774494b3253ec72b66c1778', name: '구독과다형_0cd711', visible: 1505 },
-  { persona: '구독과다형', ci: '155531fb59ad8fc67fcfc71157e52ba560e22ca7b5fa58135d9ec7c5ada2c4dc', name: '구독과다형_155531', visible: 1762 },
+  { persona: '구독과다형', ci: '020a37f937133ab67cd7ca8b93e50024645c8df14caff93b2ba5bf4624530eb5', name: '김대섭', social7: '0412203', phone: '010-7588-1946', visible: 1303 },
+  { persona: '구독과다형', ci: '047abf31373774b1ce7772bb4cd4754f9e26eb36ae8d0880eb59446e8ba3495c', name: '정서수', social7: '0607224', phone: '010-5003-2132', visible: 1625 },
 
-  { persona: '균형형', ci: '115e3a4f212fc9794c18b0a78987169609afbb3c2d699000e6ee020f9f893d80', name: '균형형_115e3a', visible: 819 },
-  { persona: '균형형', ci: '14b84e65648ea6a32189dcae131d185206cf541635b7c54812380ea43d6243cd', name: '균형형_14b84e', visible: 1186 },
+  { persona: '균형형', ci: '021ac0f65c073cca75c02eea62f5458dcbcfead69c70696a616c9d35f83ba10d', name: '이효준', social7: '9804221', phone: '010-2453-9665', visible: 974 },
+  { persona: '균형형', ci: '09386998530b2e39b6471fb233649800b4fd774c294b2d4805d1982d02c9631d', name: '고주경', social7: '9303181', phone: '010-7985-7109', visible: 1083 },
 
-  { persona: '외식형', ci: '0161ba5d6793ef94549cc7f1c6d50312df3388ec8911fd36db270c5fb4d6f9cf', name: '외식형_0161ba', visible: 1641 },
-  { persona: '외식형', ci: '016b221cc6f0e408a1517ff504cfee2de59bb17abe60f58657404c6562216ffe', name: '외식형_016b22', visible: 2164 },
+  { persona: '외식형', ci: '066881c3b1d52fcab5a0a6ed169b38b26b3bd11ad3e18bb6aac468a8291bb8f1', name: '황정현', social7: '9008192', phone: '010-6498-2709', visible: 1507 },
+  { persona: '외식형', ci: '06c15e7b87358cdb8b91e1f8714fe3276ade64968d24e62696b10099fd593a7f', name: '서세원', social7: '9108202', phone: '010-3317-9426', visible: 2249 },
 
-  { persona: '절약형', ci: '09d9d666961c336a683e47ab86953b01c266085e63107e506df9e361231b1ac7', name: '절약형_09d9d6', visible: 841 },
-  { persona: '절약형', ci: '0c966b45f96a230821966f9365133be831db58d10afeca0e829a067fcc4a0ce9', name: '절약형_0c966b', visible: 956 },
+  { persona: '절약형', ci: '0006387f8a79563fd739477af09e34383ca72dfbaab0bf0bf4f89bd6f1f7d1ee', name: '정시희', social7: '0411104', phone: '010-8588-3820', visible: 835 },
+  { persona: '절약형', ci: '1521122f349ad1eefa65fd60be0a3f66631c2e81eb4ee2a2d5149695ad994da0', name: '손효은', social7: '9610262', phone: '010-5001-7944', visible: 862 },
 ];

@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * 지킴이 Agent REST API (설계서 §API 1~6).
  *
- * <p><b>프론트는 계산하지 않는다.</b> 남은 한도, 달성률, 며칠 남았는지, 사물을 줄지 말지는
+ * <p><b>프론트는 계산하지 않는다.</b> 남은 예산, 달성률, 며칠 남았는지, 사물을 줄지 말지는
  * 전부 서버가 계산해 완성된 값으로 내려준다. 프론트에서 한 번 더 계산하면 두 곳의 로직이
  * 조금씩 어긋나는데, 이런 프로젝트에서 제일 흔하고 제일 찾기 어려운 버그다.
  *
@@ -60,7 +60,7 @@ public class GuardianController {
 
     /**
      * @param keptPaymentIds 온보딩에서 사용자가 <b>"이건 낭비가 아니다"</b>로 뺀 결제 id.
-     *                       기준 지출에서 그만큼 뺀다 — 화면이 보여준 금액과 서버가 잡는 한도가
+     *                       기준 지출에서 그만큼 뺀다 — 화면이 보여준 금액과 서버가 잡는 예산이
      *                       어긋나면 '지킬 돈'이 거짓말이 된다(2026-07-31).
      */
     public record CreateChallengeRequest(
@@ -186,8 +186,8 @@ public class GuardianController {
 
         Map<String, Object> challenge = challengeView(ch);
         challenge.put("categoryLabel", h.categoryLabel());
-        // 카테고리별 사용액 — 화면이 '지킴 현황'을 갈라 그린다. 한도는 묶음 하나이므로
-        // 카테고리별 한도는 내려보내지 않는다(없는 것을 있는 척하면 화면이 거짓말을 한다).
+        // 카테고리별 사용액 — 화면이 '지킴 현황'을 갈라 그린다. 예산은 묶음 하나이므로
+        // 카테고리별 예산은 내려보내지 않는다(없는 것을 있는 척하면 화면이 거짓말을 한다).
         challenge.put("categorySpend", h.categorySpend().stream().map(c -> {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("code", c.code());
@@ -205,6 +205,9 @@ public class GuardianController {
         out.put("asOf", h.asOf());
         out.put("challenge", challenge);
         out.put("strip", strip);
+        // 홈 한마디 — 걸린 케이스가 없으면 IDLE 문장이 온다. 자리를 비우지 않는 것이 계약이라
+        // 프론트는 null 검사 없이 그린다.
+        out.put("oneline", Map.of("caseId", h.oneline().caseId(), "text", h.oneline().text()));
         out.put("ceremony", ceremonyView(h.ceremony()));
         out.put("grass", h.grass().stream().map(g -> Map.of(
                 "date", g.date(), "result", g.result(),

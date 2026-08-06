@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -22,9 +23,9 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * <b>카테고리별 한도</b> — 사용자가 정한 강도가 그대로 한도가 되어야 한다.
+ * <b>카테고리별 예산</b> — 사용자가 정한 강도가 그대로 예산이 되어야 한다.
  *
- * <p>예전에는 한도가 챌린지에 숫자 하나뿐이라, 화면이 카테고리별로 보여줄 때 전체 캡을
+ * <p>예전에는 예산이 챌린지에 숫자 하나뿐이라, 화면이 카테고리별로 보여줄 때 전체 캡을
  * <b>균등분할</b>했다. 온보딩에서 배달 50%·카페 20%로 다르게 정해도 화면은 같은 값을 보여줬다
  * (정산 코드에 그 사실이 주석으로 적혀 있었다).
  *
@@ -32,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * (사용자 결정 2026-07-31) — 카테고리로 실패까지 가르면 카테고리 수만큼 실패 확률이 오른다.
  */
 @SpringBootTest
+@ActiveProfiles("test")   // 인메모리 H2 — 파일 DB 를 쓰면 낡은 스키마가 남는다
 @Transactional
 class ChallengeCategoryCapTest {
 
@@ -66,8 +68,8 @@ class ChallengeCategoryCapTest {
     }
 
     @Test
-    @DisplayName("카테고리마다 정한 강도가 그대로 한도가 된다 — 균등분할하지 않는다")
-    void 강도가_한도가_된다() {
+    @DisplayName("카테고리마다 정한 강도가 그대로 예산이 된다 — 균등분할하지 않는다")
+    void 강도가_예산이_된다() {
         // 배달은 절반(10만), 카페는 20%(2만)를 지키기로 한다.
         var ch = guardianService.createChallenge(USER,
                 List.of("CCAP_DELIVERY", "CCAP_CAFE"), List.of(),
@@ -96,7 +98,7 @@ class ChallengeCategoryCapTest {
     }
 
     @Test
-    @DisplayName("합계 한도는 그대로다 — 판정은 여전히 합계로 한다")
+    @DisplayName("합계 예산은 그대로다 — 판정은 여전히 합계로 한다")
     void 합계는_그대로다() {
         var ch = guardianService.createChallenge(USER,
                 List.of("CCAP_DELIVERY", "CCAP_CAFE"), List.of(),

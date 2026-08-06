@@ -1,5 +1,6 @@
 package com.finntech.guardian.domain;
 
+import com.finntech.guardian.domain.GuardianEnums.TxKind;
 import com.finntech.guardian.domain.GuardianEnums.TxState;
 import com.finntech.guardian.domain.GuardianEnums.TxType;
 import com.finntech.guardian.domain.GuardianEnums.UndoReason;
@@ -81,7 +82,22 @@ public class GuardianTransaction {
     @Column(name = "tx_type", nullable = false, length = 10)
     private TxType txType = TxType.EXPENSE;
 
-    /** 환불이면 원 거래. 한도를 조용히 복원한다(C12). */
+    /**
+     * 판정 종류 (스펙 v1.5 §5.1). 예산 차감·개입·일 판정이 전부 이 값에서 갈린다.
+     * 분류가 확정되기 전에는 {@code UNKNOWN}이다.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private TxKind kind = TxKind.UNKNOWN;
+
+    /**
+     * 고정지출(통신·구독·통근) 여부 — 분석 Agent가 붙여 보낸다.
+     * 줄일 수 있는 소비가 아니므로 예산에서 빼지 않는다.
+     */
+    @Column(name = "is_fixed_expense", nullable = false)
+    private boolean fixedExpense;
+
+    /** 환불이면 원 거래. 예산을 조용히 복원한다(C12). */
     @Column(name = "original_tx_id")
     private Long originalTxId;
 
@@ -158,6 +174,11 @@ public class GuardianTransaction {
         this.categoryConfidence = confidence;
     }
 
+    // 소비 맥락 칩(applyChip)은 v1.5 초안에만 있었고 붙이는 API도 읽는 화면도 없었다.
+    // 라벨링 포인트는 분류 확정(classifyPending)이 이미 주므로, 칩 없이도 그 자리는 메워져 있다.
+    // 필드까지 지운 이유는 `ddl-auto=validate`가 아무도 안 쓰는 칼럼을 계속 요구하게 되기
+    // 때문이다 — 죽은 칼럼은 다음 사람에게 "쓰는 데가 있나 보다"로 읽힌다. (2026-08-06)
+
     @Transient
     public boolean isCounted() { return state == TxState.COUNTED; }
 
@@ -183,6 +204,10 @@ public class GuardianTransaction {
     public String getCategory() { return category; }
     public Double getCategoryConfidence() { return categoryConfidence; }
     public TxType getTxType() { return txType; }
+    public TxKind getKind() { return kind; }
+    public void setKind(TxKind v) { this.kind = v; }
+    public boolean isFixedExpense() { return fixedExpense; }
+    public void setFixedExpense(boolean v) { this.fixedExpense = v; }
     public Long getOriginalTxId() { return originalTxId; }
     public void setOriginalTxId(Long v) { this.originalTxId = v; }
     public TxState getState() { return state; }

@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * 지킴이 엔드투엔드 — 챌린지 생성 → 거래 수신 → 되돌리기 → 새벽 배치가 실제로 이어지는지 본다.
  *
  * <p>순수 함수는 {@code GuardianRulesTest}가 검증한다. 여기서는 <b>원장이 실제로 움직이는지</b>와
- * 침묵이 기록되는지, 되돌리기가 한도를 되돌리는지를 확인한다.
+ * 침묵이 기록되는지, 되돌리기가 예산을 되돌리는지를 확인한다.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -105,7 +105,7 @@ class GuardianFlowTest {
 
     @Test
     @Order(1)
-    @DisplayName("챌린지 생성 — 기준 지출·한도·버퍼가 기존 분석 결과에서 파생된다")
+    @DisplayName("챌린지 생성 — 기준 지출·예산·버퍼가 기존 분석 결과에서 파생된다")
     void createChallenge() {
         GuardianChallenge ch = guardianService.createChallenge(userId,
                 List.of("GTEST_DELIVERY"), List.of(), 100_000L, "에어팟", 179_000L, 30);
@@ -116,7 +116,7 @@ class GuardianFlowTest {
         // 하루 8,152원, 30일이면 244,565원. 관측한 달이 무엇이든 같은 습관이면 같은 값이 나온다.
         assertEquals(BASELINE_30D, ch.getBaselineAmount(), "최근 30일 실측 = 25,000 × 7건");
         assertEquals(100_000L, ch.getTargetSaving());
-        assertEquals(BASELINE_30D - 100_000L, ch.getChallengeCap(), "한도 = 기준 지출 − 지킬 돈");
+        assertEquals(BASELINE_30D - 100_000L, ch.getChallengeCap(), "예산 = 기준 지출 − 지킬 돈");
         assertEquals(0.2, ch.getBufferRatio(), 1e-9,
                 "버퍼 = 25,000/75,000 = 0.333 → 상한 0.2 (MAX_BUFFER_RATIO)");
         assertEquals(30, ch.getDaysTotal());
@@ -125,7 +125,7 @@ class GuardianFlowTest {
 
     @Test
     @Order(1)
-    @DisplayName("뺀 결제만큼 기준 지출이 줄어든다 — 화면이 보여준 '지킬 돈'과 서버 한도가 맞아야 한다")
+    @DisplayName("뺀 결제만큼 기준 지출이 줄어든다 — 화면이 보여준 '지킬 돈'과 서버 예산이 맞아야 한다")
     void keptPaymentsReduceBaseline() {
         // 창 안(7/4~7/10) 배달 7건 중 2건을 '낭비가 아니다'로 뺀다.
         var kept = userPaymentRepository.findByUserIdOrderByPaymentDateDesc(userId).stream()
@@ -181,7 +181,7 @@ class GuardianFlowTest {
                 "GTEST_CAFE", 0.95, TxType.EXPENSE, true, null));
 
         assertEquals(TxState.EXCLUDED, r.transaction().getState());
-        assertEquals(32_000L, r.snapshot().spentAmount(), "무관 카테고리는 한도에 영향을 주지 않는다");
+        assertEquals(32_000L, r.snapshot().spentAmount(), "무관 카테고리는 예산에 영향을 주지 않는다");
         assertEquals(DeliveryKind.SILENT, r.notification().getDelivery());
         assertEquals("C4", r.notification().getCaseId());
         assertEquals(before + 1, notificationRepository.count(), "침묵도 로그로 남는다");
@@ -211,7 +211,7 @@ class GuardianFlowTest {
 
     @Test
     @Order(6)
-    @DisplayName("되돌리기 — 한도를 되돌리고 알림을 만들지 않는다")
+    @DisplayName("되돌리기 — 예산을 되돌리고 알림을 만들지 않는다")
     void undoRestoresCap() {
         GuardianTransaction target = txRepository.findByChallenge(challengeId).stream()
                 .filter(GuardianTransaction::isCounted)
@@ -326,12 +326,12 @@ class GuardianFlowTest {
 
     @Test
     @Order(103)
-    @DisplayName("챌린지 기간 밖의 거래는 한도를 태우지 않는다")
+    @DisplayName("챌린지 기간 밖의 거래는 예산을 태우지 않는다")
     void ignoresTransactionsOutsideChallengeWindow() {
         GuardianChallenge ch = challengeRepository.findById(challengeId).orElseThrow();
         long spentBefore = ch.getSpentAmount();
 
-        // 2년 전 결제. 예전에는 발생일을 보지 않아 이 한 건으로도 한도가 깎였다.
+        // 2년 전 결제. 예전에는 발생일을 보지 않아 이 한 건으로도 예산이 깎였다.
         GuardianService.IngestResult r = guardianService.ingest(userId, new GuardianService.IngestCommand(
                 ch.getStartDate().minusYears(2).atTime(19, 0), "우아한형제들", "배달의민족",
                 90_000L, "5812", "GTEST_DELIVERY", 0.99, TxType.EXPENSE, true, null));

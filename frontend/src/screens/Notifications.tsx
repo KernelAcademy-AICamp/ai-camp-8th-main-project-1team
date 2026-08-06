@@ -82,7 +82,7 @@ export function Notifications() {
       <AppBar onBack={back} title="알림함" />
       <Scroll><div className="pad" style={{ paddingTop: 12 }}>
         <p className="h-sub" style={{ margin: '0 0 12px' }}>
-          한도 안에서 쓴 결제는 알리지 않아요. 지킴이는 필요할 때만 말합니다.
+          예산 안에서 쓴 결제는 알리지 않아요. 지킴이는 필요할 때만 말합니다.
         </p>
 
         <ErrorBox error={notes.error} onRetry={notes.reload} />

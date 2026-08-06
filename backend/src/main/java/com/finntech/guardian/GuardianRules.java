@@ -6,8 +6,10 @@ import com.finntech.guardian.domain.GuardianEnums.Grade;
 import com.finntech.guardian.domain.GuardianEnums.PhrasingMode;
 import com.finntech.guardian.domain.GuardianEnums.SuppressedReason;
 import com.finntech.guardian.domain.GuardianEnums.Tone;
+import com.finntech.guardian.domain.GuardianEnums.TxKind;
 import com.finntech.guardian.domain.GuardianEnums.TxType;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
@@ -60,7 +62,7 @@ public final class GuardianRules {
             Set<String> sanctuaryCategories,
             long baselineAmount,
             long targetSaving,
-            /** 챌린지 한도 = 기준 지출 − 지킬 돈 */
+            /** 챌린지 예산 = 기준 지출 − 지킬 돈 */
             long challengeCap,
             double bufferRatio,
             int daysTotal,
@@ -111,7 +113,7 @@ public final class GuardianRules {
     }
 
     /**
-     * 페이스 버퍼 = min(0.20, 평균 결제액 / 한도). 데이터가 없으면 0.15.
+     * 페이스 버퍼 = min(0.20, 평균 결제액 / 예산). 데이터가 없으면 0.15.
      *
      * <p>결제 한 건이 곧바로 페이스를 깨면 안 되므로, 그 사용자의 <b>평소 한 건 크기</b>만큼을
      * 여유로 준다. 배달(단가 큼)은 버퍼가 넓고 카페(단가 작음)는 좁아진다.
@@ -152,7 +154,7 @@ public final class GuardianRules {
      * </ul>
      *
      * <p>미지급은 지출한 날에만 생기므로, <b>참는 날은 언제나 보상받는다.</b>
-     * 한도를 초과한(EXCEEDED) 사용자도 무지출 날이면 계속 받는다 — 사물은 벌이 아니다.
+     * 예산을 초과한(EXCEEDED) 사용자도 무지출 날이면 계속 받는다 — 사물은 벌이 아니다.
      *
      * @param daysElapsed        판정 대상 날짜 기준 경과일
      * @param spentUntilDate     판정 대상 날짜까지의 누적 집계 지출
@@ -239,22 +241,28 @@ public final class GuardianRules {
         return new CaseDef(id, label, false, tone, mode, cd, bypassBudget, batchOnly);
     }
 
-    /** 평가 순서가 곧 우선순위다. 위에서부터 보고 먼저 걸린 하나만 실행한다. */
+    /**
+     * 평가 순서가 곧 우선순위다. 위에서부터 보고 먼저 걸린 하나만 실행한다 (스펙 v1.5 §6.2).
+     *
+     * <p>화법(§6.1): TENTATIVE = C1 C2 C3 C8(되돌릴 수 있는 거래성) ·
+     * DEFINITIVE = C5 C6 C10 C11 W1 M1 · <b>C7·C9는 톤이 우선</b>이라 화법을 비운다 —
+     * C7은 질문이고 C9는 아직 일어나지 않은 일이라 단정/조건부 축이 맞지 않는다.
+     */
     public static final List<CaseDef> CASES = List.of(
             silentCase("C14", "초과 확정 후 추가 결제"),
             silentCase("C13", "오늘 알림 예산 소진"),
-            silentCase("C12", "환불로 한도 복원"),
-            speakCase("C7", "카테고리 미분류", Tone.NEUTRAL_ASK, PhrasingMode.DEFINITIVE, null, false, false),
-            speakCase("C6", "한도 초과 확정", Tone.FACT_RESET, PhrasingMode.DEFINITIVE, Cooldown.CHALLENGE, true, false),
-            speakCase("C3", "한도 80% 임박", Tone.REWARD_WARNING, PhrasingMode.TENTATIVE, Cooldown.CHALLENGE, false, false),
-            speakCase("C11", "종료 임박 + 초과 상태", Tone.FACT_RESET, PhrasingMode.DEFINITIVE, Cooldown.DAY, false, true),
+            silentCase("C12", "환불로 예산 복원"),
+            speakCase("C7", "분류 미확정", Tone.NEUTRAL_ASK, null, null, false, false),
+            speakCase("C6", "예산 초과 확정", Tone.FACT_RESET, PhrasingMode.DEFINITIVE, Cooldown.CHALLENGE, true, true),
+            speakCase("C3", "예산 80% 임박", Tone.REWARD_WARNING, PhrasingMode.TENTATIVE, Cooldown.CHALLENGE, false, false),
+            speakCase("C11", "종료 임박 + 사용률 높음", Tone.FACT_RESET, PhrasingMode.DEFINITIVE, Cooldown.DAY, false, true),
             speakCase("C2", "주 3회째 반복 결제", Tone.PATTERN_HINT, PhrasingMode.TENTATIVE, Cooldown.WEEK, false, false),
             speakCase("C1", "챌린지 첫 결제", Tone.SOFT_REMINDER, PhrasingMode.TENTATIVE, Cooldown.CHALLENGE, false, false),
             speakCase("C8", "잔돈 결제 누적", Tone.SOFT_REMINDER, PhrasingMode.TENTATIVE, Cooldown.DAY, false, false),
-            speakCase("C9", "위험 시간대 사전 넛지", Tone.NUDGE_AHEAD, PhrasingMode.DEFINITIVE, Cooldown.WEEK, false, true),
-            speakCase("C5", "무지출 3일 연속", Tone.PRAISE, PhrasingMode.DEFINITIVE, Cooldown.WEEK2, false, true),
-            speakCase("C10", "종료 임박 + 지킬 돈 유지", Tone.PRAISE, PhrasingMode.DEFINITIVE, Cooldown.DAY, false, true),
-            silentCase("C4", "무관 카테고리 지출"));
+            speakCase("C9", "위험 시간대 사전 넛지", Tone.NUDGE_AHEAD, null, Cooldown.WEEK, false, true),
+            speakCase("C5", "무지출 연속", Tone.PRAISE, PhrasingMode.DEFINITIVE, Cooldown.WEEK2, false, true),
+            speakCase("C10", "종료 임박 + 여유", Tone.PRAISE, PhrasingMode.DEFINITIVE, Cooldown.DAY, false, true),
+            silentCase("C4", "성역·고정지출·관리 밖 지출"));
 
     /** 시각 기반 1건 — 주간 회고(매트릭스 밖). */
     public static final CaseDef W1 =
@@ -280,8 +288,47 @@ public final class GuardianRules {
         return def;
     }
 
-    /** 거래 한 건의 판정 재료. */
-    public record TxView(String category, Double categoryConfidence, TxType txType, long amount) {}
+    // =====================================================================
+    //  3-1. 거래 판정 종류 (스펙 v1.5 §5.1)
+    // =====================================================================
+
+    /**
+     * 거래 한 건의 판정 재료.
+     *
+     * @param fixedExpense 분석 Agent가 붙인 고정지출 표시(통신·구독·통근)
+     */
+    public record TxView(String category, Double categoryConfidence, TxType txType, long amount,
+                         boolean fixedExpense) {
+
+        /** 고정지출 표시가 없는 예전 호출부를 위한 생성자. */
+        public TxView(String category, Double categoryConfidence, TxType txType, long amount) {
+            this(category, categoryConfidence, txType, amount, false);
+        }
+    }
+
+    /**
+     * 이 거래를 어떻게 다룰지 정한다 (스펙 v1.5 §5.1). 순수 함수.
+     *
+     * <p><b>검사 순서가 곧 규칙이다.</b>
+     * <ol>
+     *   <li>분류가 확정되지 않았으면 {@code UNKNOWN} — 무엇인지 모르면 차감할 수 없다.</li>
+     *   <li>성역이면 {@code SANCT}. <b>고정지출보다 먼저</b> 본다 — 사용자가 챌린지 도중
+     *       성역을 추가하면 챌린지 카테고리와 겹칠 수 있는데, 그때 성역이 이겨야
+     *       "여기엔 참견하지 않겠다"는 약속이 지켜진다.</li>
+     *   <li>고정지출이면 {@code FIXED} — 통신비를 줄이라고 말할 수는 없다.</li>
+     *   <li>줄이기로 한 카테고리면 {@code TARGET} — 이것만 예산을 깎는다.</li>
+     *   <li>나머지는 {@code NORMAL} — 사용자의 다른 소비에는 참견하지 않는다.</li>
+     * </ol>
+     */
+    public static TxKind resolveKind(TxView tx, ChallengeView ch, double confidenceThreshold) {
+        if (tx.category() == null || orZero(tx.categoryConfidence()) < confidenceThreshold) {
+            return TxKind.UNKNOWN;
+        }
+        if (ch.isSanctuary(tx.category())) return TxKind.SANCT;
+        if (tx.fixedExpense()) return TxKind.FIXED;
+        if (ch.isChallengeCategory(tx.category())) return TxKind.TARGET;
+        return TxKind.NORMAL;
+    }
 
     public record InterventionContext(
             ChallengeView challenge,
@@ -318,9 +365,14 @@ public final class GuardianRules {
     }
 
     /**
-     * 거래 순간의 개입 판정. {@code batchOnly} 케이스(C5·C9·C10·C11·W1)는 여기서 평가하지 않는다.
+     * 거래 순간의 개입 판정 (스펙 v1.5 §5.1·§6.2). 위에서부터 평가하고 먼저 걸린 하나만 실행한다.
      *
-     * <p>분류 신뢰도가 임계 미만이면 <b>집계하지 않고</b> C7 질문만 보낸다 — 분류 전에는 판정할 수 없다.
+     * <p>{@code batchOnly} 케이스(C5·C6·C9·C10·C11·W1)는 여기서 평가하지 않는다.
+     * <b>C6(예산 초과)가 v1.5에서 배치로 옮겨졌다</b> — 되돌리기 유예 24시간이 지나야 초과가
+     * 확정되는데, 거래 순간에 알리면 사용자가 "챌린지랑 상관없어요"로 되돌린 뒤에도 이미
+     * 초과 통보가 나간 뒤가 된다.
+     *
+     * <p>분류가 확정되지 않았으면({@code UNKNOWN}) <b>집계하지 않고</b> C7 질문만 보낸다.
      */
     public static InterventionDecision evaluateIntervention(InterventionContext ctx, GuardianProperties props) {
         ChallengeView ch = ctx.challenge();
@@ -337,26 +389,30 @@ public final class GuardianRules {
             return InterventionDecision.silent("C12", SuppressedReason.CASE_SILENT);
         }
 
-        if (tx != null && (tx.category() == null
-                || orZero(tx.categoryConfidence()) < props.getCategoryConfidenceThreshold())) {
-            return decide("C7", ctx);
+        if (tx != null) {
+            TxKind kind = resolveKind(tx, ch, props.getCategoryConfidenceThreshold());
+            if (kind == TxKind.UNKNOWN) return decide("C7", ctx);
+            // 성역·고정지출·관리 밖 지출에는 참견하지 않는다.
+            if (!kind.countsAgainstCap()) {
+                return InterventionDecision.silent("C4", SuppressedReason.CASE_SILENT);
+            }
         }
 
-        if (tx != null && ch.isSanctuary(tx.category())) {
-            return InterventionDecision.silent("C4", SuppressedReason.CASE_SILENT);
+        // C6은 배치로 갔다. 초과 구간은 여기서 조용히 지나가고 다음 새벽에 한 번만 통보한다.
+        if (snap.spentRatio() >= props.getAtRiskRatio() && snap.spentRatio() < 1.0) {
+            return decide("C3", ctx);
         }
-        if (tx != null && tx.category() != null && !ch.isChallengeCategory(tx.category())) {
-            return InterventionDecision.silent("C4", SuppressedReason.CASE_SILENT);
-        }
-
-        if (snap.spentRatio() > 1.0) return decide("C6", ctx);
-        if (snap.spentRatio() >= props.getAtRiskRatio()) return decide("C3", ctx);
         if (ctx.weeklyCountForCategory() >= props.getRepeatWeeklyCount()) return decide("C2", ctx);
         if (ctx.countedCountForCategory() == 1) return decide("C1", ctx);
         if (ctx.dailyMicroBucket() >= props.getMicroBucketTrigger()) return decide("C8", ctx);
 
-        return InterventionDecision.silent("C4", SuppressedReason.CASE_SILENT);
+        // 대상 카테고리이지만 말할 거리가 없는 결제. C4(무관)와 구분해 기록한다 —
+        // 둘을 뭉치면 "참견 안 함"과 "할 말 없음"의 비율을 나중에 못 가른다.
+        return InterventionDecision.silent(NO_CASE, SuppressedReason.CASE_SILENT);
     }
+
+    /** 대상 거래인데 발화 조건에 아무것도 안 걸렸을 때의 기록용 식별자. */
+    public static final String NO_CASE = "NONE";
 
     private static InterventionDecision decide(String id, InterventionContext ctx) {
         CaseDef def = caseById(id);
@@ -367,6 +423,129 @@ public final class GuardianRules {
     }
 
     private static double orZero(Double v) { return v == null ? 0.0 : v; }
+
+    /**
+     * 새벽 배치에서 평가하는 케이스를 고른다 (스펙 v1.5 §6.2). 순수 함수.
+     * 걸리는 것이 없으면 null.
+     *
+     * <p>거래 시점이 아니라 여기서 보는 이유는 셋 다 <b>되돌려질 수 있어서</b>다.
+     * C6는 유예가 지나야 초과가 확정되고, C10·C11은 남은 날을 말하므로 하루가 끝나야 정확하다.
+     */
+    public static String batchCase(Snapshot snap, ChallengeState state, int noSpendStreak,
+                                   boolean exceededConfirmed, GuardianProperties props) {
+        // C6 — 유예가 만료돼 초과가 확정된 순간. 알림 예산과 야간 침묵을 무시하는 유일한 케이스다.
+        if (exceededConfirmed) return "C6";
+
+        // C10 / C11 — 종료가 임박했다. 사용률로 격려와 사실 통보를 가른다.
+        if (snap.daysLeft() > 0 && snap.daysLeft() <= props.getEndingSoonDaysLeft()) {
+            return snap.spentRatio() >= props.getEndingSoonRatio() ? "C11" : "C10";
+        }
+
+        // C5 — 무지출이 이어졌다. 배수일 때만 — 넷째 날부터 매일 울리면 칭찬이 닳는다.
+        if (state != ChallengeState.EXCEEDED
+                && noSpendStreak > 0
+                && noSpendStreak % props.getNoSpendPraiseInterval() == 0) {
+            return "C5";
+        }
+        return null;
+    }
+
+    /**
+     * C9 — 위험 시간대 사전 넛지 (스펙 v1.5 §6.2). 순수 함수.
+     *
+     * <p>최근 4주에 이 요일·시간대가 임계 횟수 이상 반복됐고, 지금이 그 시간대 직전이면 true.
+     * <b>근거 없이 보내지 않는다</b> — "지난 4주 중 3번"을 지어내면 사용자가 바로 알아챈다.
+     */
+    public static boolean shouldNudgeAhead(DayOfWeek weekday, int hourStart, int frequency4w,
+                                           LocalDateTime now, GuardianProperties props) {
+        if (frequency4w < props.getNudgeFrequency4w()) return false;
+        if (now.getDayOfWeek() != weekday) return false;
+        LocalDateTime slot = now.toLocalDate().atTime(hourStart, 0);
+        LocalDateTime openAt = slot.minusMinutes(props.getNudgeLeadMinutes());
+        return !now.isBefore(openAt) && now.isBefore(slot);
+    }
+
+    // =====================================================================
+    //  3-2. 일 판정 합산 (스펙 v1.5 §5.3)
+    // =====================================================================
+
+    /**
+     * 챌린지별 판정을 사용자 하나의 결과로 합친다. 순수 함수.
+     *
+     * <p><b>아침 사물은 챌린지 개수와 무관하게 하루 1개다.</b> 챌린지를 여러 개 걸었다고
+     * 사물을 여러 개 받으면, 안 지킬 챌린지를 늘리는 것이 이득이 된다.
+     *
+     * <p>한 곳이라도 페이스를 넘겼으면 지급하지 않는다 — 배달을 아꼈다고 카페 초과가
+     * 상쇄되면 "지켰다"는 말의 뜻이 흐려진다.
+     */
+    public static DailyJudgment combineDailyVerdicts(List<DailyJudgment> judgments, int userNoSpendStreak) {
+        List<DailyJudgment> active = judgments == null ? List.of()
+                : judgments.stream().filter(j -> j.result() != DailyResult.NO_GRANT).toList();
+
+        if (active.isEmpty()) {
+            return new DailyJudgment(DailyResult.NO_GRANT, false, null, null, EMPTY_VERDICT_SNAPSHOT);
+        }
+        VerdictSnapshot snap = active.get(0).snapshot();
+
+        if (active.stream().anyMatch(j -> j.result() == DailyResult.OFF_PACE_DAY)) {
+            return new DailyJudgment(DailyResult.OFF_PACE_DAY, false, null, null, snap);
+        }
+        if (active.stream().allMatch(j -> j.result() == DailyResult.NO_SPEND_DAY)) {
+            return new DailyJudgment(DailyResult.NO_SPEND_DAY, true,
+                    gradeWeights(DailyResult.NO_SPEND_DAY, userNoSpendStreak),
+                    "NO_SPEND_STREAK_" + userNoSpendStreak, snap);
+        }
+        return new DailyJudgment(DailyResult.ON_PACE_DAY, true,
+                gradeWeights(DailyResult.ON_PACE_DAY, 0), "ON_PACE", snap);
+    }
+
+    private static final VerdictSnapshot EMPTY_VERDICT_SNAPSHOT = new VerdictSnapshot(0L, 0.0, 0.0, 0.0);
+
+    /**
+     * 세리머니 모달을 자동으로 띄울지 (스펙 v1.5 §5.3). 순수 함수.
+     *
+     * <p>매일 띄우면 연출이 광고처럼 읽힌다. 처음 일주일은 습관이 붙기 전이라 매일 띄우고,
+     * 그 뒤로는 희귀 이상일 때만 — 나머지는 미개봉 뱃지로 쌓아 두고 사용자가 열게 한다.
+     */
+    public static boolean ceremonyAutoOpen(int daysElapsed, Grade grade, GuardianProperties props) {
+        if (grade == null) return false;
+        if (daysElapsed <= props.getCeremonyAutoOpenFirstDays()) return true;
+        return grade != Grade.COMMON;
+    }
+
+    // =====================================================================
+    //  3-3. 주간 미션 (스펙 v1.5 §5.5)
+    // =====================================================================
+
+    /**
+     * 진행 중 미션이 나눠 갖는 몫 = ⌊30 / clamp(개수, 1, 3)⌋. 순수 함수.
+     * 1개 30P · 2개 15P · 3개 10P.
+     *
+     * <p>미션마다 정액을 주면 "두 개 하면 두 배"가 되어 수집형 플레이로 변질된다.
+     */
+    public static int missionShare(int activeCount, GuardianProperties props) {
+        int n = Math.max(1, Math.min(props.getPoint().getMaxActiveMissions(), activeCount));
+        return props.getPoint().getWeeklyMission() / n;
+    }
+
+    /** AVOID_SLOT 판정에 쓸 결제 한 건 — 요일·시간은 <b>KST 기준</b>으로 채워 넣는다. */
+    public record MissionTx(String category, DayOfWeek weekday, int hour) {}
+
+    /**
+     * 지정 슬롯에 걸린 결제 건수. 0이면 미션 달성. 순수 함수.
+     *
+     * <p>요일·시간을 UTC로 재면 금요일 밤 22시 주문이 토요일로 넘어가 미션이 통과해 버린다.
+     * 호출부가 KST로 변환해 넣는 것이 계약이다.
+     */
+    public static int countInSlot(List<MissionTx> weekTxs, String category,
+                                  DayOfWeek weekday, int hourStart, int hourEnd) {
+        if (weekTxs == null) return 0;
+        return (int) weekTxs.stream()
+                .filter(t -> category == null || category.equals(t.category()))
+                .filter(t -> t.weekday() == weekday)
+                .filter(t -> t.hour() >= hourStart && t.hour() < hourEnd)
+                .count();
+    }
 
     /** 이 케이스를 지금 또 보내도 되는가. */
     public static boolean cooldownOk(CaseDef def, Map<String, List<LocalDateTime>> sentAt, LocalDateTime now) {
@@ -388,6 +567,10 @@ public final class GuardianRules {
 
     // =====================================================================
     //  4. 알림 예산 (설계서 §4.1)
+    //
+    //  <b>"알림 예산"은 챌린지 예산과 다른 것이다.</b> 이쪽은 하루에 몇 번까지 말을 걸어도
+    //  되는가(`daily-push-limit`)이고, 저쪽은 얼마까지 써도 되는가다. 낱말이 겹치므로
+    //  푸시 상한을 가리킬 때는 <b>수식어 "알림"을 반드시 붙인다.</b> (2026-08-06)
     // =====================================================================
 
     /**
@@ -402,9 +585,41 @@ public final class GuardianRules {
             "들어온 결제가",
             "챌린지랑 상관없어요",
             "알려줘서 고마워요",
-            // 한도 알림(C3·C6)이 "어디서 새는지" 지목하는 고정구. 알림을 카테고리별로 쪼개는 대신
-            // 넣은 문장이라 한도 이야기마다 따라온다 — 반복으로 셀 표현이 아니다. (2026-08-02)
+            // 예산을 말하는 알림(C3·C6)이 "어디서 새는지" 지목하는 고정구. 알림을 카테고리별로 쪼개는 대신
+            // 넣은 문장이라 예산 이야기마다 따라온다 — 반복으로 셀 표현이 아니다. (2026-08-02)
             "에서 가장 많이 나갔어요");
+
+    // =====================================================================
+    //  4-1. 홈 한마디 (스펙 v1.5 §7.3)
+    // =====================================================================
+
+    /** 홈 한마디의 케이스 우선순위. 앞에 있을수록 이긴다. */
+    private static final List<String> ONELINE_PRIORITY =
+            List.of("C6", "C3", "C11", "C2", "C1", "C5");
+
+    /** 걸리는 케이스가 없을 때의 자리 — 개입이 아니므로 알림 예산을 쓰지 않고 알림함에도 안 남는다. */
+    public static final String ONELINE_IDLE = "IDLE";
+
+    /**
+     * 홈 한마디에 무엇을 걸지 고른다 (스펙 v1.5 §7.3). 순수 함수.
+     *
+     * <p><b>침묵일 때도 이 자리는 비우지 않는다.</b> 알림을 안 보낸 것과 홈이 빈 것은 다르다 —
+     * 사용자는 앱을 열었으니 무슨 상태인지는 알아야 한다.
+     *
+     * <p>여러 카테고리가 동시에 걸리면 하나만 말한다. 두 줄짜리 자리에 두 챌린지를 욱여넣으면
+     * 44자를 넘겨 레이아웃이 깨진다.
+     *
+     * @param candidates 케이스 id → 그 챌린지의 사용률. 사용률이 가장 높은 것이 대표가 된다.
+     */
+    public static String resolveOneline(Map<String, Double> candidates) {
+        if (candidates == null || candidates.isEmpty()) return ONELINE_IDLE;
+        for (String id : ONELINE_PRIORITY) {
+            // C3는 아직 넘기지 않은 구간에서만 — 이미 초과했는데 "80%예요"라고 하면 뒤처진 말이 된다.
+            if ("C3".equals(id) && orZero(candidates.get(id)) >= 1.0) continue;
+            if (candidates.containsKey(id)) return id;
+        }
+        return ONELINE_IDLE;
+    }
 
     /** 로그 적재 전 고정구를 걸러낸다 — 반복 감지가 고정구에 걸려 오작동하지 않게. */
     public static List<String> stripFixedPhrases(List<String> keyPhrases) {

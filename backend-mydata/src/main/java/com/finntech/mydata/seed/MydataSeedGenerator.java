@@ -27,10 +27,15 @@ public class MydataSeedGenerator implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(MydataSeedGenerator.class);
 
-    /** 결정론 이름 풀. */
-    private static final List<String> NAMES = List.of(
-            "김민준", "이서연", "박도윤", "최지우", "정하은", "강시우",
-            "조수아", "윤예준", "임지호", "한서윤", "오지훈", "신유진");
+    /**
+     * 이름은 {@link com.finntech.mydata.util.KoreanName} 이 만든다.
+     *
+     * <p>예전에는 고정 12개를 여기 적어 뒀다. 그러면 ① 사용자를 12명 넘게 만들면 이름 뒤에
+     * 번호가 붙어({@code 김민준12}) 사람 이름이 아니게 되고 ② 성별세대코드와 이름이 따로 놀아
+     * 「김민준(여)」이 나왔다. 이제 주민등록번호를 <b>먼저</b> 뽑고 그 성별로 이름을 만든다.
+     */
+    private static final com.finntech.mydata.util.KoreanName NAMES =
+            com.finntech.mydata.util.KoreanName.instance();
 
     private final MyDataUserRepository userRepo;
     private final MyDataCardRepository cardRepo;
@@ -127,9 +132,9 @@ public class MydataSeedGenerator implements CommandLineRunner {
         int paymentCounter = 0;
         List<String> demoIdentities = new ArrayList<>();
         for (int userIndex = 0; userIndex < users; userIndex++) {
-            String name = NAMES.get(userIndex % NAMES.size())
-                    + (userIndex >= NAMES.size() ? String.valueOf(userIndex) : "");
+            // 주민등록번호를 먼저 뽑는다 — 7번째 자리가 이름의 성별을 정한다.
             String social7 = generateBirth7(rnd);
+            String name = NAMES.full(rnd, social7.charAt(6));
             String phoneNumber = generatePhone(rnd);
             String ci = Ci.of(name, social7, phoneNumber);
             String fullSocial = social7 + generateDigits(rnd, 6);
@@ -194,7 +199,7 @@ public class MydataSeedGenerator implements CommandLineRunner {
 
     /** 주민번호 앞 7자리(YYMMDD + 성별세대) 생성. 결정론. */
     private static String generateBirth7(Random rnd) {
-        int year = 1970 + rnd.nextInt(36);   // 1970~2005
+        int year = 1987 + rnd.nextInt(20);   // 1987~2006 — regen-mydata-identity.py 와 같은 범위
         int month = 1 + rnd.nextInt(12);
         int day = 1 + rnd.nextInt(28);
         int gender = isYear2000s(year) ? (rnd.nextBoolean() ? 3 : 4) : (rnd.nextBoolean() ? 1 : 2);
