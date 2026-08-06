@@ -792,6 +792,20 @@ export interface MissionBoard {
   weeklyPointPool: number;
 }
 
+/** 챌린지 카테고리 한 줄 (마이 > 챌린지 관리). */
+export interface ChallengeCategory {
+  category: string;
+  label: string;
+  /** 기준 지출(실측) — 사용자가 정할 값이 아니다. */
+  baseline: number;
+  /** 지키기로 한 돈. 이 값만 사용자가 옮긴다. */
+  target: number;
+  /** 예산 = 기준 − 지킬 돈. */
+  cap: number;
+  /** 지금까지 쓴 돈 — 목표를 얼마나 올릴 수 있는지의 천장이다. */
+  spent: number;
+}
+
 /** 주간 미션 한 줄. ONGOING이면 아직 기간 중(일요일 배치가 정산한다). */
 export interface MissionLine {
   text: string;
@@ -1248,6 +1262,18 @@ export const api = {
     shop: (userId: number) => get<GuardianShop>(`/api/guardian/shop?userId=${userId}`),
     catSkins: (userId: number) => get<CatSkin[]>(`/api/guardian/cat-skins?userId=${userId}`),
     missions: (userId: number) => get<MissionBoard>(`/api/guardian/missions?userId=${userId}`),
+    /** 진행 중 챌린지의 카테고리들 — 관리 화면이 읽는다. */
+    challengeCategories: (userId: number) =>
+      get<ChallengeCategory[]>(`/api/guardian/challenges/categories?userId=${userId}`),
+    /** 한 카테고리의 지킬 돈을 다시 정한다. 이미 쓴 돈보다 낮추면 서버가 400으로 막는다. */
+    retarget: (userId: number, category: string, target: number) =>
+      post<ChallengeCategory[]>(
+        `/api/guardian/challenges/categories/${encodeURIComponent(category)}/target?userId=${userId}`,
+        { target }),
+    /** 줄일 카테고리를 하나 더한다. 이미 줄이고 있거나 성역이면 서버가 400으로 막는다. */
+    addChallengeCategory: (userId: number, category: string, targetSaving?: number) =>
+      post<ChallengeCategory[]>(`/api/guardian/challenges/categories?userId=${userId}`,
+        { category, targetSaving: targetSaving ?? null }),
     /** 지킴이 말수 — 하루 알림 상한. dailyLimit 0이면 '설정 안 함'이라 기본값을 따른다. */
     voice: (userId: number) =>
       get<{ dailyLimit: number; defaultLimit: number; effectiveLimit: number }>(

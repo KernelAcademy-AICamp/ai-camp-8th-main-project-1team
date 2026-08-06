@@ -491,6 +491,39 @@ public class GuardianController {
 
     public record SanctuaryRequest(List<String> categories) {}
 
+    /** 진행 중 챌린지의 카테고리들 — 관리 화면이 읽는다. */
+    @GetMapping("/challenges/categories")
+    public List<GuardianService.ChallengeCategoryView> challengeCategories(@RequestParam Long userId) {
+        return guardianService.challengeCategories(userId);
+    }
+
+    /**
+     * 한 카테고리에서 지킬 돈을 다시 정한다 (마이 &gt; 챌린지 관리 &gt; ○○ 줄이기).
+     *
+     * <p>이미 쓴 돈보다 예산을 낮추려 하면 400 — 저장하는 순간 실패가 되는 설정은 받지 않는다.
+     */
+    @PostMapping("/challenges/categories/{category}/target")
+    public List<GuardianService.ChallengeCategoryView> retarget(
+            @RequestParam Long userId, @PathVariable String category,
+            @RequestBody TargetRequest req) {
+        return guardianService.retarget(userId, category, req.target());
+    }
+
+    public record TargetRequest(long target) {}
+
+    /**
+     * 줄일 카테고리를 하나 더한다 (마이 &gt; 챌린지 관리 &gt; 새 챌린지 만들기).
+     *
+     * <p>이미 줄이고 있거나 성역으로 둔 곳이면 400 — 무엇이 문제인지 화면이 그대로 말한다.
+     */
+    @PostMapping("/challenges/categories")
+    public List<GuardianService.ChallengeCategoryView> addCategory(
+            @RequestParam Long userId, @RequestBody AddCategoryRequest req) {
+        return guardianService.addCategory(userId, req.category(), req.targetSaving());
+    }
+
+    public record AddCategoryRequest(@NotNull String category, Long targetSaving) {}
+
     /** 지킴이 말수 — 하루 알림 상한. 0이면 '설정 안 함'이고 전역 기본값을 따른다. */
     @GetMapping("/voice")
     public Map<String, Object> voice(@RequestParam Long userId) {

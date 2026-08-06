@@ -19,7 +19,7 @@ import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
 import { useAsync } from '../state/useAsync';
 import { api } from '../lib/api';
-import { won, wonNum } from '../lib/format';
+import { won, wonNum, shortDate } from '../lib/format';
 
 /** "7.20 ~ 7.26" */
 const fmtRange = (a: string, b: string) =>
@@ -67,7 +67,6 @@ export function Report() {
   const ch = home?.challenge;
   const isCur = weeksAgo === 0;
   /** 판정이 하나도 없는 주 — 개편안의 `#rpEmpty`. */
-  const empty = !w || w.days.every((d) => !d.judged);
 
   /** 차트 위 한 줄 요약. 모드마다 무엇을 견주는지가 다르다. */
   const lead = mode === 0
@@ -107,24 +106,22 @@ export function Report() {
         </div>
         <div className="rp-line" />
 
-        {empty ? (
+        {/* **소비가 없다고 화면을 통째로 감추지 않는다.**
+            예전에는 그 주에 판정된 소비가 하나도 없으면 다섯 절을 다 지웠는데, 그러면
+            "이번 주는 아직 조용하다"와 "리포트 기능이 고장났다"가 화면에서 구별되지 않았다.
+            빈 차트라도 서 있어야 무엇을 보는 화면인지 알고, 다음 주에 채워질 자리도 보인다.
+            절마다 자기 자리에서 "아직 없어요"를 말한다.
+
+            챌린지가 아예 없을 때만 다르다 — 그때는 어느 주로 옮겨도 영영 안 나오므로,
+            헤매게 두지 않고 시작하는 길을 준다. */}
+        {!ch ? (
           <div className="rp-sec">
-            {/* **챌린지가 아예 없는 것과, 그 주에 소비가 없는 것은 다른 말이다.**
-                예전에는 둘 다 "기록이 있는 주로 이동하면"이라고 했는데, 챌린지가 없으면
-                어느 주로 옮겨도 영영 안 나온다 — 사용자는 없는 주를 찾아 헤매게 된다. */}
-            {ch ? (
-              <div className="rp-emp">
-                <b>이 주에는 분석할 소비가 없어요</b>
-                <p>기록이 있는 주로 이동하면 리포트를 보여드릴게요</p>
-              </div>
-            ) : (
-              <div className="rp-emp">
-                <b>아직 보여드릴 리포트가 없어요</b>
-                <p>챌린지를 시작하면 그 주부터 쌓여요</p>
-                <button type="button" className="btn btn-primary"
-                  style={{ marginTop: 16 }} onClick={() => go('ob1')}>챌린지 시작하기</button>
-              </div>
-            )}
+            <div className="rp-emp">
+              <b>아직 보여드릴 리포트가 없어요</b>
+              <p>챌린지를 시작하면 그 주부터 쌓여요</p>
+              <button type="button" className="btn btn-primary"
+                style={{ marginTop: 16 }} onClick={() => go('ob1')}>챌린지 시작하기</button>
+            </div>
           </div>
         ) : (
           <>
@@ -132,7 +129,17 @@ export function Report() {
             <div className="rp-sec">
               <div className="t-cap">{isCur ? '이번 주' : '이 주'} 동안 지킨 금액</div>
               <div className="rp-keep">{wonNum(ch?.securedSaving ?? 0)}<em>원</em></div>
-              <WeekChart mode={mode} onMode={setMode} days={w.days} trend={w.trend} lead={lead} />
+              {/* **챌린지 시작 전 소비는 여기 안 들어온다.** 소비 내역에는 잔뜩 보이는데
+                  리포트는 0이면 사용자는 화면이 고장난 줄 안다 — 그 사정을 그 자리에서 말한다.
+                  시작 전까지 세면 시작하자마자 실패한 상태가 되므로, 안 세는 것이 맞다. */}
+              {w && ch && w.days.some((d) => !d.judged) && w.weekStart < ch.startDate && (
+                <p className="pv" style={{ margin: '0 0 12px' }}>
+                  이 주는 <b>{shortDate(ch.startDate)}에 챌린지를 시작</b>해서, 그전 소비는 세지 않아요.
+                  전체 결제는 <b>소비 내역</b>에서 볼 수 있어요.
+                </p>
+              )}
+              <WeekChart mode={mode} onMode={setMode} days={w?.days ?? []}
+                trend={w?.trend ?? []} lead={lead} />
             </div>
             <div className="rp-band" />
 
@@ -156,19 +163,19 @@ export function Report() {
             <div className="rp-band" />
 
             {/* ── ③ 지킴이가 본 이번 주 + 미션 다리 ────────────────── */}
-            {(w.coaching.good || w.coaching.watch) && (
+            {(w?.coaching.good || w?.coaching.watch) && (
               <>
                 <div className="rp-sec">
                   <div className="t-sec">지킴이가 본 이번 주</div>
                   <div className="ins">
-                    {w.coaching.good && (
-                      <div className="ig"><span className="itag good">잘한 점</span><p>{w.coaching.good}</p></div>
+                    {w?.coaching.good && (
+                      <div className="ig"><span className="itag good">잘한 점</span><p>{w?.coaching.good}</p></div>
                     )}
-                    {w.coaching.watch && (
-                      <div className="ig"><span className="itag warn">살펴볼 점</span><p>{w.coaching.watch}</p></div>
+                    {w?.coaching.watch && (
+                      <div className="ig"><span className="itag warn">살펴볼 점</span><p>{w?.coaching.watch}</p></div>
                     )}
                   </div>
-                  {w.missions.length > 0 && (
+                  {(w?.missions.length ?? 0) > 0 && (
                     <button type="button" className="bn msn" onClick={() => go('myroom')}>
                       <div className="bnt">
                         <b>이번 주 소비를 보고<br />다음 주 미션을 준비했어요</b>
@@ -183,11 +190,11 @@ export function Report() {
             )}
 
             {/* ── ④ 지난 챌린지 달성률 ────────────────────────────── */}
-            {w.pastChallenges.length > 0 && (
+            {(w?.pastChallenges.length ?? 0) > 0 && (
               <>
                 <div className="rp-sec">
                   <div className="t-sec">지난 챌린지 달성률</div>
-                  {w.pastChallenges.map((p) => (
+                  {w?.pastChallenges.map((p) => (
                     <div className="ch" key={p.challengeId}>
                       <div className="chh"><b>{p.label}</b><span>{Math.round(p.rate * 100)}%</span></div>
                       <div className="cbar"><i style={{ width: `${Math.round(p.rate * 100)}%` }} /></div>

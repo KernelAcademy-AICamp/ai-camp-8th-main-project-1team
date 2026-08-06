@@ -817,6 +817,116 @@ public class GuardianService {
         return ch.getSanctuarySet();
     }
 
+    /**
+     * 챌린지 카테고리 한 줄 — 관리 화면이 읽는 값.
+     *
+     * @param baseline 기준 지출(실측). 사용자가 정할 값이 아니다.
+     * @param target   지키기로 한 돈. 이 값만 사용자가 옮긴다.
+     * @param cap      예산 = 기준 − 지킬 돈.
+     * @param spent    지금까지 그 카테고리에서 쓴 돈 — 목표를 얼마나 낮출 수 있는지의 바닥이다.
+     */
+    public record ChallengeCategoryView(String category, String label,
+                                        long baseline, long target, long cap, long spent) {}
+
+    /** 그 챌린지에서 카테고리별로 집계된 사용액. 홈과 관리 화면이 같은 수를 본다. */
+    private Map<String, Long> spentByCategory(GuardianChallenge ch) {
+        Map<String, Long> out = new LinkedHashMap<>();
+        for (Object[] row : txRepository.sumCountedByCategory(ch.getId())) {
+            if (row[0] == null) continue;
+            out.put((String) row[0], ((Number) row[1]).longValue());
+        }
+        return out;
+    }
+
+    /** 진행 중 챌린지의 카테고리들. 없으면 빈 목록 — 화면이 "없다"를 스스로 말한다. */
+    @Transactional(readOnly = true)
+    public List<ChallengeCategoryView> challengeCategories(Long userId) {
+        GuardianChallenge ch = challengeRepository.findRunning(userId).orElse(null);
+        if (ch == null) return List.of();
+        Map<String, Long> spentBy = spentByCategory(ch);
+        List<ChallengeCategoryView> out = new ArrayList<>();
+        for (GuardianChallengeCategory c : challengeCategoryRepository.findByChallenge(ch.getId())) {
+            out.add(new ChallengeCategoryView(c.getCategory(), categoryLabel(c.getCategory()),
+                    c.getBaseline(), c.getTarget(), c.getCap(),
+                    spentBy.getOrDefault(c.getCategory(), 0L)));
+        }
+        return out;
+    }
+
+    /**
+     * 한 카테고리의 지킬 돈을 다시 정한다.
+     *
+     * <p><b>이미 쓴 돈보다 예산을 낮출 수는 없다.</b> 그러면 저장하는 순간 예산 초과가 되어
+     * 사용자가 한 적 없는 실패가 만들어진다. 바닥을 알려주고 거기서 멈춘다.
+     */
+    @Transactional
+    public List<ChallengeCategoryView> retarget(Long userId, String category, long target) {
+        GuardianChallenge ch = challengeRepository.findRunning(userId).orElseThrow(
+                () -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.BAD_REQUEST, "진행 중인 챌린지가 없어요"));
+        GuardianChallengeCategory row = challengeCategoryRepository.findByChallenge(ch.getId())
+                .stream().filter(c -> c.getCategory().equals(category)).findFirst()
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.BAD_REQUEST, "이번 챌린지에 없는 카테고리예요"));
+
+        long spent = spentByCategory(ch).getOrDefault(category, 0L);
+        long maxTarget = Math.max(0L, row.getBaseline() - spent);
+        if (target > maxTarget) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "이미 " + GuardianCopy.won(spent) + "원을 써서 그만큼은 못 지켜요");
+        }
+        row.retarget(target);
+        challengeCategoryRepository.save(row);
+        return challengeCategories(userId);
+    }
+
+    /**
+     * 진행 중 챌린지에 줄일 카테고리를 하나 더한다 (마이 &gt; 챌린지 관리 &gt; 새 챌린지 만들기).
+     *
+     * <p><b>새 챌린지를 만들지 않고 기존 것에 붙인다.</b> 카테고리마다 챌린지를 따로 만들면
+     * 기간이 제각각이 되어 "이번 달"이라는 말이 뜻을 잃고, 월말 결산도 여러 번 일어난다.
+     * 화면에서는 줄이 하나 느는 것으로 보이지만 안에서는 같은 챌린지가 넓어진 것이다.
+     *
+     * <p>기준 지출은 <b>남은 기간으로 환산</b>한다 — 한 달짜리 기준을 열흘 남은 챌린지에 그대로
+     * 얹으면 예산이 통째로 남아돌아 아무것도 지키지 않은 게 된다.
+     */
+    @Transactional
+    public List<ChallengeCategoryView> addCategory(Long userId, String category, Long targetSaving) {
+        GuardianChallenge ch = challengeRepository.findRunning(userId).orElseThrow(
+                () -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.BAD_REQUEST, "진행 중인 챌린지가 없어요"));
+        if (ch.getCategorySet().contains(category)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "이미 줄이고 있는 곳이에요");
+        }
+        if (ch.getSanctuarySet().contains(category)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "성역으로 둔 곳이에요. 성역 관리에서 먼저 빼주세요");
+        }
+
+        LocalDateTime now = clock.now(userId);
+        int remain = Math.max(1, (int) (ch.getEndDate().toEpochDay() - clock.today(userId).toEpochDay()) + 1);
+        long base = baselineByCategory(userId, List.of(category), now, remain, List.of())
+                .getOrDefault(category, 0L);
+        if (base <= 0) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "그 카테고리에는 줄일 만한 소비가 없어요");
+        }
+        long target = targetSaving != null && targetSaving > 0
+                ? Math.min(targetSaving, Math.max(0L, base - 1))
+                : base / 2;
+
+        challengeCategoryRepository.save(
+                new GuardianChallengeCategory(ch.getId(), category, base, target, now));
+        ch.addCategory(category);
+        ch.growBaseline(base, target);
+        challengeRepository.save(ch);
+        return challengeCategories(userId);
+    }
+
     /** 지금 말수 설정과 전역 기본값. 0이면 '설정 안 함'이라 기본값을 따른다. */
     @Transactional(readOnly = true)
     public Map<String, Object> voice(Long userId) {

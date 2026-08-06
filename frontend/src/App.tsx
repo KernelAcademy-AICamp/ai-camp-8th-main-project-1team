@@ -39,6 +39,8 @@ import { ReportCards } from './screens/ReportCards';
 import { Compare } from './screens/Compare';
 import { MyProducts } from './screens/MyProducts';
 import { MySanctuary } from './screens/MySanctuary';
+import { MyChallenge } from './screens/MyChallenge';
+import { MyChallengeNew } from './screens/MyChallengeNew';
 import { MyVoice } from './screens/MyVoice';
 import { ReportWaste } from './screens/ReportWaste';
 import { ReportSavings } from './screens/ReportSavings';
@@ -72,6 +74,8 @@ const SCREENS: Record<ScreenId, ComponentType> = {
   'r-compare': Compare,
   'm-products': MyProducts,
   'm-sanctuary': MySanctuary,
+  'm-challenge': MyChallenge,
+  'm-challenge-new': MyChallengeNew,
   'm-voice': MyVoice,
   'r-account': ReportAccount,
   'r-waste': ReportWaste, 'r-savings': ReportSavings,

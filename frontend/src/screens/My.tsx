@@ -34,7 +34,7 @@ function tierName(days: number): string {
 }
 
 export function My() {
-  const { go, userId } = useSession();
+  const { go, userId, openChallenge } = useSession();
   const { home } = useGuardian();
   const ch = home?.challenge;
   /** 계정 이름 — 본인인증으로 확인된 이름이 들어온다. */
@@ -88,10 +88,11 @@ export function My() {
           {(ch?.categorySpend ?? []).map((c) => {
             const { icon, bg } = iconOf(c.label);
             return (
-              // 챌린지 줄을 누르면 **챌린지를 다시 정하는 흐름**으로 간다.
+              // 줄마다 **그 카테고리의 관리 화면**으로 간다 — 거기서 강도를 다시 정한다.
               // 마이룸으로 보내던 것은 자리를 못 정해 임시로 둔 것이었는데, 방을 꾸미는 곳이라
               // "식비 줄이기"를 눌렀는데 방이 나오는 셈이었다.
-              <button type="button" key={c.code} className="list-item" onClick={() => go('ob1')}>
+              <button type="button" key={c.code} className="list-item"
+                onClick={() => openChallenge(c.code)}>
                 <span className="ic" style={{ background: bg }}><Icon id={icon} /></span>
                 <div className="tx">
                   <b>{c.label} 줄이기</b>
@@ -102,7 +103,7 @@ export function My() {
             );
           })}
           {!ch && <p className="empty" style={{ margin: '8px 0' }}>아직 챌린지가 없어요.</p>}
-          <button type="button" className="list-item" onClick={() => go('ob1')}>
+          <button type="button" className="list-item" onClick={() => go(ch ? 'm-challenge-new' : 'ob1')}>
             <span className="ic" style={{ background: 'var(--blue-weak)', color: 'var(--blue-t)',
               fontSize: 20, fontWeight: 700 }} aria-hidden="true">＋</span>
             <div className="tx"><b style={{ color: 'var(--blue-t)' }}>새 챌린지 만들기</b></div>
