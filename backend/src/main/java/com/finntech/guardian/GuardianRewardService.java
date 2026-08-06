@@ -171,7 +171,19 @@ public class GuardianRewardService {
     @Transactional
     public int award(Long userId, Long challengeId, PointType type, LocalDate date,
                      Long sourceRef, LocalDateTime now) {
-        int amount = ruleAmount(type);
+        return award(userId, challengeId, type, ruleAmount(type), date, sourceRef, now);
+    }
+
+    /**
+     * 액수를 호출부가 정하는 적립.
+     *
+     * <p>규칙표({@link #ruleAmount})로 액수가 안 나오는 종류가 있다. 주간 미션은 진행 중인
+     * 개수만큼 총액을 나눠 갖고({@link GuardianRules#missionShare}), 중복 사물은 등급이 정한다.
+     * <b>그 나눗셈을 여기서 다시 하지 않는다</b> — 규칙이 두 곳에 있으면 한쪽만 고쳐진다.
+     */
+    @Transactional
+    public int award(Long userId, Long challengeId, PointType type, int amount, LocalDate date,
+                     Long sourceRef, LocalDateTime now) {
         boolean exempt = type == PointType.MONTHLY_COMPLETE && props.getPoint().isMonthlyExemptFromCap();
 
         LocalDate week = exempt ? null : weekStart(date);
@@ -193,6 +205,23 @@ public class GuardianRewardService {
             case RISK_DEFENSE -> p.getRiskDefense();
             case LABELING -> p.getLabeling();
             case MONTHLY_COMPLETE -> p.getMonthlyComplete();
+            // 등급별로 달라 여기서는 정할 수 없다 — duplicateAmount()가 정한 값을 그대로 받는다.
+            case DUPLICATE_OBJECT -> 0;
+        };
+    }
+
+    /**
+     * 중복 사물 전환 포인트 (스펙 v1.5 §5.5). 이미 가진 사물이 나왔을 때 등급대로 바꿔 준다.
+     *
+     * <p>주간 상한 밖이다 — 상한에 걸려 중복 보상이 0이 되면 "또 같은 게 나왔다"가
+     * 아무 보상도 없는 일이 되어, 뽑기 자체가 벌처럼 읽힌다.
+     */
+    public int duplicateAmount(Grade grade) {
+        GuardianProperties.Point p = props.getPoint();
+        return switch (grade) {
+            case COMMON -> p.getDuplicateCommon();
+            case RARE -> p.getDuplicateRare();
+            case EPIC -> p.getDuplicateEpic();
         };
     }
 

@@ -2,6 +2,9 @@ package com.finntech.mydata.generation;
 
 import com.finntech.mydata.generation.CatalogModels.PersonaProfile;
 import com.finntech.mydata.generation.CatalogModels.RegionEntry;
+import com.finntech.mydata.util.Ci;
+import com.finntech.mydata.util.KoreanName;
+import com.finntech.mydata.util.Msisdn;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -90,8 +93,21 @@ public class PopulationBuilder {
 
                 // 교통카드는 한 장으로 고정한다 — 사람은 지하철 요금을 날마다 다른 카드로 내지 않는다.
                 int transitCard = GenSeed.uniformInt(r, 0, cards - 1);
-                users.add(new GeneratedUser(GenSeed.ci(masterSeed, idx), variant, start,
-                        home, work, vehicle, cards, split, userSeed, transitCard));
+
+                // 신원 — **CI 를 여기서 뽑는다.** 예전에는 `GenSeed.ci(seed, idx)` 였고 신원 칸은
+                // 전원이 같은 자리표시자(`900101-1000000`/`010-0000-0000`)였다. 본인인증은
+                // `Ci.of(이름·주민7·전화)` 로 CI 를 만드는데 그 식과 무관한 값이라, **어떤 값을
+                // 입력해도 생성 사용자에 도달할 수 없었다** — 4,511명이 통째로 로그인 불가였다.
+                // 주민등록번호를 먼저 뽑는 이유는 7번째 자리가 이름의 성별을 정하기 때문이다.
+                Random ir = GenSeed.rng(userSeed, 404);
+                String social7 = randomSocial7(ir);
+                String name = NAMES.full(ir, social7.charAt(6));
+                String phone = "010" + String.format("%04d%04d",
+                        Msisdn.randomAssigned(ir), ir.nextInt(10000));
+
+                users.add(new GeneratedUser(Ci.of(name, social7, phone), variant, start,
+                        home, work, vehicle, cards, split, userSeed, transitCard,
+                        name, social7, phone));
             }
         }
         return users;
@@ -127,6 +143,26 @@ public class PopulationBuilder {
     }
 
     /** 필터된 지역의 누적 가중 표본기(가중=시도 인구 기반 weight). */
+    /** 이름은 표 하나에서 나온다 — 파이썬 신원 재부여 스크립트도 같은 표를 읽는다. */
+    private static final KoreanName NAMES = KoreanName.instance();
+
+    /** 타깃이 20~30대 직장인이라 생년을 이 범위로 고정한다. `regen-mydata-identity.py` 와 같은 값. */
+    private static final int BIRTH_MIN = 1987, BIRTH_MAX = 2006;
+
+    /**
+     * 주민등록번호 앞 7자리(YYMMDD + 성별세대코드).
+     *
+     * <p>세대코드는 세기가 정한다 — 1900년대생 1(남)·2(여), 2000년대생 3(남)·4(여).
+     * 날짜는 28일까지만 뽑는다: 2월 30일 같은 없는 날짜를 만들지 않는 가장 단순한 방법이다.
+     */
+    private static String randomSocial7(Random r) {
+        int year = BIRTH_MIN + r.nextInt(BIRTH_MAX - BIRTH_MIN + 1);
+        int month = 1 + r.nextInt(12);
+        int day = 1 + r.nextInt(28);
+        int gender = (year >= 2000 ? 3 : 1) + r.nextInt(2);
+        return String.format("%02d%02d%02d%d", year % 100, month, day, gender);
+    }
+
     private static final class WeightedRegions {
         private final List<RegionEntry> items = new ArrayList<>();
         private final double[] cumulative;

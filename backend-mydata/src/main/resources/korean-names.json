@@ -1,0 +1,569 @@
+{
+ "source": "scripts/identity/성씨-인구.tsv · 이름-음절.tsv · 금지-조합.tsv",
+ "surnames": [
+  {
+   "surname": "김",
+   "population": 10689959
+  },
+  {
+   "surname": "이",
+   "population": 7306828
+  },
+  {
+   "surname": "박",
+   "population": 4192074
+  },
+  {
+   "surname": "정",
+   "population": 2395682
+  },
+  {
+   "surname": "최",
+   "population": 2333927
+  },
+  {
+   "surname": "조",
+   "population": 1453827
+  },
+  {
+   "surname": "강",
+   "population": 1268472
+  },
+  {
+   "surname": "윤",
+   "population": 1020547
+  },
+  {
+   "surname": "임",
+   "population": 1015182
+  },
+  {
+   "surname": "장",
+   "population": 992721
+  },
+  {
+   "surname": "유",
+   "population": 949428
+  },
+  {
+   "surname": "신",
+   "population": 933958
+  },
+  {
+   "surname": "한",
+   "population": 773404
+  },
+  {
+   "surname": "오",
+   "population": 763281
+  },
+  {
+   "surname": "서",
+   "population": 751704
+  },
+  {
+   "surname": "전",
+   "population": 745579
+  },
+  {
+   "surname": "권",
+   "population": 705941
+  },
+  {
+   "surname": "황",
+   "population": 697171
+  },
+  {
+   "surname": "안",
+   "population": 685639
+  },
+  {
+   "surname": "송",
+   "population": 683494
+  },
+  {
+   "surname": "홍",
+   "population": 558853
+  },
+  {
+   "surname": "고",
+   "population": 471396
+  },
+  {
+   "surname": "문",
+   "population": 464040
+  },
+  {
+   "surname": "양",
+   "population": 460600
+  },
+  {
+   "surname": "손",
+   "population": 457303
+  },
+  {
+   "surname": "배",
+   "population": 400641
+  },
+  {
+   "surname": "백",
+   "population": 381986
+  },
+  {
+   "surname": "허",
+   "population": 326770
+  },
+  {
+   "surname": "남",
+   "population": 275648
+  },
+  {
+   "surname": "심",
+   "population": 271749
+  },
+  {
+   "surname": "노",
+   "population": 256229
+  },
+  {
+   "surname": "하",
+   "population": 230481
+  },
+  {
+   "surname": "곽",
+   "population": 203188
+  },
+  {
+   "surname": "성",
+   "population": 199124
+  },
+  {
+   "surname": "차",
+   "population": 194782
+  },
+  {
+   "surname": "주",
+   "population": 194766
+  },
+  {
+   "surname": "우",
+   "population": 194713
+  },
+  {
+   "surname": "구",
+   "population": 193080
+  },
+  {
+   "surname": "민",
+   "population": 171740
+  },
+  {
+   "surname": "류",
+   "population": 163703
+  },
+  {
+   "surname": "나",
+   "population": 160946
+  },
+  {
+   "surname": "진",
+   "population": 157599
+  },
+  {
+   "surname": "지",
+   "population": 153491
+  },
+  {
+   "surname": "엄",
+   "population": 144425
+  },
+  {
+   "surname": "채",
+   "population": 131557
+  },
+  {
+   "surname": "원",
+   "population": 129522
+  },
+  {
+   "surname": "천",
+   "population": 121780
+  },
+  {
+   "surname": "방",
+   "population": 94831
+  },
+  {
+   "surname": "공",
+   "population": 91869
+  }
+ ],
+ "syllables": [
+  {
+   "syllable": "가",
+   "gender": "F",
+   "position": "1"
+  },
+  {
+   "syllable": "건",
+   "gender": "M",
+   "position": "B"
+  },
+  {
+   "syllable": "겸",
+   "gender": "M",
+   "position": "2"
+  },
+  {
+   "syllable": "경",
+   "gender": "N",
+   "position": "B"
+  },
+  {
+   "syllable": "규",
+   "gender": "M",
+   "position": "B"
+  },
+  {
+   "syllable": "기",
+   "gender": "M",
+   "position": "2"
+  },
+  {
+   "syllable": "나",
+   "gender": "F",
+   "position": "B"
+  },
+  {
+   "syllable": "다",
+   "gender": "F",
+   "position": "1"
+  },
+  {
+   "syllable": "대",
+   "gender": "M",
+   "position": "1"
+  },
+  {
+   "syllable": "도",
+   "gender": "N",
+   "position": "1"
+  },
+  {
+   "syllable": "동",
+   "gender": "M",
+   "position": "1"
+  },
+  {
+   "syllable": "라",
+   "gender": "F",
+   "position": "2"
+  },
+  {
+   "syllable": "린",
+   "gender": "F",
+   "position": "2"
+  },
+  {
+   "syllable": "미",
+   "gender": "F",
+   "position": "B"
+  },
+  {
+   "syllable": "민",
+   "gender": "N",
+   "position": "B"
+  },
+  {
+   "syllable": "범",
+   "gender": "M",
+   "position": "B"
+  },
+  {
+   "syllable": "빈",
+   "gender": "N",
+   "position": "2"
+  },
+  {
+   "syllable": "상",
+   "gender": "M",
+   "position": "1"
+  },
+  {
+   "syllable": "서",
+   "gender": "N",
+   "position": "B"
+  },
+  {
+   "syllable": "석",
+   "gender": "M",
+   "position": "2"
+  },
+  {
+   "syllable": "선",
+   "gender": "N",
+   "position": "B"
+  },
+  {
+   "syllable": "섭",
+   "gender": "M",
+   "position": "2"
+  },
+  {
+   "syllable": "성",
+   "gender": "M",
+   "position": "B"
+  },
+  {
+   "syllable": "세",
+   "gender": "N",
+   "position": "1"
+  },
+  {
+   "syllable": "소",
+   "gender": "F",
+   "position": "1"
+  },
+  {
+   "syllable": "수",
+   "gender": "N",
+   "position": "B"
+  },
+  {
+   "syllable": "슬",
+   "gender": "F",
+   "position": "1"
+  },
+  {
+   "syllable": "승",
+   "gender": "M",
+   "position": "B"
+  },
+  {
+   "syllable": "시",
+   "gender": "N",
+   "position": "1"
+  },
+  {
+   "syllable": "아",
+   "gender": "F",
+   "position": "2"
+  },
+  {
+   "syllable": "연",
+   "gender": "N",
+   "position": "B"
+  },
+  {
+   "syllable": "영",
+   "gender": "N",
+   "position": "B"
+  },
+  {
+   "syllable": "예",
+   "gender": "F",
+   "position": "1"
+  },
+  {
+   "syllable": "온",
+   "gender": "N",
+   "position": "1"
+  },
+  {
+   "syllable": "용",
+   "gender": "M",
+   "position": "1"
+  },
+  {
+   "syllable": "우",
+   "gender": "N",
+   "position": "2"
+  },
+  {
+   "syllable": "욱",
+   "gender": "M",
+   "position": "2"
+  },
+  {
+   "syllable": "원",
+   "gender": "N",
+   "position": "2"
+  },
+  {
+   "syllable": "유",
+   "gender": "N",
+   "position": "1"
+  },
+  {
+   "syllable": "윤",
+   "gender": "N",
+   "position": "B"
+  },
+  {
+   "syllable": "율",
+   "gender": "N",
+   "position": "2"
+  },
+  {
+   "syllable": "은",
+   "gender": "F",
+   "position": "2"
+  },
+  {
+   "syllable": "재",
+   "gender": "N",
+   "position": "1"
+  },
+  {
+   "syllable": "정",
+   "gender": "N",
+   "position": "1"
+  },
+  {
+   "syllable": "주",
+   "gender": "N",
+   "position": "B"
+  },
+  {
+   "syllable": "준",
+   "gender": "M",
+   "position": "B"
+  },
+  {
+   "syllable": "지",
+   "gender": "N",
+   "position": "1"
+  },
+  {
+   "syllable": "진",
+   "gender": "N",
+   "position": "2"
+  },
+  {
+   "syllable": "찬",
+   "gender": "M",
+   "position": "2"
+  },
+  {
+   "syllable": "채",
+   "gender": "F",
+   "position": "1"
+  },
+  {
+   "syllable": "태",
+   "gender": "M",
+   "position": "1"
+  },
+  {
+   "syllable": "하",
+   "gender": "N",
+   "position": "1"
+  },
+  {
+   "syllable": "해",
+   "gender": "N",
+   "position": "1"
+  },
+  {
+   "syllable": "헌",
+   "gender": "M",
+   "position": "2"
+  },
+  {
+   "syllable": "혁",
+   "gender": "M",
+   "position": "2"
+  },
+  {
+   "syllable": "현",
+   "gender": "N",
+   "position": "B"
+  },
+  {
+   "syllable": "형",
+   "gender": "M",
+   "position": "2"
+  },
+  {
+   "syllable": "혜",
+   "gender": "F",
+   "position": "1"
+  },
+  {
+   "syllable": "호",
+   "gender": "M",
+   "position": "2"
+  },
+  {
+   "syllable": "환",
+   "gender": "M",
+   "position": "2"
+  },
+  {
+   "syllable": "효",
+   "gender": "N",
+   "position": "1"
+  },
+  {
+   "syllable": "훈",
+   "gender": "M",
+   "position": "2"
+  },
+  {
+   "syllable": "휘",
+   "gender": "N",
+   "position": "2"
+  },
+  {
+   "syllable": "희",
+   "gender": "F",
+   "position": "2"
+  }
+ ],
+ "blocked": [
+  "가수",
+  "건기",
+  "경기",
+  "규범",
+  "다수",
+  "대기",
+  "대수",
+  "대승",
+  "도서",
+  "도수",
+  "동기",
+  "미수",
+  "범주",
+  "상승",
+  "서기",
+  "선수",
+  "성기",
+  "성서",
+  "세수",
+  "소수",
+  "수건",
+  "승수",
+  "승진",
+  "시기",
+  "시선",
+  "시주",
+  "연승",
+  "예수",
+  "온수",
+  "유기",
+  "유서",
+  "유수",
+  "윤기",
+  "재건",
+  "재수",
+  "정기",
+  "정서",
+  "주기",
+  "주민",
+  "지기",
+  "지진",
+  "하수",
+  "해석",
+  "현미"
+ ]
+}

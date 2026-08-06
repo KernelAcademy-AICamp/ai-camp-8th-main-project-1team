@@ -5,7 +5,7 @@
  * 충동절약통·설문·동의), 여기에 **지킴이 Agent(`/api/guardian/*`)** 를 새로 이었다.
  * 지킴이는 백엔드에 구현돼 있었지만 어느 화면에서도 부르지 않던 미연결 영역이었다.
  *
- * 원칙: <b>프론트는 계산하지 않는다.</b> 남은 한도·달성률·며칠 남았는지는 서버가 완성해 내려준다
+ * 원칙: <b>프론트는 계산하지 않는다.</b> 남은 예산·달성률·며칠 남았는지는 서버가 완성해 내려준다
  * (GuardianController 주석). 여기 타입은 그 응답을 그대로 받아 적은 것이다.
  */
 import { API_BASE } from './config';
@@ -565,17 +565,17 @@ export interface GuardianSnapshot {
   paceRatio: number;
   allowedRatio: number;
 }
-/** 카테고리 한 줄 — 홈의 '지킴 현황'을 갈라 그린다. 한도는 묶음 하나라 카테고리별 한도는 없다. */
+/** 카테고리 한 줄 — 홈의 '지킴 현황'을 갈라 그린다. 예산은 묶음 하나라 카테고리별 예산은 없다. */
 export interface CategorySpend {
   code: string;
   label: string;
   spent: number;
   /** 챌린지 전체 사용액에서 이 카테고리가 차지하는 비율(0~1). */
   share: number;
-  /** 그 카테고리의 한도. 온보딩에서 정한 강도가 그대로 반영된다. */
+  /** 그 카테고리의 예산. 온보딩에서 정한 강도가 그대로 반영된다. */
   cap: number;
   remaining: number;
-  /** 한도 대비 소진율(0~1). 1을 넘을 수 있다 — 넘긴 것도 보여야 한다. */
+  /** 예산 대비 소진율(0~1). 1을 넘을 수 있다 — 넘긴 것도 보여야 한다. */
   ratio: number;
 }
 export interface GuardianChallenge extends GuardianSnapshot {
@@ -627,10 +627,21 @@ export interface GuardianItems {
   missionChange: number;
   pointBalance: number;
 }
+/**
+ * 홈 한마디 — 지금 걸린 케이스 하나와 그 문장.
+ *
+ * <b>비지 않는다.</b> 걸린 것이 없으면 서버가 `IDLE`과 함께 문장을 준다. 그래서 화면은
+ * null 검사 없이 그대로 그린다 — 여기가 비면 사용자는 앱을 열고도 상태를 알 수 없다.
+ */
+export interface GuardianOneline {
+  caseId: string;
+  text: string;
+}
 export interface GuardianHome {
   asOf: string;
   challenge: GuardianChallenge;
   strip: GuardianStrip;
+  oneline: GuardianOneline;
   ceremony: GuardianCeremony | null;
   grass: GrassCell[];
   itemsHeld: GuardianItems;
@@ -738,7 +749,7 @@ export interface ShopEntry {
 }
 export interface GuardianShop { points: number; items: ShopEntry[] }
 
-/** 월간 결산의 카테고리 한 줄. rate = 지켜낸 금액 / 한도. */
+/** 월간 결산의 카테고리 한 줄. rate = 지켜낸 금액 / 예산. */
 export interface SettlementCategory {
   category: string;
   cap: number;
@@ -796,7 +807,7 @@ export interface CreateChallengeInput {
   durationDays?: number;
   /**
    * 온보딩에서 **"이건 낭비가 아니다"**로 뺀 결제 id.
-   * 서버가 기준 지출에서 그만큼 뺀다 — 화면이 보여준 '지킬 돈'과 서버 한도가 어긋나지 않게.
+   * 서버가 기준 지출에서 그만큼 뺀다 — 화면이 보여준 '지킬 돈'과 서버 예산이 어긋나지 않게.
    */
   keptPaymentIds?: string[];
   /**

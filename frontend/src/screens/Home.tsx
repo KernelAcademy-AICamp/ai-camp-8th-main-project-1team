@@ -1,11 +1,11 @@
 /**
  * HM-01 Home — 주 지표는 '지금 지키는 금액' 하나(IA §1.2).
  *
- * 값은 전부 `/api/guardian/home`이 완성해 내려준 것을 그대로 쓴다. 남은 한도 문구(`remainingCapLabel`)
+ * 값은 전부 `/api/guardian/home`이 완성해 내려준 것을 그대로 쓴다. 남은 예산 문구(`remainingCapLabel`)
  * 조차 서버가 만든 것을 쓰는 이유는, 같은 계산이 두 곳에 있으면 언젠가 조금씩 어긋나기 때문이다.
  *
  * 목업의 '카테고리별 소진 진행바' 자리에는 서버가 주는 단위(챌린지 전체)로 두 줄을 놓았다 —
- * 지킴이 원장은 카테고리 묶음 하나를 한도로 관리하고 카테고리별 소진율을 따로 내려주지 않는다.
+ * 지킴이 원장은 카테고리 묶음 하나를 예산으로 관리하고 카테고리별 소진율을 따로 내려주지 않는다.
  */
 import { Icon } from '../components/Icons';
 import { Orb, Scroll, Screen, ErrorBox, Loading, SectionTitle } from '../components/ui';
@@ -22,7 +22,8 @@ import {
 export function Home() {
   const { go, userId } = useSession();
   const { home, loading, error, reload } = useGuardian();
-  const notes = useAsync(() => api.guardian.notifications(userId).catch(() => ({ notifications: [] })), [userId]);
+  // 알림함을 여기서 더 부르지 않는다 — 한마디는 `/home`이 완성해 주고, 안 읽은 건수도
+  // 거기 실려 온다. 홈이 알림 목록까지 받아 오던 것은 문구를 뽑으려던 것뿐이었다.
   const payments = useAsync(() => api.allPayments(userId, 6).catch(() => []), [userId]);
 
   const recent = [...(payments.data ?? [])].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
@@ -87,8 +88,12 @@ export function Home() {
   const elapsed = ch.daysTotal > 0 ? Math.min(1, ch.daysElapsed / ch.daysTotal) : 0;
   const { icon: catIcon, bg: catBg } = iconOf(ch.categoryLabel.split('·')[0] ?? '');
 
-  const message = notes.data?.notifications.find((n) => n.body)?.body
-    ?? `${ch.categoryLabel} 결제를 지켜보고 있어요. 한도 안에서는 조용히 있을게요.`;
+  // 홈 한마디는 서버가 정한다(`/home`의 `oneline`). 예전에는 **가장 최근 알림 본문**을 그대로
+  // 걸었는데, 알림은 "방금 이런 일이 있었다"를 말하므로 며칠 지난 뒤 열면 홈이 지나간 일을
+  // 현재형으로 말했다("이 결제까지 넣으면…"). 걸린 것이 없을 때도 서버가 문장을 주므로
+  // 여기서 기본 문구를 따로 들고 있지 않는다.
+  const message = home.oneline?.text
+    ?? `${ch.categoryLabel} 결제를 지켜보고 있어요. 예산 안에서는 조용히 있을게요.`;
 
   return (
     <Screen title="홈" hasTabBar>
@@ -183,9 +188,9 @@ export function Home() {
             </button>
           )}
 
-          {/* 지킴 현황 — 한도는 챌린지 묶음 하나로 관리하지만, **어디서 썼는지**는 갈라 보여준다.
+          {/* 지킴 현황 — 예산은 챌린지 묶음 하나로 관리하지만, **어디서 썼는지**는 갈라 보여준다.
               예전에는 합계 한 줄뿐이라 두 카테고리를 고른 사용자가 무엇을 줄여야 할지 알 수 없었다
-              (사용자 요청 2026-07-31). 카테고리별 '한도'는 서버에 없으므로 만들지 않는다 —
+              (사용자 요청 2026-07-31). 카테고리별 '예산'은 서버에 없으므로 만들지 않는다 —
               막대는 **그 카테고리가 사용액에서 차지하는 몫**이다. */}
           <SectionTitle aux={CHALLENGE_STATE_LABEL[ch.state] ?? ch.state}>지킴 현황</SectionTitle>
           <div className="bank-list">
@@ -219,7 +224,7 @@ export function Home() {
                     <b>{c.cap > 0 ? `${won(c.remaining)} 남음` : won(c.spent)}</b>
                     <span>{c.cap > 0
                       ? `${won(c.spent)} / ${won(c.cap)}`
-                      : (c.spent > 0 ? '한도 없음' : '아직 없어요')}</span>
+                      : (c.spent > 0 ? '예산 없음' : '아직 없어요')}</span>
                   </div>
                 </div>
               );

@@ -21,7 +21,7 @@ import java.util.Map;
  * <p><b>왜 여기가 경계인가.</b> 마이데이터 제공자가 아는 것은 "이 가맹점이 무슨 업종인가"까지고,
  * "이 소비가 사용자에게 무엇인가"는 앱이 정한다. 예전에는 제공자가 7대분류를 그대로 넘겼고
  * 그 값이 곧 소비 카테고리가 됐다 — 한 축이 업종과 소비종류를 겸하다 보니 교통이 '온라인'에
- * 들어가는 왜곡이 났고, 지킴이 챌린지에서 배달을 줄이려면 지하철 요금까지 한도에 잡혔다.
+ * 들어가는 왜곡이 났고, 지킴이 챌린지에서 배달을 줄이려면 지하철 요금까지 예산에 잡혔다.
  *
  * <p><b>왜 ML이 아닌가.</b> 매핑의 정답을 우리가 만들어야 하므로, 학습을 시키면 우리 표를
  * 외울 뿐이다(순환). ML은 낭비/필수 판정에만 쓴다. 표 자체가 곧 "왜 이 소비가 이 카테고리인가"의
@@ -44,6 +44,7 @@ public class IndustryCategoryMapper {
     private final Map<String, String> midByIndustry;
     private final Map<String, Double> discretionaryByMid;
     private final Map<String, String> pgBusinessNumbers;
+    private final Map<String, String> multiBusinessNumbers;
     /** 업종 <b>이름</b> → 중분류. LLM 이 축을 직접 고르지 않게 하려고 둔다. */
     private final Map<String, String> midByIndustryName;
 
@@ -58,6 +59,9 @@ public class IndustryCategoryMapper {
             this.discretionaryByMid = d;
             Map<String, String> pg = (Map<String, String>) root.get("pgBusinessNumbers");
             this.pgBusinessNumbers = pg == null ? Map.of() : pg;
+            @SuppressWarnings("unchecked")
+            Map<String, String> multi = (Map<String, String>) root.get("multiBusinessNumbers");
+            this.multiBusinessNumbers = multi == null ? Map.of() : multi;
             Map<String, String> names = (Map<String, String>) root.get("midByIndustryName");
             this.midByIndustryName = names == null ? Map.of() : names;
         } catch (IOException e) {
@@ -93,6 +97,23 @@ public class IndustryCategoryMapper {
      */
     public java.util.Collection<String> paymentAgencyNames() {
         return pgBusinessNumbers.values();
+    }
+
+    /**
+     * 한 번호에 <b>성격이 다른 사업이 여럿</b> 붙은 곳인가 — 백화점 입점, 배 안의 편의점.
+     *
+     * <p>PG 와 다르다. PG 는 번호가 <b>남의 것</b>이라 아예 버리지만, 여기는 번호가 그 사업자의
+     * 것이 맞다. 다만 <b>번호로 분류하면 안 된다</b> — 완화("같은 번호면 같은 분류")가 닿는 순간
+     * 무인양품과 식품관이 한 분류가 되고, 사용자가 하나를 고치면 나머지까지 따라 바뀐다.
+     *
+     * <p><b>"상호가 여럿인가"로는 못 가른다.</b> 택시는 차량번호가 붙어 상호가 수만 종이지만
+     * 전부 같은 사업이라 완화가 <b>꼭 필요하다</b>. 둘을 가르는 것은 "그 상호들이 같은 것을
+     * 파는가"이고 그건 사람만 안다 — 그래서 PG 처럼 목록으로 둔다
+     * ({@code scripts/industry/복합사업자-사업자번호.tsv}).
+     */
+    public boolean isMultiBusiness(String businessNumber) {
+        if (businessNumber == null || businessNumber.isBlank()) return false;
+        return multiBusinessNumbers.containsKey(businessNumber.replaceAll("\\D", ""));
     }
 
     /**

@@ -34,13 +34,14 @@ CUTOFF = os.environ.get('MYDATA_NOW', '2026-07-23')
 PER_PERSONA = 2
 
 SQL = f"""
-SELECT u.mydata_user_persona, u.mydata_user_id, COUNT(p.mydata_payment_id)
+SELECT u.mydata_user_persona, u.mydata_user_id, COUNT(p.mydata_payment_id),
+       u.mydata_user_name, SUBSTR(u.mydata_user_social_number, 1, 7), u.mydata_user_phone_number
 FROM mydata_user u
 JOIN mydata_card c ON c.mydata_user_id = u.mydata_user_id
 JOIN mydata_payment p ON p.mydata_card_id = c.mydata_card_id
                      AND p.mydata_payment_date <= '{CUTOFF} 23:59:59'
 WHERE u.mydata_user_data_split = 'SERVICE' AND u.mydata_user_persona IS NOT NULL
-GROUP BY 1, 2
+GROUP BY 1, 2, 4, 5, 6
 ORDER BY 1, 2;
 """
 
@@ -62,20 +63,20 @@ def main():
         sys.exit(1)
 
     picked, seen = [], {}
-    for persona, ci, cnt in rows:                      # 이미 (페르소나, CI) 순 정렬이다
+    for persona, ci, cnt, name, social7, phone in rows:   # 이미 (페르소나, CI) 순 정렬이다
         if seen.get(persona, 0) >= PER_PERSONA:
             continue
         seen[persona] = seen.get(persona, 0) + 1
-        picked.append((persona, ci, int(cnt)))
+        picked.append((persona, ci, int(cnt), name, social7, phone))
 
-    order = list(dict.fromkeys(p for p, _, _ in picked))
+    order = list(dict.fromkeys(p for p, _, _, _, _, _ in picked))
     body = []
     for persona in order:
-        for p, ci, cnt in picked:
+        for p, ci, cnt, name, social7, phone in picked:
             if p != persona:
                 continue
-            body.append(f"  {{ persona: '{p}', ci: '{ci}', "
-                        f"name: '{p}_{ci[:6]}', visible: {cnt} }},")
+            body.append(f"  {{ persona: '{p}', ci: '{ci}', name: '{name}', "
+                        f"social7: '{social7}', phone: '{phone}', visible: {cnt} }},")
         body.append('')
 
     ts = f"""/**
@@ -91,7 +92,12 @@ def main():
 export interface DemoUser {{
   persona: string;
   ci: string;
+  /** 사람 이름 — 성씨 1글자 + 이름 2글자. `scripts/identity/` 의 표에서 나온다. */
   name: string;
+  /** 주민등록번호 앞 7자리. 7번째 자리가 성별이다(1·3 남, 2·4 여). */
+  social7: string;
+  /** 휴대폰 번호. **CI 는 이 셋의 해시**라 본인인증 화면에 그대로 입력해도 같은 사람에 닿는다. */
+  phone: string;
   /** 커트오프({CUTOFF}) 이하 가시 결제 건수 */
   visible: number;
 }}
@@ -103,8 +109,8 @@ export const DEMO_USERS: DemoUser[] = [
     with open(OUT, 'w', encoding='utf-8') as f:
         f.write(ts)
     print(f'  demoUsers.ts — 페르소나 {len(order)}종 · {len(picked)}명 (커트오프 {CUTOFF})')
-    for p, ci, cnt in picked:
-        print(f'     {p:<8} {ci[:12]}…  {cnt:,}건')
+    for p, ci, cnt, name, social7, phone in picked:
+        print(f'     {p:<8} {name}  {social7}  {phone}  {cnt:,}건')
 
 
 if __name__ == '__main__':

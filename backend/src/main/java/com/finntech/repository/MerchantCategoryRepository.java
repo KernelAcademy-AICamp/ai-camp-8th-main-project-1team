@@ -21,20 +21,36 @@ public interface MerchantCategoryRepository extends JpaRepository<MerchantCatego
      * 정확 일치만 쓰면 이런 가맹점은 사전이 영영 재사용되지 않고 행만 쌓인다. PG 가 아닌 번호는
      * 한 사업자의 것이라 업종이 하나이므로, 풀네임이 달라도 같은 분류를 써도 된다.
      *
+     * <p><b>사람이 확인한 행이 먼저다.</b> id 순으로만 두면 <b>먼저 들어온 씨앗이 영원히 이긴다</b> —
+     * 사용자가 "이건 교통비예요"를 눌러도 그 결제 하나만 바뀌고 같은 사업자의 나머지는 계속
+     * 옛 분류로 나온다. 오류도 안 나므로 "고쳤는데 안 고쳐진다"만 남는다
+     * (2026-08-05 운영: 티머니 396-87-03587 이 씨앗의 '쇼핑'에 막혀 16건이 그대로였다).
+     *
+     * <p>우선순위는 <b>사람의 확인 &gt; 국세청 등록 &gt; 추정</b>이다. 씨앗 적재 SQL 이
+     * {@code USER_CONFIRMED} 를 덮지 않는 것과 같은 서열을 조회에서도 지킨다.
+     *
      * <p>정렬을 고정한다 — 같은 데이터면 같은 답이 나와야 한다(마스터 §4-3 재현성).
      */
     @Query("""
             SELECT m FROM MerchantCategory m
             WHERE m.businessNumber = :businessNumber AND m.businessNumber <> ''
-            ORDER BY m.id ASC
+            ORDER BY CASE m.source
+                       WHEN 'USER_CONFIRMED' THEN 0
+                       WHEN 'USER_CSV'       THEN 1
+                       ELSE 2
+                     END ASC, m.id ASC
             """)
     List<MerchantCategory> findByBusinessNumberOrdered(@Param("businessNumber") String businessNumber);
 
-    /** 번호가 없는 해외 가맹점 — 풀네임만으로 찾는다. */
+    /** 번호가 없는 해외 가맹점 — 풀네임만으로 찾는다. 여기도 사람의 확인이 먼저다. */
     @Query("""
             SELECT m FROM MerchantCategory m
             WHERE m.businessNumber = '' AND m.merchantName = :merchantName
-            ORDER BY m.id ASC
+            ORDER BY CASE m.source
+                       WHEN 'USER_CONFIRMED' THEN 0
+                       WHEN 'USER_CSV'       THEN 1
+                       ELSE 2
+                     END ASC, m.id ASC
             """)
     List<MerchantCategory> findByNameOnly(@Param("merchantName") String merchantName);
 }

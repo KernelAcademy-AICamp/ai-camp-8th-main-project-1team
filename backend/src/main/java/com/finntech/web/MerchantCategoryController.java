@@ -49,19 +49,26 @@ public class MerchantCategoryController {
     private final MerchantCategoryService dictionary;
     private final MerchantClassifierService classifier;
     private final IndustryCategoryMapper mapper;
+    /** 사업자번호가 한 사업인가 여러 사업인가(V16). 확정이 그 판정을 흔들 수 있다. */
+    private final com.finntech.service.BusinessNumberKindService kinds;
+    private final java.time.Clock clock;
 
     public MerchantCategoryController(UserPaymentRepository payments,
                                       ConsumptionRepository consumptions,
                                       CategoryRepository categories,
                                       MerchantCategoryService dictionary,
                                       MerchantClassifierService classifier,
-                                      IndustryCategoryMapper mapper) {
+                                      IndustryCategoryMapper mapper,
+                                      com.finntech.service.BusinessNumberKindService kinds,
+                                      java.time.Clock clock) {
         this.payments = payments;
         this.consumptions = consumptions;
         this.categories = categories;
         this.dictionary = dictionary;
         this.classifier = classifier;
         this.mapper = mapper;
+        this.kinds = kinds;
+        this.clock = clock;
     }
 
     /**
@@ -187,10 +194,65 @@ public class MerchantCategoryController {
         boolean storedInDictionary =
                 dictionary.confirmFrom(payment, request.category2(), userId).isPresent();
 
+        // **판정을 다시 본다**(V16). 사람이 다르게 확정했다는 것은 그 번호가 갈렸다는 증거일 수
+        // 있다. 다만 굳은 판정은 한 번의 교정으로 뒤집지 않는다 — 그 문턱은 판정 서비스가 갖는다.
+        // 여기서 부르는 이유는, 다음 연동까지 기다리면 그 사이 완화가 계속 오염시키기 때문이다.
+        observeAfterConfirm(userId, payment.getBusinessNumber());
+
+        // **같은 가맹점의 나머지 결제도 함께 고친다.** 사전에만 쌓으면 다음 연동부터 반영되고,
+        // 지금 화면에는 고친 한 건만 바뀐다 — 사용자는 "고쳤는데 다른 건 그대로"를 본다
+        // (2026-08-05 운영: 티머니 17건 중 1건만 바뀌었다). 사전이 새 답을 주는 결제를 찾아
+        // 그 자리에서 맞춘다. 판정 근거는 여전히 사전 하나다(원칙 2).
+        int alsoFixed = 0;
+        if (storedInDictionary) {
+            for (UserPayment other : payments.findByUserIdOrderByPaymentDateDesc(userId)) {
+                if (other.getPaymentId().equals(paymentId)) continue;
+                // 사람이 이미 확정한 결제는 건드리지 않는다 — 남의 판단을 덮으면 안 된다.
+                if ("USER".equals(other.getCategory2Source())) continue;
+                String now = dictionary.lookup(other.getBusinessNumber(), other.getMerchantName())
+                        .orElse(null);
+                if (now == null || now.equals(other.getCategory2())) continue;
+                other.confirmCategory2(now, "DICT");
+                Category c2 = categories.findByCode(now)
+                        .orElseGet(() -> categories.save(new Category(now, now)));
+                for (Consumption c : consumptions.findBySourcePaymentId(other.getPaymentId())) {
+                    c.reclassify(c2);
+                }
+                alsoFixed++;
+            }
+        }
+
         return Map.of("paymentId", paymentId,
                       "category2", request.category2(),
                       "reclassifiedConsumptions", moved,
+                      "alsoFixed", alsoFixed,
                       "storedInDictionary", storedInDictionary);
+    }
+
+    /**
+     * 한 번호의 상호·분류를 다시 세어 판정을 갱신한다.
+     *
+     * <p>사용자의 교정 자체가 <b>"이 번호는 갈린다"는 신호</b>일 수 있다. 다만 그것만으로 뒤집지는
+     * 않는다 — 택시처럼 상호가 수천 종인 번호는 한 번의 실수로 무너지면 안 되므로, 뒤집는 데
+     * 필요한 반대 증거를 관측량에 비례해 요구한다({@code BusinessNumberKindService}).
+     *
+     * <p><b>교정 자체는 문턱과 무관하게 즉시 보인다.</b> 정확일치 행이 완화보다 먼저 걸린다.
+     */
+    private void observeAfterConfirm(Long userId, String businessNumber) {
+        if (businessNumber == null || businessNumber.isBlank()) return;
+        if (mapper.isPaymentAgency(businessNumber)) return;
+        Map<String, String> observed = new LinkedHashMap<>();
+        Map<String, String> confirmed = new LinkedHashMap<>();
+        for (UserPayment p : payments.findByUserIdOrderByPaymentDateDesc(userId)) {
+            if (!businessNumber.equals(p.getBusinessNumber())) continue;
+            String name = p.getMerchantName();
+            if (name == null || name.isBlank()) continue;
+            String mid = IndustryCategoryMapper.UNCLASSIFIED.equals(p.getCategory2())
+                    ? null : p.getCategory2();
+            observed.put(name, mid);
+            if ("USER".equals(p.getCategory2Source())) confirmed.put(name, mid);
+        }
+        kinds.observe(businessNumber, observed, confirmed, java.time.LocalDateTime.now(clock));
     }
 
     public record ConfirmRequest(@NotNull String category2) {}
