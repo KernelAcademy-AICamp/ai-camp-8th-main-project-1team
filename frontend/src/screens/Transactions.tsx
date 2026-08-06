@@ -12,7 +12,7 @@ import { useAsync } from '../state/useAsync';
 import { api, catLabel, type MyMerchant } from '../lib/api';
 import { SpendCalendar } from '../components/SpendCalendar';
 import { Icon } from '../components/Icons';
-import { won, shortDate, monthLabel } from '../lib/format';
+import { won, shortDate, monthLabel, inkColor } from '../lib/format';
 
 type SpendFilter = 'all' | 'disc' | 'fixed' | 'sanct';
 /** 개편안의 필터 4종. '재량'은 성역·고정지출을 뺀 나머지다 — 줄일 수 있는 것만 남긴다. */
@@ -300,8 +300,10 @@ export function Transactions() {
                       {p.category && sanctuary.has(p.category) && <span className="sp-tag tag-sanct">성역</span>}
                       {fixedOf(p) && <span className="sp-tag tag-fixed">고정</span>}
                     </span>
+                    {/* 테두리는 브랜드 원색, 글자는 흰 바탕에서 읽히도록 눌러 쓴다.
+                        KB국민 노랑을 글자에 그대로 쓰면 1.69:1 이라 안 보인다(KWCAG 5.4.3). */}
                     {p.cardName && (
-                      <span className="c" style={{ border: `1px solid ${p.cardColor || 'var(--line)'}`, color: p.cardColor || 'var(--t3)', background: 'transparent' }}>
+                      <span className="c" style={{ border: `1px solid ${p.cardColor || 'var(--line)'}`, color: inkColor(p.cardColor), background: 'transparent' }}>
                         {p.cardName}
                       </span>
                     )}

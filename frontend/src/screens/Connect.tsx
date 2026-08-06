@@ -20,7 +20,7 @@ import { Sheet } from '../components/Sheet';
 import { Icon } from '../components/Icons';
 import { useSession } from '../state/session';
 import { api, type MyDataDiscovered } from '../lib/api';
-import { brandOf, logoOf } from '../lib/institutions';
+import { brandOf, logoOf, logoBackdrop } from '../lib/institutions';
 
 const PROVIDERS = [
   { name: '카카오톡', bg: '#FFCD00', fg: '#3c1e1e', label: 'K', desc: '카카오 지갑 인증서', logo: '/logo/cert-kakao.png' },
@@ -42,9 +42,13 @@ function FoundRow({ name, sub, on, onToggle }:
   { name: string; sub?: string; on: boolean; onToggle: () => void }) {
   const b = brandOf(name);
   const logo = logoOf(name);
+  // 흰 단색 CI 는 흰 원 안에서 사라진다 — 그런 곳만 뒤에 브랜드색을 깐다.
+  const backdrop = logoBackdrop(name);
   return (
     <button type="button" className={`fi${on ? ' on' : ' off'}`} onClick={onToggle} aria-pressed={on}>
-      <span className="logo" style={logo ? undefined : { background: b.bg, color: b.fg ?? '#fff' }}
+      <span className="logo"
+        style={logo ? (backdrop ? { background: backdrop } : undefined)
+          : { background: b.bg, color: b.fg ?? '#fff' }}
         aria-hidden="true">
         {logo ? <img src={logo} alt="" loading="lazy" /> : b.label}
       </span>

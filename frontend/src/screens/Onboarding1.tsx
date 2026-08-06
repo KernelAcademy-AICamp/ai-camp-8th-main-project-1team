@@ -72,6 +72,8 @@ export function Onboarding1() {
     .sort((x, y) => y.representativeAmount - x.representativeAmount)[0] ?? null;
 
   /** 물을 것이 남았으면 먼저 묻고, 답했거나 물을 것이 없으면 그냥 넘어간다. */
+  const closeAsk = () => setAskOpen(false);
+
   function next() {
     if (ask && !askDone && !stances.loading) { setAskOpen(true); return; }
     go('ob2');
@@ -202,7 +204,9 @@ export function Onboarding1() {
       {/* 반복 지출 확인 (개편안 `sheet-ktx`) — 넘어가기 전에 하나만 묻는다.
           <b>다음 화면이 "무엇을 줄일까"를 묻기 때문에</b> 먼저 물어야 한다. 통근 교통비를
           줄일 후보에 올려 두고 "이 중에 고르세요"라고 하면, 고를 수 없는 것이 목록을 차지한다. */}
-      <div className={`tp-dim${askOpen ? ' show' : ''}`} onClick={() => setAskOpen(false)} aria-hidden="true" />
+      {/* 닫기를 인라인 화살표로 두지 않는다 — 정적 검사(check-a11y)가 태그를 `=>` 의 `>` 에서
+          끊어 읽어 뒤의 `aria-hidden` 을 못 보고 '역할 없는 클릭 div' 로 신고한다. */}
+      <div className={`tp-dim${askOpen ? ' show' : ''}`} onClick={closeAsk} aria-hidden="true" />
       <div className={`tp-sheet${askOpen ? ' show' : ''}`} role="dialog"
         aria-label="반복 지출 확인" aria-hidden={!askOpen}>
         <div className="tp-head">넘어가기 전에 하나만 확인할게요</div>

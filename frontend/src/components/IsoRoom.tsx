@@ -7,6 +7,11 @@
  *
  * 좌표: 바닥 6×6 격자. `iso(x, y, z)` 가 격자 좌표를 화면 좌표로 옮긴다(T=타일 반폭, z=높이).
  * 에셋 16종은 `public/room/*.png` — 개편안에 base64로 박혀 있던 것을 파일로 뺐다(번들 142KB 절감).
+ *
+ * <p><b>방 안의 사물은 보조기술에 노출하지 않는다(`aria-hidden`).</b> 눌러서 이름을 보는
+ * 지름길일 뿐이고, 같은 일을 하는 <b>꾸미기 시트</b>가 진짜 조작 경로다. SVG {@code <g>} 에
+ * 버튼 역할만 붙이면 키보드로 닿지 않는 <b>가짜 버튼</b>이 되어, 아무것도 없는
+ * 것보다 나쁘다 — 보조기술은 "버튼이 있다"고 말하는데 눌러지지가 않는다.
  */
 import { useMemo } from 'react';
 
@@ -157,7 +162,7 @@ export function IsoRoom({ sel, act, editing, moodPlaced, sofaOwned, catSkin = 'c
 
       {/* 소파 — 사기 전에는 흐리게 비워 둔다(무엇이 올 자리인지 보이게) */}
       <g style={{ cursor: 'pointer', opacity: sofaOwned ? 1 : 0.18 }} onClick={() => onPick('sofa')}
-         role="button" aria-label="소파">
+         aria-hidden="true">
         <At x={3.15} y={0.85}><Shadow rx={31} ry={10} /><Asset k="sofa" /></At>
       </g>
 
@@ -170,7 +175,7 @@ export function IsoRoom({ sel, act, editing, moodPlaced, sofaOwned, catSkin = 'c
       </At>
       {/* 무드등 — 세리머니로 테이블 위에 도착한다 */}
       <g style={{ cursor: 'pointer', opacity: moodPlaced ? 1 : 0 }} onClick={() => onPick('moodlight')}
-         role="button" aria-label="무드등" aria-hidden={!moodPlaced}>
+         aria-hidden="true">
         <At x={0.6} y={2.5} z={25}><Asset k="mood" /></At>
       </g>
 
@@ -192,14 +197,14 @@ export function IsoRoom({ sel, act, editing, moodPlaced, sofaOwned, catSkin = 'c
 
       <At x={2.35} y={5.3}><Shadow rx={14} /></At>
       <g className="g-sway" style={{ cursor: 'pointer' }} onClick={() => onPick('plant')}
-         role="button" aria-label="화분">
+         aria-hidden="true">
         <At x={2.35} y={5.3}><Asset k="plant" /></At>
       </g>
 
       {/* 냥지킴이 */}
       <g className="catg" transform={`translate(${a.p[0]} ${a.p[1]})`}
          style={{ cursor: 'pointer' }} onClick={() => onPick('cat')}
-         role="button" aria-label="냥지킴이">
+         aria-hidden="true">
         {!a.floating && <ellipse cx={0} cy={2} rx={17} ry={5} fill="rgba(30,45,70,.13)" />}
         {/* 크기는 자세가 정하고(`IMGD[a.k]`) 파일만 색을 따른다. */}
         <Asset k={a.k} src={catSkin === 'cat' ? a.k : `${a.k}_${catSkin}`} />
