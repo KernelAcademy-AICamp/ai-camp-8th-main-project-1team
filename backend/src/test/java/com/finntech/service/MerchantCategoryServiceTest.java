@@ -50,16 +50,20 @@ class MerchantCategoryServiceTest {
                         .filter(m -> m.getBusinessNumber().equals(inv.getArgument(0))
                                 && m.getMerchantName().equals(inv.getArgument(1)))
                         .findFirst());
+        // **대역이 쿼리의 ORDER BY 를 그대로 흉내내야 한다.** 예전에는 가맹점명 순으로 정렬해
+        // 두었는데, 실제 쿼리는 출처(사람의 확인 > 국세청 등록 > 추정) 순이다. 대역이 계약과
+        // 갈리면 테스트는 통과하는데 운영은 틀린다 — 실제로 그렇게 됐다(2026-08-05 티머니).
         when(repo.findByBusinessNumberOrdered(anyString()))
                 .thenAnswer(inv -> table.stream()
                         .filter(m -> !m.getBusinessNumber().isEmpty()
                                 && m.getBusinessNumber().equals(inv.getArgument(0)))
-                        .sorted(Comparator.comparing(MerchantCategory::getMerchantName))
+                        .sorted(BY_SOURCE_THEN_INSERTION)
                         .toList());
         when(repo.findByNameOnly(anyString()))
                 .thenAnswer(inv -> table.stream()
                         .filter(m -> m.getBusinessNumber().isEmpty()
                                 && m.getMerchantName().equals(inv.getArgument(0)))
+                        .sorted(BY_SOURCE_THEN_INSERTION)
                         .toList());
 
         // 저장은 표에 담고 그대로 돌려준다 — 쌓은 것이 곧바로 조회에 보여야 하기 때문이다.
@@ -71,7 +75,28 @@ class MerchantCategoryServiceTest {
                     return m;
                 });
 
-        service = new MerchantCategoryService(repo, mapper);
+        service = new MerchantCategoryService(repo, mapper, kinds());
+    }
+
+    /** 리포지토리의 {@code ORDER BY CASE source … , id} 를 그대로 옮긴 것. id 가 null 인
+     *  시험 행은 표에 담은 순서로 본다(실제로는 auto increment 가 그 순서를 준다). */
+    private static final Comparator<MerchantCategory> BY_SOURCE_THEN_INSERTION =
+            Comparator.comparingInt((MerchantCategory m) ->
+                    switch (m.getSource()) {
+                        case "USER_CONFIRMED" -> 0;
+                        case "USER_CSV" -> 1;
+                        default -> 2;
+                    });
+
+    /**
+     * 관측 판정 서비스 — 시험에서는 <b>표가 비어 있다</b>. 그러면 완화가 허용되는데,
+     * 그것이 "상호가 하나뿐이라 판정 대상이 아니다"와 같은 상태라 기존 시험의 전제와 맞는다.
+     * 판정이 완화를 막는 경우는 {@code 복합_사업자는_번호로_묶지_않는다} 가 따로 본다.
+     */
+    private BusinessNumberKindService kinds() {
+        var repo = mock(com.finntech.repository.BusinessNumberKindRepository.class);
+        when(repo.findById(anyString())).thenReturn(Optional.empty());
+        return new BusinessNumberKindService(repo, 5, 2, 0.10);
     }
 
     private void seed(String biz, String name, String cat) {
@@ -205,6 +230,55 @@ class MerchantCategoryServiceTest {
     }
 
     @Test
+    @DisplayName("사전이 갈리면 완화를 멈춘다 — 한 번의 교정이 남의 분류를 바꾸지 못한다")
+    void 갈린_번호는_완화하지_않는다() {
+        // 2026-08-05 운영: 티머니(396-87-03587)가 등록 업종 '전자상거래 소매업' 때문에 씨앗에
+        // '쇼핑'으로 들어갔고, 사용자가 한 건을 '교통/자동차'로 고쳤다.
+        //
+        // **고친 것을 다른 차량에 번지게 하면 안 된다.** 한 번의 교정이 그 번호 전체를 바꾸면,
+        // 택시처럼 상호가 수천 종인 곳에서 누군가 한 번 실수하는 것만으로 전부 뒤집힌다.
+        // 그래서 사전이 두 중분류를 알게 된 순간 완화를 멈춘다 — 고친 것은 그 가맹점에만 남는다.
+        //
+        // (씨앗이 틀렸다면 **씨앗을 고치는 것**이 답이다. 실제로 그렇게 했다.)
+        seed("0000000099", "", "쇼핑");                       // 씨앗(USER_CSV)
+        table.add(new MerchantCategory("0000000099", "티머니 택시-경북15바7380", "교통/자동차",
+                MerchantCategory.Source.USER_CONFIRMED, 7L)); // 사람이 고친 한 대
+
+        assertThat(service.lookup("0000000099", "티머니 택시-경북15바7380"))
+                .as("고친 그 가맹점은 정확일치로 곧바로 보인다").contains("교통/자동차");
+        assertThat(service.lookup("0000000099", "티머니 택시-서울31바3715"))
+                .as("다른 차량에는 번지지 않는다 — 업종코드·미분류로 내려간다").isEmpty();
+        assertThat(new MerchantCategoryService.Snapshot(table, mapper)
+                .lookup("0000000099", "티머니 택시-서울31바3715"))
+                .as("적재 스냅샷도 같아야 한다 — 갈리면 연동할 때마다 답이 달라진다").isEmpty();
+    }
+
+    @Test
+    @DisplayName("복합 사업자는 완화하지 않는다 — 하나를 고쳐도 나머지가 안 따라간다")
+    void 복합_사업자는_번호로_묶지_않는다() {
+        // 울릉크루즈(132-88-01755) 한 번호에 여객선과 배 안의 GS25 가 붙어 있다.
+        // 번호로 묶으면 GS25 를 '편의점'으로 고치는 순간 여객선까지 편의점이 된다.
+        String CRUISE = "1328801755";
+        assertThat(mapper.isMultiBusiness(CRUISE)).as("복합 사업자 목록에 있어야 한다").isTrue();
+
+        seed(CRUISE, "", "쇼핑");                       // 번호 전체
+        seed(CRUISE, "GS25 울룽크루즈점", "편의점/잡화");   // 그 가게만
+
+        assertThat(service.lookup(CRUISE, "GS25 울룽크루즈점"))
+                .as("정확일치는 된다").contains("편의점/잡화");
+        assertThat(service.lookup(CRUISE, "울릉크루즈 주식회사"))
+                .as("번호가 같아도 다른 가게에는 안 붙는다 — 업종코드·미분류로 내려간다").isEmpty();
+        assertThat(new MerchantCategoryService.Snapshot(table, mapper)
+                .lookup(CRUISE, "울릉크루즈 주식회사"))
+                .as("적재 스냅샷도 같아야 한다").isEmpty();
+
+        // 복합이 아닌 번호는 완화가 그대로 살아 있어야 한다 — 택시가 그것으로 산다.
+        seed("0000000077", "", "교통/자동차");
+        assertThat(service.lookup("0000000077", "카카오택시-서울12가3456"))
+                .as("복합이 아니면 완화는 유지된다").contains("교통/자동차");
+    }
+
+    @Test
     @DisplayName("PG 가 아니면 같은 번호의 다른 행을 쓴다 — 택시처럼 표시명이 매번 다른 가맹점")
     void nonAgencyReusesSiblingRow() {
         // 카카오T 는 표시명 뒤에 차량번호가 붙어 결제마다 풀네임이 다르다.
@@ -287,7 +361,7 @@ class MerchantCategoryServiceTest {
                     table.add(inv.getArgument(0));
                     return inv.getArgument(0);
                 });
-        var svc = new MerchantCategoryService(repo, mapper);
+        var svc = new MerchantCategoryService(repo, mapper, kinds());
 
         var dummy = payment("77:gen-8a3f-0012");            // 생성기가 만든 결제
         assertThat(svc.confirmFrom(dummy, "식비", 7L)).as("더미는 거절된다").isEmpty();
@@ -353,7 +427,7 @@ class MerchantCategoryServiceTest {
                     table.add(inv.getArgument(0));
                     return inv.getArgument(0);
                 });
-        var svc = new MerchantCategoryService(repo, mapper);
+        var svc = new MerchantCategoryService(repo, mapper, kinds());
 
         var first = svc.confirm("0000000011", "어떤 가게", "쇼핑",
                 MerchantCategory.Source.USER_CSV, null);

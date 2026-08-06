@@ -30,11 +30,14 @@ public class MerchantCategoryService {
 
     private final MerchantCategoryRepository repository;
     private final IndustryCategoryMapper mapper;
+    private final BusinessNumberKindService kinds;
 
     public MerchantCategoryService(MerchantCategoryRepository repository,
-                                   IndustryCategoryMapper mapper) {
+                                   IndustryCategoryMapper mapper,
+                                   BusinessNumberKindService kinds) {
         this.repository = repository;
         this.mapper = mapper;
+        this.kinds = kinds;
     }
 
     /**
@@ -94,9 +97,54 @@ public class MerchantCategoryService {
             return repository.findByNameOnly(merchantName).stream().filter(accept).findFirst();
         }
 
-        // ④ 같은 번호의 다른 행 — 택시처럼 표시명이 결제마다 달라지는 가맹점 때문이다.
-        //    PG 가 아닌 번호는 한 사업자의 것이라 업종이 하나여서 안전하다.
-        return repository.findByBusinessNumberOrdered(biz).stream().filter(accept).findFirst();
+        // ④ **복합 사업자는 완화하지 않는다.** 번호는 그 사업자의 것이 맞지만 성격이 다른
+        //    가게가 여럿 붙어 있어(백화점 입점, 배 안의 편의점), 번호로 분류하면 서로 다른
+        //    가게가 한 분류로 오염된다. 정확일치만 인정하고 없으면 업종코드·미분류로 내려보낸다.
+        if (mapper.isMultiBusiness(biz)) {
+            return Optional.empty();
+        }
+
+        // ⑤ **관측 판정을 본다.** 상호가 둘 이상 보인 번호는 "전부 같은 것을 판다"가 확인될
+        //    때까지 완화를 보류한다(V16). 상호가 하나뿐이면 판정 대상이 아니라 그대로 통과한다 —
+        //    오염될 대상이 없기 때문이다.
+        if (!kinds.relaxationAllowed(biz)) {
+            return Optional.empty();
+        }
+
+        // ⑥ 같은 번호의 다른 행 — 택시처럼 표시명이 결제마다 달라지는 가맹점 때문이다.
+        //    사전이 이미 두 중분류를 알고 있으면 판정을 기다리지 않고 여기서 막는다.
+        List<MerchantCategory> siblings = repository.findByBusinessNumberOrdered(biz);
+        if (splitsIntoSeveralCategories(siblings)) {
+            return Optional.empty();
+        }
+        return siblings.stream().filter(accept).findFirst();
+    }
+
+    /**
+     * <b>사전이 이 번호를 이미 여러 중분류로 알고 있는가</b> — 그러면 목록에 없어도 복합이다.
+     *
+     * <p>정적 목록({@code 복합사업자-사업자번호.tsv})만으로는 <b>처음 보는 백화점</b>을 못 막는다.
+     * 그런데 사고가 나는 흐름을 뜯어 보면 <b>사용자의 교정 자체가 신호</b>다 —
+     *
+     * <pre>
+     *   1월  그 번호로 '무인양품'만 결제       → 상호 하나 → 완화해도 오염될 대상이 없다
+     *   2월  같은 번호로 '러쉬' 결제           → 완화로 '쇼핑'이 붙는다(틀렸다)
+     *        사용자가 '러쉬'를 '미용'으로 고친다 → 사전이 그 번호를 두 중분류로 알게 된다
+     *        ↳ **그 순간 복합이다.** 무인양품까지 미용이 되는 사고를 여기서 막는다.
+     * </pre>
+     *
+     * <p>세는 것은 <b>확정만</b>이다. 추정끼리 갈렸다고 복합으로 보면, 모델이 한 번 흔들릴 때마다
+     * 완화가 꺼져 사전 재사용이 무너진다 — 추정은 그런 무게를 질 수 없다.
+     *
+     * <p>질의가 늘지 않는다. 완화가 어차피 그 번호의 행을 전부 가져오므로 세기만 하면 된다.
+     */
+    private static boolean splitsIntoSeveralCategories(List<MerchantCategory> siblings) {
+        return siblings.stream()
+                .filter(MerchantCategory::isConfirmed)
+                .map(MerchantCategory::getCategory2)
+                .distinct()
+                .limit(2)
+                .count() >= 2;
     }
 
     /**
@@ -205,6 +253,14 @@ public class MerchantCategoryService {
         return new Snapshot(repository.findAll(), mapper);
     }
 
+    /** 조회 서열 — 사람의 확인이 먼저다. 리포지토리의 {@code ORDER BY CASE source} 와 같은 값. */
+    private static int sourceRank(MerchantCategory m) {
+        String src = m.getSource();
+        if (MerchantCategory.Source.USER_CONFIRMED.name().equals(src)) return 0;
+        if (MerchantCategory.Source.USER_CSV.name().equals(src)) return 1;
+        return 2;
+    }
+
     /** 한 시점의 사전 사본. 적재하는 동안만 산다. */
     public static final class Snapshot {
         private final Map<String, String> exact = new HashMap<>();       // key(번호, 풀네임) → 중분류
@@ -219,9 +275,20 @@ public class MerchantCategoryService {
 
         Snapshot(List<MerchantCategory> rows, IndustryCategoryMapper mapper) {
             this.mapper = mapper;
-            // id 오름차순으로 넣어 먼저 들어온 행이 이긴다 — lookup 의 ORDER BY id ASC 와 같다.
-            rows.stream().sorted(java.util.Comparator.comparing(MerchantCategory::getId,
-                            java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
+            // **사람의 확인 > 국세청 등록 > 추정**, 같은 등급이면 먼저 들어온 것 —
+            // 조회(`findByBusinessNumberOrdered`)와 **같은 서열**이라야 한다. id 순으로만 두면
+            // 먼저 들어온 씨앗이 영원히 이겨, 사용자가 고쳐도 안 고쳐진다(2026-08-05 티머니).
+            // **갈린 번호는 완화층에 담지 않는다** — 조회(`find`)와 같은 규칙이라야 한다.
+            //   조회는 막는데 적재는 담으면, 연동할 때 굳은 값과 화면이 다시 계산한 값이 갈린다.
+            java.util.Map<String, java.util.Set<String>> confirmedKinds = new HashMap<>();
+            rows.stream().filter(MerchantCategory::isConfirmed).forEach(m ->
+                    confirmedKinds.computeIfAbsent(m.getBusinessNumber(), k -> new java.util.TreeSet<>())
+                            .add(m.getCategory2()));
+
+            rows.stream().sorted(java.util.Comparator
+                            .comparingInt(MerchantCategoryService::sourceRank)
+                            .thenComparing(MerchantCategory::getId,
+                                    java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
                     .forEach(m -> {
                         // 추정은 스냅샷에 담지 않는다. 여기 담긴 값은 적재 때 Consumption 의
                         // 카테고리로 **굳어** 리포트·판정에 그대로 쓰이므로, 사람이 확인하지
@@ -240,9 +307,11 @@ public class MerchantCategoryService {
                         exact.putIfAbsent(key(biz, m.getMerchantName()), m.getCategory2());
                         if (biz.isEmpty()) {
                             byNameOnly.putIfAbsent(m.getMerchantName(), m.getCategory2());
-                        } else if (!mapper.isPaymentAgency(biz)) {
-                            // PG 번호는 여기 담지 않는다. 담는 순간 그 PG 를 거친 모든 결제가
-                            // 한 분류로 오염된다 — lookup 이 PG 를 걸러 내는 것과 같은 이유다.
+                        } else if (!mapper.isPaymentAgency(biz) && !mapper.isMultiBusiness(biz)
+                                && confirmedKinds.getOrDefault(biz, java.util.Set.of()).size() < 2) {
+                            // PG·복합 사업자 번호는 여기 담지 않는다. 담는 순간 그 번호를 거친
+                            // 모든 결제가 한 분류로 오염된다 — lookup 이 둘을 걸러 내는 것과
+                            // 같은 이유다. 두 곳의 규칙이 갈리면 연동할 때마다 답이 달라진다.
                             byBusiness.putIfAbsent(biz, m.getCategory2());
                         }
                     });
