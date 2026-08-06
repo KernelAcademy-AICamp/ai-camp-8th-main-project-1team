@@ -30,6 +30,7 @@ const FROM_REPORT: Item[] = [
 
 /** 마이에도 리포트에도 진입점이 없어진 것. */
 const OTHERS: Item[] = [
+  { id: 'm-products', emoji: '📊', bg: 'var(--blue-weak)', title: '맞춤 상품 비교', desc: '예·적금·펀드 매칭 Top 3 · 전부 더미' },
   { id: 'm-demo', emoji: '🧪', bg: 'var(--bg)', title: '데모 도구', desc: '사용자 전환 · 시간 이동 · 배치 실행' },
 ];
 

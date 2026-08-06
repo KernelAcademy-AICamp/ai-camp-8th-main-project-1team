@@ -44,6 +44,36 @@ export interface RecommendResponse {
   estimationReason: string | null;
 }
 
+/** 카드 추천(개편안 `s-compare`) — 카드보다 근거가 먼저 온다. */
+export interface CardSummaryRow {
+  rank: number;
+  categoryCode: string;
+  displayName: string;
+  count: number;
+  amount: number;
+}
+export interface CardBenefitRow { label: string; value: string }
+export interface CardOffer {
+  name: string;
+  tagline: string;
+  /** 카드 그림 색 갈래 — blue/gold/navy. 모르는 값이면 화면이 blue로 떨어뜨린다. */
+  tint: string;
+  mark: string;
+  footer: string;
+  /** 연 예상 절감액(원). 연회비를 뺀 값이다. */
+  yearlySaving: number;
+  /** 연간 혜택 한도에 걸렸으면 그 한도, 아니면 null. */
+  cappedAt: number | null;
+  rows: CardBenefitRow[];
+}
+export interface CardRecommend {
+  summary: CardSummaryRow[];
+  offers: CardOffer[];
+  /** "2026.05 ~ 2026.07" — 무엇을 근거로 셌는지. */
+  periodLabel: string;
+  months: number;
+}
+
 export interface AlertItem {
   alertId: number;
   consumptionId: number;
@@ -969,6 +999,8 @@ export interface ConfirmCategoryResult {
 
 export const api = {
   recommend: (userId: number) => get<RecommendResponse>(`/api/products/recommend?userId=${userId}`),
+  recommendCards: (userId: number) =>
+    get<CardRecommend>(`/api/products/recommend-cards?userId=${userId}`),
   alerts: (userId: number) => get<AlertResponse>(`/api/alert/list?userId=${userId}`),
   rescan: (userId: number) => post<unknown>(`/api/alert/rescan?userId=${userId}`),
   report: (userId: number) => get<ReportResponse>(`/api/report/monthly?userId=${userId}`),

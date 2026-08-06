@@ -37,6 +37,7 @@ import { ReportAnalysis } from './screens/ReportAnalysis';
 import { ReportAccount } from './screens/ReportAccount';
 import { ReportCards } from './screens/ReportCards';
 import { Compare } from './screens/Compare';
+import { MyProducts } from './screens/MyProducts';
 import { ReportWaste } from './screens/ReportWaste';
 import { ReportSavings } from './screens/ReportSavings';
 import { My } from './screens/My';
@@ -67,6 +68,7 @@ const SCREENS: Record<ScreenId, ComponentType> = {
   monthend: MonthEnd, settle: Settle, renew: Renew,
   'r-spending': ReportSpending, 'r-analysis': ReportAnalysis, 'r-cards': ReportCards,
   'r-compare': Compare,
+  'm-products': MyProducts,
   'r-account': ReportAccount,
   'r-waste': ReportWaste, 'r-savings': ReportSavings,
   'm-impulse': MyImpulse, 'm-goals': MyGoals, 'm-connections': MyConnections,

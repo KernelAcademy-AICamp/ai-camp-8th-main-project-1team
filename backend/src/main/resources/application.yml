@@ -101,6 +101,80 @@ finntech:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173,capacitor://localhost,https://localhost,http://localhost}
 
+  # ---- 카드 추천 (개편안 s-compare) — 전부 더미 ------------------------------
+  # 마스터 §4 원칙 5: 추천·판매 흐름의 금융상품은 전부 더미다. 아래 카드는 실재하지 않으며
+  # 이름 앞의 '[더미]'도 화면에 그대로 나간다 — 사용자가 진짜로 오해할 여지를 남기지 않는다.
+  # (실 금리를 보고 싶으면 바로 아래 savings-compare 로 간다. 그쪽은 무판매·무제휴라 예외다.)
+  #
+  # 추천 순서는 광고비가 아니라 **예상 절감액** 순이다. 절감액은
+  #   Σ(혜택 카테고리 월평균 × 12 × 요율) + (그 외 지출 월평균 × 12 × 기본요율), yearly-cap 로 자름
+  # 으로 내며, 분자인 월평균은 분석 결과(AnalysisResult)가 낸 값을 그대로 쓴다(원칙 2).
+  #
+  # 카테고리 이름이 여기 있는 것은 원칙 4 위반이 아니다 — 원칙은 "코드에 박지 말라"이고
+  # 설정이 그 이름들이 있어야 할 자리다. 카테고리를 갈아끼우면 이 블록만 고친다.
+  card-recommend:
+    summary-top: 3          # 소비 요약에 보일 카테고리 수
+    max-cards: 3            # 추천으로 보일 카드 수
+    cards:
+      - name: "[더미] 한끼 캐시백카드"
+        tagline: "먹는 데 강한 카드"
+        tint: blue
+        mark: "H"
+        footer: "hankki cash"
+        annual-fee: 0
+        base-rate: 0.5
+        yearly-cap: 240000
+        monthly-requirement: 0
+        benefits:
+          - { category: "식비", rate: 5.0, kind: "캐시백" }
+          - { category: "카페/간식", rate: 10.0, kind: "캐시백" }
+      - name: "[더미] 어디서나 적립카드"
+        tagline: "어디서 써도 쌓이는 카드"
+        tint: gold
+        mark: "A"
+        footer: "anywhere point"
+        annual-fee: 0
+        base-rate: 2.0
+        yearly-cap: 180000
+        monthly-requirement: 0
+        benefits: []
+      - name: "[더미] 오가는길 할인카드"
+        tagline: "이동과 통신에 강한 카드"
+        tint: navy
+        mark: "O"
+        footer: "ogaza discount"
+        annual-fee: 15000
+        base-rate: 0.3
+        yearly-cap: 300000
+        monthly-requirement: 300000
+        benefits:
+          - { category: "교통/자동차", rate: 10.0, kind: "할인" }
+          - { category: "주거/통신", rate: 15.0, kind: "할인" }
+      - name: "[더미] 장보기 캐시백카드"
+        tagline: "장을 자주 보는 사람에게"
+        tint: blue
+        mark: "J"
+        footer: "jangbogi cash"
+        annual-fee: 0
+        base-rate: 0.5
+        yearly-cap: 200000
+        monthly-requirement: 0
+        benefits:
+          - { category: "대형마트", rate: 7.0, kind: "캐시백" }
+          - { category: "편의점/잡화", rate: 5.0, kind: "캐시백" }
+      - name: "[더미] 쉬는날 적립카드"
+        tagline: "취미와 여행에 강한 카드"
+        tint: navy
+        mark: "S"
+        footer: "swineun point"
+        annual-fee: 0
+        base-rate: 0.5
+        yearly-cap: 150000
+        monthly-requirement: 0
+        benefits:
+          - { category: "취미/여가", rate: 8.0, kind: "적립" }
+          - { category: "여행/숙박", rate: 5.0, kind: "적립" }
+
   # ---- 통장 비교 (정보성) — 실 예·적금 금리 비교 -----------------------------
   # 금소법: '단순 정보제공 + 판매목적 아님 + 무제휴/무광고 + 가입 편의 미제공'이면 중개업 아님
   # (금융위·금감원 유권해석 2022.6.15, 금융소비자정책과). 화면은 정보성이며 가입은 각 금융사에서.

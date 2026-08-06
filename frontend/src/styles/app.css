@@ -1393,3 +1393,45 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
   font-weight: 500; color: var(--t2); cursor: pointer; display: flex; align-items: center;
   justify-content: center; gap: 4px; }
 .sp-more .chev { font-size: 16px; line-height: 1; color: #9A9A98; }
+
+/* ── 카드 추천 (개편안 `s-compare`) ───────────────────────────────────────────
+   리포트 아래 배너로 들어오는 화면. 추천이 광고가 되지 않으려면 **근거가 같은 화면에**
+   있어야 한다 — 그래서 카드보다 소비 요약(`.cr-sum`)이 먼저 온다. */
+.cr-head { font-size: 22px; font-weight: 700; line-height: 1.4; margin: 8px 0 20px; }
+
+.cr-sum { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 8px 16px 0; margin-bottom: 24px; }
+.cr-row { display: flex; align-items: center; gap: 12px; padding: 16px 4px; border-radius: 12px; }
+.cr-row i { font-style: normal; font-size: 14px; font-weight: 700; color: var(--blue);
+  width: 12px; text-align: center; flex: 0 0 auto; }
+.cr-row b { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 4px;
+  min-width: 0; }
+.cr-row b svg { width: 16px; height: 16px; flex: 0 0 auto; }
+.cr-row span { margin-left: auto; font-size: 14px; font-weight: 700; flex: 0 0 auto; }
+/* 1위만 테두리로 들어올린다 — 셋 다 강조하면 아무것도 강조되지 않는다. */
+.cr-row.top { border: 1.5px solid var(--blue); padding: 16px 12px; margin: 0 -8px; }
+.cr-note { font-size: 12px; color: var(--t3); font-weight: 500; padding: 12px 4px 16px;
+  border-top: 1px solid var(--line); margin-top: 4px; }
+
+.cr-offer { background: var(--card); border-radius: 20px; padding: 24px 20px;
+  margin-bottom: 16px; text-align: center; }
+.cr-offer .cap { font-size: 13px; font-weight: 500; color: var(--t3); }
+.cr-offer .nm { font-size: 18px; font-weight: 700; margin-top: 4px; }
+.cr-offer .art { width: 120px; margin: 20px auto 16px; display: block;
+  filter: drop-shadow(0 8px 16px rgba(14, 15, 12, .18)); }
+.cr-offer .save { display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 15px; font-weight: 700; color: var(--blue); }
+.cr-offer .save svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.cr-offer .rows { margin-top: 20px; }
+.cr-brow { display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding: 12px 0; font-size: 13px; }
+.cr-brow + .cr-brow { border-top: 1px solid var(--bg); }
+.cr-brow span { color: var(--t2); font-weight: 500; text-align: left; }
+.cr-brow b { font-weight: 700; flex: 0 0 auto; }
+
+.cr-btns { display: flex; gap: 8px; margin-top: 20px; }
+/* 개편안은 48px. KWCAG 6.1.3(44px 이상)을 이미 넘으므로 그대로 둔다. */
+.cr-btns button { flex: 1; min-height: 48px; border: none; border-radius: 12px;
+  font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.cr-btns .ghost { background: var(--bg); color: var(--t2); }
+.cr-btns .dark { background: var(--t1); color: #fff; }
