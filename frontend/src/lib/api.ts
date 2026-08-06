@@ -1064,6 +1064,11 @@ export const api = {
   merchantStances: (userId: number) =>
     get<{ userId: number; items: MerchantStance[] }>(`/api/merchant-stance?userId=${userId}`),
   /** "역시 낭비였다" — 한 단계 되돌린다. */
+  /** "이건 줄일 지출이 아니에요" — 사다리를 건너뛰고 바로 제외로. */
+  excludeStance: (userId: number, businessNumber: string, merchantName?: string) =>
+    post<{ businessNumber: string; stance: StanceLevel; keptCount: number }>(
+      `/api/merchant-stance/${encodeURIComponent(businessNumber)}/exclude?userId=${userId}`
+      + (merchantName ? `&merchantName=${encodeURIComponent(merchantName)}` : ''), {}),
   revertStance: (userId: number, businessNumber: string) =>
     post<{ businessNumber: string; stance: StanceLevel; keptCount: number }>(
       `/api/merchant-stance/${encodeURIComponent(businessNumber)}/revert?userId=${userId}`, {}),

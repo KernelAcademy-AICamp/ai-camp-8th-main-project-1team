@@ -14,6 +14,7 @@
 import { useState } from 'react';
 import { Scroll, Screen } from '../components/ui';
 import { WeekChart } from '../components/WeekChart';
+import { WeekPicker, weekOfMonth, mondayOf, type WeekSel } from '../components/WeekPicker';
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
 import { useAsync } from '../state/useAsync';
@@ -51,6 +52,11 @@ export function Report() {
   const { home } = useGuardian();
   const [weeksAgo, setWeeksAgo] = useState(0);
   const [mode, setMode] = useState<0 | 1>(0);
+  /** 주차 고르기 시트 — 열려 있는가, 그 안에서 굴리고 있는 값은 무엇인가. */
+  const [pickOpen, setPickOpen] = useState(false);
+  const [pick, setPick] = useState<WeekSel | null>(null);
+  /** '오늘'은 서버가 정한다 — 데모 시계를 켜면 실제 오늘과 다르다(원칙 3). */
+  const today = home?.asOf ? new Date(`${home.asOf.slice(0, 10)}T00:00:00`) : new Date();
   // 챌린지가 없으면 404다 — 리포트 나머지는 멀쩡히 보여야 하므로 조용히 비운다.
   const weekly = useAsync(
     () => api.guardian.weeklyReport(userId, weeksAgo).catch(() => null),
@@ -88,10 +94,13 @@ export function Report() {
         <div className="rp-sec" style={{ paddingTop: 20 }}>
           <div className="wk-nav">
             <button type="button" aria-label="지난주" onClick={() => setWeeksAgo((x) => x + 1)}>‹</button>
-            <div className="wk-txt">
+            {/* 가운데를 누르면 휠로 아무 주나 고른다 — ‹ › 만으로는 석 달 전에 가려고
+                열두 번을 눌러야 해서, 지난 기록을 훑는 화면에서 사실상 못 가는 것과 같다. */}
+            <button type="button" className="wk-txt" aria-label="다른 주 고르기"
+              onClick={() => { setPick(selOf(today, weeksAgo)); setPickOpen(true); }}>
               <b>{w?.weekLabel ?? '이번 주'}</b>
               <span>{w ? fmtRange(w.weekStart, w.weekEnd) : ''}</span>
-            </div>
+            </button>
             <button type="button" aria-label="다음주" disabled={isCur}
               onClick={() => setWeeksAgo((x) => Math.max(0, x - 1))}>›</button>
           </div>
@@ -191,6 +200,41 @@ export function Report() {
 
         <div className="spacer" />
       </Scroll>
+      {pick && (
+        <WeekPicker open={pickOpen} sel={pick} today={today}
+          onChange={setPick} onClose={() => setPickOpen(false)}
+          onConfirm={() => {
+            setWeeksAgo(weeksAgoOf(today, pick));
+            setPickOpen(false);
+          }} />
+      )}
     </Screen>
   );
+}
+
+/** 지금 보고 있는 주(= N주 전)를 휠의 (연,월,주)로. */
+function selOf(today: Date, weeksAgo: number): WeekSel {
+  const d = mondayOfWeek(today);
+  d.setDate(d.getDate() - weeksAgo * 7);
+  return { y: d.getFullYear(), m: d.getMonth() + 1, w: weekOfMonth(d) };
+}
+
+/**
+ * 휠에서 고른 주가 몇 주 전인가.
+ *
+ * <b>날짜 차이를 7로 나눈다.</b> 달을 건너뛰며 주를 세면 5주짜리 달에서 한 주씩 어긋난다.
+ * 음수(미래)는 0으로 — 휠이 미래를 안 주지만, 데모 시계로 오늘이 바뀌면 어긋날 수 있다.
+ */
+function weeksAgoOf(today: Date, sel: WeekSel): number {
+  const cur = mondayOfWeek(today);
+  const got = mondayOf(sel);
+  const days = Math.round((cur.getTime() - got.getTime()) / 86400000);
+  return Math.max(0, Math.round(days / 7));
+}
+
+/** 그 날이 속한 주의 월요일. 리포트의 주 기준과 같다. */
+function mondayOfWeek(d: Date): Date {
+  const out = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  out.setDate(out.getDate() - ((out.getDay() + 6) % 7));
+  return out;
 }

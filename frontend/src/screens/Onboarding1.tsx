@@ -5,6 +5,7 @@
  * 줄이고 싶지 않은 소비를 고르게 한다. 고른 카테고리는 챌린지의 `sanctuaryCategories`로 넘어가
  * 지킴이가 그 결제에는 먼저 침묵한다(설계서 C4).
  */
+import { useState } from 'react';
 import { Icon } from '../components/Icons';
 import { AppBar, ProgressBar, Cta, Scroll, Screen, ErrorBox, Loading } from '../components/ui';
 import { useSession } from '../state/session';
@@ -26,6 +27,10 @@ export function Onboarding1() {
   // 다음 화면(ob2)과 **같은 창**을 본다. 예전에는 여기가 최근 90일 환산, 저기가 전 기간 평균이라
   // 같은 카테고리 금액이 화면을 넘길 때 튀었다(2026-07-31 실측 691,150 vs 745,118).
   const win = useAsync(() => api.onboardingWindow(userId).catch(() => null), [userId]);
+  /** 이미 답해 둔 가맹점 — 같은 것을 두 번 묻지 않는다. */
+  const stances = useAsync(() => api.merchantStances(userId).catch(() => null), [userId]);
+  const [askOpen, setAskOpen] = useState(false);
+  const [askDone, setAskDone] = useState(false);
 
   const a = analysis ?? fetched.data;
   if (fetched.error) {
@@ -47,6 +52,54 @@ export function Onboarding1() {
 
   // 끝난 구독은 뺀다 — 이 화면은 "그동안 꼬박꼬박 빠져나간" 지금의 고정지출을 말한다.
   const fixed = a.recurring.filter((r) => r.type === 'FIXED' && r.status === 'ACTIVE').slice(0, 6);
+  /**
+   * 넘어가기 전에 물어볼 반복 지출 하나 (개편안 `sheet-ktx`).
+   *
+   * <b>가장 큰 것 하나만 묻는다.</b> 고정지출이 여섯이라고 여섯 번 물으면 그건 설문이지
+   * 확인이 아니다. 금액이 가장 큰 것 하나만 짚고, 나머지는 나중에 마이 &gt; 낭비 판정 관리에서 본다.
+   *
+   * 사업자번호가 없으면 묻지 않는다 — 답을 저장할 키가 없어 "답했다"를 기억하지 못한다.
+   * 이미 느슨하게 보고 있는 곳도 빼야 물었던 것을 또 묻지 않는다.
+   */
+  const answeredBiz = new Set((stances.data?.items ?? []).map((s) => s.businessNumber));
+  // **고정지출만 보지 않는다.** 개편안의 예시(주 2회 KTX)는 우리 모델에서 `FIXED`(매달 같은 날
+  // 같은 금액)가 아니라 `ROUTINE`(같은 카테고리·시간대의 반복)으로 잡힌다. 둘 다 후보로 본다.
+  const ask = a.recurring
+    .filter((r) => r.status === 'ACTIVE')
+    .filter((r) => (r.businessNumber
+      ? !answeredBiz.has(r.businessNumber)          // 가맹점 단위로 이미 답한 것은 뺀다
+      : !draft.sanctuary.includes(r.category2)))    // 카테고리 단위로 이미 성역이면 뺀다
+    .sort((x, y) => y.representativeAmount - x.representativeAmount)[0] ?? null;
+
+  /** 물을 것이 남았으면 먼저 묻고, 답했거나 물을 것이 없으면 그냥 넘어간다. */
+  function next() {
+    if (ask && !askDone && !stances.loading) { setAskOpen(true); return; }
+    go('ob2');
+  }
+
+  /**
+   * 답을 받아 넘어간다.
+   *
+   * <b>답을 어디에 적을지는 후보가 정한다.</b> 가맹점이 붙은 반복이면 그 가맹점만 빼고(정확),
+   * 시간대 반복이라 가맹점이 없으면 그 카테고리를 성역으로 넣는다(할 수 있는 최선).
+   * 없는 정밀도를 지어내지 않는다 — 가맹점을 모르는데 가맹점 설정을 만들 수는 없다.
+   *
+   * "줄일 수 있어요"는 아무것도 바꾸지 않는다. 지금 상태가 이미 '보통'이라 다시 쓸 것이 없다.
+   */
+  async function answerAsk(needed: boolean) {
+    setAskDone(true);
+    setAskOpen(false);
+    if (needed && ask) {
+      if (ask.businessNumber) {
+        await api.excludeStance(userId, ask.businessNumber, ask.merchantName ?? undefined)
+          .catch(() => undefined);
+      } else if (!draft.sanctuary.includes(ask.category2)) {
+        patchDraft({ sanctuary: [...draft.sanctuary, ask.category2] });
+      }
+    }
+    go('ob2');
+  }
+
   const topDow = DOW_KR[a.pattern.peak?.dayOfWeek ?? topKey(a.pattern.amountByDayOfWeek)] ?? '금';
   const topPart = a.pattern.peak?.daypart ?? topKey(a.pattern.amountByDaypart) ?? '저녁';
   const candidates = a.cutCandidates.slice(0, 5);
@@ -143,8 +196,49 @@ export function Onboarding1() {
         <div className="spacer" />
       </div></Scroll>
       <Cta>
-        <button type="button" className="btn btn-primary" onClick={() => go('ob2')}>줄일 카테고리 고르기</button>
+        <button type="button" className="btn btn-primary" onClick={next}>줄일 카테고리 고르기</button>
       </Cta>
+
+      {/* 반복 지출 확인 (개편안 `sheet-ktx`) — 넘어가기 전에 하나만 묻는다.
+          <b>다음 화면이 "무엇을 줄일까"를 묻기 때문에</b> 먼저 물어야 한다. 통근 교통비를
+          줄일 후보에 올려 두고 "이 중에 고르세요"라고 하면, 고를 수 없는 것이 목록을 차지한다. */}
+      <div className={`tp-dim${askOpen ? ' show' : ''}`} onClick={() => setAskOpen(false)} aria-hidden="true" />
+      <div className={`tp-sheet${askOpen ? ' show' : ''}`} role="dialog"
+        aria-label="반복 지출 확인" aria-hidden={!askOpen}>
+        <div className="tp-head">넘어가기 전에 하나만 확인할게요</div>
+        <p className="tp-cap">
+          {ask ? <>{ask.periodDays ? `${ask.periodDays}일마다 ` : '규칙적으로 '}
+            {ask.merchantName ?? `${catLabel(ask.category2)}${ask.daypart ? ` ${ask.daypart}` : ''}`}에{' '}
+            쓰시네요. 줄일 지출이 아닐 수 있어서요.</>
+            : '규칙적으로 나가는 지출이 있어요.'}
+        </p>
+        {ask && (
+          <div className="card" style={{ background: 'var(--bg)', padding: '4px 20px', margin: '0 0 16px' }}>
+            <div className="list-item">
+              <span className="ic" style={{ background: iconOf(catLabel(ask.category2)).bg }}>
+                <Icon id={iconOf(catLabel(ask.category2)).icon} />
+              </span>
+              <div className="tx">
+                <b>{ask.merchantName ?? catLabel(ask.category2)}</b>
+                <span>
+                  {ask.periodDays ? `${ask.periodDays}일마다` : '규칙적으로 반복'}
+                  {!ask.merchantName && ask.daypart && ` · ${ask.daypart}`}
+                </span>
+              </div>
+              <span className="amt">{won(ask.representativeAmount)}</span>
+            </div>
+          </div>
+        )}
+        <div className="seg">
+          <button type="button" onClick={() => void answerAsk(true)}>꼭 필요해요</button>
+          <button type="button" onClick={() => void answerAsk(false)}>줄일 수 있어요</button>
+        </div>
+        <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--t3)', lineHeight: 1.4 }}>
+          꼭 필요한 지출이면 절약 후보에서 빼고, 지킴이도 신경 쓰지 않아요.
+          {ask && !ask.businessNumber
+            && <> 가게를 특정할 수 없는 반복이라 <b>{catLabel(ask.category2)}</b> 전체를 빼요.</>}
+        </p>
+      </div>
     </Screen>
   );
 }

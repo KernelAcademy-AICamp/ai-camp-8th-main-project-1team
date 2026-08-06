@@ -1115,7 +1115,8 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
   font-family: inherit; cursor: pointer; padding: 4px 8px; min-height: 44px; }
 .wk-txt b { display: block; font-size: 17px; font-weight: 700; white-space: nowrap; }
 .wk-txt b .car { display: inline; font-size: 11px; color: var(--t3); vertical-align: 2px; margin-left: 4px; }
-.wk-txt span { display: block; font-size: 12px; color: var(--t3); font-weight: 500; margin-top: 4px; }
+.wk-txt span { display: block; font-size: 12px; color: var(--t3); font-weight: 500;
+  margin-top: 4px; white-space: nowrap; }   /* 안 두면 "8.3 ~ 8.9"가 세 줄로 접힌다 */
 
 /* ── 히어로 + 차트 카드 ─────────────────────────────────────────────────── */
 .rp-keep { font-size: 28px; font-weight: 700; line-height: 1.2; margin-top: 8px; }
