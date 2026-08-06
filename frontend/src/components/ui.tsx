@@ -26,7 +26,9 @@ export function Screen({ title, hasTabBar, background, children }: {
   return (
     <main
       id="main"
-      className={`screen${hasTabBar ? ' has-tabbar' : ''}`}
+      /* `tabscreen` 은 개편안이 **탭 뿌리 화면**에 붙이던 표시다. 아래 탭바가 있느냐와
+         같은 뜻이라 `has-tabbar` 와 함께 붙인다 — 개편안의 선택자가 그대로 맞는다. */
+      className={`screen${hasTabBar ? ' has-tabbar tabscreen' : ''}`}
       style={background ? { background } : undefined}
       ref={ref}
       tabIndex={-1}

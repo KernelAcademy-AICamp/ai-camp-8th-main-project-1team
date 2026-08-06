@@ -642,6 +642,9 @@ export interface GuardianCeremony {
   verdictDate: string;
   result: DailyResult;
   objectId: string | null;
+  /** 사람이 읽는 이름. 서버가 카탈로그에서 찾아 보낸다 — 예전엔 코드가 그대로 화면에 나갔다. */
+  objectName: string | null;
+  glyph: string | null;
   grade: Grade | null;
   message: string | null;
   rerollAvailable: boolean;
@@ -753,6 +756,40 @@ export interface WeeklyReport {
   coaching: { good: string | null; watch: string | null };
   /** 끝난 챌린지 달성률. 진행 중인 회차는 빠진다 — 확정되지 않은 성적을 최종처럼 보이면 안 된다. */
   pastChallenges: PastChallenge[];
+}
+
+/* ── 주간 미션 보드 (개편안 s-myroom) ──────────────────────────────────── */
+/** 보드에 걸린 미션 한 줄. */
+export interface MissionBoardLine {
+  id: number;
+  text: string;
+  status: 'SUCCESS' | 'FAILED' | 'ONGOING';
+  /** 이 미션 몫의 포인트. 만들 때 박아 둔 값이라 나중에 줄지 않는다. */
+  reward: number;
+  type: 'MAX_COUNT' | 'AVOID_SLOT' | 'NO_SPEND_STREAK_MIN' | 'LABELING_COUNT_MIN';
+  category: string | null;
+  /** 이 미션을 만든 후보의 키 — 시트를 다시 열 때 표시를 되살린다. */
+  candidateKey: string;
+}
+/** 고를 수 있는 미션 하나. `key`로 고른다 — 후보는 매번 다시 계산돼 id가 없다. */
+export interface MissionCandidate {
+  key: string;
+  type: 'MAX_COUNT' | 'AVOID_SLOT' | 'NO_SPEND_STREAK_MIN' | 'LABELING_COUNT_MIN';
+  category: string | null;
+  threshold: number;
+  weekday: string | null;
+  hourStart: number | null;
+  hourEnd: number | null;
+  text: string;
+  /** 왜 이걸 권하는지 — 근거 없는 추천은 숙제가 된다. */
+  why: string;
+}
+export interface MissionBoard {
+  active: MissionBoardLine[];
+  next: MissionBoardLine[];
+  candidates: MissionCandidate[];
+  nextWeekStart: string;
+  weeklyPointPool: number;
 }
 
 /** 주간 미션 한 줄. ONGOING이면 아직 기간 중(일요일 배치가 정산한다). */
@@ -1205,6 +1242,9 @@ export const api = {
       post<GuardianCollection>(`/api/guardian/collection/milestones/${count}/claim?userId=${userId}`, {}),
     shop: (userId: number) => get<GuardianShop>(`/api/guardian/shop?userId=${userId}`),
     catSkins: (userId: number) => get<CatSkin[]>(`/api/guardian/cat-skins?userId=${userId}`),
+    missions: (userId: number) => get<MissionBoard>(`/api/guardian/missions?userId=${userId}`),
+    pickMission: (userId: number, key: string) =>
+      post<MissionBoard>(`/api/guardian/missions/pick?userId=${userId}&key=${encodeURIComponent(key)}`),
     /** 털색을 고른다. 가지지 않은 색이면 서버가 막는다. */
     chooseCatSkin: (userId: number, key: string) =>
       post<CatSkin[]>(`/api/guardian/cat-skins/${encodeURIComponent(key)}?userId=${userId}`, {}),

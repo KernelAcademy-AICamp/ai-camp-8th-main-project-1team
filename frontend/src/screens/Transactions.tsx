@@ -3,7 +3,7 @@
  * 결제에 실린 사업자등록번호로 가맹점 주소를 눌러서 조회할 수 있다(§13).
  * 상단 '동기화'는 마이데이터에서 새 결제를 당겨오고 지킴이 원장에도 반영한다.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppBar, Scroll, Screen, ErrorBox, Loading, Empty } from '../components/ui';
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
@@ -52,6 +52,8 @@ export function Transactions() {
    * "이 달 안에서만 찾나"로 읽힌다. 날짜 필터도 함께 푼다 — 두 필터가 겹치면 왜 안 나오는지 모른다.
    */
   const [query, setQuery] = useState<string | null>(null);
+  /** 검색 입력칸 — 돋보기를 누르면 초점을 놓아 키보드를 접는다. */
+  const inputRef = useRef<HTMLInputElement>(null);
   /** 카테고리를 고치는 중인 결제. 한 번에 한 줄만 연다. */
   const [editing, setEditing] = useState<string | null>(null);
   /** 이미 고친 것 — 목록을 다시 불러오기 전까지 화면에 바로 반영한다. */
@@ -185,13 +187,20 @@ export function Transactions() {
           <div className="appbar sp-abar">
             <button type="button" className="back" onClick={() => setQuery(null)}
               aria-label="검색 닫기">‹</button>
-            <input className="sp-ipt" type="text" placeholder="가맹점 이름" autoComplete="off"
-              autoFocus value={query} onChange={(e) => setQuery(e.target.value)}
+            <input ref={inputRef} className="sp-ipt" type="text" placeholder="가맹점 이름"
+              autoComplete="off" autoFocus value={query} onChange={(e) => setQuery(e.target.value)}
               aria-label="가맹점 이름으로 검색" />
             {query !== '' && (
               <button type="button" className="sp-clr" onClick={() => setQuery('')}
                 aria-label="입력 지우기"><span><Icon id="i-x" /></span></button>
             )}
+            {/* 오른쪽 끝 돋보기(개편안 `.sp-mag`) — 누르면 지금 적은 말로 다시 찾는다.
+                입력할 때마다 걸러지므로 없어도 되지만, 키보드를 접고 결과를 보고 싶을 때
+                누를 곳이 필요하다. */}
+            <button type="button" className="sp-mag" aria-label="검색"
+              onClick={() => inputRef.current?.blur()}>
+              <Icon id="i-search" />
+            </button>
           </div>
           <div className="sp-abar-line" />
         </>

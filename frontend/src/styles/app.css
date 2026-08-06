@@ -900,7 +900,9 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
 .icon-btn:hover { background: var(--bg); }
 .goal-meta { font-size: 13px; color: var(--t2); margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
 .goal-meta b { font-variant-numeric: tabular-nums; }
-.ms-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+/* 목표 마일스톤 칩줄. **`.ms-row` 를 쓰지 않는다** — 개편안이 그 이름을 미션 고르기 시트의
+   행에 쓰므로, 같은 이름을 두 뜻으로 두면 한쪽 스타일이 다른 쪽을 덮는다. */
+.mile-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .ms-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 5px 9px; min-height: 34px; border-radius: 20px; background: var(--bg); color: var(--t3); }
 .ms-chip.got { background: var(--green-weak); color: var(--green-t); }
 
@@ -1435,3 +1437,110 @@ textarea.inp { min-height: 92px; resize: vertical; line-height: 1.5; }
   font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .cr-btns .ghost { background: var(--bg); color: var(--t2); }
 .cr-btns .dark { background: var(--t1); color: #fff; }
+
+/* ── 홈 (개편안 `s-home`) ─────────────────────────────────────────────────── */
+/* 마이룸 진입 카드 (개편안 피그마 47:177 실측). 다른 스트립과 달리 **그림이 든 큰 카드**다 —
+   방을 꾸미는 곳이라 무엇이 기다리는지 보여야 눌러 볼 마음이 생긴다.
+   그림 원본 프레임 168×130 이 (188,-19)에 놓여 카드 밖 부분이 잘린다. 내장 판본은 투명
+   여백을 잘라낸 것이라 좌표를 환산해 (197,-8)·폭 149 로 둔다. */
+.strip.mr { display: block; position: relative; height: 100px; padding: 0;
+  background: linear-gradient(125deg, #FFFFFF 27.4%, #EDFFDD 89.2%); overflow: hidden; }
+/* 개편안은 세로 중앙 정렬이었다. 스트릭·포인트 줄을 아래에 얹으면서 위로 올린다 —
+   중앙에 둔 채로는 두 줄 설명과 메타가 겹쳤다. */
+.strip .mr-tx { position: absolute; left: 20px; top: 14px; }
+.strip .mr-tx b { display: block; font-size: 18px; font-weight: 700; }
+.strip .mr-tx p { margin: 6px 0 0; font-size: 13px; font-weight: 500; color: var(--t3);
+  line-height: 1.3; }
+.strip .mr-art { position: absolute; left: 197px; top: -8px; width: 149px;
+  filter: drop-shadow(4px 4px 12px rgba(2, 71, 0, .1)); }
+/* 스트릭·포인트는 카드 왼쪽 아래에 얹는다 — 개편안에는 없지만 이 앱에는 있는 값이라,
+   그림을 가리지 않는 자리에 작게 둔다. */
+.strip .mr-meta { position: absolute; left: 20px; bottom: 12px; display: flex; gap: 10px;
+  font-size: 12px; font-weight: 700; color: var(--t2); align-items: center; }
+.strip .mr-meta .fire { color: #C2410C; display: flex; align-items: center; gap: 3px; }
+
+/* 홈 종 아이콘 — 안 읽은 알림이 있으면 점을 찍는다. */
+.bell-wrap { position: relative; display: flex; align-items: center; justify-content: center;
+  border: none; background: none; padding: 0; cursor: pointer;
+  min-width: 44px; min-height: 44px; }   /* KWCAG 6.1.3 — 개편안은 아이콘 크기 그대로였다 */
+.bell-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px;
+  border-radius: 50%; background: var(--red); border: 2px solid var(--bg); }
+
+/* ── 마이 · 세리머니 (개편안 `s-my` / 아침 세리머니 모달) ────────────────── */
+.profile-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--blue-weak);
+  flex: 0 0 auto; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
+.profile-avatar img { width: 42px; display: block; margin-bottom: -2px; }
+
+/* 도착한 소품을 크게, 뒤에서 빛이 돌게. 작은 칸에 있을 때와 같은 그림인데
+   크게 놓고 빛을 주면 기념품이 된다. */
+.cere-hero { position: relative; width: 96px; height: 96px; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center; }
+.cere-hero::before { content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, #FFF3CC 0%, #FFF9E8 55%, rgba(255, 249, 232, 0) 78%); }
+.cere-hero svg, .cere-hero img { position: relative; width: 56px; height: 56px;
+  filter: drop-shadow(0 8px 8px rgba(14, 15, 12, .16)); }
+.cere-name { display: inline-block; margin: 12px 0 20px; padding: 4px 12px; border-radius: 20px;
+  background: var(--blue-weak); color: #054D28; font-size: 13px; font-weight: 700; }
+
+.float-bob { animation: bob 2.6s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+/* 움직임을 줄여 달라고 한 사람에게는 흔들지 않는다 (KWCAG 2.2 — 반짝임과 동작). */
+@media (prefers-reduced-motion: reduce) { .float-bob { animation: none; } }
+/* 검색 앱바 오른쪽 끝 돋보기 — 키보드를 접고 결과를 보게 한다. */
+.sp-abar .sp-mag { border: none; background: none; padding: 0; cursor: pointer; flex: 0 0 auto;
+  margin-left: 8px; width: 44px; height: 44px; display: flex; align-items: center;
+  justify-content: center; color: var(--t1); }   /* 개편안은 32px — KWCAG 6.1.3 으로 44px */
+.sp-abar .sp-mag svg { width: 24px; height: 24px; }
+
+/* ── 발표용 푸시 배너 (개편안 `.push-layer`) ─────────────────────────────── */
+/* 실제 푸시가 아니라 화면 안에 그린 그림이다. 데모 도구에서만 켠다. */
+.push-layer { position: fixed; top: 40px; left: 8px; right: 8px; z-index: 70;
+  display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+  max-width: 420px; margin: 0 auto; }
+.push { text-align: left; font-family: inherit; border: none;
+  background: rgba(250, 250, 250, .94); backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px); border-radius: 12px; padding: 12px;
+  display: flex; gap: 12px; align-items: flex-start; pointer-events: auto; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+  transform: translateY(-140px); opacity: 0;
+  /* 사라질 때는 등장보다 빠르게, 가속 곡선 */
+  transition: transform .32s cubic-bezier(.4, 0, .85, .4), opacity .24s; }
+.push.show { transform: none; opacity: 1;
+  /* 나타날 때는 조금 느리게, 감속 곡선 */
+  transition: transform .48s cubic-bezier(.2, .9, .3, 1), opacity .28s; }
+.push .ap { width: 36px; height: 36px; border-radius: 8px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff; }
+.push .pt { flex: 1; min-width: 0; }
+.push .row1 { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.push .pt b { font-size: 13px; font-weight: 600; color: #1c1f24; }
+.push .ago { font-size: 11px; color: #8b8b8f; font-weight: 500; flex: none; }
+.push .pt p { margin: 2px 0 0; font-size: 13px; line-height: 1.45; color: #3a3a3c;
+  font-weight: 500; }
+@media (prefers-reduced-motion: reduce) { .push, .push.show { transition: opacity .2s; } }
+
+/* ── 다음 주 미션 고르기 시트 (개편안 `#msSheet`) ────────────────────────── */
+/* 라디오 하나로 고른다. 여러 개를 담게 하면 포인트 몫이 쪼개져 "셋 다 해야 30P"가 되고,
+   그러면 고른 게 아니라 늘어난 것이 된다. */
+.ms-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; cursor: pointer;
+  width: 100%; min-height: 44px; border: none; background: none; font-family: inherit;
+  color: inherit; text-align: left; }
+.ms-row .mtx b { font-size: 14px; font-weight: 700; display: block; }
+.ms-row .mtx span { font-size: 12px; color: var(--t3); }
+.ms-radio { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line);
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: center; transition: .15s; }
+.ms-row.on .ms-radio { background: var(--blue); border-color: var(--blue); }
+.ms-radio svg { width: 12px; height: 12px; color: #fff; display: none; }
+.ms-row.on .ms-radio svg { display: block; }
+
+/* 미션 보드 — 게이지 없이 상태 칩 하나만. 목적이 위, 미션명이 아래(개편안 실측). */
+#msnList .list-item { gap: 12px; padding: 16px 0; }
+#msnList .list-item .ic { width: 40px; height: 40px; }
+#msnList .list-item .tx b { font-size: 14px; font-weight: 600; margin-bottom: 0; }
+#msnList .list-item .tx .mcap { display: block; font-size: 12px; font-weight: 400;
+  color: #8B95A1; margin-bottom: 4px; }
+#msnList .madd, #msnList .madd svg { color: #8B95A1; }
+/* 대기 미션 구분 라벨 — 선 사이 가운데 글자. */
+.mdiv { display: flex; align-items: center; gap: 12px; font-size: 12px; font-weight: 500;
+  color: var(--t3); padding: 8px 0 0; }
+.mdiv::before, .mdiv::after { content: ''; flex: 1; height: 1px; background: var(--line); }

@@ -287,7 +287,7 @@ export function Auth() {
         {TERMS.map((t) => {
           const on = checked.has(t.id);
           return (
-            <div className="chk-row" key={t.id}>
+            <div className="chk-row term-item" key={t.id}>
               <button type="button" className={`chk${on ? ' on' : ''}`} aria-pressed={on} onClick={() => toggle(t.id)}>
                 <span className="box" aria-hidden="true">✓</span>
                 <span className="ct">

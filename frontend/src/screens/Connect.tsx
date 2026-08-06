@@ -138,7 +138,7 @@ export function Connect() {
               </button>
               <div className="divider" />
               {AGREEMENTS.map((a) => (
-                <button type="button" key={a.key} className={`chk${agreed.has(a.key) ? ' on' : ''}`}
+                <button type="button" key={a.key} className={`chk conn-item${agreed.has(a.key) ? ' on' : ''}`}
                   aria-pressed={agreed.has(a.key)} onClick={() => toggleAgree(a.key)}>
                   <span className="box" aria-hidden="true">✓</span>
                   <span className="ct"><b>{a.title}</b> <span className="req">(필수)</span><p>{a.desc}</p></span>

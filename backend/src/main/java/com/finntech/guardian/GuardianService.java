@@ -43,6 +43,7 @@ public class GuardianService {
     private final GuardianRewardService rewardService;
     private final GuardianNarrative narrative;
     private final GuardianClock clock;
+    private final GuardianCatalog catalog;
     private final GuardianProperties props;
     private final AnalysisEngine analysisEngine;
     private final ConsumptionRepository consumptionRepository;
@@ -64,7 +65,9 @@ public class GuardianService {
                            CategoryRepository categoryRepository,
                            com.finntech.repository.UserPaymentRepository userPaymentRepository,
                            com.finntech.repository.UserMerchantStanceRepository stanceRepository,
-                           GuardianChallengeCategoryRepository challengeCategoryRepository) {
+                           GuardianChallengeCategoryRepository challengeCategoryRepository,
+                           GuardianCatalog catalog) {
+        this.catalog = catalog;
         this.challengeRepository = challengeRepository;
         this.txRepository = txRepository;
         this.notificationRepository = notificationRepository;
@@ -756,8 +759,16 @@ public class GuardianService {
 
     public record GrassCell(LocalDate date, DailyResult result, boolean granted, boolean protectedDay) {}
 
-    public record CeremonyView(LocalDate verdictDate, DailyResult result, String objectId,
-                               Grade grade, String message, boolean rerollAvailable) {}
+    /**
+      * 아침 세리머니 한 장.
+      *
+      * <p><b>이름과 그림을 함께 보낸다.</b> 예전에는 {@code objectId} 만 보냈는데, 그 코드가
+      * 화면에 그대로 나가 "mug_01 이 도착했어요"가 됐다. 코드는 서버의 말이지 사용자의 말이
+      * 아니다. 카탈로그를 아는 쪽이 서버이므로 여기서 사람 말로 바꿔 보낸다.
+      */
+     public record CeremonyView(LocalDate verdictDate, DailyResult result, String objectId,
+                                String objectName, String glyph,
+                                Grade grade, String message, boolean rerollAvailable) {}
 
     /**
      * 카테고리 한 줄 — 홈의 '지킴 현황'을 갈라 보여준다.
@@ -799,8 +810,13 @@ public class GuardianService {
         }
 
         CeremonyView ceremony = verdictRepository.findUnseenCeremonies(userId).stream().findFirst()
-                .map(v -> new CeremonyView(v.getVerdictDate(), v.getResult(), v.getGrantedObjectId(),
-                        v.getGrantedGrade(), v.getCeremonyMessage(), !v.isRerolled()))
+                .map(v -> {
+                    GuardianCatalog.Item item = v.getGrantedObjectId() == null ? null
+                            : catalog.find(v.getGrantedObjectId());
+                    return new CeremonyView(v.getVerdictDate(), v.getResult(), v.getGrantedObjectId(),
+                            item == null ? null : item.name(), item == null ? null : item.glyph(),
+                            v.getGrantedGrade(), v.getCeremonyMessage(), !v.isRerolled());
+                })
                 .orElse(null);
 
         String label = ch.getCategorySet().stream()

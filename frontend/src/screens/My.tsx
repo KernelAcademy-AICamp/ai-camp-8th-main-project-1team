@@ -6,6 +6,8 @@ import { Orb, Scroll, Screen, SectionTitle } from '../components/ui';
 import { Icon } from '../components/Icons';
 import { useSession, type ScreenId } from '../state/session';
 import { useGuardian } from '../state/guardian';
+import { useAsync } from '../state/useAsync';
+import { api } from '../lib/api';
 import { DEMO_ENABLED } from '../lib/config';
 import { won, CHALLENGE_STATE_LABEL } from '../lib/format';
 
@@ -55,6 +57,9 @@ export function My() {
   const { go, userId, resetOnboarding } = useSession();
   const { home } = useGuardian();
   const ch = home?.challenge;
+  // 털색은 상점이 갖고 있다. 못 불러오면 기본 고양이로 — 프로필이 비는 것보다 낫다.
+  const skins = useAsync(() => api.guardian.catSkins(userId).catch(() => []), [userId]);
+  const catSkin = skins.data?.find((s) => s.selected)?.key ?? 'cat';
 
   return (
     <Screen title="마이" hasTabBar>
@@ -65,7 +70,12 @@ export function My() {
             "함께한 지 N일"은 챌린지 시작일에서 센다 — 가입일은 서버가 내려주지 않고,
             사용자에게 의미 있는 것도 '지킴이와 함께한 날'이다. */}
         <div className="profile">
-          <Orb size={44} bob />
+          {/* 개편안은 여기에 **내 고양이**를 세운다. 추상적인 오브가 아니라 방에 사는 그 고양이가
+              서야 '내' 화면이 된다 — 상점에서 바꾼 털색도 여기 그대로 온다. */}
+          <div className="profile-avatar">
+            <img src={`/room/${catSkin === 'cat' ? 'catsit' : `catsit_${catSkin}`}.png`}
+              alt="" aria-hidden="true" />
+          </div>
           <div>
             <b>{ch ? '지킴이와 함께' : '반가워요'}</b>
             <br />

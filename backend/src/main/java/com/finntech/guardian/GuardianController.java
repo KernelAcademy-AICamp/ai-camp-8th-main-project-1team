@@ -37,13 +37,16 @@ public class GuardianController {
     private final GuardianWeeklyReportService weeklyReportService;
     private final GuardianSettlementService settlementService;
     private final GuardianClock clock;
+    private final GuardianMissionService missionService;
 
     public GuardianController(GuardianService guardianService, GuardianBatchService batchService,
                               GuardianRewardService rewardService,
                               GuardianCollectionService collectionService,
                               GuardianCatalog catalog,
                               GuardianWeeklyReportService weeklyReportService,
-                              GuardianSettlementService settlementService, GuardianClock clock) {
+                              GuardianSettlementService settlementService,
+                              GuardianMissionService missionService, GuardianClock clock) {
+        this.missionService = missionService;
         this.guardianService = guardianService;
         this.batchService = batchService;
         this.rewardService = rewardService;
@@ -393,6 +396,9 @@ public class GuardianController {
         m.put("verdictDate", c.verdictDate());
         m.put("result", c.result());
         m.put("objectId", c.objectId());
+        // 이름과 그림도 함께 — 예전에는 objectId 만 나가 화면에 "mug_01"이 그대로 찍혔다.
+        m.put("objectName", c.objectName());
+        m.put("glyph", c.glyph());
         m.put("grade", c.grade());
         m.put("message", c.message());
         m.put("rerollAvailable", c.rerollAvailable());
@@ -468,6 +474,28 @@ public class GuardianController {
     public List<GuardianCollectionService.CatSkin> chooseCatSkin(@RequestParam Long userId,
                                                                  @PathVariable String key) {
         return collectionService.chooseCatSkin(userId, key);
+    }
+
+    // ======================================================================
+    //  주간 미션 (개편안 s-myroom 의 미션 보드·고르기 시트)
+    // ======================================================================
+
+    /** 이번 주 진행 중 · 다음 주 담아 둔 것 · 고를 수 있는 후보. */
+    @GetMapping("/missions")
+    public GuardianMissionService.Board missions(@RequestParam Long userId) {
+        return missionService.board(userId);
+    }
+
+    /**
+     * 다음 주 미션을 정한다. 이미 담아 둔 것이 있으면 갈아 끼운다.
+     *
+     * <p>후보는 매번 다시 계산되므로 id 가 아니라 {@code key} 로 고른다. 진행 중인 챌린지가
+     * 없거나 없는 후보면 400.
+     */
+    @PostMapping("/missions/pick")
+    public GuardianMissionService.Board pickMission(@RequestParam Long userId,
+                                                    @RequestParam String key) {
+        return missionService.pick(userId, key);
     }
 
     @PostMapping("/shop/{code}/buy")
