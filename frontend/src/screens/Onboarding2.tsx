@@ -96,6 +96,7 @@ export function Onboarding2() {
     return (
       <button type="button" key={c.categoryCode} onClick={() => toggle(c.categoryCode)} aria-pressed={on}
         className="card" style={{
+          minHeight: 44,
           margin: 0, padding: 16, cursor: 'pointer', position: 'relative', textAlign: 'left',
           fontFamily: 'inherit', width: '100%',
           border: `1.5px solid ${on ? 'var(--blue)' : 'var(--line)'}`,

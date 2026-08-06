@@ -156,7 +156,8 @@ export function IsoRoom({ sel, act, editing, moodPlaced, sofaOwned, catSkin = 'c
       </At>
 
       {/* 소파 — 사기 전에는 흐리게 비워 둔다(무엇이 올 자리인지 보이게) */}
-      <g style={{ cursor: 'pointer', opacity: sofaOwned ? 1 : 0.18 }} onClick={() => onPick('sofa')}>
+      <g style={{ cursor: 'pointer', opacity: sofaOwned ? 1 : 0.18 }} onClick={() => onPick('sofa')}
+         role="button" aria-label="소파">
         <At x={3.15} y={0.85}><Shadow rx={31} ry={10} /><Asset k="sofa" /></At>
       </g>
 
@@ -168,7 +169,8 @@ export function IsoRoom({ sel, act, editing, moodPlaced, sofaOwned, catSkin = 'c
         <Shadow rx={19} /><Asset k="table" />
       </At>
       {/* 무드등 — 세리머니로 테이블 위에 도착한다 */}
-      <g style={{ cursor: 'pointer', opacity: moodPlaced ? 1 : 0 }} onClick={() => onPick('moodlight')}>
+      <g style={{ cursor: 'pointer', opacity: moodPlaced ? 1 : 0 }} onClick={() => onPick('moodlight')}
+         role="button" aria-label="무드등" aria-hidden={!moodPlaced}>
         <At x={0.6} y={2.5} z={25}><Asset k="mood" /></At>
       </g>
 
@@ -189,13 +191,15 @@ export function IsoRoom({ sel, act, editing, moodPlaced, sofaOwned, catSkin = 'c
       </At>
 
       <At x={2.35} y={5.3}><Shadow rx={14} /></At>
-      <g className="g-sway" style={{ cursor: 'pointer' }} onClick={() => onPick('plant')}>
+      <g className="g-sway" style={{ cursor: 'pointer' }} onClick={() => onPick('plant')}
+         role="button" aria-label="화분">
         <At x={2.35} y={5.3}><Asset k="plant" /></At>
       </g>
 
       {/* 냥지킴이 */}
       <g className="catg" transform={`translate(${a.p[0]} ${a.p[1]})`}
-         style={{ cursor: 'pointer' }} onClick={() => onPick('cat')}>
+         style={{ cursor: 'pointer' }} onClick={() => onPick('cat')}
+         role="button" aria-label="냥지킴이">
         {!a.floating && <ellipse cx={0} cy={2} rx={17} ry={5} fill="rgba(30,45,70,.13)" />}
         {/* 크기는 자세가 정하고(`IMGD[a.k]`) 파일만 색을 따른다. */}
         <Asset k={a.k} src={catSkin === 'cat' ? a.k : `${a.k}_${catSkin}`} />
