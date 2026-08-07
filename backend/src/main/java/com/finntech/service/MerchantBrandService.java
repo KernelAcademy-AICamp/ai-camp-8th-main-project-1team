@@ -50,6 +50,8 @@ public class MerchantBrandService {
     private final MerchantBrandRepository brands;
     private final MerchantCategoryRepository dictionary;
     private final TempClassifierService temporary;
+    /** 그 상호가 <b>실제 사람의 결제</b>에 있는지 확인한다 — 저장 직전의 마지막 방벽. */
+    private final com.finntech.repository.UserPaymentRepository payments;
     /** 가맹점명에 든 표기 → 브랜드. 생성기 카탈로그에서 파생한 것이라 물어볼 필요가 없다. */
     private final Map<String, String> brandByForm;
 
@@ -57,10 +59,12 @@ public class MerchantBrandService {
     public MerchantBrandService(MerchantBrandRepository brands,
                                 MerchantCategoryRepository dictionary,
                                 TempClassifierService temporary,
+                                com.finntech.repository.UserPaymentRepository payments,
                                 tools.jackson.databind.ObjectMapper json) {
         this.brands = brands;
         this.dictionary = dictionary;
         this.temporary = temporary;
+        this.payments = payments;
         Map<String, String> forms = Map.of();
         try (java.io.InputStream is = new org.springframework.core.io.ClassPathResource(
                 "brand-forms.json").getInputStream()) {
@@ -143,12 +147,12 @@ public class MerchantBrandService {
             out.putIfAbsent(b.getMerchantName(), b.getBrand());
         }
 
-        // ② 카탈로그로 맞춰 본다 — 생성기가 만든 상호는 물어볼 필요가 없다(브랜드를 이미 안다).
+        // ② 카탈로그로 맞춰 본다 — 표에 쌓는 것은 실사용자 것만(위 label 과 같은 규칙).
         for (String name : distinct) {
             if (out.containsKey(name)) continue;
             fromCatalog(name).ifPresent(b -> {
                 out.put(name, b);
-                remember(name, b);
+                if (askable.contains(name)) remember(name, b);
             });
         }
 
@@ -220,11 +224,19 @@ public class MerchantBrandService {
             if (inDictionary) known.add(name);
         }
 
-        // ① 카탈로그 — 호출이 없으므로 상한을 안 쓴다. 전원에게 적용한다.
+        // ① 카탈로그 — 호출이 없어 상한은 없다. 다만 **표에 쌓는 것은 실사용자 것만**이다.
+        //
+        //    처음에는 "이미 큐레이션한 목록이라 새 사실이 안 들어온다"는 이유로 전원에게 쌓았는데,
+        //    그러자 표가 4,742줄로 불었다(2026-08-07 운영). 실사용자는 273곳뿐인데 더미 22명의
+        //    가맹점이 전부 들어간 것이다. **행이 쌓이는 것 자체가 문제다** — 표의 뜻이 흐려지고,
+        //    2차 대조가 읽는 브랜드 목록이 비대해진다.
+        //
+        //    더미는 표가 필요 없다. 카탈로그가 이미 알고 있어 필요할 때 즉석에서 맞추면 된다.
         int added = 0;
         List<String> rest = new java.util.ArrayList<>();
         for (String name : distinct) {
             if (known.contains(name)) continue;
+            if (!askable.contains(name)) continue;          // 실사용자 결제에서 온 이름만 쌓는다
             var hit = fromCatalog(name);
             if (hit.isPresent()) {
                 remember(name, hit.get());
@@ -261,19 +273,39 @@ public class MerchantBrandService {
         return added;
     }
 
-    /** 이미 아는 브랜드 이름들 — 2차 대조의 후보가 된다. */
+    /**
+     * 이미 아는 브랜드 이름들 — 2차 대조의 후보가 된다.
+     *
+     * <p>표가 아니라 <b>브랜드 이름</b>의 집합이라 행 수보다 훨씬 작다. 그래도 상한을 둔다 —
+     * 이 목록이 통째로 프롬프트에 들어가므로, 커지면 2차 대조가 비싸지고 모델이 흘린다.
+     */
     private java.util.Set<String> knownBrands() {
         java.util.Set<String> out = new java.util.TreeSet<>();
-        brands.findAll().forEach(b -> out.add(b.getBrand()));
-        out.remove(NONE);
+        for (MerchantBrand b : brands.findAll()) {
+            if (!NONE.equals(b.getBrand())) out.add(b.getBrand());
+            if (out.size() >= MAX_BRANDS_IN_PROMPT) break;
+        }
         return out;
     }
 
-    /** 알아낸 브랜드를 제자리에 적는다 — 사전에 있으면 사전에, 없으면 대기 장소에. */
+    /** 2차 대조 프롬프트에 담을 브랜드 수 상한. 넘으면 통일이 덜 되지만 프롬프트가 안 터진다. */
+    private static final int MAX_BRANDS_IN_PROMPT = 300;
+
+    /**
+     * 알아낸 브랜드를 제자리에 적는다 — 사전에 있으면 사전에, 없으면 대기 장소에.
+     *
+     * <p><b>실제 사람의 결제에 있는 상호만 받는다.</b> 게이트를 <b>저장하는 자리</b>에 두는 것이
+     * 요점이다 — 부르는 쪽에만 두면 호출부가 하나 늘 때마다 빠뜨릴 수 있고, 실제로 그렇게
+     * 새어 273곳용 표가 4,860줄이 됐다(2026-08-07 운영). 여기서 막으면 어디서 불러도 안 들어온다.
+     *
+     * <p>더미의 상호는 생성기가 조립한 것이라 브랜드 표에 앉을 자격이 없다. 카탈로그가 이미
+     * 알고 있어 필요하면 즉석에서 맞추면 되고, 표에 쌓을 이유가 없다.
+     */
     @Transactional
     public void remember(String merchantName, String brand) {
         if (merchantName == null || merchantName.isBlank()
                 || brand == null || brand.isBlank()) return;
+        if (!payments.existsRealPersonPaymentByMerchantName(merchantName)) return;
 
         List<MerchantCategory> rows = dictionary.findByMerchantName(merchantName);
         if (!rows.isEmpty()) {

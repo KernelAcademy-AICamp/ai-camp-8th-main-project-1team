@@ -102,7 +102,9 @@ class MerchantCategoryServiceTest {
         when(brandRepo.findByMerchantName(anyString())).thenReturn(Optional.empty());
         return new MerchantBrandService(brandRepo,
                 mock(com.finntech.repository.MerchantCategoryRepository.class),
-                mock(TempClassifierService.class), new tools.jackson.databind.ObjectMapper());
+                mock(TempClassifierService.class),
+                mock(com.finntech.repository.UserPaymentRepository.class),
+                new tools.jackson.databind.ObjectMapper());
     }
 
     private BusinessNumberKindService kinds() {
