@@ -71,18 +71,22 @@ public class MerchantAskService {
     private final MerchantClassifierService classifier;
     /** ②-c 임시 분류 — 무료 통로. 답은 메모리에만 살고 DB 에 안 들어간다. */
     private final TempClassifierService temporary;
+    /** 가맹점명 → 브랜드. 사전에 있으면 사전에, 없으면 대기 장소에 쌓인다. */
+    private final MerchantBrandService brands;
     private final Clock clock;
 
     public MerchantAskService(UserPaymentRepository payments, ConsumptionRepository consumptions,
                               CategoryRepository categories, MerchantCategoryService dictionary,
                               MerchantClassifierService classifier,
-                              TempClassifierService temporary, Clock clock) {
+                              TempClassifierService temporary, MerchantBrandService brands,
+                              Clock clock) {
         this.payments = payments;
         this.consumptions = consumptions;
         this.categories = categories;
         this.dictionary = dictionary;
         this.classifier = classifier;
         this.temporary = temporary;
+        this.brands = brands;
         this.clock = clock;
     }
 
@@ -100,7 +104,10 @@ public class MerchantAskService {
      */
     @Transactional
     public Asked ask(Long userId, int minMerchants) {
-        List<UserPayment> rows = payments.findTop100ByUserIdAndCategory2OrderByPaymentDateDesc(
+        // **미분류 전부를 본다.** 예전에는 최신 100건만 봤는데, 미분류가 그보다 많으면 오래된
+        // 것은 영원히 차례가 안 왔다(2026-08-07 운영: 150건 중 100건만 보여 카드사 수수료가
+        // 사각지대에 있었다). 무료 통로가 전부를 훑게 되면서 그 제한이 곧 구멍이 됐다.
+        List<UserPayment> rows = payments.findByUserIdAndCategory2OrderByPaymentDateDesc(
                 userId, IndustryCategoryMapper.UNCLASSIFIED);
 
         // 같은 가맹점이 여러 번 나온다 — 이름당 한 번만 묻는다.
@@ -127,12 +134,17 @@ public class MerchantAskService {
         // 남기지 않고** 화면 표시에만 쓴다 — 사전에는 유료 모델과 사람의 확정만 들어간다.
         Map<String, TempClassifierService.Guess> temp = temporary.classify(ask);
 
+        // **브랜드도 같이 뽑는다.** 가맹점명 하나씩 물어 브랜드를 알아 두면 그 브랜드의 새 지점은
+        // 다시 안 물어도 되고, 한 지점이 분류되면 나머지에 물려줄 수 있다. 무료 통로라 하나씩
+        // 물어도 손해가 없고, 이미 아는 가맹점은 건너뛰므로 쌓일수록 호출이 준다.
+        brands.fill(ask);
+
         // **여기가 임계값이다.** 모자라면 유료 통로를 부르지 않고, 임시 답만 얹어 돌려준다.
         if (ask.size() < minMerchants) {
-            Map<String, String> onlyTemp = new LinkedHashMap<>(remembered);
-            temp.forEach((n, g) -> onlyTemp.putIfAbsent(n, g.category2()));
-            paint(rows, onlyTemp);
-            return new Asked(rows, onlyTemp, Set.of());
+            paint(rows, remembered, temp);
+            Map<String, String> shown = new LinkedHashMap<>(remembered);
+            temp.forEach((n, g) -> shown.putIfAbsent(n, g.category2()));
+            return new Asked(rows, shown, Set.of());
         }
 
         // **못 잡았을 때 다시 물을 값어치**를 여기서 정한다 — 건수·금액을 아는 것은 이쪽이다.
@@ -178,10 +190,11 @@ public class MerchantAskService {
         }
         applySettled(rows, settled);
 
-        Map<String, String> guesses = new LinkedHashMap<>(remembered);
-        guesses.putAll(fresh);
+        Map<String, String> paid = new LinkedHashMap<>(remembered);
+        paid.putAll(fresh);
+        paint(rows, paid, temp);
+        Map<String, String> guesses = new LinkedHashMap<>(paid);
         temp.forEach((n, g) -> guesses.putIfAbsent(n, g.category2()));
-        paint(rows, guesses);
         log.info("가맹점 분류 질의 — userId={} 물어본 곳 {}, 답 얻음 {}, 종결 {}",
                 userId, ask.size(), fresh.size(), settled.size());
         return new Asked(rows, guesses, settled);
@@ -235,11 +248,24 @@ public class MerchantAskService {
         return out;
     }
 
-    /** 추정을 결제 행에 얹는다 — 확정({@code category2})은 건드리지 않는다. */
-    private static void paint(List<UserPayment> rows, Map<String, String> guesses) {
+    /**
+     * 추정을 결제 행에 얹는다 — 확정({@code category2})은 건드리지 않는다.
+     *
+     * <p><b>출처를 갈라 적는다.</b> 유료 통로의 답({@code LLM})은 사전에 쌓여 다음에도 같은 값이
+     * 나오고, 무료 통로의 답({@code TEMP})은 임시라 유료 답이 오면 덮인다. 화면에는 둘 다
+     * "AI 추정"으로 똑같이 보이지만, 기록까지 같게 두면 나중에 어느 쪽 값인지 가려낼 수 없다.
+     */
+    private static void paint(List<UserPayment> rows, Map<String, String> paid,
+                              Map<String, TempClassifierService.Guess> temp) {
         for (UserPayment p : rows) {
-            String g = guesses.get(p.getMerchantName());
-            if (g != null) p.suggestCategory2(g);
+            String name = p.getMerchantName();
+            String confirmed = paid.get(name);
+            if (confirmed != null) {
+                p.suggestCategory2(confirmed, "LLM");
+                continue;
+            }
+            TempClassifierService.Guess t = temp.get(name);
+            if (t != null) p.suggestCategory2(t.category2(), "TEMP");
         }
     }
 
