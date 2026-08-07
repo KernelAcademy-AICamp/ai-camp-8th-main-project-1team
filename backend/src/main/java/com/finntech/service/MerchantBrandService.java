@@ -187,6 +187,88 @@ public class MerchantBrandService {
         return out;
     }
 
+    /**
+     * <b>그 사용자의 결제 전체</b>에 브랜드를 붙인다 — 미분류인지와 무관하다.
+     *
+     * <p>예전에는 미분류 처리 흐름 안에서 불렀는데, 그러면 <b>이미 분류된 가맹점은 브랜드를
+     * 얻을 기회가 없다</b>(2026-08-07 운영 실측: 273곳 중 15곳만 붙었다). 그런데 브랜드의
+     * 값어치가 바로 거기 있다 — <i>한 지점이 분류되면 나머지 지점에 물려주는 것</i>. 분류된
+     * 쪽에 브랜드가 없으면 물려줄 근거가 안 생긴다.
+     *
+     * <p><b>회차마다 조금씩 나아간다.</b> 273곳을 한 번에 물으면 동기화가 그만큼 늘어지므로,
+     * 아직 브랜드가 없는 곳부터 {@code limit} 만큼만 처리한다. 카탈로그로 붙는 것은 호출이
+     * 없어 상한을 거의 안 쓰고, 모델에 묻는 것만 상한에 걸린다.
+     *
+     * @param merchantNames 그 사용자의 가맹점명 전부
+     * @param askable       모델에 물어도 되는 것 — 실제 사람의 결제에서 온 이름
+     * @param limit         이번 회차에 <b>모델에</b> 물어볼 최대 수
+     * @return 이번에 새로 붙인 수
+     */
+    @Transactional
+    public int label(List<String> merchantNames, java.util.Set<String> askable, int limit) {
+        if (merchantNames == null || merchantNames.isEmpty()) return 0;
+        List<String> distinct = merchantNames.stream()
+                .filter(n -> n != null && !n.isBlank()).distinct().sorted().toList();
+
+        // 이미 아는 것은 건너뛴다 — 사전이든 대기 장소든.
+        java.util.Set<String> known = new java.util.HashSet<>();
+        for (MerchantBrand b : brands.findByMerchantNameIn(distinct)) known.add(b.getMerchantName());
+        for (String name : distinct) {
+            if (known.contains(name)) continue;
+            boolean inDictionary = dictionary.findByMerchantName(name).stream()
+                    .anyMatch(m -> m.getBrand() != null && !m.getBrand().isBlank());
+            if (inDictionary) known.add(name);
+        }
+
+        // ① 카탈로그 — 호출이 없으므로 상한을 안 쓴다. 전원에게 적용한다.
+        int added = 0;
+        List<String> rest = new java.util.ArrayList<>();
+        for (String name : distinct) {
+            if (known.contains(name)) continue;
+            var hit = fromCatalog(name);
+            if (hit.isPresent()) {
+                remember(name, hit.get());
+                added++;
+            } else {
+                rest.add(name);
+            }
+        }
+
+        // ② 모델 — 실사용자 이름만, 이번 회차 상한까지. 두 단계(뽑기 → 표기 통일)를 거친다.
+        java.util.Set<String> brandNames = new java.util.TreeSet<>(knownBrands());
+        int asked = 0, unified = 0;
+        for (String name : rest) {
+            if (asked >= limit) break;
+            if (!askable.contains(name) || !temporary.usable()) continue;
+            asked++;
+            var first = temporary.brandOf(name);
+            if (first.isEmpty()) continue;
+            String brand = first.get();
+            if (!NONE.equals(brand)) {
+                String same = temporary.unify(brand, brandNames);
+                if (!same.equals(brand)) unified++;
+                brand = same;
+                brandNames.add(brand);
+            }
+            remember(name, brand);
+            added++;
+        }
+        if (added > 0 || asked > 0) {
+            log.info("브랜드 라벨링 — 가맹점 {}, 새로 붙임 {}(카탈로그 {}), 모델 질의 {}, 통일 {}, 남은 곳 {}",
+                    distinct.size(), added, added - (asked > 0 ? asked : 0), asked, unified,
+                    Math.max(0, rest.size() - asked));
+        }
+        return added;
+    }
+
+    /** 이미 아는 브랜드 이름들 — 2차 대조의 후보가 된다. */
+    private java.util.Set<String> knownBrands() {
+        java.util.Set<String> out = new java.util.TreeSet<>();
+        brands.findAll().forEach(b -> out.add(b.getBrand()));
+        out.remove(NONE);
+        return out;
+    }
+
     /** 알아낸 브랜드를 제자리에 적는다 — 사전에 있으면 사전에, 없으면 대기 장소에. */
     @Transactional
     public void remember(String merchantName, String brand) {

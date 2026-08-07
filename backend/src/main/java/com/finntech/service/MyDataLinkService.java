@@ -30,6 +30,14 @@ public class MyDataLinkService {
 
     private static final Logger log = LoggerFactory.getLogger(MyDataLinkService.class);
 
+    /**
+     * 한 회차에 <b>모델에</b> 물어볼 브랜드 수. 카탈로그로 붙는 것은 호출이 없어 여기 안 센다.
+     *
+     * <p>상한을 두는 이유는 값이 아니라 <b>시간</b>이다 — 하나에 6~10초가 걸려 273곳을 한
+     * 번에 물으면 동기화가 40분을 넘긴다. 넘친 것은 다음 회차(5분 뒤)가 이어 받는다.
+     */
+    private static final int BRAND_ASKS_PER_SYNC = 20;
+
     private final MyDataClient myDataClient;
     private final AppUserRepository userRepository;
     private final UserCardRepository userCardRepository;
@@ -45,6 +53,8 @@ public class MyDataLinkService {
     private final IndustryLookupService industryLookup;
     /** 분류 순위 ③ — 40곳이 쌓이면 묶어서 묻는다. 화면 진입은 임계값 1 로 같은 것을 부른다. */
     private final MerchantAskService merchantAskService;
+    /** 가맹점명 → 브랜드. 미분류와 무관하게 결제 전체를 훑는다. */
+    private final MerchantBrandService merchantBrandService;
     private final UserCardCompanyRepository userCardCompanyRepository;
     private final UserBankRepository userBankRepository;
     private final ReportRepository reportRepository;
@@ -60,6 +70,7 @@ public class MyDataLinkService {
                              BusinessNumberKindService businessNumberKindService,
                              IndustryLookupService industryLookup,
                              MerchantAskService merchantAskService,
+                             MerchantBrandService merchantBrandService,
                              UserCardCompanyRepository userCardCompanyRepository,
                              UserBankRepository userBankRepository, ReportRepository reportRepository,
                              java.time.Clock clock,
@@ -75,6 +86,7 @@ public class MyDataLinkService {
         this.businessNumberKindService = businessNumberKindService;
         this.industryLookup = industryLookup;
         this.merchantAskService = merchantAskService;
+        this.merchantBrandService = merchantBrandService;
         this.userCardCompanyRepository = userCardCompanyRepository;
         this.userBankRepository = userBankRepository;
         this.reportRepository = reportRepository;
@@ -273,6 +285,7 @@ public class MyDataLinkService {
         // **관측 다음이라야 한다.** 조회를 건너뛸지를 "이 번호에 상호가 여럿인가"로 판단하는데,
         // 그 사실은 방금 적재한 결제까지 봐야 안다.
         lookupUnknownIndustries(userId);
+        labelBrands(userId);
 
         log.info("마이데이터 연동 완료 — userId={} 카드사 {}개, 카드 {}장, 결제 {}건, 은행 {}곳 적재",
                 userId, companyIds.size(), cardCount, paymentCount, bankCount);
@@ -356,6 +369,32 @@ public class MyDataLinkService {
                     Math.max(0, targets.size() - asked));
         }
         return resolved;
+    }
+
+    /**
+     * <b>브랜드가 없는 결제를 전부 라벨링한다</b> — 미분류인지와 무관하다.
+     *
+     * <p>부르는 자리가 요점이다. 예전에는 미분류 처리 흐름 안에서 불러 <b>이미 분류된 가맹점은
+     * 브랜드를 얻을 기회가 없었다</b>(2026-08-07 운영: 273곳 중 15곳만 붙었다). 그런데 브랜드의
+     * 값어치가 바로 거기 있다 — 한 지점이 분류되면 나머지 지점에 물려주는 것.
+     *
+     * <p>회차마다 조금씩 나아간다. 카탈로그로 붙는 것은 호출이 없어 한 번에 다 처리되고,
+     * 모델에 묻는 것만 상한에 걸려 다음 회차로 넘어간다.
+     */
+    private void labelBrands(Long userId) {
+        List<UserPayment> rows = userPaymentRepository.findByUserIdOrderByPaymentDateDesc(userId);
+        if (rows.isEmpty()) return;
+        List<String> names = rows.stream()
+                .map(UserPayment::getMerchantName)
+                .filter(n -> n != null && !n.isBlank())
+                .distinct().toList();
+        // 모델에 묻는 것은 실제 사람의 결제에서 온 이름만 — 사전과 같은 규칙이다.
+        java.util.Set<String> askable = rows.stream()
+                .filter(UserPayment::isFromRealPerson)
+                .map(UserPayment::getMerchantName)
+                .filter(n -> n != null && !n.isBlank())
+                .collect(java.util.stream.Collectors.toSet());
+        merchantBrandService.label(names, askable, BRAND_ASKS_PER_SYNC);
     }
 
     /**
@@ -525,6 +564,8 @@ public class MyDataLinkService {
             // 1 이라 남은 것을 전부 몰아 묻는다. 그래서 체감 지연이 없다.
             merchantAskService.ask(userId, MerchantAskService.BACKGROUND_MIN);
         }
+        // **브랜드는 미분류와 무관하게 돈다** — 이미 분류된 가맹점도 브랜드가 필요하다.
+        labelBrands(userId);
         // 자동 동기화 배치가 5분마다 이 메서드를 부른다. 대부분 0건이라 INFO로 남기면 로그가 그것만으로 찬다.
         if (added > 0) log.info("마이데이터 증분 동기화 — userId={} 신규 결제 {}건", userId, added);
         else log.debug("마이데이터 증분 동기화 — userId={} 신규 결제 없음", userId);

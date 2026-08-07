@@ -69,7 +69,8 @@ class MyDataLinkServiceTest {
 
         new MyDataLinkService(client, users, cards, payments, consumptions, categories,
                 new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
-                emptyDictionary(), emptyKinds(), offLookup(), noAsk(), links,
+                emptyDictionary(), emptyKinds(), offLookup(), noAsk(),
+                mock(MerchantBrandService.class), links,
                 mock(UserBankRepository.class), reports, clock, "")
                 .linkCardCompanies(1L, List.of(9007L));
 
@@ -100,7 +101,8 @@ class MyDataLinkServiceTest {
         new MyDataLinkService(client, users, mock(UserCardRepository.class), mock(UserPaymentRepository.class),
                 mock(ConsumptionRepository.class), mock(CategoryRepository.class),
                 new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
-                emptyDictionary(), emptyKinds(), offLookup(), noAsk(), links,
+                emptyDictionary(), emptyKinds(), offLookup(), noAsk(),
+                mock(MerchantBrandService.class), links,
                 mock(UserBankRepository.class), mock(ReportRepository.class), clock, "")
                 .linkCardCompanies(1L, List.of(9007L));
 
@@ -133,8 +135,7 @@ class MyDataLinkServiceTest {
                 mock(com.finntech.repository.ConsumptionRepository.class),
                 mock(com.finntech.repository.CategoryRepository.class),
                 emptyDictionary(), mock(MerchantClassifierService.class),
-                offTempClassifier(), mock(MerchantBrandService.class),
-                java.time.Clock.systemDefaultZone());
+                offTempClassifier(), java.time.Clock.systemDefaultZone());
     }
 
     /**
