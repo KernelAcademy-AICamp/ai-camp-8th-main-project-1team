@@ -138,7 +138,20 @@ public class IndustryLookupService {
         String biz = businessNumber == null ? "" : businessNumber.replaceAll("\\D", "");
         if (biz.length() != 10) return false;
         if (mapper.isPaymentAgency(biz) || mapper.isMultiBusiness(biz)) return false;
-        return kinds.relaxationAllowed(biz);
+        // **MULTI 만 막는다 — UNKNOWN 은 통과시킨다.**
+        //
+        // 예전에는 `relaxationAllowed`(= SINGLE 만 허용)로 막았는데 그것이 교착을 만들었다.
+        // 관측 판정이 UNKNOWN 인 이유는 "갈렸다"가 아니라 **"아직 분류가 안 돼서 같은지 판단할
+        // 재료가 없다"** 이고, 분류를 하려면 조회가 필요하고, 조회는 SINGLE 이라야 되고,
+        // SINGLE 이 되려면 분류가 돼야 한다 — 서로를 기다린다.
+        //
+        // 실제로 걸렸다(2026-08-07 운영): 카드사 수수료 번호가 상호 6개(01·02·03·06·07월
+        // 알림료 + 체크카드발급수수료)라 UNKNOWN 이 됐고, 여섯 다 같은 성격인데도 조회가 막혀
+        // 영영 '카테고리없음'으로 남았다.
+        //
+        // 갈릴 위험은 MULTI 에서만 실재한다(애플 번호 = 앱스토어 + 애플TV+). 그건 그대로 막고,
+        // UNKNOWN 은 한 번 붙여 본 뒤 갈리면 그때 MULTI 로 굳어 다음부터 막힌다.
+        return !kinds.isMulti(biz);
     }
 
     /**

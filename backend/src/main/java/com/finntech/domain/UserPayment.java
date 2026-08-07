@@ -143,17 +143,40 @@ public class UserPayment {
     public String getCategory2Llm() { return category2Llm; }
     public String getCategory2Source() { return category2Source; }
 
-    /** AI 추정을 담는다 — {@code category2} 는 건드리지 않는다. */
+    /** AI 추정을 담는다 — {@code category2} 는 건드리지 않는다. 출처는 유료 통로. */
     public void suggestCategory2(String llmCategory2) {
-        this.category2Llm = llmCategory2;
-        this.category2Source = "LLM";
+        suggestCategory2(llmCategory2, "LLM");
     }
+
+    /**
+     * AI 추정을 <b>출처와 함께</b> 담는다.
+     *
+     * <p>추정을 내는 통로가 둘이 됐다 — 유료(사전에 남는다)와 무료(사전에 안 남는다).
+     * 화면에는 둘 다 "AI 추정"으로 똑같이 보이지만 <b>성질이 다르다</b>:
+     * 유료 답은 사전에 쌓여 다음에도 같은 값이 나오고, 무료 답은 임시라 유료 답이 오면 덮인다.
+     *
+     * <p>구분해 두지 않으면 나중에 <i>"무료 통로가 이상하다"</i> 싶을 때 어느 값이 그쪽 것인지
+     * 가려낼 방법이 없다. 화면 표시는 같아도 기록은 갈라 둔다.
+     *
+     * @param source {@code LLM}(유료) 또는 {@code TEMP}(무료 임시)
+     */
+    public void suggestCategory2(String llmCategory2, String source) {
+        this.category2Llm = llmCategory2;
+        this.category2Source = source;
+    }
+
 
     /**
      * 확정 분류를 적용한다 — 사전에서 왔거나({@code DICT}) 사람이 확인한 것({@code USER})이다.
      * 이때는 {@code category2} 를 바꾼다. 근거가 사람이라 판정에 참여해도 원칙이 깨지지 않는다.
      */
     public void confirmCategory2(String category2, String source) {
+        // **임시 추정을 함께 치운다.** 무료 통로의 답은 확정이 오기 전까지만 사는 값인데,
+        // 남겨 두면 확정이 붙은 뒤에도 옛 추정이 화면에 따라다닌다. 규칙을 여기 한 곳에 두는
+        // 이유는 확정을 적는 자리가 여섯 곳이라 흩어 놓으면 한 곳이 빠지기 때문이다.
+        if ("TEMP".equals(this.category2Source)) {
+            this.category2Llm = null;
+        }
         this.category2 = category2;
         this.category2Source = source;
     }

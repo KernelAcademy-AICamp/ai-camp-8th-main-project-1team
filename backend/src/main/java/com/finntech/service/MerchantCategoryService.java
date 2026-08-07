@@ -31,13 +31,17 @@ public class MerchantCategoryService {
     private final MerchantCategoryRepository repository;
     private final IndustryCategoryMapper mapper;
     private final BusinessNumberKindService kinds;
+    /** 브랜드 대기 장소 — 사전에 들어오는 순간 이쪽에서 옮겨 온다. */
+    private final MerchantBrandService brands;
 
     public MerchantCategoryService(MerchantCategoryRepository repository,
                                    IndustryCategoryMapper mapper,
-                                   BusinessNumberKindService kinds) {
+                                   BusinessNumberKindService kinds,
+                                   MerchantBrandService brands) {
         this.repository = repository;
         this.mapper = mapper;
         this.kinds = kinds;
+        this.brands = brands;
     }
 
     /**
@@ -345,13 +349,17 @@ public class MerchantCategoryService {
         // 같은 넷플릭스인데 NHNKCP 를 거친 4건에는 안 붙는다. 쌓이는 자리와 찾는 자리가
         // 어긋나면 사전이 커져도 적중이 안 는다 — 아무 오류도 없이.
         final String biz = mapper.isPaymentAgency(normalized) ? "" : normalized;
-        return repository.findByBusinessNumberAndMerchantName(biz, merchantName)
+        MerchantCategory row = repository.findByBusinessNumberAndMerchantName(biz, merchantName)
                 .map(existing -> {
                     existing.reclassify(category2, source, confirmedBy);
                     return existing;
                 })
                 .orElseGet(() -> repository.save(
                         new MerchantCategory(biz, merchantName, category2, source, confirmedBy)));
+        // 이 가맹점이 사전에 들어왔으니 대기 장소의 브랜드를 옮기고 그쪽은 지운다 —
+        // 두 곳에 남으면 어느 쪽이 정본인지 알 수 없게 된다.
+        brands.promote(row);
+        return row;
     }
 
     /**

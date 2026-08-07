@@ -34,6 +34,16 @@ public interface UserPaymentRepository extends JpaRepository<UserPayment, String
      */
     long countByUserIdAndCategory2(Long userId, String category2);
 
+    /**
+     * 그 분류의 결제 <b>전부</b> — 최신 100건 제한이 없다.
+     *
+     * <p>{@code findTop100...} 은 화면이 보여줄 만큼만 가져오려고 자른 것인데, 무료 통로가
+     * <b>미분류 전부</b>를 훑게 되면서 그 제한이 곧 사각지대가 됐다 — 미분류가 150건인데
+     * 100건만 보면 오래된 50건은 영원히 차례가 오지 않는다(2026-08-07 운영 실측: 카드사
+     * 수수료가 그 바깥에 있었다).
+     */
+    List<UserPayment> findByUserIdAndCategory2OrderByPaymentDateDesc(Long userId, String category2);
+
     /** 벌크 삭제(즉시 DML) — 재연동 delete→insert 순서 역전 방지. */
     @Modifying
     @Transactional

@@ -75,7 +75,7 @@ class MerchantCategoryServiceTest {
                     return m;
                 });
 
-        service = new MerchantCategoryService(repo, mapper, kinds());
+        service = new MerchantCategoryService(repo, mapper, kinds(), noBrands());
     }
 
     /** 리포지토리의 {@code ORDER BY CASE source … , id} 를 그대로 옮긴 것. id 가 null 인
@@ -93,6 +93,18 @@ class MerchantCategoryServiceTest {
      * 그것이 "상호가 하나뿐이라 판정 대상이 아니다"와 같은 상태라 기존 시험의 전제와 맞는다.
      * 판정이 완화를 막는 경우는 {@code 복합_사업자는_번호로_묶지_않는다} 가 따로 본다.
      */
+    /**
+     * 브랜드 대기 장소 대역 — 비어 있다. 이 시험이 보는 것은 분류 조회 규칙이라
+     * 브랜드는 상관이 없지만, 사전에 쌓을 때 승격을 부르므로 대역이 필요하다.
+     */
+    private static MerchantBrandService noBrands() {
+        var brandRepo = mock(com.finntech.repository.MerchantBrandRepository.class);
+        when(brandRepo.findByMerchantName(anyString())).thenReturn(Optional.empty());
+        return new MerchantBrandService(brandRepo,
+                mock(com.finntech.repository.MerchantCategoryRepository.class),
+                mock(TempClassifierService.class));
+    }
+
     private BusinessNumberKindService kinds() {
         var repo = mock(com.finntech.repository.BusinessNumberKindRepository.class);
         when(repo.findById(anyString())).thenReturn(Optional.empty());
@@ -361,7 +373,7 @@ class MerchantCategoryServiceTest {
                     table.add(inv.getArgument(0));
                     return inv.getArgument(0);
                 });
-        var svc = new MerchantCategoryService(repo, mapper, kinds());
+        var svc = new MerchantCategoryService(repo, mapper, kinds(), noBrands());
 
         var dummy = payment("77:gen-8a3f-0012");            // 생성기가 만든 결제
         assertThat(svc.confirmFrom(dummy, "식비", 7L)).as("더미는 거절된다").isEmpty();
@@ -507,7 +519,7 @@ class MerchantCategoryServiceTest {
                     table.add(inv.getArgument(0));
                     return inv.getArgument(0);
                 });
-        var svc = new MerchantCategoryService(repo, mapper, kinds());
+        var svc = new MerchantCategoryService(repo, mapper, kinds(), noBrands());
 
         var first = svc.confirm("0000000011", "어떤 가게", "쇼핑",
                 MerchantCategory.Source.USER_CSV, null);
