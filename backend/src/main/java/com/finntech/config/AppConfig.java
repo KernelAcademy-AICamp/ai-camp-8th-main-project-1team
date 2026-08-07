@@ -12,7 +12,7 @@ import java.time.ZoneId;
 
 @Configuration
 @EnableConfigurationProperties({AnalysisProperties.class, CardRecommendProperties.class,
-        com.finntech.guardian.GuardianProperties.class})
+        IndustryLookupProperties.class, com.finntech.guardian.GuardianProperties.class})
 public class AppConfig {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AppConfig.class);

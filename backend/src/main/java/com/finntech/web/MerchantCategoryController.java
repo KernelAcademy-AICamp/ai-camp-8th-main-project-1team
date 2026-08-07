@@ -126,6 +126,35 @@ public class MerchantCategoryController {
             if (g != null) dictionary.rememberGuess(p, g);
         }
 
+        // **헛물켠 질문을 센다** — 물었는데 답이 안 온 가맹점. 세 번째면 '기타'로 종결하고
+        // 다음부터는 조회도 질문도 하지 않는다. 이 기록이 없으면 화면을 열 때마다 같은 상호를
+        // 다시 묻는다: 답이 없다는 사실이 어디에도 안 남기 때문이다.
+        //
+        // **가맹점당 한 번만 센다.** 결제 건마다 세면 넷플릭스 12건짜리 가맹점이 한 번의 질문에
+        // 12회로 기록돼 첫 시도에 바로 종결된다.
+        java.time.LocalDateTime askedAt = java.time.LocalDateTime.now(clock);
+        Set<String> settled = new java.util.LinkedHashSet<>();
+        Set<String> counted = new java.util.HashSet<>();
+        for (UserPayment p : askable) {
+            String name = p.getMerchantName();
+            if (fresh.containsKey(name) || !counted.add(name)) continue;
+            if (dictionary.noteLlmMiss(p, askedAt)) settled.add(name);
+        }
+        // 종결된 가맹점은 화면에서도 '기타'가 돼야 한다. 사전에만 적고 결제를 그대로 두면
+        // 사용자는 여전히 '카테고리없음'을 보고, 다음에 또 이 화면이 그것을 물어볼 대상으로 센다.
+        if (!settled.isEmpty()) {
+            Category other = categories.findByCode(IndustryCategoryMapper.OTHER)
+                    .orElseGet(() -> categories.save(
+                            new Category(IndustryCategoryMapper.OTHER, IndustryCategoryMapper.OTHER)));
+            for (UserPayment p : rows) {
+                if (!settled.contains(p.getMerchantName())) continue;
+                p.confirmCategory2(IndustryCategoryMapper.OTHER, "GIVE_UP");
+                for (Consumption c : consumptions.findBySourcePaymentId(p.getPaymentId())) {
+                    c.reclassify(other);
+                }
+            }
+        }
+
         Map<String, String> guessed = new LinkedHashMap<>(remembered);
         guessed.putAll(fresh);
         for (UserPayment p : rows) {

@@ -83,6 +83,55 @@ class IndustryCategoryMapperTest {
     }
 
     @Test
+    @DisplayName("바깥 조회처의 업종 이름이 세세분류 색인으로 우리 중분류에 닿는다")
+    void mapsFineNameToMid() {
+        // 조회처는 KSIC 세대의 이름을 주고 우리 대조표는 국세청 세대라 번호끼리는 안 겹친다.
+        // 이어 주는 것은 국세청 업종코드표의 `세세분류` 칸이다 — 같은 글자를 쓴다.
+        assertEquals("쇼핑", mapper.midOfFineName("전자상거래 소매업"));
+        assertEquals("편의점/잡화", mapper.midOfFineName("체인화 편의점"));
+        assertEquals("식비", mapper.midOfFineName("한식 일반 음식점업"));
+        assertEquals("금융/보험", mapper.midOfFineName("기타 금융 투자업"), "카드사 수수료");
+        assertEquals("생활", mapper.midOfFineName("기타 목재 가구 제조업"), "가구는 제품이 곧 구매물");
+    }
+
+    @Test
+    @DisplayName("띄어쓰기·가운뎃점이 달라도 붙는다 — 세대가 다르면 거기서 어긋난다")
+    void fineNameIgnoresSpacingAndPunctuation() {
+        assertEquals("편의점/잡화", mapper.midOfFineName("기타 음ㆍ식료품 위주 종합 소매업"));
+        assertEquals("편의점/잡화", mapper.midOfFineName("기타음·식료품위주종합소매업"));
+        assertEquals(mapper.midOfFineName("그 외 기타 종합 소매업"),
+                     mapper.midOfFineName("그외기타종합소매업"));
+    }
+
+    @Test
+    @DisplayName("법인 주업종은 안 받는다 — 소비를 설명하지 못하는 자리다")
+    void refusesCorporateIndustries() {
+        // 이것이 방어의 전부다. 실측(2026-08-07)에서 아파트 건설업으로 등록된 회사의 결제는
+        // 주차비였고, 상품 종합 도매업으로 등록된 회사의 결제는 호텔 주차비였다. 대조표가
+        // 소매·서비스만 담기 때문에 그 답들이 여기서 자동으로 빠진다.
+        assertEquals(IndustryCategoryMapper.UNCLASSIFIED, mapper.midOfFineName("아파트 건설업"));
+        assertEquals(IndustryCategoryMapper.UNCLASSIFIED, mapper.midOfFineName("상품 종합 도매업"));
+        assertEquals(IndustryCategoryMapper.UNCLASSIFIED,
+                mapper.midOfFineName("응용 소프트웨어 개발 및 공급업"));
+        assertEquals(IndustryCategoryMapper.UNCLASSIFIED,
+                mapper.midOfFineName("비디오 및 기타 영상 기기 제조업"), "삼성페이가 가전이 되면 안 된다");
+        assertEquals(IndustryCategoryMapper.UNCLASSIFIED, mapper.midOfFineName("모르는 업종"));
+        assertEquals(IndustryCategoryMapper.UNCLASSIFIED, mapper.midOfFineName(null));
+    }
+
+    @Test
+    @DisplayName("'기타'는 '카테고리없음'과 함께 판정에서 빠진다")
+    void otherCountsAsUnknown() {
+        // 종결 표시를 판정 대상으로 흘리면 재량성 기본값 0.5 를 받아 "모르는 소비의 절반이
+        // 낭비"라는 값이 리포트에 실린다. 같은 사고가 '카테고리없음'으로 한 번 있었다.
+        assertTrue(IndustryCategoryMapper.isUnknown(IndustryCategoryMapper.OTHER));
+        assertTrue(IndustryCategoryMapper.isUnknown(IndustryCategoryMapper.UNCLASSIFIED));
+        assertTrue(IndustryCategoryMapper.isUnknown(null));
+        assertTrue(IndustryCategoryMapper.isUnknown("  "));
+        assertFalse(IndustryCategoryMapper.isUnknown("식비"));
+    }
+
+    @Test
     @DisplayName("표가 비어 있지 않고 중분류가 15개 축을 유지한다")
     void tableIsPopulated() {
         assertTrue(mapper.size() > 400, "소비 업종이 400개 넘게 있어야 한다: " + mapper.size());

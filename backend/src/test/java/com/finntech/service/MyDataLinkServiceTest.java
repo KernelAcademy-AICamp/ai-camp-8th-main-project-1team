@@ -69,7 +69,7 @@ class MyDataLinkServiceTest {
 
         new MyDataLinkService(client, users, cards, payments, consumptions, categories,
                 new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
-                emptyDictionary(), emptyKinds(), links,
+                emptyDictionary(), emptyKinds(), offLookup(), links,
                 mock(UserBankRepository.class), reports, clock, "")
                 .linkCardCompanies(1L, List.of(9007L));
 
@@ -100,7 +100,7 @@ class MyDataLinkServiceTest {
         new MyDataLinkService(client, users, mock(UserCardRepository.class), mock(UserPaymentRepository.class),
                 mock(ConsumptionRepository.class), mock(CategoryRepository.class),
                 new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
-                emptyDictionary(), emptyKinds(), links,
+                emptyDictionary(), emptyKinds(), offLookup(), links,
                 mock(UserBankRepository.class), mock(ReportRepository.class), clock, "")
                 .linkCardCompanies(1L, List.of(9007L));
 
@@ -115,6 +115,18 @@ class MyDataLinkServiceTest {
      * 다만 적재 경로가 사전을 한 번 읽으므로 널이 아닌 것을 준다.
      */
     /** 관측 판정 — 시험에서는 표가 비어 있다(상호가 하나뿐인 상태와 같아 완화가 통과한다). */
+    /**
+     * 등록 업종 조회를 <b>끈</b> 것 — 기본 상태 그대로다.
+     *
+     * <p>이 통로는 주소·추출식이 환경변수로 들어와야 켜지고, 안 주면 조용히 꺼진 채 있다.
+     * 단위 테스트에서 바깥 서버를 부르지 않는 것이 그래서 설정이 아니라 <b>기본값</b>이다.
+     */
+    private static IndustryLookupService offLookup() {
+        return new IndustryLookupService(new com.finntech.config.IndustryLookupProperties(),
+                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
+                emptyKinds());
+    }
+
     private static BusinessNumberKindService emptyKinds() {
         var repo = mock(com.finntech.repository.BusinessNumberKindRepository.class);
         when(repo.findById(org.mockito.ArgumentMatchers.anyString()))

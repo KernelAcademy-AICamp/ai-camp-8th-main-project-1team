@@ -30,12 +30,24 @@ import java.time.LocalDateTime;
 @Table(name = "merchant_category")
 public class MerchantCategory {
 
-    /** 이 분류가 어디서 왔나. <b>LLM 추정만으로는 들어오지 못한다</b> — 그래서 둘뿐이다. */
+    /** 이 분류가 어디서 왔나. <b>LLM 추정만으로는 확정이 되지 못한다</b> — 그 하나만 예외다. */
     public enum Source {
         /** 사용자가 업종코드를 직접 준 것. 국세청 등록 정보라 추정이 아니라 사실이다. */
         USER_CSV,
         /** LLM 추정을 사람이 "맞다"고 확인한 것. */
         USER_CONFIRMED,
+        /**
+         * <b>사업자등록번호로 등록 업종을 조회해 얻은 것</b>(분류 순위 ②-b).
+         *
+         * <p>추정이 아니라 <b>사실</b>이라 확정으로 들어온다. 얻은 것은 국세청에 등록된 업종이고,
+         * 거기서 중분류로 옮기는 일은 사람이 검토한 대조표({@code nts-mid.tsv})가 한다 —
+         * 모델이 끼는 자리가 없다(마스터 §4 원칙 1). 정답을 이미 아는 가맹점 28곳에 걸어 본
+         * 실측에서 <b>붙은 20건이 전부 맞았다</b>(2026-08-07).
+         *
+         * <p>그래도 사람 아래다. 등록 업종은 "이 사업자가 무슨 일을 하는가"이지 "이 결제가 무엇에
+         * 쓴 돈인가"가 아니라서, 사람이 고치면 그 판단이 이긴다({@link #USER_CONFIRMED} 로 덮인다).
+         */
+        REGISTRY,
         /**
          * <b>LLM 이 추정만 한 것 — 확정이 아니다.</b> 판정에 참여하지 않으며
          * {@code lookup} 이 이 행을 돌려주지 않는다. 여기 있는 이유는 하나다:
@@ -45,12 +57,54 @@ public class MerchantCategory {
          * <p>사람이 나중에 "맞아요"를 누르면 이 행이 {@link #USER_CONFIRMED} 로 승격되고,
          * 국세청 등록 정보가 들어오면 {@link #USER_CSV} 가 덮는다 — 사실이 추정을 이긴다.
          */
-        LLM_GUESS
+        LLM_GUESS,
+        /**
+         * <b>분류가 아니라 시도 이력이다</b> — "이 가맹점을 건드려 봤다"만 말한다.
+         *
+         * <p>이 행이 없으면 <b>같은 일을 매번 다시 한다.</b> 조회처에 물어 답을 받았지만 그 업종이
+         * 소비 업종이 아니어서 못 붙였을 때, 결과를 어디에도 남기지 않으면 연동할 때마다 같은
+         * 번호를 다시 조회한다. 붙은 것만 사전에 쌓고 못 붙인 것을 버리면, 사전이 커져도
+         * 바깥 호출은 안 줄어든다.
+         *
+         * <p>분류로 취급하지 않는다 — {@code category2} 는 카테고리없음이고 조회에도 안 잡힌다.
+         * 여기 담기는 것은 {@code lookupAttempts}·{@code llmAttempts}·{@code registryIndustry} 다.
+         */
+        ATTEMPTED,
+        /**
+         * <b>다 해 봤지만 알 수 없었다</b> — 종결 상태이며 {@code category2} 는 '기타'다.
+         *
+         * <p>기준은 <b>LLM 질문 {@value #GIVE_UP_AFTER}회</b>다. 조회 실패는 종결 사유가 아니다 —
+         * 조회처가 모른다고 LLM 도 모르는 것이 아니고, LLM 은 다시 물으면 답이 달라질 수 있어
+         * 한두 번으로 단정할 수 없기 때문이다(사용자 확인 2026-08-07). 그만큼 물어도 안 되면
+         * 더 묻는 것은 비용만 든다.
+         *
+         * <p>'카테고리없음'과 갈라 두는 것이 요점이다. 그 값 하나가 <i>"아직 안 물어봤다"</i>와
+         * <i>"다 물어봤는데 모른다"</i>를 같이 담고 있었고, 그래서 뒤엣것을 매번 다시 처리했다.
+         *
+         * <p><b>영구가 아니다.</b> 사람이 화면에서 고치면 {@link #USER_CONFIRMED} 가 덮고
+         * {@code confirmedBy}·{@code updatedAt} 에 그 사실이 남는다.
+         */
+        UNRESOLVED
     }
 
-    /** 판정에 참여할 수 있는 출처인가 — 추정은 아니다(마스터 §4 원칙 1). */
+    /** 이만큼 LLM 에 묻고도 답이 없으면 '기타'로 종결한다. */
+    public static final int GIVE_UP_AFTER = 3;
+
+    /**
+     * 판정에 참여할 수 있는 출처인가 — 추정과 시도 이력은 아니다(마스터 §4 원칙 1).
+     *
+     * <p>{@link Source#UNRESOLVED} 는 <b>참여한다</b>. '기타'는 추정이 아니라 <i>"다 해 봤지만
+     * 알 수 없었다"</i>는 결론이고, 그 결론이 나와야 화면이 같은 결제를 계속 '카테고리없음'으로
+     * 두지 않는다. 낭비 판정에서 빠지는 것은 출처가 아니라 <b>값</b>이 정한다 —
+     * {@code IndustryCategoryMapper.isUnknown} 이 '카테고리없음'과 '기타'를 함께 뺀다.
+     */
     public boolean isConfirmed() {
-        return !Source.LLM_GUESS.name().equals(source);
+        return !Source.LLM_GUESS.name().equals(source) && !Source.ATTEMPTED.name().equals(source);
+    }
+
+    /** LLM 추정인가 — {@code guess} 가 이 행만 돌려준다. 시도 이력과 섞이면 안 된다. */
+    public boolean isGuess() {
+        return Source.LLM_GUESS.name().equals(source);
     }
 
     @Id
@@ -83,6 +137,28 @@ public class MerchantCategory {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    /**
+     * 조회처가 말한 <b>등록 업종 이름</b> — 붙였든 못 붙였든 남긴다.
+     *
+     * <p>못 붙인 것을 남기는 이유가 더 크다. '아파트 건설업'이라는 답을 받고도 버리면 다음
+     * 연동에서 같은 번호를 또 조회한다. 그리고 이 이름은 <b>LLM 에게 줄 근거</b>이기도 하다 —
+     * 상호만 주는 것보다 "등록 업종은 이렇다"를 같이 주는 편이 답이 낫다.
+     */
+    @Column(name = "registry_industry", length = 80)
+    private String registryIndustry;
+
+    /** 바깥 조회처에 물어본 횟수. 답을 받아 {@link #registryIndustry} 가 차면 더 묻지 않는다. */
+    @Column(name = "lookup_attempts", nullable = false)
+    private int lookupAttempts;
+
+    /** LLM 에 물어본 횟수. {@link #GIVE_UP_AFTER} 에 닿으면 '기타'로 종결한다. */
+    @Column(name = "llm_attempts", nullable = false)
+    private int llmAttempts;
+
+    /** 마지막으로 무엇이든 시도한 시각 — 통로가 죽었는지 보는 단서다. */
+    @Column(name = "last_attempt_at")
+    private LocalDateTime lastAttemptAt;
 
     protected MerchantCategory() {
     }
@@ -119,6 +195,55 @@ public class MerchantCategory {
         this.source = source.name();
         this.confirmedBy = confirmedBy;
     }
+
+    /**
+     * 바깥 조회처에 한 번 물었다고 적는다 — 답을 얻었으면 그 업종 이름도 같이.
+     *
+     * <p>답을 얻은 뒤에는 다시 묻지 않는다({@link #registryAnswered}). 등록 업종은 잘 안 바뀌고,
+     * 바뀐다 해도 그때는 사람이 고치는 편이 빠르다.
+     */
+    public void noteLookup(String industryName, LocalDateTime at) {
+        this.lookupAttempts++;
+        this.lastAttemptAt = at;
+        if (industryName != null && !industryName.isBlank()) {
+            this.registryIndustry = industryName.length() > 80
+                    ? industryName.substring(0, 80) : industryName;
+        }
+    }
+
+    /** 이미 조회처의 답을 받아 둔 가맹점인가 — 그러면 또 부르지 않는다. */
+    public boolean registryAnswered() {
+        return registryIndustry != null && !registryIndustry.isBlank();
+    }
+
+    /**
+     * LLM 에 한 번 물었다고 적는다. {@link #GIVE_UP_AFTER} 번째부터는 '기타'로 종결한다.
+     *
+     * <p>세는 것은 <b>답이 없었던 질문</b>이다. 답을 얻으면 그 행은 {@link Source#LLM_GUESS} 가
+     * 되므로 여기까지 오지 않는다.
+     *
+     * @return 이번 호출로 종결됐으면 true
+     */
+    public boolean noteLlmMiss(LocalDateTime at) {
+        this.llmAttempts++;
+        this.lastAttemptAt = at;
+        if (llmAttempts >= GIVE_UP_AFTER && !Source.UNRESOLVED.name().equals(source)) {
+            this.category2 = com.finntech.engine.IndustryCategoryMapper.OTHER;
+            this.source = Source.UNRESOLVED.name();
+            return true;
+        }
+        return false;
+    }
+
+    /** 더 시도할 필요가 없는 가맹점인가 — 사람이 고치기 전까지 조회도 질문도 멈춘다. */
+    public boolean settledAsOther() {
+        return Source.UNRESOLVED.name().equals(source);
+    }
+
+    public String getRegistryIndustry() { return registryIndustry; }
+    public int getLookupAttempts() { return lookupAttempts; }
+    public int getLlmAttempts() { return llmAttempts; }
+    public LocalDateTime getLastAttemptAt() { return lastAttemptAt; }
 
     public Long getId() { return id; }
     public String getBusinessNumber() { return businessNumber; }
