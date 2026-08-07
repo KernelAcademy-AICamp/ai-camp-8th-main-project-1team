@@ -41,6 +41,8 @@ public class MyDataLinkService {
     private final MerchantCategoryService merchantCategoryService;
     /** 사업자번호가 한 사업인가 여러 사업인가 — 연동이 관측해 갱신한다(V16). */
     private final BusinessNumberKindService businessNumberKindService;
+    /** 분류 순위 ②-b — 사업자등록번호로 등록 업종을 조회한다. 기본은 꺼져 있다. */
+    private final IndustryLookupService industryLookup;
     private final UserCardCompanyRepository userCardCompanyRepository;
     private final UserBankRepository userBankRepository;
     private final ReportRepository reportRepository;
@@ -54,6 +56,7 @@ public class MyDataLinkService {
                              com.finntech.engine.IndustryCategoryMapper industryMapper,
                              MerchantCategoryService merchantCategoryService,
                              BusinessNumberKindService businessNumberKindService,
+                             IndustryLookupService industryLookup,
                              UserCardCompanyRepository userCardCompanyRepository,
                              UserBankRepository userBankRepository, ReportRepository reportRepository,
                              java.time.Clock clock,
@@ -67,6 +70,7 @@ public class MyDataLinkService {
         this.industryMapper = industryMapper;
         this.merchantCategoryService = merchantCategoryService;
         this.businessNumberKindService = businessNumberKindService;
+        this.industryLookup = industryLookup;
         this.userCardCompanyRepository = userCardCompanyRepository;
         this.userBankRepository = userBankRepository;
         this.reportRepository = reportRepository;
@@ -262,10 +266,70 @@ public class MyDataLinkService {
         // **번호별로 상호를 관측해 판정을 갱신한다**(V16). 앱은 결제를 건별로 보므로 조회 시점에는
         // 한 번호에 다른 상호가 있는지 알 수 없다 — **연동만이 그 사용자의 결제를 전부 본다.**
         observeBusinessNumbers(userId);
+        // **관측 다음이라야 한다.** 조회를 건너뛸지를 "이 번호에 상호가 여럿인가"로 판단하는데,
+        // 그 사실은 방금 적재한 결제까지 봐야 안다.
+        lookupUnknownIndustries(userId);
 
         log.info("마이데이터 연동 완료 — userId={} 카드사 {}개, 카드 {}장, 결제 {}건, 은행 {}곳 적재",
                 userId, companyIds.size(), cardCount, paymentCount, bankCount);
         return new LinkResult(cardCount, paymentCount, bankCount);
+    }
+
+    /**
+     * <b>분류 순위 ②-b</b> — 아직 분류가 없는 가맹점의 <b>등록 업종을 조회</b>해 중분류를 붙인다.
+     *
+     * <p><b>관측 판정 다음에 선다</b>({@link #observeBusinessNumbers}). 조회를 건너뛸지 말지를
+     * "이 번호에 상호가 여럿인가"로 판단하는데, 그 사실은 방금 적재한 결제까지 봐야 알 수 있다.
+     * 순서가 뒤집히면 한 번호에 앱스토어와 OTT 가 같이 달린 것을 모른 채 번호 하나의 업종으로
+     * 칠하게 된다.
+     *
+     * <p><b>루프 밖에서 한 번에 한다.</b> 결제 건마다 부르면 수천 번 바깥 호출이 나가 연동이
+     * 멈춘 것처럼 보인다. 가맹점 단위로 접어서 물어야 할 곳만 남긴 뒤, 상한({@code maxPerSync})
+     * 까지만 묻는다. 넘친 것은 다음 연동이 이어 받는다 — 물어본 것은 사전에 쌓이므로 같은 곳을
+     * 두 번 묻지 않기 때문이다.
+     *
+     * <p>답을 <b>못 붙였어도 기록한다.</b> '아파트 건설업'이라는 답을 받고 버리면 다음 연동에서
+     * 같은 번호를 또 조회한다. 조회는 성공했고 그 업종이 소비 업종이 아니었다는 것도 사실이다.
+     *
+     * @return 이번에 분류가 붙은 가맹점 수
+     */
+    private int lookupUnknownIndustries(Long userId) {
+        if (!industryLookup.usable()) return 0;
+        // 가맹점 단위로 접는다 — 정렬을 고정해 같은 입력이 같은 순서로 처리되게 한다(§4 원칙 3).
+        Map<String, UserPayment> targets = new java.util.TreeMap<>();
+        for (UserPayment p : userPaymentRepository.findByUserIdOrderByPaymentDateDesc(userId)) {
+            if (!p.isFromRealPerson()) continue;                     // 더미 번호는 등록부에 없다
+            if (!com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED.equals(p.getCategory2())) continue;
+            String biz = com.finntech.domain.MerchantCategory.normalize(p.getBusinessNumber());
+            String name = p.getMerchantName();
+            if (biz.length() != 10 || name == null || name.isBlank()) continue;
+            if (!merchantCategoryService.needsWork(biz, name)) continue;   // 이미 확정·종결
+            targets.putIfAbsent(biz + '' + name, p);
+        }
+        if (targets.isEmpty()) return 0;
+
+        LocalDateTime now = LocalDateTime.now(clock);
+        int asked = 0, resolved = 0;
+        for (UserPayment p : targets.values()) {
+            if (asked >= industryLookup.maxPerSync()) break;
+            String biz = com.finntech.domain.MerchantCategory.normalize(p.getBusinessNumber());
+            var row = merchantCategoryService.attemptRow(p);
+            if (row.isPresent() && row.get().registryAnswered()) continue;   // 이미 답을 받아 뒀다
+            asked++;
+            var answer = industryLookup.industryOfMerchant(biz);
+            industryLookup.pause();
+            merchantCategoryService.noteLookup(p, answer.orElse(null), now);
+            String mid = answer.map(industryMapper::midOfFineName)
+                    .filter(m -> !com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED.equals(m))
+                    .orElse(null);
+            if (mid == null) continue;                                       // 소비 업종이 아니다 → LLM 이 받는다
+            if (merchantCategoryService.rememberRegistry(p, mid).isPresent()) resolved++;
+        }
+        if (asked > 0) {
+            log.info("등록 업종 조회 — userId={} 물어본 곳 {}, 분류된 곳 {}, 남은 곳 {}",
+                    userId, asked, resolved, Math.max(0, targets.size() - asked));
+        }
+        return resolved;
     }
 
     /**
@@ -377,7 +441,13 @@ public class MyDataLinkService {
             link.setLastRenewalTime(maxDate);      // 다음 증분 기준 전진
             userCardCompanyRepository.save(link);
         }
-        if (added > 0) reportRepository.deleteByUserId(userId); // 새 결제 반영 위해 리포트 캐시 무효화
+        if (added > 0) {
+            reportRepository.deleteByUserId(userId);   // 새 결제 반영 위해 리포트 캐시 무효화
+            // 새 결제가 있을 때만 조회한다. 증분은 5분마다 도는데 대개 0건이라, 조건 없이 부르면
+            // 아무 새 가맹점도 없는 채로 바깥 서버를 하루 288번 두드린다.
+            observeBusinessNumbers(userId);
+            lookupUnknownIndustries(userId);
+        }
         // 자동 동기화 배치가 5분마다 이 메서드를 부른다. 대부분 0건이라 INFO로 남기면 로그가 그것만으로 찬다.
         if (added > 0) log.info("마이데이터 증분 동기화 — userId={} 신규 결제 {}건", userId, added);
         else log.debug("마이데이터 증분 동기화 — userId={} 신규 결제 없음", userId);
