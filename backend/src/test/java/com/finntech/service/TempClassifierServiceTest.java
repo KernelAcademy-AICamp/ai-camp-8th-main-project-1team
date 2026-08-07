@@ -1,0 +1,110 @@
+package com.finntech.service;
+
+import com.finntech.config.TempClassifierProperties;
+import com.finntech.engine.IndustryCategoryMapper;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+/**
+ * 임시 분류(순위 ②-c) — <b>꺼져 있는 것이 기본이고, 깨진 답을 통째로 버리지 않는다.</b>
+ *
+ * <p>여기 있는 것은 전부 실제로 겪은 실패다. 무료 통로는 언제 막힐지 모르고 응답 형식도
+ * 우리가 통제하지 못하므로, "안 될 때 어떻게 되는가"가 계약이다.
+ */
+class TempClassifierServiceTest {
+
+    private final ObjectMapper json = new ObjectMapper();
+    private final IndustryCategoryMapper mapper = new IndustryCategoryMapper(json);
+
+    private TempClassifierService service(TempClassifierProperties props) {
+        MerchantClassifierService classifier = mock(MerchantClassifierService.class);
+        when(classifier.isPaymentAgencyMerchant(org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(false);
+        return new TempClassifierService(props, mapper, classifier, json);
+    }
+
+    @Test
+    @DisplayName("설정을 안 주면 꺼진 채로 있고 아무것도 부르지 않는다")
+    void offByDefault() {
+        // 주소·키·모델 중 하나만 비어도 꺼진다. 단위 시험이 바깥 서버를 안 부르는 것이
+        // **설정이 아니라 기본값**이라야 한다.
+        var props = new TempClassifierProperties();
+        assertThat(props.usable()).isFalse();
+        assertThat(service(props).usable()).isFalse();
+        assertThat(service(props).classify(List.of("어떤 가게"))).isEmpty();
+
+        props.setEnabled(true);
+        props.setBaseUrl("https://example.invalid/v1/chat/completions");
+        props.setApiKey("k");
+        assertThat(props.usable()).as("모델 이름이 없으면 여전히 꺼짐").isFalse();
+    }
+
+    @Test
+    @DisplayName("응답 속 제어문자 때문에 한 묶음을 통째로 버리지 않는다")
+    void survivesControlCharacters() {
+        // 2026-08-07 실측: 여섯 묶음 중 하나가 제어문자로 JSON 파싱에 실패해 40곳이 날아갔다.
+        // 모델이 문자열 안에 줄바꿈을 그대로 흘리는 경우가 있다.
+        var props = enabled();
+        String body = """
+                {"choices":[{"message":{"content":"{\\"1\\": \\"체인화 편의점\\",\\n \\"2\\": \\"한식 일반 음식점업\\"}"}}]}
+                """;
+        var got = service(props).parse(body, List.of("GS25 강남역점", "김밥천국"));
+        assertThat(got).containsEntry("GS25 강남역점", "체인화 편의점")
+                       .containsEntry("김밥천국", "한식 일반 음식점업");
+    }
+
+    @Test
+    @DisplayName("설명이 섞여 와도 JSON 덩어리만 꺼낸다")
+    void extractsJsonFromChatter() {
+        String body = """
+                {"choices":[{"message":{"content":"네, 분류했습니다.\\n\\n{\\"1\\": \\"체인화 편의점\\"}\\n\\n도움이 되었길."}}]}
+                """;
+        assertThat(service(enabled()).parse(body, List.of("GS25 강남역점")))
+                .containsEntry("GS25 강남역점", "체인화 편의점");
+    }
+
+    @Test
+    @DisplayName("범위를 벗어난 번호·빈 값·깨진 본문은 조용히 버린다")
+    void ignoresGarbage() {
+        var svc = service(enabled());
+        List<String> names = List.of("가게1");
+
+        // 번호가 목록 밖 — 지어낸 답이 들어오지 못한다.
+        assertThat(svc.parse("""
+                {"choices":[{"message":{"content":"{\\"7\\": \\"체인화 편의점\\"}"}}]}""", names)).isEmpty();
+        // 값이 빈 문자열.
+        assertThat(svc.parse("""
+                {"choices":[{"message":{"content":"{\\"1\\": \\"\\"}"}}]}""", names)).isEmpty();
+        // 아예 JSON 이 없다.
+        assertThat(svc.parse("""
+                {"choices":[{"message":{"content":"모르겠습니다"}}]}""", names)).isEmpty();
+        // 본문이 비었다 — 예외를 던지지 않는다.
+        assertThat(svc.parse("", names)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("목록에 없는 업종 이름은 중분류로 못 옮겨 버려진다")
+    void unknownIndustryNamesAreDropped() {
+        // 모델이 그럴듯한 이름을 지어내도 우리 표에 없으면 통과하지 못한다 —
+        // 축 배정은 표가 하고 모델은 업종의 사실만 말한다(마스터 §4 원칙 1).
+        assertThat(mapper.midOfIndustryName("체인화 편의점")).isEqualTo("편의점/잡화");
+        assertThat(IndustryCategoryMapper.isUnknown(mapper.midOfIndustryName("우주 정거장 운영업")))
+                .as("없는 업종은 중분류가 안 나온다").isTrue();
+    }
+
+    private static TempClassifierProperties enabled() {
+        var p = new TempClassifierProperties();
+        p.setEnabled(true);
+        p.setBaseUrl("https://example.invalid/v1/chat/completions");
+        p.setApiKey("k");
+        p.setModel("some/model");
+        return p;
+    }
+}

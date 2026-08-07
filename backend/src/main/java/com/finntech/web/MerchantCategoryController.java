@@ -48,6 +48,8 @@ public class MerchantCategoryController {
     private final CategoryRepository categories;
     private final MerchantCategoryService dictionary;
     private final MerchantClassifierService classifier;
+    /** 분류 순위 ③ — 묻는 일은 여기 하나에 있다(백그라운드와 공유). */
+    private final com.finntech.service.MerchantAskService ask;
     private final IndustryCategoryMapper mapper;
     /** 사업자번호가 한 사업인가 여러 사업인가(V16). 확정이 그 판정을 흔들 수 있다. */
     private final com.finntech.service.BusinessNumberKindService kinds;
@@ -58,6 +60,7 @@ public class MerchantCategoryController {
                                       CategoryRepository categories,
                                       MerchantCategoryService dictionary,
                                       MerchantClassifierService classifier,
+                                      com.finntech.service.MerchantAskService ask,
                                       IndustryCategoryMapper mapper,
                                       com.finntech.service.BusinessNumberKindService kinds,
                                       java.time.Clock clock) {
@@ -66,6 +69,7 @@ public class MerchantCategoryController {
         this.categories = categories;
         this.dictionary = dictionary;
         this.classifier = classifier;
+        this.ask = ask;
         this.mapper = mapper;
         this.kinds = kinds;
         this.clock = clock;
@@ -81,86 +85,10 @@ public class MerchantCategoryController {
     @GetMapping("/unclassified")
     @Transactional
     public Map<String, Object> unclassified(@RequestParam Long userId) {
-        List<UserPayment> rows = payments.findTop100ByUserIdAndCategory2OrderByPaymentDateDesc(
-                userId, IndustryCategoryMapper.UNCLASSIFIED);
-
-        // 같은 가맹점이 여러 번 나온다 — 이름당 한 번만 묻는다.
-        List<UserPayment> askable = rows.stream()
-                .filter(p -> p.getCategory2Llm() == null)
-                .filter(p -> classifier.worthAsking(p.getMerchantName(), p.getBusinessNumber()))
-                .toList();
-        // **이미 물어본 가맹점은 다시 묻지 않는다.** 추정은 결제 행(`category2_llm`)에만 남기면
-        // 다음 달 같은 넷플릭스가 새 결제로 들어올 때 또 묻게 된다 — 행이 새것이라 비어 있기
-        // 때문이다. 그래서 사전에도 `LLM_GUESS` 로 남기고, 여기서 그것부터 꺼내 쓴다.
-        Map<String, String> remembered = new LinkedHashMap<>();
-        for (UserPayment p : askable) {
-            remembered.computeIfAbsent(p.getMerchantName(),
-                    n -> dictionary.guess(p.getBusinessNumber(), n).orElse(null));
-        }
-        remembered.values().removeIf(java.util.Objects::isNull);
-
-        List<String> ask = askable.stream().map(UserPayment::getMerchantName).distinct()
-                .filter(n -> !remembered.containsKey(n)).toList();
-
-        // **못 잡았을 때 다시 물을 값어치**를 여기서 정한다 — 건수·금액을 아는 것은 이쪽이다.
-        // 모델은 알면서도 큰 묶음에서 흘리므로(2026-08-05 실측: 넷플릭스), 중요한 것은 작게
-        // 나눠 한 번 더 묻는다. 다만 1건 200원짜리 카드 수수료까지 다시 물으면 호출만 쓴다 —
-        // 실측으로 이 기준이 못 잡은 금액의 93%를 덮었다.
-        Map<String, Integer> count = new LinkedHashMap<>();
-        Map<String, Long> total = new LinkedHashMap<>();
-        for (UserPayment p : askable) {
-            count.merge(p.getMerchantName(), 1, Integer::sum);
-            total.merge(p.getMerchantName(), (long) p.getAmount(), Long::sum);
-        }
-        Set<String> important = ask.stream()
-                .filter(n -> count.getOrDefault(n, 0) >= RETRY_MIN_COUNT
-                        || total.getOrDefault(n, 0L) >= RETRY_MIN_AMOUNT)
-                .collect(java.util.stream.Collectors.toSet());
-
-        Map<String, String> fresh = classifier.classify(ask, important);
-
-        // 새로 알아낸 것만 사전에 남긴다 — 다음 연동·다음 달 결제에서 재사용된다.
-        // (실제 사람의 결제일 때만 쌓인다. 더미의 사업자번호는 실재하지 않는다.)
-        for (UserPayment p : askable) {
-            String g = fresh.get(p.getMerchantName());
-            if (g != null) dictionary.rememberGuess(p, g);
-        }
-
-        // **헛물켠 질문을 센다** — 물었는데 답이 안 온 가맹점. 세 번째면 '기타'로 종결하고
-        // 다음부터는 조회도 질문도 하지 않는다. 이 기록이 없으면 화면을 열 때마다 같은 상호를
-        // 다시 묻는다: 답이 없다는 사실이 어디에도 안 남기 때문이다.
-        //
-        // **가맹점당 한 번만 센다.** 결제 건마다 세면 넷플릭스 12건짜리 가맹점이 한 번의 질문에
-        // 12회로 기록돼 첫 시도에 바로 종결된다.
-        java.time.LocalDateTime askedAt = java.time.LocalDateTime.now(clock);
-        Set<String> settled = new java.util.LinkedHashSet<>();
-        Set<String> counted = new java.util.HashSet<>();
-        for (UserPayment p : askable) {
-            String name = p.getMerchantName();
-            if (fresh.containsKey(name) || !counted.add(name)) continue;
-            if (dictionary.noteLlmMiss(p, askedAt)) settled.add(name);
-        }
-        // 종결된 가맹점은 화면에서도 '기타'가 돼야 한다. 사전에만 적고 결제를 그대로 두면
-        // 사용자는 여전히 '카테고리없음'을 보고, 다음에 또 이 화면이 그것을 물어볼 대상으로 센다.
-        if (!settled.isEmpty()) {
-            Category other = categories.findByCode(IndustryCategoryMapper.OTHER)
-                    .orElseGet(() -> categories.save(
-                            new Category(IndustryCategoryMapper.OTHER, IndustryCategoryMapper.OTHER)));
-            for (UserPayment p : rows) {
-                if (!settled.contains(p.getMerchantName())) continue;
-                p.confirmCategory2(IndustryCategoryMapper.OTHER, "GIVE_UP");
-                for (Consumption c : consumptions.findBySourcePaymentId(p.getPaymentId())) {
-                    c.reclassify(other);
-                }
-            }
-        }
-
-        Map<String, String> guessed = new LinkedHashMap<>(remembered);
-        guessed.putAll(fresh);
-        for (UserPayment p : rows) {
-            String g = guessed.get(p.getMerchantName());
-            if (g != null) p.suggestCategory2(g);
-        }
+        // **묻는 일은 서비스가 한다.** 백그라운드 동기화도 같은 것을 부르는데 임계값만 다르다
+        // (거긴 40곳, 여긴 1곳). 두 벌로 적으면 한쪽만 고쳐져 조용히 갈라진다.
+        var asked = ask.ask(userId, com.finntech.service.MerchantAskService.ON_DEMAND_MIN);
+        List<UserPayment> rows = asked.rows();
 
         List<Map<String, Object>> items = new ArrayList<>();
         for (UserPayment p : rows) {
