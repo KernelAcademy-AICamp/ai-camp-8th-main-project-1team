@@ -71,22 +71,18 @@ public class MerchantAskService {
     private final MerchantClassifierService classifier;
     /** ②-c 임시 분류 — 무료 통로. 답은 메모리에만 살고 DB 에 안 들어간다. */
     private final TempClassifierService temporary;
-    /** 가맹점명 → 브랜드. 사전에 있으면 사전에, 없으면 대기 장소에 쌓인다. */
-    private final MerchantBrandService brands;
     private final Clock clock;
 
     public MerchantAskService(UserPaymentRepository payments, ConsumptionRepository consumptions,
                               CategoryRepository categories, MerchantCategoryService dictionary,
                               MerchantClassifierService classifier,
-                              TempClassifierService temporary, MerchantBrandService brands,
-                              Clock clock) {
+                              TempClassifierService temporary, Clock clock) {
         this.payments = payments;
         this.consumptions = consumptions;
         this.categories = categories;
         this.dictionary = dictionary;
         this.classifier = classifier;
         this.temporary = temporary;
-        this.brands = brands;
         this.clock = clock;
     }
 
@@ -137,19 +133,6 @@ public class MerchantAskService {
         // **브랜드도 같이 뽑는다.** 가맹점명 하나씩 물어 브랜드를 알아 두면 그 브랜드의 새 지점은
         // 다시 안 물어도 되고, 한 지점이 분류되면 나머지에 물려줄 수 있다. 무료 통로라 하나씩
         // 물어도 손해가 없고, 이미 아는 가맹점은 건너뛰므로 쌓일수록 호출이 준다.
-        // **브랜드는 두 층으로 채운다.**
-        //   ① 카탈로그(생성기가 쓰는 브랜드 312개) — 실사용자든 더미든 여기서 먼저 맞춘다.
-        //      이미 아는 브랜드를 모델에 다시 묻는 것은 낭비이고, 답이 흔들리면 같은 브랜드가 갈린다.
-        //   ② 모델 — 카탈로그에 없는 상호에만. **실사용자 결제일 때만** 묻는다.
-        //
-        // ②에 게이트를 두는 이유는 사전과 같다. 더미의 상호는 생성기가 조립한 것이라, 그걸로
-        // 브랜드 표를 넓히면 아무도 결제한 적 없는 브랜드가 앉는다. 반대로 ①은 이미 우리가
-        // 큐레이션한 목록이라 누구에게 적용하든 새 사실이 들어오지 않는다.
-        brands.fill(ask, askable.stream()
-                .filter(UserPayment::isFromRealPerson)
-                .map(UserPayment::getMerchantName)
-                .collect(java.util.stream.Collectors.toSet()));
-
         if (!ask.isEmpty() || !temp.isEmpty()) {
             log.info("미분류 최신화 — userId={} 남은 가맹점 {}, 임시 분류 {}, 임계값 {}",
                     userId, ask.size(), temp.size(), minMerchants);
