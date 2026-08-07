@@ -121,12 +121,19 @@ class MyDataLinkServiceTest {
      * <p>이 시험이 보는 것은 증분 기준선이라 분류는 상관이 없다. 그래도 대역을 넣는 이유는
      * 단위 시험이 바깥 서버를 부르지 않는 것이 <b>설정이 아니라 기본값</b>이라야 하기 때문이다.
      */
+    /** 임시 분류를 <b>끈</b> 것 — 기본 상태 그대로다(주소·키·모델이 비면 안 부른다). */
+    private static TempClassifierService offTempClassifier() {
+        return new TempClassifierService(new com.finntech.config.TempClassifierProperties(),
+                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
+                mock(MerchantClassifierService.class), new tools.jackson.databind.ObjectMapper());
+    }
+
     private static MerchantAskService noAsk() {
         return new MerchantAskService(mock(com.finntech.repository.UserPaymentRepository.class),
                 mock(com.finntech.repository.ConsumptionRepository.class),
                 mock(com.finntech.repository.CategoryRepository.class),
                 emptyDictionary(), mock(MerchantClassifierService.class),
-                java.time.Clock.systemDefaultZone());
+                offTempClassifier(), java.time.Clock.systemDefaultZone());
     }
 
     /**
