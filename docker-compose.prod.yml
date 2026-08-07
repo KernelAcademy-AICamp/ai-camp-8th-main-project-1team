@@ -114,6 +114,18 @@ services:
       # 금감원 오픈API 인증키. 비면 통장 비교가 더미로 폴백한다(화면에 '예시 데이터'로 표시).
       # 이 줄이 없어서 .env 에 키를 넣어도 컨테이너까지 오지 못했다 — 운영에서 실측(2026-08-04).
       FSS_API_KEY: ${FSS_API_KEY:-}
+      # 등록 업종 조회(분류 순위 ②-b) — 사업자번호로 등록 업종을 되찾아 중분류를 정한다.
+      # 주소·추출식이 저장소에 없는 이유는 조회처가 계약된 API 가 아니라 공개 페이지여서다.
+      # 셋 중 하나라도 비면 통로가 조용히 꺼지고 분류는 종전대로 LLM 으로 내려간다.
+      INDUSTRY_LOOKUP_ENABLED: ${INDUSTRY_LOOKUP_ENABLED:-false}
+      INDUSTRY_LOOKUP_URL: ${INDUSTRY_LOOKUP_URL:-}
+      INDUSTRY_LOOKUP_PATTERN: ${INDUSTRY_LOOKUP_PATTERN:-}
+      # 임시 분류(②-c) — 무료 모델로 잠정 업종을 붙인다. 답은 DB 에 안 남고 화면 표시에만 쓴다.
+      # 모델 이름을 환경변수로 두는 이유: 카탈로그에 있는데 404 인 모델이 실재한다(2026-08-07 실측).
+      TEMP_CLASSIFIER_ENABLED: ${TEMP_CLASSIFIER_ENABLED:-false}
+      TEMP_CLASSIFIER_URL: ${TEMP_CLASSIFIER_URL:-}
+      TEMP_CLASSIFIER_KEY: ${TEMP_CLASSIFIER_KEY:-}
+      TEMP_CLASSIFIER_MODEL: ${TEMP_CLASSIFIER_MODEL:-}
       TSA_ENABLED: ${TSA_ENABLED:-false}
     mem_limit: 1280m            # 힙 ≈ 768m. 분석 엔진·EBM 스코어러가 있어 넷 중 가장 크다.
     # internal로 마이데이터·DB에 닿고, edge로 Gemini·TSA·금리조회 아웃바운드를 유지한다.
