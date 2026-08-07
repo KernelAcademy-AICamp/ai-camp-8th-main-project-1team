@@ -128,11 +128,13 @@ public class TempClassifierService {
         }
         if (ask.isEmpty() || !usable()) return out;
 
+        // **남은 것을 전부 훑는다.** 회차당 상한을 두지 않는다 — 무료 통로라 아낄 것이 없고,
+        // 자르면 그만큼이 다음 회차(5분 뒤)로 밀려 미분류가 오래 남는다. 유료 통로가 40곳씩
+        // 묶는 것과 혼동하기 쉬운데, 그쪽은 프롬프트의 76%가 업종 목록이라 묶어야 이득인 것이고
+        // 여기는 그런 이유가 없다.
         String catalog = catalog();
-        int asked = 0;
-        for (int i = 0; i < ask.size() && asked < props.getMaxPerRun(); i += BATCH) {
+        for (int i = 0; i < ask.size(); i += BATCH) {
             List<String> chunk = ask.subList(i, Math.min(i + BATCH, ask.size()));
-            asked += chunk.size();
             Map<String, String> got = callOnce(catalog, chunk);
             if (got == null) return out;                 // 실패 — 남은 묶음도 포기한다
             Instant now = Instant.now();

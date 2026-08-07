@@ -56,7 +56,7 @@ class MerchantBrandServiceTest {
         when(categories.findByMerchantName(anyString())).thenAnswer(inv -> dictionary.stream()
                 .filter(m -> m.getMerchantName().equals(inv.getArgument(0))).toList());
 
-        service = new MerchantBrandService(brands, categories, mock(TempClassifierService.class));
+        service = new MerchantBrandService(brands, categories, mock(TempClassifierService.class), new tools.jackson.databind.ObjectMapper());
     }
 
     @Test

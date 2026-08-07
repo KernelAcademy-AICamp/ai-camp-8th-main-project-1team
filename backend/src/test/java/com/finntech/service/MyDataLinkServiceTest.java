@@ -170,6 +170,6 @@ class MyDataLinkServiceTest {
                 new BusinessNumberKindService(kindRepo, 5, 2, 0.10),
                 new MerchantBrandService(brandRepo,
                         mock(com.finntech.repository.MerchantCategoryRepository.class),
-                        mock(TempClassifierService.class)));
+                        mock(TempClassifierService.class), new tools.jackson.databind.ObjectMapper()));
     }
 }

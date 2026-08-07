@@ -347,9 +347,13 @@ public class MyDataLinkService {
             }
         }
         int resolved = applyResolved(rows, found);
-        if (asked > 0) {
-            log.info("등록 업종 조회 — userId={} 물어본 곳 {}, 분류된 가맹점 {}, 고쳐진 결제 {}건, 남은 곳 {}",
-                    userId, asked, found.size(), resolved, Math.max(0, targets.size() - asked));
+        // **대상이 있으면 언제나 남긴다.** 예전에는 `asked > 0` 일 때만 찍었는데, 그러면
+        // "물어볼 대상이 하나도 안 잡힌다"는 상황이 로그에 흔적을 안 남겨 원인을 못 좁혔다
+        // (2026-08-07 운영: 조회가 도는지조차 알 수 없었다). 0 도 정보다.
+        if (!targets.isEmpty() || !found.isEmpty()) {
+            log.info("등록 업종 조회 — userId={} 대상 {}, 물어본 곳 {}, 분류된 가맹점 {}, 고쳐진 결제 {}건, 남은 곳 {}",
+                    userId, targets.size(), asked, found.size(), resolved,
+                    Math.max(0, targets.size() - asked));
         }
         return resolved;
     }
