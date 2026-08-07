@@ -50,6 +50,7 @@ export const ICON_BG: Record<string, string> = {
   'i-heart': '#FFE9EC', 'i-book': '#FFF7E6', 'i-gift': '#FFF1E8',
   'i-paw': '#F3EEFF', 'i-med': '#FDECEE', 'i-plane': '#E8F6FE', 'i-game': '#EEF0FF',
   'i-card': '#E8F1FF', 'i-coin': '#FFF7E6', 'i-doc': '#EAF0F6',
+  'i-dots': '#EEF1F4',
 };
 
 /** 카테고리 표시명 → 아이콘 id. 코드가 아니라 이름으로 고른다(세그먼트 비의존). */
@@ -71,7 +72,10 @@ export function iconFor(name: string): string {
   if (/병원|약|의료|건강검진/.test(n)) return 'i-med';
   if (/여행|항공|숙박|호텔/.test(n)) return 'i-plane';
   if (/취미|게임|문화|여가|영화/.test(n)) return 'i-game';
-  return 'i-shop';
+  // **모르는 것은 모르는 표시를 준다.** 예전에는 여기서 'i-shop' 으로 떨어졌고, 그래서
+  // '카테고리없음' 결제가 전부 쇼핑 아이콘을 달았다 — 화면만 보면 분류가 된 것처럼 보였다
+  // (2026-08-07 실사용자 제보). 종결 표시인 '기타'도 같은 자리로 온다.
+  return 'i-dots';
 }
 export const bgFor = (icon: string) => ICON_BG[icon] ?? 'var(--bg)';
 /** 카테고리 이름 하나로 아이콘+배경을 함께. */
