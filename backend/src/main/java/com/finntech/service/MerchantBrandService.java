@@ -50,13 +50,49 @@ public class MerchantBrandService {
     private final MerchantBrandRepository brands;
     private final MerchantCategoryRepository dictionary;
     private final TempClassifierService temporary;
+    /** 가맹점명에 든 표기 → 브랜드. 생성기 카탈로그에서 파생한 것이라 물어볼 필요가 없다. */
+    private final Map<String, String> brandByForm;
 
+    @SuppressWarnings("unchecked")
     public MerchantBrandService(MerchantBrandRepository brands,
                                 MerchantCategoryRepository dictionary,
-                                TempClassifierService temporary) {
+                                TempClassifierService temporary,
+                                tools.jackson.databind.ObjectMapper json) {
         this.brands = brands;
         this.dictionary = dictionary;
         this.temporary = temporary;
+        Map<String, String> forms = Map.of();
+        try (java.io.InputStream is = new org.springframework.core.io.ClassPathResource(
+                "brand-forms.json").getInputStream()) {
+            Map<String, Object> root = json.readValue(is, Map.class);
+            Object m = root.get("brandByForm");
+            if (m instanceof Map<?, ?> raw) {
+                Map<String, String> tmp = new java.util.LinkedHashMap<>();
+                raw.forEach((k, v) -> tmp.put(String.valueOf(k), String.valueOf(v)));
+                forms = tmp;
+            }
+        } catch (Exception e) {
+            // 표가 없어도 동작한다 — 그러면 전부 모델에게 묻는다. 기동을 막을 일은 아니다.
+            log.warn("브랜드 표기표를 읽지 못했다 — 전부 모델에 묻는다: {}", e.toString());
+        }
+        this.brandByForm = forms;
+    }
+
+    /**
+     * <b>카탈로그로 먼저 맞춘다</b> — 생성기가 만든 가맹점명은 물어볼 필요가 없다.
+     *
+     * <p>더미 사용자의 상호는 {@code merchants_brand.json} 의 브랜드로 조립된 것이라 브랜드를
+     * 이미 안다. 그걸 모델에 다시 묻는 것은 호출 낭비이고, 답이 흔들리면 같은 브랜드가 갈린다.
+     *
+     * <p>긴 표기부터 맞춘다 — {@code 세븐일레븐} 이 {@code 세븐} 보다 먼저 걸려야 한다.
+     * 표는 그 순서로 만들어져 있다.
+     */
+    private Optional<String> fromCatalog(String merchantName) {
+        String n = merchantName.replaceAll("\\s+", "");
+        for (var e : brandByForm.entrySet()) {
+            if (n.contains(e.getKey().replaceAll("\\s+", ""))) return Optional.of(e.getValue());
+        }
+        return Optional.empty();
     }
 
     /**
@@ -69,6 +105,25 @@ public class MerchantBrandService {
      */
     @Transactional
     public Map<String, String> fill(List<String> merchantNames) {
+        return fill(merchantNames, java.util.Set.copyOf(
+                merchantNames == null ? List.of() : merchantNames));
+    }
+
+    /**
+     * 브랜드를 채운다 — <b>카탈로그는 전원에게, 모델은 {@code askable} 에만.</b>
+     *
+     * <p>카탈로그(생성기가 쓰는 브랜드 목록)는 우리가 이미 큐레이션한 것이라 누구에게 적용하든
+     * 새 사실이 들어오지 않는다. 그래서 더미든 실사용자든 <b>먼저 여기서 맞춘다</b> — 이미 아는
+     * 브랜드를 모델에 다시 묻는 것은 호출 낭비이고, 답이 흔들리면 같은 브랜드가 갈린다.
+     *
+     * <p>모델에 묻는 것은 다르다. 그건 <b>표를 넓히는</b> 일이라, 더미의 상호(생성기가 조립한 것)로
+     * 넓히면 아무도 결제한 적 없는 브랜드가 앉는다. 사전이 실제 사람의 결제만 받는 것과 같은
+     * 이유로 여기도 막는다.
+     *
+     * @param askable 모델에 물어도 되는 가맹점명 — 실제 사람의 결제에서 온 것
+     */
+    @Transactional
+    public Map<String, String> fill(List<String> merchantNames, java.util.Set<String> askable) {
         Map<String, String> out = new LinkedHashMap<>();
         if (merchantNames == null || merchantNames.isEmpty()) return out;
         List<String> distinct = merchantNames.stream()
@@ -88,7 +143,17 @@ public class MerchantBrandService {
             out.putIfAbsent(b.getMerchantName(), b.getBrand());
         }
 
-        // ② 모르는 것만 하나씩 묻는다 — **두 단계다.**
+        // ② 카탈로그로 맞춰 본다 — 생성기가 만든 상호는 물어볼 필요가 없다(브랜드를 이미 안다).
+        for (String name : distinct) {
+            if (out.containsKey(name)) continue;
+            fromCatalog(name).ifPresent(b -> {
+                out.put(name, b);
+                remember(name, b);
+            });
+        }
+
+        // ③ 그래도 모르는 것만 하나씩 묻는다 — **두 단계다.**
+        //    여기서만 실사용자 게이트가 걸린다(위 카탈로그는 전원에게 적용된다).
         //    1차: 이름만 보고 브랜드를 뽑는다(목록을 안 준다).
         //    2차: 뽑은 것이 이미 아는 브랜드와 같은지 대조해 표기를 통일한다.
         //
@@ -99,6 +164,7 @@ public class MerchantBrandService {
         int asked = 0, got = 0, unified = 0;
         for (String name : distinct) {
             if (out.containsKey(name)) continue;
+            if (!askable.contains(name)) continue;      // 더미 상호로는 표를 넓히지 않는다
             if (!temporary.usable()) break;
             asked++;
             Optional<String> first = temporary.brandOf(name);
