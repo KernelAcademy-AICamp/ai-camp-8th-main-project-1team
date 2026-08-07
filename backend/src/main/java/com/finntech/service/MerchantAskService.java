@@ -107,7 +107,13 @@ public class MerchantAskService {
                 userId, IndustryCategoryMapper.UNCLASSIFIED);
 
         // 같은 가맹점이 여러 번 나온다 — 이름당 한 번만 묻는다.
+        //
+        // **더미 결제는 어느 모델에도 보내지 않는다.** 생성기가 만든 상호라 물어볼 값이 없고
+        // (카탈로그가 이미 안다), 답이 와도 사전에 못 들어간다 — 사전에 실사용자 게이트가 있기
+        // 때문이다. 즉 더미를 물으면 **호출만 쓰고 버려진다.** 유료 통로에서는 그게 곧 돈이고,
+        // 무료 통로에서도 남의 서버를 헛되이 두드리는 일이다.
         List<UserPayment> askable = rows.stream()
+                .filter(UserPayment::isFromRealPerson)
                 .filter(p -> p.getCategory2Llm() == null)
                 .filter(p -> classifier.worthAsking(p.getMerchantName(), p.getBusinessNumber()))
                 .toList();
