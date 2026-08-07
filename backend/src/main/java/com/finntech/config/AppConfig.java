@@ -12,6 +12,7 @@ import java.time.ZoneId;
 
 @Configuration
 @EnableConfigurationProperties({AnalysisProperties.class, CardRecommendProperties.class,
+        IndustryLookupProperties.class, TempClassifierProperties.class,
         com.finntech.guardian.GuardianProperties.class})
 public class AppConfig {
 

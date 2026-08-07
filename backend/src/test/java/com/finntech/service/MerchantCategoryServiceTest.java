@@ -373,6 +373,86 @@ class MerchantCategoryServiceTest {
         assertThat(table.get(0).getSource()).isEqualTo("USER_CONFIRMED");
     }
 
+    @Test
+    @DisplayName("조회 답을 사전에 남긴다 — 확정으로 들어오고 추정을 덮는다")
+    void registryAnswerBecomesConfirmed() {
+        UserPayment real = realPayment("0000000021", "어느 가구점");
+        service.rememberGuess(real, "쇼핑");                       // 먼저 추정이 있었다
+        assertThat(service.lookup("0000000021", "어느 가구점")).isEmpty();
+
+        service.rememberRegistry(real, "생활");
+        assertThat(service.lookup("0000000021", "어느 가구점"))
+                .as("사실이 추정을 덮는다").contains("생활");
+        assertThat(table).as("행이 늘지 않고 고쳐진다").hasSize(1);
+    }
+
+    @Test
+    @DisplayName("사람이 정한 것은 조회가 덮지 않는다")
+    void registryNeverOverwritesPeople() {
+        UserPayment real = realPayment("0000000022", "그 가게");
+        service.confirmFrom(real, "식비", 7L);
+        assertThat(service.rememberRegistry(real, "쇼핑")).isEmpty();
+        assertThat(service.lookup("0000000022", "그 가게")).contains("식비");
+    }
+
+    @Test
+    @DisplayName("더미 결제로는 사전이 자라지 않는다 — 조회 통로도 마찬가지다")
+    void registryRejectsDummyPayments() {
+        // 더미 결제에도 실재하는 사업자번호가 섞여 있어 조회 자체는 성공할 수 있다.
+        // 그렇게 들어온 행은 아무도 결제한 적 없는 가맹점을 사전에 앉힌다.
+        assertThat(service.rememberRegistry(payment("77:gen-8a3f-0012"), "쇼핑")).isEmpty();
+        assertThat(service.attemptRow(payment("77:gen-8a3f-0012"))).isEmpty();
+        assertThat(table).isEmpty();
+    }
+
+    @Test
+    @DisplayName("LLM 을 세 번 헛물켜면 '기타'로 종결하고 더 묻지 않는다")
+    void givesUpAfterThreeLlmMisses() {
+        UserPayment real = realPayment("0000000023", "알 수 없는 곳");
+        LocalDateTime at = LocalDateTime.now();
+
+        assertThat(service.noteLlmMiss(real, at)).as("1회").isFalse();
+        assertThat(service.noteLlmMiss(real, at)).as("2회").isFalse();
+        assertThat(service.needsWork("0000000023", "알 수 없는 곳"))
+                .as("아직 남았다").isTrue();
+
+        assertThat(service.noteLlmMiss(real, at)).as("3회 — 종결").isTrue();
+        assertThat(service.needsWork("0000000023", "알 수 없는 곳"))
+                .as("더 조회도 질문도 하지 않는다").isFalse();
+        assertThat(service.lookup("0000000023", "알 수 없는 곳"))
+                .contains(IndustryCategoryMapper.OTHER);
+        assertThat(table).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("종결돼도 사람이 고치면 그것이 이긴다 — 영구가 아니다")
+    void peopleCanOverrideGiveUp() {
+        UserPayment real = realPayment("0000000024", "그래도 아는 곳");
+        LocalDateTime at = LocalDateTime.now();
+        service.noteLlmMiss(real, at);
+        service.noteLlmMiss(real, at);
+        service.noteLlmMiss(real, at);
+        assertThat(service.lookup("0000000024", "그래도 아는 곳"))
+                .contains(IndustryCategoryMapper.OTHER);
+
+        service.confirmFrom(real, "카페/간식", 7L);
+        assertThat(service.lookup("0000000024", "그래도 아는 곳")).contains("카페/간식");
+        assertThat(service.needsWork("0000000024", "그래도 아는 곳")).isFalse();
+    }
+
+    @Test
+    @DisplayName("시도 이력 행은 분류가 아니다 — 추정 조회에 걸리지 않는다")
+    void attemptRowIsNotAClassification() {
+        UserPayment real = realPayment("0000000025", "물어본 곳");
+        service.noteLookup(real, "아파트 건설업", LocalDateTime.now());
+
+        assertThat(service.lookup("0000000025", "물어본 곳")).as("확정 아님").isEmpty();
+        assertThat(service.guess("0000000025", "물어본 곳")).as("추정도 아님").isEmpty();
+        assertThat(table).hasSize(1);
+        assertThat(table.get(0).registryAnswered())
+                .as("못 붙였어도 답은 남는다 — 안 남기면 다음 연동에 또 조회한다").isTrue();
+    }
+
     /** 실제 사람의 결제 — 번호와 가맹점명을 지정한다(사전에 쌓이는 유일한 출처다). */
     private static UserPayment realPayment(String biz, String name) {
         return new UserPayment("77:real-9c2b1d04-20260805-1", 77L, "S1", 9001L,

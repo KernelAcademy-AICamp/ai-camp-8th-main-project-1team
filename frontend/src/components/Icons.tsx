@@ -1,7 +1,7 @@
 /**
  * 아이콘 — 목업(frontend-moa/components/Icons.tsx)의 SVG 심볼 세트를 스프라이트로 한 번
  * 마운트하고(<IconSprite/>), 각 자리에서 <Icon id="i-food"/>로 참조한다(토스 일러스트 톤).
- * 심볼 정의는 목업과 100% 동일하고, 화면이 늘어나며 필요해진 3개(i-bank·i-doc·i-shield)만 같은 톤으로 더했다.
+ * 심볼 정의는 목업과 100% 동일하고, 화면이 늘어나며 필요해진 4개(i-bank·i-doc·i-shield·i-dots)만 같은 톤으로 더했다.
  */
 export function Icon({ id, className = 'ci', size }: { id: string; className?: string; size?: number }) {
   // size를 주면 인라인 폭/높이로 확실히 고정(클래스가 없어도 대형으로 커지지 않게).
@@ -107,6 +107,14 @@ export function IconSprite() {
           <path d="M13.2 3.4L19 9.2h-4.2a1.6 1.6 0 0 1-1.6-1.6V3.4z" fill="#3182F6" />
           <rect x="7.2" y="12" width="8" height="1.6" rx=".8" fill="#3182F6" />
           <rect x="7.2" y="15.2" width="5.6" height="1.6" rx=".8" fill="#3182F6" />
+        </symbol>
+        {/* 무엇을 샀는지 모르는 결제 — '카테고리없음'과 '기타'가 쓴다.
+            없으면 폴백(i-shop)이 잡아 **모르는 결제가 전부 쇼핑처럼 보인다**. */}
+        <symbol id="i-dots" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8.6" fill="#E3E8EF" />
+          <circle cx="8.2" cy="12" r="1.5" fill="#8B95A1" />
+          <circle cx="12" cy="12" r="1.5" fill="#8B95A1" />
+          <circle cx="15.8" cy="12" r="1.5" fill="#8B95A1" />
         </symbol>
         <symbol id="i-shield" viewBox="0 0 24 24">
           <path d="M12 3l7 2.6v5.6c0 4.6-3 7.9-7 9.8-4-1.9-7-5.2-7-9.8V5.6L12 3z" fill="#57C785" />
