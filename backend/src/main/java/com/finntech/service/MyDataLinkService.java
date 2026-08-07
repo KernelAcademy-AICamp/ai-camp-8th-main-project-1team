@@ -384,17 +384,16 @@ public class MyDataLinkService {
     private void labelBrands(Long userId) {
         List<UserPayment> rows = userPaymentRepository.findByUserIdOrderByPaymentDateDesc(userId);
         if (rows.isEmpty()) return;
+        // **실제 사람의 결제만 본다.** 더미의 상호는 생성기가 조립한 것이라 브랜드 표에 쌓을
+        // 것이 아니고, 훑어 봐야 버려질 이름을 세는 일이라 그냥 여기서 끝낸다.
+        // (2026-08-07 운영: 전원을 훑었더니 표가 273곳용인데 4,742줄로 불었다.)
         List<String> names = rows.stream()
-                .map(UserPayment::getMerchantName)
-                .filter(n -> n != null && !n.isBlank())
-                .distinct().toList();
-        // 모델에 묻는 것은 실제 사람의 결제에서 온 이름만 — 사전과 같은 규칙이다.
-        java.util.Set<String> askable = rows.stream()
                 .filter(UserPayment::isFromRealPerson)
                 .map(UserPayment::getMerchantName)
                 .filter(n -> n != null && !n.isBlank())
-                .collect(java.util.stream.Collectors.toSet());
-        merchantBrandService.label(names, askable, BRAND_ASKS_PER_SYNC);
+                .distinct().toList();
+        if (names.isEmpty()) return;
+        merchantBrandService.label(names, java.util.Set.copyOf(names), BRAND_ASKS_PER_SYNC);
     }
 
     /**

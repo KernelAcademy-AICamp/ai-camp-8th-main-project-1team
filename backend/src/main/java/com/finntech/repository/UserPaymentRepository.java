@@ -44,6 +44,18 @@ public interface UserPaymentRepository extends JpaRepository<UserPayment, String
      */
     List<UserPayment> findByUserIdAndCategory2OrderByPaymentDateDesc(Long userId, String category2);
 
+    /**
+     * 그 상호가 <b>실제 사람의 결제</b>에 있는가 — 브랜드 표에 앉을 자격을 묻는다.
+     *
+     * <p>{@code payment_id} 의 접두가 실물 여부를 말한다({@code UserPayment.isFromRealPerson}).
+     * 더미의 상호는 생성기가 조립한 것이라 브랜드 표에 쌓을 것이 아니다.
+     */
+    @Query("""
+            select count(p) > 0 from UserPayment p
+            where p.merchantName = :merchantName and p.paymentId like '%:real-%'
+            """)
+    boolean existsRealPersonPaymentByMerchantName(@Param("merchantName") String merchantName);
+
     /** 벌크 삭제(즉시 DML) — 재연동 delete→insert 순서 역전 방지. */
     @Modifying
     @Transactional

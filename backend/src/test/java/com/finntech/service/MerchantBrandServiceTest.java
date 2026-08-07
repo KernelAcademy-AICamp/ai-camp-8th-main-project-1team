@@ -30,12 +30,19 @@ class MerchantBrandServiceTest {
 
     private final List<MerchantBrand> staging = new ArrayList<>();
     private final List<MerchantCategory> dictionary = new ArrayList<>();
+    /** 실제 사람의 결제에 있는 상호 — 이 집합 밖은 브랜드 표에 못 들어간다. */
+    private final java.util.Set<String> realNames = new java.util.HashSet<>();
+    private com.finntech.repository.UserPaymentRepository payments;
     private MerchantBrandService service;
 
     @BeforeEach
     void setUp() {
         staging.clear();
         dictionary.clear();
+        // 이 시험의 상호들은 기본적으로 실물로 본다 — 더미 차단은 별도 시험이 따로 본다.
+        realNames.clear();
+        realNames.addAll(List.of("GS25 강남역점", "스타벅스 포항공대점", "유니클로 온라인 스토어",
+                "어떤 가게", "물고기자리"));
 
         MerchantBrandRepository brands = mock(MerchantBrandRepository.class);
         when(brands.findByMerchantName(anyString())).thenAnswer(inv -> staging.stream()
@@ -56,7 +63,14 @@ class MerchantBrandServiceTest {
         when(categories.findByMerchantName(anyString())).thenAnswer(inv -> dictionary.stream()
                 .filter(m -> m.getMerchantName().equals(inv.getArgument(0))).toList());
 
-        service = new MerchantBrandService(brands, categories, mock(TempClassifierService.class), new tools.jackson.databind.ObjectMapper());
+        // **실사용자 결제에 있는 상호만** 브랜드 표에 앉는다. 대역은 `realNames` 에 담긴 것만
+        // 실물로 인정한다 — 게이트 자체를 시험할 수 있어야 하기 때문이다.
+        payments = mock(com.finntech.repository.UserPaymentRepository.class);
+        when(payments.existsRealPersonPaymentByMerchantName(anyString()))
+                .thenAnswer(inv -> realNames.contains(inv.getArgument(0)));
+
+        service = new MerchantBrandService(brands, categories, mock(TempClassifierService.class),
+                payments, new tools.jackson.databind.ObjectMapper());
     }
 
     @Test
@@ -175,6 +189,23 @@ class MerchantBrandServiceTest {
         dictionary.add(row);
 
         assertThat(service.brandOf("어떤 가게")).contains("사전브랜드");
+    }
+
+    @Test
+    @DisplayName("더미 결제의 상호는 브랜드 표에 못 들어간다 — 저장 자리에서 막는다")
+    void dummyMerchantsNeverEnterTheTable() {
+        // 게이트를 **저장하는 자리**에 둔 것이 요점이다. 부르는 쪽에만 두면 호출부가 하나 늘
+        // 때마다 빠뜨릴 수 있고, 실제로 그렇게 새어 273곳용 표가 4,860줄이 됐다(2026-08-07 운영).
+        service.remember("생성기가만든가게", "어떤브랜드");
+
+        assertThat(staging).as("실사용자 결제에 없는 상호는 안 쌓인다").isEmpty();
+        assertThat(service.brandOf("생성기가만든가게")).isEmpty();
+
+        // 사전에 그 이름의 행이 있어도 마찬가지다 — 실물 여부가 먼저다.
+        dictionary.add(new MerchantCategory("0000000099", "생성기가만든가게", "쇼핑",
+                MerchantCategory.Source.USER_CSV, null));
+        service.remember("생성기가만든가게", "어떤브랜드");
+        assertThat(dictionary.get(0).getBrand()).isNull();
     }
 
     @Test
