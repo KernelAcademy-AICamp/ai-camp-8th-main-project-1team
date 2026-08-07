@@ -295,21 +295,36 @@ public class MyDataLinkService {
      */
     private int lookupUnknownIndustries(Long userId) {
         if (!industryLookup.usable()) return 0;
+        List<UserPayment> rows = userPaymentRepository.findByUserIdOrderByPaymentDateDesc(userId);
         // 가맹점 단위로 접는다 — 정렬을 고정해 같은 입력이 같은 순서로 처리되게 한다(§4 원칙 3).
         Map<String, UserPayment> targets = new java.util.TreeMap<>();
-        for (UserPayment p : userPaymentRepository.findByUserIdOrderByPaymentDateDesc(userId)) {
+        Map<String, String> found = new java.util.LinkedHashMap<>();   // 가맹점명 → 붙일 중분류
+        for (UserPayment p : rows) {
             if (!p.isFromRealPerson()) continue;                     // 더미 번호는 등록부에 없다
             if (!com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED.equals(p.getCategory2())) continue;
             String biz = com.finntech.domain.MerchantCategory.normalize(p.getBusinessNumber());
             String name = p.getMerchantName();
             if (biz.length() != 10 || name == null || name.isBlank()) continue;
+            // **사전이 이미 아는 것부터 입힌다.** 앞선 실행이 사전에 넣어 두고 결제를 못 고쳤다면
+            // 그 결제는 영영 '카테고리없음'이다 — 사전이 아니까 다시 묻지도 않는다. 사전과 원장이
+            // 갈라진 채로 굳는 자리라, 물어보기 전에 먼저 맞춘다(2026-08-07 비아인키노).
+            var known = merchantCategoryService.lookup(biz, name)
+                    .filter(m -> !com.finntech.engine.IndustryCategoryMapper.isUnknown(m));
+            if (known.isPresent()) {
+                found.putIfAbsent(name, known.get());
+                continue;
+            }
+            // **물어볼 수 없는 곳은 시도 이력도 만들지 않는다.** 예전에는 여기를 그냥 통과시키고
+            // 조회 함수 안에서 걸렀는데, 그 사이에 이력 행이 만들어져 PG 가맹점마다 빈 행이
+            // 쌓이고 동기화마다 다시 쓰였다(2026-08-07 실측: 6곳). 답을 못 얻을 것이 확실한
+            // 곳에 "물어봤다"를 적는 것은 기록이 아니라 잡음이다.
+            if (!industryLookup.askable(biz)) continue;
             if (!merchantCategoryService.needsWork(biz, name)) continue;   // 이미 확정·종결
             targets.putIfAbsent(biz + '' + name, p);
         }
-        if (targets.isEmpty()) return 0;
-
+        // **물어볼 곳이 없어도 여기서 끝내지 않는다** — 사전이 아는 것을 입히는 일이 남았다.
         LocalDateTime now = LocalDateTime.now(clock);
-        int asked = 0, resolved = 0;
+        int asked = 0;
         for (UserPayment p : targets.values()) {
             if (asked >= industryLookup.maxPerSync()) break;
             String biz = com.finntech.domain.MerchantCategory.normalize(p.getBusinessNumber());
@@ -323,13 +338,49 @@ public class MyDataLinkService {
                     .filter(m -> !com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED.equals(m))
                     .orElse(null);
             if (mid == null) continue;                                       // 소비 업종이 아니다 → LLM 이 받는다
-            if (merchantCategoryService.rememberRegistry(p, mid).isPresent()) resolved++;
+            if (merchantCategoryService.rememberRegistry(p, mid).isPresent()) {
+                found.put(p.getMerchantName(), mid);
+            }
         }
+        int resolved = applyResolved(rows, found);
         if (asked > 0) {
-            log.info("등록 업종 조회 — userId={} 물어본 곳 {}, 분류된 곳 {}, 남은 곳 {}",
-                    userId, asked, resolved, Math.max(0, targets.size() - asked));
+            log.info("등록 업종 조회 — userId={} 물어본 곳 {}, 분류된 가맹점 {}, 고쳐진 결제 {}건, 남은 곳 {}",
+                    userId, asked, found.size(), resolved, Math.max(0, targets.size() - asked));
         }
         return resolved;
+    }
+
+    /**
+     * 새로 알아낸 분류를 <b>결제와 소비에 실제로 입힌다</b> — 사전에만 적으면 화면은 그대로다.
+     *
+     * <p>이것이 빠져 있었다. 조회가 '생활'을 알아내 사전에 넣었는데 결제 원장은 여전히
+     * '카테고리없음'이었다(2026-08-07 실측 — 비아인키노). 리포트·판정이 읽는 것은
+     * {@link Consumption} 이고 그 카테고리는 <b>적재할 때 박힌 값</b>이라, 짝을 함께 고쳐야
+     * 반영된다. 사람이 화면에서 확정할 때 {@code MerchantCategoryController} 가 하는 일과 같다.
+     *
+     * <p><b>사람이 이미 정한 결제는 건드리지 않는다.</b> 조회는 사실이지만 "이 결제가 무엇에 쓴
+     * 돈인가"에 대한 답은 사용자가 위다.
+     *
+     * @return 고쳐진 결제 건수
+     */
+    private int applyResolved(List<UserPayment> rows, Map<String, String> found) {
+        if (found.isEmpty()) return 0;
+        Map<String, Category> categories = new java.util.HashMap<>();
+        int fixed = 0;
+        for (UserPayment p : rows) {
+            String mid = found.get(p.getMerchantName());
+            if (mid == null || mid.equals(p.getCategory2())) continue;
+            if ("USER".equals(p.getCategory2Source())) continue;      // 사람의 판단이 위다
+            p.confirmCategory2(mid, "REGISTRY");
+            Category category = categories.computeIfAbsent(mid, code ->
+                    categoryRepository.findByCode(code)
+                            .orElseGet(() -> categoryRepository.save(new Category(code, code))));
+            for (Consumption c : consumptionRepository.findBySourcePaymentId(p.getPaymentId())) {
+                c.reclassify(category);
+            }
+            fixed++;
+        }
+        return fixed;
     }
 
     /**
@@ -443,9 +494,18 @@ public class MyDataLinkService {
         }
         if (added > 0) {
             reportRepository.deleteByUserId(userId);   // 새 결제 반영 위해 리포트 캐시 무효화
-            // 새 결제가 있을 때만 조회한다. 증분은 5분마다 도는데 대개 0건이라, 조건 없이 부르면
-            // 아무 새 가맹점도 없는 채로 바깥 서버를 하루 288번 두드린다.
             observeBusinessNumbers(userId);
+        }
+        // **조건은 '새 결제'가 아니라 '할 일'이다.** 새 결제가 있을 때만 조회하면 이미 쌓인
+        // 미분류는 영영 안 물어본다 — 새 결제가 안 오는 한 계속 '카테고리없음'으로 남는다
+        // (2026-08-07 실측: 실사용자 미분류 53곳이 그 상태였다. 통로를 켜고 동기화를 돌려도
+        // `newPayments:0` 이라 아무것도 안 일어났다).
+        //
+        // 그래도 5분마다 바깥 서버를 두드리지는 않는다. 미분류 개수 하나로 먼저 걸러(값싼 질의)
+        // 할 일이 없으면 결제를 읽지도 않고, 물어본 가맹점은 사전에 시도 이력이 남아 다시 묻지
+        // 않는다. 그래서 반복 호출은 사전이 차는 만큼 저절로 마른다.
+        if (userPaymentRepository.countByUserIdAndCategory2(
+                userId, com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED) > 0) {
             lookupUnknownIndustries(userId);
         }
         // 자동 동기화 배치가 5분마다 이 메서드를 부른다. 대부분 0건이라 INFO로 남기면 로그가 그것만으로 찬다.

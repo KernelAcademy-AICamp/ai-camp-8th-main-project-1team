@@ -122,12 +122,23 @@ public class IndustryLookupService {
      * 둘 다 기록할 값이 있다.
      */
     public Optional<String> industryOfMerchant(String businessNumber) {
-        if (!usable()) return Optional.empty();
+        if (!askable(businessNumber)) return Optional.empty();
+        return industryOf(businessNumber.replaceAll("\\D", ""));
+    }
+
+    /**
+     * <b>이 번호에 물어볼 수 있는가</b> — 방어벽만 따로 뗀 것. 바깥 호출은 하지 않는다.
+     *
+     * <p>부르는 쪽이 <b>시도 이력을 만들기 전에</b> 이것부터 물을 수 있어야 한다. 안 그러면
+     * 답을 못 얻을 것이 확실한 PG 가맹점마다 빈 이력 행이 쌓이고 동기화마다 다시 쓰인다
+     * (2026-08-07 실측: 6곳). 물어보지 않은 것에 "물어봤다"를 적는 것은 기록이 아니라 잡음이다.
+     */
+    public boolean askable(String businessNumber) {
+        if (!usable()) return false;
         String biz = businessNumber == null ? "" : businessNumber.replaceAll("\\D", "");
-        if (biz.length() != 10) return Optional.empty();
-        if (mapper.isPaymentAgency(biz) || mapper.isMultiBusiness(biz)) return Optional.empty();
-        if (!kinds.relaxationAllowed(biz)) return Optional.empty();
-        return industryOf(biz);
+        if (biz.length() != 10) return false;
+        if (mapper.isPaymentAgency(biz) || mapper.isMultiBusiness(biz)) return false;
+        return kinds.relaxationAllowed(biz);
     }
 
     /**

@@ -22,6 +22,18 @@ public interface UserPaymentRepository extends JpaRepository<UserPayment, String
     List<UserPayment> findTop100ByUserIdAndCategory2OrderByPaymentDateDesc(Long userId, String category2);
     boolean existsById(String paymentId);
 
+    /**
+     * <b>아직 분류가 안 붙은 결제가 남았는가</b> — 등록 업종 조회를 시작할지 정하는 값싼 물음.
+     *
+     * <p>증분 동기화는 5분마다 도는데 대개 새 결제가 없다. 그렇다고 조회를 <i>새 결제가 있을
+     * 때만</i> 돌리면 <b>이미 쌓인 미분류는 영영 안 물어본다</b> — 새 결제가 안 오는 한 그 결제들은
+     * 계속 '카테고리없음'으로 남는다(2026-08-07 실측: 실사용자 미분류 53곳이 그 상태였다).
+     *
+     * <p>그래서 조건을 "새 결제"가 아니라 "할 일"로 바꾸고, 그 판단을 결제 전체를 읽지 않고
+     * 개수 하나로 한다. 할 일이 없으면 여기서 끝나고 아무것도 읽지 않는다.
+     */
+    long countByUserIdAndCategory2(Long userId, String category2);
+
     /** 벌크 삭제(즉시 DML) — 재연동 delete→insert 순서 역전 방지. */
     @Modifying
     @Transactional
