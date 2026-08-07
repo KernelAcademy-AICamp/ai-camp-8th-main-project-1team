@@ -160,6 +160,15 @@ public class MerchantCategory {
     @Column(name = "last_attempt_at")
     private LocalDateTime lastAttemptAt;
 
+    /**
+     * 가맹점명에서 뽑은 <b>브랜드</b> — {@code GS25 강남역점} 의 {@code GS25}.
+     *
+     * <p>사전에 들어온 가맹점은 브랜드도 여기 함께 산다. 대기 장소({@code merchant_brand})에서
+     * 옮겨 오며, 그러면 그 브랜드를 다시 물어볼 일이 없다.
+     */
+    @Column(name = "brand", length = 60)
+    private String brand;
+
     protected MerchantCategory() {
     }
 
@@ -238,6 +247,13 @@ public class MerchantCategory {
     /** 더 시도할 필요가 없는 가맹점인가 — 사람이 고치기 전까지 조회도 질문도 멈춘다. */
     public boolean settledAsOther() {
         return Source.UNRESOLVED.name().equals(source);
+    }
+
+    public String getBrand() { return brand; }
+
+    /** 대기 장소에서 옮겨 올 때. 이미 있으면 덮지 않는다 — 먼저 들어온 것이 사람의 손일 수 있다. */
+    public void adoptBrand(String value) {
+        if (brand == null || brand.isBlank()) this.brand = value;
     }
 
     public String getRegistryIndustry() { return registryIndustry; }
