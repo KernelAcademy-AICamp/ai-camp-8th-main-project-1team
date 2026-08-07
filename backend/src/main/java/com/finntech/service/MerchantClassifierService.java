@@ -38,7 +38,7 @@ public class MerchantClassifierService {
      * 한 번에 물어보는 가맹점 수. 가맹점명은 짧아 한 요청에 여럿을 담을 수 있고,
      * 건당 호출하면 명세서 한 장에 수백 번을 부르게 된다.
      */
-    private static final int BATCH = 40;
+    static final int BATCH = 40;
 
     /**
      * 한 요청에서 LLM 을 부를 수 있는 최대 횟수. {@code EligibilityLabelService} 와 같은 장치다 —

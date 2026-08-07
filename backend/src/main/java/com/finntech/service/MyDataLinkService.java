@@ -43,6 +43,8 @@ public class MyDataLinkService {
     private final BusinessNumberKindService businessNumberKindService;
     /** 분류 순위 ②-b — 사업자등록번호로 등록 업종을 조회한다. 기본은 꺼져 있다. */
     private final IndustryLookupService industryLookup;
+    /** 분류 순위 ③ — 40곳이 쌓이면 묶어서 묻는다. 화면 진입은 임계값 1 로 같은 것을 부른다. */
+    private final MerchantAskService merchantAskService;
     private final UserCardCompanyRepository userCardCompanyRepository;
     private final UserBankRepository userBankRepository;
     private final ReportRepository reportRepository;
@@ -57,6 +59,7 @@ public class MyDataLinkService {
                              MerchantCategoryService merchantCategoryService,
                              BusinessNumberKindService businessNumberKindService,
                              IndustryLookupService industryLookup,
+                             MerchantAskService merchantAskService,
                              UserCardCompanyRepository userCardCompanyRepository,
                              UserBankRepository userBankRepository, ReportRepository reportRepository,
                              java.time.Clock clock,
@@ -71,6 +74,7 @@ public class MyDataLinkService {
         this.merchantCategoryService = merchantCategoryService;
         this.businessNumberKindService = businessNumberKindService;
         this.industryLookup = industryLookup;
+        this.merchantAskService = merchantAskService;
         this.userCardCompanyRepository = userCardCompanyRepository;
         this.userBankRepository = userBankRepository;
         this.reportRepository = reportRepository;
@@ -507,6 +511,15 @@ public class MyDataLinkService {
         if (userPaymentRepository.countByUserIdAndCategory2(
                 userId, com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED) > 0) {
             lookupUnknownIndustries(userId);
+            // **③ LLM 은 40곳이 쌓여야 부른다.** 조회(②-b)와 달리 임계값을 두는 이유는 값이
+            // 묶음 크기에 좌우되기 때문이다 — 프롬프트의 76%가 업종 목록(385종)이라 1곳을 묻든
+            // 40곳을 묻든 값이 거의 같고, 1곳씩 40번 부르면 40배가 든다. 조회는 번호 하나만
+            // 보내므로 그런 낭비가 없어 발견 즉시 한다.
+            //
+            // 기다리는 동안 화면은 '카테고리없음'이고 그것이 정확한 표현이다(낭비 판정에서도
+            // 빠진다). 그리고 기다림이 눈에 띄는 순간 — 사용자가 화면을 열 때 — 에는 임계값이
+            // 1 이라 남은 것을 전부 몰아 묻는다. 그래서 체감 지연이 없다.
+            merchantAskService.ask(userId, MerchantAskService.BACKGROUND_MIN);
         }
         // 자동 동기화 배치가 5분마다 이 메서드를 부른다. 대부분 0건이라 INFO로 남기면 로그가 그것만으로 찬다.
         if (added > 0) log.info("마이데이터 증분 동기화 — userId={} 신규 결제 {}건", userId, added);
