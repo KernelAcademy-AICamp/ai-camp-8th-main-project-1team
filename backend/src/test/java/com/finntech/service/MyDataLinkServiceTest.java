@@ -133,7 +133,8 @@ class MyDataLinkServiceTest {
                 mock(com.finntech.repository.ConsumptionRepository.class),
                 mock(com.finntech.repository.CategoryRepository.class),
                 emptyDictionary(), mock(MerchantClassifierService.class),
-                offTempClassifier(), java.time.Clock.systemDefaultZone());
+                offTempClassifier(), mock(MerchantBrandService.class),
+                java.time.Clock.systemDefaultZone());
     }
 
     /**
@@ -161,8 +162,14 @@ class MyDataLinkServiceTest {
         var kindRepo = mock(com.finntech.repository.BusinessNumberKindRepository.class);
         when(kindRepo.findById(org.mockito.ArgumentMatchers.anyString()))
                 .thenReturn(java.util.Optional.empty());
+        var brandRepo = mock(com.finntech.repository.MerchantBrandRepository.class);
+        when(brandRepo.findByMerchantName(org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(java.util.Optional.empty());
         return new MerchantCategoryService(repo,
                 new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
-                new BusinessNumberKindService(kindRepo, 5, 2, 0.10));
+                new BusinessNumberKindService(kindRepo, 5, 2, 0.10),
+                new MerchantBrandService(brandRepo,
+                        mock(com.finntech.repository.MerchantCategoryRepository.class),
+                        mock(TempClassifierService.class)));
     }
 }

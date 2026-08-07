@@ -53,4 +53,12 @@ public interface MerchantCategoryRepository extends JpaRepository<MerchantCatego
                      END ASC, m.id ASC
             """)
     List<MerchantCategory> findByNameOnly(@Param("merchantName") String merchantName);
+
+    /**
+     * <b>번호를 가리지 않고</b> 그 상호의 사전 행들 — 브랜드를 적을 자리를 찾을 때 쓴다.
+     *
+     * <p>{@link #findByNameOnly} 와 다르다. 그쪽은 번호가 빈 행(해외 가맹점)만 보는데,
+     * 브랜드는 번호와 무관하게 <b>이름에 붙는 성질</b>이라 번호가 있든 없든 같은 상호면 같다.
+     */
+    List<MerchantCategory> findByMerchantName(String merchantName);
 }
