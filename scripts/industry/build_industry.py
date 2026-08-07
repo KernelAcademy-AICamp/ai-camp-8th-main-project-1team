@@ -11,6 +11,7 @@
 import collections
 import json
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -76,6 +77,38 @@ def load_mid():
     return mid, names, 실재
 
 
+def fine_name_index(실재):
+    """**세세분류 이름 → 국세청 업종코드들.** 바깥 조회처의 답을 우리 번호 체계로 옮기는 칸이다.
+
+    사업자등록번호로 업종을 물어 오는 조회처는 KSIC(한국표준산업분류) 세대의 이름을 돌려주고,
+    우리 대조표는 국세청 업종코드 세대다. 번호끼리는 겹치지 않아 바로 못 잇는데,
+    **이름은 이어진다** — 국세청 업종코드표의 `세세분류` 칸이 KSIC 세세분류 이름을 그대로 쓴다.
+    (실측 2026-08-07: 조회처가 답한 업종명 10종 중 9종이 이 칸에 그대로 있었다.)
+
+    그래서 이름을 정규화해 색인한다. 세대가 다르면 띄어쓰기·가운뎃점만 달라지는 일이 잦다
+    (`그 외 기타` ↔ `그외 기타`, `정보 제공업` ↔ `정보제공업`). 글자를 지워 맞추면 붙는다.
+
+    코드는 **목록**이다. 한 이름에 국세청 코드가 여럿 달릴 수 있어(같은 업종을 규모로 쪼갠 것),
+    중분류가 하나로 모일 때만 쓰고 갈리면 쓰지 않는다 — 그 판단은 런타임이 한다.
+    여기는 `nts-mid.tsv` 에 없는 코드까지 **전부** 담는다. 이 색인의 임무는 분류가 아니라
+    번호 옮기기이고, 중분류가 있는지는 다음 칸이 판단할 일이기 때문이다.
+    """
+    index = collections.defaultdict(list)
+    for code, row in sorted(실재.items()):
+        key = normalize_industry_name(row['세세분류'])
+        if key:
+            index[key].append(code)
+    return {k: v for k, v in sorted(index.items())}
+
+
+def normalize_industry_name(name):
+    """이름 결합용 정규화 — **자바 쪽과 글자 하나까지 같아야 한다**(IndustryCategoryMapper).
+
+    한쪽만 고치면 색인은 멀쩡한데 아무것도 안 붙는 조용한 실패가 난다.
+    """
+    return re.sub(r'[\s·‧ㆍ･·․.,()（）\[\]/\\-]', '', name or '')
+
+
 def load_pg():
     """PG·간편결제 사업자번호. 하이픈 없는 10자리로 정규화해 둔다(원장이 그 형태다)."""
     pg, bad = {}, []
@@ -130,6 +163,7 @@ def discretionary_by_mid(mid_of):
 
 def main():
     mid, names, 실재 = load_mid()
+    fine = fine_name_index(실재)
     pg = load_pg()
     multi = load_multi_business()
     disc = discretionary_by_mid(mid)
@@ -152,8 +186,16 @@ def main():
                       '"이 가맹점은 어느 업종인가"를 답하게 하려고 둔다 — 그러면 축 배정은 '
                       '이 표가 하고 모델은 업종의 사실만 말한다(마스터 §4-1). '
                       '이름 하나가 두 중분류에 걸치면 빌드가 실패하므로 1:1 이 보장된다.'),
+        '_fineNameNote': ('**세세분류 이름 → 국세청 업종코드들.** 바깥 조회처(사업자등록번호로 등록 업종을 '
+                          '돌려주는 곳)의 답을 우리 번호 체계로 옮기는 칸이다. 조회처는 KSIC 세대의 이름을 '
+                          '주고 우리는 국세청 세대라 번호끼리는 못 잇는데, 국세청 업종코드표의 `세세분류` 칸이 '
+                          'KSIC 세세분류 이름을 그대로 써서 **이름은 이어진다**(2026-08-07 실측: 조회된 업종명 '
+                          '19종 중 18종이 이 칸에 있었다). 키는 띄어쓰기·가운뎃점·괄호를 지운 형태이며 '
+                          '자바 쪽 정규화와 글자 하나까지 같아야 한다. 중분류가 있는지는 여기서 따지지 않는다 — '
+                          '이 칸의 임무는 번호 옮기기이고, 판단은 midByIndustry 가 한다.'),
         'midByIndustry': dict(sorted(mid.items())),
         'midByIndustryName': dict(sorted(names.items())),
+        'ntsByFineName': fine,
         'pgBusinessNumbers': dict(sorted(pg.items())),
         'multiBusinessNumbers': dict(sorted(multi.items())),
         'discretionaryByMid': disc,
@@ -163,7 +205,8 @@ def main():
     for path in (os.path.join(CATALOG, 'industry-mid.json'), os.path.join(BACKEND, 'industry-mid.json')):
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(out, f, ensure_ascii=False, indent=1)
-        print(f'  {os.path.relpath(path, ROOT)} — 소비 코드 {len(mid)}개 · 업종명 {len(names)}종 · PG {len(pg)}곳 · 복합 {len(multi)}곳 · 필수 {len(essential)}개')
+        print(f'  {os.path.relpath(path, ROOT)} — 소비 코드 {len(mid)}개 · 업종명 {len(names)}종 · '
+              f'세세분류 색인 {len(fine)}종 · PG {len(pg)}곳 · 복합 {len(multi)}곳 · 필수 {len(essential)}개')
 
     # 맥락이 실제로 존재하는 코드만 담는다 — 없는 중분류에 페르소나 비중을 주면 그만큼 사라진다.
     contexts = json.load(open(CONTEXTS, encoding='utf-8'))['contexts']
