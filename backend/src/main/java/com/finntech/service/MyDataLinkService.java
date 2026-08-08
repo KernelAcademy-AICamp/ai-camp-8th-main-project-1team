@@ -345,7 +345,7 @@ public class MyDataLinkService {
         if (!industryLookup.usable()) return;
         var rows = merchantCategoryService.missingAddress(industryLookup.maxPerSync());
         if (rows.isEmpty()) return;
-        int filled = 0, asked = 0;
+        int filled = 0, asked = 0, missed = 0;
         for (MerchantCategory row : rows) {
             String biz = row.getBusinessNumber();
             if (!industryLookup.askable(biz)) continue;      // PG·복합은 물어도 소용없다
@@ -353,11 +353,19 @@ public class MyDataLinkService {
             var found = industryLookup.lookup(biz);
             industryLookup.pause();                          // 남의 서버를 연달아 두드리지 않는다
             String addr = found.map(IndustryLookupService.Found::address).orElse(null);
-            if (addr == null) continue;
+            if (addr == null) {
+                // **물었는데 없더라를 적는다.** 안 적으면 회차마다 같은 번호를 다시 묻는다 —
+                // 조회처에 주소칸이 없는 사업자가 실재해서(2026-08-08 운영 7곳) 성공이 영영
+                // 안 오고, 하루 2,016회가 남의 서버로 헛나갔다.
+                selfProvider.getObject().noteAddressMiss(row.getId());
+                missed++;
+                continue;
+            }
             if (selfProvider.getObject().storeAddress(row.getId(), addr)) filled++;
         }
         if (asked > 0) {
-            log.info("가맹점 주소 채우기 — 대상 {}, 물어본 곳 {}, 채워진 곳 {}", rows.size(), asked, filled);
+            log.info("가맹점 주소 채우기 — 대상 {}, 물어본 곳 {}, 채워진 곳 {}, 없던 곳 {}",
+                    rows.size(), asked, filled, missed);
         }
     }
 
@@ -366,6 +374,13 @@ public class MyDataLinkService {
     public boolean storeAddress(Long rowId, String address) {
         return merchantCategoryRepository.findById(rowId)
                 .map(r -> r.noteAddress(address)).orElse(false);
+    }
+
+    /** 물었는데 주소가 없더라를 적는다 — 같은 번호를 회차마다 다시 묻지 않기 위해서다. */
+    @Transactional
+    public void noteAddressMiss(Long rowId) {
+        merchantCategoryRepository.findById(rowId)
+                .ifPresent(r -> r.noteAddressMiss(LocalDateTime.now(clock)));
     }
 
     /** 연동의 <b>적재 부분</b> — DB 만 만진다. 바깥 서버를 부르는 일은 여기 들어오지 않는다. */

@@ -170,6 +170,22 @@ public class MerchantCategory {
     private LocalDateTime lastAttemptAt;
 
     /**
+     * 주소를 물었는데 <b>조회처에 없더라</b>를 센 횟수(V27).
+     *
+     * <p>{@code lookupAttempts} 와 따로 세는 이유는 <b>끝나는 조건이 다르기 때문</b>이다. 업종
+     * 조회는 답을 받으면 {@code registryIndustry} 가 차서 저절로 안 물어보게 되지만, 주소는
+     * <b>답이 없는 것이 정상인 번호</b>가 있다 — 조회처에 주소칸이 비어 있거나(롯데아울렛
+     * 서울역점) 사업자 자체가 안 나온다. 그런 번호는 성공이 영영 안 오므로 세어 두지 않으면
+     * 회차마다 다시 묻는다.
+     *
+     * <p>실제로 그랬다(2026-08-08 운영): 7곳이 5분마다 헛물을 켜 하루 2,016회가 남의 서버로
+     * 나갔다. {@value #GIVE_UP_AFTER} 회에 닿으면 {@code findMissingAddress} 가 그 행을 빼므로
+     * 멎는다. 주소만 안 채워질 뿐 업종 조회·분류는 이 값을 보지 않는다.
+     */
+    @Column(name = "address_misses", nullable = false)
+    private int addressMisses;
+
+    /**
      * 가맹점명에서 뽑은 <b>브랜드</b> — {@code GS25 강남역점} 의 {@code GS25}.
      *
      * <p>사전에 들어온 가맹점은 브랜드도 여기 함께 산다. 대기 장소({@code merchant_brand})에서
@@ -282,6 +298,18 @@ public class MerchantCategory {
         this.address = value.length() > 200 ? value.substring(0, 200) : value;
         return true;
     }
+    /**
+     * 주소를 물었는데 없었다고 적는다 — {@value #GIVE_UP_AFTER} 회면 백필이 그 행을 놓는다.
+     *
+     * <p>물어보지도 않고 적으면 안 된다. PG·복합 번호는 {@code askable} 이 먼저 막으므로 여기
+     * 들어오지 않는다({@code IndustryLookupService.askable} 의 같은 원칙).
+     */
+    public void noteAddressMiss(LocalDateTime at) {
+        this.addressMisses++;
+        this.lastAttemptAt = at;
+    }
+
+    public int getAddressMisses() { return addressMisses; }
     public int getLookupAttempts() { return lookupAttempts; }
     public int getLlmAttempts() { return llmAttempts; }
     public LocalDateTime getLastAttemptAt() { return lastAttemptAt; }

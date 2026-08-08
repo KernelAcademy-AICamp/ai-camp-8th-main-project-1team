@@ -70,9 +70,14 @@ public interface MerchantCategoryRepository extends JpaRepository<MerchantCatego
      *
      * <p>업종 조회는 <i>미분류</i> 결제만 훑으므로, 이미 분류가 끝난 가맹점은 주소를 얻을 기회가
      * 없다. 그래서 따로 훑어 회차마다 조금씩 채운다.
+     *
+     * <p><b>몇 번 물어도 없던 번호는 뺀다.</b> 조회처에 주소칸이 비어 있는 사업자가 있어(2026-08-08
+     * 운영 7곳) 그런 행은 성공이 영영 안 오는데, 빼지 않으면 회차마다 다시 물어 하루 2,016회가
+     * 헛나갔다. {@link MerchantCategory#GIVE_UP_AFTER} 회에서 멎는다.
      */
     @Query("select m from MerchantCategory m "
             + "where m.address is null and m.businessNumber <> '' "
+            + "and m.addressMisses < " + MerchantCategory.GIVE_UP_AFTER + " "
             + "order by m.id")
     List<MerchantCategory> findMissingAddress(org.springframework.data.domain.Pageable page);
 
