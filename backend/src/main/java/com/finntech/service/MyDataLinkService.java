@@ -707,8 +707,9 @@ public class MyDataLinkService {
                 com.finntech.domain.MerchantCategory.normalize(businessNumber));
         if (known.isPresent()) {
             MerchantCategory row = known.get();
+            // 좌표는 조회처가 안 준다 — 주소만 있고 lat/lon 은 없다. online 은 원시형이라 null 을 못 넣는다.
             return new MyDataResponses.MerchantView(null, row.getCategory2(), businessNumber,
-                    row.getMerchantName(), row.getAddress(), null, null, null);
+                    row.getMerchantName(), row.getAddress(), null, null, false);
         }
         MyDataResponses.MerchantView m = myDataClient.findMerchant(businessNumber);
         if (m == null) return null;
