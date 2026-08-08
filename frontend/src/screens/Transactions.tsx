@@ -370,9 +370,16 @@ export function Transactions() {
                           <button type="button"
                             onClick={(e) => { e.stopPropagation(); setEditing(editing === p.paymentId ? null : p.paymentId); }}
                             className="sp-tag"
+                            /* **추정은 호박색이다.** 브랜드색(초록)은 "확인됨·좋음"으로 읽히는데
+                               이 배지의 뜻은 정반대다 — <b>아직 확정이 아니니 봐 달라</b>. 주목을
+                               끌어야 할 것이 안심시키는 색이면 신호가 뒤집힌다(2026-08-08).
+                               미분류 정리 화면과 같은 조합(#FFF4E5 + --amber-t = .tag-warn)을 쓴다.
+                               **무료·유료 통로를 색으로 가르지 않는다.** 실측 정확도가 73% 대 75% 로
+                               사실상 같아 전할 신뢰도 차이가 없고, 사용자가 할 일도 같다(보고 확정한다).
+                               어느 통로가 답했는지는 category2_source 에 남아 관측으로 답한다. */
                             style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                                     background: guess ? 'var(--blue-weak)' : 'var(--bg2)',
-                                     color: guess ? 'var(--blue-t)' : 'var(--t3)' }}>
+                                     background: guess ? '#FFF4E5' : 'var(--bg2)',
+                                     color: guess ? 'var(--amber-t)' : 'var(--t3)' }}>
                             {guess ? `AI 추정 · ${catLabel(guess)}` : catLabel(label)} ✎
                           </button>
                         );
