@@ -37,16 +37,20 @@ public class ConsumptionAnalysisController {
     private final ProfileBuilder profileBuilder;
     private final CutCandidateService cutCandidateService;
     private final NarrativeService narrativeService;
+    /** 저장된 문장을 주고, 낡았으면 큐에 올린다 — 화면은 모델을 기다리지 않는다. */
+    private final com.finntech.service.NarrativeCacheService narratives;
     private final Clock clock;
 
     public ConsumptionAnalysisController(RecurringPaymentDetector recurringDetector, PatternAnalyzer patternAnalyzer,
                                          ProfileBuilder profileBuilder, CutCandidateService cutCandidateService,
-                                         NarrativeService narrativeService, Clock clock) {
+                                         NarrativeService narrativeService,
+                                         com.finntech.service.NarrativeCacheService narratives, Clock clock) {
         this.recurringDetector = recurringDetector;
         this.patternAnalyzer = patternAnalyzer;
         this.profileBuilder = profileBuilder;
         this.cutCandidateService = cutCandidateService;
         this.narrativeService = narrativeService;
+        this.narratives = narratives;
         this.clock = clock;
     }
 
@@ -67,7 +71,11 @@ public class ConsumptionAnalysisController {
     @GetMapping("/profile/narrative")
     public NarrativeService.Narrative profileNarrative(@RequestParam Long userId,
                                                        @RequestParam(defaultValue = "90") int days) {
-        return narrativeService.summarizeProfile(profileBuilder.build(userId, now(), days));
+        // 저장된 문장을 곧바로 준다 — 낡았으면 큐에 올리고, 새 문장은 다음에 열 때 보인다.
+        var req = narrativeService.profileRequest(userId, profileBuilder.build(userId, now(), days));
+        var shown = narratives.show(req);
+        narratives.enqueueIfNeeded(req);
+        return new NarrativeService.Narrative(shown.body(), shown.source());
     }
 
     /** ⑤ 절약 후보 권유 문장(LLM, 온디맨드). */
@@ -78,7 +86,10 @@ public class ConsumptionAnalysisController {
                 .filter(x -> x.category2().equals(category2))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("절약 후보가 아닙니다: " + category2));
-        return narrativeService.explainCutCandidate(c);
+        var req = narrativeService.cutCandidateRequest(userId, c);
+        var shown = narratives.show(req);
+        narratives.enqueueIfNeeded(req);
+        return new NarrativeService.Narrative(shown.body(), shown.source());
     }
 
     /** ⑤ 후보 하나를 "줄이겠다"고 선택 → 추적 시작. */

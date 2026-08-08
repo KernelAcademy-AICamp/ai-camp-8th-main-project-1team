@@ -53,6 +53,8 @@ public class MerchantCategoryController {
     private final IndustryCategoryMapper mapper;
     /** 사업자번호가 한 사업인가 여러 사업인가(V16). 확정이 그 판정을 흔들 수 있다. */
     private final com.finntech.service.BusinessNumberKindService kinds;
+    /** 소비 원장을 고치면 리포트 캐시가 낡는다 — 그 자리에서 깨기 위해 든다. */
+    private final com.finntech.repository.ReportRepository reports;
     private final java.time.Clock clock;
 
     public MerchantCategoryController(UserPaymentRepository payments,
@@ -63,6 +65,7 @@ public class MerchantCategoryController {
                                       com.finntech.service.MerchantAskService ask,
                                       IndustryCategoryMapper mapper,
                                       com.finntech.service.BusinessNumberKindService kinds,
+                                      com.finntech.repository.ReportRepository reports,
                                       java.time.Clock clock) {
         this.payments = payments;
         this.consumptions = consumptions;
@@ -72,6 +75,7 @@ public class MerchantCategoryController {
         this.ask = ask;
         this.mapper = mapper;
         this.kinds = kinds;
+        this.reports = reports;
         this.clock = clock;
     }
 
@@ -81,9 +85,17 @@ public class MerchantCategoryController {
      * <p>추정은 {@code category2} 를 덮지 않는다 — 화면이 "AI 추정" 배지로 보여 주고 사람이
      * 확인해야 확정이 된다. 물어볼 대상은 {@link MerchantClassifierService#worthAsking} 이 고른다
      * (PG 상호는 물어봐도 소용없으므로 뺀다).
+     *
+     * <p><b>트랜잭션을 열지 않는다.</b> {@code ask} 는 안에서 추리기·질의·입히기로 갈라져 있고
+     * 가운데(모델 질의)만 트랜잭션 밖에서 돌게 되어 있는데, 여기에 {@code @Transactional} 이
+     * 붙으면 그 셋이 <b>전부 이 트랜잭션에 합류해</b> 분리가 통째로 무의미해진다. 그리고 이
+     * 진입로가 가장 나쁘다 — 임계값이 1({@code ON_DEMAND_MIN})이라 남은 것을 전부 몰아 묻기
+     * 때문이다(무료 6~10초 × N + 유료 30초+). 2026-08-07 감사에서 여기만 남아 있었다.
+     *
+     * <p>돌려받는 결제 행은 영속 상태가 아니지만 상관없다 — 값만 읽어 그대로 내보낸다
+     * ({@code UserPayment} 에는 지연 로딩할 연관이 없다).
      */
     @GetMapping("/unclassified")
-    @Transactional
     public Map<String, Object> unclassified(@RequestParam Long userId) {
         // **묻는 일은 서비스가 한다.** 백그라운드 동기화도 같은 것을 부르는데 임계값만 다르다
         // (거긴 40곳, 여긴 1곳). 두 벌로 적으면 한쪽만 고쳐져 조용히 갈라진다.
@@ -179,6 +191,11 @@ public class MerchantCategoryController {
             }
         }
 
+        // **소비 원장을 고쳤으면 리포트 캐시를 깬다.** 리포트는 (사용자, 연월) 로 캐시되는데
+        // 그 값은 `Consumption` 의 카테고리를 집계한 것이다. 여기서 고치고 캐시를 안 깨면
+        // 사용자는 "고쳤다"는 응답을 받고도 리포트에서는 옛 숫자를 계속 본다(2026-08-07 재감사).
+        if (moved > 0 || alsoFixed > 0) reports.deleteByUserId(userId);
+
         return Map.of("paymentId", paymentId,
                       "category2", request.category2(),
                       "reclassifiedConsumptions", moved,
@@ -201,10 +218,17 @@ public class MerchantCategoryController {
         Map<String, String> observed = new LinkedHashMap<>();
         Map<String, String> confirmed = new LinkedHashMap<>();
         for (UserPayment p : payments.findByUserIdOrderByPaymentDateDesc(userId)) {
+            // **더미의 "맞아요"는 전역 판정 표에 안 들어간다.** 사전 쪽은 `confirmFrom` 이 막는데
+            // 이쪽 문이 열려 있었다 — 데모로 둘러보다 누른 것이 실사용자의 완화 판정을 정하게
+            // 된다(2026-08-07 감사). 결제 자체의 분류는 그대로 바뀐다. 화면은 정상이어야 한다.
+            if (!p.isFromRealPerson()) continue;
             if (!businessNumber.equals(p.getBusinessNumber())) continue;
             String name = p.getMerchantName();
             if (name == null || name.isBlank()) continue;
-            String mid = IndustryCategoryMapper.UNCLASSIFIED.equals(p.getCategory2())
+            // **'기타'는 분류가 아니다** — 관측하는 자리는 여기와 `observeBusinessNumbers` 둘이고
+            // 둘이 같은 규칙을 써야 한다. '기타'를 중분류로 세면 종결 하나가 그 번호를 영구
+            // MULTI 로 만들어 완화가 죽는다(2026-08-07 재감사).
+            String mid = IndustryCategoryMapper.isUnknown(p.getCategory2())
                     ? null : p.getCategory2();
             observed.put(name, mid);
             if ("USER".equals(p.getCategory2Source())) confirmed.put(name, mid);

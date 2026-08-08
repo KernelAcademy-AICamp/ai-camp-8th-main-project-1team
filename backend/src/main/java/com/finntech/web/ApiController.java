@@ -41,6 +41,8 @@ public class ApiController {
     private final NarrativeService narrativeService;
     private final AuditService auditService;
     private final AppUserRepository userRepository;
+    /** 저장된 문장을 주고, 낡았으면 큐에 올린다 — 화면은 모델을 기다리지 않는다. */
+    private final com.finntech.service.NarrativeCacheService narratives;
     private final CategoryRepository categoryRepository;
     private final ConsumptionRepository consumptionRepository;
     private final AlertRepository alertRepository;
@@ -50,6 +52,7 @@ public class ApiController {
                          ReportService reportService, AlertService alertService,
                          ScoreService scoreService, NarrativeService narrativeService,
                          AuditService auditService, AppUserRepository userRepository,
+                         com.finntech.service.NarrativeCacheService narratives,
                          CategoryRepository categoryRepository,
                          ConsumptionRepository consumptionRepository,
                          AlertRepository alertRepository, CardRecommendService cardRecommendService,
@@ -63,6 +66,7 @@ public class ApiController {
         this.narrativeService = narrativeService;
         this.auditService = auditService;
         this.userRepository = userRepository;
+        this.narratives = narratives;
         this.categoryRepository = categoryRepository;
         this.consumptionRepository = consumptionRepository;
         this.alertRepository = alertRepository;
@@ -153,7 +157,11 @@ public class ApiController {
         String period = now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM"));
         // CONFIRMED일 때만 캐시된다 — ESTIMATED를 캐시하면 "더 기록하면 정확해집니다"가 거짓말이 된다
         ReportService.ReportBody rb = reportService.buildCached(userId, period, analysis, now());
-        NarrativeService.Narrative narrative = narrativeService.summarizeReport(rb, analysis);
+        var narrativeReq = narrativeService.reportRequest(userId, rb, analysis);
+        var shownNarrative = narratives.show(narrativeReq);
+        NarrativeService.Narrative narrative =
+                new NarrativeService.Narrative(shownNarrative.body(), shownNarrative.source());
+        narratives.enqueueIfNeeded(narrativeReq);
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("userId", userId);
