@@ -107,10 +107,16 @@ public class MerchantCategoryService {
         if (name == null || name.isBlank()) return Optional.empty();
         String normalized = MerchantCategory.normalize(payment.getBusinessNumber());
         final String biz = mapper.isPaymentAgency(normalized) ? "" : normalized;
-        return Optional.of(repository.findByBusinessNumberAndMerchantName(biz, name)
+        MerchantCategory row = repository.findByBusinessNumberAndMerchantName(biz, name)
                 .orElseGet(() -> repository.save(new MerchantCategory(
                         biz, name, com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED,
-                        MerchantCategory.Source.ATTEMPTED, null))));
+                        MerchantCategory.Source.ATTEMPTED, null)));
+
+        // 이 가맹점이 사전에 자리를 얻었으니 대기 장소의 브랜드를 옮기고 그쪽은 지운다.
+        // **attemptRow·rememberGuess·rememberRegistry 도 confirm 과 같아야 한다** — 한 곳만 옮기면 브랜드가 두 곳에 남아
+        // 어느 쪽이 정본인지 알 수 없게 된다(2026-08-07 감사에서 발견).
+        brands.promote(row);
+        return Optional.of(row);
     }
 
     /**
@@ -220,10 +226,13 @@ public class MerchantCategoryService {
                 return Optional.empty();     // 사실·사람의 확인을 추정으로 덮지 않는다
             }
             row.reclassify(category2, MerchantCategory.Source.LLM_GUESS, null);
+            brands.promote(row);
             return Optional.of(row);
         }
-        return Optional.of(repository.save(new MerchantCategory(
-                biz, name, category2, MerchantCategory.Source.LLM_GUESS, null)));
+        MerchantCategory row = repository.save(new MerchantCategory(
+                biz, name, category2, MerchantCategory.Source.LLM_GUESS, null));
+        brands.promote(row);
+        return Optional.of(row);
     }
 
     /**
@@ -294,10 +303,13 @@ public class MerchantCategoryService {
                 return Optional.empty();     // 사람이 준 것·확인한 것은 그대로 둔다
             }
             row.reclassify(category2, MerchantCategory.Source.REGISTRY, null);
+            brands.promote(row);
             return Optional.of(row);
         }
-        return Optional.of(repository.save(new MerchantCategory(
-                biz, merchantName, category2, MerchantCategory.Source.REGISTRY, null)));
+        MerchantCategory row = repository.save(new MerchantCategory(
+                biz, merchantName, category2, MerchantCategory.Source.REGISTRY, null));
+        brands.promote(row);
+        return Optional.of(row);
     }
 
     /**

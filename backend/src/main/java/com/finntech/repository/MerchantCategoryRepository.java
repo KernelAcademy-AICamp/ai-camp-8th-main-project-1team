@@ -61,4 +61,12 @@ public interface MerchantCategoryRepository extends JpaRepository<MerchantCatego
      * 브랜드는 번호와 무관하게 <b>이름에 붙는 성질</b>이라 번호가 있든 없든 같은 상호면 같다.
      */
     List<MerchantCategory> findByMerchantName(String merchantName);
+
+    /** 여러 상호를 <b>한 번에</b> — 가맹점마다 묻지 않기 위해서다(N+1 방지). */
+    List<MerchantCategory> findByMerchantNameIn(List<String> merchantNames);
+
+    /** 사전에 이미 확정된 브랜드 이름들 — 대기 장소의 것과 합쳐 2차 대조의 후보가 된다. */
+    @Query("select distinct m.brand from MerchantCategory m "
+            + "where m.brand is not null and m.brand <> :exclude order by m.brand")
+    List<String> findDistinctBrands(@Param("exclude") String exclude);
 }

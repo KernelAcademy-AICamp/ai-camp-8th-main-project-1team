@@ -126,6 +126,11 @@ services:
       TEMP_CLASSIFIER_URL: ${TEMP_CLASSIFIER_URL:-}
       TEMP_CLASSIFIER_KEY: ${TEMP_CLASSIFIER_KEY:-}
       TEMP_CLASSIFIER_MODEL: ${TEMP_CLASSIFIER_MODEL:-}
+      # 무료 통로로 나가는 문의 예산·동시성·큐 상한. **컨테이너까지 전달해야** .env 가 효력을 갖는다
+      # — 예전에 같은 실수를 한 적이 있다("새 환경변수를 컨테이너까지 전달한다", 2026-08-07).
+      FREE_CHANNEL_PER_MINUTE: ${FREE_CHANNEL_PER_MINUTE:-40}
+      FREE_CHANNEL_CONCURRENCY: ${FREE_CHANNEL_CONCURRENCY:-6}
+      FREE_CHANNEL_MAX_QUEUED: ${FREE_CHANNEL_MAX_QUEUED:-500}
       TSA_ENABLED: ${TSA_ENABLED:-false}
     mem_limit: 1280m            # 힙 ≈ 768m. 분석 엔진·EBM 스코어러가 있어 넷 중 가장 크다.
     # internal로 마이데이터·DB에 닿고, edge로 Gemini·TSA·금리조회 아웃바운드를 유지한다.

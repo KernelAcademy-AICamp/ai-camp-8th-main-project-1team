@@ -672,7 +672,8 @@ public class GuardianService {
         if (extras != null) numbers.putAll(extras);
         GuardianNarrative.Message msg = narrative.compose(
                 decision.caseId(), decision.tone(), decision.phrasingMode(),
-                numbers, recentKeyPhrases(ch.getId(), now), false);
+                numbers, recentKeyPhrases(ch.getId(), now), false,
+                userRepository.existsByIdAndRealPersonTrue(ch.getUserId()));
 
         return notificationRepository.save(GuardianNotification.spoken(
                 ch.getUserId(), ch.getId(), txId, decision.caseId(),

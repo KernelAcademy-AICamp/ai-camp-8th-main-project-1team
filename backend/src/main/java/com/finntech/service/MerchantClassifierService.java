@@ -160,6 +160,34 @@ public class MerchantClassifierService {
      */
     public Map<String, String> classify(List<String> merchantNames, java.util.Set<String> important,
                                         Map<String, String> industries) {
+        return classify(merchantNames, important, industries, new java.util.HashSet<>());
+    }
+
+    /**
+     * {@link #classify} 와 같되 <b>실제로 물어보고 답을 받은 가맹점</b>을 따로 담아 준다.
+     *
+     * <p>부르는 쪽이 이것을 알아야 하는 이유가 하나다 — <b>'헛물'을 세는 자리</b>. 답에 없는
+     * 가맹점을 "모델이 침묵했다"로 세어 세 번이면 '기타'로 종결하는데, 그 세기가 성립하려면
+     * <b>물어보기는 했다</b>가 참이라야 한다. 그런데 이 메서드는 <b>묻지 않고 빈손으로 돌아가는
+     * 길이 셋</b>이다.
+     *
+     * <pre>
+     *   ① 키가 없다        aiEnabled() 가 false 면 HTTP 를 한 번도 안 내고 빈 지도를 준다
+     *   ② 호출이 실패했다   429·타임아웃이면 그 묶음이 통째로 null 이다
+     *   ③ 상한을 넘었다     MAX_LLM_CALLS_PER_REQUEST × BATCH 를 넘은 뒤쪽은 프롬프트에 안 담긴다
+     * </pre>
+     *
+     * <p>셋 다 "그 가맹점에 대해 모델이 침묵했다"가 아니라 <b>"우리가 못 물었다"</b>이다.
+     * 구별하지 않으면 키를 안 넣은 환경에서 화면을 세 번 여는 것만으로 미분류 전부가 '기타'로
+     * 종결되고, 종결은 결제와 소비 원장까지 고치므로 리포트에서 그 지출이 사라진다
+     * (2026-08-07 재감사).
+     *
+     * @param answered 답을 받은 가맹점명이 여기 담긴다 — 호출자가 준 집합에 채워 넣는다.
+     *                 표기가 다른 형제까지 함께 담는다(대표가 답을 받으면 형제도 받은 것이다).
+     */
+    public Map<String, String> classify(List<String> merchantNames, java.util.Set<String> important,
+                                        Map<String, String> industries,
+                                        java.util.Set<String> answered) {
         Map<String, String> out = new TreeMap<>();
         if (!aiEnabled() || merchantNames == null || merchantNames.isEmpty()) return out;
 
@@ -175,10 +203,17 @@ public class MerchantClassifierService {
         List<String> distinct = variants.values().stream().map(v -> v.get(0)).toList();
 
         Map<String, String> byRepresentative = new TreeMap<>();
+        // 답을 받은 **대표**를 모은다. 형제로 펼치는 것은 아래 한 곳에서 한꺼번에 한다.
+        java.util.Set<String> answeredReps = new java.util.HashSet<>();
         int calls = 0;
         for (int i = 0; i < distinct.size() && calls < MAX_LLM_CALLS_PER_REQUEST; i += BATCH, calls++) {
-            Map<String, String> got = callGemini(distinct.subList(i, Math.min(i + BATCH, distinct.size())), industries);
-            if (got != null) byRepresentative.putAll(got);
+            List<String> batch = distinct.subList(i, Math.min(i + BATCH, distinct.size()));
+            Map<String, String> got = callGemini(batch, industries);
+            // **null 은 "물어봤다"가 아니다.** 429·타임아웃이면 그 묶음은 프롬프트에 담겼어도
+            // 답이 통째로 없다 — 그것을 가맹점의 침묵으로 세면 통로 장애가 데이터를 종결시킨다.
+            if (got == null) continue;
+            byRepresentative.putAll(got);
+            answeredReps.addAll(batch);
         }
 
         // 두 번째 판 — 못 잡은 것 중 중요한 것만, 작게.
@@ -192,13 +227,18 @@ public class MerchantClassifierService {
             }
         }
         for (int i = 0; i < retry.size() && calls < MAX_LLM_CALLS_PER_REQUEST; i += RETRY_BATCH, calls++) {
-            Map<String, String> got = callGemini(retry.subList(i, Math.min(i + RETRY_BATCH, retry.size())), industries);
-            if (got != null) byRepresentative.putAll(got);
+            List<String> batch = retry.subList(i, Math.min(i + RETRY_BATCH, retry.size()));
+            Map<String, String> got = callGemini(batch, industries);
+            if (got == null) continue;
+            byRepresentative.putAll(got);
+            answeredReps.addAll(batch);
         }
 
-        // 대표가 받은 답을 **표기가 다른 형제 전부**에 돌려준다.
+        // 대표가 받은 답을 **표기가 다른 형제 전부**에 돌려준다. '물어봤다'도 같이 펼친다 —
+        // 형제는 대표에 접혀서 안 물어본 것이라, 대표가 답을 받았으면 형제도 받은 것으로 본다.
         for (List<String> group : variants.values()) {
             String rep = group.get(0);
+            if (answeredReps.contains(rep)) answered.addAll(group);
             String answer = byRepresentative.get(rep);
             if (answer != null) group.forEach(n -> out.put(n, answer));
             String ind = industries.get(rep);

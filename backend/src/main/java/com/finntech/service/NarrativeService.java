@@ -30,6 +30,11 @@ import java.util.Map;
 @Service
 public class NarrativeService {
 
+    // **화면에 걸린 문장 셋은 이제 Gemini 를 안 부른다**(2026-08-08). 저장해 두고 무료 통로가
+    // 하루 한 번 갱신하는 구조로 옮겼다 — 화면이 6~10초를 기다리지 않고, 값도 0 이다.
+    // 그래서 이 클래스에 남은 일은 **무엇을 물을지와 못 받았을 때 무엇을 보일지**뿐이다.
+    // `explainAlert` 만 예외다 — 그건 그 순간의 탐지에 붙는 말이라 저장해 둘 것이 아니다.
+
     private static final Logger log = LoggerFactory.getLogger(NarrativeService.class);
 
     private final String apiKey;
@@ -42,18 +47,30 @@ public class NarrativeService {
             @Value("${finntech.gemini.base-url:https://generativelanguage.googleapis.com}") String baseUrl) {
         this.apiKey = apiKey;
         this.model = com.finntech.config.GeminiModels.orDefault(model);
-        this.restClient = RestClient.builder().baseUrl(baseUrl).build();
+        // 타임아웃을 준다 — `RestClient.builder()` 는 정적 팩터리라 부트 자동구성이 안 붙고,
+        // 이 저장소 classpath 에서는 JDK 팩터리로 떨어져 읽기 타임아웃이 무한이 된다
+        // ({@link com.finntech.util.HttpClients} 가 같은 함정을 적어 두었다). 화면 요청 안에서
+        // 도는 호출이라 무한이면 톰캣 스레드가 그대로 묶인다.
+        this.restClient = RestClient.builder().baseUrl(baseUrl)
+                .requestFactory(com.finntech.util.HttpClients.factory(
+                        java.time.Duration.ofSeconds(3), java.time.Duration.ofSeconds(8)))
+                .build();
     }
 
     public boolean aiEnabled() {
         return apiKey != null && !apiKey.isBlank();
     }
 
-    /** 리포트 요약 문장. 실패 시 템플릿. */
-    public Narrative summarizeReport(ReportService.ReportBody body, AnalysisResult analysis) {
+    /**
+     * 리포트 요약 <b>재료</b> — 여기서 모델을 부르지 않는다.
+     *
+     * <p>부르는 일은 {@link NarrativeCacheService} 가 큐를 통해 한다. 이 클래스는 <b>무엇을
+     * 물을지와 못 받았을 때 무엇을 보일지</b>만 안다 — 그 둘은 화면의 사정이라 여기 있는 것이 맞고,
+     * 언제 얼마나 부를지는 통로의 사정이라 큐가 안다.
+     */
+    public NarrativeCacheService.Request reportRequest(Long userId, ReportService.ReportBody body,
+                                                       AnalysisResult analysis) {
         String template = reportTemplate(body);
-        if (!aiEnabled()) return new Narrative(template, "TEMPLATE");
-
         String prompt = """
                 아래는 이미 계산이 끝난 소비 분석 집계치입니다.
                 숫자를 새로 만들거나 바꾸지 말고, 주어진 숫자만 사용해 2~3문장으로 요약하세요.
@@ -67,7 +84,8 @@ public class NarrativeService {
                 body.negative().stream().map(l -> l.displayName() + " " + l.spendPercent() + "%").toList(),
                 body.positive().stream().map(l -> l.displayName() + " " + l.spendPercent() + "%").toList());
 
-        return callGemini(prompt, template);
+        return new NarrativeCacheService.Request(
+                userId, com.finntech.domain.NarrativeCache.Kind.REPORT, "", prompt, template);
     }
 
     /** FDS 경고 문장. */
@@ -86,11 +104,9 @@ public class NarrativeService {
         return callGemini(prompt, template);
     }
 
-    /** 절약 후보(⑤) 권유 문장. 개별 결제가 아니라 category2 집계치만 전달. */
-    public Narrative explainCutCandidate(CutCandidate c) {
+    /** 절약 후보(⑤) 권유 <b>재료</b>. 개별 결제가 아니라 category2 집계치만 담는다. */
+    public NarrativeCacheService.Request cutCandidateRequest(Long userId, CutCandidate c) {
         String template = cutCandidateTemplate(c);
-        if (!aiEnabled()) return new Narrative(template, "TEMPLATE");
-
         String prompt = """
                 아래는 이미 계산이 끝난 '줄일 수 있는 소비' 후보입니다.
                 숫자를 새로 만들거나 바꾸지 말고, 주어진 숫자만 사용해 1~2문장으로 부드럽게 권유하세요.
@@ -103,14 +119,16 @@ public class NarrativeService {
                 """.formatted(c.category2(), c.type(),
                 String.format("%,d", c.monthlySpend()), String.format("%,d", c.estimatedSaving()));
 
-        return callGemini(prompt, template);
+        return new NarrativeCacheService.Request(
+                // **카테고리가 키의 일부다.** 절약 후보는 카테고리마다 다른 문장이라, 이것이
+                // 빠지면 카페 문장이 쇼핑 화면에 뜨고 서로 덮어쓴다.
+                userId, com.finntech.domain.NarrativeCache.Kind.CUT_CANDIDATE, c.category2(),
+                prompt, template);
     }
 
-    /** 소비 프로필(④) 요약 문장. 이상소비지수와 성분별 기여점수 등 집계치만 전달. */
-    public Narrative summarizeProfile(UserProfile p) {
+    /** 소비 프로필(④) 요약 <b>재료</b>. 이상소비지수와 성분별 기여점수 등 집계치만 담는다. */
+    public NarrativeCacheService.Request profileRequest(Long userId, UserProfile p) {
         String template = profileTemplate(p);
-        if (!aiEnabled()) return new Narrative(template, "TEMPLATE");
-
         String prompt = """
                 아래는 이미 계산이 끝난 소비 프로필 집계치입니다.
                 점수를 바꾸지 말고, 주어진 숫자만 사용해 2~3문장으로 요약하세요.
@@ -122,7 +140,8 @@ public class NarrativeService {
                 습관성(루틴) 소비 수: %d
                 """.formatted(p.abnormalityIndex(), p.contributionPoints(), p.fixedCount(), p.routineCount());
 
-        return callGemini(prompt, template);
+        return new NarrativeCacheService.Request(
+                userId, com.finntech.domain.NarrativeCache.Kind.PROFILE, "", prompt, template);
     }
 
     private Narrative callGemini(String prompt, String fallback) {

@@ -100,11 +100,10 @@ class MerchantCategoryServiceTest {
     private static MerchantBrandService noBrands() {
         var brandRepo = mock(com.finntech.repository.MerchantBrandRepository.class);
         when(brandRepo.findByMerchantName(anyString())).thenReturn(Optional.empty());
-        return new MerchantBrandService(brandRepo,
+        return TestServices.brandService(brandRepo,
                 mock(com.finntech.repository.MerchantCategoryRepository.class),
                 mock(TempClassifierService.class),
-                mock(com.finntech.repository.UserPaymentRepository.class),
-                new tools.jackson.databind.ObjectMapper());
+                mock(com.finntech.repository.UserPaymentRepository.class));
     }
 
     private BusinessNumberKindService kinds() {

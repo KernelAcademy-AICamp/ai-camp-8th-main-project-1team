@@ -56,6 +56,23 @@ public interface UserPaymentRepository extends JpaRepository<UserPayment, String
             """)
     boolean existsRealPersonPaymentByMerchantName(@Param("merchantName") String merchantName);
 
+    /**
+     * 이 사용자에게 <b>실제 사람의 결제</b>가 하나라도 있는가 — {@code app_user.real_person} 의 근거다.
+     *
+     * <p>그 칸은 적재가 정하는데, 적재를 다시 돌리지 않으면 갱신될 일이 없다. 그래서 표시가
+     * <b>거짓으로 남는</b> 상태가 만들어질 수 있고(예: 백필이 없는 개발 H2, 또는 결제가 이미
+     * 있는 채로 칸만 새로 생긴 DB), 그러면 실사용자의 조회·질의·브랜드가 <b>아무 오류 없이
+     * 통째로 멈춘다.</b> 표시가 틀리는 두 방향 중 이쪽이 훨씬 나쁘다.
+     *
+     * <p>그래서 관문이 "아니다"라고 답할 때만 이 질의로 되짚는다 — {@code user_id} 로 좁혀지는
+     * 질의라 값싸고, 한 번 참으로 밝혀지면 그 뒤로는 칸이 답하므로 다시 오지 않는다.
+     */
+    @Query("""
+            select count(p) > 0 from UserPayment p
+            where p.userId = :userId and p.paymentId like '%:real-%'
+            """)
+    boolean existsRealPersonPaymentByUserId(@Param("userId") Long userId);
+
     /** 벌크 삭제(즉시 DML) — 재연동 delete→insert 순서 역전 방지. */
     @Modifying
     @Transactional
