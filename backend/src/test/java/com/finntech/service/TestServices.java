@@ -88,8 +88,12 @@ final class TestServices {
             java.time.Clock clock,
             String referenceDate) {
         var self = new AtomicReference<MyDataLinkService>();
+        // 사전 리포지토리는 여기서 세운다 — 협력자가 하나 늘 때마다 시험 파일이 전부 깨지는 것을
+        // 막는 것이 이 조립기의 목적이다(클래스 주석). 주소를 보는 시험은 직접 대역을 준다.
         var service = new MyDataLinkService(client, users, cards, payments, consumptions,
-                categories, mapper, dictionary, kinds, lookup, ask, brands, links, bankLinks,
+                categories, mapper, dictionary,
+                mock(com.finntech.repository.MerchantCategoryRepository.class),
+                kinds, lookup, ask, brands, links, bankLinks,
                 reports, clock, referenceDate, selfOf(self));
         self.set(service);
         return service;

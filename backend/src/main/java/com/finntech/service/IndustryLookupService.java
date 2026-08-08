@@ -58,6 +58,8 @@ public class IndustryLookupService {
     private final BusinessNumberKindService kinds;
     private final RestClient client;
     private final Pattern extractor;
+    /** 주소 추출식 — 없으면 주소는 안 뽑는다(업종만으로도 통로는 제 일을 한다). */
+    private final Pattern addressExtractor;
 
     public IndustryLookupService(IndustryLookupProperties props,
                                  IndustryCategoryMapper mapper,
@@ -82,6 +84,16 @@ public class IndustryLookupService {
             }
         }
         this.extractor = p;
+        Pattern ap = null;
+        if (props.usable() && props.getAddressPattern() != null && !props.getAddressPattern().isBlank()) {
+            try {
+                ap = Pattern.compile(props.getAddressPattern(), Pattern.DOTALL);
+            } catch (RuntimeException e) {
+                // 주소 하나 때문에 업종 조회까지 막지 않는다.
+                log.warn("주소 추출식이 올바르지 않아 주소는 안 뽑는다: {}", e.getMessage());
+            }
+        }
+        this.addressExtractor = ap;
         if (usable()) {
             log.info("업종 조회 통로 켜짐 — 연동 한 번당 최대 {}곳", props.getMaxPerSync());
         }
@@ -161,7 +173,31 @@ public class IndustryLookupService {
      * 못 알아낸 이유(연결 실패·타임아웃·형식 변경)가 갈라져 봐야 할 일이 같다. 다만 <b>기록은
      * 남긴다</b> — 조용히 안 되면 통로가 죽은 것을 아무도 모른다.
      */
+    /**
+     * 한 번 받아온 문서에서 <b>업종과 주소를 함께</b> 뽑은 것.
+     *
+     * <p>주소를 따로 부르지 않는 것이 요점이다. 조회처는 둘을 같은 문서에 담아 주는데 지금까지
+     * 업종만 쓰고 주소는 버리고 있었다 — 그래서 화면에서 사업자번호를 눌러도 주소가 안 떴다
+     * (실사용자 번호 132종 중 5%만 떴다. 그 5%는 제공자가 우연히 아는 번호였다).
+     *
+     * @param industry 업종 이름. 못 뽑았으면 null
+     * @param address  주소. 추출식이 없거나 못 뽑았으면 null
+     */
+    public record Found(String industry, String address) {
+        public boolean isEmpty() { return industry == null && address == null; }
+    }
+
+    /** 업종만 필요할 때 — 안쪽은 {@link #lookup} 하나를 쓴다(문서를 두 번 받지 않는다). */
     Optional<String> industryOf(String businessNumber) {
+        return lookup(businessNumber).map(Found::industry).filter(s -> s != null && !s.isBlank());
+    }
+
+    /**
+     * 사업자번호로 문서를 한 번 받아 <b>업종과 주소</b>를 뽑는다.
+     *
+     * <p>예외를 삼키는 것이 여기서는 맞다 — 부르는 쪽에 필요한 답은 "알아냈는가" 하나뿐이다.
+     */
+    public Optional<Found> lookup(String businessNumber) {
         String hyphenated = businessNumber.substring(0, 3) + '-'
                 + businessNumber.substring(3, 5) + '-' + businessNumber.substring(5);
         try {
@@ -170,14 +206,23 @@ public class IndustryLookupService {
                     .retrieve()
                     .body(String.class);
             if (body == null) return Optional.empty();
-            Matcher m = extractor.matcher(body);
-            if (!m.find() || m.groupCount() < 1) return Optional.empty();
-            String name = m.group(1);
-            return name == null || name.isBlank() ? Optional.empty() : Optional.of(name.trim());
+            String industry = first(extractor, body);
+            String address = first(addressExtractor, body);
+            Found found = new Found(industry, address);
+            return found.isEmpty() ? Optional.empty() : Optional.of(found);
         } catch (RuntimeException e) {
-            log.debug("업종 조회 실패 {} — {}", hyphenated, e.toString());
+            log.debug("업종·주소 조회 실패 {} — {}", hyphenated, e.toString());
             return Optional.empty();
         }
+    }
+
+    /** 추출식의 1번 그룹. 식이 없거나 안 걸리면 null. */
+    private static String first(Pattern p, String body) {
+        if (p == null) return null;
+        Matcher m = p.matcher(body);
+        if (!m.find() || m.groupCount() < 1) return null;
+        String v = m.group(1);
+        return v == null || v.isBlank() ? null : v.trim();
     }
 
     /** 남의 서버를 연달아 두드리지 않게 사이를 둔다. 인터럽트는 삼키지 않고 되살린다. */
