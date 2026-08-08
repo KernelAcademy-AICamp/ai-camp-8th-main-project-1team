@@ -92,9 +92,33 @@ public class TempClassifierService {
         return f;
     }
 
-    /** 켜져 있고 아직 스스로 끄지 않았는가. */
+    /**
+     * 켜져 있고 <b>지금</b> 쓸 수 있는가.
+     *
+     * <p><b>영구히 끄지 않는다.</b> 예전에는 연속 실패가 문턱을 넘으면 이 프로세스가 사는 동안
+     * 통로를 껐다. 그런데 429 는 <i>잠깐 너무 많이 불렀다</i>는 뜻이지 <i>통로가 죽었다</i>가
+     * 아니라서, 그러면 <b>재기동 전까지 분류도 브랜드도 문장도 전부 멈춘다.</b> 큐가 예산껏
+     * 두드리는 구조에서는 연속 5회가 순식간이라 더 그렇다(2026-08-08).
+     *
+     * <p>대신 실패가 쌓인 만큼 <b>쉬었다 다시 본다.</b> 문턱을 넘으면 그때부터 유예가 걸리고,
+     * 한 번 성공하면 {@code failures} 가 0 으로 돌아가 유예도 사라진다.
+     */
     public boolean usable() {
-        return client != null && failures.get() < props.getFailureCutoff();
+        if (client == null) return false;
+        if (failures.get() < props.getFailureCutoff()) return true;
+        return System.currentTimeMillis() >= restAfterMillis;
+    }
+
+    /** 문턱을 넘긴 뒤의 유예 종료 시각. 실패가 쌓일수록 길어지되 상한이 있다. */
+    private volatile long restAfterMillis;
+
+    private void noteFailure() {
+        int n = failures.incrementAndGet();
+        if (n < props.getFailureCutoff()) return;
+        // 문턱 초과분마다 배로 늘리되 5분에서 멈춘다. 무한히 늘리면 회복을 못 본다.
+        long wait = Math.min(300_000L, 15_000L * (1L << Math.min(5, n - props.getFailureCutoff())));
+        restAfterMillis = System.currentTimeMillis() + wait;
+        log.warn("임시 통로가 {}회 연속 실패해 {}초 쉰다 — 성공하면 곧바로 회복한다", n, wait / 1000);
     }
 
     /** 이미 물어본 가맹점의 임시 답 — 없거나 오래됐으면 비어 있다. */
@@ -239,6 +263,26 @@ public class TempClassifierService {
 
     /** 프롬프트 하나를 보내고 답 문자열만 받는다 — 실패는 {@code null}. */
     private String askOnce(String prompt) {
+        return askOnce(prompt, 64, 0);
+    }
+
+    /**
+     * <b>사용자에게 보일 문장</b>을 하나 받아 온다 — 분류와 달리 길고, 매번 달라도 된다.
+     *
+     * <p>분류는 {@code max_tokens 64}·{@code temperature 0} 이다. 같은 입력에 같은 답이 나와야
+     * 하기 때문이다(§4 원칙 3 재현성). 문장은 반대다 — 두세 문장이 들어갈 길이가 필요하고,
+     * <b>매일 조금씩 달라지는 것이 이 기능의 목적</b>이라 온도를 준다.
+     *
+     * <p><b>숫자는 프롬프트에 이미 들어 있다.</b> 모델은 그것을 말로 옮길 뿐 새로 만들지도
+     * 바꾸지도 않는다(§4 원칙 1). 부르는 쪽이 집계만 담아 보내는 것이 그 전제다.
+     */
+    public java.util.Optional<String> sentence(String prompt) {
+        if (!usable() || prompt == null || prompt.isBlank()) return java.util.Optional.empty();
+        String out = askOnce(prompt, 400, 0.7);
+        return (out == null || out.isBlank()) ? java.util.Optional.empty() : java.util.Optional.of(out);
+    }
+
+    private String askOnce(String prompt, int maxTokens, double temperature) {
         try {
             String body = client.post()
                     .uri(props.getBaseUrl())
@@ -247,19 +291,17 @@ public class TempClassifierService {
                     .body(json.writeValueAsString(Map.of(
                             "model", props.getModel(),
                             "messages", List.of(Map.of("role", "user", "content", prompt)),
-                            "max_tokens", 64,
-                            "temperature", 0)))
+                            "max_tokens", maxTokens,
+                            "temperature", temperature)))
                     .retrieve()
                     .body(String.class);
             if (body == null) return null;
-            failures.set(0);
+            failures.set(0);            // 한 번 성공하면 유예가 사라진다
             return json.readTree(body).path("choices").path(0)
                     .path("message").path("content").asString("").trim();
         } catch (RuntimeException e) {
-            int n = failures.incrementAndGet();
-            if (n >= props.getFailureCutoff()) {
-                log.warn("임시 통로가 {}회 연속 실패해 이 프로세스에서는 끈다 — {}", n, e.toString());
-            }
+            noteFailure();
+            log.debug("임시 통로 호출 실패 — {}", e.toString());
             return null;
         }
     }

@@ -51,7 +51,13 @@ public class ProductLookupService {
         this.industryMapper = industryMapper;
         this.apiKey = apiKey;
         this.model = com.finntech.config.GeminiModels.orDefault(model);
-        this.gemini = RestClient.builder().baseUrl(baseUrl).build();
+        // 타임아웃을 준다 — 정적 `RestClient.builder()` 는 부트 자동구성이 안 붙어 읽기
+        // 타임아웃이 무한이 된다({@link com.finntech.util.HttpClients}). 사진·URL 로 상품을
+        // 물어보는 호출이라 응답이 크고 느릴 수 있어 읽기는 넉넉히 잡는다.
+        this.gemini = RestClient.builder().baseUrl(baseUrl)
+                .requestFactory(com.finntech.util.HttpClients.factory(
+                        Duration.ofSeconds(3), Duration.ofSeconds(15)))
+                .build();
     }
 
     public boolean aiEnabled() { return apiKey != null && !apiKey.isBlank(); }

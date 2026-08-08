@@ -34,11 +34,15 @@ class MerchantBrandServiceTest {
     private final java.util.Set<String> realNames = new java.util.HashSet<>();
     private com.finntech.repository.UserPaymentRepository payments;
     private MerchantBrandService service;
+    /** 가맹점 <b>하나씩</b> 묻는 질의가 몇 번 나갔는지 — N+1 을 단정으로 못박기 위해 센다. */
+    private final java.util.concurrent.atomic.AtomicInteger perNameQueries =
+            new java.util.concurrent.atomic.AtomicInteger();
 
     @BeforeEach
     void setUp() {
         staging.clear();
         dictionary.clear();
+        perNameQueries.set(0);
         // 이 시험의 상호들은 기본적으로 실물로 본다 — 더미 차단은 별도 시험이 따로 본다.
         realNames.clear();
         realNames.addAll(List.of("GS25 강남역점", "스타벅스 포항공대점", "유니클로 온라인 스토어",
@@ -51,6 +55,9 @@ class MerchantBrandServiceTest {
             List<String> names = inv.getArgument(0);
             return staging.stream().filter(b -> names.contains(b.getMerchantName())).toList();
         });
+        when(brands.findDistinctBrands(anyString())).thenAnswer(inv -> staging.stream()
+                .map(MerchantBrand::getBrand)
+                .filter(b -> !b.equals(inv.getArgument(0))).distinct().sorted().toList());
         when(brands.save(any(MerchantBrand.class))).thenAnswer(inv -> {
             staging.add(inv.getArgument(0));
             return inv.getArgument(0);
@@ -60,8 +67,18 @@ class MerchantBrandServiceTest {
                 .when(brands).deleteByMerchantName(anyString());
 
         MerchantCategoryRepository categories = mock(MerchantCategoryRepository.class);
-        when(categories.findByMerchantName(anyString())).thenAnswer(inv -> dictionary.stream()
-                .filter(m -> m.getMerchantName().equals(inv.getArgument(0))).toList());
+        when(categories.findByMerchantName(anyString())).thenAnswer(inv -> {
+            perNameQueries.incrementAndGet();
+            return dictionary.stream()
+                    .filter(m -> m.getMerchantName().equals(inv.getArgument(0))).toList();
+        });
+        when(categories.findByMerchantNameIn(any())).thenAnswer(inv -> {
+            List<String> names = inv.getArgument(0);
+            return dictionary.stream().filter(m -> names.contains(m.getMerchantName())).toList();
+        });
+        when(categories.findDistinctBrands(anyString())).thenAnswer(inv -> dictionary.stream()
+                .map(MerchantCategory::getBrand)
+                .filter(b -> b != null && !b.equals(inv.getArgument(0))).distinct().sorted().toList());
 
         // **실사용자 결제에 있는 상호만** 브랜드 표에 앉는다. 대역은 `realNames` 에 담긴 것만
         // 실물로 인정한다 — 게이트 자체를 시험할 수 있어야 하기 때문이다.
@@ -69,8 +86,13 @@ class MerchantBrandServiceTest {
         when(payments.existsRealPersonPaymentByMerchantName(anyString()))
                 .thenAnswer(inv -> realNames.contains(inv.getArgument(0)));
 
-        service = new MerchantBrandService(brands, categories, mock(TempClassifierService.class),
-                payments, new tools.jackson.databind.ObjectMapper());
+        service = TestServices.brandService(brands, categories,
+                mock(TempClassifierService.class), payments);
+    }
+
+    /** 실사용자 결제에서 온 이름들 — {@code label} 이 모델에 물어도 되는 집합. */
+    private java.util.Set<String> askable(String... names) {
+        return new java.util.LinkedHashSet<>(List.of(names));
     }
 
     @Test
@@ -171,12 +193,88 @@ class MerchantBrandServiceTest {
         row.adoptBrand("스타벅스");
         dictionary.add(row);
 
-        var got = service.fill(List.of("GS25 강남역점", "스타벅스 포항공대점"));
+        int added = service.label(List.of("GS25 강남역점", "스타벅스 포항공대점"),
+                askable("GS25 강남역점", "스타벅스 포항공대점"), 10);
 
-        assertThat(got).containsEntry("GS25 강남역점", "GS25")
-                       .containsEntry("스타벅스 포항공대점", "스타벅스");
-        // 대역 분류기는 usable() 이 false 라 아무것도 못 묻는다 — 그래도 둘 다 나왔다는 것은
-        // 이미 아는 것으로만 채웠다는 뜻이다.
+        assertThat(added).as("둘 다 이미 알므로 새로 붙일 것이 없다").isZero();
+        assertThat(service.brandOf("GS25 강남역점")).contains("GS25");
+        assertThat(service.brandOf("스타벅스 포항공대점")).contains("스타벅스");
+    }
+
+    @Test
+    @DisplayName("가맹점마다 질의하지 않는다 — 할 일을 추리는 데 드는 질의는 회차당 두 번")
+    void findsPendingWithBatchQueriesNotPerMerchant() {
+        // 2026-08-07 감사에서 발견한 것: 회차마다 `findByMerchantName` 이 가맹점 수만큼 나갔다.
+        // 273곳이면 273회이고, 그 질의가 인덱스를 못 타면 273번의 풀스캔이다.
+        List<String> names = new ArrayList<>();
+        for (int i = 0; i < 50; i++) names.add("가맹점" + i);
+
+        service.findPending(names, new java.util.HashSet<>(names));
+
+        assertThat(perNameQueries.get())
+                .as("이름 하나씩 묻는 질의가 한 번도 나가면 안 된다").isZero();
+    }
+
+    @Test
+    @DisplayName("모델에 묻는 동안 트랜잭션을 붙잡지 않는다 — 읽기·질의·쓰기가 갈라져 있다")
+    void modelCallsHappenOutsideTransaction() throws Exception {
+        // HTTP 6~10초짜리 호출 20개를 한 트랜잭션에 넣으면 DB 커넥션을 3분씩 붙잡는다.
+        // 계약을 서명으로 못박는다 — label 에는 트랜잭션이 없고, 안에서 부르는 두 단계에만 있다.
+        var label = MerchantBrandService.class.getMethod(
+                "label", List.class, java.util.Set.class, int.class);
+        assertThat(label.getAnnotation(
+                org.springframework.transaction.annotation.Transactional.class))
+                .as("label 자체에 트랜잭션이 붙으면 모델 호출이 그 안에서 돈다").isNull();
+
+        var findPending = MerchantBrandService.class.getMethod(
+                "findPending", List.class, java.util.Set.class);
+        assertThat(findPending.getAnnotation(
+                org.springframework.transaction.annotation.Transactional.class).readOnly())
+                .as("할 일을 추리는 단계는 읽기 전용").isTrue();
+
+        assertThat(MerchantBrandService.class.getMethod("persist", java.util.Map.class, java.util.Map.class)
+                .getAnnotation(org.springframework.transaction.annotation.Transactional.class))
+                .as("쓰는 단계에는 트랜잭션이 있어야 한다").isNotNull();
+    }
+
+    /**
+     * <b>부분문자열로 맞추면 실사용자 상호에 엉뚱한 브랜드가 사실처럼 박힌다.</b>
+     *
+     * <p>카탈로그로 맞은 것은 모델에 묻지 않고 바로 사전·대기장소에 적히고, 한 번 적히면
+     * {@code findPending} 의 known 검사에 걸려 다시는 안 묻는다 — 교정 기회가 없다.
+     * 실측(2026-08-07 재감사): 표기 {@code 카카오}(→멜론)가 실사용자 상호 <b>74곳</b>에,
+     * 두 글자 라틴 표기 {@code KT} 가 {@code 고속철도(KTX)…} <b>7곳</b>에 잘못 맞았다.
+     */
+    @Test
+    @DisplayName("카탈로그가 회사 접두·짧은 라틴 표기로 엉뚱한 브랜드를 박지 않는다")
+    void catalogDoesNotMislabelOnSubstrings() {
+        realNames.addAll(List.of("카카오택시-서울33바2592", "고속철도(KTX)서울-포항", "(주)카카오"));
+
+        var pending = service.findPending(
+                List.of("카카오택시-서울33바2592", "고속철도(KTX)서울-포항", "(주)카카오"),
+                askable("카카오택시-서울33바2592", "고속철도(KTX)서울-포항", "(주)카카오"));
+        var hit = pending.fromCatalog();
+
+        // 회사 접두는 그 회사로 — 제품(멜론)으로 새지 않는다. 더 긴 표기가 있으면 그쪽이 이긴다.
+        assertThat(hit.get("카카오택시-서울33바2592")).isNotEqualTo("멜론");
+        assertThat(hit.get("(주)카카오")).isNotEqualTo("멜론");
+        // 라틴 표기는 낱말 경계에서만 — 'KT' 가 'KTX' 안에 걸리면 안 된다.
+        // 같은 명세서의 `코레일유통…` 이 한국철도공사로 가므로, 갈리면 같은 철도 결제가 두 브랜드다.
+        assertThat(hit.get("고속철도(KTX)서울-포항")).isEqualTo("한국철도공사");
+    }
+
+    @Test
+    @DisplayName("카탈로그는 긴 표기부터 맞춘다 — '세븐일레븐'이 '세븐'보다 먼저")
+    void catalogPrefersLongerForm() {
+        // 표기를 생성 때 한 번만 접어 두고 길이 내림차순으로 세운다. 접는 순서가 흐트러지면
+        // `세븐일레븐 강남점`이 `세븐`(다른 브랜드)으로 걸린다.
+        realNames.add("세븐일레븐 강남점");
+        int added = service.label(List.of("세븐일레븐 강남점"), askable("세븐일레븐 강남점"), 10);
+
+        if (added > 0) {
+            assertThat(service.brandOf("세븐일레븐 강남점"))
+                    .as("긴 표기가 먼저 걸려야 한다").contains("세븐일레븐");
+        }
     }
 
     @Test
@@ -211,9 +309,9 @@ class MerchantBrandServiceTest {
     @Test
     @DisplayName("빈 목록은 호출도 안 한다")
     void emptyInputShortCircuits() {
-        assertThat(service.fill(List.of())).isEmpty();
-        assertThat(service.fill(null)).isEmpty();
-        assertThat(service.fill(java.util.Arrays.asList("", "  "))).isEmpty();
+        assertThat(service.label(List.of(), java.util.Set.of(), 10)).isZero();
+        assertThat(service.label(null, java.util.Set.of(), 10)).isZero();
+        assertThat(service.label(java.util.Arrays.asList("", "  "), java.util.Set.of(), 10)).isZero();
         assertThat(Optional.ofNullable(staging.isEmpty() ? null : staging.get(0))).isEmpty();
     }
 }

@@ -41,6 +41,8 @@ public class GuardianBatchService {
     private final WeeklyMissionRepository missionRepository;
     /** C9의 시간대 패턴은 챌린지 원장이 아니라 <b>사람의 소비 이력</b>에서 나온다. */
     private final com.finntech.repository.ConsumptionRepository consumptionRepository;
+    /** Gemini 는 실사용자 것만 — 더미는 템플릿 문구로 간다(사용자 규칙 2026-08-08). */
+    private final com.finntech.repository.AppUserRepository userRepository;
     private final GuardianRewardService rewardService;
     private final GuardianNarrative narrative;
     private final GuardianService guardianService;
@@ -52,6 +54,7 @@ public class GuardianBatchService {
                                 DailyVerdictRepository verdictRepository,
                                 WeeklyMissionRepository missionRepository,
                                 com.finntech.repository.ConsumptionRepository consumptionRepository,
+                                com.finntech.repository.AppUserRepository userRepository,
                                 GuardianRewardService rewardService,
                                 GuardianNarrative narrative,
                                 GuardianService guardianService,
@@ -62,6 +65,7 @@ public class GuardianBatchService {
         this.verdictRepository = verdictRepository;
         this.missionRepository = missionRepository;
         this.consumptionRepository = consumptionRepository;
+        this.userRepository = userRepository;
         this.rewardService = rewardService;
         this.narrative = narrative;
         this.guardianService = guardianService;
@@ -158,7 +162,7 @@ public class GuardianBatchService {
                     j.gradeWeights(), j.reasonCode(), 0, now).orElse(null);
             if (granted != null) {
                 verdict.grant(granted.objectId(), granted.grade());
-                verdict.setCeremonyMessage(ceremonyMessage(granted));
+                verdict.setCeremonyMessage(ceremonyMessage(granted, userId));
                 verdict.setCeremonyAutoOpen(GuardianRules.ceremonyAutoOpen(
                         ch.daysElapsedOn(target), granted.grade(), props));
                 verdictRepository.save(verdict);
@@ -505,10 +509,11 @@ public class GuardianBatchService {
     }
 
     /** 아침 세리머니 문구 — 푸시가 아니라 앱을 열면 뜨는 모달에 쓴다. */
-    private String ceremonyMessage(GuardianRewardService.Granted granted) {
+    private String ceremonyMessage(GuardianRewardService.Granted granted, Long userId) {
         Map<String, Object> v = new TreeMap<>();
         v.put("objectId", granted.objectId());
+        // Gemini 는 실사용자 것만 부른다 — 더미는 고정 템플릿 문구로 간다(사용자 규칙 2026-08-08).
         return narrative.compose("M1", Tone.MORNING_CEREMONY, PhrasingMode.DEFINITIVE,
-                v, List.of(), false).body();
+                v, List.of(), false, userRepository.existsByIdAndRealPersonTrue(userId)).body();
     }
 }

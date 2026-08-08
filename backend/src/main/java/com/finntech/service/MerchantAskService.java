@@ -72,11 +72,27 @@ public class MerchantAskService {
     /** ②-c 임시 분류 — 무료 통로. 답은 메모리에만 살고 DB 에 안 들어간다. */
     private final TempClassifierService temporary;
     private final Clock clock;
+    /**
+     * <b>자기 자신의 프록시.</b> 추리기·입히기만 트랜잭션 안이고 모델 질의는 밖이라야 하는데,
+     * {@code @Transactional} 은 프록시가 걸어 주는 것이라 같은 객체 안에서 그냥 부르면 안 걸린다.
+     */
+    private final org.springframework.beans.factory.ObjectProvider<MerchantAskService> selfProvider;
+    /**
+     * <b>지금 묻고 있는 사용자.</b> 진입로가 셋이라 겹칠 수 있다 — 5분 배치, 화면의
+     * {@code POST /api/mydata/sync}, 그리고 미분류 화면을 여는 순간({@code ON_DEMAND_MIN}).
+     *
+     * <p>겹치면 같은 가맹점을 두 모델에 두 번 묻는다. 유료 통로에서는 그게 곧 돈이다.
+     *
+     * <p><b>물러나되 빈손으로 돌아가지 않는다.</b> 화면이 부른 것일 수 있으므로 모델만 건너뛰고
+     * 이미 아는 추정은 그대로 그려 준다 — 잠깐 뒤 새로고침이면 나머지도 보인다.
+     */
+    private final java.util.Set<Long> asking = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     public MerchantAskService(UserPaymentRepository payments, ConsumptionRepository consumptions,
                               CategoryRepository categories, MerchantCategoryService dictionary,
                               MerchantClassifierService classifier,
-                              TempClassifierService temporary, Clock clock) {
+                              TempClassifierService temporary, Clock clock,
+                              org.springframework.beans.factory.ObjectProvider<MerchantAskService> selfProvider) {
         this.payments = payments;
         this.consumptions = consumptions;
         this.categories = categories;
@@ -84,6 +100,7 @@ public class MerchantAskService {
         this.classifier = classifier;
         this.temporary = temporary;
         this.clock = clock;
+        this.selfProvider = selfProvider;
     }
 
     /** 한 번 물어본 결과 — 화면이 이어서 쓸 수 있게 추정과 종결을 함께 준다. */
@@ -92,31 +109,81 @@ public class MerchantAskService {
     }
 
     /**
-     * 아직 답이 없는 가맹점을 묻는다 — <b>{@code minMerchants} 곳 미만이면 묻지 않는다.</b>
+     * <b>트랜잭션이 열려 있지 않다.</b> 세 단계로 갈라져 있고 가운데(모델 질의)만 밖에서 돈다.
+     *
+     * <pre>
+     *   ① 무엇을 물을지 추린다   짧은 읽기 트랜잭션
+     *   ② 모델에 묻는다          트랜잭션 없음 — 무료 통로는 가맹점당 6~10초 × N, 유료는 한 번에 30초+
+     *   ③ 얻은 답을 입힌다       짧은 트랜잭션
+     * </pre>
+     *
+     * <p>한 트랜잭션으로 묶으면 그 시간 내내 DB 커넥션을 붙잡는다. 무료 통로를 켜고 미분류가
+     * 50곳이면 <b>한 번에 8분</b>이다(2026-08-07 감사).
      *
      * <p>묻지 않아도 <b>이미 아는 추정은 돌려준다.</b> 화면은 그것으로 배지를 그린다.
      *
-     * @param minMerchants 이만큼 쌓여야 부른다. 화면에서 부를 때는 1, 백그라운드는 40.
+     * @param minMerchants 이만큼 쌓여야 유료 통로를 부른다. 화면에서 부를 때는 1, 백그라운드는 40.
      */
-    @Transactional
     public Asked ask(Long userId, int minMerchants) {
-        // **미분류 전부를 본다.** 예전에는 최신 100건만 봤는데, 미분류가 그보다 많으면 오래된
-        // 것은 영원히 차례가 안 왔다(2026-08-07 운영: 150건 중 100건만 보여 카드사 수수료가
-        // 사각지대에 있었다). 무료 통로가 전부를 훑게 되면서 그 제한이 곧 구멍이 됐다.
-        List<UserPayment> rows = payments.findByUserIdAndCategory2OrderByPaymentDateDesc(
-                userId, IndustryCategoryMapper.UNCLASSIFIED);
+        MerchantAskService self = selfProvider.getObject();
+        if (!asking.add(userId)) {
+            log.debug("이미 묻고 있어 모델 호출을 건너뜀 — userId={}", userId);
+            return self.applyGuesses(userId, self.plan(userId).remembered(),
+                    Map.of(), Map.of(), Set.of());
+        }
+        try {
+            return askOnce(self, userId, minMerchants);
+        } finally {
+            asking.remove(userId);
+        }
+    }
 
-        // 같은 가맹점이 여러 번 나온다 — 이름당 한 번만 묻는다.
-        //
-        // **더미 결제는 어느 모델에도 보내지 않는다.** 생성기가 만든 상호라 물어볼 값이 없고
-        // (카탈로그가 이미 안다), 답이 와도 사전에 못 들어간다 — 사전에 실사용자 게이트가 있기
-        // 때문이다. 즉 더미를 물으면 **호출만 쓰고 버려진다.** 유료 통로에서는 그게 곧 돈이고,
-        // 무료 통로에서도 남의 서버를 헛되이 두드리는 일이다.
-        List<UserPayment> askable = rows.stream()
-                .filter(UserPayment::isFromRealPerson)
-                .filter(p -> p.getCategory2Llm() == null)
-                .filter(p -> classifier.worthAsking(p.getMerchantName(), p.getBusinessNumber()))
-                .toList();
+    private Asked askOnce(MerchantAskService self, Long userId, int minMerchants) {
+        Plan plan = self.plan(userId);
+
+        // ②-c **임시 분류 — 무료라 임계값 없이 지금 묻는다.**
+        // 유료 통로는 40곳이 쌓여야 부르는데, 그동안 새 결제는 '카테고리없음'으로 남는다.
+        // 무료 통로는 값이 0 이라 결제가 들어오는 대로 물어도 손해가 없다. 답은 **DB 에
+        // 남기지 않고** 화면 표시에만 쓴다 — 사전에는 유료 모델과 사람의 확정만 들어간다.
+        Map<String, TempClassifierService.Guess> temp = temporary.classify(plan.ask());
+
+        if (!plan.ask().isEmpty() || !temp.isEmpty()) {
+            log.info("미분류 최신화 — userId={} 남은 가맹점 {}, 임시 분류 {}, 임계값 {}",
+                    userId, plan.ask().size(), temp.size(), minMerchants);
+        }
+
+        // **여기가 임계값이다.** 모자라면 유료 통로를 부르지 않고, 임시 답만 얹어 돌려준다.
+        if (plan.ask().size() < minMerchants) {
+            return self.applyGuesses(userId, plan.remembered(), Map.of(), temp, Set.of());
+        }
+
+        // 업종 이름을 함께 받는다 — 재질의 후보를 중분류가 아니라 업종으로 주기 위해서다.
+        Map<String, String> paidIndustries = new java.util.TreeMap<>();
+        // **답을 받은 곳**을 따로 받아 둔다 — '헛물'은 이 안에서만 셀 수 있다.
+        Set<String> answered = new java.util.HashSet<>();
+        Map<String, String> fresh = classifier.classify(plan.ask(), plan.important(),
+                paidIndustries, answered);
+        fresh = reconcile(fresh, paidIndustries, temp);
+
+        Asked out = self.applyGuesses(userId, plan.remembered(), fresh, temp, answered);
+        log.info("가맹점 분류 질의 — userId={} 물어본 곳 {}, 답 얻음 {}, 종결 {}",
+                userId, plan.ask().size(), fresh.size(), out.settled().size());
+        return out;
+    }
+
+    /**
+     * 이번에 <b>무엇을 물을지</b> — 이름과 집계만 담는다(엔티티가 아니다).
+     *
+     * @param ask        물어야 할 가맹점명
+     * @param remembered 이미 사전이 아는 추정 — 묻지 않는다
+     * @param important  못 잡았을 때 다시 물을 값어치가 있는 곳
+     */
+    public record Plan(List<String> ask, Map<String, String> remembered, Set<String> important) {}
+
+    /** ① 물을 곳을 추린다 — 읽기만 한다. */
+    @Transactional(readOnly = true)
+    public Plan plan(Long userId) {
+        List<UserPayment> askable = askable(userId);
 
         // **이미 물어본 가맹점은 다시 묻지 않는다.** 추정을 결제 행에만 남기면 다음 달 같은
         // 넷플릭스가 새 결제로 들어올 때 또 묻게 된다 — 행이 새것이라 비어 있기 때문이다.
@@ -129,28 +196,6 @@ public class MerchantAskService {
 
         List<String> ask = askable.stream().map(UserPayment::getMerchantName).distinct()
                 .filter(n -> !remembered.containsKey(n)).toList();
-
-        // ②-c **임시 분류 — 무료라 임계값 없이 지금 묻는다.**
-        // 유료 통로는 40곳이 쌓여야 부르는데, 그동안 새 결제는 '카테고리없음'으로 남는다.
-        // 무료 통로는 값이 0 이라 결제가 들어오는 대로 물어도 손해가 없다. 답은 **DB 에
-        // 남기지 않고** 화면 표시에만 쓴다 — 사전에는 유료 모델과 사람의 확정만 들어간다.
-        Map<String, TempClassifierService.Guess> temp = temporary.classify(ask);
-
-        // **브랜드도 같이 뽑는다.** 가맹점명 하나씩 물어 브랜드를 알아 두면 그 브랜드의 새 지점은
-        // 다시 안 물어도 되고, 한 지점이 분류되면 나머지에 물려줄 수 있다. 무료 통로라 하나씩
-        // 물어도 손해가 없고, 이미 아는 가맹점은 건너뛰므로 쌓일수록 호출이 준다.
-        if (!ask.isEmpty() || !temp.isEmpty()) {
-            log.info("미분류 최신화 — userId={} 남은 가맹점 {}, 임시 분류 {}, 임계값 {}",
-                    userId, ask.size(), temp.size(), minMerchants);
-        }
-
-        // **여기가 임계값이다.** 모자라면 유료 통로를 부르지 않고, 임시 답만 얹어 돌려준다.
-        if (ask.size() < minMerchants) {
-            paint(rows, remembered, temp);
-            Map<String, String> shown = new LinkedHashMap<>(remembered);
-            temp.forEach((n, g) -> shown.putIfAbsent(n, g.category2()));
-            return new Asked(rows, shown, Set.of());
-        }
 
         // **못 잡았을 때 다시 물을 값어치**를 여기서 정한다 — 건수·금액을 아는 것은 이쪽이다.
         // 모델은 알면서도 큰 묶음에서 흘리므로(2026-08-05 실측: 넷플릭스) 중요한 것은 작게
@@ -166,42 +211,92 @@ public class MerchantAskService {
                 .filter(n -> count.getOrDefault(n, 0) >= RETRY_MIN_COUNT
                         || total.getOrDefault(n, 0L) >= RETRY_MIN_AMOUNT)
                 .collect(java.util.stream.Collectors.toSet());
+        return new Plan(ask, remembered, important);
+    }
 
-        // 업종 이름을 함께 받는다 — 재질의 후보를 중분류가 아니라 업종으로 주기 위해서다.
-        Map<String, String> paidIndustries = new java.util.TreeMap<>();
-        Map<String, String> fresh = classifier.classify(ask, important, paidIndustries);
-        fresh = reconcile(fresh, paidIndustries, temp);
+    /**
+     * 물어도 되는 결제 — <b>추리는 자리와 입히는 자리가 같은 규칙을 써야 한다.</b>
+     *
+     * <p>두 단계가 서로 다른 트랜잭션이라 각자 읽는다. 규칙이 갈라지면 "물어놓고 안 입히는"
+     * 조용한 실패가 난다.
+     *
+     * <p><b>미분류 전부를 본다.</b> 예전에는 최신 100건만 봤는데, 미분류가 그보다 많으면 오래된
+     * 것은 영원히 차례가 안 왔다(2026-08-07 운영: 150건 중 100건만 보여 카드사 수수료가
+     * 사각지대에 있었다).
+     *
+     * <p><b>더미 결제는 어느 모델에도 보내지 않는다.</b> 생성기가 만든 상호라 물어볼 값이 없고
+     * (카탈로그가 이미 안다), 답이 와도 사전에 못 들어간다 — 사전에 실사용자 게이트가 있기
+     * 때문이다. 즉 더미를 물으면 <b>호출만 쓰고 버려진다.</b> 유료 통로에서는 그게 곧 돈이고,
+     * 무료 통로에서도 남의 서버를 헛되이 두드리는 일이다.
+     */
+    private List<UserPayment> askable(Long userId) {
+        return payments.findByUserIdAndCategory2OrderByPaymentDateDesc(
+                        userId, IndustryCategoryMapper.UNCLASSIFIED).stream()
+                .filter(UserPayment::isFromRealPerson)
+                .filter(p -> p.getCategory2Llm() == null)
+                .filter(p -> classifier.worthAsking(p.getMerchantName(), p.getBusinessNumber()))
+                .toList();
+    }
 
-        // 새로 알아낸 것만 사전에 남긴다 — 다음 연동·다음 달 결제에서 재사용된다.
-        // (실제 사람의 결제일 때만 쌓인다. 더미의 사업자번호는 실재하지 않는다.)
-        for (UserPayment p : askable) {
-            String g = fresh.get(p.getMerchantName());
-            if (g != null) dictionary.rememberGuess(p, g);
-        }
-
-        // **헛물켠 질문을 센다** — 물었는데 답이 안 온 가맹점. 세 번째면 '기타'로 종결하고
-        // 다음부터는 조회도 질문도 하지 않는다. 이 기록이 없으면 화면을 열 때마다 같은 상호를
-        // 다시 묻는다: 답이 없다는 사실이 어디에도 안 남기 때문이다.
-        //
-        // **가맹점당 한 번만 센다.** 결제 건마다 세면 넷플릭스 12건짜리 가맹점이 한 번의
-        // 질문에 12회로 기록돼 첫 시도에 바로 종결된다.
-        LocalDateTime askedAt = LocalDateTime.now(clock);
+    /**
+     * ③ 얻은 답을 결제와 사전에 입힌다 — <b>여기서 다시 읽는다.</b>
+     *
+     * <p>모델 질의는 트랜잭션 밖에서 돌므로 그때 손에 든 엔티티는 영속 상태가 아니다.
+     * 고치는 순간에 트랜잭션을 열고 그 안에서 읽은 것을 고쳐야 반영된다.
+     *
+     * @param answered <b>모델에 물어보고 답을 받은</b> 가맹점명. '헛물'은 <b>이 안에서만</b> 센다.
+     *                 비어 있으면 유료 통로를 안 부른 것이라 아무것도 세지 않는다.
+     */
+    @Transactional
+    public Asked applyGuesses(Long userId, Map<String, String> remembered,
+                              Map<String, String> fresh,
+                              Map<String, TempClassifierService.Guess> temp,
+                              Set<String> answered) {
+        List<UserPayment> rows = payments.findByUserIdAndCategory2OrderByPaymentDateDesc(
+                userId, IndustryCategoryMapper.UNCLASSIFIED);
         Set<String> settled = new java.util.LinkedHashSet<>();
-        Set<String> counted = new java.util.HashSet<>();
-        for (UserPayment p : askable) {
-            String name = p.getMerchantName();
-            if (fresh.containsKey(name) || !counted.add(name)) continue;
-            if (dictionary.noteLlmMiss(p, askedAt)) settled.add(name);
+        if (!answered.isEmpty() || !fresh.isEmpty()) {
+            List<UserPayment> askable = askable(userId);
+            // 새로 알아낸 것만 사전에 남긴다 — 다음 연동·다음 달 결제에서 재사용된다.
+            // (실제 사람의 결제일 때만 쌓인다. 더미의 사업자번호는 실재하지 않는다.)
+            for (UserPayment p : askable) {
+                String g = fresh.get(p.getMerchantName());
+                if (g != null) dictionary.rememberGuess(p, g);
+            }
+            // **헛물켠 질문을 센다** — 물었는데 답이 안 온 가맹점. 세 번째면 '기타'로 종결하고
+            // 다음부터는 조회도 질문도 하지 않는다. 이 기록이 없으면 화면을 열 때마다 같은
+            // 상호를 다시 묻는다: 답이 없다는 사실이 어디에도 안 남기 때문이다.
+            //
+            // **가맹점당 한 번만 센다.** 결제 건마다 세면 넷플릭스 12건짜리 가맹점이 한 번의
+            // 질문에 12회로 기록돼 첫 시도에 바로 종결된다.
+            //
+            // **세는 자격은 `answered` 하나로 정한다.** "물어보고 답을 받았는데 그 가맹점이
+            // 답에 없었다" 만이 침묵이다. 그 밖은 전부 <b>우리가 못 물은 것</b>이고, 못 물은 것을
+            // 세면 세 번 만에 멀쩡한 가맹점이 '기타'로 종결된다 — 종결은 결제와 소비 원장까지
+            // 고치므로 리포트에서 그 지출이 통째로 사라진다. 다음 넷이 한 규칙으로 막힌다
+            // (2026-08-07 감사·재감사):
+            //
+            //   · 사전이 이미 추정을 아는 곳   ①에서 질문 목록에서 빠진다(remembered)
+            //   · 통로가 꺼져 있다             키가 없으면 HTTP 를 한 번도 안 낸다
+            //   · 호출이 실패했다              429·타임아웃이면 그 묶음이 통째로 빈손이다
+            //   · 상한을 넘겼다                5회 × 40곳을 넘은 뒤쪽은 프롬프트에 안 담긴다
+            //   · ①과 ③ 사이에 새로 들어왔다   질문 당시에는 존재하지도 않았다
+            LocalDateTime askedAt = LocalDateTime.now(clock);
+            Set<String> counted = new java.util.HashSet<>();
+            for (UserPayment p : askable) {
+                String name = p.getMerchantName();
+                if (!answered.contains(name)) continue;
+                if (fresh.containsKey(name) || !counted.add(name)) continue;
+                if (dictionary.noteLlmMiss(p, askedAt)) settled.add(name);
+            }
+            applySettled(rows, settled);
         }
-        applySettled(rows, settled);
 
         Map<String, String> paid = new LinkedHashMap<>(remembered);
         paid.putAll(fresh);
         paint(rows, paid, temp);
         Map<String, String> guesses = new LinkedHashMap<>(paid);
         temp.forEach((n, g) -> guesses.putIfAbsent(n, g.category2()));
-        log.info("가맹점 분류 질의 — userId={} 물어본 곳 {}, 답 얻음 {}, 종결 {}",
-                userId, ask.size(), fresh.size(), settled.size());
         return new Asked(rows, guesses, settled);
     }
 

@@ -114,7 +114,16 @@ public class GuardianNarrative {
             @Value("${finntech.gemini.base-url:https://generativelanguage.googleapis.com}") String baseUrl) {
         this.apiKey = apiKey;
         this.model = com.finntech.config.GeminiModels.orDefault(model);
-        this.restClient = RestClient.builder().baseUrl(baseUrl).build();
+        // **타임아웃이 없으면 배치가 영구히 선다.** 이 호출은 `GuardianService.ingest` 의
+        // `@Transactional` 안에서 일어나고, 그 ingest 를 5분 배치가 부른다. 스케줄러 스레드는
+        // 기본 하나라 여기서 응답이 안 오면 ① 커넥션 하나가 무한 점유되고 ② 뒤 사용자의
+        // 동기화가 영영 안 돌며 ③ 지킴이 배치·04시 파기 크론까지 같이 선다. 그리고 그 방아쇠는
+        // 대개 더미의 결제다 — 실측으로 문장 호출 14건 중 13건이 더미 몫이었다(2026-08-07 재감사).
+        // `RestClient.builder()` 는 정적 팩터리라 부트 자동구성이 안 붙는다({@link HttpClients}).
+        this.restClient = RestClient.builder().baseUrl(baseUrl)
+                .requestFactory(com.finntech.util.HttpClients.factory(
+                        java.time.Duration.ofSeconds(3), java.time.Duration.ofSeconds(8)))
+                .build();
     }
 
     public boolean aiEnabled() {
@@ -134,13 +143,17 @@ public class GuardianNarrative {
      * @param recentKeyPhrases 최근 쓴 표현 — 반복을 피하게 한다(고정구는 예외)
      */
     public Message compose(String caseId, Tone tone, PhrasingMode phrasingMode,
-                           Map<String, Object> numbers, List<String> recentKeyPhrases, boolean formalTone) {
+                           Map<String, Object> numbers, List<String> recentKeyPhrases,
+                           boolean formalTone, boolean allowAi) {
         Message template = new Message(
                 GuardianCopy.fallbackTitle(caseId, numbers),
                 GuardianCopy.fallback(caseId, numbers),
                 GuardianCopy.fallbackKeyPhrases(caseId),
                 true);
-        if (!aiEnabled()) return template;
+        // **더미에는 Gemini 를 안 부른다**(사용자 규칙 2026-08-08). 생성기가 만든 결제에 대해
+        // 문장을 지어 내는 데 유료 호출을 쓸 이유가 없다 — 실측으로 문장 호출 14건 중 13건이
+        // 더미 몫이었다. 폴백이 먼저인 구조라 막아도 화면은 그대로 템플릿 문장이 나간다.
+        if (!allowAi || !aiEnabled()) return template;
 
         String prompt = SYSTEM_PROMPT + """
 
