@@ -46,6 +46,8 @@ public class MyDataLinkService {
     /** 업종코드 → 소비 중분류. 제공자는 업종까지만 주므로 분류는 우리가 한다. */
     private final com.finntech.engine.IndustryCategoryMapper industryMapper;
     private final MerchantCategoryService merchantCategoryService;
+    /** 주소를 읽고 쓰는 자리 — 사전이 주소의 정본이다(V26). */
+    private final MerchantCategoryRepository merchantCategoryRepository;
     /** 사업자번호가 한 사업인가 여러 사업인가 — 연동이 관측해 갱신한다(V16). */
     private final BusinessNumberKindService businessNumberKindService;
     /** 분류 순위 ②-b — 사업자등록번호로 등록 업종을 조회한다. 기본은 꺼져 있다. */
@@ -81,6 +83,7 @@ public class MyDataLinkService {
                              ConsumptionRepository consumptionRepository, CategoryRepository categoryRepository,
                              com.finntech.engine.IndustryCategoryMapper industryMapper,
                              MerchantCategoryService merchantCategoryService,
+                             MerchantCategoryRepository merchantCategoryRepository,
                              BusinessNumberKindService businessNumberKindService,
                              IndustryLookupService industryLookup,
                              MerchantAskService merchantAskService,
@@ -99,6 +102,7 @@ public class MyDataLinkService {
         this.categoryRepository = categoryRepository;
         this.industryMapper = industryMapper;
         this.merchantCategoryService = merchantCategoryService;
+        this.merchantCategoryRepository = merchantCategoryRepository;
         this.businessNumberKindService = businessNumberKindService;
         this.industryLookup = industryLookup;
         this.merchantAskService = merchantAskService;
@@ -259,6 +263,15 @@ public class MyDataLinkService {
             var asked = merchantAskService.ask(userId, MerchantAskService.BACKGROUND_MIN);
             if (asked != null) reclassified += asked.settled().size();
         }
+        // **주소를 회차마다 조금씩 채운다.**
+        //
+        // 업종 조회는 *미분류* 결제만 훑는다. 그래서 이미 분류가 끝난 가맹점은 주소를 얻을
+        // 기회가 없고, 실제로 실사용자 번호 132종 중 5%만 주소가 떴다 — 그 5%도 제공자가
+        // 우연히 아는 번호였을 뿐이다. 분류와 무관하게 따로 훑어야 채워진다.
+        //
+        // 조회처를 연달아 두드리지 않게 **순차로, 회차당 상한까지만** 한다(`pause` 를 사이에 둔다).
+        fillMissingAddresses();
+
         // **브랜드는 미분류와 무관하게 돈다** — 이미 분류된 가맹점도 브랜드가 필요하다.
         labelBrands(userId);
 
@@ -311,6 +324,48 @@ public class MyDataLinkService {
         user.setRealPerson(true);
         userRepository.save(user);
         return true;
+    }
+
+    /** 조회로 알아낸 주소를 사전에 적는다 — 프록시를 거쳐 자기 트랜잭션을 연다. */
+    @Transactional
+    public void rememberAddress(String businessNumber, String merchantName, String address) {
+        merchantCategoryService.rememberAddress(businessNumber, merchantName, address);
+    }
+
+    /**
+     * <b>주소가 빈 사전 행을 순차로 채운다</b> — 회차당 상한까지만.
+     *
+     * <p>여기 오는 것은 실사용자뿐이다(위 관문). 사전에 자리가 있다는 것은 이미 실사용자 게이트를
+     * 통과했다는 뜻이라, 여기서 다시 가릴 것이 없다.
+     *
+     * <p>업종 조회와 <b>같은 통로·같은 문서</b>를 쓴다. 즉 주소를 위해 새로 만든 호출이 아니라,
+     * 이미 있던 조회를 아직 안 물어본 번호에 마저 하는 것이다.
+     */
+    private void fillMissingAddresses() {
+        if (!industryLookup.usable()) return;
+        var rows = merchantCategoryService.missingAddress(industryLookup.maxPerSync());
+        if (rows.isEmpty()) return;
+        int filled = 0, asked = 0;
+        for (MerchantCategory row : rows) {
+            String biz = row.getBusinessNumber();
+            if (!industryLookup.askable(biz)) continue;      // PG·복합은 물어도 소용없다
+            asked++;
+            var found = industryLookup.lookup(biz);
+            industryLookup.pause();                          // 남의 서버를 연달아 두드리지 않는다
+            String addr = found.map(IndustryLookupService.Found::address).orElse(null);
+            if (addr == null) continue;
+            if (selfProvider.getObject().storeAddress(row.getId(), addr)) filled++;
+        }
+        if (asked > 0) {
+            log.info("가맹점 주소 채우기 — 대상 {}, 물어본 곳 {}, 채워진 곳 {}", rows.size(), asked, filled);
+        }
+    }
+
+    /** 행 하나에 주소를 적는다 — 백필이 부르는 짧은 쓰기 트랜잭션. */
+    @Transactional
+    public boolean storeAddress(Long rowId, String address) {
+        return merchantCategoryRepository.findById(rowId)
+                .map(r -> r.noteAddress(address)).orElse(false);
     }
 
     /** 연동의 <b>적재 부분</b> — DB 만 만진다. 바깥 서버를 부르는 일은 여기 들어오지 않는다. */
@@ -492,9 +547,15 @@ public class MyDataLinkService {
             var row = merchantCategoryService.attemptRow(p);
             if (row.isPresent() && row.get().registryAnswered()) continue;   // 이미 답을 받아 뒀다
             asked++;
-            var answer = industryLookup.industryOfMerchant(biz);
+            // 이름을 `found` 로 두면 위의 '가맹점명 → 중분류' 맵과 부딪힌다.
+            var looked = industryLookup.lookup(biz);
             industryLookup.pause();
+            var answer = looked.map(IndustryLookupService.Found::industry)
+                    .filter(v -> v != null && !v.isBlank());
             merchantCategoryService.noteLookup(p, answer.orElse(null), now);
+            // **주소는 덤이다.** 같은 문서에 들어 있으므로 호출이 안 는다 — 지금까지 버리고 있었다.
+            String addr = looked.map(IndustryLookupService.Found::address).orElse(null);
+            if (addr != null) selfProvider.getObject().rememberAddress(biz, p.getMerchantName(), addr);
             String mid = answer.map(industryMapper::midOfFineName)
                     .filter(m -> !com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED.equals(m))
                     .orElse(null);
@@ -640,6 +701,15 @@ public class MyDataLinkService {
      * 한 번 동안 커넥션만 잡고 있게 된다.
      */
     public MyDataResponses.MerchantView merchant(String businessNumber) {
+        // **사전을 먼저 본다.** 조회처가 알려 준 주소가 여기 쌓인다. 제공자는 생성기가 만든
+        // 번호만 알아서 실사용자 번호는 대부분 모른다 — 132종 중 7종뿐이었다.
+        var known = merchantCategoryRepository.findWithAddress(
+                com.finntech.domain.MerchantCategory.normalize(businessNumber));
+        if (known.isPresent()) {
+            MerchantCategory row = known.get();
+            return new MyDataResponses.MerchantView(null, row.getCategory2(), businessNumber,
+                    row.getMerchantName(), row.getAddress(), null, null, null);
+        }
         MyDataResponses.MerchantView m = myDataClient.findMerchant(businessNumber);
         if (m == null) return null;
         // 업종코드는 사용자에게 보여줄 말이 아니다. 결제와 같은 표로 소비 중분류를 붙여 준다.

@@ -33,6 +33,17 @@ public class IndustryLookupProperties {
      */
     private String pattern = "";
 
+    /**
+     * 받아온 문서에서 <b>주소</b>를 뽑는 정규식 — <b>1번 그룹</b>이 주소라야 한다.
+     *
+     * <p>비워 두면 주소는 안 뽑고 업종만 뽑는다. 이 통로가 없어도 되는 것과 같은 이유로,
+     * 주소 하나 때문에 업종 조회까지 못 하게 되면 안 된다.
+     *
+     * <p><b>같은 문서에서 뽑으므로 바깥 호출이 안 는다.</b> 조회처는 업종과 주소를 함께 주는데
+     * 지금까지 업종만 쓰고 주소는 버리고 있었다.
+     */
+    private String addressPattern = "";
+
     /** 한 번 부르는 데 이만큼 넘게 걸리면 포기한다. 연동이 조회 때문에 느려지면 안 된다. */
     private int timeoutMs = 4000;
 
@@ -53,6 +64,8 @@ public class IndustryLookupProperties {
     public void setUrl(String url) { this.url = url; }
 
     public String getPattern() { return pattern; }
+    public String getAddressPattern() { return addressPattern; }
+    public void setAddressPattern(String addressPattern) { this.addressPattern = addressPattern; }
     public void setPattern(String pattern) { this.pattern = pattern; }
 
     public int getTimeoutMs() { return timeoutMs; }

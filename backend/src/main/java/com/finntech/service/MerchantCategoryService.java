@@ -247,6 +247,33 @@ public class MerchantCategoryService {
     }
 
     /**
+     * 조회처가 알려 준 <b>주소</b>를 사전에 적는다 — 업종과 같은 문서에서 온 것이다.
+     *
+     * <p>사전에 자리가 없으면 만들지 않는다. 주소만 아는 가맹점을 사전에 앉히면 <i>"이 점포의
+     * 업종이 무엇인가"</i> 라는 약속이 깨진다(브랜드에 대기 장소를 따로 둔 것과 같은 이유).
+     * 업종을 알아내는 흐름이 자리를 만들고, 주소는 그 자리에 얹힌다.
+     *
+     * @return 새로 적었으면 true
+     */
+    @Transactional
+    public boolean rememberAddress(String businessNumber, String merchantName, String address) {
+        if (address == null || address.isBlank()) return false;
+        String biz = MerchantCategory.normalize(businessNumber);
+        if (biz.isEmpty() || mapper.isPaymentAgency(biz)) return false;   // PG 번호는 남의 것이다
+        boolean[] wrote = {false};
+        repository.findByBusinessNumberAndMerchantName(biz, merchantName)
+                .ifPresent(row -> wrote[0] = row.noteAddress(address));
+        return wrote[0];
+    }
+
+    /** 주소가 아직 없는 사전 행 — 순차 백필이 채울 대상이다. */
+    @Transactional(readOnly = true)
+    public List<MerchantCategory> missingAddress(int limit) {
+        return repository.findMissingAddress(
+                org.springframework.data.domain.PageRequest.of(0, Math.max(1, limit)));
+    }
+
+    /**
      * <b>LLM 에 물었는데 답이 없었다고 적는다</b> — {@value MerchantCategory#GIVE_UP_AFTER}회째면 '기타'로 종결한다.
      *
      * <p>답을 얻은 경우는 여기 오지 않는다({@link #rememberGuess} 가 받는다). 세는 것은

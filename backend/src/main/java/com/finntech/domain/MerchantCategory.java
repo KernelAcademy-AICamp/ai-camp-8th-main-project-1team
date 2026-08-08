@@ -148,6 +148,15 @@ public class MerchantCategory {
     @Column(name = "registry_industry", length = 80)
     private String registryIndustry;
 
+    /**
+     * 등록처가 알려 준 <b>가맹점 주소</b>(V26).
+     *
+     * <p>업종과 <b>같은 문서</b>에서 뽑는다 — 주소를 따로 부르지 않으므로 바깥 호출이 안 는다.
+     * 한 번 적으면 다음부터는 조회 없이 답한다({@code registryIndustry} 와 같은 이치다).
+     */
+    @Column(length = 200)
+    private String address;
+
     /** 바깥 조회처에 물어본 횟수. 답을 받아 {@link #registryIndustry} 가 차면 더 묻지 않는다. */
     @Column(name = "lookup_attempts", nullable = false)
     private int lookupAttempts;
@@ -257,6 +266,22 @@ public class MerchantCategory {
     }
 
     public String getRegistryIndustry() { return registryIndustry; }
+    public String getAddress() { return address; }
+
+    /**
+     * 주소를 적는다 — <b>이미 있으면 덮지 않는다.</b>
+     *
+     * <p>덮지 않는 이유는 조회처가 답을 바꿀 때 화면의 주소가 이유 없이 흔들리기 때문이다.
+     * 바꿔야 할 일이 생기면 그때 지우고 다시 채운다.
+     *
+     * @return 이번에 새로 적었으면 true
+     */
+    public boolean noteAddress(String value) {
+        if (value == null || value.isBlank()) return false;
+        if (address != null && !address.isBlank()) return false;
+        this.address = value.length() > 200 ? value.substring(0, 200) : value;
+        return true;
+    }
     public int getLookupAttempts() { return lookupAttempts; }
     public int getLlmAttempts() { return llmAttempts; }
     public LocalDateTime getLastAttemptAt() { return lastAttemptAt; }

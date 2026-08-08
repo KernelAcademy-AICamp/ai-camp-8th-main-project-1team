@@ -65,6 +65,28 @@ public interface MerchantCategoryRepository extends JpaRepository<MerchantCatego
     /** 여러 상호를 <b>한 번에</b> — 가맹점마다 묻지 않기 위해서다(N+1 방지). */
     List<MerchantCategory> findByMerchantNameIn(List<String> merchantNames);
 
+    /**
+     * <b>주소가 아직 없는</b> 사전 행 — 번호가 있는 것만(번호가 없으면 조회할 수가 없다).
+     *
+     * <p>업종 조회는 <i>미분류</i> 결제만 훑으므로, 이미 분류가 끝난 가맹점은 주소를 얻을 기회가
+     * 없다. 그래서 따로 훑어 회차마다 조금씩 채운다.
+     */
+    @Query("select m from MerchantCategory m "
+            + "where m.address is null and m.businessNumber <> '' "
+            + "order by m.id")
+    List<MerchantCategory> findMissingAddress(org.springframework.data.domain.Pageable page);
+
+    /** 이 번호의 <b>주소를 아는</b> 행 — 화면이 사업자번호를 눌렀을 때 여기부터 본다. */
+    @Query("select m from MerchantCategory m "
+            + "where m.businessNumber = :biz and m.address is not null and m.address <> '' "
+            + "order by m.id")
+    List<MerchantCategory> findAllWithAddress(@Param("biz") String biz);
+
+    default Optional<MerchantCategory> findWithAddress(String biz) {
+        List<MerchantCategory> rows = findAllWithAddress(biz);
+        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
+    }
+
     /** 사전에 이미 확정된 브랜드 이름들 — 대기 장소의 것과 합쳐 2차 대조의 후보가 된다. */
     @Query("select distinct m.brand from MerchantCategory m "
             + "where m.brand is not null and m.brand <> :exclude order by m.brand")
