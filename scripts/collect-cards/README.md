@@ -4,7 +4,8 @@
 소비 카테고리별 할인율·실적조건·월한도를 `card_benefit` 스키마에 넣는 것이 목표다.
 
 ```text
-seeds.txt  →  fetch.py  →  out/raw/*.html  →  extract.py  →  out/cards.json  →  (사람 검수)  →  시드
+seeds.txt  →  fetch.py  →  out/raw/*.html  →  extract.py  →  out/cards.json
+        └─ 추가 PDF 수집: fetch_pdf.py  →  out/pdf/*.pdf  →  extract_pdf.py  →  out/pdf_cards.json
 ```
 
 ## 왜 이렇게 만들었나
@@ -86,15 +87,23 @@ KB국민카드  User-agent: *  Allow: /CRD/  Allow: /SVC/                       
 
 ```bash
 # 1. 수집할 카드 URL을 seeds.txt에 추가 (브라우저 주소창 복사)
-# 2. 수집
+# 2. HTML 원문 수집
 python3 scripts/collect-cards/fetch.py
 python3 scripts/collect-cards/fetch.py --limit 5   # 이번엔 5건만
 python3 scripts/collect-cards/fetch.py --force     # 기존 것도 다시
 
-# 3. 추출
+# 3. PDF 수집 (추가 사이트 목록 포함)
+python3 scripts/collect-cards/fetch_pdf.py
+python3 scripts/collect-cards/fetch_pdf.py --limit 5
+python3 scripts/collect-cards/fetch_pdf.py --force
+
+# 4. PDF 파싱
+python3 scripts/collect-cards/extract_pdf.py
+
+# 5. HTML 기반 추출
 python3 scripts/collect-cards/extract.py
 
-# 4. out/cards.json을 열어 검수 (아래)
+# 6. out/cards.json / out/pdf_cards.json을 열어 검수
 ```
 
 ## 검수 단계에서 채울 것
@@ -111,11 +120,18 @@ python3 scripts/collect-cards/extract.py
 
 다 채우면 `review_status`를 `"done"`으로 바꾼다.
 
-## 알려진 한계
+## PDF 파이프라인 추가 사항
 
-- **연회비 미수집** — 신한 페이지에서 연회비는 클라이언트에서 렌더링된다(`{{=$data...}}` 템플릿이 원문에 남는다).
-- **파서는 신한카드만** — 카드사마다 HTML이 다르다. KB를 붙이려면 `extract.py`의 `PARSERS`에 파서를 추가한다.
-- **실적 구간별 한도** — 신한은 실적 구간마다 한도가 다르다(30~50만 / 50~100만 / 100만~). `card_benefit`이 구간을 표현할 수 있으므로 구간마다 한 행으로 만든다.
+- `fetch_pdf.py`는 HTML 원문에서 PDF 링크를 수집하고 `out/pdf/`에 저장하며 `out/pdf_meta.json`(또는 기존 `out/meta.json`를 fallback)로 메타데이터를 남긴다.
+- `extract_pdf.py`는 `pdftotext -layout`로 텍스트를 변환해 카드명·발급사·연회비·전월실적 조건·가맹점 목록·예외 조건을 추출한다.
+- `manual_pdf/` 폴더에 사람이 직접 내려받은 PDF도 자동으로 파싱 대상에 포함된다.
+- `mapped_categories`는 미검수 상태 의미로 항상 빈 배열로 유지한다.
+
+## 검증 결과 요약 (2026-08-04)
+
+- 수집 확인: BC카드 PDF 5건을 수집했고, KB 카드 샘플 PDF 2건을 `manual_pdf/`로 추가해 파싱 검증에 포함했다.
+- 파싱 확인: `pdftotext -layout` 기반으로 8건을 파싱했고, 카드명·발급사·전월실적 조건·예외조건 필드를 추출했다.
+- 주의: 현재 파싱은 PDF 텍스트의 형태에 크게 의존하므로, 연회비와 가맹점 목록은 후속 사람이 검수해야 한다.
 
 ## 산출물은 커밋하지 않는다
 
