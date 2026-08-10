@@ -28,15 +28,15 @@ import java.util.Map;
 @Service
 public class WasteScoringService {
 
-    /**
-     * 무엇을 샀는지 알 수 없는 결제의 카테고리. ML은 이를 낭비/필수로 판단하지 않고(사용자가 직접 결정),
-     * 학습에서도 제외한다(§13-11).
+    /*
+     * 무엇을 샀는지 알 수 없는 결제는 ML이 낭비/필수로 판단하지 않고(사용자가 직접 결정),
+     * 학습에서도 제외한다(§13-11). 판정은 {@link IndustryCategoryMapper#isUnknown} 한 곳에서 한다.
      *
-     * <p>이름을 여기에 박지 않고 {@link IndustryCategoryMapper}에서 가져온다. 예전에는 {@code "미분류"}가
-     * 박혀 있었는데 업종코드 체계로 옮기며 미분류 이름이 {@code "카테고리없음"}이 되었고, 그 결과
-     * <b>알 수 없는 PG 결제가 전부 ML 판정에 들어갔다</b> — 문자열이 안 맞을 뿐이라 크래시가 없었다.
+     * 이름을 여기 박지 않는 이유가 있다. 예전에는 {@code "미분류"}가 박혀 있었는데 업종코드
+     * 체계로 옮기며 미분류 이름이 {@code "카테고리없음"}이 되었고, 그 결과 <b>알 수 없는 PG
+     * 결제가 전부 ML 판정에 들어갔다</b> — 문자열이 안 맞을 뿐이라 크래시가 없었다. 그래서
+     * 같은 사고가 '기타'(종결 표시)로 반복되지 않게, 상수를 복사해 두지 않고 판정 함수를 부른다.
      */
-    private static final String UNCLASSIFIED = IndustryCategoryMapper.UNCLASSIFIED;
 
     private final SpendingClassifier classifier;
     private final UserPaymentRepository userPaymentRepository;
@@ -127,7 +127,8 @@ public class WasteScoringService {
         }
         List<WasteJudgment> out = new ArrayList<>(payments.size());
         for (UserPayment p : payments) {
-            if (p.getCategory2() == null || UNCLASSIFIED.equals(p.getCategory2())) continue; // 미분류(unknown-pg)는 판정 안 함
+            // 미분류(unknown-pg)와 종결(기타)는 판정 안 함 — 무엇을 샀는지 모르는 것은 같다.
+            if (IndustryCategoryMapper.isUnknown(p.getCategory2())) continue;
             Map<String, Object> feats = WasteFeatureExtractor.features(
                     p.getCategory2(), p.getAmount(), p.getPaymentDate(), stats);
             double prob = classifier.wasteProbability(feats);
@@ -171,7 +172,7 @@ public class WasteScoringService {
         long essentialAmt = 0, totalAmt = 0;
         Map<String, long[]> byCat1 = new java.util.TreeMap<>(); // category1 -> [낭비금액, 총금액]
         for (UserPayment p : payments) {
-            if (p.getCategory2() == null || UNCLASSIFIED.equals(p.getCategory2())) continue; // 미분류(unknown-pg) 집계 제외
+            if (IndustryCategoryMapper.isUnknown(p.getCategory2())) continue;  // 미분류·기타 집계 제외
             boolean waste = overrides.containsKey(p.getCategory2())
                     ? overrides.get(p.getCategory2())
                     : classifier.wasteProbability(WasteFeatureExtractor.features(

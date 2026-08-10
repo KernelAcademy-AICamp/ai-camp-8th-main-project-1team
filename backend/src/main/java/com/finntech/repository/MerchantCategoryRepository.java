@@ -53,4 +53,47 @@ public interface MerchantCategoryRepository extends JpaRepository<MerchantCatego
                      END ASC, m.id ASC
             """)
     List<MerchantCategory> findByNameOnly(@Param("merchantName") String merchantName);
+
+    /**
+     * <b>번호를 가리지 않고</b> 그 상호의 사전 행들 — 브랜드를 적을 자리를 찾을 때 쓴다.
+     *
+     * <p>{@link #findByNameOnly} 와 다르다. 그쪽은 번호가 빈 행(해외 가맹점)만 보는데,
+     * 브랜드는 번호와 무관하게 <b>이름에 붙는 성질</b>이라 번호가 있든 없든 같은 상호면 같다.
+     */
+    List<MerchantCategory> findByMerchantName(String merchantName);
+
+    /** 여러 상호를 <b>한 번에</b> — 가맹점마다 묻지 않기 위해서다(N+1 방지). */
+    List<MerchantCategory> findByMerchantNameIn(List<String> merchantNames);
+
+    /**
+     * <b>주소가 아직 없는</b> 사전 행 — 번호가 있는 것만(번호가 없으면 조회할 수가 없다).
+     *
+     * <p>업종 조회는 <i>미분류</i> 결제만 훑으므로, 이미 분류가 끝난 가맹점은 주소를 얻을 기회가
+     * 없다. 그래서 따로 훑어 회차마다 조금씩 채운다.
+     *
+     * <p><b>몇 번 물어도 없던 번호는 뺀다.</b> 조회처에 주소칸이 비어 있는 사업자가 있어(2026-08-08
+     * 운영 7곳) 그런 행은 성공이 영영 안 오는데, 빼지 않으면 회차마다 다시 물어 하루 2,016회가
+     * 헛나갔다. {@link MerchantCategory#GIVE_UP_AFTER} 회에서 멎는다.
+     */
+    @Query("select m from MerchantCategory m "
+            + "where m.address is null and m.businessNumber <> '' "
+            + "and m.addressMisses < " + MerchantCategory.GIVE_UP_AFTER + " "
+            + "order by m.id")
+    List<MerchantCategory> findMissingAddress(org.springframework.data.domain.Pageable page);
+
+    /** 이 번호의 <b>주소를 아는</b> 행 — 화면이 사업자번호를 눌렀을 때 여기부터 본다. */
+    @Query("select m from MerchantCategory m "
+            + "where m.businessNumber = :biz and m.address is not null and m.address <> '' "
+            + "order by m.id")
+    List<MerchantCategory> findAllWithAddress(@Param("biz") String biz);
+
+    default Optional<MerchantCategory> findWithAddress(String biz) {
+        List<MerchantCategory> rows = findAllWithAddress(biz);
+        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
+    }
+
+    /** 사전에 이미 확정된 브랜드 이름들 — 대기 장소의 것과 합쳐 2차 대조의 후보가 된다. */
+    @Query("select distinct m.brand from MerchantCategory m "
+            + "where m.brand is not null and m.brand <> :exclude order by m.brand")
+    List<String> findDistinctBrands(@Param("exclude") String exclude);
 }

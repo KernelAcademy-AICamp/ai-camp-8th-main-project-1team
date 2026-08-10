@@ -103,7 +103,7 @@ public class CutCandidateSelector {
             // 재량성이 낮으면 생존필수 — 줄이라고 권하지 않는다(약값·통신비·교통비).
             // 무엇을 샀는지 모르는 소비(간편결제 등)도 뺀다 — "카테고리없음을 줄이세요"는
             // 사용자가 행동으로 옮길 수 없는 조언이다.
-            if (cat2 == null || IndustryCategoryMapper.UNCLASSIFIED.equals(cat2)) continue;
+            if (IndustryCategoryMapper.isUnknown(cat2)) continue;   // 카테고리없음 · 기타
             if (discretionary.applyAsDouble(cat2) < cfg.getProtectedBelow()) continue;
             byCat2.computeIfAbsent(cat2, k -> new ArrayList<>()).add(p.getAmount());
         }

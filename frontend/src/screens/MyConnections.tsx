@@ -9,8 +9,27 @@ import { useGuardian } from '../state/guardian';
 import { resetAutoSyncThrottle } from '../state/autoSync';
 import { useAsync } from '../state/useAsync';
 import { api } from '../lib/api';
-import { brandOf } from '../lib/institutions';
+import { brandOf, logoOf } from '../lib/institutions';
 import { won } from '../lib/format';
+
+/**
+ * 기관 로고 한 칸 — 연결 화면(`s-connect`)과 <b>같은 규칙</b>으로 그린다.
+ *
+ * <p>이 화면은 로고 이미지를 안 쓰고 브랜드색 원에 첫 글자만 찍고 있었다. 같은 은행이
+ * 연결 화면에서는 CI 로, 연결 관리에서는 글자 배지로 나와 다른 곳처럼 보였다.
+ * 그림이 없는 기관만 글자 배지로 떨어진다.
+ */
+function InstLogo({ name }: { name: string }) {
+  const logo = logoOf(name);
+  const b = brandOf(name);
+  return (
+    <span className="inst-logo"
+      style={logo ? undefined : { background: b.bg, color: b.fg ?? '#fff' }}
+      aria-hidden="true">
+      {logo ? <img src={logo} alt="" loading="lazy" /> : b.label}
+    </span>
+  );
+}
 
 export function MyConnections() {
   const { back, userId, go } = useSession();
@@ -77,10 +96,9 @@ export function MyConnections() {
           {connected.length === 0 ? (
             <Empty>아직 연결된 기관이 없어요. 아래에서 연결해 보세요.</Empty>
           ) : connected.map(([name, count]) => {
-            const b = brandOf(name);
             return (
               <div className="list-item" key={name} style={{ padding: '13px 0', borderBottom: '1px solid var(--bg)' }}>
-                <span className="inst-logo" style={{ background: b.bg, color: b.fg ?? '#fff' }} aria-hidden="true">{b.label}</span>
+                <InstLogo name={name} />
                 <div className="tx"><b>{name}</b><span>카드 {count}장 연결됨</span></div>
                 <span className="aux-badge green">정상</span>
               </div>
@@ -93,10 +111,9 @@ export function MyConnections() {
             <SectionTitle aux={`${myBanks.data!.length}곳`}>연결된 은행</SectionTitle>
             <div className="card" style={{ padding: '6px 18px' }}>
               {myBanks.data!.map((b) => {
-                const br = brandOf(b.bankName);
                 return (
                   <div className="list-item" key={b.id} style={{ padding: '13px 0', borderBottom: '1px solid var(--bg)' }}>
-                    <span className="inst-logo" style={{ background: br.bg, color: br.fg ?? '#fff' }} aria-hidden="true">{br.label}</span>
+                    <InstLogo name={b.bankName} />
                     <div className="tx"><b>{b.bankName}</b><span>입출금 통장 연결됨</span></div>
                     <button type="button" className="btn btn-ghost btn-sm" onClick={() => go('r-account')}>보기</button>
                   </div>
@@ -122,10 +139,9 @@ export function MyConnections() {
             <SectionTitle aux={`${notConnected.length}개`}>연결 가능한 기관</SectionTitle>
             <div className="card" style={{ padding: '6px 18px' }}>
               {notConnected.map((c) => {
-                const b = brandOf(c.name);
                 return (
                   <div className="list-item" key={c.id} style={{ padding: '13px 0', borderBottom: '1px solid var(--bg)' }}>
-                    <span className="inst-logo" style={{ background: b.bg, color: b.fg ?? '#fff' }} aria-hidden="true">{b.label}</span>
+                    <InstLogo name={c.name} />
                     <div className="tx"><b>{c.name}</b><span>아직 연결하지 않았어요</span></div>
                   </div>
                 );

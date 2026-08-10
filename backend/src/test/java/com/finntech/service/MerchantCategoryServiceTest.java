@@ -75,7 +75,7 @@ class MerchantCategoryServiceTest {
                     return m;
                 });
 
-        service = new MerchantCategoryService(repo, mapper, kinds());
+        service = new MerchantCategoryService(repo, mapper, kinds(), noBrands());
     }
 
     /** 리포지토리의 {@code ORDER BY CASE source … , id} 를 그대로 옮긴 것. id 가 null 인
@@ -93,6 +93,19 @@ class MerchantCategoryServiceTest {
      * 그것이 "상호가 하나뿐이라 판정 대상이 아니다"와 같은 상태라 기존 시험의 전제와 맞는다.
      * 판정이 완화를 막는 경우는 {@code 복합_사업자는_번호로_묶지_않는다} 가 따로 본다.
      */
+    /**
+     * 브랜드 대기 장소 대역 — 비어 있다. 이 시험이 보는 것은 분류 조회 규칙이라
+     * 브랜드는 상관이 없지만, 사전에 쌓을 때 승격을 부르므로 대역이 필요하다.
+     */
+    private static MerchantBrandService noBrands() {
+        var brandRepo = mock(com.finntech.repository.MerchantBrandRepository.class);
+        when(brandRepo.findByMerchantName(anyString())).thenReturn(Optional.empty());
+        return TestServices.brandService(brandRepo,
+                mock(com.finntech.repository.MerchantCategoryRepository.class),
+                mock(TempClassifierService.class),
+                mock(com.finntech.repository.UserPaymentRepository.class));
+    }
+
     private BusinessNumberKindService kinds() {
         var repo = mock(com.finntech.repository.BusinessNumberKindRepository.class);
         when(repo.findById(anyString())).thenReturn(Optional.empty());
@@ -361,7 +374,7 @@ class MerchantCategoryServiceTest {
                     table.add(inv.getArgument(0));
                     return inv.getArgument(0);
                 });
-        var svc = new MerchantCategoryService(repo, mapper, kinds());
+        var svc = new MerchantCategoryService(repo, mapper, kinds(), noBrands());
 
         var dummy = payment("77:gen-8a3f-0012");            // 생성기가 만든 결제
         assertThat(svc.confirmFrom(dummy, "식비", 7L)).as("더미는 거절된다").isEmpty();
@@ -371,6 +384,86 @@ class MerchantCategoryServiceTest {
         assertThat(svc.confirmFrom(real, "식비", 7L)).isPresent();
         assertThat(table).hasSize(1);
         assertThat(table.get(0).getSource()).isEqualTo("USER_CONFIRMED");
+    }
+
+    @Test
+    @DisplayName("조회 답을 사전에 남긴다 — 확정으로 들어오고 추정을 덮는다")
+    void registryAnswerBecomesConfirmed() {
+        UserPayment real = realPayment("0000000021", "어느 가구점");
+        service.rememberGuess(real, "쇼핑");                       // 먼저 추정이 있었다
+        assertThat(service.lookup("0000000021", "어느 가구점")).isEmpty();
+
+        service.rememberRegistry(real, "생활");
+        assertThat(service.lookup("0000000021", "어느 가구점"))
+                .as("사실이 추정을 덮는다").contains("생활");
+        assertThat(table).as("행이 늘지 않고 고쳐진다").hasSize(1);
+    }
+
+    @Test
+    @DisplayName("사람이 정한 것은 조회가 덮지 않는다")
+    void registryNeverOverwritesPeople() {
+        UserPayment real = realPayment("0000000022", "그 가게");
+        service.confirmFrom(real, "식비", 7L);
+        assertThat(service.rememberRegistry(real, "쇼핑")).isEmpty();
+        assertThat(service.lookup("0000000022", "그 가게")).contains("식비");
+    }
+
+    @Test
+    @DisplayName("더미 결제로는 사전이 자라지 않는다 — 조회 통로도 마찬가지다")
+    void registryRejectsDummyPayments() {
+        // 더미 결제에도 실재하는 사업자번호가 섞여 있어 조회 자체는 성공할 수 있다.
+        // 그렇게 들어온 행은 아무도 결제한 적 없는 가맹점을 사전에 앉힌다.
+        assertThat(service.rememberRegistry(payment("77:gen-8a3f-0012"), "쇼핑")).isEmpty();
+        assertThat(service.attemptRow(payment("77:gen-8a3f-0012"))).isEmpty();
+        assertThat(table).isEmpty();
+    }
+
+    @Test
+    @DisplayName("LLM 을 세 번 헛물켜면 '기타'로 종결하고 더 묻지 않는다")
+    void givesUpAfterThreeLlmMisses() {
+        UserPayment real = realPayment("0000000023", "알 수 없는 곳");
+        LocalDateTime at = LocalDateTime.now();
+
+        assertThat(service.noteLlmMiss(real, at)).as("1회").isFalse();
+        assertThat(service.noteLlmMiss(real, at)).as("2회").isFalse();
+        assertThat(service.needsWork("0000000023", "알 수 없는 곳"))
+                .as("아직 남았다").isTrue();
+
+        assertThat(service.noteLlmMiss(real, at)).as("3회 — 종결").isTrue();
+        assertThat(service.needsWork("0000000023", "알 수 없는 곳"))
+                .as("더 조회도 질문도 하지 않는다").isFalse();
+        assertThat(service.lookup("0000000023", "알 수 없는 곳"))
+                .contains(IndustryCategoryMapper.OTHER);
+        assertThat(table).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("종결돼도 사람이 고치면 그것이 이긴다 — 영구가 아니다")
+    void peopleCanOverrideGiveUp() {
+        UserPayment real = realPayment("0000000024", "그래도 아는 곳");
+        LocalDateTime at = LocalDateTime.now();
+        service.noteLlmMiss(real, at);
+        service.noteLlmMiss(real, at);
+        service.noteLlmMiss(real, at);
+        assertThat(service.lookup("0000000024", "그래도 아는 곳"))
+                .contains(IndustryCategoryMapper.OTHER);
+
+        service.confirmFrom(real, "카페/간식", 7L);
+        assertThat(service.lookup("0000000024", "그래도 아는 곳")).contains("카페/간식");
+        assertThat(service.needsWork("0000000024", "그래도 아는 곳")).isFalse();
+    }
+
+    @Test
+    @DisplayName("시도 이력 행은 분류가 아니다 — 추정 조회에 걸리지 않는다")
+    void attemptRowIsNotAClassification() {
+        UserPayment real = realPayment("0000000025", "물어본 곳");
+        service.noteLookup(real, "아파트 건설업", LocalDateTime.now());
+
+        assertThat(service.lookup("0000000025", "물어본 곳")).as("확정 아님").isEmpty();
+        assertThat(service.guess("0000000025", "물어본 곳")).as("추정도 아님").isEmpty();
+        assertThat(table).hasSize(1);
+        assertThat(table.get(0).registryAnswered())
+                .as("못 붙였어도 답은 남는다 — 안 남기면 다음 연동에 또 조회한다").isTrue();
     }
 
     /** 실제 사람의 결제 — 번호와 가맹점명을 지정한다(사전에 쌓이는 유일한 출처다). */
@@ -427,7 +520,7 @@ class MerchantCategoryServiceTest {
                     table.add(inv.getArgument(0));
                     return inv.getArgument(0);
                 });
-        var svc = new MerchantCategoryService(repo, mapper, kinds());
+        var svc = new MerchantCategoryService(repo, mapper, kinds(), noBrands());
 
         var first = svc.confirm("0000000011", "어떤 가게", "쇼핑",
                 MerchantCategory.Source.USER_CSV, null);

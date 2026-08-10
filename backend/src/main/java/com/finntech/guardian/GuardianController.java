@@ -37,13 +37,16 @@ public class GuardianController {
     private final GuardianWeeklyReportService weeklyReportService;
     private final GuardianSettlementService settlementService;
     private final GuardianClock clock;
+    private final GuardianMissionService missionService;
 
     public GuardianController(GuardianService guardianService, GuardianBatchService batchService,
                               GuardianRewardService rewardService,
                               GuardianCollectionService collectionService,
                               GuardianCatalog catalog,
                               GuardianWeeklyReportService weeklyReportService,
-                              GuardianSettlementService settlementService, GuardianClock clock) {
+                              GuardianSettlementService settlementService,
+                              GuardianMissionService missionService, GuardianClock clock) {
+        this.missionService = missionService;
         this.guardianService = guardianService;
         this.batchService = batchService;
         this.rewardService = rewardService;
@@ -393,6 +396,9 @@ public class GuardianController {
         m.put("verdictDate", c.verdictDate());
         m.put("result", c.result());
         m.put("objectId", c.objectId());
+        // 이름과 그림도 함께 — 예전에는 objectId 만 나가 화면에 "mug_01"이 그대로 찍혔다.
+        m.put("objectName", c.objectName());
+        m.put("glyph", c.glyph());
         m.put("grade", c.grade());
         m.put("message", c.message());
         m.put("rerollAvailable", c.rerollAvailable());
@@ -457,6 +463,102 @@ public class GuardianController {
     }
 
     /** 구매 — 포인트로만. 잔액이 모자라거나 이미 가진 물건이면 400. */
+    /** 고를 수 있는 털색과 지금 고른 것 (프로토타입_0806 꾸미기 &gt; 캐릭터). */
+    @GetMapping("/cat-skins")
+    public List<GuardianCollectionService.CatSkin> catSkins(@RequestParam Long userId) {
+        return collectionService.catSkins(userId);
+    }
+
+    /** 털색을 고른다. 가지지 않은 색이면 400. */
+    @PostMapping("/cat-skins/{key}")
+    public List<GuardianCollectionService.CatSkin> chooseCatSkin(@RequestParam Long userId,
+                                                                 @PathVariable String key) {
+        return collectionService.chooseCatSkin(userId, key);
+    }
+
+    /**
+     * 성역을 다시 정한다 (마이 &gt; 설정 &gt; 성역 관리).
+     *
+     * <p>줄이기로 한 카테고리는 성역이 될 수 없다 — 그러면 "줄이라고 하면서 침묵한다"가 된다.
+     * 겹치면 400 으로 되돌려, 화면이 무엇이 문제인지 사용자에게 말하게 한다.
+     */
+    @PostMapping("/challenges/sanctuary")
+    public Map<String, Object> setSanctuary(@RequestParam Long userId,
+                                            @RequestBody SanctuaryRequest req) {
+        return Map.of("sanctuaryCategories",
+                guardianService.setSanctuary(userId, req.categories()));
+    }
+
+    public record SanctuaryRequest(List<String> categories) {}
+
+    /** 진행 중 챌린지의 카테고리들 — 관리 화면이 읽는다. */
+    @GetMapping("/challenges/categories")
+    public List<GuardianService.ChallengeCategoryView> challengeCategories(@RequestParam Long userId) {
+        return guardianService.challengeCategories(userId);
+    }
+
+    /**
+     * 한 카테고리에서 지킬 돈을 다시 정한다 (마이 &gt; 챌린지 관리 &gt; ○○ 줄이기).
+     *
+     * <p>이미 쓴 돈보다 예산을 낮추려 하면 400 — 저장하는 순간 실패가 되는 설정은 받지 않는다.
+     */
+    @PostMapping("/challenges/categories/{category}/target")
+    public List<GuardianService.ChallengeCategoryView> retarget(
+            @RequestParam Long userId, @PathVariable String category,
+            @RequestBody TargetRequest req) {
+        return guardianService.retarget(userId, category, req.target());
+    }
+
+    public record TargetRequest(long target) {}
+
+    /**
+     * 줄일 카테고리를 하나 더한다 (마이 &gt; 챌린지 관리 &gt; 새 챌린지 만들기).
+     *
+     * <p>이미 줄이고 있거나 성역으로 둔 곳이면 400 — 무엇이 문제인지 화면이 그대로 말한다.
+     */
+    @PostMapping("/challenges/categories")
+    public List<GuardianService.ChallengeCategoryView> addCategory(
+            @RequestParam Long userId, @RequestBody AddCategoryRequest req) {
+        return guardianService.addCategory(userId, req.category(), req.targetSaving());
+    }
+
+    public record AddCategoryRequest(@NotNull String category, Long targetSaving) {}
+
+    /** 지킴이 말수 — 하루 알림 상한. 0이면 '설정 안 함'이고 전역 기본값을 따른다. */
+    @GetMapping("/voice")
+    public Map<String, Object> voice(@RequestParam Long userId) {
+        return guardianService.voice(userId);
+    }
+
+    @PostMapping("/voice")
+    public Map<String, Object> setVoice(@RequestParam Long userId, @RequestBody VoiceRequest req) {
+        return guardianService.setVoice(userId, req.dailyLimit());
+    }
+
+    public record VoiceRequest(int dailyLimit) {}
+
+    // ======================================================================
+    //  주간 미션 (개편안 s-myroom 의 미션 보드·고르기 시트)
+    // ======================================================================
+
+    /** 이번 주 진행 중 · 다음 주 담아 둔 것 · 고를 수 있는 후보. */
+    @GetMapping("/missions")
+    public GuardianMissionService.Board missions(@RequestParam Long userId) {
+        return missionService.board(userId);
+    }
+
+    /**
+     * 다음 주 미션을 정한다. 이미 담아 둔 것이 있으면 갈아 끼운다.
+     *
+     * <p>후보는 매번 다시 계산되므로 id 가 아니라 {@code key} 로 고른다. 진행 중인 챌린지가
+     * 없거나 없는 후보면 400.
+     */
+    @PostMapping("/missions/pick")
+    public GuardianMissionService.Board pickMission(@RequestParam Long userId,
+                                                    @RequestParam String key) {
+        return missionService.pick(userId, key);
+    }
+
     @PostMapping("/shop/{code}/buy")
     public GuardianCollectionService.ShopView buy(@RequestParam Long userId, @PathVariable String code) {
         return collectionService.buy(userId, code);

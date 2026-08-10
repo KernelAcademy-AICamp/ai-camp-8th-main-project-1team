@@ -67,9 +67,10 @@ class MyDataLinkServiceTest {
                 LocalDateTime.of(2026, 7, 28, 14, 0).atZone(ZoneId.systemDefault()).toInstant(),
                 ZoneId.systemDefault());
 
-        new MyDataLinkService(client, users, cards, payments, consumptions, categories,
+        TestServices.linkService(client, users, cards, payments, consumptions, categories,
                 new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
-                emptyDictionary(), emptyKinds(), links,
+                emptyDictionary(), emptyKinds(), offLookup(), noAsk(),
+                mock(MerchantBrandService.class), links,
                 mock(UserBankRepository.class), reports, clock, "")
                 .linkCardCompanies(1L, List.of(9007L));
 
@@ -97,10 +98,11 @@ class MyDataLinkServiceTest {
         LocalDateTime 연동시각 = LocalDateTime.of(2026, 7, 28, 14, 0);
         Clock clock = Clock.fixed(연동시각.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
 
-        new MyDataLinkService(client, users, mock(UserCardRepository.class), mock(UserPaymentRepository.class),
+        TestServices.linkService(client, users, mock(UserCardRepository.class), mock(UserPaymentRepository.class),
                 mock(ConsumptionRepository.class), mock(CategoryRepository.class),
                 new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
-                emptyDictionary(), emptyKinds(), links,
+                emptyDictionary(), emptyKinds(), offLookup(), noAsk(),
+                mock(MerchantBrandService.class), links,
                 mock(UserBankRepository.class), mock(ReportRepository.class), clock, "")
                 .linkCardCompanies(1L, List.of(9007L));
 
@@ -115,6 +117,36 @@ class MyDataLinkServiceTest {
      * 다만 적재 경로가 사전을 한 번 읽으므로 널이 아닌 것을 준다.
      */
     /** 관측 판정 — 시험에서는 표가 비어 있다(상호가 하나뿐인 상태와 같아 완화가 통과한다). */
+    /**
+     * LLM 질의를 <b>안 하는</b> 것 — 분류기가 꺼져 있어({@code aiEnabled()} false) 아무것도 묻지 않는다.
+     *
+     * <p>이 시험이 보는 것은 증분 기준선이라 분류는 상관이 없다. 그래도 대역을 넣는 이유는
+     * 단위 시험이 바깥 서버를 부르지 않는 것이 <b>설정이 아니라 기본값</b>이라야 하기 때문이다.
+     */
+    /** 임시 분류를 <b>끈</b> 것 — 기본 상태 그대로다(주소·키·모델이 비면 안 부른다). */
+    private static TempClassifierService offTempClassifier() {
+        return new TempClassifierService(new com.finntech.config.TempClassifierProperties(),
+                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
+                mock(MerchantClassifierService.class), new tools.jackson.databind.ObjectMapper());
+    }
+
+    private static MerchantAskService noAsk() {
+        return TestServices.askService(emptyDictionary(),
+                mock(MerchantClassifierService.class), offTempClassifier());
+    }
+
+    /**
+     * 등록 업종 조회를 <b>끈</b> 것 — 기본 상태 그대로다.
+     *
+     * <p>이 통로는 주소·추출식이 환경변수로 들어와야 켜지고, 안 주면 조용히 꺼진 채 있다.
+     * 단위 테스트에서 바깥 서버를 부르지 않는 것이 그래서 설정이 아니라 <b>기본값</b>이다.
+     */
+    private static IndustryLookupService offLookup() {
+        return new IndustryLookupService(new com.finntech.config.IndustryLookupProperties(),
+                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
+                emptyKinds());
+    }
+
     private static BusinessNumberKindService emptyKinds() {
         var repo = mock(com.finntech.repository.BusinessNumberKindRepository.class);
         when(repo.findById(org.mockito.ArgumentMatchers.anyString()))
@@ -130,6 +162,7 @@ class MyDataLinkServiceTest {
                 .thenReturn(java.util.Optional.empty());
         return new MerchantCategoryService(repo,
                 new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
-                new BusinessNumberKindService(kindRepo, 5, 2, 0.10));
+                new BusinessNumberKindService(kindRepo, 5, 2, 0.10),
+                TestServices.brandService());
     }
 }

@@ -1,7 +1,7 @@
 /**
  * 아이콘 — 목업(frontend-moa/components/Icons.tsx)의 SVG 심볼 세트를 스프라이트로 한 번
  * 마운트하고(<IconSprite/>), 각 자리에서 <Icon id="i-food"/>로 참조한다(토스 일러스트 톤).
- * 심볼 정의는 목업과 100% 동일하고, 화면이 늘어나며 필요해진 3개(i-bank·i-doc·i-shield)만 같은 톤으로 더했다.
+ * 심볼 정의는 목업과 100% 동일하고, 화면이 늘어나며 필요해진 4개(i-bank·i-doc·i-shield·i-dots)만 같은 톤으로 더했다.
  */
 export function Icon({ id, className = 'ci', size }: { id: string; className?: string; size?: number }) {
   // size를 주면 인라인 폭/높이로 확실히 고정(클래스가 없어도 대형으로 커지지 않게).
@@ -108,6 +108,14 @@ export function IconSprite() {
           <rect x="7.2" y="12" width="8" height="1.6" rx=".8" fill="#3182F6" />
           <rect x="7.2" y="15.2" width="5.6" height="1.6" rx=".8" fill="#3182F6" />
         </symbol>
+        {/* 무엇을 샀는지 모르는 결제 — '카테고리없음'과 '기타'가 쓴다.
+            없으면 폴백(i-shop)이 잡아 **모르는 결제가 전부 쇼핑처럼 보인다**. */}
+        <symbol id="i-dots" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8.6" fill="#E3E8EF" />
+          <circle cx="8.2" cy="12" r="1.5" fill="#8B95A1" />
+          <circle cx="12" cy="12" r="1.5" fill="#8B95A1" />
+          <circle cx="15.8" cy="12" r="1.5" fill="#8B95A1" />
+        </symbol>
         <symbol id="i-shield" viewBox="0 0 24 24">
           <path d="M12 3l7 2.6v5.6c0 4.6-3 7.9-7 9.8-4-1.9-7-5.2-7-9.8V5.6L12 3z" fill="#57C785" />
           <path d="M8.8 12.2l2.3 2.3 4.1-4.4" stroke="#fff" strokeWidth="1.9" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -145,6 +153,26 @@ export function IconSprite() {
         <symbol id="i-mega" viewBox="0 0 24 24">
           <path d="M20 4.4v15.2l-7.6-3.2H6a2.8 2.8 0 0 1-2.8-2.8v-2.8A2.8 2.8 0 0 1 6 8h6.4L20 4.4z" fill="#00B14F" />
           <path d="M6.8 17.2h2.9l.9 2.6a1.5 1.5 0 0 1-2.8 1l-1-3.6z" fill="#00804A" />
+        </symbol>
+
+        {/* 선(stroke) 아이콘 — 위의 면(fill) 아이콘들과 달리 `currentColor` 를 따라간다.
+            글자색을 물려받으므로 버튼 안에서 상태에 따라 색이 같이 바뀐다.
+            프로토타입_0806 에서 온 넷이다(체크·더하기·검색·닫기). */}
+        <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+        </symbol>
+        <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </symbol>
+        <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
         </symbol>
       </defs>
     </svg>

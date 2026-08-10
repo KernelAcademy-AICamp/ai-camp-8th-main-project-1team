@@ -151,8 +151,44 @@ public class GuardianChallenge {
     @Transient
     public Set<String> getCategorySet() { return parseCsv(categories); }
 
+    /**
+     * 줄일 카테고리를 하나 더한다 (마이 &gt; 챌린지 관리 &gt; 새 챌린지 만들기).
+     *
+     * <p><b>진행 중인 챌린지에 붙인다.</b> 카테고리마다 챌린지를 따로 만들면 기간이 제각각이 되어
+     * "이번 달"이라는 말이 뜻을 잃는다. 화면에서는 줄이 하나 늘어난 것으로 보이지만,
+     * 안에서는 같은 챌린지의 카테고리가 늘어난 것이다.
+     *
+     * <p>기간·보상은 건드리지 않는다. 새로 더한 카테고리도 <b>같은 날 끝난다</b> — 그래야
+     * 월말 결산이 한 번에 이뤄진다.
+     */
+    public void addCategory(String category) {
+        Set<String> now = new java.util.LinkedHashSet<>(parseCsv(categories));
+        now.add(category);
+        this.categories = joinCsv(new java.util.ArrayList<>(now));
+    }
+
+    /** 기준 지출·지킬 돈을 늘어난 카테고리만큼 키운다. 예산은 그 차이라 함께 다시 센다. */
+    public void growBaseline(long addBaseline, long addTarget) {
+        this.baselineAmount += addBaseline;
+        this.targetSaving += addTarget;
+        this.challengeCap = Math.max(0L, this.baselineAmount - this.targetSaving);
+    }
+
     @Transient
     public Set<String> getSanctuarySet() { return parseCsv(sanctuaryCategories); }
+
+    /**
+     * 성역을 다시 정한다 (마이 &gt; 설정 &gt; 성역 관리).
+     *
+     * <p><b>진행 중에도 바꿀 수 있어야 한다.</b> 성역은 "지킴이가 침묵할 곳"이라는 약속인데,
+     * 챌린지를 만들 때 한 번만 정할 수 있으면 잘못 고른 사람은 한 달을 견뎌야 한다.
+     *
+     * <p><b>줄이기로 한 카테고리는 성역이 될 수 없다.</b> 둘 다이면 "줄이라고 하면서 침묵한다"가
+     * 되어 앞뒤가 안 맞는다. 겹치는 것은 호출부가 걸러 보낸다.
+     */
+    public void setSanctuaryCategories(List<String> categories) {
+        this.sanctuaryCategories = joinCsv(categories);
+    }
 
     @Transient
     public boolean isRunning() {

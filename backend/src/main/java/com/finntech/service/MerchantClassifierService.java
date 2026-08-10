@@ -38,7 +38,7 @@ public class MerchantClassifierService {
      * 한 번에 물어보는 가맹점 수. 가맹점명은 짧아 한 요청에 여럿을 담을 수 있고,
      * 건당 호출하면 명세서 한 장에 수백 번을 부르게 된다.
      */
-    private static final int BATCH = 40;
+    static final int BATCH = 40;
 
     /**
      * 한 요청에서 LLM 을 부를 수 있는 최대 횟수. {@code EligibilityLabelService} 와 같은 장치다 —
@@ -144,6 +144,50 @@ public class MerchantClassifierService {
      * @return 가맹점명 → 중분류. 정렬 고정(§4-3 재현성).
      */
     public Map<String, String> classify(List<String> merchantNames, java.util.Set<String> important) {
+        return classify(merchantNames, important, new TreeMap<>());
+    }
+
+    /**
+     * {@link #classify} 와 같되 <b>모델이 답한 업종 이름을 함께 담아 준다.</b>
+     *
+     * <p>필요한 곳이 하나 있다 — 두 통로가 갈렸을 때의 재질의({@link #tieBreak})다. 후보를
+     * 중분류로 주면 모델에게 <b>우리 축을 직접 고르게</b> 하는 셈이라 마스터 §4 원칙 1 과
+     * 어긋난다. 업종 이름으로 물어야 모델은 "이 가게가 무엇을 파는가"라는 사실만 말하고
+     * 축 배정은 표가 한다. 그런데 {@code classify} 는 이미 중분류로 바꿔 돌려주므로
+     * 원본 이름이 남지 않는다 — 그래서 여기로 흘려 준다.
+     *
+     * @param industries 가맹점명 → 모델이 답한 업종 이름. 호출자가 준 지도에 채워 넣는다.
+     */
+    public Map<String, String> classify(List<String> merchantNames, java.util.Set<String> important,
+                                        Map<String, String> industries) {
+        return classify(merchantNames, important, industries, new java.util.HashSet<>());
+    }
+
+    /**
+     * {@link #classify} 와 같되 <b>실제로 물어보고 답을 받은 가맹점</b>을 따로 담아 준다.
+     *
+     * <p>부르는 쪽이 이것을 알아야 하는 이유가 하나다 — <b>'헛물'을 세는 자리</b>. 답에 없는
+     * 가맹점을 "모델이 침묵했다"로 세어 세 번이면 '기타'로 종결하는데, 그 세기가 성립하려면
+     * <b>물어보기는 했다</b>가 참이라야 한다. 그런데 이 메서드는 <b>묻지 않고 빈손으로 돌아가는
+     * 길이 셋</b>이다.
+     *
+     * <pre>
+     *   ① 키가 없다        aiEnabled() 가 false 면 HTTP 를 한 번도 안 내고 빈 지도를 준다
+     *   ② 호출이 실패했다   429·타임아웃이면 그 묶음이 통째로 null 이다
+     *   ③ 상한을 넘었다     MAX_LLM_CALLS_PER_REQUEST × BATCH 를 넘은 뒤쪽은 프롬프트에 안 담긴다
+     * </pre>
+     *
+     * <p>셋 다 "그 가맹점에 대해 모델이 침묵했다"가 아니라 <b>"우리가 못 물었다"</b>이다.
+     * 구별하지 않으면 키를 안 넣은 환경에서 화면을 세 번 여는 것만으로 미분류 전부가 '기타'로
+     * 종결되고, 종결은 결제와 소비 원장까지 고치므로 리포트에서 그 지출이 사라진다
+     * (2026-08-07 재감사).
+     *
+     * @param answered 답을 받은 가맹점명이 여기 담긴다 — 호출자가 준 집합에 채워 넣는다.
+     *                 표기가 다른 형제까지 함께 담는다(대표가 답을 받으면 형제도 받은 것이다).
+     */
+    public Map<String, String> classify(List<String> merchantNames, java.util.Set<String> important,
+                                        Map<String, String> industries,
+                                        java.util.Set<String> answered) {
         Map<String, String> out = new TreeMap<>();
         if (!aiEnabled() || merchantNames == null || merchantNames.isEmpty()) return out;
 
@@ -159,10 +203,17 @@ public class MerchantClassifierService {
         List<String> distinct = variants.values().stream().map(v -> v.get(0)).toList();
 
         Map<String, String> byRepresentative = new TreeMap<>();
+        // 답을 받은 **대표**를 모은다. 형제로 펼치는 것은 아래 한 곳에서 한꺼번에 한다.
+        java.util.Set<String> answeredReps = new java.util.HashSet<>();
         int calls = 0;
         for (int i = 0; i < distinct.size() && calls < MAX_LLM_CALLS_PER_REQUEST; i += BATCH, calls++) {
-            Map<String, String> got = callGemini(distinct.subList(i, Math.min(i + BATCH, distinct.size())));
-            if (got != null) byRepresentative.putAll(got);
+            List<String> batch = distinct.subList(i, Math.min(i + BATCH, distinct.size()));
+            Map<String, String> got = callGemini(batch, industries);
+            // **null 은 "물어봤다"가 아니다.** 429·타임아웃이면 그 묶음은 프롬프트에 담겼어도
+            // 답이 통째로 없다 — 그것을 가맹점의 침묵으로 세면 통로 장애가 데이터를 종결시킨다.
+            if (got == null) continue;
+            byRepresentative.putAll(got);
+            answeredReps.addAll(batch);
         }
 
         // 두 번째 판 — 못 잡은 것 중 중요한 것만, 작게.
@@ -176,15 +227,70 @@ public class MerchantClassifierService {
             }
         }
         for (int i = 0; i < retry.size() && calls < MAX_LLM_CALLS_PER_REQUEST; i += RETRY_BATCH, calls++) {
-            Map<String, String> got = callGemini(retry.subList(i, Math.min(i + RETRY_BATCH, retry.size())));
-            if (got != null) byRepresentative.putAll(got);
+            List<String> batch = retry.subList(i, Math.min(i + RETRY_BATCH, retry.size()));
+            Map<String, String> got = callGemini(batch, industries);
+            if (got == null) continue;
+            byRepresentative.putAll(got);
+            answeredReps.addAll(batch);
         }
 
-        // 대표가 받은 답을 **표기가 다른 형제 전부**에 돌려준다.
+        // 대표가 받은 답을 **표기가 다른 형제 전부**에 돌려준다. '물어봤다'도 같이 펼친다 —
+        // 형제는 대표에 접혀서 안 물어본 것이라, 대표가 답을 받았으면 형제도 받은 것으로 본다.
         for (List<String> group : variants.values()) {
-            String answer = byRepresentative.get(group.get(0));
+            String rep = group.get(0);
+            if (answeredReps.contains(rep)) answered.addAll(group);
+            String answer = byRepresentative.get(rep);
             if (answer != null) group.forEach(n -> out.put(n, answer));
+            String ind = industries.get(rep);
+            if (ind != null) group.forEach(n -> industries.put(n, ind));
         }
+        return out;
+    }
+
+    /**
+     * <b>두 모델이 갈렸을 때 둘 중 하나를 고르게 한다</b> — 385개 목록 대신 <b>후보 둘</b>만 준다.
+     *
+     * <p>무료 통로(임시 분류)와 유료 통로가 같은 가맹점에 다른 업종을 답하는 일이 있다. 어느
+     * 쪽을 믿을지 우리가 정할 근거가 없고, 그렇다고 아무거나 쓰면 반은 틀린다. 그래서 <b>다시
+     * 묻되 질문을 좁힌다</b> — 385개 중 고르라는 것과 둘 중 고르라는 것은 난이도가 다르다.
+     *
+     * <p>싸다. 프롬프트의 76%를 차지하던 업종 목록이 통째로 빠지고 후보 두 개만 남는다.
+     * 갈린 가맹점만 대상이라 건수도 적다.
+     *
+     * <p><b>후보는 업종 이름이다.</b> 중분류를 주면 모델이 우리 축을 직접 고르는 셈이라 원칙 1 과
+     * 어긋난다. 업종으로 물으면 모델은 "이 가게가 무엇을 파는가"만 말하고 축 배정은 표가 한다 —
+     * 첫 질의와 같은 규칙이다.
+     *
+     * @param candidates 가맹점명 → {A안, B안} 업종 이름 둘
+     * @return 가맹점명 → 고른 <b>업종 이름</b>. 못 고른 것은 빠진다.
+     */
+    public Map<String, String> tieBreak(Map<String, String[]> candidates) {
+        Map<String, String> out = new TreeMap<>();
+        if (!aiEnabled() || candidates == null || candidates.isEmpty()) return out;
+
+        List<String> names = new ArrayList<>(new TreeMap<>(candidates).keySet());
+        StringBuilder listing = new StringBuilder();
+        for (int i = 0; i < names.size(); i++) {
+            String[] two = candidates.get(names.get(i));
+            listing.append(i + 1).append(". ").append(names.get(i))
+                    .append("  → A) ").append(two[0]).append("  B) ").append(two[1]).append('\n');
+        }
+        String prompt = """
+                아래는 한국 카드 명세서의 가맹점명입니다. 각 가맹점의 업종으로 A 와 B 중 어느 쪽이
+                맞는지 고르세요. 판단이 안 서면 빼세요.
+
+                %s
+                답은 JSON 하나로만 주세요. 값은 "A" 또는 "B" 입니다.
+                {"1": "A", "2": "B"}
+                """.formatted(listing);
+
+        Map<String, String> picked = askRaw(prompt, names);
+        picked.forEach((name, ab) -> {
+            String[] two = candidates.get(name);
+            if (two == null) return;
+            if ("A".equalsIgnoreCase(ab.trim())) out.put(name, two[0]);
+            else if ("B".equalsIgnoreCase(ab.trim())) out.put(name, two[1]);
+        });
         return out;
     }
 
@@ -201,7 +307,7 @@ public class MerchantClassifierService {
                 .toUpperCase();
     }
 
-    private Map<String, String> callGemini(List<String> names) {
+    private Map<String, String> callGemini(List<String> names, Map<String, String> industries) {
         // **중분류가 아니라 업종을 묻는다.** 모델이 우리 축을 직접 고르면 축 배정까지 AI 가 하는
         // 셈이라 원칙 1 과 어긋나고, 표를 고쳐도 모델의 옛 답은 안 따라온다. 업종으로 받으면
         // 모델은 "이 가게가 무엇을 파는가"라는 사실만 말하고 축은 우리 표가 정한다.
@@ -260,10 +366,72 @@ public class MerchantClassifierService {
                     .retrieve()
                     .body(Map.class);
             String text = extractText(response);
-            return text == null ? null : parseJson(text, names);
+            if (text == null) return null;
+            collectIndustries(text, names, industries);
+            return parseJson(text, names);
         } catch (Exception e) {
             // 미분류로 남을 뿐 화면이 깨지지는 않는다 — 추정은 부가 정보다.
             return null;
+        }
+    }
+
+    /**
+     * 프롬프트 하나를 보내고 <b>번호 → 값</b> JSON 을 가맹점명 → 값으로 되돌린다.
+     *
+     * <p>{@link #callGemini} 와 달리 값을 업종으로 해석하지 않는다 — 무엇을 묻든 쓸 수 있는
+     * 통로다({@link #tieBreak} 는 "A"/"B" 를 받는다). 실패는 빈 지도다.
+     */
+    private Map<String, String> askRaw(String prompt, List<String> names) {
+        Map<String, String> out = new TreeMap<>();
+        try {
+            Map<?, ?> response = restClient.post()
+                    .uri("/v1beta/models/{model}:generateContent?key={key}", model, apiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))),
+                                 "generationConfig", Map.of("temperature", 0)))
+                    .retrieve()
+                    .body(Map.class);
+            String text = extractText(response);
+            if (text == null) return out;
+            int s = text.indexOf('{'), e = text.lastIndexOf('}');
+            if (s < 0 || e <= s) return out;
+            Map<?, ?> m = MAPPER.readValue(text.substring(s, e + 1), Map.class);
+            for (var entry : m.entrySet()) {
+                int idx;
+                try {
+                    idx = Integer.parseInt(entry.getKey().toString().trim());
+                } catch (NumberFormatException ignored) {
+                    continue;
+                }
+                if (idx < 1 || idx > names.size() || entry.getValue() == null) continue;
+                out.put(names.get(idx - 1), entry.getValue().toString());
+            }
+        } catch (Exception e) {
+            return out;      // 못 고르면 그냥 유료 통로의 답을 쓴다 — 화면이 깨지지 않는다
+        }
+        return out;
+    }
+
+    /** 응답에서 <b>업종 이름 원문</b>만 따로 걷어 둔다 — 재질의가 그것을 후보로 쓴다. */
+    private void collectIndustries(String text, List<String> names, Map<String, String> into) {
+        if (into == null) return;
+        int s = text.indexOf('{'), e = text.lastIndexOf('}');
+        if (s < 0 || e <= s) return;
+        try {
+            Map<?, ?> m = MAPPER.readValue(text.substring(s, e + 1), Map.class);
+            for (var entry : m.entrySet()) {
+                int idx;
+                try {
+                    idx = Integer.parseInt(entry.getKey().toString().trim());
+                } catch (NumberFormatException ignored) {
+                    continue;
+                }
+                if (idx < 1 || idx > names.size() || entry.getValue() == null) continue;
+                String ind = entry.getValue().toString().trim();
+                if (!ind.isBlank()) into.put(names.get(idx - 1), ind);
+            }
+        } catch (Exception ignored) {
+            // 업종 이름은 있으면 좋은 것이다 — 못 걷어도 분류 자체는 parseJson 이 한다.
         }
     }
 

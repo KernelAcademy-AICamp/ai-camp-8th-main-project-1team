@@ -155,11 +155,13 @@ class WalkingSkeletonTest {
         assertFalse(body.negative().isEmpty(), "과한 소비가 분류되어야 한다");
         assertEquals(4, body.positive().size() + body.negative().size());
 
-        NarrativeService.Narrative n = narrativeService.summarizeReport(body, r);
-        assertNotNull(n.text());
-        assertFalse(n.text().isBlank());
-        // API 키가 없으면 템플릿으로 폴백한다 — 시연이 죽지 않는다
-        assertEquals("TEMPLATE", n.source());
+        // 문장은 이제 모델을 부르지 않고 **재료**만 만든다 — 부르는 일은 큐가 한다(2026-08-08).
+        // 여기서 확인할 것은 둘이다: 못 받았을 때 보일 템플릿이 비어 있지 않을 것,
+        // 그리고 프롬프트에 **집계만** 들어갈 것(§4 원칙 1).
+        var req = narrativeService.reportRequest(1L, body, r);
+        assertNotNull(req.template());
+        assertFalse(req.template().isBlank());
+        assertFalse(req.prompt().isBlank());
     }
 
     @Test @Order(7)

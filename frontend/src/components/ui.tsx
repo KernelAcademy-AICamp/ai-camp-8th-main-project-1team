@@ -3,7 +3,7 @@
  * 폰 목업(PhoneFrame·노치·상태바)은 걷어냈다. 여기서는 화면 하나가 곧 문서 한 장이다.
  * 스타일은 styles/app.css.
  */
-import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import { forwardRef, useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 
 /** 지킴이 캐릭터(오브). size(px)로 크기 조절, bob으로 둥실 애니메이션. */
 export function Orb({ size = 84, bob = false, style }: { size?: number; bob?: boolean; style?: CSSProperties }) {
@@ -14,10 +14,12 @@ export function Orb({ size = 84, bob = false, style }: { size?: number; bob?: bo
  * 화면 한 장. 제목은 화면마다 h1으로 한 번 선언한다(KWCAG 2.4.2 제목 제공).
  * 시각적으로 큰 제목이 따로 있는 화면은 sr-only로 둔다.
  */
-export function Screen({ title, hasTabBar, background, children }: {
+export function Screen({ title, hasTabBar, background, className, children }: {
   title: string;
   hasTabBar?: boolean;
   background?: string;
+  /** 화면별 예외 스타일을 걸 자리(소비 내역의 흰 바탕 등). */
+  className?: string;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLElement>(null);
@@ -26,7 +28,9 @@ export function Screen({ title, hasTabBar, background, children }: {
   return (
     <main
       id="main"
-      className={`screen${hasTabBar ? ' has-tabbar' : ''}`}
+      /* `tabscreen` 은 개편안이 **탭 뿌리 화면**에 붙이던 표시다. 아래 탭바가 있느냐와
+         같은 뜻이라 `has-tabbar` 와 함께 붙인다 — 개편안의 선택자가 그대로 맞는다. */
+      className={`screen${hasTabBar ? ' has-tabbar tabscreen' : ''}${className ? ` ${className}` : ''}`}
       style={background ? { background } : undefined}
       ref={ref}
       tabIndex={-1}
@@ -72,9 +76,13 @@ export function Cta({ children }: { children: ReactNode }) {
 }
 
 /** 스크롤 본문 래퍼(목업과 같은 이름을 유지해 화면 코드가 그대로 읽히게). */
-export function Scroll({ children }: { children: ReactNode }) {
-  return <div className="scroll">{children}</div>;
-}
+export const Scroll = forwardRef<HTMLDivElement, {
+  children: ReactNode;
+  onScroll?: React.UIEventHandler<HTMLDivElement>;
+}>(function Scroll({ children, onScroll }, ref) {
+  // ref 를 받는 이유: 소비 내역에서 달력 날짜를 누르면 **이 요소를** 그 날짜 줄로 굴린다.
+  return <div className="scroll" ref={ref} onScroll={onScroll}>{children}</div>;
+});
 
 /** 에러 박스 — 서버가 보낸 우리말 문장을 그대로 보여준다. */
 export function ErrorBox({ error, onRetry }: { error: unknown; onRetry?: () => void }) {

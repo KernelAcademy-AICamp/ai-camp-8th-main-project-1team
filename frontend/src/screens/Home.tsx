@@ -100,14 +100,13 @@ export function Home() {
       <Scroll>
         <div className="pad" style={{ paddingTop: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <p style={{ fontSize: 21, fontWeight: 800, margin: 0 }}>지킴이</p>
-            <button type="button" className="icon-btn" onClick={() => go('notifications')}
-              aria-label={home.unreadNotifications > 0 ? `알림함 · 안 읽은 알림 ${home.unreadNotifications}건` : '알림함'}
-              style={{ position: 'relative' }}>   {/* 크기는 .icon-btn(44px)에 맡긴다 — 인라인 40px 이 덮어 터치 타깃이 미달했다 */}
+            {/* 앱 이름은 MOA, 안에 사는 캐릭터가 지킴이다. 예전엔 여기도 '지킴이'라 적어
+                시작 화면(MOA)과 홈이 서로 다른 앱처럼 보였다. */}
+            <p style={{ fontSize: 21, fontWeight: 800, margin: 0 }}>MOA</p>
+            <button type="button" className="bell-wrap" onClick={() => go('notifications')}
+              aria-label={home.unreadNotifications > 0 ? `알림함 · 안 읽은 알림 ${home.unreadNotifications}건` : '알림함'}>
               <Icon id="i-bell" className="ci" />
-              {home.unreadNotifications > 0 && (
-                <span aria-hidden="true" style={{ position: 'absolute', top: 5, right: 5, width: 8, height: 8, borderRadius: '50%', background: 'var(--red)' }} />
-              )}
+              {home.unreadNotifications > 0 && <i className="bell-dot" aria-hidden="true" />}
             </button>
           </div>
 
@@ -158,17 +157,21 @@ export function Home() {
             </div>
           </div>
 
-          {/* 마이룸 스트립 — 스트릭 + 포인트(방 꾸미기 재화) */}
-          <button type="button" className="strip" onClick={() => go('myroom')}>
-            <Orb size={28} />
-            <b>마이룸</b>
-            <span className="meta">
-              <span className="fire"><Icon id="i-flame" className="" size={15} /> {strip.grassStreak}일</span>
+          {/* 마이룸 진입 카드 (개편안 `.strip` + `.mr-tx`/`.mr-art`).
+              예전에는 아이콘 한 줄짜리 스트립이었는데, 방을 꾸미는 곳인데도 무엇이 기다리는지
+              보이지 않아 그냥 지나가는 줄이 됐다. 개편안대로 방 그림을 얹는다. */}
+          <button type="button" className="strip mr" onClick={() => go('myroom')}>
+            <div className="mr-tx">
+              <b>마이룸</b>
+              <p>포인트를 모아서 나만의<br />방을 꾸며보세요</p>
+            </div>
+            <img className="mr-art" alt="" aria-hidden="true" src="/room/myroom-preview.png" />
+            <span className="mr-meta">
+              <span className="fire"><Icon id="i-flame" className="" size={14} /> {strip.grassStreak}일</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <Icon id="i-coin" className="" size={15} /> {strip.pointBalance}P
+                <Icon id="i-coin" className="" size={14} /> {strip.pointBalance}P
               </span>
               {strip.unopenedCeremony && <span className="dot-new" aria-label="새 소식" />}
-              <span className="chev" aria-hidden="true">›</span>
             </span>
           </button>
 

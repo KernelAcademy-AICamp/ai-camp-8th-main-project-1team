@@ -31,13 +31,17 @@ public class MerchantCategoryService {
     private final MerchantCategoryRepository repository;
     private final IndustryCategoryMapper mapper;
     private final BusinessNumberKindService kinds;
+    /** 브랜드 대기 장소 — 사전에 들어오는 순간 이쪽에서 옮겨 온다. */
+    private final MerchantBrandService brands;
 
     public MerchantCategoryService(MerchantCategoryRepository repository,
                                    IndustryCategoryMapper mapper,
-                                   BusinessNumberKindService kinds) {
+                                   BusinessNumberKindService kinds,
+                                   MerchantBrandService brands) {
         this.repository = repository;
         this.mapper = mapper;
         this.kinds = kinds;
+        this.brands = brands;
     }
 
     /**
@@ -66,8 +70,53 @@ public class MerchantCategoryService {
      */
     @Transactional(readOnly = true)
     public Optional<String> guess(String businessNumber, String merchantName) {
-        return find(businessNumber, merchantName, m -> !m.isConfirmed())
+        // **추정만** 본다. `!isConfirmed()` 로 두면 시도 이력 행(ATTEMPTED — 분류가 아니라
+        // "건드려 봤다"는 기록)까지 걸려 들어 '카테고리없음'이 추정인 양 화면에 나간다.
+        return find(businessNumber, merchantName, MerchantCategory::isGuess)
                 .map(MerchantCategory::getCategory2);
+    }
+
+    /**
+     * <b>이 가맹점에 더 손댈 필요가 있는가</b> — 조회·질문을 시작하기 전에 묻는다.
+     *
+     * <p>여기서 막지 않으면 연동할 때마다 같은 번호를 조회하고 같은 상호를 다시 묻는다.
+     * 사전이 커져도 바깥 호출이 안 줄어드는 것이 그 증상이다.
+     *
+     * <p><b>추정만 있는 것은 아직 할 일이 남은 것으로 본다.</b> 조회로 사실을 얻으면 추정을
+     * 덮을 수 있기 때문이다 — 사실이 추정을 이긴다.
+     */
+    @Transactional(readOnly = true)
+    public boolean needsWork(String businessNumber, String merchantName) {
+        if (merchantName == null || merchantName.isBlank()) return false;
+        return find(businessNumber, merchantName, m -> true)
+                .map(m -> !m.isConfirmed())     // 확정(사람·조회)도 종결('기타')도 아니면 남았다
+                .orElse(true);                  // 처음 보는 가맹점
+    }
+
+    /**
+     * 시도를 적을 행을 가져온다 — 없으면 <b>시도 이력 행</b>을 만든다(분류가 아니다).
+     *
+     * <p>{@link #confirmFrom}·{@link #rememberGuess} 와 같은 이유로 <b>실제 사람의 결제일
+     * 때만</b> 만든다. 더미 결제에도 실재하는 사업자번호가 섞여 있어 조회는 성공할 수 있는데,
+     * 그렇게 들어온 행은 아무도 결제한 적 없는 가맹점을 사전에 앉힌다.
+     */
+    @Transactional
+    public Optional<MerchantCategory> attemptRow(UserPayment payment) {
+        if (payment == null || !payment.isFromRealPerson()) return Optional.empty();
+        String name = payment.getMerchantName();
+        if (name == null || name.isBlank()) return Optional.empty();
+        String normalized = MerchantCategory.normalize(payment.getBusinessNumber());
+        final String biz = mapper.isPaymentAgency(normalized) ? "" : normalized;
+        MerchantCategory row = repository.findByBusinessNumberAndMerchantName(biz, name)
+                .orElseGet(() -> repository.save(new MerchantCategory(
+                        biz, name, com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED,
+                        MerchantCategory.Source.ATTEMPTED, null)));
+
+        // 이 가맹점이 사전에 자리를 얻었으니 대기 장소의 브랜드를 옮기고 그쪽은 지운다.
+        // **attemptRow·rememberGuess·rememberRegistry 도 confirm 과 같아야 한다** — 한 곳만 옮기면 브랜드가 두 곳에 남아
+        // 어느 쪽이 정본인지 알 수 없게 된다(2026-08-07 감사에서 발견).
+        brands.promote(row);
+        return Optional.of(row);
     }
 
     /**
@@ -177,10 +226,117 @@ public class MerchantCategoryService {
                 return Optional.empty();     // 사실·사람의 확인을 추정으로 덮지 않는다
             }
             row.reclassify(category2, MerchantCategory.Source.LLM_GUESS, null);
+            brands.promote(row);
             return Optional.of(row);
         }
-        return Optional.of(repository.save(new MerchantCategory(
-                biz, name, category2, MerchantCategory.Source.LLM_GUESS, null)));
+        MerchantCategory row = repository.save(new MerchantCategory(
+                biz, name, category2, MerchantCategory.Source.LLM_GUESS, null));
+        brands.promote(row);
+        return Optional.of(row);
+    }
+
+    /**
+     * <b>조회를 한 번 했다고 적는다</b> — 답을 얻었으면 그 업종 이름도 같이.
+     *
+     * <p>{@code industryName} 이 null 이어도 부른다. 조회처가 모른다고 답한 것도 시도이고,
+     * 그것까지 세야 죽은 통로를 눈치챌 수 있다.
+     */
+    @Transactional
+    public void noteLookup(UserPayment payment, String industryName, java.time.LocalDateTime at) {
+        attemptRow(payment).ifPresent(row -> row.noteLookup(industryName, at));
+    }
+
+    /**
+     * 조회처가 알려 준 <b>주소</b>를 사전에 적는다 — 업종과 같은 문서에서 온 것이다.
+     *
+     * <p>사전에 자리가 없으면 만들지 않는다. 주소만 아는 가맹점을 사전에 앉히면 <i>"이 점포의
+     * 업종이 무엇인가"</i> 라는 약속이 깨진다(브랜드에 대기 장소를 따로 둔 것과 같은 이유).
+     * 업종을 알아내는 흐름이 자리를 만들고, 주소는 그 자리에 얹힌다.
+     *
+     * @return 새로 적었으면 true
+     */
+    @Transactional
+    public boolean rememberAddress(String businessNumber, String merchantName, String address) {
+        if (address == null || address.isBlank()) return false;
+        String biz = MerchantCategory.normalize(businessNumber);
+        if (biz.isEmpty() || mapper.isPaymentAgency(biz)) return false;   // PG 번호는 남의 것이다
+        boolean[] wrote = {false};
+        repository.findByBusinessNumberAndMerchantName(biz, merchantName)
+                .ifPresent(row -> wrote[0] = row.noteAddress(address));
+        return wrote[0];
+    }
+
+    /** 주소가 아직 없는 사전 행 — 순차 백필이 채울 대상이다. */
+    @Transactional(readOnly = true)
+    public List<MerchantCategory> missingAddress(int limit) {
+        return repository.findMissingAddress(
+                org.springframework.data.domain.PageRequest.of(0, Math.max(1, limit)));
+    }
+
+    /**
+     * <b>LLM 에 물었는데 답이 없었다고 적는다</b> — {@value MerchantCategory#GIVE_UP_AFTER}회째면 '기타'로 종결한다.
+     *
+     * <p>답을 얻은 경우는 여기 오지 않는다({@link #rememberGuess} 가 받는다). 세는 것은
+     * <b>헛물켠 질문</b>뿐이다.
+     *
+     * @return 이번 호출로 '기타'가 됐으면 true
+     */
+    @Transactional
+    public boolean noteLlmMiss(UserPayment payment, java.time.LocalDateTime at) {
+        return attemptRow(payment)
+                .filter(row -> !row.isConfirmed() || row.settledAsOther())
+                .map(row -> row.noteLlmMiss(at))
+                .orElse(false);
+    }
+
+    /**
+     * <b>등록 업종 조회로 얻은 분류를 사전에 남긴다</b>(순위 ②-b) — 같은 가맹점을 두 번 묻지 않는다.
+     *
+     * <p>남기는 것이 이 통로의 절반이다. 조회는 남의 서버를 두드리는 일이라 매번 하면 느리고
+     * 무례하고 언제 막힐지 모른다. 한 번 알아낸 사실을 사전에 넣어 두면 그다음부터는
+     * {@link #lookup} 이 바로 답하므로 조회가 아예 일어나지 않는다 —
+     * {@link Source#LLM_GUESS} 를 남기는 이유와 같은 이유다.
+     *
+     * <p><b>사람이 정한 것은 덮지 않는다.</b> 등록 업종은 사실이지만 "이 결제가 무엇에 쓴 돈인가"에
+     * 대한 답은 아니라, 사용자가 직접 고친 것이 위에 있다. 반대로 <b>추정은 덮는다</b> —
+     * 사실이 추정을 이긴다.
+     *
+     * <p>그리고 {@link #confirmFrom}·{@link #rememberGuess} 와 같은 이유로 <b>실제 사람의 결제일
+     * 때만</b> 쌓는다. 더미 사용자의 결제에도 실재하는 사업자번호가 섞여 있어 조회 자체는
+     * 성공할 수 있는데, 그렇게 들어온 행은 <i>"이 사전은 실제 명세서에서 자란다"</i>는 약속을
+     * 어긴다 — 아무도 결제한 적 없는 가맹점이 사전에 앉는다.
+     *
+     * @return 남겼으면 그 행, 사람이 정한 것이 이미 있거나 더미 결제라 남기지 않았으면 empty
+     */
+    @Transactional
+    public Optional<MerchantCategory> rememberRegistry(UserPayment payment, String category2) {
+        if (payment == null || !payment.isFromRealPerson()
+                || category2 == null || category2.isBlank()) {
+            return Optional.empty();
+        }
+        String merchantName = payment.getMerchantName();
+        if (merchantName == null || merchantName.isBlank()) {
+            return Optional.empty();
+        }
+        String normalized = MerchantCategory.normalize(payment.getBusinessNumber());
+        // PG 번호는 조회 단계에서 이미 걸러지지만, 쌓는 자리와 찾는 자리의 규칙을 같게 둔다.
+        final String biz = mapper.isPaymentAgency(normalized) ? "" : normalized;
+
+        Optional<MerchantCategory> existing =
+                repository.findByBusinessNumberAndMerchantName(biz, merchantName);
+        if (existing.isPresent()) {
+            MerchantCategory row = existing.get();
+            if (row.isConfirmed() && !MerchantCategory.Source.REGISTRY.name().equals(row.getSource())) {
+                return Optional.empty();     // 사람이 준 것·확인한 것은 그대로 둔다
+            }
+            row.reclassify(category2, MerchantCategory.Source.REGISTRY, null);
+            brands.promote(row);
+            return Optional.of(row);
+        }
+        MerchantCategory row = repository.save(new MerchantCategory(
+                biz, merchantName, category2, MerchantCategory.Source.REGISTRY, null));
+        brands.promote(row);
+        return Optional.of(row);
     }
 
     /**
@@ -232,13 +388,17 @@ public class MerchantCategoryService {
         // 같은 넷플릭스인데 NHNKCP 를 거친 4건에는 안 붙는다. 쌓이는 자리와 찾는 자리가
         // 어긋나면 사전이 커져도 적중이 안 는다 — 아무 오류도 없이.
         final String biz = mapper.isPaymentAgency(normalized) ? "" : normalized;
-        return repository.findByBusinessNumberAndMerchantName(biz, merchantName)
+        MerchantCategory row = repository.findByBusinessNumberAndMerchantName(biz, merchantName)
                 .map(existing -> {
                     existing.reclassify(category2, source, confirmedBy);
                     return existing;
                 })
                 .orElseGet(() -> repository.save(
                         new MerchantCategory(biz, merchantName, category2, source, confirmedBy)));
+        // 이 가맹점이 사전에 들어왔으니 대기 장소의 브랜드를 옮기고 그쪽은 지운다 —
+        // 두 곳에 남으면 어느 쪽이 정본인지 알 수 없게 된다.
+        brands.promote(row);
+        return row;
     }
 
     /**

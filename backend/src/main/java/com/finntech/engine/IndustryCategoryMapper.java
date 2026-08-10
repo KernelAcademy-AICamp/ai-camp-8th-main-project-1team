@@ -41,12 +41,39 @@ public class IndustryCategoryMapper {
     /** 업종코드를 모를 때. 알 수 없는 가맹점·비소비 업종·간편결제가 여기로 온다. */
     public static final String UNCLASSIFIED = "카테고리없음";
 
+    /**
+     * <b>다 해 봤지만 알 수 없었다</b> — 조회도 하고 LLM 에도 물었는데 답이 없던 가맹점.
+     *
+     * <p>{@link #UNCLASSIFIED} 와 갈라 둔 이유가 전부다. 그 값 하나가 <i>"아직 안 물어봤다"</i>와
+     * <i>"다 물어봤는데 모른다"</i>를 같이 담고 있었고, 그래서 뒤엣것을 연동할 때마다 다시
+     * 조회하고 다시 물었다. 종결을 적을 자리가 없으면 파이프라인은 영원히 같은 일을 한다.
+     */
+    public static final String OTHER = "기타";
+
+    /**
+     * <b>무엇을 샀는지 모르는 분류인가</b> — 낭비 판정·절약 후보에서 빼야 할 값들.
+     *
+     * <p>둘을 한 자리에서 판정하는 것이 요점이다. '기타'를 새 분류로 들이면서 이 함수를 안 만들면,
+     * 종결 표시가 <b>판정 대상으로 흘러 들어간다</b> — 재량성 표에 없으니 기본값 0.5 를 받아
+     * "모르는 소비의 절반이 낭비"라는 값이 리포트에 실린다. 실제로 같은 사고가 한 번 있었다:
+     * 알 수 없는 간편결제가 전부 ML 판정에 들어갔는데 문자열만 안 맞을 뿐이라 크래시가 없어
+     * 아무도 몰랐다.
+     *
+     * <p>"카테고리없음을 줄이세요"가 행동으로 옮길 수 없는 조언인 것처럼 "기타를 줄이세요"도
+     * 그렇다. 사람이 그 결제를 직접 고쳐 주기 전까지는 판정의 재료가 아니다.
+     */
+    public static boolean isUnknown(String mid) {
+        return mid == null || mid.isBlank() || UNCLASSIFIED.equals(mid) || OTHER.equals(mid);
+    }
+
     private final Map<String, String> midByIndustry;
     private final Map<String, Double> discretionaryByMid;
     private final Map<String, String> pgBusinessNumbers;
     private final Map<String, String> multiBusinessNumbers;
     /** 업종 <b>이름</b> → 중분류. LLM 이 축을 직접 고르지 않게 하려고 둔다. */
     private final Map<String, String> midByIndustryName;
+    /** 세세분류 이름(정규화) → 국세청 업종코드들. 바깥 조회처의 답을 우리 번호로 옮기는 칸. */
+    private final Map<String, java.util.List<String>> ntsByFineName;
 
     @SuppressWarnings("unchecked")
     public IndustryCategoryMapper(ObjectMapper objectMapper) {
@@ -64,6 +91,9 @@ public class IndustryCategoryMapper {
             this.multiBusinessNumbers = multi == null ? Map.of() : multi;
             Map<String, String> names = (Map<String, String>) root.get("midByIndustryName");
             this.midByIndustryName = names == null ? Map.of() : names;
+            Map<String, java.util.List<String>> fine =
+                    (Map<String, java.util.List<String>>) root.get("ntsByFineName");
+            this.ntsByFineName = fine == null ? Map.of() : fine;
         } catch (IOException e) {
             throw new UncheckedIOException("업종코드 대조표를 읽지 못했다: " + PATH, e);
         }
@@ -129,6 +159,54 @@ public class IndustryCategoryMapper {
     public String midOfIndustryName(String industryName) {
         if (industryName == null) return UNCLASSIFIED;
         return midByIndustryName.getOrDefault(industryName.trim(), UNCLASSIFIED);
+    }
+
+    /**
+     * <b>바깥 조회처가 답한 업종 이름</b>을 우리 중분류로 옮긴다 — 없거나 애매하면 {@link #UNCLASSIFIED}.
+     *
+     * <p>세 칸을 지난다: <b>세세분류 이름 → 국세청 업종코드 → 중분류.</b> 가운데 칸이 필요한 이유는
+     * 세대가 다르기 때문이다. 사업자등록번호로 등록 업종을 돌려주는 조회처는 KSIC(한국표준산업분류)
+     * 이름을 주고 우리 대조표는 국세청 업종코드 세대라, 번호끼리는 아예 겹치지 않는다. 그런데
+     * <b>이름은 이어진다</b> — 국세청 업종코드표의 {@code 세세분류} 칸이 KSIC 세세분류 이름을 그대로
+     * 쓴다(2026-08-07 실측: 조회된 업종명 19종 중 18종이 그 칸에 있었다).
+     *
+     * <p><b>만장일치일 때만 답한다.</b> 이름 하나에 국세청 코드가 여럿 달리는 일이 있고(같은 업종을
+     * 규모로 쪼갠 것), 그 코드들의 중분류가 갈리면 어느 쪽인지 알 방법이 없다. 억지로 고르는 대신
+     * 비워서 LLM 으로 내려보낸다 — 모르는 것을 모른다고 하는 편이 조용히 틀리는 것보다 낫다.
+     *
+     * <p><b>대조표에 없는 업종은 답하지 않는다.</b> 대조표는 소매·서비스처럼 개인이 직접 결제하는
+     * 업종만 담는다(제조·도매·B2B 제외). 그래서 이 통로는 "법인 주업종을 소비로 읽는" 사고를
+     * 구조적으로 안 낸다 — 삼성전자의 등록 업종은 영상기기 제조업이라 여기서 자동으로 빠진다.
+     */
+    public String midOfFineName(String fineName) {
+        java.util.List<String> codes = ntsByFineName.get(normalizeFineName(fineName));
+        if (codes == null || codes.isEmpty()) return UNCLASSIFIED;
+        String only = null;
+        for (String code : codes) {
+            String mid = midByIndustry.get(code);
+            if (mid == null) continue;
+            if (only == null) only = mid;
+            else if (!only.equals(mid)) return UNCLASSIFIED;   // 갈렸다 — 고르지 않는다
+        }
+        return only == null ? UNCLASSIFIED : only;
+    }
+
+    /**
+     * 이름 결합용 정규화 — <b>{@code scripts/industry/build_industry.py} 와 글자 하나까지 같아야 한다.</b>
+     *
+     * <p>한쪽만 고치면 색인은 멀쩡한데 아무것도 안 붙는 조용한 실패가 난다. 지우는 것은 세대가
+     * 다를 때 흔히 어긋나는 글자들이다 — {@code 그 외 기타}↔{@code 그외 기타},
+     * {@code 정보 제공업}↔{@code 정보제공업}, {@code 음ㆍ식료품}↔{@code 음·식료품}.
+     */
+    static String normalizeFineName(String name) {
+        if (name == null) return "";
+        StringBuilder sb = new StringBuilder(name.length());
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (Character.isWhitespace(c) || "·‧ㆍ･․.,()（）[]/-\\".indexOf(c) >= 0) continue;
+            sb.append(c);
+        }
+        return sb.toString();
     }
 
     /** 중분류로 묶은 업종 이름 — LLM 에게 보여 줄 목록이다. 정렬 고정(§4-3 재현성). */

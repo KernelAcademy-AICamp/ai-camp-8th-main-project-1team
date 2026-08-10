@@ -78,6 +78,18 @@ public class BusinessNumberKindService {
     }
 
     /** 스냅샷에서 같은 판정을 한다 — 적재 루프가 건마다 질의하지 않게. 규칙은 위와 같다. */
+    /**
+     * <b>갈린 것으로 확정된</b> 번호인가 — {@code MULTI} 만 참이다.
+     *
+     * <p>{@link #relaxationAllowed} 와 다르다. 그쪽은 {@code SINGLE} 만 허용해 {@code UNKNOWN}
+     * 도 막는데, 그것은 <b>사전 완화</b>(같은 번호의 다른 행을 재사용)에 맞는 엄격함이다.
+     * 등록 업종 조회는 남의 행을 가져다 쓰는 것이 아니라 <b>그 번호 자체의 등록 사실</b>을
+     * 묻는 것이라, "아직 모른다"까지 막으면 알아낼 방법이 영영 없어진다.
+     */
+    public boolean isMulti(String businessNumber) {
+        return repository.findById(businessNumber).map(BusinessNumberKind::isMulti).orElse(false);
+    }
+
     public static boolean relaxationAllowed(BusinessNumberKind row) {
         return row == null || row.isSingle();
     }

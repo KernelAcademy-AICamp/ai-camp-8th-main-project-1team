@@ -34,12 +34,15 @@ public class ApiController {
 
     private final AnalysisEngine engine;
     private final RecommendService recommendService;
+    private final CardRecommendService cardRecommendService;
     private final ReportService reportService;
     private final AlertService alertService;
     private final ScoreService scoreService;
     private final NarrativeService narrativeService;
     private final AuditService auditService;
     private final AppUserRepository userRepository;
+    /** 저장된 문장을 주고, 낡았으면 큐에 올린다 — 화면은 모델을 기다리지 않는다. */
+    private final com.finntech.service.NarrativeCacheService narratives;
     private final CategoryRepository categoryRepository;
     private final ConsumptionRepository consumptionRepository;
     private final AlertRepository alertRepository;
@@ -49,17 +52,21 @@ public class ApiController {
                          ReportService reportService, AlertService alertService,
                          ScoreService scoreService, NarrativeService narrativeService,
                          AuditService auditService, AppUserRepository userRepository,
+                         com.finntech.service.NarrativeCacheService narratives,
                          CategoryRepository categoryRepository,
                          ConsumptionRepository consumptionRepository,
-                         AlertRepository alertRepository, Clock clock) {
+                         AlertRepository alertRepository, CardRecommendService cardRecommendService,
+                         Clock clock) {
         this.engine = engine;
         this.recommendService = recommendService;
+        this.cardRecommendService = cardRecommendService;
         this.reportService = reportService;
         this.alertService = alertService;
         this.scoreService = scoreService;
         this.narrativeService = narrativeService;
         this.auditService = auditService;
         this.userRepository = userRepository;
+        this.narratives = narratives;
         this.categoryRepository = categoryRepository;
         this.consumptionRepository = consumptionRepository;
         this.alertRepository = alertRepository;
@@ -116,6 +123,18 @@ public class ApiController {
         return body;
     }
 
+    /**
+     * 카드 추천 (개편안 {@code s-compare}).
+     *
+     * <p>여기 카드는 <b>전부 더미</b>다(마스터 §4 원칙 5). 응답에 소비 요약을 함께 싣는 이유는
+     * 순위의 근거를 화면에서 바로 대조할 수 있게 하기 위함이다 — 근거 없는 순위는 광고다.
+     */
+    @GetMapping("/products/recommend-cards")
+    public CardRecommendService.Result recommendCards(@RequestParam Long userId) {
+        user(userId);   // 없는 사용자면 404
+        return cardRecommendService.recommend(engine.analyze(userId, now()));
+    }
+
     // ---- 리포트 -----------------------------------------------------------
 
     /**
@@ -138,7 +157,11 @@ public class ApiController {
         String period = now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM"));
         // CONFIRMED일 때만 캐시된다 — ESTIMATED를 캐시하면 "더 기록하면 정확해집니다"가 거짓말이 된다
         ReportService.ReportBody rb = reportService.buildCached(userId, period, analysis, now());
-        NarrativeService.Narrative narrative = narrativeService.summarizeReport(rb, analysis);
+        var narrativeReq = narrativeService.reportRequest(userId, rb, analysis);
+        var shownNarrative = narratives.show(narrativeReq);
+        NarrativeService.Narrative narrative =
+                new NarrativeService.Narrative(shownNarrative.body(), shownNarrative.source());
+        narratives.enqueueIfNeeded(narrativeReq);
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("userId", userId);

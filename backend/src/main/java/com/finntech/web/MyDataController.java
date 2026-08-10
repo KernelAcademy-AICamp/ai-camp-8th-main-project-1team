@@ -53,6 +53,17 @@ public class MyDataController {
         return linkService.companies();
     }
 
+    /**
+     * 본인인증을 마친 사람이 <b>실제로 가진</b> 카드사·은행을 찾는다 (프로토타입_0806).
+     *
+     * <p>연결하지는 않는다 — 화면이 "N곳을 찾았어요"로 보여 주고, 사용자가 뺄 것을 해제한 뒤
+     * {@code POST /link} 를 부른다. 인증 전에 부르면 400 이다(CI 가 없으면 물어볼 신원이 없다).
+     */
+    @GetMapping("/discover")
+    public com.finntech.service.MyDataLinkService.Discovered discover(@RequestParam Long userId) {
+        return linkService.discover(userId);
+    }
+
     /** 카드사 연결 → 마이데이터에서 카드·결제 적재 + Consumption(MYDATA) 투영. */
     @PostMapping("/link")
     public LinkResult link(@RequestBody LinkRequest request) {
