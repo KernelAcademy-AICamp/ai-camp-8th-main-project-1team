@@ -30,7 +30,7 @@ class AccountFundFlowSourceTest {
 
     private static UserPayment card(LocalDateTime date, int amount, String merchant) {
         return new UserPayment("id-" + date + "-" + amount + "-" + merchant, 1L, "card", 1L,
-                date, "대분류", "category2", amount, merchant, 0, null);
+                date, "대분류", "category2", amount, merchant, null);
     }
 
     private static MyDataResponses.AccountView account(int salary, int payday, long balance) {

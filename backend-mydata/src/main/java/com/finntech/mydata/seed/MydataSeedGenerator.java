@@ -42,8 +42,6 @@ public class MydataSeedGenerator implements CommandLineRunner {
     private final MyDataPaymentRepository paymentRepo;
     private final CardCompanyRepository companyRepo;
     private final CardProductRepository productRepo;
-    /** 업종코드 → 중분류. 혜택이 중분류에 걸려 있어 결제(업종코드)와 맞추려면 필요하다. */
-    private final com.finntech.mydata.generation.IndustryCategoryMap ksicToMid;
 
     private final boolean enabled;
     private final String mode;
@@ -57,7 +55,6 @@ public class MydataSeedGenerator implements CommandLineRunner {
     public MydataSeedGenerator(MyDataUserRepository userRepo, MyDataCardRepository cardRepo,
                                MyDataPaymentRepository paymentRepo, CardCompanyRepository companyRepo,
                                CardProductRepository productRepo,
-                               com.finntech.mydata.generation.IndustryCategoryMap ksicToMid,
                                @Value("${mydata.seed.enabled:true}") boolean enabled,
                                @Value("${mydata.seed.mode:keep}") String mode,
                                @Value("${mydata.generation.enabled:false}") boolean generationEnabled,
@@ -74,7 +71,6 @@ public class MydataSeedGenerator implements CommandLineRunner {
         this.paymentRepo = paymentRepo;
         this.companyRepo = companyRepo;
         this.productRepo = productRepo;
-        this.ksicToMid = ksicToMid;
         this.enabled = enabled;
         this.mode = mode;
         this.generationEnabled = generationEnabled;
@@ -151,9 +147,8 @@ public class MydataSeedGenerator implements CommandLineRunner {
                 CardProduct product = shuffled.get(cardIndex);
                 String serialNumber = generateSerial(rnd);
                 LocalDate expiration = referenceDate.plusYears(2 + rnd.nextInt(3)).withDayOfMonth(1);
-                int prevMonthAmount = rnd.nextInt(650000); // 0~65만, 30/40만 실적 구간을 걸치게
                 MyDataCard card = cardRepo.save(
-                        new MyDataCard(serialNumber, user, product, expiration, prevMonthAmount));
+                        new MyDataCard(serialNumber, user, product, expiration));
 
                 int paymentCount = paymentsMin + rnd.nextInt(Math.max(1, paymentsMax - paymentsMin + 1));
                 for (int paymentIndex = 0; paymentIndex < paymentCount; paymentIndex++) {
@@ -167,9 +162,8 @@ public class MydataSeedGenerator implements CommandLineRunner {
                             .minusDays(rnd.nextInt(windowDays))
                             .plusHours(8 + rnd.nextInt(14))
                             .plusMinutes(rnd.nextInt(60));
-                    int benefit = calculateBenefit(product, industryCode, amount, prevMonthAmount);
                     paymentRepo.save(new MyDataPayment("pay-" + (paymentCounter++), card, paidAt,
-                            industryCode, category2, amount, merchant, benefit));
+                            industryCode, category2, amount, merchant));
                 }
             }
         }
@@ -178,24 +172,9 @@ public class MydataSeedGenerator implements CommandLineRunner {
         log.info("데모용 신원(앞 3명, 본체 본인인증 입력용): {}", demoIdentities);
     }
 
-    /**
-     * 카드 상품의 혜택에서 결제 1건의 받은 혜택 계산(실적구간 대조).
-     *
-     * <p>혜택은 <b>우리 중분류</b>에 걸려 있고 결제는 <b>업종코드</b>를 갖는다.
-     * 그래서 대조표(industry-mid.json)를 한 번 거친다 — 카드사가 502개 업종코드를 각각
-     * 정의하지 않아도 되고, 실제 카드 혜택도 소비자가 아는 묶음 단위로 준다.
-     */
-    private int calculateBenefit(CardProduct product, String industryCode, int amount, int prevMonthAmount) {
-        String mid = ksicToMid.midOf(industryCode);
-        if (mid == null) return 0;
-        for (CardBenefit benefit : product.getBenefits()) {
-            if (benefit.getMidCategory().equals(mid) && benefit.coversPerformance(prevMonthAmount)) {
-                int raw = (int) ((long) amount * benefit.getDiscountPercent() / 100);
-                return Math.min(raw, benefit.getMonthlyLimit());
-            }
-        }
-        return 0;
-    }
+    // 받은 혜택 계산은 없앴다 — 전월 실적액이 사라졌기 때문이 아니라, 실 마이데이터가
+    // 할인·적립액을 주지 않기 때문이다. 혜택 계산은 카드 룰을 아는 쪽(추천 엔진)이
+    // 승인내역에서 직접 해야 하고, 여기서 정답을 내주면 그 계산이 검증되지 않는다.
 
     /** 주민번호 앞 7자리(YYMMDD + 성별세대) 생성. 결정론. */
     private static String generateBirth7(Random rnd) {

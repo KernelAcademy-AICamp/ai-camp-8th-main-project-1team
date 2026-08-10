@@ -159,7 +159,7 @@ class ExternalCallBoundaryTest {
         var row = new com.finntech.domain.UserPayment("24:real-1", 24L, "card", 1L,
                 java.time.LocalDateTime.of(2026, 8, 1, 12, 0), "5814",
                 com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED, 13_500,
-                "넷플릭스", 0, "1234567890");
+                "넷플릭스", "1234567890");
         var payments = mock(UserPaymentRepository.class);
         when(payments.findByUserIdAndCategory2OrderByPaymentDateDesc(anyLong(), anyString()))
                 .thenReturn(List.of(row));
@@ -185,7 +185,7 @@ class ExternalCallBoundaryTest {
         var row = new com.finntech.domain.UserPayment("24:real-1", 24L, "card", 1L,
                 java.time.LocalDateTime.of(2026, 8, 1, 12, 0), "5814",
                 com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED, 5_000,
-                "어떤가게", 0, "1234567890");
+                "어떤가게", "1234567890");
         var payments = mock(UserPaymentRepository.class);
         when(payments.findByUserIdAndCategory2OrderByPaymentDateDesc(anyLong(), anyString()))
                 .thenReturn(List.of(row));
@@ -312,7 +312,7 @@ class ExternalCallBoundaryTest {
                 new com.finntech.domain.UserPayment("1:real-1", 1L, "card", 1L,
                         java.time.LocalDateTime.of(2026, 8, 1, 12, 0), "5814",
                         com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED, 5_000,
-                        "어떤가게", 0, "1234567890")));
+                        "어떤가게", "1234567890")));
         var brands = mock(MerchantBrandService.class);
 
         MyDataLinkService service = TestServices.linkService(client, users,

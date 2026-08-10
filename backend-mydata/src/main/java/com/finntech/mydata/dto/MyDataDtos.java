@@ -53,13 +53,21 @@ public final class MyDataDtos {
      * 업종인가"({@code industryCode})까지고, "사용자에게 이 소비가 무엇인가"는 앱이 판단할 몫이다.
      * 실제 마이데이터도 그렇게 동작하며, 이 경계를 지켜야 앱의 분류 품질을 검증할 수 있다.
      * 생성 시점의 소비맥락(category2)은 제공자 DB에만 남아 학습에 쓰인다 — 낭비 라벨과 같다.
+     *
+     * <p><b>받은 혜택 금액도 넘기지 않는다.</b> 실 마이데이터에 할인·적립액 필드가 없다
+     * (카드-005 청구 추가정보·카드-008 승인내역 모두). 같은 경계다.
      */
     public record PaymentView(String id, LocalDateTime date, String industryCode,
-                              int amount, String merchantName, int receivedBenefitAmount, Long cardCode,
+                              int amount, String merchantName, Long cardCode,
                               String businessNumber) {}
 
-    /** 카드 1장 + 그 카드의 상품정보·소유자·결제내역 전체 — 본체가 UserCard/UserPayment로 영속화. */
-    public record CardView(String cardId, LocalDate expirationDate, int prevMonthAmount,
+    /**
+     * 카드 1장 + 그 카드의 상품정보·소유자·결제내역 전체 — 본체가 UserCard/UserPayment로 영속화.
+     *
+     * <p><b>전월 실적액을 넘기지 않는다.</b> 실 마이데이터 카드 API 에 그런 필드가 없다.
+     * 실적은 승인내역에서 앱이 계산할 몫이고, 그 계산이 정확한지는 여기서 값을 안 줘야 검증된다.
+     */
+    public record CardView(String cardId, LocalDate expirationDate,
                            CardProductView cardProduct, UserView user, List<PaymentView> payments) {}
 
     /** 입출금 통장 1건(§13-11 경제 모델) — 은행·상품·계좌·월급·잔액 + 최근 입출금 내역(월급 입금 + 카드 출금). */

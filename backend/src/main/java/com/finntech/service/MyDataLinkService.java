@@ -422,12 +422,12 @@ public class MyDataLinkService {
             for (CardView card : myDataClient.findCards(companyId, ci)) {
                 companyName = card.cardProduct().company().name();
                 int requirement = requirementOf(card);
-                int currentPerformance = card.payments().stream()
-                        .filter(payment -> YearMonth.from(payment.date()).equals(referenceMonth))
-                        .mapToInt(PaymentView::amount).sum();
+                int currentPerformance = performanceOf(card, referenceMonth);
+                // 전월 실적도 우리가 센다 — 제공자는 주지 않는다(실 마이데이터에 그 필드가 없다).
+                int prevPerformance = performanceOf(card, referenceMonth.minusMonths(1));
                 userCardRepository.save(new UserCard(userId, card.cardId(), card.cardProduct().code(),
                         card.cardProduct().name(), card.cardProduct().color(),
-                        card.cardProduct().company().name(), card.prevMonthAmount(),
+                        card.cardProduct().company().name(), prevPerformance,
                         currentPerformance, requirement));
                 cardCount++;
 
@@ -441,7 +441,7 @@ public class MyDataLinkService {
                     UserPayment row = new UserPayment(
                             UserPayment.rowId(userId, payment.id()), userId, card.cardId(),
                             payment.cardCode(), payment.date(), payment.industryCode(), mid,
-                            payment.amount(), payment.merchantName(), payment.receivedBenefitAmount(),
+                            payment.amount(), payment.merchantName(),
                             payment.businessNumber());
                     // 사전에서 붙은 것은 근거가 사람이라 **처음부터 확정**이다(§F 격리 대상이 아니다).
                     if (fromDict.isPresent()) row.confirmCategory2(mid, "DICT");
@@ -814,7 +814,7 @@ public class MyDataLinkService {
                     UserPayment row = new UserPayment(
                             UserPayment.rowId(userId, payment.id()), userId, card.cardId(),
                             payment.cardCode(), payment.date(), payment.industryCode(), mid,
-                            payment.amount(), payment.merchantName(), payment.receivedBenefitAmount(),
+                            payment.amount(), payment.merchantName(),
                             payment.businessNumber());
                     if (fromDict.isPresent()) row.confirmCategory2(mid, "DICT");
                     else applyRemembered(dict, row);
@@ -865,7 +865,8 @@ public class MyDataLinkService {
                     .findByUserIdAndCardSerialOrderByPaymentDateDesc(userId, card.getSerialNumber()).stream()
                     .filter(payment -> YearMonth.from(payment.getPaymentDate()).equals(referenceMonth))
                     .toList();
-            int earnedThisMonth = thisMonth.stream().mapToInt(UserPayment::getReceivedBenefit).sum();
+            // 받은 혜택 합계는 더 내보내지 않는다 — 마이데이터가 할인·적립액을 주지 않으므로
+            // 셀 수 있는 값이 아니다. 카드 혜택 룰이 갖춰지면 그때 우리가 계산해 되살린다.
             int currentPerformance = thisMonth.stream().mapToInt(UserPayment::getAmount).sum();
 
             boolean requirementMet = card.getRequirement() == 0
@@ -873,7 +874,7 @@ public class MyDataLinkService {
             int toRequirement = Math.max(0, card.getRequirement() - currentPerformance);
             views.add(new MyCardView(card.getSerialNumber(), card.getCardCode(), card.getCardName(),
                     card.getCardColor(), card.getCompanyName(), card.getRequirement(),
-                    currentPerformance, requirementMet, toRequirement, earnedThisMonth));
+                    currentPerformance, requirementMet, toRequirement));
         }
         return views;
     }
@@ -884,7 +885,7 @@ public class MyDataLinkService {
         return userPaymentRepository.findByUserIdAndCardSerialOrderByPaymentDateDesc(userId, cardSerial).stream()
                 .map(payment -> new PaymentRow(payment.getPaymentId(), payment.getPaymentDate(),
                         payment.getCategory2(), payment.getCategory2(), payment.getAmount(),
-                        payment.getMerchantName(), payment.getReceivedBenefit(), payment.getBusinessNumber()))
+                        payment.getMerchantName(), payment.getBusinessNumber()))
                 .toList();
     }
 
@@ -903,13 +904,27 @@ public class MyDataLinkService {
                     UserCard card = bySerial.get(payment.getCardSerial());
                     return new PaymentHistoryRow(payment.getPaymentId(), payment.getPaymentDate(),
                             payment.getCategory2(), payment.getCategory2(), payment.getAmount(),
-                            payment.getMerchantName(), payment.getReceivedBenefit(),
+                            payment.getMerchantName(),
                             card != null ? card.getCardName() : null,
                             card != null ? card.getCardColor() : null,
                             card != null ? card.getCompanyName() : null,
                             payment.getBusinessNumber(), payment.getCategory2Llm());
                 })
                 .toList();
+    }
+
+    /**
+     * 한 달치 실적액 = 그 달 승인액 합.
+     *
+     * <p>제공자가 전월 실적액을 주지 않으므로(실 마이데이터에 없는 필드다) 전월·당월 모두
+     * 여기서 센다. <b>승인액 전액 기준이라 카드사 실적보다 크게 나온다</b> — 세금·공과금·
+     * 상품권·무이자할부·해외이용분이 실적에서 빠지는데 그 목록은 카드마다 달라, 카드 혜택
+     * 룰이 갖춰지기 전에는 뺄 수가 없다. 그래서 이 값은 <b>상한</b>이다.
+     */
+    private static int performanceOf(CardView card, YearMonth month) {
+        return card.payments().stream()
+                .filter(payment -> YearMonth.from(payment.date()).equals(month))
+                .mapToInt(PaymentView::amount).sum();
     }
 
     /** 실적 요건 = 카드 혜택 구간의 하한 중 최솟값(양수). 없으면 0(조건 없음). */
@@ -937,10 +952,10 @@ public class MyDataLinkService {
 
     public record MyCardView(String serialNumber, Long cardCode, String cardName, String cardColor,
                              String companyName, int requirement, int currentPerformance,
-                             boolean requirementMet, int toRequirement, int earnedThisMonth) {}
+                             boolean requirementMet, int toRequirement) {}
 
     public record PaymentRow(String paymentId, java.time.LocalDateTime date, String category,
-                             String category2, int amount, String merchantName, int receivedBenefit,
+                             String category2, int amount, String merchantName,
                              String businessNumber) {}
 
     /** 결제내역 모아보기 1건 — 결제 정보 + 어느 카드(실카드명·색·카드사)인지 + 가맹점 사업자번호. */
@@ -963,7 +978,7 @@ public class MyDataLinkService {
     }
 
     public record PaymentHistoryRow(String paymentId, java.time.LocalDateTime date, String category,
-                                    String category2, int amount, String merchantName, int receivedBenefit,
+                                    String category2, int amount, String merchantName,
                                     String cardName, String cardColor, String companyName,
                                     String businessNumber, String category2Llm) {}
 }

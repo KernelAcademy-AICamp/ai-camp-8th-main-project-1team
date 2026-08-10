@@ -36,16 +36,16 @@ public class GenerationRunner implements ApplicationRunner {
             "(mydata_user_id, mydata_user_name, mydata_user_social_number, mydata_user_phone_number, " +
             "mydata_user_persona, mydata_user_data_split) VALUES (?,?,?,?,?,?)";
     private static final String CARD_SQL = "INSERT INTO mydata_card " +
-            "(mydata_card_id, mydata_user_id, card_code, mydata_card_expiration_date, mydata_card_prev_month_amount) " +
-            "VALUES (?,?,?,?,?)";
+            "(mydata_card_id, mydata_user_id, card_code, mydata_card_expiration_date) " +
+            "VALUES (?,?,?,?)";
     private static final String PAY_SQL = "INSERT INTO mydata_payment " +
             "(mydata_payment_id, mydata_card_id, mydata_payment_date, mydata_payment_ksic_code, " +
             "mydata_payment_category2, mydata_payment_amount, mydata_payment_merchant_name, " +
-            "mydata_payment_received_benefit_amount, mydata_payment_channel, mydata_payment_product_name, " +
+            "mydata_payment_channel, mydata_payment_product_name, " +
             "mydata_payment_product_price, mydata_payment_quantity, mydata_payment_waste_label, " +
             "mydata_payment_discretionary_score, mydata_payment_location_address, " +
             "mydata_payment_location_lat, mydata_payment_location_lng, mydata_payment_business_number) " +
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     private static final String ACCOUNT_TXN_SQL = "INSERT INTO mydata_account_txn " +
             "(mydata_account_id, mydata_account_txn_date, mydata_account_txn_type, " +
             "mydata_account_txn_amount, mydata_account_txn_description, mydata_account_txn_note, " +
@@ -387,8 +387,7 @@ public class GenerationRunner implements ApplicationRunner {
             String cardId = String.format("%04d-%04d-%04d-%04d",
                     r.nextInt(10000), r.nextInt(10000), r.nextInt(10000), r.nextInt(10000));
             long code = pool.get(c);
-            jdbc.update(CARD_SQL, cardId, u.id(), code, Date.valueOf(LocalDate.of(2030, 12, 31)),
-                    (int) Math.min(Integer.MAX_VALUE, u.variant().monthlyTotalMean()));
+            jdbc.update(CARD_SQL, cardId, u.id(), code, Date.valueOf(LocalDate.of(2030, 12, 31)));
             ids.add(new IssuedCard(cardId, companyByCode.getOrDefault(code, "카드")));
         }
         return ids;
@@ -476,7 +475,7 @@ public class GenerationRunner implements ApplicationRunner {
             }
             batch.add(new Object[]{
                     payId, cardId, Timestamp.valueOf(t.date()), t.industryCode(), t.category2(),
-                    amount, t.merchant(), 0, t.channel(), t.productName(), unitPrice,
+                    amount, t.merchant(), t.channel(), t.productName(), unitPrice,
                     t.quantity(), t.wasteLabel(), t.discretionaryScore(), t.address(), t.lat(), t.lon(),
                     t.businessNumber()
             });

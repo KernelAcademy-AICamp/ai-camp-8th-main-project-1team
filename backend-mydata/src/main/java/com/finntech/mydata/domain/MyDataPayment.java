@@ -34,9 +34,10 @@ public class MyDataPayment {
     @Column(name = "mydata_payment_merchant_name", length = 60)
     private String merchantName;
 
-    /** 이 결제로 받은 혜택 금액(원) — 생성 시 실적구간 대조로 계산해 저장. */
-    @Column(name = "mydata_payment_received_benefit_amount", nullable = false)
-    private int receivedBenefitAmount;
+    // 받은 혜택 금액은 두지 않는다 — 실 마이데이터에는 할인·적립액 필드가 없다
+    // (카드-005 청구 추가정보에도, 카드-008 승인내역에도 없다). 여기서 값을 내주면
+    // "이 결제로 얼마 아꼈다"를 실측처럼 그릴 수 있고, 실데이터로 넘어가는 날 그 화면이
+    // 통째로 사라진다.
 
     // ── 대량 생성(W1)·낭비/필수 ML(W8)용 확장 컬럼 (전부 nullable·additive: 기존 12명 시드 비파괴) ──
 
@@ -83,7 +84,7 @@ public class MyDataPayment {
 
     public MyDataPayment(String id, MyDataCard card, LocalDateTime paymentDate,
                          String industryCode, String category2, int amount,
-                         String merchantName, int receivedBenefitAmount) {
+                         String merchantName) {
         this.id = id;
         this.card = card;
         this.paymentDate = paymentDate;
@@ -91,7 +92,6 @@ public class MyDataPayment {
         this.category2 = category2;
         this.amount = amount;
         this.merchantName = merchantName;
-        this.receivedBenefitAmount = receivedBenefitAmount;
     }
 
     public String getId() { return id; }
@@ -101,7 +101,6 @@ public class MyDataPayment {
     public String getCategory2() { return category2; }
     public int getAmount() { return amount; }
     public String getMerchantName() { return merchantName; }
-    public int getReceivedBenefitAmount() { return receivedBenefitAmount; }
 
     public String getChannel() { return channel; }
     public void setChannel(String channel) { this.channel = channel; }

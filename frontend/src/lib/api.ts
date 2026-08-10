@@ -352,7 +352,6 @@ export interface MyCard {
   currentPerformance: number;
   requirementMet: boolean;
   toRequirement: number;
-  earnedThisMonth: number;
 }
 /** 카드 상세 결제내역 1건. */
 export interface MyPayment {
@@ -363,7 +362,6 @@ export interface MyPayment {
   category2: string | null;
   amount: number;
   merchantName: string | null;
-  receivedBenefit: number;
   businessNumber: string | null;
 }
 /** 결제내역 모아보기 1건(§13-11) — 결제 정보 + 어느 카드인지. */
@@ -377,7 +375,6 @@ export interface MyPaymentHistory {
   category2Llm?: string | null;
   amount: number;
   merchantName: string | null;
-  receivedBenefit: number;
   cardName: string | null;
   cardColor: string | null;
   companyName: string | null;
