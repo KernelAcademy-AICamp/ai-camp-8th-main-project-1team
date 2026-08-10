@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MOA · User Flow</title>
+<style>
+:root{
+  --bg:#0D0F12; --box:#2B2F36; --ink:#E9EBEE; --sub:#868D97;
+  --line:#464C55; --hub:#FFFFFF; --hub-ink:#16181C;
+  --band:#13161B; --band-line:#1E232A;
+  --a1:#00B14F; --a2:#4DA3FF; --a3:#C08BF0;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;}
+.page{max-width:1560px;margin:0 auto;padding:64px 40px 90px;}
+
+h1{font-size:38px;font-weight:800;letter-spacing:-.03em;margin:0 0 34px;}
+.intro{display:flex;gap:60px;flex-wrap:wrap;margin-bottom:60px;}
+.intro p{margin:0;font-size:14px;line-height:1.8;max-width:540px;}
+.intro .ko{color:#C9CDD3;}
+.intro .en{color:#6E757E;font-size:13px;}
+
+.board{position:relative;margin:0 auto;}
+.board>*{z-index:2}
+.board svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-index:1;}
+
+.band{position:absolute;border-radius:20px;background:var(--band);border:1px solid var(--band-line);z-index:0;}
+.blabel{position:absolute;font-size:11px;font-weight:700;color:#79808A;letter-spacing:.06em;}
+
+.agent{position:absolute;border-radius:16px;border:1.5px dashed;z-index:0;}
+.alabel{position:absolute;font-size:10.5px;font-weight:700;letter-spacing:.02em;
+  background:var(--band);padding:1px 7px;border-radius:5px;z-index:3;white-space:nowrap;}
+
+.nd{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;
+  font-size:12.5px;font-weight:600;letter-spacing:-.2px;line-height:1.25;padding:0 8px;}
+.t-box{background:var(--box);color:var(--ink);border-radius:9px;}
+.t-hub{background:var(--hub);color:var(--hub-ink);border-radius:9px;font-weight:700;}
+.t-term{background:transparent;border:1.5px solid #7A828C;color:var(--ink);border-radius:999px;font-weight:700;}
+.t-trig{background:var(--box);color:var(--ink);border-radius:9px;border:1.5px dashed #C9CDD3;}
+.t-dec{background:var(--box);color:var(--ink);
+  clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);font-size:11.5px;}
+.elabel{position:absolute;transform:translate(-50%,-50%);background:var(--band);
+  padding:0 5px;font-size:10.5px;font-weight:600;color:var(--sub);white-space:nowrap;}
+
+.legend{display:flex;gap:24px;margin:38px 0 0;flex-wrap:wrap;}
+.lg{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--sub);}
+.lg i{display:block;width:26px;height:15px;border-radius:5px;background:var(--box);}
+.lg i.hub{background:var(--hub);}
+.lg i.term{background:transparent;border:1.5px solid #7A828C;border-radius:999px;}
+.lg i.trig{background:var(--box);border:1.5px dashed #C9CDD3;}
+.lg i.dec{clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);width:22px;height:18px;}
+.lg i.ag{width:26px;height:15px;background:transparent;border:1.5px dashed;border-radius:5px;}
+
+.agents{display:flex;gap:30px;margin:26px 0 0;flex-wrap:wrap;
+  padding-top:22px;border-top:1px solid var(--band-line);}
+.ag-item{display:flex;gap:10px;align-items:flex-start;max-width:330px;}
+.ag-dot{width:9px;height:9px;border-radius:3px;margin-top:4px;flex:none;}
+.ag-item b{display:block;font-size:12.5px;font-weight:700;margin-bottom:3px;}
+.ag-item span{font-size:11.5px;line-height:1.6;color:var(--sub);}
+
+@media(max-width:900px){ .page{padding:36px 18px 60px} h1{font-size:28px} }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>User Flow</h1>
+
+  <div class="intro">
+    <p class="ko">가입, 탭별 일상 사용, 월간 재설정 — 세 구간으로 나눠 설계했습니다.<br>
+      소비를 지켰는지에 따라 갈라지는 지점을 마름모로 표시했고,<br>
+      점선 박스는 세 에이전트가 각각 맡는 구간입니다.</p>
+    <p class="en">Three sections: onboarding, daily use across tabs, and the monthly reset.<br>
+      Diamonds mark where keeping or breaking the goal splits the path.<br>
+      Dashed frames show which agent owns which part of the journey.</p>
+  </div>
+
+  <div class="board" id="board"><svg id="svg"><defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5A616B"/></marker></defs><g id="g"></g></svg></div>
+
+  <div class="legend">
+    <div class="lg"><i class="term"></i>시작 · 끝</div>
+    <div class="lg"><i></i>화면</div>
+    <div class="lg"><i class="hub"></i>탭 (홈 · 리포트 · 마이)</div>
+    <div class="lg"><i class="dec"></i>분기</div>
+    <div class="lg"><i class="trig"></i>진입 트리거</div>
+    <div class="lg"><i class="ag" style="border-color:#6C737D"></i>에이전트 담당 구간</div>
+    <div class="lg"><i class="ag" style="border-color:#6C737D;box-shadow:inset 0 0 0 1.5px #3D434B"></i>두 겹 = 두 에이전트가 함께</div>
+    <div class="lg"><i style="border:1.5px solid var(--a1)"></i>테두리 색 = 이 화면만 다른 에이전트 담당</div>
+  </div>
+
+  <div class="agents">
+    <div class="ag-item"><span class="ag-dot" style="background:var(--a1)"></span>
+      <div><b style="color:var(--a1)">소비분석 에이전트</b>
+      <span>온보딩에서 소비를 분석해 새는 돈 후보를 뽑고, 챌린지 설정이 끝날 때까지 따라붙습니다. 홈의 지출 라벨링과 매달 목표를 다시 잡는 월간 사이클도 같은 역할을 맡습니다.</span></div></div>
+    <div class="ag-item"><span class="ag-dot" style="background:var(--a2)"></span>
+      <div><b style="color:var(--a2)">지킴이 에이전트</b>
+      <span>홈 탭에 상주합니다. 소비가 일어나는 순간마다 지킬 돈을 잘 지키도록 돕고, 지킨 날에는 마이룸으로 보상을 돌려줍니다. 리포트에서 얼마나 지켜냈는지 읽어주고, 마이의 챌린지·성역·말수 설정도 맡습니다.</span></div></div>
+    <div class="ag-item"><span class="ag-dot" style="background:var(--a3)"></span>
+      <div><b style="color:var(--a3)">취향·추천 에이전트</b>
+      <span>소비 취향을 읽어 나에게 맞는 카드를 찾아줍니다. 리포트의 또래 비교처럼 취향을 읽어야 하는 인사이트도 함께 맡습니다.</span></div></div>
+  </div>
+
+</div>
+
+<script>
+const COLW=158, ROWH=74, NW=116, NH=34, DH=52, PADX=30, PADY=8, BANDGAP=62;
+
+/* 구획 — 관련된 흐름끼리 묶는다 */
+const BANDS=[
+  {rs:0, re:0, t:'01  온보딩 — 한 번만 지나가는 길'},
+  {rs:1, re:6, t:'02  탭 — 언제든 오갈 수 있는 세 화면'},
+  {rs:7, re:8, t:'03  월간 사이클 — 매달 반복'}
+];
+const bandOf=r=>BANDS.findIndex(b=>r>=b.rs&&r<=b.re);
+const rowY=r=>PADY+r*ROWH+BANDGAP*bandOf(r);
+
+const NODES=[
+ /* 01 온보딩 */
+ {id:'st',   c:0,r:0,t:'시작',            y:'term'},
+ {id:'join', c:1,r:0,t:'가입 여부',        y:'dec'},
+ {id:'conn', c:2,r:0,t:'자산 연결'},
+ {id:'ai',   c:3,r:0,t:'① AI 분석'},
+ {id:'sel',  c:4,r:0,t:'② 사용자 선택'},
+ {id:'str',  c:5,r:0,t:'③ 절약 강도'},
+ {id:'chg',  c:6,r:0,t:'④ 챌린지 시작'},
+
+ /* 02 탭 — 같은 행 */
+ {id:'home', c:0,r:1,t:'홈',              y:'hub'},
+ {id:'rep',  c:4,r:1,t:'리포트',          y:'hub'},
+ {id:'my',   c:6,r:1,t:'마이',            y:'hub'},
+
+ /* 홈 갈래 */
+ {id:'spend',c:1,r:2,t:'소비 내역'},
+ {id:'label',c:2,r:2,t:'지출 라벨링', og:'var(--a1)'},
+ {id:'room', c:1,r:3,t:'마이룸'},
+ {id:'dday', c:2,r:3,t:'오늘 지켰나',      y:'dec'},
+ {id:'pop',  c:3,r:3,t:'소품 도착 팝업'},
+ {id:'nopop',c:3,r:4,t:'팝업 없이 진입'},
+ {id:'coll', c:2,r:5,t:'도감'},
+ {id:'shop', c:2,r:6,t:'포인트샵'},
+ {id:'bnr',  c:0,r:5,t:'월말 결산 배너',   y:'trig'},
+
+ /* 리포트 갈래 */
+ {id:'mrep', c:4,r:2,t:'월간 리포트'},
+ {id:'wrep', c:5,r:2,t:'주간 리포트'},
+ {id:'peer', c:4,r:3,t:'또래 비교'},
+ {id:'msn',  c:5,r:3,t:'미션 선택'},
+
+ /* 마이 갈래 */
+ {id:'chl',  c:7,r:2,t:'챌린지 관리'},
+ {id:'snc',  c:7,r:3,t:'성역 관리'},
+ {id:'vol',  c:7,r:4,t:'지킴이 말수'},
+ {id:'card', c:7,r:5,t:'나와 맞는 카드 찾기'},
+ {id:'cmg',  c:7,r:6,t:'연결 관리'},
+ {id:'crev', c:8,r:6,t:'철회 확인'},
+
+ /* 03 월간 */
+ {id:'stl',  c:1,r:7,t:'월간 결산'},
+ {id:'mgoal',c:2,r:7,t:'목표 달성',        y:'dec'},
+ {id:'keep2',c:3,r:7,t:'목표 유지'},
+ {id:'next', c:4,r:7,t:'다음 달 목표'},
+ {id:'newm', c:5,r:7,t:'새 달 시작'},
+ {id:'down2',c:3,r:8,t:'목표 하향'}
+];
+
+const EDGES=[
+ ['st','join'],
+ ['join','conn','','미가입'],
+ ['conn','ai'],['ai','sel'],['sel','str'],['str','chg'],
+ ['chg','home','wrap','챌린지 시작'],
+ ['join','home','down','가입',1],
+
+ ['home','rep','tab','탭 이동'],['rep','my','tab'],
+
+ ['home','spend','bus'],['home','room','bus'],['home','bnr','down'],
+ ['spend','label'],
+
+ ['room','dday'],
+ ['dday','pop','','지킴'],
+ ['dday','nopop','down','못 지킴'],
+ ['room','coll','bus'],['room','shop','bus'],
+
+ ['rep','mrep','down'],
+ ['mrep','wrep'],
+ ['mrep','peer','down'],
+ ['wrep','msn','down'],
+
+ ['my','chl','bus'],['my','snc','bus'],['my','vol','bus'],['my','card','bus'],['my','cmg','bus'],
+ ['cmg','crev'],
+
+ ['bnr','stl','bus','결산 열기'],
+ ['stl','mgoal'],
+ ['mgoal','keep2','','달성'],
+ ['mgoal','down2','down','미달성'],
+ ['keep2','next'],['down2','next'],
+ ['next','newm'],
+ ['newm','home','return','다음 달 시작']
+];
+
+/* 에이전트 담당 구간 */
+const AGENTS=[
+ {t:'소비분석 에이전트', c:'var(--a1)', n:['conn','ai','sel','str','chg']},
+ {t:'지킴이 에이전트',   c:'var(--a2)', n:['home','spend','label','room','dday','pop','nopop','coll','shop','bnr']},
+ {t:'지킴이 + 취향·추천', c:'var(--a2)', c2:'var(--a3)', n:['rep','mrep','wrep','peer','msn']},
+ {t:'지킴이 에이전트',   c:'var(--a2)', n:['chl','snc','vol']},
+ {t:'취향·추천 에이전트', c:'var(--a3)', n:['card']},
+ {t:'소비분석 에이전트', c:'var(--a1)', n:['stl','mgoal','keep2','down2','next','newm']}
+];
+
+/* ---------- 렌더 ---------- */
+const board=document.getElementById('board');
+const maxC=Math.max(...NODES.map(n=>n.c)), maxR=Math.max(...NODES.map(n=>n.r));
+const W=PADX*2+maxC*COLW+NW, H=rowY(maxR)+NH+58;
+board.style.width=W+'px'; board.style.height=H+'px';
+const svg=document.getElementById('svg');
+svg.setAttribute('width',W); svg.setAttribute('height',H);
+
+/* 구획 배경 */
+BANDS.forEach((b,i)=>{
+  const y1=rowY(b.rs)-20, y2=rowY(b.re)+NH+(i===BANDS.length-1?52:20);
+  const d=document.createElement('div');
+  d.className='band';
+  d.style.left='0px'; d.style.top=y1+'px';
+  d.style.width=W+'px'; d.style.height=(y2-y1)+'px';
+  board.appendChild(d);
+  const l=document.createElement('div');
+  l.className='blabel';
+  l.style.left='4px'; l.style.top=(y1-24)+'px';
+  l.textContent=b.t;
+  board.appendChild(l);
+});
+
+NODES.forEach(n=>{
+  const d=document.createElement('div');
+  const dec=n.y==='dec';
+  d.className='nd '+(dec?'t-dec':n.y==='hub'?'t-hub':n.y==='term'?'t-term':n.y==='trig'?'t-trig':'t-box');
+  d.id='n_'+n.id;
+  const w=dec?NW+16:NW, hgt=dec?DH:NH;
+  d.style.left=(PADX+n.c*COLW-(dec?8:0))+'px';
+  d.style.top=(rowY(n.r)+(NH-hgt)/2)+'px';
+  d.style.width=w+'px'; d.style.height=hgt+'px';
+  d.textContent=n.t;
+  if(n.og) d.style.border='1.5px solid '+n.og;
+  board.appendChild(d);
+});
+
+const box=id=>{const e=document.getElementById('n_'+id);
+  return {x:e.offsetLeft,y:e.offsetTop,w:e.offsetWidth,h:e.offsetHeight};};
+
+/* 에이전트 박스 — 담은 노드들의 외곽을 감싼다 */
+const PAD=12;
+const frame=(x1,y1,x2,y2,color)=>{
+  const d=document.createElement('div');
+  d.className='agent';
+  d.style.left=x1+'px'; d.style.top=y1+'px';
+  d.style.width=(x2-x1)+'px'; d.style.height=(y2-y1)+'px';
+  d.style.borderColor=color;
+  d.style.opacity='.55';
+  board.appendChild(d);
+};
+
+AGENTS.forEach(a=>{
+  const bs=a.n.map(box);
+  const x1=Math.min(...bs.map(b=>b.x))-PAD, y1=Math.min(...bs.map(b=>b.y))-PAD;
+  const x2=Math.max(...bs.map(b=>b.x+b.w))+PAD, y2=Math.max(...bs.map(b=>b.y+b.h))+PAD;
+  frame(x1,y1,x2,y2,a.c);
+  if(a.c2) frame(x1+5,y1+5,x2-5,y2-5,a.c2);   /* 둘이 함께 맡는 구간 — 테두리 두 겹 */
+
+  const l=document.createElement('div');
+  l.className='alabel';
+  l.style.left=(x1+12)+'px'; l.style.top=(y1-9)+'px';
+  if(a.c2){
+    l.innerHTML='<span style="color:'+a.c+'">지킴이</span>'
+      +'<span style="color:#6C737D"> + </span>'
+      +'<span style="color:'+a.c2+'">취향·추천</span>';
+  } else {
+    l.style.color=a.c; l.textContent=a.t;
+  }
+  board.appendChild(l);
+});
+
+function rounded(p,r){
+  let d='M'+p[0][0]+','+p[0][1];
+  for(let i=1;i<p.length-1;i++){
+    const a=p[i-1],c=p[i],b=p[i+1];
+    const v1=[Math.sign(c[0]-a[0]),Math.sign(c[1]-a[1])];
+    const v2=[Math.sign(b[0]-c[0]),Math.sign(b[1]-c[1])];
+    const rr=Math.min(r,(Math.abs(c[0]-a[0])+Math.abs(c[1]-a[1]))/2,(Math.abs(b[0]-c[0])+Math.abs(b[1]-c[1]))/2);
+    d+='L'+(c[0]-v1[0]*rr)+','+(c[1]-v1[1]*rr)+'Q'+c[0]+','+c[1]+' '+(c[0]+v2[0]*rr)+','+(c[1]+v2[1]*rr);
+  }
+  const L=p[p.length-1]; return d+'L'+L[0]+','+L[1];
+}
+
+const g=document.getElementById('g');
+EDGES.forEach(e=>{
+  const [a,b,kind,label,dash]=e;
+  const A=box(a),B=box(b);
+  const ar=A.x+A.w, acy=A.y+A.h/2, bcy=B.y+B.h/2;
+  const acx=A.x+A.w/2, bcx=B.x+B.w/2;
+  let pts,mid;
+
+  if(kind==='tab'){
+    pts=[[ar,acy],[B.x,bcy]]; mid=[(ar+B.x)/2,acy-11];
+  } else if(kind==='return'){
+    const yb=H-28, xl=B.x-22;
+    pts=[[acx,A.y+A.h],[acx,yb],[xl,yb],[xl,bcy],[B.x,bcy]];
+    mid=[(acx+xl)/2,yb];
+  } else if(kind==='bus'){
+    pts=[[acx,A.y+A.h],[acx,bcy],[B.x,bcy]];
+    mid=[(acx+B.x)/2,bcy];
+  } else if(kind==='wrap'){
+    const y=B.y-14;
+    pts=[[ar,acy],[ar+18,acy],[ar+18,y],[B.x-20,y],[B.x-20,bcy],[B.x,bcy]];
+    mid=[(ar+B.x)/2,y];
+  } else if(kind==='down'){
+    if(Math.abs(acx-bcx)<4){ pts=[[acx,A.y+A.h],[acx,B.y]]; mid=[acx,(A.y+A.h+B.y)/2]; }
+    else{ const y=A.y+A.h+(B.y-(A.y+A.h))/2;
+      pts=[[acx,A.y+A.h],[acx,y],[bcx,y],[bcx,B.y]]; mid=[acx,y-10]; }
+  } else {
+    if(Math.abs(acy-bcy)<4){ pts=[[ar,acy],[B.x,bcy]]; mid=[(ar+B.x)/2,acy-10]; }
+    else{ const x=ar+(B.x-ar)/2;
+      pts=[[ar,acy],[x,acy],[x,bcy],[B.x,bcy]]; mid=[x,(acy+bcy)/2]; }
+  }
+
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d',rounded(pts,9));
+  p.setAttribute('fill','none');
+  p.setAttribute('stroke','#4A5058');
+  p.setAttribute('stroke-width','1.3');
+  if(dash) p.setAttribute('stroke-dasharray','4 4');
+  if(kind!=='tab') p.setAttribute('marker-end','url(#ar)');
+  if(kind==='tab'){ p.setAttribute('stroke-dasharray','3 4'); p.setAttribute('stroke','#3D434B'); }
+  g.appendChild(p);
+
+  if(label){
+    const l=document.createElement('div');
+    l.className='elabel';
+    l.style.left=mid[0]+'px'; l.style.top=mid[1]+'px';
+    l.textContent=label;
+    board.appendChild(l);
+  }
+});
+</script>
+</body>
+</html>
