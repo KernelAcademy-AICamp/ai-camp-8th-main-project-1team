@@ -15,7 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -51,14 +51,20 @@ class ChallengeCategoryCapTest {
         Category cafe = categories.findByCode("CCAP_CAFE")
                 .orElseGet(() -> categories.save(new Category("CCAP_CAFE", "카페")));
         consumptionRepository.deleteByUserIdAndSource(USER, Enums.DataSource.DUMMY_SEED);
-        // 창(7/4~8/3) 안에 배달 20만, 카페 10만
-        for (int i = 0; i < 4; i++) {
+        // **날짜를 오늘 기준으로 잡는다.** 예전에는 `2026-07-10` 처럼 박아 두고 주석에
+        // "창(7/4~8/3)" 이라고 적었는데, 기준선 창은 `now.minusDays(30)` 으로 **매일 밀린다.**
+        // 그래서 2026-08-10 이 되자 7/10 하나가 창 밖으로 떨어져 배달 기준선이 20만 → 15만이
+        // 됐고 시험 셋이 한꺼번에 깨졌다. 코드는 멀쩡한데 달력이 바뀌어서 깨지는 시험이다.
+        //
+        // 창 한복판(20일 전~14일 전)에 두면 달력이 어디에 있든 안 걸린다.
+        LocalDate today = LocalDate.now();
+        for (int i = 0; i < 4; i++) {                       // 배달 20만
             consumptionRepository.save(new Consumption(USER, delivery, new BigDecimal("50000"),
-                    LocalDateTime.of(2026, 7, 10 + i, 19, 0), false, Enums.DataSource.DUMMY_SEED));
+                    today.minusDays(20 - i).atTime(19, 0), false, Enums.DataSource.DUMMY_SEED));
         }
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 2; i++) {                       // 카페 10만
             consumptionRepository.save(new Consumption(USER, cafe, new BigDecimal("50000"),
-                    LocalDateTime.of(2026, 7, 15 + i, 15, 0), false, Enums.DataSource.DUMMY_SEED));
+                    today.minusDays(15 - i).atTime(15, 0), false, Enums.DataSource.DUMMY_SEED));
         }
     }
 
