@@ -167,8 +167,7 @@ export function MyConnections() {
 
         {cards.data && cards.data.length > 0 && (
           <div className="pv">
-            이번 달 사용 <b>{won(cards.data.reduce((s, c) => s + c.currentPerformance, 0))}</b> ·
-            받은 혜택 <b>{won(cards.data.reduce((s, c) => s + c.earnedThisMonth, 0))}</b>
+            이번 달 사용 <b>{won(cards.data.reduce((s, c) => s + c.currentPerformance, 0))}</b>
           </div>
         )}
 

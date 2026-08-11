@@ -209,7 +209,7 @@ public class RealPersonImportService {
             // **모든 결제가 심야 결제로** 판정된다. 모르는 값을 0으로 두는 건 중립이 아니다.
             MyDataPayment row = new MyDataPayment(id, card, d.get().atTime(12, 0),
                     industryCode, UNKNOWN_INDUSTRY.equals(industryCode) ? UNKNOWN_CATEGORY2 : null,
-                    (int) amount, merchant, 0);
+                    (int) amount, merchant);
             // 사업자번호가 **확정 분류 사전의 키**다. 이걸 안 실으면 사전이 아무리 차 있어도
             // 실데이터에는 영영 안 붙는다 — 조회가 '번호 없음' 갈래로 빠지기 때문이다
             // (`MerchantCategoryService.lookup` ②). 2026-08-05 에 그 상태를 실측으로 확인했다.
@@ -246,7 +246,7 @@ public class RealPersonImportService {
         String h = user.getId();
         String serial = h.substring(0, 4) + "-" + h.substring(4, 8) + "-"
                 + h.substring(8, 12) + "-" + h.substring(12, 16);
-        MyDataCard card = new MyDataCard(serial, user, product, LocalDate.now().plusYears(4), 0);
+        MyDataCard card = new MyDataCard(serial, user, product, LocalDate.now().plusYears(4));
         cardRepository.save(card);
     }
 

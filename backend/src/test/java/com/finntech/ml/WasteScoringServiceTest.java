@@ -27,7 +27,7 @@ class WasteScoringServiceTest {
     @Autowired UserSpendingOverrideRepository overrideRepository;
 
     private UserPayment pay(String id, long uid, String c1, String c2, int amt, LocalDateTime when) {
-        return new UserPayment(id, uid, "0000-0000-0000-0001", 1L, when, c1, c2, amt, "가맹점", 0, null);
+        return new UserPayment(id, uid, "0000-0000-0000-0001", 1L, when, c1, c2, amt, "가맹점", null);
     }
 
     @Test

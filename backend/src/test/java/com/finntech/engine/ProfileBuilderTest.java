@@ -30,7 +30,7 @@ class ProfileBuilderTest {
 
     /** 첫 인자는 업종코드, 둘째는 우리 소비 중분류 — 집계 축이 중분류로 내려왔다. */
     private static UserPayment tx(LocalDateTime at, String ksic, String cat2, int amount) {
-        return new UserPayment(at + "-" + cat2 + "-" + amount, 1L, "S1", 9001L, at, ksic, cat2, amount, "가맹점", 0, "1234567890");
+        return new UserPayment(at + "-" + cat2 + "-" + amount, 1L, "S1", 9001L, at, ksic, cat2, amount, "가맹점", "1234567890");
     }
 
     @Test

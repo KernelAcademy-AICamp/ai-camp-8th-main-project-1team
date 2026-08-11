@@ -120,7 +120,7 @@ class MerchantClassifierServiceTest {
     @DisplayName("추정은 category2 를 덮지 않는다 — 판정이 AI 를 타지 않게")
     void suggestionNeverOverwritesJudgedCategory() {
         var p = new UserPayment("k", 1L, "S1", 9001L, LocalDateTime.now(),
-                null, IndustryCategoryMapper.UNCLASSIFIED, 5000, "GS25 강남역점", 0, null);
+                null, IndustryCategoryMapper.UNCLASSIFIED, 5000, "GS25 강남역점", null);
 
         p.suggestCategory2("편의점/잡화");
         assertThat(p.getCategory2()).as("판정이 읽는 칸은 그대로다")

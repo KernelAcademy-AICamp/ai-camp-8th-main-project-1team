@@ -25,6 +25,21 @@ SOURCE = os.path.join(ROOT, 'reference', '업종코드-국세청-2025.csv')
 # (재량 ≠ 낭비 — 취미 지출이 재량이어도 본인 취미면 보호한다.)
 ESSENTIAL_THRESHOLD = 0.30
 
+# 카드혜택 축 — nts-mid.tsv 4번째 칸에 쓸 수 있는 값. 오타를 빌드에서 잡는다.
+#
+# 정본은 카드 검색 서비스가 실제로 쓰는 분류를 따랐다. 우리가 새로 지으면 카드사 공시의
+# 묶음과 어긋나 매칭이 안 된다. 여기 없는 두 축은 업종코드로 판정할 수 없어 뺐다 —
+#   · 배달      배달의민족이 통신판매업으로 등록돼 '쇼핑'이 된다 → 브랜드로만 풀린다
+#   · 간편결제   결제수단이라 업종이 아니다 → 표시만 하고 계산에서 뺀다
+#
+# '혜택축없음'은 "소비가 아니다"가 아니라 "그 업종에 걸리는 카드 혜택 축이 없다"이다.
+# 카드로 결제됐으면 **전월 실적에는 그대로 들어간다**(실적 제외는 카드사가 정하는 별개 목록).
+CARD_AXES = {
+    '주유', '온라인쇼핑', '통신', '여행/항공', '대중교통', '카페/디저트', '공과금/렌탈',
+    '쇼핑', '편의점', '마트', '외식', '병원/약국', '디지털구독', '영화/문화', '뷰티',
+    '택시', '백화점/면세점', '교육/육아', '스포츠/레저', '애완', '혜택축없음',
+}
+
 
 def read_tsv(name):
     """주석(#)과 빈 줄을 걷어낸 탭 구분 행들."""
@@ -47,7 +62,7 @@ def load_mid():
     with open(SOURCE, encoding='utf-8') as f:
         실재 = {r['업종코드'].strip(): r for r in csv.DictReader(f)}
 
-    mid, names, bad = {}, {}, []
+    mid, names, axes, bad = {}, {}, {}, []
     for n, cols in read_tsv('nts-mid.tsv'):
         if len(cols) < 2:
             bad.append(f'{n}행: 칸이 2개 미만 — {cols}')
@@ -58,6 +73,16 @@ def load_mid():
         if code in mid:
             bad.append(f'{n}행: {code} 가 두 번 나온다')
         mid[code] = m
+        # 4번째 칸 — 카드혜택 축. 중분류와 다른 축이라 따로 모은다(같은 교통/자동차가
+        # 주유·대중교통·택시로 갈린다). 비어 있으면 빌드를 세운다 — 조용히 빠지면
+        # 그 업종에 걸리는 카드 혜택이 통째로 계산되지 않는데 아무 표시도 안 난다.
+        ax = cols[3].strip() if len(cols) >= 4 else ''
+        if not ax:
+            bad.append(f'{n}행: {code} 에 카드혜택 축이 비어 있다')
+        elif ax not in CARD_AXES:
+            bad.append(f'{n}행: {code} 의 카드혜택 축 "{ax}" 은 목록에 없다')
+        else:
+            axes[code] = ax
         # 업종 **이름**도 모은다. LLM 보조 분류가 "이 가맹점은 어느 업종인가"를 이름으로
         # 답하게 하려면 축이 필요하다 — 6자리 숫자는 불투명해서 모델이 추론하지 못하고
         # 외운 것에 기대는데, 국세청은 구 분류 세대라 그 기억이 맞을 가능성이 낮다.
@@ -74,7 +99,7 @@ def load_mid():
         for b in bad:
             print(f'  {b}', file=sys.stderr)
         sys.exit(1)
-    return mid, names, 실재
+    return mid, names, axes, 실재
 
 
 def fine_name_index(실재):
@@ -162,7 +187,7 @@ def discretionary_by_mid(mid_of):
 
 
 def main():
-    mid, names, 실재 = load_mid()
+    mid, names, axes, 실재 = load_mid()
     fine = fine_name_index(실재)
     pg = load_pg()
     multi = load_multi_business()
@@ -193,7 +218,16 @@ def main():
                           '19종 중 18종이 이 칸에 있었다). 키는 띄어쓰기·가운뎃점·괄호를 지운 형태이며 '
                           '자바 쪽 정규화와 글자 하나까지 같아야 한다. 중분류가 있는지는 여기서 따지지 않는다 — '
                           '이 칸의 임무는 번호 옮기기이고, 판단은 midByIndustry 가 한다.'),
+        '_cardAxisNote': ('**업종코드 → 카드혜택 축.** 중분류(midByIndustry)와 다른 축이다 — 중분류는 '
+                          '소비분석용이라 교통/자동차 하나에 주유·시내버스·택시가 함께 들어 있는데 카드는 '
+                          '셋을 전부 다르게 취급한다. 한 파일(nts-mid.tsv)에서 두 축이 나가고, '
+                          '소비분석은 중분류를 카드추천은 이 칸을 읽는다. '
+                          "'혜택축없음'은 소비가 아니라는 뜻이 아니라 그 업종에 걸리는 카드 혜택 축이 "
+                          '없다는 뜻이고, **전월 실적에는 그대로 들어간다.** '
+                          '배달·간편결제는 업종코드로 판정할 수 없어 축에서 뺐다 — 배달은 브랜드로 풀고 '
+                          '간편결제는 표시만 한다. 그래서 카드추천 판정은 브랜드가 1순위, 이 표가 2순위다.'),
         'midByIndustry': dict(sorted(mid.items())),
+        'cardAxisByIndustry': dict(sorted(axes.items())),
         'midByIndustryName': dict(sorted(names.items())),
         'ntsByFineName': fine,
         'pgBusinessNumbers': dict(sorted(pg.items())),

@@ -632,12 +632,12 @@ class MerchantCategoryServiceTest {
     private static UserPayment realPayment(String biz, String name) {
         return new UserPayment("77:real-9c2b1d04-20260805-1", 77L, "S1", 9001L,
                 LocalDateTime.now(), null, IndustryCategoryMapper.UNCLASSIFIED,
-                5000, name, 0, biz);
+                5000, name, biz);
     }
 
     private static UserPayment payment(String rowId) {
         return new UserPayment(rowId, 77L, "S1", 9001L, LocalDateTime.now(),
-                null, IndustryCategoryMapper.UNCLASSIFIED, 5000, "어떤 가게", 0, "0000000011");
+                null, IndustryCategoryMapper.UNCLASSIFIED, 5000, "어떤 가게", "0000000011");
     }
 
     @Test

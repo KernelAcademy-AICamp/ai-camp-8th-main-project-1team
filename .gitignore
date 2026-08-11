@@ -65,3 +65,16 @@ backend-mydata/generated/merchants.csv
 
 # 운영 이전용 DB 덤프(수 GB) — 커밋 금지
 deploy/dump/
+
+# ── 발표자료·발표자메모: 저장소 밖에 둔다 ──
+# .key 는 바이너리라 diff 가 안 되고 **한 글자만 고쳐도 매 버전이 통째로 이력에 쌓인다**
+# (중간데모 자료 하나가 6.1MB). 발표자료는 고치며 여러 번 저장하는 물건이라 클론이 계속 무거워진다.
+# 저장소에 .key 선례도 없었다. 공유는 드라이브 등 저장소 밖에서 한다.
+*.key
+reference/기획/_history/*_발표자메모.md
+
+# ── 카드 공시 원문(손으로 받은 PDF): 수집물은 git 밖 ──
+# scripts/collect-cards/.gitignore 가 out/ 을 빼는 것과 **같은 원칙**이다. manual_pdf/ 는 그
+# 폴더 밖에 있어서 딸려 들어갈 뿐 성격은 같은 수집 원문이고, 카드사 저작물이기도 하다.
+# 원문 관리는 개인카드-로컬전용/ 한 곳으로 모은다(카드사별-수집경로.md 참조).
+scripts/collect-cards/manual_pdf/

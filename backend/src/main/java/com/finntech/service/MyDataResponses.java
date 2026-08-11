@@ -33,10 +33,10 @@ public final class MyDataResponses {
      * 앱의 분류 품질을 검증할 방법이 없고, 실제 마이데이터도 업종까지만 준다.
      */
     public record PaymentView(String id, LocalDateTime date, String industryCode,
-                              int amount, String merchantName, int receivedBenefitAmount, Long cardCode,
+                              int amount, String merchantName, Long cardCode,
                               String businessNumber) {}
 
-    public record CardView(String cardId, LocalDate expirationDate, int prevMonthAmount,
+    public record CardView(String cardId, LocalDate expirationDate,
                            CardProductView cardProduct, UserView user, List<PaymentView> payments) {}
 
     // 데이터 최소화(W7-2): 제공자가 주민번호·전화번호를 응답에 싣지 않는다(본체 미사용). 격리가 뚫려도 PII 미유출.

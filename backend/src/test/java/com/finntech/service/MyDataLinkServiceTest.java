@@ -29,13 +29,13 @@ class MyDataLinkServiceTest {
 
     private static PaymentView 결제(String id, LocalDateTime at, int amount) {
         // 5914 = 영화 및 비디오물 상영업 → 취미/여가. 제공자는 업종코드까지만 준다.
-        return new PaymentView(id, at, "5914", amount, "씨네Q", 0, 9713L, "1234567890");
+        return new PaymentView(id, at, "5914", amount, "씨네Q", 9713L, "1234567890");
     }
 
     private static CardView 카드(List<PaymentView> payments) {
         CompanyView company = new CompanyView(9007L, "하나카드", null);
         CardProductView product = new CardProductView(9713L, "하나 원큐", null, "#111", company, List.of());
-        return new CardView("0107-0319-8232-0101", LocalDate.of(2030, 1, 31), 300_000,
+        return new CardView("0107-0319-8232-0101", LocalDate.of(2030, 1, 31),
                 product, new UserView("ci", "홍길동"), payments);
     }
 

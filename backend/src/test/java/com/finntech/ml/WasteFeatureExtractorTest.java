@@ -15,7 +15,7 @@ class WasteFeatureExtractorTest {
     /** 첫 인자는 업종코드, cat2는 우리 소비 중분류다. */
     private UserPayment pay(String cat2, int amount, LocalDateTime when) {
         return new UserPayment("p" + amount + when, 1L, "0000-0000-0000-0001", 1L, when,
-                "5622", cat2, amount, "가맹점", 0, null);
+                "5622", cat2, amount, "가맹점", null);
     }
 
     @Test

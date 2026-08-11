@@ -75,12 +75,22 @@ class FundFlowServiceTest {
     // ── L4 유동성 ────────────────────────────────────────────
     @Test
     void L4_큰지출_유무와_예측성으로_분류() {
-        assertThat(FundFlowService.classifyLiquidity(null)).isEqualTo(LiquidityNeed.UNKNOWN);
-        assertThat(FundFlowService.classifyLiquidity(new LargeExpense(null, false))).isEqualTo(LiquidityNeed.SMOOTH);
-        assertThat(FundFlowService.classifyLiquidity(new LargeExpense(3, true)))
+        assertThat(FundFlowService.classifyLiquidity(null).level()).isEqualTo(LiquidityNeed.UNKNOWN);
+        assertThat(FundFlowService.classifyLiquidity(new LargeExpense(null, false)).level())
+                .isEqualTo(LiquidityNeed.SMOOTH);
+        assertThat(FundFlowService.classifyLiquidity(new LargeExpense(3, true)).level())
                 .isEqualTo(LiquidityNeed.PREDICTABLE_LUMPY);
-        assertThat(FundFlowService.classifyLiquidity(new LargeExpense(3, false)))
+        assertThat(FundFlowService.classifyLiquidity(new LargeExpense(3, false)).level())
                 .isEqualTo(LiquidityNeed.UNPREDICTABLE_LUMPY);
+    }
+
+    /** 주기(원값)는 구간과 함께 남아야 FP-01의 M2가 `주기 짧음`을 판정할 수 있다. */
+    @Test
+    void L4_주기_원값이_구간과_함께_남는다() {
+        assertThat(FundFlowService.classifyLiquidity(new LargeExpense(3, true)).cycleMonths()).isEqualTo(3);
+        // 큰 지출이 없으면(SMOOTH) 주기도 없다 — 0이 아니라 null이다.
+        assertThat(FundFlowService.classifyLiquidity(new LargeExpense(null, false)).cycleMonths()).isNull();
+        assertThat(FundFlowService.classifyLiquidity(null).cycleMonths()).isNull();
     }
 
     // ── L5 우대조건 ──────────────────────────────────────────
@@ -101,7 +111,7 @@ class FundFlowServiceTest {
         assertThat(out.l1Income()).isEqualTo(IncomeRegularity.UNKNOWN);
         assertThat(out.l2FixedCost()).isEqualTo(FixedCostLevel.UNKNOWN);
         assertThat(out.l3Stability().level()).isEqualTo(StabilityLevel.UNKNOWN);
-        assertThat(out.l4Liquidity()).isEqualTo(LiquidityNeed.UNKNOWN);
+        assertThat(out.l4Liquidity().level()).isEqualTo(LiquidityNeed.UNKNOWN);
         assertThat(out.l5Preferential().known()).isFalse();
     }
 
@@ -120,7 +130,8 @@ class FundFlowServiceTest {
         assertThat(out.l2FixedCost()).isEqualTo(FixedCostLevel.LOW);
         assertThat(out.l3Stability().aomMonths()).isEqualTo(4.5);
         assertThat(out.l3Stability().level()).isEqualTo(StabilityLevel.THICK);
-        assertThat(out.l4Liquidity()).isEqualTo(LiquidityNeed.PREDICTABLE_LUMPY);
+        assertThat(out.l4Liquidity().level()).isEqualTo(LiquidityNeed.PREDICTABLE_LUMPY);
+        assertThat(out.l4Liquidity().cycleMonths()).isEqualTo(6);
         assertThat(out.l5Preferential().known()).isTrue();
     }
 }

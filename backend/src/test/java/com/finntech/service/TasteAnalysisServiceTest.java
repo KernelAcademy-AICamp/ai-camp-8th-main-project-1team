@@ -46,7 +46,7 @@ class TasteAnalysisServiceTest {
     /** 취향 분석은 업종코드만 본다. 중분류는 같은 결제에 실려 있어도 집계에 관여하지 않는다. */
     private static UserPayment pay(String ksic, int amount, String merchant) {
         return new UserPayment("id-" + ksic + "-" + amount + "-" + merchant, 1L, "card", 1L,
-                LocalDateTime.of(2026, 7, 1, 12, 0), ksic, "중분류", amount, merchant, 0, null);
+                LocalDateTime.of(2026, 7, 1, 12, 0), ksic, "중분류", amount, merchant, null);
     }
 
     @Test

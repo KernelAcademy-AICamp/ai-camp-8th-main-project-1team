@@ -219,6 +219,31 @@ finntech:
   #
   # 카테고리 이름이 여기 있는 것은 원칙 4 위반이 아니다 — 원칙은 "코드에 박지 말라"이고
   # 설정이 그 이름들이 있어야 할 자리다. 카테고리를 갈아끼우면 이 블록만 고친다.
+  #
+  # ★ 카드는 실제 상품으로 간다 (마스터 원칙 5 재개정 2026-08-10).
+  #   아래 [더미] 세 장은 **실 카드 데이터를 넣기 전까지의 임시값**이다. 지어낸 요율·연회비를
+  #   실제 카드 이름표를 달고 내보내면 안 되므로, 검수를 마친 카드부터 한 장씩 교체한다.
+  #   원문은 scripts/collect-cards/out/ 에 18건(HTML 10 · PDF 8) 있고 아직 검수 전이다
+  #   (mapped_categories 가 비어 있으면 미검수라는 뜻 — 그 폴더 README 참조).
+  #
+  #   교체할 때 이 스키마도 같이 바꿔야 한다. 지금 benefits.category 는 **소비 중분류**(15종)인데,
+  #   실제 카드 혜택은 그 축으로 계산되지 않는다 —
+  #     · 교통/자동차 58종 안에 주유소·시내버스·택시·자동차 구매가 함께 있다(요율이 전부 다르다)
+  #     · 주거/통신 53종 안에 통신비(실적 인정)와 공과금(대개 실적 제외)이 섞여 있다
+  #     · "생활: 올리브영(온·오프), 다이소(오프), 오늘의집(온라인)" 처럼 브랜드·채널 단위가 흔하다
+  #   그래서 대상 축은 **국세청 업종코드 6자리 + 브랜드 + 온/오프라인**이어야 한다.
+  #   결제마다 6자리 원본이 user_payment.ksic_code 에 살아 있어 스키마 변경 없이 조인된다.
+  #
+  #   출처는 각 카드사 자사 사이트의 **상품공시정보**다 — 집계처를 거치지 않은 1차 원천이라
+  #   신고 부실이 끼어들 여지가 없다. 남는 과제는 출처가 아니라 우리 파서의 추출 정확성이다.
+  #
+  #   ★ 혜택 개정 추적은 스코프 밖이다. 그래서 이 값들은 **수집 시점 스냅샷**이고 낡는다.
+  #     교체할 때 카드마다 수집 기준일(as-of) 필드를 함께 넣고 화면에 병기해야 한다 —
+  #     자동 갱신을 안 하기로 한 이상, 정직한 표기가 유일한 방어다.
+  #
+  #   그리고 이 화면은 **혜택 비교까지만** 한다. 카드사로 넘어가는 CTA 버튼·신청 링크를 두지
+  #   않는다. 제휴·수수료·광고비 연동 순위도 없다 — 넷 중 하나라도 하면 금소법상 중개업 등록
+  #   대상이 되고, 특히 CTA 는 "낡은 정보로 가입을 유도한 것"이 되어 위 스냅샷 방어까지 무너뜨린다.
   card-recommend:
     summary-top: 3          # 소비 요약에 보일 카테고리 수
     max-cards: 3            # 추천으로 보일 카드 수
@@ -302,12 +327,15 @@ finntech:
       base-url: https://finlife.fss.or.kr
       path: /finlifeapi
       service-name: savingProductsSearch
+      # 정기예금 — FP-01의 예금 그룹. 적금과 서비스명만 다르고 응답 구조는 같다(rsrv_type_nm만 없다).
+      deposit-service-name: depositProductsSearch
       # ★ UA 필수 — 없으면 WAF가 상태코드도 없이 연결을 끊는다(curl 52 Empty reply).
       user-agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
       # 권역코드: 020000 은행 · 030300 저축은행 · 050000 보험 · 060000 금융투자
       top-fin-grp-no: "020000"
-      # MOA의 '지킨 돈'은 매달 금액이 달라져 정액적립식과 맞지 않는다. 실측상 금리 손해도 없다.
-      reserve-type: 자유적립식
+      # (적립방식 필터는 뺐다 — FP-01 M4가 "정액적립식도 항상 노출"이라 자유·정액을 모두 담고
+      #  어느 그룹인지는 rsrv_type_nm 값으로 매퍼가 가른다. 예전 reserve-type: 자유적립식 설정 때문에
+      #  정액 상품이 조회조차 되지 않아 M4의 후보가 0건이었다.)
 
     # 통장 비교 섹션의 기본 기간(개월). 목표별 추천은 계획 개월수를 6·12·24·36 버킷으로 매핑해 각각 조회한다.
     default-period: 12
@@ -327,6 +355,39 @@ finntech:
     aom-thick-min-months: 3.0   # 3개월치 이상 → THICK(안정)
     fixed-cost-low-ratio: 0.20  # 고정비/소득 ≤ 0.20 → LOW
     fixed-cost-high-ratio: 0.40 # 고정비/소득 ≥ 0.40 → HIGH
+
+    # L4 큰 1회성 지출 — "큰"의 기준은 그 사람의 월평균지출 대비 비율이다(2026-08-04 확정).
+    # 고정 금액으로 자르면 씀씀이 큰 사람은 매달 여러 건이 걸려 늘 "목돈이 자주 나간다"가 된다.
+    large-expense-ratio: 0.5                # 한 건이 월평균지출의 50% 이상이면 큰 지출
+    large-expense-predictable-cv-max: 0.35  # 큰 지출 간격의 변동계수가 이 이하이면 예측 가능
+    # L5 우대조건 — 상품이 요구하는 실적액은 spclCnd 자연어에만 있어 알 수 없다(D2).
+    # 실제 적금 우대조건에 흔한 기준선을 둔다. 카드사별 전월 실적 중 최대값과 비교한다.
+    card-performance-threshold: 300000      # 전월 카드실적이 30만원 이상이면 충족
+
+  # 파킹통장 후보 — FP-01의 PARKING 그룹. 금감원 공시에는 만기 없는 상품이 없어 여기서 따로 받는다.
+  # 비공식 API를 쓰는 근거는 ParkingAccountSource 클래스 주석에 적어 뒀다(가상 환경 학습용 서비스,
+  # 목적은 판매가 아니라 추천 규칙이 현실 상품 분포에서 제대로 갈리는지 확인). 실서비스로 가면
+  # 이 소스만 제휴 데이터로 갈아끼우고 매칭 규칙은 손대지 않는다.
+  parking-accounts:
+    enabled: true
+    base-url: https://new-m.pay.naver.com
+    path: /savings/api/v1/productList
+    # ★ depositPeriod를 보내면 0건이 온다 — 파킹통장은 만기가 없다(2026-08-04 실측).
+    #   productTypeCode 1001=파킹 · 1002=정기예금 · 1003=적금, 1004 이상은 400.
+    company-group-code: BA          # 은행
+    sort-type: INTEREST_RATE
+    deposit-amount: "30000"         # 금리 구간 산정용 예치금 가정액
+    user-agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    referer: https://new-m.pay.naver.com/savings/list/parking
+    max-pages: 5
+    # 금감원(30분)보다 길게 둔다 — 비공식 출처라 호출을 아낀다.
+    cache-ttl-minutes: 60
+
+  # 저축 상품 매칭 FP-01 (M1~M9) — 07_취향분석및추천_Agent_설계.md §4.5
+  savings-match:
+    # M2의 "large_expense_cycle이 짧음" 기준(개월). 이 값 이하이면 짧다고 보고 파킹통장을 상단에 둔다.
+    # 분기마다 큰 지출이 오는 사람(§4.3의 B 사례)을 잡는 자리라 분기=3을 잠정값으로 뒀다. §8 미정.
+    short-large-expense-cycle-months: 3
 
   # 감사로그 계층 3 — RFC 3161 TSA 앵커링
   tsa:

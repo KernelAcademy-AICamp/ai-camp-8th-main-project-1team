@@ -24,7 +24,7 @@ class RecurringPaymentDetectorTest {
 
     private static UserPayment tx(LocalDateTime at, String cat2, int amount, String merchant, String bizno) {
         return new UserPayment(at + "-" + merchant + "-" + amount, 1L, "S1", 9001L,
-                at, "생활", cat2, amount, merchant, 0, bizno);
+                at, "생활", cat2, amount, merchant, bizno);
     }
 
     private List<RecurringPayment> detect(List<UserPayment> txns, LocalDateTime ref) {
