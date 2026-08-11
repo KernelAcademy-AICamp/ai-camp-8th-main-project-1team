@@ -64,13 +64,16 @@ function formatPhone(digits: string): string {
  * 동의 항목. `doc`은 '상세보기'가 무엇을 펼칠지다 — 전자상거래법·개인정보보호법 모두 동의 전에
  * 전문을 볼 수 있어야 하는데, 개편 화면에 그 버튼이 없어 **읽을 방법 자체가 없었다.**
  * 백엔드 `/api/privacy/terms`는 이미 있었는데 부르는 곳이 없던 것도 같은 이유다.
+ *
+ * **항목마다 제 문서를 편다.** 예전에는 아래 셋이 전부 개인정보 처리방침을 폈는데, 그 방침에는
+ * 고유식별정보도 마케팅 수신도 **한 번도 안 나온다.** 상세보기를 눌러도 자기 얘기가 없는 문서가
+ * 떴다는 뜻이고, 그건 이 `doc` 필드를 만든 이유(동의 전에 그 내용을 읽게 한다)를 무너뜨린다.
  */
 const TERMS = [
-  { id: 't1', label: '서비스 이용약관', req: true, doc: 'terms' as const },
-  { id: 't2', label: '개인(신용)정보 수집·이용 동의', req: true, doc: 'policy' as const,
-    desc: '소비 분석 목적으로만 사용, 제3자 제공 안 함' },
-  { id: 't3', label: '고유식별정보 처리 동의', req: true, doc: 'policy' as const },
-  { id: 't4', label: '지킴이 알림·혜택 수신', req: false, doc: 'policy' as const },
+  { id: 't1', label: '서비스 이용약관', req: true, doc: 'terms' },
+  { id: 't2', label: '개인(신용)정보 수집·이용 동의', req: true, doc: 'consent/credit-info' },
+  { id: 't3', label: '고유식별정보 처리 동의', req: true, doc: 'consent/unique-id' },
+  { id: 't4', label: '지킴이 알림·혜택 수신', req: false, doc: 'consent/marketing' },
 ];
 
 export function Auth() {
@@ -81,10 +84,12 @@ export function Auth() {
   /** 펼쳐 놓은 약관 전문. null이면 닫혀 있다. */
   const [doc, setDoc] = useState<{ label: string; body: PrivacyPolicy | null; error: string | null } | null>(null);
 
-  async function openDoc(label: string, which: 'terms' | 'policy') {
+  async function openDoc(label: string, which: string) {
     setDoc({ label, body: null, error: null });
     try {
-      const body = which === 'terms' ? await api.privacyTerms() : await api.privacyPolicy();
+      const body = which.startsWith('consent/')
+        ? await api.privacyConsent(which.slice('consent/'.length))
+        : await api.privacyTerms();
       setDoc({ label, body, error: null });
     } catch (e) {
       setDoc({ label, body: null, error: e instanceof Error ? e.message : '불러오지 못했어요' });
@@ -314,7 +319,6 @@ export function Auth() {
                 <span className="ct">
                   <b>{t.label}</b>{' '}
                   <span className="req" style={!t.req ? { color: 'var(--blue-t)' } : undefined}>({t.req ? '필수' : '선택'})</span>
-                  {t.desc && <span className="desc">{t.desc}</span>}
                 </span>
               </button>
               {/* 체크 버튼 안에 버튼을 넣을 수 없어 형제로 둔다(중첩 버튼은 무효 마크업이다). */}
@@ -338,9 +342,10 @@ export function Auth() {
         {doc?.body && (
           <div className="doc">
             <p className="sheet-sub">{doc.body.title}</p>
-            {doc.body.clauses.map((c) => (
-              <section key={c.title}>
-                <h3>{c.title}</h3>
+            {/* 소제목이 없는 문서도 있다(동의서 셋). 빈 `h3`가 뜨면 문단 앞에 빈 줄만 생긴다. */}
+            {doc.body.clauses.map((c, i) => (
+              <section key={c.title || i}>
+                {c.title && <h3>{c.title}</h3>}
                 <p>{c.body}</p>
               </section>
             ))}

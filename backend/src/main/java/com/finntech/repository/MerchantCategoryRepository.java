@@ -70,9 +70,14 @@ public interface MerchantCategoryRepository extends JpaRepository<MerchantCatego
      *
      * <p>업종 조회는 <i>미분류</i> 결제만 훑으므로, 이미 분류가 끝난 가맹점은 주소를 얻을 기회가
      * 없다. 그래서 따로 훑어 회차마다 조금씩 채운다.
+     *
+     * <p><b>몇 번 물어도 없던 번호는 뺀다.</b> 조회처에 주소칸이 비어 있는 사업자가 있어(2026-08-08
+     * 운영 7곳) 그런 행은 성공이 영영 안 오는데, 빼지 않으면 회차마다 다시 물어 하루 2,016회가
+     * 헛나갔다. {@link MerchantCategory#GIVE_UP_AFTER} 회에서 멎는다.
      */
     @Query("select m from MerchantCategory m "
             + "where m.address is null and m.businessNumber <> '' "
+            + "and m.addressMisses < " + MerchantCategory.GIVE_UP_AFTER + " "
             + "order by m.id")
     List<MerchantCategory> findMissingAddress(org.springframework.data.domain.Pageable page);
 
@@ -86,6 +91,24 @@ public interface MerchantCategoryRepository extends JpaRepository<MerchantCatego
         List<MerchantCategory> rows = findAllWithAddress(biz);
         return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
     }
+
+    /**
+     * <b>표에서 유도된 행</b> — 대조표를 고쳤을 때 다시 계산할 대상이다(V29).
+     *
+     * <p>{@code findAll()} 로 때우지 않는 이유는 <b>의도가 질의에 드러나야 하기 때문</b>이다.
+     * 여기 걸리는 것은 국세청 등록 업종에서 유도된 행뿐이고, 사람이 정한 것
+     * ({@code USER_CONFIRMED})·추정({@code LLM_GUESS})·시도 이력·종결은 표가 바뀌어도
+     * 따라 움직이면 안 된다.
+     *
+     * <p>{@code nts_codes} 로 고르지 않는다. 아직 근거가 안 채워진 행도 대상이어야 하고
+     * (조회 답 {@code registryIndustry} 에서 역산해 채우는 백필이 같은 경로로 돈다),
+     * 조건이 둘로 갈리면 백필과 재계산이 서로 다른 집합을 본다.
+     *
+     * <p>정렬을 고정한다(§4-3 재현성).
+     */
+    @Query("select m from MerchantCategory m "
+            + "where m.source in ('USER_CSV','REGISTRY') order by m.id")
+    List<MerchantCategory> findTableDerived(org.springframework.data.domain.Pageable page);
 
     /** 사전에 이미 확정된 브랜드 이름들 — 대기 장소의 것과 합쳐 2차 대조의 후보가 된다. */
     @Query("select distinct m.brand from MerchantCategory m "

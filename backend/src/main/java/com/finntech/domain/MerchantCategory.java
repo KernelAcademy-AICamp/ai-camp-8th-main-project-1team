@@ -170,6 +170,22 @@ public class MerchantCategory {
     private LocalDateTime lastAttemptAt;
 
     /**
+     * 주소를 물었는데 <b>조회처에 없더라</b>를 센 횟수(V27).
+     *
+     * <p>{@code lookupAttempts} 와 따로 세는 이유는 <b>끝나는 조건이 다르기 때문</b>이다. 업종
+     * 조회는 답을 받으면 {@code registryIndustry} 가 차서 저절로 안 물어보게 되지만, 주소는
+     * <b>답이 없는 것이 정상인 번호</b>가 있다 — 조회처에 주소칸이 비어 있거나(롯데아울렛
+     * 서울역점) 사업자 자체가 안 나온다. 그런 번호는 성공이 영영 안 오므로 세어 두지 않으면
+     * 회차마다 다시 묻는다.
+     *
+     * <p>실제로 그랬다(2026-08-08 운영): 7곳이 5분마다 헛물을 켜 하루 2,016회가 남의 서버로
+     * 나갔다. {@value #GIVE_UP_AFTER} 회에 닿으면 {@code findMissingAddress} 가 그 행을 빼므로
+     * 멎는다. 주소만 안 채워질 뿐 업종 조회·분류는 이 값을 보지 않는다.
+     */
+    @Column(name = "address_misses", nullable = false)
+    private int addressMisses;
+
+    /**
      * 가맹점명에서 뽑은 <b>브랜드</b> — {@code GS25 강남역점} 의 {@code GS25}.
      *
      * <p>사전에 들어온 가맹점은 브랜드도 여기 함께 산다. 대기 장소({@code merchant_brand})에서
@@ -178,22 +194,73 @@ public class MerchantCategory {
     @Column(name = "brand", length = 60)
     private String brand;
 
+    /**
+     * 이 분류를 낳은 <b>국세청 업종코드들</b> — 6자리를 쉼표로 이은 것(V29).
+     *
+     * <p><b>비어 있는 것도 뜻이다.</b> 값이 있으면 이 행의 중분류가 <b>표에서 유도</b>됐다는
+     * 말이고({@link Source#USER_CSV}·{@link Source#REGISTRY}), {@code null} 이면 표에서 나오지
+     * 않았다는 말이다 — 사람이 정했거나({@link Source#USER_CONFIRMED}) 애초에 유도가 없다.
+     * 그래서 재계산 대상이 {@code source} 하나로 떨어진다.
+     *
+     * <p><b>왜 대표 하나가 아니라 목록인가.</b> 한 업종명에 코드가 여럿 달리고, 살아 있는 경로는
+     * 그 코드들의 중분류가 <b>만장일치일 때만</b> 답한다
+     * ({@code IndustryCategoryMapper.midOfCodes}). 대표 하나만 적으면 재계산이 그 판단을 못 해
+     * <i>"모르겠다"</i>고 해야 할 자리에서 자신 있게 답한다.
+     *
+     * <p>형식은 6자리 0채움 · 쉼표 · 공백 없음 · 오름차순이다. <b>쓰기는 그 형식으로, 읽기는
+     * 관대하게</b> — {@link #ntsCodeList()} 가 쉼표로 자르고 다듬는다.
+     */
+    @Column(name = "nts_codes", length = 120)
+    private String ntsCodes;
+
     protected MerchantCategory() {
     }
 
     public MerchantCategory(String businessNumber, String merchantName,
-                            String category2, Source source, Long confirmedBy) {
+                            String category2, Source source, Long confirmedBy,
+                            java.util.List<String> ntsCodes) {
         this.businessNumber = normalize(businessNumber);
         this.merchantName = merchantName;
         this.category2 = category2;
         this.source = source.name();
         this.confirmedBy = confirmedBy;
+        this.ntsCodes = joinCodes(ntsCodes);
     }
 
     /** 원장이 하이픈을 넣어 보관하기도 한다. 키가 갈라지지 않게 숫자만 남긴다. */
     public static String normalize(String businessNumber) {
         return businessNumber == null ? "" : businessNumber.replaceAll("\\D", "");
     }
+
+    /**
+     * 코드 목록을 칸에 담을 문자열로 — 없으면 {@code null}(빈 문자열이 아니다).
+     *
+     * <p>정렬하고 중복을 없앤다. 같은 근거가 순서만 달라 다른 값처럼 보이면 재계산의 diff 가
+     * 이유 없이 흔들린다(§4-3 재현성).
+     */
+    private static String joinCodes(java.util.List<String> codes) {
+        if (codes == null || codes.isEmpty()) return null;
+        String joined = codes.stream()
+                .filter(c -> c != null && !c.isBlank())
+                .map(String::trim)
+                .distinct().sorted()
+                .collect(java.util.stream.Collectors.joining(","));
+        return joined.isBlank() ? null : joined;
+    }
+
+    /**
+     * 담긴 업종코드들 — 없으면 빈 목록.
+     *
+     * <p><b>읽기는 관대하다.</b> 쉼표로 자르고 다듬어, 쓰는 쪽이 언젠가 {@code ", "} 로 적어도
+     * 재계산이 안 죽는다.
+     */
+    public java.util.List<String> ntsCodeList() {
+        if (ntsCodes == null || ntsCodes.isBlank()) return java.util.List.of();
+        return java.util.Arrays.stream(ntsCodes.split(","))
+                .map(String::trim).filter(c -> !c.isEmpty()).toList();
+    }
+
+    public String getNtsCodes() { return ntsCodes; }
 
     @PrePersist
     void onCreate() {
@@ -207,11 +274,23 @@ public class MerchantCategory {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /** 사람이 다시 확인해 분류를 바꾼다 — 오입력을 되돌릴 길이다. */
-    public void reclassify(String category2, Source source, Long confirmedBy) {
+    /**
+     * 사람이 다시 확인해 분류를 바꾼다 — 오입력을 되돌릴 길이다.
+     *
+     * <p><b>{@code ntsCodes} 를 인자로 받는 것이 요점이다.</b> 오버로드를 두지 않아 부르는 쪽이
+     * 매번 <i>"이 판단이 표에서 나왔는가"</i>를 말하게 한다. 사람이 정한 것이면 {@code null} 을
+     * 넘겨 <b>근거를 지운다</b> — 지금 값과 무관한 코드가 남으면, 설명가능성을 위해 만든 칸이
+     * 오해를 만드는 칸이 된다. 잃는 것은 없다({@link #registryIndustry} 가 그대로 남는다).
+     *
+     * <p>근거는 분류와 <b>함께</b> 움직여야 한다. 분류만 갈아 끼우고 코드를 두면 그 행은 새
+     * 분류에 옛 근거를 붙인 채로 굳는다.
+     */
+    public void reclassify(String category2, Source source, Long confirmedBy,
+                           java.util.List<String> ntsCodes) {
         this.category2 = category2;
         this.source = source.name();
         this.confirmedBy = confirmedBy;
+        this.ntsCodes = joinCodes(ntsCodes);
     }
 
     /**
@@ -248,6 +327,9 @@ public class MerchantCategory {
         if (llmAttempts >= GIVE_UP_AFTER && !Source.UNRESOLVED.name().equals(source)) {
             this.category2 = com.finntech.engine.IndustryCategoryMapper.OTHER;
             this.source = Source.UNRESOLVED.name();
+            // '기타'는 표의 답이 아니라 **종결 표시**다. 근거를 남기면 재계산이 그 행을
+            // 대상으로 잡아 종결을 되돌린다 — 근거는 분류와 함께 움직인다({@code reclassify}).
+            this.ntsCodes = null;
             return true;
         }
         return false;
@@ -282,6 +364,18 @@ public class MerchantCategory {
         this.address = value.length() > 200 ? value.substring(0, 200) : value;
         return true;
     }
+    /**
+     * 주소를 물었는데 없었다고 적는다 — {@value #GIVE_UP_AFTER} 회면 백필이 그 행을 놓는다.
+     *
+     * <p>물어보지도 않고 적으면 안 된다. PG·복합 번호는 {@code askable} 이 먼저 막으므로 여기
+     * 들어오지 않는다({@code IndustryLookupService.askable} 의 같은 원칙).
+     */
+    public void noteAddressMiss(LocalDateTime at) {
+        this.addressMisses++;
+        this.lastAttemptAt = at;
+    }
+
+    public int getAddressMisses() { return addressMisses; }
     public int getLookupAttempts() { return lookupAttempts; }
     public int getLlmAttempts() { return llmAttempts; }
     public LocalDateTime getLastAttemptAt() { return lastAttemptAt; }
