@@ -33,15 +33,30 @@ public class MerchantCategoryService {
     private final BusinessNumberKindService kinds;
     /** 브랜드 대기 장소 — 사전에 들어오는 순간 이쪽에서 옮겨 온다. */
     private final MerchantBrandService brands;
+    /** 사람의 확정을 한 표로 세는 곳(V30). 전역 분류는 다수가 정한다. */
+    private final MerchantCategoryVoteService votes;
 
     public MerchantCategoryService(MerchantCategoryRepository repository,
                                    IndustryCategoryMapper mapper,
                                    BusinessNumberKindService kinds,
-                                   MerchantBrandService brands) {
+                                   MerchantBrandService brands,
+                                   MerchantCategoryVoteService votes) {
         this.repository = repository;
         this.mapper = mapper;
         this.kinds = kinds;
         this.brands = brands;
+        this.votes = votes;
+    }
+
+    /**
+     * 사전·표가 함께 쓰는 <b>키 규칙</b> — PG 번호는 남의 것이라 지운다.
+     *
+     * <p>한 곳에만 둔다. 쌓는 자리와 찾는 자리와 <b>표를 세는 자리</b>가 같은 키를 써야
+     * 한다 — 갈리면 표는 쌓이는데 사전은 못 찾는, 오류 없는 실패가 난다.
+     */
+    public String keyOf(String businessNumber) {
+        String normalized = MerchantCategory.normalize(businessNumber);
+        return mapper.isPaymentAgency(normalized) ? "" : normalized;
     }
 
     /**
@@ -105,12 +120,12 @@ public class MerchantCategoryService {
         if (payment == null || !payment.isFromRealPerson()) return Optional.empty();
         String name = payment.getMerchantName();
         if (name == null || name.isBlank()) return Optional.empty();
-        String normalized = MerchantCategory.normalize(payment.getBusinessNumber());
-        final String biz = mapper.isPaymentAgency(normalized) ? "" : normalized;
+        final String biz = keyOf(payment.getBusinessNumber());
         MerchantCategory row = repository.findByBusinessNumberAndMerchantName(biz, name)
                 .orElseGet(() -> repository.save(new MerchantCategory(
                         biz, name, com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED,
-                        MerchantCategory.Source.ATTEMPTED, null)));
+                        MerchantCategory.Source.ATTEMPTED, null,
+                        null)));   // 시도 이력이다 — 표에서 유도된 것이 없다(V29)
 
         // 이 가맹점이 사전에 자리를 얻었으니 대기 장소의 브랜드를 옮기고 그쪽은 지운다.
         // **attemptRow·rememberGuess·rememberRegistry 도 confirm 과 같아야 한다** — 한 곳만 옮기면 브랜드가 두 곳에 남아
@@ -211,8 +226,7 @@ public class MerchantCategoryService {
                 || category2 == null || category2.isBlank()) {
             return Optional.empty();
         }
-        String normalized = MerchantCategory.normalize(payment.getBusinessNumber());
-        final String biz = mapper.isPaymentAgency(normalized) ? "" : normalized;
+        final String biz = keyOf(payment.getBusinessNumber());
         String name = payment.getMerchantName();
         if (name == null || name.isBlank()) {
             return Optional.empty();
@@ -225,12 +239,15 @@ public class MerchantCategoryService {
             if (row.isConfirmed()) {
                 return Optional.empty();     // 사실·사람의 확인을 추정으로 덮지 않는다
             }
-            row.reclassify(category2, MerchantCategory.Source.LLM_GUESS, null);
+            // **추정에는 업종코드를 적지 않는다**(V29). 모델이 답한 업종 이름을 표로 옮겨
+            // 코드를 역산하는 것은 되지만, 그러면 그 칸이 "표에서 유도"와 "모델의 말을 표로
+            // 옮김"을 한꺼번에 담아 읽을 수 없게 된다.
+            row.reclassify(category2, MerchantCategory.Source.LLM_GUESS, null, null);
             brands.promote(row);
             return Optional.of(row);
         }
         MerchantCategory row = repository.save(new MerchantCategory(
-                biz, name, category2, MerchantCategory.Source.LLM_GUESS, null));
+                biz, name, category2, MerchantCategory.Source.LLM_GUESS, null, null));
         brands.promote(row);
         return Optional.of(row);
     }
@@ -306,10 +323,16 @@ public class MerchantCategoryService {
      * 성공할 수 있는데, 그렇게 들어온 행은 <i>"이 사전은 실제 명세서에서 자란다"</i>는 약속을
      * 어긴다 — 아무도 결제한 적 없는 가맹점이 사전에 앉는다.
      *
+     * <p><b>업종코드도 함께 남긴다</b>(V29). 이 분류는 표에서 유도된 것이므로 그 원재료를
+     * 적어 두어야 나중에 대조표를 고쳤을 때 다시 계산할 수 있다 — 이 통로로 들어온 행은
+     * 씨앗 파일에 없어 <b>DB 에만 살기 때문에</b>, 여기서 안 적으면 재계산할 길이 영영 없다.
+     *
+     * @param ntsCodes 이 중분류를 낳은 국세청 업종코드들({@code IndustryCategoryMapper.codesOfFineName})
      * @return 남겼으면 그 행, 사람이 정한 것이 이미 있거나 더미 결제라 남기지 않았으면 empty
      */
     @Transactional
-    public Optional<MerchantCategory> rememberRegistry(UserPayment payment, String category2) {
+    public Optional<MerchantCategory> rememberRegistry(UserPayment payment, String category2,
+                                                       List<String> ntsCodes) {
         if (payment == null || !payment.isFromRealPerson()
                 || category2 == null || category2.isBlank()) {
             return Optional.empty();
@@ -318,9 +341,8 @@ public class MerchantCategoryService {
         if (merchantName == null || merchantName.isBlank()) {
             return Optional.empty();
         }
-        String normalized = MerchantCategory.normalize(payment.getBusinessNumber());
         // PG 번호는 조회 단계에서 이미 걸러지지만, 쌓는 자리와 찾는 자리의 규칙을 같게 둔다.
-        final String biz = mapper.isPaymentAgency(normalized) ? "" : normalized;
+        final String biz = keyOf(payment.getBusinessNumber());
 
         Optional<MerchantCategory> existing =
                 repository.findByBusinessNumberAndMerchantName(biz, merchantName);
@@ -329,12 +351,12 @@ public class MerchantCategoryService {
             if (row.isConfirmed() && !MerchantCategory.Source.REGISTRY.name().equals(row.getSource())) {
                 return Optional.empty();     // 사람이 준 것·확인한 것은 그대로 둔다
             }
-            row.reclassify(category2, MerchantCategory.Source.REGISTRY, null);
+            row.reclassify(category2, MerchantCategory.Source.REGISTRY, null, ntsCodes);
             brands.promote(row);
             return Optional.of(row);
         }
         MerchantCategory row = repository.save(new MerchantCategory(
-                biz, merchantName, category2, MerchantCategory.Source.REGISTRY, null));
+                biz, merchantName, category2, MerchantCategory.Source.REGISTRY, null, ntsCodes));
         brands.promote(row);
         return Optional.of(row);
     }
@@ -357,7 +379,18 @@ public class MerchantCategoryService {
      * "맞아요"를 누른 것이 쌓이면 사전이 <i>"실제 사업자번호와 중분류"</i> 라는 약속을 어긴다.
      * 그래서 여기서 막는다 — 읽기는 막지 않는다(사전에 실물만 있으면 더미가 읽어도 안 더러워진다).
      *
-     * @return 쌓았으면 그 행, 더미 결제라 거절했으면 {@link Optional#empty()}
+     * <p><b>덮어쓰지 않는다 — 한 표를 던진다</b>(V30). 예전에는 여기가 곧장 전역 분류를 갈아
+     * 끼웠고, 그래서 <b>마지막에 누른 사람이 이겼다</b> — 앞사람의 판단은 흔적도 없이 사라졌다.
+     * 사람은 오분류하고 착각하는데 사전은 전역 자산이라 한 번의 실수가 모두에게 간다.
+     * 이제 표를 적고 <b>다수가 정한 값</b>만 사전에 앉는다({@link MerchantCategoryVoteService}).
+     *
+     * <p><b>져도 잃는 것이 없다.</b> 본인의 결제는 {@code category2_source='USER'} 가 지키고
+     * 사전은 그것을 덮지 않는다 — 전역은 <i>처음 보는 결제에 붙는 기본값</i>일 뿐이다.
+     * 그래서 동률이어도 행을 돌려준다: 부르는 쪽이 <b>본인의</b> 나머지 결제를 자기 표로
+     * 맞춰야 하기 때문이다.
+     *
+     * @return 사전에서 이 가맹점의 행(동률이라 안 바뀌었어도 준다),
+     *         더미 결제라 거절했으면 {@link Optional#empty()}
      */
     @Transactional
     public Optional<MerchantCategory> confirmFrom(UserPayment payment, String category2,
@@ -365,8 +398,35 @@ public class MerchantCategoryService {
         if (payment == null || !payment.isFromRealPerson()) {
             return Optional.empty();
         }
-        return Optional.of(confirm(payment.getBusinessNumber(), payment.getMerchantName(),
-                category2, MerchantCategory.Source.USER_CONFIRMED, confirmedBy));
+        String name = payment.getMerchantName();
+        if (name == null || name.isBlank()) {
+            return Optional.empty();
+        }
+        // 표의 키와 사전의 키는 **같은 규칙**이라야 한다 — PG 번호는 양쪽에서 지워진다.
+        final String biz = keyOf(payment.getBusinessNumber());
+
+        Optional<String> majority = votes.castAndTally(biz, name, confirmedBy, category2);
+        if (majority.isEmpty()) {
+            // **동률이면 아무것도 안 바꾼다.** 갈렸다는 것은 그 가맹점이 사람마다 다르게
+            // 보인다는 뜻이고(배달의민족 — 등록은 통신판매업, 쓴 돈은 밥값), 그럴 때 억지로
+            // 고르면 진 쪽의 전역 화면이 이유 없이 흔들린다.
+            return repository.findByBusinessNumberAndMerchantName(biz, name);
+        }
+        String winner = majority.get();
+        // **이긴 값에 동의한 사람만 `confirmedBy` 에 남는다.** 진 표를 적으면 그 행은
+        // "이 사람이 정했다"고 말하는데 값은 그 사람 것이 아니게 된다.
+        Long credited = winner.equals(category2)
+                ? confirmedBy
+                : repository.findByBusinessNumberAndMerchantName(biz, name)
+                        .map(MerchantCategory::getConfirmedBy).orElse(null);
+        return Optional.of(confirm(biz, name, winner,
+                MerchantCategory.Source.USER_CONFIRMED, credited));
+    }
+
+    /** 그 사람이 이 가맹점에 던진 표 — 본인 결제는 전역 다수보다 이것이 먼저다. */
+    @Transactional(readOnly = true)
+    public Optional<String> voteOf(String businessNumber, String merchantName, Long userId) {
+        return votes.voteOf(keyOf(businessNumber), merchantName, userId);
     }
 
     /**
@@ -382,19 +442,22 @@ public class MerchantCategoryService {
     public MerchantCategory confirm(String businessNumber, String merchantName,
                                     String category2, MerchantCategory.Source source,
                                     Long confirmedBy) {
-        String normalized = MerchantCategory.normalize(businessNumber);
-        // PG 번호는 <b>키에서 지운다</b> — 조회가 PG 번호를 버리는 것과 같은 규칙이라야 한다.
-        // 지우지 않으면 사람이 "맞아요"를 눌러 준 넷플릭스가 (KG이니시스, 넷플릭스…) 로 박혀,
-        // 같은 넷플릭스인데 NHNKCP 를 거친 4건에는 안 붙는다. 쌓이는 자리와 찾는 자리가
-        // 어긋나면 사전이 커져도 적중이 안 는다 — 아무 오류도 없이.
-        final String biz = mapper.isPaymentAgency(normalized) ? "" : normalized;
+        // PG 번호는 <b>키에서 지운다</b>({@link #keyOf}) — 조회가 PG 번호를 버리는 것과 같은
+        // 규칙이라야 한다. 지우지 않으면 사람이 "맞아요"를 눌러 준 넷플릭스가 (KG이니시스,
+        // 넷플릭스…) 로 박혀, 같은 넷플릭스인데 NHNKCP 를 거친 4건에는 안 붙는다. 쌓이는
+        // 자리와 찾는 자리가 어긋나면 사전이 커져도 적중이 안 는다 — 아무 오류도 없이.
+        final String biz = keyOf(businessNumber);
+        // **업종코드를 지운다**(V29). 여기로 오는 것은 사람이 화면에서 정한 것이거나 CSV 일괄
+        // 적재다. 사람의 판단은 표에서 유도된 것이 아니므로 근거 칸이 비는 것이 정상이고,
+        // 옛 코드를 남기면 지금 값과 무관한 근거가 붙어 있는 행이 된다. 씨앗 적재는 자기 코드를
+        // 직접 넣으므로(load_merchant_seed.py) 이 경로를 타지 않는다.
         MerchantCategory row = repository.findByBusinessNumberAndMerchantName(biz, merchantName)
                 .map(existing -> {
-                    existing.reclassify(category2, source, confirmedBy);
+                    existing.reclassify(category2, source, confirmedBy, null);
                     return existing;
                 })
                 .orElseGet(() -> repository.save(
-                        new MerchantCategory(biz, merchantName, category2, source, confirmedBy)));
+                        new MerchantCategory(biz, merchantName, category2, source, confirmedBy, null)));
         // 이 가맹점이 사전에 들어왔으니 대기 장소의 브랜드를 옮기고 그쪽은 지운다 —
         // 두 곳에 남으면 어느 쪽이 정본인지 알 수 없게 된다.
         brands.promote(row);

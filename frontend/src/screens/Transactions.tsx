@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppBar, Scroll, Screen, ErrorBox, Loading, Empty } from '../components/ui';
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
-import { autoSyncMyData } from '../state/autoSync';
+import { autoSyncMyData, POLL_MS } from '../state/autoSync';
 import { useAsync } from '../state/useAsync';
 import { api, catLabel, type MyMerchant } from '../lib/api';
 import { SpendCalendar } from '../components/SpendCalendar';
@@ -187,21 +187,44 @@ export function Transactions() {
     }));
   }, [payments.data, filter, sanctuary, fixedOf, query, span, asOf]);
 
-  // 화면에 들어오면 새 결제를 조용히 당겨온다. 목록을 먼저 그리고 결과가 오면 그때 다시 부른다 —
+  // 최신 갱신 함수를 타이머가 붙잡고 있게 한다. 타이머는 화면이 열려 있는 내내 살아 있어서,
+  // 처음 렌더의 함수를 그대로 쥐고 있으면 그 사이 바뀐 것(reloadGuardian은 linked·userId에
+  // 매여 있다)을 놓친다. payments.reload는 useAsync가 useCallback([])으로 고정해 두지만,
+  // 둘을 같은 방식으로 다루는 편이 나중에 한쪽만 바뀌어도 안전하다.
+  const reloadRef = useRef({ payments: payments.reload, guardian: reloadGuardian });
+  reloadRef.current = { payments: payments.reload, guardian: reloadGuardian };
+
+  // 화면을 보고 있는 동안 새 결제를 조용히 당겨온다. 목록을 먼저 그리고 결과가 오면 그때 다시 부른다 —
   // 상단 '동기화' 버튼은 결과 문구가 필요한 수동 경로라 그대로 둔다.
+  //
+  // **진입 때 한 번이 아니라 POLL_MS 간격으로 계속이다.** 예전에는 여기가 진입 1회뿐이라
+  // 가만히 보고 있으면 목록이 영영 안 늘었다 — 마이데이터 커트오프가 지나 새 결제가 생겨도
+  // 화면을 다시 열기 전에는 알 수 없었다. 서버 배치(5분)를 줄여도 이 화면은 안 바뀌므로,
+  // 고칠 자리는 주기가 아니라 여기다.
   useEffect(() => {
     let alive = true;
-    void autoSyncMyData(userId).then((n) => {
-      // 개편안에는 '동기화' 버튼이 없다. 조용히 당겨오되 **새로 들어온 것이 있으면 말해 준다** —
-      // 목록이 소리 없이 늘어나면 사용자는 자기가 뭘 잘못 봤나 하게 된다.
-      if (n > 0 && alive) {
-        setSyncMsg(`새 결제 ${n}건을 불러왔어요`);
-        payments.reload(); void reloadGuardian();
-      }
-    });
-    return () => { alive = false; };
-    // payments.reload는 useAsync가 매 렌더 새로 만들 수 있어 의존성에 넣지 않는다(진입당 한 번).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const pull = () => {
+      void autoSyncMyData(userId).then((n) => {
+        // 개편안에는 '동기화' 버튼이 없다. 조용히 당겨오되 **새로 들어온 것이 있으면 말해 준다** —
+        // 목록이 소리 없이 늘어나면 사용자는 자기가 뭘 잘못 봤나 하게 된다.
+        if (n > 0 && alive) {
+          setSyncMsg(`새 결제 ${n}건을 불러왔어요`);
+          reloadRef.current.payments(); void reloadRef.current.guardian();
+        }
+      });
+    };
+    pull();
+    // **숨은 탭에서는 돌리지 않는다.** 안 보는 화면 때문에 외부 서버를 두드리는 것은 낭비고,
+    // 모바일에서는 배터리로 돌아온다. 대신 돌아오는 순간 곧바로 한 번 당겨 기다리게 하지 않는다
+    // (그때는 스로틀이 마지막 성공 시각을 보고 알아서 걸러 준다).
+    const timer = setInterval(() => { if (!document.hidden) pull(); }, POLL_MS);
+    const onVisible = () => { if (document.visibilityState === 'visible') pull(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [userId]);
 
   async function lookupMerchant(bizno: string) {

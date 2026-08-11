@@ -6,6 +6,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -92,6 +93,44 @@ class IndustryCategoryMapperTest {
         assertEquals("식비", mapper.midOfFineName("한식 일반 음식점업"));
         assertEquals("금융/보험", mapper.midOfFineName("기타 금융 투자업"), "카드사 수수료");
         assertEquals("생활", mapper.midOfFineName("기타 목재 가구 제조업"), "가구는 제품이 곧 구매물");
+    }
+
+    @Test
+    @DisplayName("이름→코드→중분류를 쪼개도 답이 같다 — 재계산이 살아 있는 경로와 한 규칙을 쓴다")
+    void splittingFineNameLookupKeepsTheSameAnswer() {
+        // midOfFineName 을 codesOfFineName + midOfCodes 로 쪼갠 것은 **코드를 사전에 적기
+        // 위해서**다(V29). 쪼개면서 답이 달라지면 재계산이 살아 있는 경로와 갈린다.
+        for (String name : new String[]{"전자상거래 소매업", "체인화 편의점", "한식 일반 음식점업",
+                "기타 금융 투자업", "기타 목재 가구 제조업", "기타 음ㆍ식료품 위주 종합 소매업",
+                "아파트 건설업", "모르는 업종", null}) {
+            assertEquals(mapper.midOfFineName(name),
+                    mapper.midOfCodes(mapper.codesOfFineName(name)), "이름: " + name);
+        }
+    }
+
+    @Test
+    @DisplayName("코드 목록은 사본이고, 모르는 이름은 빈 목록이다")
+    void codesOfFineNameIsSafeToHold() {
+        assertFalse(mapper.codesOfFineName("체인화 편의점").isEmpty());
+        assertTrue(mapper.codesOfFineName("모르는 업종").isEmpty());
+        assertTrue(mapper.codesOfFineName(null).isEmpty());
+        // 색인의 리스트를 그대로 내주면 부르는 쪽이 공유 상태를 만진다.
+        assertThrows(UnsupportedOperationException.class,
+                () -> mapper.codesOfFineName("체인화 편의점").add("999999"));
+        assertEquals(IndustryCategoryMapper.UNCLASSIFIED, mapper.midOfCodes(java.util.List.of()));
+        assertEquals(IndustryCategoryMapper.UNCLASSIFIED, mapper.midOfCodes(null));
+    }
+
+    @Test
+    @DisplayName("어떤 업종 이름의 코드를 이어도 사전 칸(120자)에 들어간다")
+    void joinedCodesFitTheColumn() {
+        // 넘치면 잘려 나가는데, 잘린 근거는 재계산에서 **조용히 다른 답**을 낸다.
+        // 실측(2026-08-11): 최대 9개 · 62자.
+        for (String name : new String[]{"그 외 기타 분류 안된 상품 전문 소매업", "일반 의원",
+                "체인화 편의점", "전자상거래 소매업"}) {
+            String joined = String.join(",", mapper.codesOfFineName(name));
+            assertTrue(joined.length() <= 120, name + " → " + joined.length() + "자");
+        }
     }
 
     @Test
