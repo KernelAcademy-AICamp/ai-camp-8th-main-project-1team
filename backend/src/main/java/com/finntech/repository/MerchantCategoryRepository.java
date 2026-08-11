@@ -92,6 +92,24 @@ public interface MerchantCategoryRepository extends JpaRepository<MerchantCatego
         return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
     }
 
+    /**
+     * <b>표에서 유도된 행</b> — 대조표를 고쳤을 때 다시 계산할 대상이다(V29).
+     *
+     * <p>{@code findAll()} 로 때우지 않는 이유는 <b>의도가 질의에 드러나야 하기 때문</b>이다.
+     * 여기 걸리는 것은 국세청 등록 업종에서 유도된 행뿐이고, 사람이 정한 것
+     * ({@code USER_CONFIRMED})·추정({@code LLM_GUESS})·시도 이력·종결은 표가 바뀌어도
+     * 따라 움직이면 안 된다.
+     *
+     * <p>{@code nts_codes} 로 고르지 않는다. 아직 근거가 안 채워진 행도 대상이어야 하고
+     * (조회 답 {@code registryIndustry} 에서 역산해 채우는 백필이 같은 경로로 돈다),
+     * 조건이 둘로 갈리면 백필과 재계산이 서로 다른 집합을 본다.
+     *
+     * <p>정렬을 고정한다(§4-3 재현성).
+     */
+    @Query("select m from MerchantCategory m "
+            + "where m.source in ('USER_CSV','REGISTRY') order by m.id")
+    List<MerchantCategory> findTableDerived(org.springframework.data.domain.Pageable page);
+
     /** 사전에 이미 확정된 브랜드 이름들 — 대기 장소의 것과 합쳐 2차 대조의 후보가 된다. */
     @Query("select distinct m.brand from MerchantCategory m "
             + "where m.brand is not null and m.brand <> :exclude order by m.brand")

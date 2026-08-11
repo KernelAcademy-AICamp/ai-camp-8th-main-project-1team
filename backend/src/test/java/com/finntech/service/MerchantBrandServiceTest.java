@@ -110,7 +110,7 @@ class MerchantBrandServiceTest {
     @DisplayName("사전에 있으면 사전에 적고 대기 장소는 안 쓴다")
     void knownMerchantGetsBrandInDictionary() {
         var row = new MerchantCategory("0000000011", "GS25 강남역점", "편의점/잡화",
-                MerchantCategory.Source.USER_CSV, null);
+                MerchantCategory.Source.USER_CSV, null, null);
         dictionary.add(row);
 
         service.remember("GS25 강남역점", "GS25");
@@ -126,7 +126,7 @@ class MerchantBrandServiceTest {
         assertThat(staging).hasSize(1);
 
         var row = new MerchantCategory("0000000012", "스타벅스 포항공대점", "카페/간식",
-                MerchantCategory.Source.USER_CONFIRMED, 7L);
+                MerchantCategory.Source.USER_CONFIRMED, 7L, null);
         service.promote(row);
 
         assertThat(row.getBrand()).isEqualTo("스타벅스");
@@ -138,9 +138,9 @@ class MerchantBrandServiceTest {
     void brandKeysOnNameNotBusinessNumber() {
         // PG 를 거친 행(번호가 지워짐)과 일반 행(번호 있음)이 같은 상호로 사전에 있다고 하자.
         var viaPg = new MerchantCategory("", "유니클로 온라인 스토어", "쇼핑",
-                MerchantCategory.Source.USER_CSV, null);
+                MerchantCategory.Source.USER_CSV, null, null);
         var direct = new MerchantCategory("0000000013", "유니클로 온라인 스토어", "쇼핑",
-                MerchantCategory.Source.USER_CSV, null);
+                MerchantCategory.Source.USER_CSV, null, null);
         dictionary.add(viaPg);
         dictionary.add(direct);
 
@@ -154,7 +154,7 @@ class MerchantBrandServiceTest {
     @DisplayName("이미 있는 브랜드는 덮지 않는다 — 먼저 들어온 것이 사람의 손일 수 있다")
     void existingBrandIsNotOverwritten() {
         var row = new MerchantCategory("0000000014", "어떤 가게", "생활",
-                MerchantCategory.Source.USER_CSV, null);
+                MerchantCategory.Source.USER_CSV, null, null);
         row.adoptBrand("사람이적은브랜드");
         dictionary.add(row);
 
@@ -189,7 +189,7 @@ class MerchantBrandServiceTest {
     void asksOnlyForUnknownMerchants() {
         staging.add(new MerchantBrand("GS25 강남역점", "GS25", MerchantBrand.Source.TEMP_MODEL));
         var row = new MerchantCategory("0000000015", "스타벅스 포항공대점", "카페/간식",
-                MerchantCategory.Source.USER_CSV, null);
+                MerchantCategory.Source.USER_CSV, null, null);
         row.adoptBrand("스타벅스");
         dictionary.add(row);
 
@@ -282,7 +282,7 @@ class MerchantBrandServiceTest {
     void dictionaryWinsOverStaging() {
         staging.add(new MerchantBrand("어떤 가게", "대기장소브랜드", MerchantBrand.Source.TEMP_MODEL));
         var row = new MerchantCategory("0000000016", "어떤 가게", "생활",
-                MerchantCategory.Source.USER_CSV, null);
+                MerchantCategory.Source.USER_CSV, null, null);
         row.adoptBrand("사전브랜드");
         dictionary.add(row);
 
@@ -301,7 +301,7 @@ class MerchantBrandServiceTest {
 
         // 사전에 그 이름의 행이 있어도 마찬가지다 — 실물 여부가 먼저다.
         dictionary.add(new MerchantCategory("0000000099", "생성기가만든가게", "쇼핑",
-                MerchantCategory.Source.USER_CSV, null));
+                MerchantCategory.Source.USER_CSV, null, null));
         service.remember("생성기가만든가게", "어떤브랜드");
         assertThat(dictionary.get(0).getBrand()).isNull();
     }

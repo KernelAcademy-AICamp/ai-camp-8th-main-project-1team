@@ -571,11 +571,15 @@ public class MyDataLinkService {
             // **주소는 덤이다.** 같은 문서에 들어 있으므로 호출이 안 는다 — 지금까지 버리고 있었다.
             String addr = looked.map(IndustryLookupService.Found::address).orElse(null);
             if (addr != null) selfProvider.getObject().rememberAddress(biz, p.getMerchantName(), addr);
-            String mid = answer.map(industryMapper::midOfFineName)
-                    .filter(m -> !com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED.equals(m))
-                    .orElse(null);
-            if (mid == null) continue;                                       // 소비 업종이 아니다 → LLM 이 받는다
-            if (merchantCategoryService.rememberRegistry(p, mid).isPresent()) {
+            // **코드를 손에 쥔 채로 내려간다**(V29). 예전에는 이름에서 곧장 중분류를 얻어
+            // 가운데 칸(국세청 코드)이 지역변수로 사라졌고, 그래서 이 통로로 들어온 사전 행은
+            // 근거 없이 답만 들었다 — 나중에 대조표를 고쳐도 다시 계산할 길이 없었다.
+            List<String> codes = answer.map(industryMapper::codesOfFineName).orElse(List.of());
+            String mid = codes.isEmpty() ? null : industryMapper.midOfCodes(codes);
+            if (mid == null || com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED.equals(mid)) {
+                continue;                                                    // 소비 업종이 아니다 → LLM 이 받는다
+            }
+            if (merchantCategoryService.rememberRegistry(p, mid, codes).isPresent()) {
                 found.put(p.getMerchantName(), mid);
             }
         }

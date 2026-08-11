@@ -163,6 +163,8 @@ class MyDataLinkServiceTest {
         return new MerchantCategoryService(repo,
                 new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
                 new BusinessNumberKindService(kindRepo, 5, 2, 0.10),
-                TestServices.brandService());
+                TestServices.brandService(),
+                new MerchantCategoryVoteService(
+                        mock(com.finntech.repository.MerchantCategoryVoteRepository.class)));
     }
 }

@@ -132,12 +132,15 @@ def main():
                 # 실제로는 떡집에서 산 것일 수 있다(주업종만 등록되기 때문이다).
                 non_consumer.append((biz, 업종))
                 continue
-            rows.append((biz, mids.pop(), 업종, ''))
+            # 5번째 칸은 **근거**다(V29). 중분류를 낳은 국세청 코드를 그대로 실어 보내
+            # 사전이 답과 함께 원재료를 들게 한다 — 나중에 대조표를 고쳤을 때 이 행을
+            # 다시 계산할 수 있는 유일한 길이다. 정렬은 재현성을 위해 고정한다.
+            rows.append((biz, mids.pop(), 업종, '', ','.join(sorted(codes))))
 
     # 수동 지정은 마지막에 덮어쓴다 — 사람이 본 것이 등록 업종보다 정확하다.
     manual, manual_bad = 0, []
     if os.path.exists(MANUAL):
-        auto = {b: i for i, (b, _, _, _) in enumerate(rows)}
+        auto = {b: i for i, (b, _, _, _, _) in enumerate(rows)}
         for line in io.open(MANUAL, encoding='utf-8'):
             if line.startswith('#') or not line.strip():
                 continue
@@ -160,7 +163,7 @@ def main():
                 manual_bad.append((biz, code + ' → 소비 업종이 아니다'))
                 continue
             if name:
-                rows.append(('' if biz in pg else biz, cat, why, name))
+                rows.append(('' if biz in pg else biz, cat, why, name, code))
             elif biz in pg:
                 # 수동 지정도 PG 검사를 받는다. 자동 경로만 막아 두었더니 사람이 적은 번호가
                 # 그대로 통과했고, KSNET(120-81-97322) 이 'CJ올리브영'이라는 표시명만 보고
@@ -169,9 +172,12 @@ def main():
                 manual_bad.append((biz, f'{code} → PG({pg[biz]}) 다. 4번째 칸에 가맹점명을 적어라'))
                 continue
             elif biz in auto:
-                rows[auto[biz]] = (biz, cat, why or rows[auto[biz]][2], '')
+                # **근거도 함께 갈아 끼운다**(V29). 분류를 사람이 정한 코드로 바꿔 놓고
+                # 근거는 자동 산출의 코드를 남기면 그 행이 자기모순이 된다 — 재계산이
+                # 옛 코드를 읽어 사람이 고친 분류를 도로 뒤집는다.
+                rows[auto[biz]] = (biz, cat, why or rows[auto[biz]][2], '', code)
             else:
-                rows.append((biz, cat, why, ''))
+                rows.append((biz, cat, why, '', code))
             manual += 1
 
     rows.sort()
@@ -181,15 +187,20 @@ def main():
                 '# 출처는 국세청 등록 업종이라 LLM 추정이 아니라 **사실**이다.\n'
                 '# PG·업종코드 없음(지자체 등)은 뺐다 — 사업자번호만으로 결제 성격을 말할 수 없다.\n'
                 '# 사업자번호가 빈 행은 **이름으로만** 붙는다 — PG 를 거친 결제가 그렇다.\n'
-                '#\n# 사업자번호\t중분류\t등록 업종(근거)\t가맹점명(이름 단독일 때만)\n')
-        for biz, m, 업종, name in rows:
-            f.write(f'{biz}\t{m}\t{업종}\t{name}\n')
+                '#\n'
+                '# 5번째 칸(업종코드)은 **이 중분류를 낳은 근거**다(V29). 사전에 함께 실려\n'
+                '# 나중에 대조표를 고쳤을 때 그 행을 다시 계산할 수 있게 한다. 칸을 늘릴 일이\n'
+                '# 생기면 **반드시 끝에 붙인다** — 앞 칸만 읽는 소비자가 셋 있다\n'
+                '# (load_merchant_seed.py · check_no_real_numbers.py · import-realperson.py).\n'
+                '#\n# 사업자번호\t중분류\t등록 업종(근거)\t가맹점명(이름 단독일 때만)\t업종코드(쉼표)\n')
+        for biz, m, 업종, name, codes in rows:
+            f.write(f'{biz}\t{m}\t{업종}\t{name}\t{codes}\n')
 
     print(f'  {os.path.relpath(OUT, ROOT)} — 확정 {len(rows)}곳 (수동 지정 {manual}곳 포함)')
     if manual_bad:
         print(f'   ⚠ 수동 지정에서 못 쓴 것 {len(manual_bad)}: {manual_bad}', file=sys.stderr)
     dist = {}
-    for _, m, _, _ in rows:
+    for _, m, _, _, _ in rows:
         dist[m] = dist.get(m, 0) + 1
     print('   중분류 분포: ' + ' · '.join(f'{k} {v}' for k, v in sorted(dist.items(), key=lambda x: -x[1])))
     print(f'   PG 라 제외: {len(skipped_pg)}곳 — ' + ', '.join(n for _, n, _ in skipped_pg))

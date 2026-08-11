@@ -49,14 +49,17 @@ def rows(path):
             biz = ''.join(ch for ch in c[0] if ch.isdigit())
             # 4번째 칸(가맹점명)이 있으면 **번호 없이 이름으로만** 붙는 행이다 — PG 경유 결제.
             name = c[3].strip() if len(c) > 3 else ''
+            # 5번째 칸은 이 중분류를 낳은 국세청 코드다(V29). **옛 4칸 씨앗도 읽힌다** —
+            # 없으면 근거 없이 들어가고, 그건 지금까지와 같은 상태다.
+            codes = c[4].strip() if len(c) > 4 else ''
             if not c[1].strip():
                 continue
             if name:
-                out.append(('', c[1].strip(), name))
+                out.append(('', c[1].strip(), name, codes))
                 continue
             if len(biz) != 10:
                 continue
-            out.append((biz, c[1].strip(), ''))
+            out.append((biz, c[1].strip(), '', codes))
     return out
 
 
@@ -72,12 +75,15 @@ def main():
         sys.exit(1)
 
     dist = {}
-    for _, m, _ in data:
+    for _, m, _, _ in data:
         dist[m] = dist.get(m, 0) + 1
-    byname = sum(1 for b, _, _ in data if not b)
+    byname = sum(1 for b, _, _, _ in data if not b)
+    withcodes = sum(1 for _, _, _, c in data if c)
     print(f'  {os.path.relpath(src, ROOT)} — {len(data)}곳'
           + (f' (그중 이름으로만 붙는 것 {byname}곳 — PG 경유)' if byname else ''))
     print('   ' + ' · '.join(f'{k} {v}' for k, v in sorted(dist.items(), key=lambda x: -x[1])))
+    print(f'   업종코드(근거)를 든 행 {withcodes}곳 / {len(data)}'
+          + ('  ⚠ 옛 4칸 씨앗이다 — build_merchant_seed.py 를 다시 돌려라' if not withcodes else ''))
 
     if DRY:
         print('   DRY_RUN=1 — 쓰지 않고 끝낸다.')
@@ -105,21 +111,24 @@ def main():
     # **덮지 않는다** — 사람의 판단이 CSV 일괄 적재보다 뒤에 있으면 안 된다.
     sql = """
         INSERT INTO merchant_category
-            (business_number, merchant_name, category2, source, created_at, updated_at)
-        VALUES (%s, %s, %s, %s, NOW(6), NOW(6))
+            (business_number, merchant_name, category2, source, nts_codes, created_at, updated_at)
+        VALUES (%s, %s, %s, %s, NULLIF(%s, ''), NOW(6), NOW(6))
         ON DUPLICATE KEY UPDATE
             category2  = IF(source = 'USER_CONFIRMED', category2, VALUES(category2)),
             -- **source 도 함께 올린다.** 같은 가맹점에 LLM 추정(LLM_GUESS)이 먼저 쌓여 있을 수
             -- 있는데, 분류만 사실로 바꾸고 출처를 그대로 두면 그 행은 여전히 '추정'이라
             -- 조회에서 걸러진다 — 값은 맞는데 안 붙는, 오류 없는 실패가 된다.
             source     = IF(source = 'USER_CONFIRMED', source, VALUES(source)),
+            -- **근거는 분류와 함께 움직인다**(V29). 분류만 갈아 끼우고 옛 코드를 두면 그 행은
+            -- 새 분류에 옛 근거를 붙인 채로 굳고, 재계산이 그 옛 코드를 읽어 도로 뒤집는다.
+            nts_codes  = IF(source = 'USER_CONFIRMED', nts_codes, VALUES(nts_codes)),
             updated_at = IF(source = 'USER_CONFIRMED', updated_at, NOW(6))
     """
     try:
         with conn.cursor() as cur:
             cur.execute("SELECT COUNT(*) FROM merchant_category")
             before = cur.fetchone()[0]
-            cur.executemany(sql, [(b, n, m, SOURCE) for b, m, n in data])
+            cur.executemany(sql, [(b, n, m, SOURCE, c) for b, m, n, c in data])
             cur.execute("SELECT COUNT(*) FROM merchant_category")
             after = cur.fetchone()[0]
         conn.commit()

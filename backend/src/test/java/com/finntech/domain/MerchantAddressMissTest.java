@@ -19,7 +19,7 @@ class MerchantAddressMissTest {
 
     private static MerchantCategory row() {
         return new MerchantCategory("1048526046", "롯데아울렛 서울역점", "쇼핑",
-                MerchantCategory.Source.USER_CSV, null);
+                MerchantCategory.Source.USER_CSV, null, null);
     }
 
     @Test

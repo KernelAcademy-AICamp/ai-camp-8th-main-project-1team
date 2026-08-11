@@ -178,10 +178,19 @@ public class MerchantCategoryController {
                 if (other.getPaymentId().equals(paymentId)) continue;
                 // 사람이 이미 확정한 결제는 건드리지 않는다 — 남의 판단을 덮으면 안 된다.
                 if ("USER".equals(other.getCategory2Source())) continue;
-                String now = dictionary.lookup(other.getBusinessNumber(), other.getMerchantName())
+                // **본인의 표가 사전보다 먼저다**(V30). 사전의 값은 이제 전역 다수결이라,
+                // 내 표가 졌을 때 그대로 밀어 넣으면 **남의 다수결이 내 결제를 덮는다** —
+                // "본인에게만 적용"이라는 약속이 여기서 깨진다. 전역은 내가 아직 표를 안 던진
+                // 가맹점에만 붙는 기본값이다.
+                String mine = dictionary
+                        .voteOf(other.getBusinessNumber(), other.getMerchantName(), userId)
                         .orElse(null);
+                String now = mine != null ? mine
+                        : dictionary.lookup(other.getBusinessNumber(), other.getMerchantName())
+                                .orElse(null);
                 if (now == null || now.equals(other.getCategory2())) continue;
-                other.confirmCategory2(now, "DICT");
+                // 내 표로 고친 것은 내 판단이므로 그렇게 적는다 — 다음에 사전이 덮지 않는다.
+                other.confirmCategory2(now, mine != null ? "USER" : "DICT");
                 Category c2 = categories.findByCode(now)
                         .orElseGet(() -> categories.save(new Category(now, now)));
                 for (Consumption c : consumptions.findBySourcePaymentId(other.getPaymentId())) {
