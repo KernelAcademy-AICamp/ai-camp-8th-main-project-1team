@@ -3,6 +3,7 @@ package com.finntech.web;
 import com.finntech.service.PrivacyService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,10 +34,22 @@ public class PrivacyController {
         return privacyService.policy();
     }
 
-    /** 이용약관 요약 (정본: legal/terms-of-service.md). */
+    /** 이용약관 (정본: legal/terms-of-service.md). */
     @GetMapping("/terms")
     public PrivacyService.Terms terms() {
         return privacyService.terms();
+    }
+
+    /**
+     * 동의 항목 하나가 펼치는 문서 (정본: legal/consent-*.md).
+     *
+     * <p>가입 화면의 동의 넷 중 셋이 여기를 읽는다 — 개인(신용)정보 수집·이용, 고유식별정보
+     * 처리, 마케팅 수신. 예전에는 셋 다 개인정보 처리방침을 폈는데 그 방침에는 고유식별정보도
+     * 마케팅도 안 나온다.
+     */
+    @GetMapping("/consent/{id}")
+    public PrivacyService.PrivacyPolicy consent(@PathVariable String id) {
+        return privacyService.consent(id);
     }
 
     /** 수동 파기 트리거 (시연·운영용). 스케줄러와 동일한 로직을 탄다. */

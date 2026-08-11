@@ -23,16 +23,19 @@ export function MyPolicy() {
           <>
             <p className="h-title" style={{ marginTop: 0 }}>{policy.data.title}</p>
             <div className="card">
-              {policy.data.clauses.map((c) => (
-                <section key={c.title} style={{ marginBottom: 18 }}>
-                  <h2 style={{ fontSize: 15.5, fontWeight: 700, margin: '0 0 6px' }}>{c.title}</h2>
+              {/* 표제 없는 머리글도 한 절로 온다(방침 첫 문단). 빈 `h2`가 뜨지 않게 한다. */}
+              {policy.data.clauses.map((c, i) => (
+                <section key={c.title || i} style={{ marginBottom: 18 }}>
+                  {c.title && (
+                    <h2 style={{ fontSize: 15.5, fontWeight: 700, margin: '0 0 6px' }}>{c.title}</h2>
+                  )}
                   <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: 'var(--t2)', whiteSpace: 'pre-line' }}>
                     {c.body}
                   </p>
                 </section>
               ))}
             </div>
-            <div className="pv">{policy.data.notice}</div>
+            {policy.data.notice && <div className="pv">{policy.data.notice}</div>}
           </>
         )}
         <div className="spacer" />
