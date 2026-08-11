@@ -71,18 +71,110 @@ class PrivacyFlowTest {
                 Enums.DataSource.USER_INPUT));
     }
 
+    /**
+     * <b>화면에 실려 나가는 정본이 저장소의 정본과 같은 글자인지</b> 지킨다.
+     *
+     * <p>화면은 {@code legal/} 를 직접 읽지 못한다. 운영이 도커로 도는데 백엔드 이미지의 빌드
+     * 맥락이 {@code ./backend} 라 {@code ../legal} 이 이미지 안으로 안 들어오기 때문이다
+     * (맥락을 저장소 루트로 넓히면 4.7GB 를 도커 데몬에 보내게 된다). 그래서 정본을
+     * {@code backend/src/main/resources/legal/} 에 <b>함께 싣는다.</b>
+     *
+     * <p>사본이 하나 생겼으니 <b>갈라질 수 있다.</b> 그 갈라짐을 사람 눈에 맡기지 않는다 —
+     * 한 글자라도 다르면 여기서 깨진다. 예전에 손으로 옮겨 적던 요약이 정확히 그렇게 갈라졌다
+     * (2026-08-10: 정본은 이름·CI·계좌번호를 수집한다고 적는데 화면은 "수집하지 않습니다"라고
+     * 말하고 있었다 — 이용자가 운영사가 쓰지도 않은 방침에 동의하는 셈이었다).
+     */
     @Test
-    @DisplayName("방침 1번 — 수집 항목이 4개를 넘지 않고, 식별정보 필드가 존재하지 않는다")
-    void policyDeclaresOnlyFourFields() {
-        PrivacyService.PrivacyPolicy p = privacyService.policy();
-        assertEquals(7, p.clauses().size(), "7개 조항 전부 고지되어야 한다");
-
-        String collected = p.clauses().get(0).body();
-        for (String forbidden : List.of("실명", "계좌번호", "카드번호", "주민등록번호")) {
-            assertTrue(collected.contains(forbidden),
-                    "수집하지 않는다는 사실을 명시해야 한다: " + forbidden);
+    @DisplayName("이미지에 실린 법무 정본이 저장소 정본과 한 글자도 다르지 않다")
+    void shippedLegalDocumentsMatchTheCanonicalFiles() throws java.io.IOException {
+        // 시험의 작업 디렉터리는 `backend/` 다(OneDoorTest 와 같은 관습).
+        for (String name : List.of("privacy-policy", "terms-of-service",
+                "consent-credit-info", "consent-unique-id", "consent-marketing")) {
+            String canonical = java.nio.file.Files.readString(
+                    java.nio.file.Path.of("../legal/" + name + ".md"));
+            String shipped = java.nio.file.Files.readString(
+                    java.nio.file.Path.of("src/main/resources/legal/" + name + ".md"));
+            assertEquals(canonical, shipped,
+                    name + ".md 가 정본과 다르다 — `cp legal/" + name + ".md "
+                            + "backend/src/main/resources/legal/` 로 맞춰라");
         }
-        // 엔티티에 실제로 그런 필드가 없는지 — 문서와 스키마가 어긋나면 방침이 거짓말이 된다
+    }
+
+    /**
+     * <b>정본이 절째로 화면까지 간다</b> — 요약해서 덜어내지 않는다.
+     *
+     * <p>가입 화면의 '상세보기'가 읽는 것이 이 응답이다. 조문이 하나라도 빠지면 이용자는 못 본
+     * 조문에 동의하게 된다.
+     */
+    @Test
+    @DisplayName("방침 머리글+7절·약관 9조가 빠짐없이 내려간다")
+    void everySectionReachesTheScreen() {
+        PrivacyService.PrivacyPolicy p = privacyService.policy();
+        assertEquals("모아 서비스 개인정보처리방침", p.title());
+        // 첫 덩이는 표제 없는 머리글("운영사는 …을 준수하며")이다. 이걸 버리면 화면에서 통째로
+        // 사라지므로 절로 싣는다 — 그래서 7절 + 머리글 = 8이다.
+        assertEquals(8, p.clauses().size(), "머리글 한 덩이와 1~7절");
+        assertEquals("", p.clauses().get(0).title(), "머리글에는 표제가 없다");
+        assertTrue(p.clauses().get(1).title().startsWith("1."), "절 번호가 정본 그대로여야 한다");
+
+        PrivacyService.Terms t = privacyService.terms();
+        assertEquals("모아 서비스 이용약관", t.title());
+        assertEquals(9, t.clauses().size(), "약관은 제1조~제9조다");
+        assertTrue(t.clauses().get(0).title().startsWith("제1조"), "장이 아니라 조로 쪼개야 한다");
+
+        // 빈 절이 화면에 뜨면 안 된다 — 약관의 `## 제1장` 같은 묶음 표제가 그대로 새면 그렇게 된다.
+        for (var c : t.clauses()) assertFalse(c.body().isBlank(), "빈 조문: " + c.title());
+        for (var c : p.clauses()) assertFalse(c.body().isBlank(), "빈 절: " + c.title());
+
+        // 개정으로 새로 생긴 위탁 고지 — 사업자번호·가맹점명이 밖으로 나간다는 사실이다.
+        String all = p.clauses().stream().map(PrivacyService.Clause::body)
+                .reduce("", (a, b) -> a + "\n" + b);
+        assertTrue(all.contains("가맹점명") && all.contains("위탁"),
+                "가맹점명·사업자등록번호의 외부 위탁 고지가 화면까지 가야 한다");
+    }
+
+    /**
+     * <b>동의 항목 셋이 각자 제 문서를 편다</b> — 그리고 그 문서에 <b>받은 문장만</b> 들어 있다.
+     *
+     * <p>예전에는 셋 다 개인정보 처리방침을 폈는데, 그 방침에는 고유식별정보도 마케팅 수신도
+     * 한 번도 안 나온다. 동의 전에 그 내용을 읽게 하려고 만든 '상세보기'가 자기 얘기 없는
+     * 문서를 펴고 있었다.
+     */
+    @Test
+    @DisplayName("동의 문서 셋이 제 내용을 펴고, 덧붙은 문장이 없다")
+    void consentDocumentsCarryOnlyWhatWasGiven() {
+        var credit = privacyService.consent("credit-info");
+        assertEquals("개인(신용)정보 수집·이용 동의", credit.title());
+        assertTrue(credit.clauses().get(0).body().startsWith("수집·이용 항목"));
+        assertTrue(credit.clauses().get(0).body().contains("내외국인 정보"));
+
+        var uniqueId = privacyService.consent("unique-id");
+        assertEquals("고유식별정보 처리 동의", uniqueId.title());
+        assertTrue(uniqueId.clauses().get(0).body().contains("주민등록번호, 여권번호, 운전면허번호, 외국인등록번호"));
+
+        var marketing = privacyService.consent("marketing");
+        assertEquals("지킴이 알림, 혜택 수신", marketing.title());
+        assertTrue(marketing.clauses().get(0).body().contains("마이페이지 설정"));
+
+        // **덧붙이지 않는다.** 주석·해설 한 줄도 붙이지 않기로 한 문서다(사용자 지시 2026-08-11).
+        // `notice` 가 비어 있어야 화면 아래 회색 줄이 아예 안 뜬다.
+        for (var d : List.of(credit, uniqueId, marketing,
+                privacyService.policy())) {
+            assertEquals("", d.notice(), "정본 밖의 문장을 붙이면 안 된다");
+        }
+        assertEquals("", privacyService.terms().notice());
+    }
+
+    /**
+     * <b>오늘의 스키마가 실제로 무엇을 들고 있는지</b> 지킨다 — 방침이 허용하는 범위와는 별개다.
+     *
+     * <p>새 정본은 이름·휴대폰번호·계좌번호까지 수집할 수 있다고 적지만, <b>지금 구현은 그것들을
+     * 저장하지 않는다.</b> 닉네임과 가상 CI, 출생연도만 든다. 그 상태를 못 박아 두어, 식별정보
+     * 칸이 <b>모르는 사이에</b> 생기는 것을 막는다. 일부러 넣는 날에는 이 시험을 같이 고치면 된다.
+     */
+    @Test
+    @DisplayName("소비·사용자 엔티티에 식별정보 칸이 슬그머니 생기지 않는다")
+    void entitiesHoldNoIdentifiers() {
         for (var f : Consumption.class.getDeclaredFields()) {
             String n = f.getName().toLowerCase();
             assertFalse(n.contains("name") || n.contains("account") || n.contains("card")

@@ -15,7 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,22 +33,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  * (사용자 결정 2026-07-31) — 카테고리로 실패까지 가르면 카테고리 수만큼 실패 확률이 오른다.
  */
 /*
- * ★ '오늘'을 고정한다 (2026-08-10 추가).
- *
- * 아래 seed() 가 결제 날짜를 2026-07-10~16 로 박아 두는데, 기준 지출을 세는 창은
- * **오늘부터 30일**이다. 그래서 시각을 안 고정하면 날짜가 흐르는 것만으로 시험이 깨진다 —
- * 실제로 그렇게 깨졌다. 2026-08-10 에는 창이 7/11~8/10 이라 7/10 결제 5만원 한 건이
- * 밖으로 밀려나 세 시험이 전부 정확히 5만원씩 어긋났다(300,000 기대에 250,000).
- * 그대로 두면 매일 한 건씩 더 떨어지고, 8/14 쯤에는 카페 이력이 0 이 되어
- * "소비 이력이 없어 기준 지출을 잡을 수 없어요" 예외로 다르게 터진다.
- *
- * 원칙 3(재현성)이 "엔진은 now() 를 직접 읽지 않고 Clock 을 주입받는다"인데, 이 시험이
- * 그 주입을 안 쓰고 있었다. finntech.demo.today 가 AppConfig.clock 을 고정하므로
- * 이 클래스에만 걸어 둔다 — 프로파일에 넣으면 실시간을 전제한 다른 시험이 흔들린다.
- *
- * 날짜는 seed() 의 결제가 모두 창 안에 들어오는 값으로 고른다(창 = 7/4~8/3).
+ * 시각 고정(finntech.demo.today)은 여기 걸지 않는다 — seed() 가 이미 오늘 기준 상대 날짜를
+ * 쓰기 때문이다. 둘을 같이 쓰면 **시드는 실시간으로 흐르는데 창만 과거에 멈춰** 한 달쯤 뒤에
+ * 결제가 전부 창 밖으로 나간다. 시드와 창은 같은 시간을 봐야 한다.
  */
-@SpringBootTest(properties = "finntech.demo.today=2026-08-03")
+@SpringBootTest
 @ActiveProfiles("test")   // 인메모리 H2 — 파일 DB 를 쓰면 낡은 스키마가 남는다
 @Transactional
 class ChallengeCategoryCapTest {
@@ -67,14 +56,20 @@ class ChallengeCategoryCapTest {
         Category cafe = categories.findByCode("CCAP_CAFE")
                 .orElseGet(() -> categories.save(new Category("CCAP_CAFE", "카페")));
         consumptionRepository.deleteByUserIdAndSource(USER, Enums.DataSource.DUMMY_SEED);
-        // 창(7/4~8/3) 안에 배달 20만, 카페 10만
-        for (int i = 0; i < 4; i++) {
+        // **날짜를 오늘 기준으로 잡는다.** 예전에는 `2026-07-10` 처럼 박아 두고 주석에
+        // "창(7/4~8/3)" 이라고 적었는데, 기준선 창은 `now.minusDays(30)` 으로 **매일 밀린다.**
+        // 그래서 2026-08-10 이 되자 7/10 하나가 창 밖으로 떨어져 배달 기준선이 20만 → 15만이
+        // 됐고 시험 셋이 한꺼번에 깨졌다. 코드는 멀쩡한데 달력이 바뀌어서 깨지는 시험이다.
+        //
+        // 창 한복판(20일 전~14일 전)에 두면 달력이 어디에 있든 안 걸린다.
+        LocalDate today = LocalDate.now();
+        for (int i = 0; i < 4; i++) {                       // 배달 20만
             consumptionRepository.save(new Consumption(USER, delivery, new BigDecimal("50000"),
-                    LocalDateTime.of(2026, 7, 10 + i, 19, 0), false, Enums.DataSource.DUMMY_SEED));
+                    today.minusDays(20 - i).atTime(19, 0), false, Enums.DataSource.DUMMY_SEED));
         }
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 2; i++) {                       // 카페 10만
             consumptionRepository.save(new Consumption(USER, cafe, new BigDecimal("50000"),
-                    LocalDateTime.of(2026, 7, 15 + i, 15, 0), false, Enums.DataSource.DUMMY_SEED));
+                    today.minusDays(15 - i).atTime(15, 0), false, Enums.DataSource.DUMMY_SEED));
         }
     }
 

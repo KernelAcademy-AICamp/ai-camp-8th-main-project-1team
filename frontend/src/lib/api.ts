@@ -1099,8 +1099,16 @@ export const api = {
     del<{ deletedCount: number }>(`/api/users/${userId}/data`),
 
   privacyPolicy: () => get<PrivacyPolicy>('/api/privacy/policy'),
-  /** 이용약관 요약. 정본은 legal/terms-of-service.md — 방침과 같은 모양으로 내려온다. */
+  /** 이용약관. 정본은 legal/terms-of-service.md — 방침과 같은 모양으로 내려온다. */
   privacyTerms: () => get<PrivacyPolicy>('/api/privacy/terms'),
+  /**
+   * 동의 항목 하나가 펼치는 문서. 정본은 legal/consent-{id}.md.
+   *
+   * 가입 화면의 동의 넷 중 셋이 이걸 읽는다. 예전에는 셋 다 개인정보 처리방침을 폈는데,
+   * 그 방침에는 고유식별정보도 마케팅 수신도 안 나온다 — 상세보기를 눌러도 자기 얘기가
+   * 없는 문서가 떴다.
+   */
+  privacyConsent: (id: string) => get<PrivacyPolicy>(`/api/privacy/consent/${id}`),
   categories: () => get<CategoryView[]>('/api/categories'),
   addConsumption: (input: ConsumptionInput) => post<{ id: number }>('/api/consumption', input),
 
