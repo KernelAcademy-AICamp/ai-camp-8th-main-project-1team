@@ -1,0 +1,58 @@
+-- 지킴이 원장 반영이 회차마다 창 전체를 훑고 있었다 (2026-08-11)
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 무엇이 잘못 돌고 있었나
+--
+-- `GuardianService.syncFromMyData` 는 진행 중 챌린지의 **기간 전체**를 훑으면서, 소비 한 건마다
+-- "이미 원장에 넣었나"를 묻는다.
+--
+--     for (Consumption c : consumptionRepository.findInRange(userId, from, to))   // 창 전체
+--         if (txRepository.existsByUserIdAndSourceConsumptionId(userId, c.getId())) continue;
+--
+-- 새 결제가 하나도 없어도 창이 통째로 돈다 — 멱등을 이 질의로 얻고 있어서, 이미 넣은 것을
+-- 다시 확인하는 것이 곧 일이다. 그런데 `guardian_transaction` 에 붙은 인덱스는 V6 의 셋뿐이고
+-- **`source_consumption_id` 를 덮는 것이 없다.**
+--
+--     idx_gtx_challenge_date  (challenge_id, counted_date)
+--     idx_gtx_user_received   (user_id, received_at)
+--     idx_gtx_undo            (state, undo_deadline)
+--
+-- 그래서 MySQL 은 `idx_gtx_user_received` 의 앞칸(`user_id`)까지만 타고, 그 사용자의 원장 행을
+-- **전부 꺼내어** `source_consumption_id` 를 하나씩 맞춘다. 창 안의 소비가 N 건이고 그 사용자의
+-- 원장이 M 행이면 **회차마다 N × M** 이다. 30일 챌린지 한 개면 N 도 M 도 수십~수백이라,
+-- 한 사용자 한 회차에 수만 번의 행 접근이 된다.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 왜 지금 고치나 — 부르는 자리가 늘었다
+--
+-- 이 경로에는 진입로가 셋이다.
+--
+--     ① 5분 배치            MyDataSyncScheduler:70  — 새 결제가 0건이어도 무조건 부른다
+--     ② 지킴이 화면 진입      guardian.tsx:44 → POST /api/guardian/sync
+--     ③ 화면을 보고 있는 동안  guardian.tsx 의 폴링(2026-08-11 신설)
+--
+-- ③ 이 생기기 전에도 ①이 5분마다 내던 값이라 그 자체로 손해였다. ③ 은 새 결제가 있을 때만
+-- `load()` 를 타므로 **횟수를 크게 늘리지는 않지만**, 셋이 같은 질의를 쓰는 이상 받치는
+-- 인덱스가 없다는 사실이 그대로 남는다. 진입로를 늘리기 전에 바닥을 먼저 깐다.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 왜 (user_id, source_consumption_id) 인가
+--
+-- 질의 술어가 정확히 그 둘의 등치다(`existsByUserIdAndSourceConsumptionId`). 두 칸을 다 덮으면
+-- 행을 꺼낼 필요 없이 인덱스에서 끝난다 — N × M 이 N 번의 탐색이 된다.
+--
+-- 칸 순서는 `user_id` 가 앞이다. 뒤집으면 `source_consumption_id` 단독 조회에는 좋지만 그런
+-- 질의가 없고, 이 순서라야 "한 사용자의 원장"이라는 다른 접근에도 앞칸이 쓸모 있다.
+--
+-- `source_consumption_id` 는 NULL 을 받는다(마이데이터에서 오지 않은 거래에는 원본이 없다).
+-- MySQL 인덱스는 NULL 을 담으므로 조회에는 지장이 없다.
+--
+-- **유일키가 아니라 일반 인덱스로 낸다.** 질의가 원하는 것은 탐색이지 제약이 아니다. 유일키는
+-- 지금 없던 불변식을 새로 거는 일이라, 이미 쌓인 행에 하나라도 겹침이 있으면 마이그레이션이
+-- 기동을 막는다. 멱등은 이미 `existsBy...` 가 코드에서 지키고 있고, 그것이 느려서 고치는
+-- 중이다 — 성능 수정이 스키마 제약을 겸하면 실패 자리가 둘로 는다.
+--
+-- 새 파일로 낸다. V6 은 이미 운영에 적용됐고 Flyway 가 파일 내용 전체로 체크섬을 계산하므로
+-- 주석 한 글자도 고치지 않는다(CLAUDE.md 규칙 3).
+
+CREATE INDEX idx_gtx_user_source ON guardian_transaction (user_id, source_consumption_id);

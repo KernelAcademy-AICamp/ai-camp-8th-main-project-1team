@@ -800,7 +800,12 @@ public class MyDataLinkService {
                     org.springframework.http.HttpStatus.FORBIDDEN, "개인정보 수집 동의가 필요합니다");
         }
         int added = 0;
-        MerchantCategoryService.Snapshot dict = merchantCategoryService.snapshot();
+        // **사전은 새 결제를 처음 만났을 때 만든다.** {@code snapshot()} 은 merchant_category 를
+        // 통째로 읽는데(findAll), 증분 회차는 대개 새 결제가 0건이라 그 표를 읽고 그냥 버렸다.
+        // 이 메서드는 5분 배치가 **연동된 사용자 전원**에게 부르므로, 더미까지 합치면 아무 일도
+        // 없는 회차마다 사전을 사람 수만큼 읽고 있었다. 연동(수천 건)에서는 첫 결제에서 바로
+        // 만들어지므로 원래의 이점(건마다 질의하지 않기)은 그대로다.
+        MerchantCategoryService.Snapshot dict = null;
         for (UserCardCompany link : userCardCompanyRepository.findByUserIdOrderByCompanyIdAsc(userId)) {
             LocalDateTime since = link.getLastRenewalTime();
             LocalDateTime maxDate = since;
@@ -808,6 +813,7 @@ public class MyDataLinkService {
                 for (PaymentView payment : card.payments()) {
                     // 멱등 — 계정별 키로 확인한다. 제공자 id로 보면 남의 행을 내 것으로 착각한다.
                     if (userPaymentRepository.existsById(UserPayment.rowId(userId, payment.id()))) continue;
+                    if (dict == null) dict = merchantCategoryService.snapshot();
                     var fromDict = dict.lookup(payment.businessNumber(), payment.merchantName());
                     String mid = fromDict.orElseGet(
                             () -> industryMapper.midOf(payment.industryCode(), payment.businessNumber()));
@@ -838,9 +844,14 @@ public class MyDataLinkService {
             link.setLastRenewalTime(maxDate);      // 다음 증분 기준 전진
             userCardCompanyRepository.save(link);
         }
+        // **관측은 여기서 하지 않는다.** 예전에는 여기서도 한 번 돌았는데, 이 메서드를 부르는 곳은
+        // `renew` 하나뿐이고 그 바로 뒤 `runFollowUps` 가 `observeAll` 을 무조건 돌린다(:284).
+        // 즉 여기 것은 원장을 통째로 한 번 더 읽고서 곧바로 덮였다. 게다가 여기는 분류가 고쳐지기
+        // **전**이라 뒤엣것보다 낡은 관측이다 — 남길 이유가 없다.
+        // 자물쇠에 막혀 후속이 건너뛰어진 회차에는 관측도 같이 밀리지만, `observeAll` 은 새 결제를
+        // 조건으로 걸지 않으므로 다음 회차가 그대로 이어받는다.
         if (added > 0) {
             reportRepository.deleteByUserId(userId);   // 새 결제 반영 위해 리포트 캐시 무효화
-            observeBusinessNumbers(userId);
         }
         return added;
     }
