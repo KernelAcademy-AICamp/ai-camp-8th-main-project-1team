@@ -250,89 +250,130 @@ public class PrivacyService {
     }
 
     /**
-     * 개인정보 처리방침 화면용 요약.
+     * 개인정보 처리방침 — <b>정본을 그대로 내려보낸다</b>({@code legal/privacy-policy.md}).
      *
-     * <p>정본은 {@code legal/privacy-policy.md}이며(『/reference』 예시 양식을 우리 관행으로 변형),
-     * 이 메서드는 그 정본의 핵심 조항을 화면(`GET /api/privacy/policy`)에 그대로 내려주기 위한 요약이다.
-     * 정본을 고치면 이 요약도 정합시킨다.
+     * <p><b>왜 요약을 그만뒀나.</b> 예전에는 여기 손으로 쓴 요약이 들어 있었다. 화면은 정본
+     * 파일이 아니라 이 문자열을 읽으므로, <b>정본을 고쳐도 화면은 안 바뀐다.</b> 실제로 갈라졌다
+     * — 2026-08-10 개정 뒤 정본은 이름·CI·DI·계좌번호를 수집 항목으로 명시하는데 화면은 여전히
+     * "실명·계좌번호는 수집하지 않습니다"라고 말하고 있었다. 이용자가 <b>운영사가 쓰지도 않은
+     * 방침에 동의</b>하는 셈이다.
+     *
+     * <p>그래서 사람이 옮겨 적는 자리를 없앴다. 정본을 읽어 절로 쪼개 내려보내므로 옮겨 적을
+     * 일이 없고, 어긋날 자리도 없다.
      */
     public PrivacyPolicy policy() {
-        return new PrivacyPolicy(
-                "소비내역 기록 기능 개인정보 처리방침",
-                List.of(
-                        new Clause("1. 수집 항목",
-                                "소비 카테고리, 금액, 날짜, 계획소비 여부, 출생연도(마이데이터 연동 시), "
-                                        + "가맹점명(마이데이터 연동 시) (6개 항목)\n"
-                                        + "※ 서비스는 무엇을 샀는지(품목)를 알지 못합니다 — 카드 결제가 주는 것은 가맹점과 업종까지이며, "
-                                        + "소비 종류는 업종코드를 대조표로 옮겨 추정합니다. 결제 위치(주소·좌표)도 받지 않습니다.\n"
-                                        + "※ 실명·이메일·연락처·계좌번호·카드번호는 수집하지 않으며, 계정은 닉네임 기반 익명 계정입니다.\n"
-                                        + "※ 마이데이터(가상) 연동 시 본인인증 신원(이름·주민등록번호 앞 7자리·휴대폰번호)은 "
-                                        + "가상 CI 계산에만 쓰고 원문은 저장하지 않습니다(전화번호 미저장). CI는 실 NICE 인증값이 아닌 "
-                                        + "가상 생성값이며, 불러온 카드·결제내역과 함께 삭제권 대상입니다.\n"
-                                        + "※ 출생연도는 주민등록번호 앞 7자리에서 연도만 파생해 저장하며(월·일·성별 미저장), "
-                                        + "금융상품 비교에서 나이 자격 조건을 맞춰 보는 용도로만 씁니다. CI와 함께 삭제권 대상입니다."),
-                        new Clause("2. 수집 목적",
-                                "소비 패턴 분석·소비건전성지수·절약 리포트·금융상품 비교·이상소비 탐지 (본 서비스 내에서만 이용).\n"
-                                        + "출생연도는 나이 자격 조건 확인에만 씁니다. 직업·소득자격·병역·가족관계는 알지 못하므로 "
-                                        + "그런 자격이 필요한 상품(군 장병·공무원·기초생활수급자·자녀 조건 등)은 비교 대상에서 제외합니다.\n"
-                                        // 정본(legal/privacy-policy.md)과 **같은 사실**을 적는다. 예전에는
-                                        // "가맹점명은 외부로 나가지 않는다"고 적혀 있었는데, 업종 분류 통로가
-                                        // 상호를 모델에 보내므로 사실과 달랐다(2026-08-07 재감사에서 드러났다).
-                                        + "외부 AI를 쓰는 곳은 둘입니다. ① 리포트·알림 문장 생성 — 개인을 식별할 수 없는 "
-                                        + "집계 수치만 전달합니다. ② 가맹점 업종 분류 — 가맹점명만 전달하며, 이용자 식별자·"
-                                        + "금액·일시·사업자번호는 전달하지 않습니다. 아직 업종이 정해지지 않은 상호만 보내고, "
-                                        + "한 번 알아낸 상호는 다시 보내지 않습니다. 광고·마케팅·AI 학습에는 이용하지 않습니다."),
-                        new Clause("3. 보유 및 이용 기간",
-                                "직접 입력한 소비내역은 입력일로부터 " + (retentionDays / 30) + "개월. 기간 경과 시 매일 배치로 자동 파기합니다.\n"
-                                        + "마이데이터로 불러온 카드·결제내역과 CI는 주기 자동 파기 대상이 아니라 "
-                                        + "삭제 요청·동의 철회 시까지 보유하며, 그때 즉시 파기합니다. 프로젝트 종료 시 전량 파기합니다."),
-                        new Clause("4. 파기 절차 및 방법",
-                                "보유기간이 지난 기록은 배치 작업으로 삭제하며, 해당 소비내역에서 파생된 이상소비 경고·리포트 캐시도 "
-                                        + "함께 삭제합니다. 삭제 사실은 감사로그에 기록되어 사후 검증이 가능합니다."),
-                        new Clause("5. 제3자 제공 및 안전성 확보조치",
-                                // 정본(legal/privacy-policy.md §4)과 **같은 사실**을 적는다.
-                                // 예전에는 "제공·위탁 없음, 국외 이전 없음"이라고 적혀 있었는데,
-                                // 리포트 문장 생성과 업종 분류가 국외 AI 를 부르므로 사실이 아니었다.
-                                // 정본의 §3(가맹점명 전송)과도 정면으로 모순이었다(2026-08-08 감사).
-                                "판매·광고 목적의 제3자 제공은 없습니다. 다만 생성형 AI 서비스 제공자에게 두 가지를 "
-                                        + "처리위탁하며 이는 국외 이전에 해당합니다 — ① 리포트·알림 문장 생성(개인을 식별할 수 없는 "
-                                        + "집계 수치만), ② 가맹점 업종 분류(가맹점명만). 이용자 식별자·금액·일시·카드정보·사업자번호는 "
-                                        + "보내지 않고, 한 번 알아낸 상호는 다시 보내지 않으며, AI 학습에 이용하지 않는 조건으로만 씁니다. "
-                                        + "그 밖의 개인정보는 국외로 이전하지 않습니다. "
-                                        + "전송 구간 암호화(TLS)·저장 암호화, 접속·처리 기록의 해시체인+TSA 감사로그로 위·변조를 방지합니다."),
-                        new Clause("6. 정보주체의 권리",
-                                "언제든지 본인이 입력한 기록의 열람·내보내기·삭제를 요청할 수 있습니다. "
-                                        + "예시(더미) 데이터는 개인정보가 아니므로 열람·삭제 대상에서 제외됩니다."),
-                        new Clause("7. 동의 거부권 · 해당 없는 항목",
-                                "동의를 거부할 수 있으며, 이 경우 예시 데이터 기반 데모 모드로 이용 가능합니다.\n"
-                                        + "본 서비스는 쿠키·결제·송금 기능이 없습니다. 마이데이터로 불러온 결제내역에는 가맹점 위치(더미 좌표)가 "
-                                        + "포함되나 이는 합성 데이터이며, 실 사용자의 위치정보는 수집하지 않습니다.")
-                ),
-                "본 서비스는 학습용 포트폴리오 프로토타입이며 실제 금융거래·결제·송금 기능을 제공하지 않고, "
-                        + "표시되는 금융상품은 실재하지 않는 더미 상품입니다. 방침 전문: legal/privacy-policy.md");
+        Document d = LEGAL.get("privacy-policy");
+        return new PrivacyPolicy(d.title(), d.clauses(), "");
     }
 
     /**
-     * 이용약관 화면용 요약. 정본은 {@code legal/terms-of-service.md}.
-     * 발표에서 중요한 제8조(금융 자문·중개가 아님)를 화면에서 바로 보여주기 위함이다.
+     * 이용약관 — <b>정본을 그대로 내려보낸다</b>({@code legal/terms-of-service.md}).
+     *
+     * <p>가입 화면의 '상세보기'가 읽는 것이 이것이다. {@link #policy()} 와 같은 이유로 요약을
+     * 두지 않는다 — 개정으로 조문이 아홉 개로 바뀌었을 때 손으로 쓴 요약은 <b>없어진 제8조·
+     * 제10조를 인용</b>하고 있었다.
      */
     public Terms terms() {
-        return new Terms(
-                "소비·저축 어드바이저 이용약관",
-                List.of(
-                        new Clause("제4조 (이용계약)",
-                                "닉네임 익명 계정으로 이용하며 실명·이메일·비밀번호를 요구하지 않습니다. "
-                                        + "마이데이터 연동을 위한 가상 본인인증은 마이데이터 시뮬레이션 연동 확인 목적이며 "
-                                        + "금융 라이선스 본인확인 서비스가 아닙니다. 미동의 시에도 데모 모드로 모든 기능을 이용할 수 있습니다."),
-                        new Clause("제8조 (금융 자문·중개가 아님)",
-                                "표시되는 금융상품은 실재하지 않는 더미 상품이며 실제 계약·수수료가 발생하지 않아 "
-                                        + "금융소비자보호법상 판매·중개·자문에 해당하지 않습니다. 실제 결제·송금·계좌연동을 제공하지 않으며, "
-                                        + "마이데이터 연동은 가상 제공자에 대한 조회 시뮬레이션입니다."),
-                        new Clause("제10조 (책임의 제한)",
-                                "학습용 프로토타입으로 무료 제공되며 데이터의 영구 보존을 보증하지 않습니다. "
-                                        + "추천·리포트·알림은 참고자료이며 실제 금융 의사결정의 근거로 사용해서는 안 됩니다.")
-                ),
-                "약관 전문: legal/terms-of-service.md");
+        Document d = LEGAL.get("terms-of-service");
+        return new Terms(d.title(), d.clauses(), "");
+    }
+
+    /**
+     * 동의 항목 하나가 펼치는 문서 — <b>정본을 그대로 내려보낸다</b>.
+     *
+     * <p>가입 화면의 동의 항목 넷 중 셋은 각자 다른 문서를 편다. 예전에는 셋 다 개인정보
+     * 처리방침을 폈는데, 그 방침에는 <b>고유식별정보도 마케팅 수신도 한 번도 안 나온다.</b>
+     * 상세보기를 눌러도 자기 얘기가 없는 문서가 떴다는 뜻이다.
+     *
+     * @param id {@code credit-info} · {@code unique-id} · {@code marketing}
+     */
+    public PrivacyPolicy consent(String id) {
+        Document d = LEGAL.get("consent-" + id);
+        if (d == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "그런 동의 문서는 없습니다: " + id);
+        return new PrivacyPolicy(CONSENT_TITLES.get(id), d.clauses(), "");
+    }
+
+    // ======================================================================
+    //  법무 정본 읽기
+    // ======================================================================
+
+    /** 정본 한 편 — 제목과 절. */
+    private record Document(String title, List<Clause> clauses) {}
+
+    /**
+     * 동의 문서의 제목 — <b>화면의 동의 항목 이름</b>을 그대로 쓴다.
+     *
+     * <p>파일에 제목 줄을 넣지 않는 이유는 그 문서들이 <b>받은 문장만</b> 담기 때문이다.
+     * 제목까지 파일에 적으면 원문에 없던 줄이 하나 늘어난다.
+     */
+    private static final Map<String, String> CONSENT_TITLES = Map.of(
+            "credit-info", "개인(신용)정보 수집·이용 동의",
+            "unique-id", "고유식별정보 처리 동의",
+            "marketing", "지킴이 알림, 혜택 수신");
+
+    /**
+     * 기동할 때 한 번 읽어 둔다. 방침·약관·동의서는 배포 중에 안 바뀌므로 요청마다 파일을 열
+     * 이유가 없다.
+     *
+     * <p><b>왜 저장소 루트가 아니라 리소스에서 읽나.</b> 운영은 도커로 도는데 백엔드 이미지의
+     * 빌드 맥락이 {@code ./backend} 라 {@code ../legal} 이 이미지 안으로 안 들어온다. 맥락을
+     * 저장소 루트로 넓히면 4.7GB 를 도커 데몬에 보내게 된다. 그래서 정본을 리소스로 <b>함께
+     * 싣고</b>, 루트의 정본과 한 글자라도 다르면 시험이 깨지게 했다({@code PrivacyFlowTest}).
+     */
+    private static final Map<String, Document> LEGAL = Map.of(
+            "privacy-policy", load("privacy-policy"),
+            "terms-of-service", load("terms-of-service"),
+            "consent-credit-info", load("consent-credit-info"),
+            "consent-unique-id", load("consent-unique-id"),
+            "consent-marketing", load("consent-marketing"));
+
+    /**
+     * 정본을 화면용 절로 쪼갠다. <b>글자는 하나도 더하지도 빼지도 않는다.</b>
+     *
+     * <p>규칙은 셋이다.
+     * <ul>
+     *   <li>{@code # } 한 줄은 문서 제목이다(없으면 절 제목도 없이 통째로 한 덩이가 된다)</li>
+     *   <li>표제 앞에 오는 <b>머리글도 절이 된다</b> — 제목만 없다. 이걸 버리면 방침 첫
+     *       문단("운영사는 …을 준수하며")이 화면에서 통째로 사라진다</li>
+     *   <li>내용 없는 표제는 버린다 — 약관의 {@code ## 제1장 총칙} 같은 묶음이다. 남기면 빈
+     *       절이 뜬다</li>
+     * </ul>
+     */
+    private static Document load(String name) {
+        String md;
+        try (var in = PrivacyService.class.getResourceAsStream("/legal/" + name + ".md")) {
+            if (in == null) throw new IllegalStateException("법무 정본이 빠졌다: " + name);
+            md = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("법무 정본을 못 읽었다: " + name, e);
+        }
+
+        String title = "";
+        List<Clause> clauses = new java.util.ArrayList<>();
+        String heading = "";                       // 머리글은 제목 없는 절이다
+        StringBuilder body = new StringBuilder();
+
+        for (String line : md.split("\n", -1)) {
+            if (!line.startsWith("#")) {
+                body.append(line).append('\n');
+                continue;
+            }
+            if (!body.toString().isBlank()) {
+                clauses.add(new Clause(heading, body.toString().strip()));
+            }
+            body.setLength(0);
+            String text = line.replaceFirst("^#+\\s*", "").strip();
+            if (line.startsWith("# ")) {           // 문서 제목 — 절이 아니다
+                title = text;
+                heading = "";
+            } else {
+                heading = text;
+            }
+        }
+        if (!body.toString().isBlank()) {
+            clauses.add(new Clause(heading, body.toString().strip()));
+        }
+        return new Document(title, List.copyOf(clauses));
     }
 
     public record Clause(String title, String body) {}
