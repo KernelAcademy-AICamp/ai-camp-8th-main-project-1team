@@ -7,7 +7,10 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ApplyApp } from './ApplyApp';
-import './ops.css';
+// 사용자 앱과 **같은 스타일**을 쓴다 — 같은 서비스인데 겉모습이 다르면 여기가 어디인지 모른다.
+// `ops.css` 는 admin 화면이 계속 쓰므로 그대로 두고, 이 화면만 갈아탄다(클래스 이름이 겹친다).
+import '../styles/tokens.css';
+import '../styles/app.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode><ApplyApp /></StrictMode>,
