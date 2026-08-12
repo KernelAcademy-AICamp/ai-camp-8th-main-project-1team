@@ -21,6 +21,41 @@ public class MyDataClient {
         this.client = myDataRestClient;
     }
 
+    /** 카드 한 장 — 카드사·상품·표시명과 그 카드의 명세서(5칸 CSV). */
+    public record SelfCardBody(Long cardCode, String displayName, String csv) {}
+
+    private record SelfImportBody(String name, String social7, String phone,
+                                  List<SelfCardBody> cards) {}
+
+    /**
+     * <b>승인된 실사용자 신청을 제공자에 적재한다</b> (설계서 Phase 3).
+     *
+     * <p>이 클래스의 다른 14개 메서드는 전부 {@code client.get()} — <b>읽기</b>다.
+     * 여기부터 쓰기가 셋 생긴다(적재·파기·카탈로그 조회는 읽기). <b>더 늘리지 않는다</b> —
+     * 늘어나는 순간 "본체는 제공자에서 읽기만 한다"는 성질이 사라지고, 제공자를 격리해 둔
+     * 이유가 흐려진다.
+     *
+     * <p>{@code /self/**} 는 제공자의 공유 시크릿 필터가 검사한다. 토큰은
+     * {@code MyDataClientConfig} 가 모든 요청에 기본 헤더로 붙인다.
+     */
+    public java.util.Map<String, Object> selfImport(String name, String social7, String phone,
+                                                    List<SelfCardBody> cards) {
+        return client.post()
+                .uri("/self/import")
+                .body(new SelfImportBody(name, social7, phone, cards))
+                .retrieve()
+                .body(new ParameterizedTypeReference<java.util.Map<String, Object>>() {});
+    }
+
+    /** 카드 상품 카탈로그 — 신청 화면이 카드사·카드를 고르게 하려면 목록이 필요하다. */
+    public List<java.util.Map<String, Object>> selfCardCatalog() {
+        List<java.util.Map<String, Object>> catalog = client.get()
+                .uri("/self/card-catalog")
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<java.util.Map<String, Object>>>() {});
+        return catalog == null ? List.of() : catalog;
+    }
+
     /** CI 존재 확인 — 본인인증 후 "마이데이터에 있는 회원인가". */
     public boolean checkCi(String ci) {
         Envelope<Boolean> response = client.get()
