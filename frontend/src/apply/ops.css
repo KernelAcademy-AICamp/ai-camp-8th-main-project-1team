@@ -2,20 +2,25 @@
  * 신청·관리 화면의 스타일 — 사용자 앱과 공유하지 않는다.
  *
  * 앱의 디자인 토큰(tokens.css)을 끌어오면 두 번들이 다시 묶여, 번들을 가른 이유가 사라진다.
- * 이 두 화면은 **일하는 화면**이라 예쁠 필요가 없고 읽기 쉬우면 된다.
- * 색은 앱과 같은 계열만 맞춰 둔다.
  */
 
 :root {
   --ink: #191F28;
-  --muted-ink: #6B7684;
+  --ink-2: #4E5968;
+  --muted-ink: #8B95A1;
   --line: #E5E8EB;
-  --bg: #F7F8FA;
+  --line-strong: #D1D6DB;
+  --bg: #FFFFFF;
   --paper: #FFFFFF;
+  --panel: #F9FAFB;
   --blue: #3182F6;
+  --blue-dark: #1B64DA;
   --red: #F04452;
+  --red-bg: #FEF2F3;
   --green: #15803D;
+  --green-bg: #F0FDF4;
   --amber: #B45309;
+  --amber-bg: #FFFBEB;
 }
 
 * { box-sizing: border-box; }
@@ -26,125 +31,186 @@ body {
   color: var(--ink);
   font-family: Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   font-size: 15px;
-  line-height: 1.55;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
-main { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+main { max-width: 1120px; margin: 0 auto; padding: 48px 24px 96px; }
 
-h1 { font-size: 22px; margin: 0 0 8px; }
-h2 { font-size: 16px; margin: 0 0 12px; }
+/* ── ① 제목과 설명 ───────────────────────────────────────────────────── */
+.page-title { margin: 0 0 40px; padding-bottom: 28px; border-bottom: 1px solid var(--line-strong); }
+.page-title h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 10px; }
+.page-title p { margin: 0; color: var(--ink-2); font-size: 15px; }
+
+/* ── ② 왼쪽 폼 · 오른쪽 안내 ─────────────────────────────────────────── */
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 56px; align-items: start; }
+.cols > .guide { border-left: 1px solid var(--line); padding-left: 40px; }
+@media (max-width: 860px) {
+  main { padding: 32px 16px 64px; }
+  .page-title h1 { font-size: 24px; }
+  .cols { grid-template-columns: 1fr; gap: 32px; }
+  .cols > .guide { border-left: 0; border-top: 1px solid var(--line); padding-left: 0; padding-top: 28px; }
+}
+
+.guide h2 { font-size: 15px; font-weight: 700; margin: 0 0 12px; }
+.guide ul { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 14px; }
+.guide li { padding: 3px 0; }
+.guide li b { color: var(--ink); }
+.guide + .guide { margin-top: 28px; }
+
+/* ── ③ 폼 ────────────────────────────────────────────────────────────── */
+.section { margin: 0 0 36px; }
+.section > h2 {
+  font-size: 18px; font-weight: 700; margin: 0 0 4px;
+}
+.section > .sub { margin: 0 0 20px; color: var(--ink-2); font-size: 14px; }
+
+.field { margin: 0 0 20px; }
+.field > label,
+.field > .label { display: block; font-weight: 600; font-size: 14px; margin: 0 0 8px; }
+.field .hint { font-weight: 400; color: var(--muted-ink); margin-left: 6px; }
+.field .help { margin: 8px 0 0; font-size: 13px; color: var(--muted-ink); }
+.field .help.warn { color: var(--amber); }
+
+input[type="text"], input[type="password"], input[type="file"], select, .input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+}
+input::placeholder { color: var(--muted-ink); }
+input:focus, select:focus {
+  outline: none; border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(49, 130, 246, .15);
+}
+input[type="file"] { padding: 10px 12px; }
+input[type="checkbox"] { width: auto; margin: 0 8px 0 0; accent-color: var(--blue); }
+
+/* 비밀번호 보기 토글 — 12자 이상을 오타 없이 넣으려면 확인할 길이 있어야 한다. */
+.with-toggle { position: relative; }
+.with-toggle input { padding-right: 52px; }
+.with-toggle button {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  border: 0; background: none; padding: 8px 10px; cursor: pointer;
+  color: var(--muted-ink); font-size: 13px; font-weight: 600;
+}
+.with-toggle button:hover { color: var(--ink-2); }
+
+/* 두 칸을 나란히 — 주민번호 앞 6 + 뒤 1 */
+.row { display: flex; gap: 8px; align-items: center; }
+.row > * { margin-top: 0; }
+.row .grow { flex: 1; min-width: 0; }
+.row .one { width: 64px; text-align: center; }
+.row .sep { color: var(--muted-ink); }
+.row .masked { color: var(--muted-ink); letter-spacing: 2px; }
+.row button { white-space: nowrap; }
+
+/* ── ④ 버튼 ──────────────────────────────────────────────────────────── */
+button {
+  padding: 12px 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit; font-weight: 600;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { background: var(--panel); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+
+button.primary {
+  width: 100%; padding: 15px 18px;
+  background: var(--blue); border-color: var(--blue); color: #fff;
+  font-size: 16px;
+}
+button.primary:hover:not(:disabled) { background: var(--blue-dark); border-color: var(--blue-dark); }
+button.ghost { width: 100%; border-style: dashed; color: var(--ink-2); }
+button.link {
+  border: 0; background: none; padding: 0; color: var(--blue);
+  text-decoration: underline; font-weight: 500;
+}
+
+.actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+.actions .primary { width: auto; padding: 12px 24px; font-size: 15px; }
+.actions select { width: auto; }
+
+/* ── 알림 ────────────────────────────────────────────────────────────── */
+.notice { padding: 13px 16px; border-radius: 8px; margin: 0 0 20px; font-size: 14px; }
+.notice.ok { background: var(--green-bg); color: var(--green); }
+.notice.error { background: var(--red-bg); color: var(--red); font-weight: 600; }
+.notice.warn { background: var(--amber-bg); color: var(--amber); }
 
 .muted { color: var(--muted-ink); }
 .small { font-size: 13px; }
-.warn { color: var(--amber); }
-.ok { color: var(--green); }
-.error { color: var(--red); font-weight: 600; }
 
+/* ── 카드·목록 ───────────────────────────────────────────────────────── */
 .card {
-  background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 16px;
-  margin: 16px 0;
-}
-
-label { display: block; margin: 12px 0; font-weight: 600; }
-label .muted { font-weight: 400; }
-
-input, select {
-  width: 100%;
-  margin-top: 6px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  font: inherit;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 0 0 20px;
   background: var(--paper);
-  color: var(--ink);
 }
-input[type="file"] { padding: 8px; }
-input[type="checkbox"] { width: auto; margin: 0 8px 0 0; }
+.card > h2 { margin-top: 0; }
 
-.row { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
-.row input, .row select { margin-top: 0; }
-.row button { white-space: nowrap; }
-
-.social { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
-.social input { margin-top: 0; }
-.social .one { max-width: 56px; text-align: center; }
-
-button {
-  padding: 10px 16px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--paper);
-  color: var(--ink);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-button:disabled { opacity: .45; cursor: not-allowed; }
-button.primary { background: var(--blue); border-color: var(--blue); color: #fff; width: 100%; }
-button.ghost { width: 100%; border-style: dashed; }
-button.link {
-  border: 0; background: none; color: var(--blue); padding: 0 0 0 10px; text-decoration: underline;
-}
-
-.check { display: flex; align-items: flex-start; font-weight: 400; }
-
-.entry { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 12px; }
+.entry { border-top: 1px solid var(--line); padding-top: 24px; margin-top: 24px; }
 .entry:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
-.entry-head { display: flex; justify-content: space-between; align-items: center; }
+.entry-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.entry-head b { font-size: 15px; }
 
-.preview {
-  margin-top: 10px;
-  padding: 12px;
-  border-radius: 10px;
-  background: var(--bg);
-  border: 1px solid var(--line);
-}
-.preview.bad { border-color: var(--red); }
+/* 미리보기 — 무엇을 어느 칸으로 읽었는지 보여주는 자리 */
+.preview { margin-top: 16px; padding: 16px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); }
+.preview.bad { background: var(--red-bg); border-color: var(--red); }
+.preview > b { display: block; margin-bottom: 10px; font-size: 14px; }
 
-/* 무엇을 어느 칸으로 읽었는지 — 성공했을 때도 보여준다. */
-.mapping { margin: 8px 0; font-size: 13px; }
-.mapping div { display: flex; gap: 8px; }
-.mapping dt { min-width: 74px; color: var(--muted-ink); margin: 0; }
+.mapping { margin: 0 0 12px; font-size: 13px; }
+.mapping div { display: flex; gap: 10px; padding: 2px 0; }
+.mapping dt { min-width: 76px; color: var(--muted-ink); margin: 0; }
 .mapping dd { margin: 0; }
 
-.stats { list-style: none; padding: 0; margin: 8px 0 0; font-size: 14px; }
-.stats li { padding: 2px 0; }
-.problems { margin: 6px 0 0; padding-left: 18px; font-size: 13px; color: var(--muted-ink); }
+.stats { list-style: none; padding: 0; margin: 0; font-size: 14px; }
+.stats li { padding: 3px 0; }
+.stats li.warn { color: var(--amber); }
+.problems { margin: 8px 0 0; padding-left: 18px; font-size: 13px; color: var(--ink-2); }
 
 .summary { margin: 0; }
-.summary div { display: flex; gap: 10px; padding: 3px 0; }
-.summary dt { min-width: 88px; color: var(--muted-ink); margin: 0; }
+.summary div { display: flex; gap: 12px; padding: 4px 0; font-size: 14px; }
+.summary dt { min-width: 96px; color: var(--muted-ink); margin: 0; }
 .summary dd { margin: 0; }
 
-.actions { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
-.actions .primary { width: auto; }
-.actions select { width: auto; margin-top: 0; }
-
+/* ── 상단 바(관리 화면) ──────────────────────────────────────────────── */
 .bar {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 12px 0; border-bottom: 1px solid var(--line);
+  padding: 0 0 20px; margin-bottom: 28px; border-bottom: 1px solid var(--line-strong);
 }
+.bar b { font-size: 18px; }
+.bar span { color: var(--ink-2); font-size: 14px; }
+.bar .link { margin-left: 12px; }
 
+/* ── 접수증·비밀·복구코드 ────────────────────────────────────────────── */
 .ticket {
-  font-size: 28px; font-weight: 700; letter-spacing: 2px;
-  background: var(--paper); border: 1px solid var(--line);
-  border-radius: 12px; padding: 16px; text-align: center;
+  font-size: 32px; font-weight: 700; letter-spacing: 3px; text-align: center;
+  background: var(--panel); border: 1px solid var(--line-strong);
+  border-radius: 12px; padding: 24px; margin: 0 0 20px;
 }
 .secret {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 18px; letter-spacing: 1px; word-break: break-all;
-  background: var(--bg); padding: 12px; border-radius: 10px;
+  font-size: 17px; letter-spacing: 1px; word-break: break-all;
+  background: var(--panel); border: 1px solid var(--line);
+  padding: 14px; border-radius: 8px; margin: 0 0 12px;
 }
 .codes {
-  list-style: none; padding: 0; margin: 12px 0;
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+  list-style: none; padding: 0; margin: 16px 0;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
 }
 .codes li {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  background: var(--bg); padding: 10px; border-radius: 8px; text-align: center;
+  background: var(--panel); border: 1px solid var(--line);
+  padding: 12px; border-radius: 8px; text-align: center; font-size: 15px;
 }
 
-.login { max-width: 360px; margin: 48px auto; }
+/* 로그인은 좁게 가운데 — 넣을 것이 셋뿐이라 넓으면 오히려 헤맨다 */
+.narrow { max-width: 940px; }
