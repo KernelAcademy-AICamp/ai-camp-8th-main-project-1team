@@ -35,11 +35,16 @@ fi
 
 # ── 2. 인증을 끄고 커밋했는가 ────────────────────────────────────────────────
 # 운영에서 이 값이 false 면 `?userId=N` 으로 남의 데이터가 그대로 열린다.
-if grep -q 'FINNTECH_AUTH_ENABLED: "true"' docker-compose.prod.yml; then
-  ok "운영 인증이 켜져 있다"
-else
-  bad "docker-compose.prod.yml 에서 인증이 꺼졌다 — 남의 데이터가 열린다"
-fi
+#
+# **기본값이 true 인지**를 본다. `"true"` 문자열 정확일치로 보다가, 값을 `.env` 로 덮을 수 있게
+# `${FINNTECH_AUTH_ENABLED:-true}` 로 바꾸자 제 검사가 제 변경을 잡았다(2026-08-12).
+# 지켜야 하는 것은 표기가 아니라 **"아무것도 안 주면 켜진다"** 는 성질이다.
+auth_line=$(grep -m1 'FINNTECH_AUTH_ENABLED' docker-compose.prod.yml || true)
+case "$auth_line" in
+  *'"true"'*|*':-true}'*) ok "운영 인증이 기본 켜짐 (${auth_line##*: })" ;;
+  '')                     bad "docker-compose.prod.yml 에 FINNTECH_AUTH_ENABLED 가 없다 — 컨테이너에 안 전달된다" ;;
+  *)                      bad "운영 인증의 기본값이 켜짐이 아니다 — 남의 데이터가 열린다: ${auth_line##*: }" ;;
+esac
 
 # ── 3. 관리자 무방비 입구가 열렸는가 ─────────────────────────────────────────
 # /admin/realdata 는 인증이 없고 본문의 신원을 그대로 믿는다. 기본값이 true 로 바뀌면 안 된다.

@@ -109,7 +109,13 @@ services:
       FINNTECH_DEV_SEED_ENABLED: "false"
       # ---- 인증 (설계서 Phase 1) ----
       # **끄지 않는다.** 끄면 `?userId=N`으로 남의 데이터가 그대로 열린다 — 도입 전 상태로 돌아간다.
-      FINNTECH_AUTH_ENABLED: "true"
+      # 기본값을 true로 두되 .env가 덮을 수 있게 한다(끄는 경우가 있다면 그것이 기록에 남아야 한다).
+      FINNTECH_AUTH_ENABLED: "${FINNTECH_AUTH_ENABLED:-true}"
+      # https 뒤라 기본 true. 로컬 http 총연습에서만 false로 내린다.
+      FINNTECH_SECURE_COOKIE: "${FINNTECH_SECURE_COOKIE:-true}"
+      # 기동 1회용 admin 계정 생성. 값이 있으면 만들고 임시 비밀번호를 로그에 한 번 찍는다.
+      # 받아 적은 뒤 .env에서 지운다 — 이미 있는 계정이면 아무것도 하지 않는다.
+      FINNTECH_ADMIN_BOOTSTRAP: ${FINNTECH_ADMIN_BOOTSTRAP:-}
       # ---- 개인정보 컬럼 암호화 (Phase 2) ----
       # mysql 프로파일에서 꺼져 있으면 CryptoRequiredGuard가 기동을 막는다.
       # 조용히 평문으로 도는 것보다 기동이 실패하는 편이 낫다.
