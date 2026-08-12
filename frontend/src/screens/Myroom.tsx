@@ -14,7 +14,7 @@ import { DecoSheet, type DecoTab, type DecoItem } from '../components/DecoSheet'
 import { ItemGlyph } from '../components/ItemGlyph';
 import { MissionSheet } from '../components/MissionSheet';
 import { AppBar, Scroll, Screen, ErrorBox, Loading, SectionTitle } from '../components/ui';
-import { useSession } from '../state/session';
+import { useSession, CEREMONY_SEEN_KEY } from '../state/session';
 import { useGuardian } from '../state/guardian';
 import { useAsync } from '../state/useAsync';
 import { api } from '../lib/api';
@@ -30,9 +30,8 @@ const DAY = 86_400_000;
  * 눈앞에서 보여 주는 연출이다. 우리는 홈에서 띄우고 있었는데, 그러면 방을 보지도 않은 채
  * 모달만 닫게 되어 "무엇이 어디에 놓였는지"가 남지 않는다.
  */
-const SEEN_KEY = 'guardian_ceremony_seen';
-const readSeen = () => { try { return localStorage.getItem(SEEN_KEY) ?? ''; } catch { return ''; } };
-const writeSeen = (d: string) => { try { localStorage.setItem(SEEN_KEY, d); } catch { /* noop */ } };
+const readSeen = () => { try { return localStorage.getItem(CEREMONY_SEEN_KEY) ?? ''; } catch { return ''; } };
+const writeSeen = (d: string) => { try { localStorage.setItem(CEREMONY_SEEN_KEY, d); } catch { /* noop */ } };
 
 /**
  * 소품을 누르면 나오는 한 줄. 개편안 `objInfo` 를 옮겼다.

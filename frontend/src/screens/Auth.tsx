@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { AppBar, ProgressBar, Cta, Scroll, Screen, ErrorBox } from '../components/ui';
 import { Sheet } from '../components/Sheet';
 import { useSession } from '../state/session';
-import { api } from '../lib/api';
+import { api, saveAuthToken } from '../lib/api';
 import type { PrivacyPolicy, VerifyResult } from '../lib/api';
 import { DEMO_CI, DEMO_ENABLED } from '../lib/config';
 
@@ -133,6 +133,10 @@ export function Auth() {
       const result = await api.verify(
         userId, (vals.name ?? '').trim(), social7, vals.phone ?? '', vals.carrier);
       if (!result.verified) { setFailure(failureMessage(result, vals.carrier ?? '')); return false; }
+      // **여기가 로그인이다.** 통과했을 때만 토큰이 온다. 이후 모든 요청이 이것을 싣고,
+      // 서버 필터가 이 토큰의 주인과 요청의 userId를 대조한다 — 남의 것은 403이 된다.
+      // 아래 sendConsent보다 **먼저** 저장해야 한다: 그 호출도 이미 인증을 요구한다.
+      if (result.authToken) saveAuthToken(result.authToken);
       // 인증된 신원의 계정으로 갈아탄다. 브라우저에 남아 있던 userId는 **앞사람**일 수 있다 —
       // 그대로 두면 홈이 앞사람의 챌린지를 보여준다(2026-07-31 운영에서 실제로 겪었다).
       const uid = result.userId ?? userId;

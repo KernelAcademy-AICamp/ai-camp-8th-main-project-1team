@@ -33,7 +33,7 @@ public class MyDataSharedSecretFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        if (!secret.isBlank() && request.getRequestURI().startsWith("/bank/")
+        if (!secret.isBlank() && isProtected(request.getRequestURI())
                 && !secret.equals(request.getHeader(HEADER))) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
@@ -41,5 +41,19 @@ public class MyDataSharedSecretFilter extends OncePerRequestFilter {
             return;
         }
         chain.doFilter(request, response);
+    }
+
+    /**
+     * 토큰을 요구하는 경로.
+     *
+     * <p>{@code /bank/**}(마이데이터 제공 API)에 더해 <b>{@code /self/**}(승인된 실사용자 적재)도
+     * 검사한다.</b> 이 경로는 <b>쓰기</b>라 오히려 조회보다 무거운데, 예전 관리자 입구
+     * ({@code /admin/realdata})가 필터 밖이라 무방비였다 — 8082 격리 하나에만 기대고 있었고
+     * 그 격리는 설정 실수 하나면 무너지는 단층 방어다. 새 입구를 만들면서 그 빚을 여기서 갚는다.
+     *
+     * <p>{@code /actuator/**} 는 계속 통과 — 컨테이너 헬스체크가 토큰 없이 부른다.
+     */
+    private static boolean isProtected(String uri) {
+        return uri.startsWith("/bank/") || uri.startsWith("/self/");
     }
 }

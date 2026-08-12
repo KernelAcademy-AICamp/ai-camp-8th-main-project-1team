@@ -42,6 +42,15 @@ mydata:
   unknown-pg:
     enabled: false
 
+  # 승인된 실사용자 신청의 적재구(/self/**, 설계서 Phase 3).
+  #
+  # **위의 realdata 와 성질이 다르다.** realdata 는 인증이 없고 본문의 신원을 그대로 믿는
+  # 무방비 관리자 입구라 계속 닫아둔다. 이쪽은 부르는 것이 본체뿐이고(공유 시크릿 필터가
+  # /self/** 도 검사한다), 본체는 admin 이 승인한 신청만 보낸다.
+  # 위험한 것은 '쓰기'가 아니라 '인증 없는 쓰기'였다.
+  selfimport:
+    enabled: ${MYDATA_SELFIMPORT_ENABLED:false}
+
   # 조회 커트오프(§13-11): 결제일 ≤ now 만 반환한다. 미래 날짜로 미리 생성해둔 결제는
   # now가 그 시점을 지나면 등장해 '실시간 연동'처럼 보인다.
   #   system(기본)    = 실시간(LocalDateTime.now()) → 날이 지나면 그날치가 자동 등장

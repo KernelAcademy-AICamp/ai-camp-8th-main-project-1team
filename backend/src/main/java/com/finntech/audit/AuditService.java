@@ -30,14 +30,16 @@ public class AuditService {
     private final AuditLogRepository logRepository;
     private final AuditBatchRepository batchRepository;
     private final TsaClient tsaClient;
+    private final AnchorArchive anchorArchive;
     private final long anchorDelayMillis;
 
     public AuditService(AuditLogRepository logRepository, AuditBatchRepository batchRepository,
-                        TsaClient tsaClient,
+                        TsaClient tsaClient, AnchorArchive anchorArchive,
                         @Value("${finntech.tsa.request-delay-millis:15000}") long anchorDelayMillis) {
         this.logRepository = logRepository;
         this.batchRepository = batchRepository;
         this.tsaClient = tsaClient;
+        this.anchorArchive = anchorArchive;
         this.anchorDelayMillis = anchorDelayMillis;
     }
 
@@ -123,7 +125,12 @@ public class AuditService {
                 batch.setAnchorError(null);
                 batch.setAnchorStatus(AuditBatch.AnchorStatus.ANCHORED);
                 ok++;
-                messages.add("batch=" + batch.getId() + " 앵커링 완료 (genTime=" + result.genTime() + ")");
+                // **밖에 사본을 남긴다.** 도장이 이 DB 에만 있으면, DB 를 갈아엎고 도장을 새로
+                // 받아 바꿔치기하는 공격이 그대로 통과한다 — 타임스탬프는 '존재 증명'이지
+                // '유일성 증명'이 아니기 때문이다. 실패해도 흐름은 막지 않는다.
+                boolean archived = anchorArchive.archive(batch);
+                messages.add("batch=" + batch.getId() + " 앵커링 완료 (genTime=" + result.genTime() + ")"
+                        + (archived ? " · 외부 사본 저장" : ""));
             } else {
                 batch.setAnchorStatus(AuditBatch.AnchorStatus.FAILED);
                 batch.setAnchorError(result.message());
