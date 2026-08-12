@@ -116,6 +116,9 @@ services:
       # 기동 1회용 admin 계정 생성. 값이 있으면 만들고 임시 비밀번호를 로그에 한 번 찍는다.
       # 받아 적은 뒤 .env에서 지운다 — 이미 있는 계정이면 아무것도 하지 않는다.
       FINNTECH_ADMIN_BOOTSTRAP: ${FINNTECH_ADMIN_BOOTSTRAP:-}
+      # 잠겼을 때 빠져나오는 유일한 길 — 비밀번호·2단계 인증·세션을 처음 상태로 되돌린다.
+      # **쓰고 나면 반드시 지운다.** 기동할 때마다 admin 이 초기화되면 그것도 잠김이다.
+      FINNTECH_ADMIN_RESET: ${FINNTECH_ADMIN_RESET:-}
       # ---- 개인정보 컬럼 암호화 (Phase 2) ----
       # mysql 프로파일에서 꺼져 있으면 CryptoRequiredGuard가 기동을 막는다.
       # 조용히 평문으로 도는 것보다 기동이 실패하는 편이 낫다.

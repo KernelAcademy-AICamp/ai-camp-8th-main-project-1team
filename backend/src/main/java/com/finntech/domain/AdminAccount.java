@@ -88,6 +88,21 @@ public class AdminAccount {
         this.mustChangePassword = false;
     }
 
+    /**
+     * 계정을 <b>방금 만든 상태로 되돌린다</b> — 잠겼을 때 빠져나오는 유일한 길.
+     *
+     * <p><b>TOTP 도 함께 지운다.</b> 안 지우면 폰을 잃은 사람은 비밀번호를 새로 받아도
+     * 여전히 못 들어온다 — 되돌리는 의미가 없다. 다음 로그인에서 비밀번호를 바꾸고
+     * 2단계 인증을 다시 등록하게 된다.
+     */
+    public void reset(String temporaryHash) {
+        this.passwordHash = temporaryHash;
+        this.mustChangePassword = true;
+        this.totpSecretEnc = null;
+        this.totpConfirmed = false;
+        this.totpLastStep = null;
+    }
+
     /** 등록 단계 — 아직 확정 전이라 다시 발급할 수 있다. */
     public void prepareTotp(byte[] secretEnc) {
         this.totpSecretEnc = secretEnc;

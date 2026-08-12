@@ -14,13 +14,28 @@
  *
  * `apply.html`이 진입점이라, 이 화면의 코드·경로가 사용자 앱 JS 에 들어가지 않는다.
  *
- * <h2>화면은 공공 서비스 폼의 관행을 따른다</h2>
+ * <h2>디자인은 앱 것을 그대로 쓴다 (2026-08-12 개편)</h2>
  *
- * 제목·설명 → 왼쪽 폼 / 오른쪽 안내 → 라벨 위 칸 아래 → 전체 너비 확인 버튼.
- * 개인정보를 넣는 화면이라 <b>무엇을 왜 넣는지</b>가 폼 옆에 늘 보여야 한다.
+ * <p>예전에는 이 화면만의 `ops.css` 로 공공 서비스 폼처럼 그렸다. 같은 서비스인데 겉모습이 달라
+ * 여기가 어디인지 알기 어려웠다. <b>새 디자인을 만들지 않는다</b> — `components/ui` 와
+ * `styles/app.css` 를 그대로 쓰고 이 화면 전용 클래스는 하나도 만들지 않는다.
+ *
+ * <p><b>단계로 쪼개지 않는다.</b> 온보딩은 화면마다 하나씩 묻지만 그것은 되돌아올 일이 없는
+ * 인증이라 가능한 것이고, 여기는 파일을 고르다 신원을 고치는 일이 흔하다. 그래서
+ * <b>한 화면에 전부 놓고 내려가며</b> 채운다 — 빌려 오는 것은 생김새(`.field`·`.label`·`.h-title`)다.
+ *
+ * <h2>묻는 것만 둔다</h2>
+ *
+ * <p>설명·안내·당부는 두지 않고, 안 받아도 되는 칸도 두지 않는다(2026-08-12 사용자 결정).
+ * 카드사와 카드는 <b>한 칸으로 합쳤고</b>(회사별로 묶은 목록), 표시 이름은 없앴다 —
+ * 없으면 카드 이름을 쓰므로 받을 이유가 없었다.
  */
 import { useEffect, useState } from 'react';
-import { parseStatement, readTextFile, type ParseResult } from '../lib/statement';
+import { Cta, ErrorBox, Screen, Scroll } from '../components/ui';
+import {
+  headerCandidates, parseStatement, readTextFile,
+  type ColumnOverride, type ParseResult,
+} from '../lib/statement';
 
 const API_BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? '';
 
@@ -28,30 +43,75 @@ interface CatalogRow { cardCode: number; cardName: string; companyId: number; co
 
 interface CardEntry {
   key: number;
-  companyName: string;
   cardCode: number | null;
-  displayName: string;
   fileName: string;
   parsed: ParseResult | null;
+  /** 별칭표가 실패해 모델에게 칸을 묻는 중. 몇 초 걸리므로 화면이 멈춘 것처럼 보이면 안 된다. */
+  asking: boolean;
 }
 
+const EMPTY_CARD = (key: number): CardEntry =>
+  ({ key, cardCode: null, fileName: '', parsed: null, asking: false });
+
+/** `.label` 의 기본 여백(28px)이 한 화면에 다 놓기엔 넓다. 좁힌다. */
+const LABEL: React.CSSProperties = { margin: '18px 0 8px' };
+
 const won = (value: number) => `${value.toLocaleString('ko-KR')}원`;
+
+/** 숫자만 저장하고, 표시는 010-0000-0000 형태로 자동 하이픈 — 온보딩과 같은 규칙이다. */
+function formatPhone(digits: string): string {
+  const n = digits.replace(/\D/g, '').slice(0, 11);
+  if (n.length <= 3) return n;
+  if (n.length <= 7) return `${n.slice(0, 3)}-${n.slice(3)}`;
+  return `${n.slice(0, 3)}-${n.slice(3, 7)}-${n.slice(7)}`;
+}
+
+/**
+ * 별칭표가 실패했을 때 <b>칸 이름만</b> 서버에 보내 연결을 물어 온다.
+ *
+ * <p>보내는 것은 카드사가 정한 머리글 낱말들뿐이다 — 날짜·금액·사업자번호가 든 줄은
+ * {@link headerCandidates} 가 빼고, 서버가 같은 검사를 한 번 더 한다.
+ *
+ * <p><b>실패는 조용하다.</b> 못 찾든 통로가 막혔든, 화면은 원래의 "칸을 못 찾았어요"로 돌아간다.
+ */
+async function askColumns(text: string): Promise<ColumnOverride | null> {
+  const candidates = headerCandidates(text);
+  if (candidates.length === 0) return null;
+  try {
+    const res = await fetch(`${API_BASE}/api/apply/columns`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rows: candidates.map((row) => row.cells) }),
+    });
+    if (!res.ok) return null;
+    const body = await res.json() as {
+      found: boolean; row: number;
+      date: number; merchant: number; amount: number; biz: number; source: string;
+    };
+    if (!body.found || body.row < 0 || body.row >= candidates.length) return null;
+    return {
+      // 서버가 준 번호는 **우리가 보낸 목록** 기준이다. 격자 번호로 되돌린다.
+      at: candidates[body.row].at,
+      cols: { date: body.date, merchant: body.merchant, amount: body.amount, biz: body.biz },
+      source: body.source,
+    };
+  } catch {
+    return null;
+  }
+}
 
 let nextKey = 1;
 
 export function ApplyApp() {
   const [catalog, setCatalog] = useState<CatalogRow[]>([]);
-  const [catalogError, setCatalogError] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [social, setSocial] = useState('');
   const [socialGender, setSocialGender] = useState('');
   const [phone, setPhone] = useState('');
   const [consent, setConsent] = useState(false);
-  const [cards, setCards] = useState<CardEntry[]>([
-    { key: 0, companyName: '', cardCode: null, displayName: '', fileName: '', parsed: null },
-  ]);
+  const [cards, setCards] = useState<CardEntry[]>([EMPTY_CARD(0)]);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const [ticket, setTicket] = useState<string | null>(null);
   const [lookup, setLookup] = useState('');
   const [lookupResult, setLookupResult] = useState<string | null>(null);
@@ -66,32 +126,41 @@ export function ApplyApp() {
         throw new Error(body?.message ?? '카드 목록을 불러오지 못했어요.');
       })
       .then((rows) => setCatalog(rows))
-      .catch((e: Error) => setCatalogError(e.message));
+      .catch((e: Error) => setError(e));
   }, []);
 
-  const companies = [...new Set(catalog.map((row) => row.companyName))].sort();
-  const productsOf = (company: string) => catalog.filter((row) => row.companyName === company);
+  /** 카드사별로 묶은 목록 — 칸 하나로 고르게 해서 입력을 하나 줄인다. */
+  const grouped = [...new Set(catalog.map((row) => row.companyName))].sort()
+    .map((company) => ({ company, rows: catalog.filter((row) => row.companyName === company) }));
 
-  const patch = (key: number, nextValue: Partial<CardEntry>) =>
-    setCards((prev) => prev.map((card) => (card.key === key ? { ...card, ...nextValue } : card)));
+  const patch = (key: number, next: Partial<CardEntry>) =>
+    setCards((prev) => prev.map((card) => (card.key === key ? { ...card, ...next } : card)));
 
+  /**
+   * 파일을 읽어 미리보기를 만든다 — <b>별칭표가 먼저, 모델은 실패했을 때만</b>.
+   *
+   * <p>순서가 설계다. 아는 카드사는 표가 즉시·공짜로·늘 같은 답을 낸다. 늘 모델에게 물으면
+   * 같은 파일이 매번 다르게 읽힐 수 있고, 그것은 이 저장소가 지키는 재현성과 어긋난다.
+   */
   async function pickFile(key: number, file: File | undefined) {
     if (!file) return;
     const text = await readTextFile(file);
-    patch(key, { fileName: file.name, parsed: parseStatement(text) });
+    const first = parseStatement(text);
+    if (first.ok || first.rows.length > 0) {
+      patch(key, { fileName: file.name, parsed: first, asking: false });
+      return;
+    }
+    patch(key, { fileName: file.name, parsed: first, asking: true });
+    const override = await askColumns(text);
+    patch(key, {
+      parsed: override ? parseStatement(text, new Date(), override) : first, asking: false,
+    });
   }
 
-  function randomCard(key: number, company: string) {
-    const products = productsOf(company);
-    if (products.length === 0) return;
-    const picked = products[Math.floor(Math.random() * products.length)];
-    patch(key, { cardCode: picked.cardCode });
-  }
-
-  const ready = cards.every((card) => card.parsed?.ok && card.cardCode)
-    && name.trim().length >= 2
-    && social.replace(/\D/g, '').length === 6 && socialGender.length === 1
+  const ready = name.trim().length >= 2
+    && social.length === 6 && socialGender.length === 1
     && phone.replace(/\D/g, '').length >= 10
+    && cards.every((card) => card.parsed?.ok && card.cardCode && !card.asking)
     && consent;
 
   async function submit() {
@@ -102,13 +171,11 @@ export function ApplyApp() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
-          social7: social.replace(/\D/g, '') + socialGender,
+          social7: social + socialGender,
           phone,
           consent,
           cards: cards.map((card) => ({
-            cardCode: card.cardCode,
-            displayName: card.displayName.trim() || null,
-            csv: card.parsed?.csv ?? '',
+            cardCode: card.cardCode, displayName: null, csv: card.parsed?.csv ?? '',
           })),
         }),
       });
@@ -116,213 +183,128 @@ export function ApplyApp() {
       if (!res.ok) throw new Error(body?.message ?? '신청하지 못했어요.');
       setTicket(body.ticket);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '신청하지 못했어요.');
+      setError(e);
     } finally {
       setBusy(false);
     }
   }
 
   async function checkTicket() {
-    const res = await fetch(`${API_BASE}/api/apply/${encodeURIComponent(lookup.trim())}`);
-    const body = await res.json();
-    const label: Record<string, string> = {
-      RECEIVED: '검토 중이에요.',
-      IMPORTED: '반영됐어요. 앱에서 본인인증 후 카드사를 연결해 주세요.',
-      REJECTED: '반려됐어요.',
-      DONE_OR_UNKNOWN: body?.message ?? '처리가 끝났거나 없는 접수증이에요.',
-    };
-    setLookupResult(label[body?.status as string] ?? '알 수 없어요.');
+    setLookupResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/apply/${encodeURIComponent(lookup.trim())}`);
+      const body = await res.json();
+      const label: Record<string, string> = {
+        RECEIVED: '검토 중이에요.',
+        IMPORTED: '반영됐어요.',
+        REJECTED: '반려됐어요.',
+        DONE_OR_UNKNOWN: body?.message ?? '처리가 끝났거나 없는 접수증이에요.',
+      };
+      setLookupResult(label[body?.status as string] ?? '알 수 없어요.');
+    } catch {
+      setLookupResult('확인하지 못했어요.');
+    }
   }
 
   if (ticket) {
     return (
-      <main className="narrow">
-        <div className="page-title">
-          <h1>신청이 접수됐습니다</h1>
-          <p>검토 후 반영되면 알려드립니다.</p>
-        </div>
-        <div className="cols">
-          <div>
-            <p className="ticket">{ticket}</p>
-            <p className="notice warn">
-              <b>이 번호를 적어 두세요.</b> 진행 상태를 확인할 수 있는 유일한 방법입니다.
-            </p>
-          </div>
-          <aside className="guide">
-            <h2>다음 순서</h2>
-            <ul>
-              <li>운영자가 요약을 확인하고 승인합니다.</li>
-              <li>반영된 뒤 앱에서 <b>평소대로 본인인증</b>을 하세요 — 방금 넣으신 이름·주민등록번호
-                앞 7자리·휴대전화번호 그대로입니다.</li>
-              <li>인증 후 <b>카드사 연결</b>까지 마쳐야 화면에 소비내역이 나옵니다.</li>
-            </ul>
-          </aside>
-        </div>
-      </main>
+      <Screen title="접수 완료">
+        <Scroll><div className="pad">
+          <p className="h-title">접수됐습니다</p>
+          <div className="label" style={LABEL}>접수증 번호</div>
+          <div className="card"><b>{ticket}</b></div>
+        </div></Scroll>
+      </Screen>
     );
   }
 
   return (
-    <main>
-      <div className="page-title">
-        <h1>내 카드 명세서로 MOA 써보기</h1>
-        <p>
-          실제 카드 사용내역으로 소비 분석을 받아볼 수 있습니다.
-          올려주신 명세서는 검토 후 반영되며, <b>원본 파일은 서버로 전송되지 않습니다.</b>
-        </p>
-      </div>
+    <Screen title="명세서 신청">
+      <Scroll><div className="pad">
+        <p className="h-title">명세서 신청</p>
 
-      <div className="cols">
-        <div>
-          <section className="section">
-            <h2>본인 정보</h2>
-            <p className="sub">이 셋으로 신원을 확인합니다. 다른 용도로 쓰지 않습니다.</p>
+        <div className="label" style={LABEL}>이름</div>
+        <input className="field" value={name} placeholder="이름" autoComplete="name" maxLength={40}
+          onChange={(e) => setName(e.target.value)} />
 
-            <div className="field">
-              <label htmlFor="ap-name">이름</label>
-              <input id="ap-name" type="text" value={name} maxLength={40}
-                placeholder="이름을 입력하세요." onChange={(e) => setName(e.target.value)} />
-            </div>
-
-            <div className="field">
-              <span className="label">주민등록번호 앞 7자리</span>
-              <div className="row">
-                <input className="grow" type="text" value={social} inputMode="numeric"
-                  placeholder="생년월일 6자리"
-                  onChange={(e) => setSocial(e.target.value.replace(/\D/g, '').slice(0, 6))} />
-                <span className="sep" aria-hidden="true">–</span>
-                <input className="one" type="text" value={socialGender} inputMode="numeric"
-                  placeholder="1" aria-label="주민등록번호 뒤 첫 자리"
-                  onChange={(e) => setSocialGender(e.target.value.replace(/\D/g, '').slice(0, 1))} />
-                <span className="masked" aria-hidden="true">●●●●●●</span>
-              </div>
-              <p className="help">뒤 6자리는 받지 않습니다.</p>
-            </div>
-
-            <div className="field">
-              <label htmlFor="ap-phone">휴대전화번호</label>
-              <input id="ap-phone" type="text" value={phone} inputMode="numeric"
-                placeholder="010-0000-0000" onChange={(e) => setPhone(e.target.value)} />
-            </div>
-          </section>
-
-          <section className="section">
-            <h2>카드 명세서</h2>
-            <p className="sub">카드마다 파일을 하나씩 올립니다. 카드사가 여러 곳이면 카드를 추가하세요.</p>
-            {catalogError && <p className="notice error" role="alert">{catalogError}</p>}
-
-            {cards.map((card, index) => (
-              <div className="entry" key={card.key}>
-                <div className="entry-head">
-                  <b>{index + 1}번째 카드</b>
-                  {cards.length > 1 && (
-                    <button type="button" className="link"
-                      onClick={() => setCards((prev) => prev.filter((c) => c.key !== card.key))}>
-                      빼기
-                    </button>
-                  )}
-                </div>
-
-                <div className="field">
-                  <span className="label">카드사</span>
-                  <select value={card.companyName}
-                    onChange={(e) => patch(card.key, { companyName: e.target.value, cardCode: null })}>
-                    <option value="">고르세요</option>
-                    {companies.map((company) => <option key={company} value={company}>{company}</option>)}
-                  </select>
-                </div>
-
-                <div className="field">
-                  <span className="label">카드</span>
-                  <div className="row">
-                    <select className="grow" value={card.cardCode ?? ''} disabled={!card.companyName}
-                      onChange={(e) => patch(card.key, { cardCode: Number(e.target.value) })}>
-                      <option value="">고르세요</option>
-                      {productsOf(card.companyName).map((product) => (
-                        <option key={product.cardCode} value={product.cardCode}>{product.cardName}</option>
-                      ))}
-                    </select>
-                    <button type="button" disabled={!card.companyName}
-                      onClick={() => randomCard(card.key, card.companyName)}>무작위</button>
-                  </div>
-                </div>
-
-                <div className="field">
-                  <label htmlFor={`ap-nick-${card.key}`}>
-                    표시 이름 <span className="hint">비우면 카드 이름을 씁니다</span>
-                  </label>
-                  <input id={`ap-nick-${card.key}`} type="text" value={card.displayName} maxLength={60}
-                    placeholder="예: 주력카드" onChange={(e) => patch(card.key, { displayName: e.target.value })} />
-                </div>
-
-                <div className="field">
-                  <label htmlFor={`ap-file-${card.key}`}>명세서 파일 (CSV)</label>
-                  <input id={`ap-file-${card.key}`} type="file" accept=".csv,text/csv"
-                    onChange={(e) => void pickFile(card.key, e.target.files?.[0])} />
-                </div>
-
-                {card.parsed && <Preview parsed={card.parsed} fileName={card.fileName} />}
-              </div>
-            ))}
-
-            <button type="button" className="ghost" onClick={() => setCards((prev) => [...prev,
-              { key: nextKey++, companyName: '', cardCode: null, displayName: '', fileName: '', parsed: null }])}>
-              + 카드 추가
-            </button>
-          </section>
-
-          <section className="section">
-            <h2>동의</h2>
-            <div className="field">
-              <label>
-                <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-                개인(신용)정보 수집·이용에 동의합니다
-              </label>
-              <p className="help">
-                카드 승인 상세정보 · 가맹점명 · 사업자등록번호 · 거래내역을 소비 분석 목적으로
-                처리합니다. 회원 탈퇴 또는 동의 철회 시까지 보유하며, 언제든 삭제를 요청할 수
-                있습니다. 자세한 내용은 개인정보 처리방침 3항에 있습니다.
-              </p>
-            </div>
-          </section>
-
-          {error && <p className="notice error" role="alert">{error}</p>}
-          <button type="button" className="primary" disabled={!ready || busy}
-            onClick={() => void submit()}>
-            {busy ? '보내는 중…' : '신청하기'}
-          </button>
-
-          <section className="section" style={{ marginTop: 48 }}>
-            <h2>접수증으로 상태 보기</h2>
-            <div className="row">
-              <input className="grow" type="text" value={lookup} placeholder="A7F3-2K91"
-                onChange={(e) => setLookup(e.target.value.toUpperCase())} />
-              <button type="button" onClick={() => void checkTicket()}>확인</button>
-            </div>
-            {lookupResult && <p className="help">{lookupResult}</p>}
-          </section>
+        <div className="label" style={LABEL}>주민등록번호 앞 7자리</div>
+        <div className="row2">
+          <input className="field" style={{ flex: 1.3 }} value={social} placeholder="생년월일 6자리"
+            inputMode="numeric" maxLength={6} aria-label="생년월일 6자리" autoComplete="off"
+            onChange={(e) => setSocial(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+          <span style={{ alignSelf: 'center', color: 'var(--t3)' }} aria-hidden="true">-</span>
+          <input className="field" style={{ flex: 0.35, textAlign: 'center' }} value={socialGender}
+            placeholder="0" inputMode="numeric" maxLength={1}
+            aria-label="주민등록번호 성별 자리" autoComplete="off"
+            onChange={(e) => setSocialGender(e.target.value.replace(/\D/g, '').slice(0, 1))} />
+          <span className="masked" aria-hidden="true">●●●●●●</span>
         </div>
 
-        <aside className="guide">
-          <h2>명세서 준비하기</h2>
-          <ul>
-            <li>카드사 홈페이지에서 <b>이용내역을 CSV 로 내려받아</b> 그대로 올리세요.</li>
-            <li>받을 때 <b>사업자번호 칸을 포함</b>해 주세요 — 없으면 어디에 썼는지 분류가 되지 않습니다.</li>
-            <li>거래일 · 가맹점명 · 이용금액 세 칸은 반드시 있어야 합니다.</li>
-            <li>엑셀로 받으셨다면 <b>다른 이름으로 저장 → CSV</b> 로 바꿔 주세요.</li>
-            <li>취소·환불(음수)도 그대로 두세요. 합계에서 알아서 상쇄됩니다.</li>
-          </ul>
+        <div className="label" style={LABEL}>휴대전화번호</div>
+        <input className="field" value={formatPhone(phone)} inputMode="numeric"
+          placeholder="010-0000-0000" autoComplete="tel" maxLength={13}
+          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} />
 
-          <h2>개인정보 안내</h2>
-          <ul>
-            <li><b>원본 파일은 서버로 전송되지 않습니다.</b> 이 화면에서 필요한 다섯 칸만 뽑아 보냅니다.</li>
-            <li>주민등록번호는 <b>앞 7자리만</b> 받습니다.</li>
-            <li>신원 정보와 명세서는 <b>암호화해서</b> 보관하고, 반영이 끝나면 대기열에서 지웁니다.</li>
-            <li>7일 안에 처리되지 않은 신청은 자동으로 파기됩니다.</li>
-          </ul>
-        </aside>
-      </div>
-    </main>
+        {cards.map((card, index) => (
+          <div key={card.key}>
+            <div className="label" style={LABEL}>
+              카드{cards.length > 1 ? ` ${index + 1}` : ''}
+              {cards.length > 1 && (
+                <button type="button" className="chk-more" style={{ float: 'right', minHeight: 0, padding: '2px 8px' }}
+                  onClick={() => setCards((prev) => prev.filter((c) => c.key !== card.key))}>빼기</button>
+              )}
+            </div>
+            <select className="field" value={card.cardCode ?? ''}
+              onChange={(e) => patch(card.key, { cardCode: Number(e.target.value) })}>
+              <option value="">카드를 고르세요</option>
+              {grouped.map((group) => (
+                <optgroup key={group.company} label={group.company}>
+                  {group.rows.map((row) => (
+                    <option key={row.cardCode} value={row.cardCode}>{row.cardName}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            {/* 파일 고르기는 앱의 `.btn` 을 그대로 쓴다 — 기본 파일 입력은 숨긴다. */}
+            <label className="btn btn-ghost btn-sm" style={{ display: 'block', marginTop: 10 }}>
+              <input type="file" accept=".csv,text/csv" style={{ display: 'none' }}
+                onChange={(e) => void pickFile(card.key, e.target.files?.[0])} />
+              {card.fileName || 'CSV 파일'}
+            </label>
+            {card.parsed && <Preview parsed={card.parsed} asking={card.asking} />}
+          </div>
+        ))}
+
+        <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 12 }}
+          onClick={() => setCards((prev) => [...prev, EMPTY_CARD(nextKey++)])}>카드 추가</button>
+
+        <button type="button" className={`chk${consent ? ' on' : ''}`} aria-pressed={consent}
+          style={{ marginTop: 8 }} onClick={() => setConsent((v) => !v)}>
+          <span className="box" aria-hidden="true">✓</span>
+          <span className="ct"><b>개인(신용)정보 수집·이용 동의</b> <span className="req">(필수)</span></span>
+        </button>
+
+        <ErrorBox error={error} />
+
+        <div className="divider" style={{ margin: '24px 0 12px' }} />
+        <div className="row2">
+          <input className="field" style={{ flex: 1 }} value={lookup} placeholder="접수증 번호"
+            onChange={(e) => setLookup(e.target.value)} />
+          <button type="button" className="btn btn-ghost btn-sm" disabled={!lookup.trim()}
+            onClick={() => void checkTicket()}>조회</button>
+        </div>
+        {lookupResult && <p className="muted" style={{ marginTop: 8 }}>{lookupResult}</p>}
+
+        {/* 아래 고정 버튼(`.cta-fixed`)이 마지막 줄을 덮는다. 그만큼 비워 둔다. */}
+        <div style={{ height: 48 }} />
+      </div></Scroll>
+
+      <Cta>
+        <button type="button" className="btn btn-primary" disabled={!ready || busy} onClick={() => void submit()}>
+          {busy ? '보내는 중…' : '신청하기'}
+        </button>
+      </Cta>
+    </Screen>
   );
 }
 
@@ -330,50 +312,43 @@ export function ApplyApp() {
  * 미리보기 — <b>자동 인식이 성공했을 때도 무엇을 어느 칸으로 읽었는지 보여준다.</b>
  * 조용히 맞히는 것과 조용히 틀리는 것이 화면에서 똑같아 보이면 안 된다.
  */
-function Preview({ parsed, fileName }: { parsed: ParseResult; fileName: string }) {
-  if (!parsed.ok) {
-    return (
-      <div className="preview bad" role="alert">
-        <b>{fileName}</b>
-        <p style={{ margin: '0 0 8px' }}>{parsed.error}</p>
-        <p className="muted small" style={{ margin: 0 }}>
-          필요한 칸: <b>거래일 · 가맹점명 · 이용금액</b>
-          (사업자번호가 있으면 분류가 훨씬 좋아집니다)
-        </p>
-      </div>
-    );
+function Preview({ parsed, asking }: { parsed: ParseResult; asking: boolean }) {
+  // 칸 이름이 우리 표에 없는 카드사다. 몇 초 걸리므로 **기다리는 중이라고 말한다** —
+  // 아무 말 없이 "못 찾았어요"만 떠 있으면 사용자는 이미 끝난 줄 알고 창을 닫는다.
+  if (asking) {
+    return <p className="muted" aria-busy="true" style={{ margin: '10px 0 0' }}>확인하고 있어요…</p>;
   }
-  const bizRatio = parsed.rows.length === 0 ? 0
-    : Math.round((parsed.withBiz / parsed.rows.length) * 100);
+  if (!parsed.ok) {
+    return <div className="error" role="alert" style={{ margin: '10px 0 0' }}>{parsed.error}</div>;
+  }
   return (
-    <div className="preview">
-      <b>{fileName}</b>
-      <dl className="mapping">
-        {Object.entries(parsed.mapping).map(([key, source]) => (
-          <div key={key}><dt>{key}</dt><dd>← “{source}”</dd></div>
-        ))}
-      </dl>
-      <ul className="stats">
-        <li>결제 <b>{parsed.rows.length.toLocaleString('ko-KR')}건</b></li>
-        <li>기간 {parsed.from} ~ {parsed.to}</li>
-        <li>합계 <b>{won(parsed.totalAmount)}</b></li>
-        {parsed.refundCount > 0 && (
-          <li>취소·환불 {parsed.refundCount}건 {won(parsed.refundAmount)}</li>
-        )}
-        <li className={bizRatio < 50 ? 'warn' : undefined}>
-          사업자번호 <b>{parsed.withBiz}건 ({bizRatio}%)</b> · 고유 {parsed.merchants}곳
-          {bizRatio < 50 && ' — 낮으면 분류가 잘 안 됩니다'}
-        </li>
-      </ul>
+    <div className="card" style={{ margin: '10px 0 0', padding: 16 }}>
+      {Object.entries(parsed.mapping).map(([key, source]) => (
+        <div className="list-item" key={key} style={{ padding: '6px 0' }}>
+          <div className="tx"><b>{key}</b><span>{source}</span></div>
+        </div>
+      ))}
+      {/* **추정이라고 밝힌다.** 우리 표에 없는 칸 이름이라 모델이 연결한 것이고, 맞는지
+          판단하는 것은 사람이다 — 확정과 추정이 화면에서 똑같아 보이면 안 된다. */}
+      {parsed.guessedBy && (
+        <div className="error" role="status">자동 추정한 연결이에요. 맞는지 확인해 주세요.</div>
+      )}
+      <div className="divider" />
+      <div className="list-item" style={{ padding: '6px 0' }}>
+        <div className="tx">
+          <b>{parsed.rows.length.toLocaleString('ko-KR')}건</b>
+          <span>{parsed.from} ~ {parsed.to} · 사업자번호 {parsed.withBiz}건</span>
+        </div>
+        <div className="amt">{won(parsed.totalAmount)}</div>
+      </div>
       {parsed.problems.length > 0 && (
         <details>
-          <summary>못 읽은 줄 {parsed.problems.length}건</summary>
-          <ul className="problems">
+          <summary className="muted">못 읽은 줄 {parsed.problems.length}개</summary>
+          <div className="doc">
             {parsed.problems.slice(0, 20).map((problem) => (
-              <li key={problem.line}>{problem.line}행 — {problem.reason}</li>
+              <p key={problem.line}>{problem.line}번째 줄 — {problem.reason}</p>
             ))}
-            {parsed.problems.length > 20 && <li>… 그 외 {parsed.problems.length - 20}건</li>}
-          </ul>
+          </div>
         </details>
       )}
     </div>

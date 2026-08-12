@@ -1,5 +1,6 @@
 package com.finntech.web;
 
+import com.finntech.intake.ColumnMapperService;
 import com.finntech.intake.IntakeService;
 import com.finntech.service.MyDataClient;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,10 +37,45 @@ public class ApplyController {
 
     private final IntakeService intake;
     private final MyDataClient myDataClient;
+    private final ColumnMapperService columnMapper;
 
-    public ApplyController(IntakeService intake, MyDataClient myDataClient) {
+    public ApplyController(IntakeService intake, MyDataClient myDataClient,
+                           ColumnMapperService columnMapper) {
         this.intake = intake;
         this.myDataClient = myDataClient;
+        this.columnMapper = columnMapper;
+    }
+
+    public record ColumnsBody(List<List<String>> rows) {}
+
+    /**
+     * <b>칸 이름만</b> 보내 어느 칸이 무엇인지 묻는다 — 별칭표가 실패했을 때만 화면이 부른다.
+     *
+     * <p>결제 자료는 오지 않는다. 브라우저가 머리글 후보만 골라 보내고, 서버가
+     * {@link ColumnMapperService#isHeaderCandidate} 로 <b>한 번 더</b> 거른다 —
+     * 값이 한 칸이라도 섞인 줄은 모델에 닿지 않는다.
+     *
+     * <p>못 찾으면 200 에 {@code found:false} 다. 오류가 아니라 <b>"모르겠다"</b>이고,
+     * 화면은 종전대로 "칸을 못 찾았어요"를 보여 준다.
+     */
+    @PostMapping("/columns")
+    public Map<String, Object> columns(@RequestBody ColumnsBody body, HttpServletRequest request) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        if (body.rows() == null || body.rows().isEmpty()) {
+            payload.put("found", false);
+            return payload;
+        }
+        String ip = com.finntech.auth.AuthTokenService.clientIp(request);
+        return columnMapper.map(body.rows(), ip)
+                .map(mapping -> {
+                    Map<String, Object> found = ColumnMapperService.describe(mapping);
+                    found.put("found", true);
+                    return found;
+                })
+                .orElseGet(() -> {
+                    payload.put("found", false);
+                    return payload;
+                });
     }
 
     /**

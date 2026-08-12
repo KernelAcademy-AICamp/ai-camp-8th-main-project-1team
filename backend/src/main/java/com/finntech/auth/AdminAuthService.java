@@ -189,6 +189,45 @@ public class AdminAuthService {
     }
 
     /**
+     * 계정을 <b>처음 상태로 되돌린다</b> — 잠겼을 때 빠져나오는 유일한 길.
+     *
+     * <h2>왜 필요한가</h2>
+     *
+     * <p>지금 구조에서 admin 이 잠기는 경우가 둘 있다. <b>비밀번호를 잊었을 때</b>와
+     * <b>폰을 잃고 복구 코드도 없을 때</b>다. 둘 다 화면에서는 빠져나올 방법이 없다 —
+     * 비밀번호 재설정 메일도, 본인확인도 없기 때문이다(만들면 그것이 새 공격면이 된다).
+     *
+     * <p>그래서 <b>서버에 닿을 수 있는 사람</b>만 쓸 수 있는 길을 둔다. 그 권한은 AWS IAM 이
+     * 관리하고(SSM · CloudTrail), 우리가 만든 비밀번호보다 강하다. 설계서가 "SSM 우회 복구
+     * 경로"라고 적어 둔 것이 이것인데, 정작 만들지 않아 <b>고칠 수 없는 상태가 실재했다</b>
+     * (2026-08-12).
+     *
+     * <h2>무엇을 되돌리나</h2>
+     *
+     * <p>비밀번호를 새 임시값으로 · 다음 로그인에서 변경 강제 · <b>TOTP 등록 해제</b> ·
+     * 복구 코드 폐기 · <b>기존 세션 전부 폐기</b>. 즉 계정을 방금 만든 상태로 되돌린다.
+     * TOTP 를 지우지 않으면 폰을 잃은 사람은 여전히 못 들어온다 — 그것이 이 함수의 요점이다.
+     *
+     * @return 새 임시 비밀번호. 호출부가 한 번 보여주고 버린다
+     */
+    @Transactional
+    public String resetAccount(String username) {
+        AdminAccount account = accounts.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("없는 계정: " + username));
+        String temporary = Tokens.newRecoveryCode();
+        account.reset(encoder.encode(temporary));
+        accounts.save(account);
+        recoveryCodes.deleteByAdminId(account.getId());
+        tokens.revokeAllOf(UserToken.Role.ADMIN, account.getId());
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("username", username);
+        payload.put("by", "server-side-reset");
+        audit.append("ADMIN_RESET", payload, LocalDateTime.now(clock));
+        return temporary;
+    }
+
+    /**
      * 비밀번호를 바꾼다. <b>기존 세션을 전부 끊는다</b> — 바꾼 이유가 유출이라면
      * 옛 세션이 살아 있는 것이 곧 구멍이다.
      */
