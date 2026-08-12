@@ -55,11 +55,11 @@ public class UnknownPgPaymentRunner implements ApplicationRunner {
     private static final String PAY_SQL = "INSERT INTO mydata_payment " +
             "(mydata_payment_id, mydata_card_id, mydata_payment_date, mydata_payment_ksic_code, " +
             "mydata_payment_category2, mydata_payment_amount, mydata_payment_merchant_name, " +
-            "mydata_payment_received_benefit_amount, mydata_payment_channel, mydata_payment_product_name, " +
+            "mydata_payment_channel, mydata_payment_product_name, " +
             "mydata_payment_product_price, mydata_payment_quantity, mydata_payment_waste_label, " +
             "mydata_payment_discretionary_score, mydata_payment_location_address, " +
             "mydata_payment_location_lat, mydata_payment_location_lng, mydata_payment_business_number) " +
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
     private final JdbcTemplate jdbc;
     private final boolean enabled;
@@ -109,7 +109,7 @@ public class UnknownPgPaymentRunner implements ApplicationRunner {
                 LocalDateTime when = d.atTime(r.nextInt(24), r.nextInt(60));
                 batch.add(new Object[]{
                         payId, cardId, Timestamp.valueOf(when), UNKNOWN_INDUSTRY, "미분류",
-                        amount, pg.getValue(), 0, "ONLINE", "알 수 없는 결제", null, 1,
+                        amount, pg.getValue(), "ONLINE", "알 수 없는 결제", null, 1,
                         null, null, null, null, null, pg.getKey()});
                 total++;
                 if (batch.size() >= 5000) { jdbc.batchUpdate(PAY_SQL, batch); batch.clear(); }

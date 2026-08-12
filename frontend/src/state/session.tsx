@@ -9,7 +9,7 @@ import {
   createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode,
 } from 'react';
 import { DEFAULT_USER_ID } from '../lib/config';
-import { ApiError, api } from '../lib/api';
+import { ApiError, api, clearAuthToken } from '../lib/api';
 import type { AnalysisSummary, OnboardingPayment } from '../lib/api';
 
 export type ScreenId =
@@ -145,6 +145,12 @@ const remove = (key: string) => {
   try { localStorage.removeItem(key); } catch { /* noop */ }
 };
 
+/**
+ * 세리머니를 하루 한 번으로 묶는 날짜 키. 쓰는 곳은 마이룸이지만 <b>이름은 여기가 갖는다</b> —
+ * 로그아웃이 지워야 할 목록에서 빠지면 앞사람의 날짜가 뒷사람의 연출을 삼킨다.
+ */
+export const CEREMONY_SEEN_KEY = 'guardian_ceremony_seen';
+
 const hashScreen = (): ScreenId | null => {
   const raw = window.location.hash.replace(/^#\/?/, '');
   return raw && isScreen(raw) ? raw : null;
@@ -194,6 +200,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setLinkedState(v);
   }, []);
 
+  /** 그 카테고리의 관리 화면을 연다. */
+  const openChallenge = useCallback((category: string) => {
+    setChallengeCategory(category);
+    go('m-challenge');
+  }, [go]);
+
   /**
    * 처음으로 되돌린다(= 로그아웃).
    *
@@ -201,16 +213,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
    * 인증해도 세션은 앞사람의 계정을 들고 있었다. 그 상태로 연동하면 앞사람 계정에 뒷사람 신원이
    * 덮어써지고, 홈은 앞사람의 챌린지를 계속 보여줬다(2026-07-31 운영). 서버도 CI 로 계정을 고르도록
    * 함께 고쳤지만, 신원을 끊는 일은 로그아웃이 먼저 해야 한다.
+   *
+   * <b>앞사람의 흔적은 하나도 남기지 않는다.</b> 같은 이유로 브라우저에 남는 나머지도 지운다 —
+   * `guardian_ceremony_seen` 은 세리머니를 하루 한 번으로 묶는 날짜라, 남겨 두면 뒷사람은
+   * 그날 받은 소품 연출을 <b>못 보고 지나간다</b>. `demo_ci` 는 데모 패널이 기억하는 앞사람의 CI다.
+   *
+   * <b>인증 토큰이 가장 중요하다.</b> 남겨 두면 뒷사람의 브라우저가 앞사람의 열쇠를 들고 있는
+   * 셈이라, 로그아웃했는데도 앞사람 계정으로 요청이 나간다.
    */
-  /** 그 카테고리의 관리 화면을 연다. */
-  const openChallenge = useCallback((category: string) => {
-    setChallengeCategory(category);
-    go('m-challenge');
-  }, [go]);
-
   const resetOnboarding = useCallback(() => {
+    clearAuthToken();
     remove('mydata_onboarded');
     remove('demo_user_id');
+    remove(CEREMONY_SEEN_KEY);
+    remove('demo_ci');
     setUserIdState(DEFAULT_USER_ID);
     setLinkedState(false);
     setDraft(emptyDraft);
@@ -229,12 +245,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
    * 오류 문구로 판별하지 않는 이유: Spring 기본 404 본문은 사유를 싣지 않아
    * (`server.error.include-message`가 never) "사용자 없음"과 "챌린지 없음"이 구분되지 않는다.
    * 그래서 존재 여부를 **명시적으로** 묻는다. 기동당 요청 한 번이다.
+   *
+   * <b>401도 같이 본다.</b> 인증을 도입한 배포 직후, 이미 가입해 둔 사람의 브라우저에는
+   * `mydata_onboarded`와 `demo_user_id`는 있는데 **토큰만 없다.** 404만 보고 있으면 그 사람은
+   * 모든 요청이 401로 막힌 채 화면마다 'Load Failed'만 보게 되고, 온보딩도 못 탄다 —
+   * 위에 적힌 그 상황이 사유만 바뀌어 그대로 재현된다. 토큰이 없거나 만료됐으면
+   * 처음으로 되돌려 <b>다시 인증할 길을 준다.</b>
    */
   useEffect(() => {
     if (!read('mydata_onboarded')) return;          // 아직 가입 전이면 확인할 것이 없다
     let alive = true;
     void api.getUser(userId).catch((e: unknown) => {
-      if (!alive || !(e instanceof ApiError) || e.status !== 404) return;   // 네트워크 오류는 건드리지 않는다
+      // 네트워크 오류는 건드리지 않는다 — 잠깐 끊긴 것으로 가입을 날리면 안 된다.
+      // 404 = 그 사용자가 없다 · 401 = 토큰이 없거나 만료됐다 · 403 = 남의 id 를 들고 있다.
+      // 셋 다 "지금 이 신원으로는 아무것도 못 한다"이고, 빠져나갈 길은 처음부터 다시뿐이다.
+      if (!alive || !(e instanceof ApiError)) return;
+      if (e.status !== 404 && e.status !== 401 && e.status !== 403) return;
       remove('demo_user_id');
       setUserIdState(DEFAULT_USER_ID);
       resetOnboarding();

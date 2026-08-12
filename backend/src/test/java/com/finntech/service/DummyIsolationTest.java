@@ -31,7 +31,7 @@ class DummyIsolationTest {
     private static UserPayment payment(String providerId, String merchantName, String biz) {
         return new UserPayment(UserPayment.rowId(24L, providerId), 24L, "card", 1L,
                 LocalDateTime.of(2026, 8, 1, 12, 0), "5814",
-                IndustryCategoryMapper.UNCLASSIFIED, 9_000, merchantName, 0, biz);
+                IndustryCategoryMapper.UNCLASSIFIED, 9_000, merchantName, biz);
     }
 
     /** 협력자를 한 번에 세운다 — 무엇을 검사하는지가 시험마다 다르므로 대역만 돌려준다. */

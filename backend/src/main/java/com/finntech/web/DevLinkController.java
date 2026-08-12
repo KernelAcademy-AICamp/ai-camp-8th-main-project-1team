@@ -31,10 +31,13 @@ public class DevLinkController {
 
     private final AppUserRepository userRepository;
     private final MyDataLinkService myDataLinkService;
+    private final com.finntech.auth.AuthTokenService authTokens;
 
-    public DevLinkController(AppUserRepository userRepository, MyDataLinkService myDataLinkService) {
+    public DevLinkController(AppUserRepository userRepository, MyDataLinkService myDataLinkService,
+                             com.finntech.auth.AuthTokenService authTokens) {
         this.userRepository = userRepository;
         this.myDataLinkService = myDataLinkService;
+        this.authTokens = authTokens;
     }
 
     public record LinkSyntheticRequest(String ci, List<Long> companyIds, String nickname) {}
@@ -48,7 +51,8 @@ public class DevLinkController {
      *   -d '{"ci":"010ac641...","companyIds":[9001]}'</pre>
      */
     @PostMapping("/link-synthetic")
-    public Map<String, Object> linkSynthetic(@RequestBody LinkSyntheticRequest req) {
+    public Map<String, Object> linkSynthetic(@RequestBody LinkSyntheticRequest req,
+                                             jakarta.servlet.http.HttpServletRequest httpRequest) {
         if (req.ci() == null || req.ci().isBlank()) {
             throw new IllegalArgumentException("ci is required");
         }
@@ -78,6 +82,11 @@ public class DevLinkController {
         body.put("companyIds", companyIds);
         body.put("cardCount", result.cardCount());
         body.put("paymentCount", result.paymentCount());
+        // 이 경로는 본인인증을 건너뛰므로 토큰이 없다. 그대로 두면 사람을 바꾼 직후 화면의
+        // 모든 요청이 **앞사람 토큰**으로 나가 403이 된다 — 데모 패널이 통째로 죽는다.
+        // 인증을 건너뛴 만큼 여기서 발급한다(운영에는 이 컨트롤러 자체가 없다).
+        body.put("authToken", authTokens.issue(
+                com.finntech.domain.UserToken.Role.USER, user.getId(), httpRequest).raw());
         return body;
     }
 }

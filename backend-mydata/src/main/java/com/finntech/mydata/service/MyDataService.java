@@ -215,7 +215,7 @@ public class MyDataService {
         List<PaymentView> paymentViews = payments.stream()
                 .map(payment -> toPaymentView(payment, product.getCode())).toList();
         return new CardView(
-                card.getId(), card.getExpirationDate(), card.getPrevMonthAmount(),
+                card.getId(), card.getExpirationDate(),
                 toProductView(product), toUserView(card.getUser()), paymentViews);
     }
 
@@ -242,6 +242,6 @@ public class MyDataService {
     private PaymentView toPaymentView(MyDataPayment payment, Long cardCode) {
         return new PaymentView(payment.getId(), payment.getPaymentDate(), payment.getKsicCode(),
                 payment.getAmount(), payment.getMerchantName(),
-                payment.getReceivedBenefitAmount(), cardCode, payment.getBusinessNumber());
+                cardCode, payment.getBusinessNumber());
     }
 }

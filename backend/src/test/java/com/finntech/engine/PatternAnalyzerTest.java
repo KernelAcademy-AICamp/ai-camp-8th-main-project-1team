@@ -19,7 +19,7 @@ class PatternAnalyzerTest {
     private final AnalysisProperties.Daypart daypart = new AnalysisProperties.Daypart();
 
     private static UserPayment tx(LocalDateTime at, int amount) {
-        return new UserPayment(at + "-" + amount, 1L, "S1", 9001L, at, "생활", "기타", amount, "가맹점", 0, "1234567890");
+        return new UserPayment(at + "-" + amount, 1L, "S1", 9001L, at, "생활", "기타", amount, "가맹점", "1234567890");
     }
 
     @Test

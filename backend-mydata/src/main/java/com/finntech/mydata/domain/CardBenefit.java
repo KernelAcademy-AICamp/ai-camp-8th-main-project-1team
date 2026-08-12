@@ -51,12 +51,9 @@ public class CardBenefit {
         this.monthlyLimit = monthlyLimit;
     }
 
-    /** 이 혜택이 주어진 전월실적액에 적용되는 구간인지. */
-    public boolean coversPerformance(int prevMonthAmount) {
-        boolean aboveStart = prevMonthAmount >= performanceStart;
-        boolean belowEnd = performanceEnd == 0 || prevMonthAmount < performanceEnd;
-        return aboveStart && belowEnd;
-    }
+    // 실적 구간 판정(coversPerformance)은 여기 두지 않는다 — 전월 실적액을 제공자가 주지
+    // 않으므로 판정할 입력이 없다. 실적은 승인내역에서 계산하는 쪽의 몫이고, 이 클래스는
+    // 구간의 경계값(performanceStart/End)만 들고 있는다.
 
     public Long getId() { return id; }
     public CardProduct getCardProduct() { return cardProduct; }

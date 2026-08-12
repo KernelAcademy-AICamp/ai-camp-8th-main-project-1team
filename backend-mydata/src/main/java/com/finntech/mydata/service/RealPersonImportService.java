@@ -150,7 +150,17 @@ public class RealPersonImportService {
         MyDataUser user = ensurePerson(name, social7, phone, cardCode);
         MyDataCard card = cardRepository.findByUser(user.getId()).stream().findFirst()
                 .orElseThrow(() -> new IllegalStateException("카드가 없다 — ensurePerson 이 실패했다"));
+        return importCsvInto(user, card, csv);
+    }
 
+    /**
+     * <b>지정한 카드에</b> 명세서를 넣는다.
+     *
+     * <p>{@link #importCsv} 에서 갈라냈다 — 예전에는 "그 사람의 첫 카드"에만 넣을 수 있어
+     * 카드가 여러 장이면 두 번째부터 갈 곳이 없었다. 넣을 카드를 밖에서 정하게 하면
+     * 한 사람이 카드사 여럿을 신청해도 각각 제자리에 들어간다.
+     */
+    private ImportResult importCsvInto(MyDataUser user, MyDataCard card, String csv) {
         List<RowResult> problems = new ArrayList<>();
         int accepted = 0, rejected = 0, backfilled = 0, withBusinessNumber = 0;
         String[] lines = csv == null ? new String[0] : csv.split("\\r?\\n");
@@ -185,9 +195,16 @@ public class RealPersonImportService {
             String industryCode = c.length >= 4 && !c[3].isBlank() ? c[3].trim() : UNKNOWN_INDUSTRY;
             String businessNumber = c.length >= 5 ? normalizeBusinessNumber(c[4]) : null;
 
-            // 결제 id는 (CI, 줄, 날짜)로 결정론이다 — 같은 파일을 두 번 올려도 행이 두 배가 되지 않는다.
-            String id = "real-" + user.getId().substring(0, 8) + "-" + d.get().toString().replace("-", "")
-                    + "-" + String.format("%04d", i);
+            // 결제 id는 (CI, **카드**, 날짜, 줄)로 결정론이다 — 같은 파일을 두 번 올려도
+            // 행이 두 배가 되지 않는다.
+            //
+            // **카드를 넣지 않으면 카드가 여러 장일 때 조용히 깨진다**(2026-08-12). 카드사별로
+            // 명세서를 따로 받으면 서로 다른 카드의 같은 날짜·같은 줄 번호가 **같은 id**가 되어,
+            // 두 번째 카드의 결제가 "이미 있다"로 건너뛰어진다. 화면에는 `accepted`만 줄어들 뿐
+            // 아무 오류도 안 난다 — §8-U 가 말하는 침묵이다.
+            String cardKey = card.getId().replace("-", "").substring(0, 4);
+            String id = "real-" + user.getId().substring(0, 8) + "-" + cardKey + "-"
+                    + d.get().toString().replace("-", "") + "-" + String.format("%04d", i);
 
             // 같은 파일을 두 번 올려도 행이 두 배가 되지 않는다. 다만 **그냥 건너뛰면 안 된다** —
             // 결제 id 에 칸 수가 안 들어가므로, 사업자번호를 붙여 다시 올려도 전건이 skip 되어
@@ -209,7 +226,7 @@ public class RealPersonImportService {
             // **모든 결제가 심야 결제로** 판정된다. 모르는 값을 0으로 두는 건 중립이 아니다.
             MyDataPayment row = new MyDataPayment(id, card, d.get().atTime(12, 0),
                     industryCode, UNKNOWN_INDUSTRY.equals(industryCode) ? UNKNOWN_CATEGORY2 : null,
-                    (int) amount, merchant, 0);
+                    (int) amount, merchant);
             // 사업자번호가 **확정 분류 사전의 키**다. 이걸 안 실으면 사전이 아무리 차 있어도
             // 실데이터에는 영영 안 붙는다 — 조회가 '번호 없음' 갈래로 빠지기 때문이다
             // (`MerchantCategoryService.lookup` ②). 2026-08-05 에 그 상태를 실측으로 확인했다.
@@ -242,12 +259,124 @@ public class RealPersonImportService {
                 ? cardProductRepository.findAll().stream().findFirst()
                 : cardProductRepository.findById(cardCode))
                 .orElseThrow(() -> new IllegalStateException("카드 상품 카탈로그가 비어 있다"));
-        // 카드 번호는 CI에서 파생한다 — 결정론이라 다시 넣어도 같은 카드가 된다.
-        String h = user.getId();
-        String serial = h.substring(0, 4) + "-" + h.substring(4, 8) + "-"
-                + h.substring(8, 12) + "-" + h.substring(12, 16);
-        MyDataCard card = new MyDataCard(serial, user, product, LocalDate.now().plusYears(4), 0);
-        cardRepository.save(card);
+        cardRepository.save(newCard(user, product, 0, null));
+    }
+
+    /**
+     * 카드 한 장을 만든다. <b>카드 번호는 (CI, 순번)에서 파생해 결정론</b>이다 —
+     * 같은 신청을 다시 넣어도 같은 카드에 붙어 행이 두 배가 되지 않는다.
+     *
+     * <p>순번을 섞지 않으면 여러 장이 <b>전부 같은 번호</b>가 되어 두 번째 카드부터
+     * 저장이 깨진다(PK 충돌). 예전에는 카드가 한 장뿐이라 드러나지 않던 구멍이다.
+     */
+    private static MyDataCard newCard(MyDataUser user, CardProduct product, int index, String displayName) {
+        String hash = sha256Hex(user.getId() + ":card:" + index);
+        String serial = hash.substring(0, 4) + "-" + hash.substring(4, 8) + "-"
+                + hash.substring(8, 12) + "-" + hash.substring(12, 16);
+        MyDataCard card = new MyDataCard(serial, user, product, LocalDate.now().plusYears(4));
+        card.setDisplayName(displayName == null || displayName.isBlank() ? null : displayName.trim());
+        return card;
+    }
+
+    private static String sha256Hex(String value) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] out = md.digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(out.length * 2);
+            for (byte octet : out) {
+                hex.append(Character.forDigit((octet >> 4) & 0xF, 16));
+                hex.append(Character.forDigit(octet & 0xF, 16));
+            }
+            return hex.toString();
+        } catch (java.security.NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 unavailable", exception);
+        }
+    }
+
+    /** 신청 화면이 고를 카드 상품 한 줄. */
+    public record CatalogRow(Long cardCode, String cardName, Long companyId, String companyName) {}
+
+    /**
+     * 카드 상품 카탈로그 — 카드사 7곳 · 상품 115종. 기준 데이터라 개인정보가 없다.
+     *
+     * <p><b>여기서 트랜잭션 안에 담아 돌려준다.</b> 엔티티를 그대로 컨트롤러로 올리면
+     * {@code open-in-view: false} 라 {@code getCardCompany()} 에서 세션이 이미 닫혀 있어
+     * {@code LazyInitializationException} 이 난다 — 화면에는 500 만 뜨고 이유는 안 보인다.
+     */
+    @Transactional(readOnly = true)
+    public List<CatalogRow> cardCatalog() {
+        return cardProductRepository.findAll().stream()
+                .map(product -> new CatalogRow(product.getCode(), product.getName(),
+                        product.getCardCompany().getId(), product.getCardCompany().getName()))
+                .sorted(java.util.Comparator.comparing(CatalogRow::companyName)
+                        .thenComparing(CatalogRow::cardName))
+                .toList();
+    }
+
+    /** 카드 한 장에 대한 적재 요청 — 카드사·상품·표시명과 그 카드의 명세서. */
+    public record CardImport(Long cardCode, String displayName, String csv) {}
+
+    /** 카드별 결과 — 화면이 "어느 카드가 몇 건"을 그대로 보여줄 수 있게 나눠 준다. */
+    public record CardImportResult(String cardId, String cardName, String displayName,
+                                   String companyName, int accepted, int rejected,
+                                   int backfilled, int withBusinessNumber,
+                                   List<RowResult> problems) {}
+
+    public record BatchImportResult(String ci, List<CardImportResult> cards,
+                                    int accepted, int rejected, int withBusinessNumber) {}
+
+    /**
+     * <b>카드 여러 장을 한 번에 적재한다</b> (설계서 F3).
+     *
+     * <p>실사용자는 카드사별로 명세서를 따로 받으므로 신청 한 건에 파일이 여럿이다.
+     * 카드를 하나로 합치면 "어느 카드에서 쓴 돈인가"가 사라지고, 카드별 실적·혜택 계산이
+     * 성립하지 않는다. 그래서 <b>파일 하나가 카드 한 장</b>이다.
+     *
+     * <p>카드는 <b>목록 순서대로</b> 만든다 — 순서가 곧 결정론 카드 번호의 재료라,
+     * 같은 신청을 다시 넣으면 같은 카드에 붙는다.
+     */
+    @Transactional
+    public BatchImportResult importBatch(String name, String social7, String phone,
+                                         List<CardImport> imports) {
+        MyDataUser user = ensurePerson(name, social7, phone, firstCardCode(imports));
+        List<MyDataCard> existing = cardRepository.findByUser(user.getId());
+
+        List<CardImportResult> results = new ArrayList<>(imports.size());
+        int accepted = 0, rejected = 0, withBusinessNumber = 0;
+
+        for (int index = 0; index < imports.size(); index++) {
+            CardImport request = imports.get(index);
+            CardProduct product = (request.cardCode() == null
+                    ? cardProductRepository.findAll().stream().findFirst()
+                    : cardProductRepository.findById(request.cardCode()))
+                    .orElseThrow(() -> new IllegalStateException("카드 상품을 찾을 수 없다: " + request.cardCode()));
+
+            MyDataCard card = newCard(user, product, index, request.displayName());
+            // 재신청이면 같은 번호의 카드가 이미 있다 — 그것을 그대로 쓴다.
+            MyDataCard target = existing.stream()
+                    .filter(c -> c.getId().equals(card.getId()))
+                    .findFirst()
+                    .orElseGet(() -> cardRepository.save(card));
+            if (request.displayName() != null && !request.displayName().isBlank()) {
+                target.setDisplayName(request.displayName().trim());
+                cardRepository.save(target);
+            }
+
+            ImportResult one = importCsvInto(user, target, request.csv());
+            accepted += one.accepted();
+            rejected += one.rejected();
+            withBusinessNumber += one.withBusinessNumber();
+            results.add(new CardImportResult(target.getId(), product.getName(),
+                    target.getDisplayName(), product.getCardCompany().getName(),
+                    one.accepted(), one.rejected(), one.backfilled(),
+                    one.withBusinessNumber(), one.problems()));
+        }
+        return new BatchImportResult(user.getId(), List.copyOf(results),
+                accepted, rejected, withBusinessNumber);
+    }
+
+    private static Long firstCardCode(List<CardImport> imports) {
+        return imports.isEmpty() ? null : imports.get(0).cardCode();
     }
 
     /**

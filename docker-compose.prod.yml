@@ -73,6 +73,10 @@ services:
       # 실제 사람 1명의 카드내역 입력구(/admin/realdata). **실 개인정보**를 받고 파기까지 있다.
       # 기본 꺼짐 — 넣을 때만 켠다. 8082는 외부 미발행이지만 그 격리는 단층 방어라 여기서도 막는다.
       MYDATA_REALDATA_ENABLED: "${MYDATA_REALDATA_ENABLED:-false}"
+      # 승인된 실사용자 신청의 적재구(/self/**). 위와 성질이 다르다 — 부르는 것은 본체뿐이고
+      # (공유 시크릿 필터가 /self/** 도 검사한다) 본체는 admin 이 승인한 신청만 보낸다.
+      # 데모 기간에만 켠다. 본체의 FINNTECH_INTAKE_ENABLED 와 짝이다(둘 다 켜야 흐른다).
+      MYDATA_SELFIMPORT_ENABLED: "${MYDATA_SELFIMPORT_ENABLED:-false}"
     mem_limit: 768m             # 힙 ≈ 460m. 조회 응답만 만들면 되는 서버라 이 정도면 충분하다.
     networks: [internal]        # 아웃바운드 없음 — 이 서버는 밖으로 나갈 일이 없다
     healthcheck:
@@ -103,6 +107,33 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-capacitor://localhost,https://localhost,http://localhost}
       # 일반 API로 더미 시드가 생성되면 안 된다(문서 §5-2 ④). 운영에서는 켜지 않는다.
       FINNTECH_DEV_SEED_ENABLED: "false"
+      # ---- 인증 (설계서 Phase 1) ----
+      # **끄지 않는다.** 끄면 `?userId=N`으로 남의 데이터가 그대로 열린다 — 도입 전 상태로 돌아간다.
+      # 기본값을 true로 두되 .env가 덮을 수 있게 한다(끄는 경우가 있다면 그것이 기록에 남아야 한다).
+      FINNTECH_AUTH_ENABLED: "${FINNTECH_AUTH_ENABLED:-true}"
+      # https 뒤라 기본 true. 로컬 http 총연습에서만 false로 내린다.
+      FINNTECH_SECURE_COOKIE: "${FINNTECH_SECURE_COOKIE:-true}"
+      # 기동 1회용 admin 계정 생성. 값이 있으면 만들고 임시 비밀번호를 로그에 한 번 찍는다.
+      # 받아 적은 뒤 .env에서 지운다 — 이미 있는 계정이면 아무것도 하지 않는다.
+      FINNTECH_ADMIN_BOOTSTRAP: ${FINNTECH_ADMIN_BOOTSTRAP:-}
+      # ---- 개인정보 컬럼 암호화 (Phase 2) ----
+      # mysql 프로파일에서 꺼져 있으면 CryptoRequiredGuard가 기동을 막는다.
+      # 조용히 평문으로 도는 것보다 기동이 실패하는 편이 낫다.
+      FINNTECH_CRYPTO_ENABLED: "${FINNTECH_CRYPTO_ENABLED:-false}"
+      # 가드를 끄는 스위치. **운영 .env 에는 넣지 않는다** — 기본값 true 가 그대로 산다.
+      # CI 의 '운영 중지 검사'만 이 값을 넣는다(러너에 KMS 키가 없다).
+      FINNTECH_CRYPTO_REQUIRED: "${FINNTECH_CRYPTO_REQUIRED:-true}"
+      FINNTECH_KMS_KEY_ID: ${FINNTECH_KMS_KEY_ID:-}
+      FINNTECH_ENCRYPTED_DEK: ${FINNTECH_ENCRYPTED_DEK:-}
+      FINNTECH_ENCRYPTED_PEPPER: ${FINNTECH_ENCRYPTED_PEPPER:-}
+      # ---- 실사용자 신청·승인 (Phase 3) ----
+      # 데모 기간에만 켠다. 끄면 신청·승인 경로가 통째로 404가 된다.
+      FINNTECH_INTAKE_ENABLED: "${FINNTECH_INTAKE_ENABLED:-false}"
+      # ---- 감사 앵커 외부 사본 (Phase 5-1) ----
+      # TSA 토큰이 위조 대상과 같은 DB에 있으면 도장을 새로 받아 바꿔치기하는 공격이 통과한다.
+      # Object Lock(Compliance) 버킷에 사본을 남겨야 그것이 드러난다.
+      FINNTECH_ANCHOR_ARCHIVE_ENABLED: "${FINNTECH_ANCHOR_ARCHIVE_ENABLED:-false}"
+      FINNTECH_ANCHOR_BUCKET: ${FINNTECH_ANCHOR_BUCKET:-}
       # 운영 관측(/api/ops/health)은 켜 둔다 — 개인정보가 없고, 켜야 볼 수 있는 관측은 안 보게 된다.
       FINNTECH_OPS_ENABLED: "${FINNTECH_OPS_ENABLED:-true}"
       # 시각 기준. 비우면 실시간. 고정할 때는 마이데이터의 MYDATA_NOW와 같은 날짜로 함께 넣는다(§8-D).

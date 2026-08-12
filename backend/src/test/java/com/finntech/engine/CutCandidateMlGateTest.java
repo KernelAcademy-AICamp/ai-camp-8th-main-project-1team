@@ -50,7 +50,7 @@ class CutCandidateMlGateTest {
         List<UserPayment> out = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             out.add(new UserPayment("p" + cat + i, 1L, "card", 1L, T.minusDays(i),
-                    "9999", cat, amount, "가맹점", 0, null));
+                    "9999", cat, amount, "가맹점", null));
         }
         return out;
     }
@@ -114,7 +114,7 @@ class CutCandidateMlGateTest {
     void optimizableAlsoGated() {
         List<UserPayment> w = new ArrayList<>(spend("식비", 10_000, 9));
         w.addAll(spend("식비비싼", 0, 0));
-        w.add(new UserPayment("big", 1L, "card", 1L, T, "9999", "식비", 90_000, "오마카세", 0, null));
+        w.add(new UserPayment("big", 1L, "card", 1L, T, "9999", "식비", 90_000, "오마카세", null));
 
         var blocked = CutCandidateSelector.selectFrom(w, cfg(), 30, CutCandidateMlGateTest::disc,
                 Map.of("식비", 0.10));

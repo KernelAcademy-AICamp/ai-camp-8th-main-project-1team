@@ -29,7 +29,6 @@ export function ReportCards() {
 
   const list = cards.data ?? [];
   const monthSpend = list.reduce((sum, c) => sum + c.currentPerformance, 0);
-  const monthBenefit = list.reduce((sum, c) => sum + c.earnedThisMonth, 0);
 
   return (
     <Screen title="내 카드" hasTabBar>
@@ -46,7 +45,6 @@ export function ReportCards() {
           <>
             <div className="asset-row">
               <div className="asset"><b>{won(monthSpend)}</b><span>이번 달 사용</span></div>
-              <div className="asset"><b style={{ color: 'var(--green-t)' }}>{won(monthBenefit)}</b><span>받은 혜택</span></div>
               <div className="asset"><b>{list.length}장</b><span>연결 카드</span></div>
             </div>
 
@@ -76,7 +74,6 @@ export function ReportCards() {
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginTop: 8, color: 'var(--t3)' }}>
                       <span>사용 {won(c.currentPerformance)}</span>
-                      <span>받은 혜택 <b style={{ color: 'var(--green-t)' }}>{won(c.earnedThisMonth)}</b></span>
                     </div>
                   </div>
 
@@ -91,12 +88,7 @@ export function ReportCards() {
                         <div className="txn" key={p.paymentId}>
                           <span className="d">{shortDate(p.date)}</span>
                           <span className="m">{p.merchantName ?? catLabel(p.category2 ?? p.category)}</span>
-                          <span className="a">
-                            {won(p.amount)}
-                            {p.receivedBenefit > 0 && (
-                              <em style={{ color: 'var(--green-t)', fontStyle: 'normal', marginLeft: 4 }}>−{won(p.receivedBenefit)}</em>
-                            )}
-                          </span>
+                          <span className="a">{won(p.amount)}</span>
                         </div>
                       ))}
                     </div>

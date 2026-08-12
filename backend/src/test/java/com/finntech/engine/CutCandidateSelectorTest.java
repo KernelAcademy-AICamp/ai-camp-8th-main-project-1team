@@ -31,7 +31,7 @@ class CutCandidateSelectorTest {
 
     private static UserPayment tx(String cat2, int amount) {
         return new UserPayment(cat2 + "|" + amount, 1L, "S1", 9001L,
-                LocalDateTime.of(2026, 2, 10, 12, 0), "생활", cat2, amount, "가맹점", 0, "1234567890");
+                LocalDateTime.of(2026, 2, 10, 12, 0), "생활", cat2, amount, "가맹점", "1234567890");
     }
 
     /** 창 길이 = 한 달(평균 30.436875일). 환산비가 1이라 창 합계가 그대로 월 금액이 된다. */

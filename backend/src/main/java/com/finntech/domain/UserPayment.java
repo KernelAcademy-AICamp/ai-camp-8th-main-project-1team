@@ -59,8 +59,9 @@ public class UserPayment {
     @Column(name = "merchant_name", length = 60)
     private String merchantName;
 
-    @Column(name = "received_benefit", nullable = false)
-    private int receivedBenefit;
+    // 받은 혜택 금액은 두지 않는다 — 마이데이터가 할인·적립액을 주지 않는다(카드-005·카드-008
+    // 어디에도 없다). 이 카드로 얼마를 아꼈는지는 카드 혜택 룰을 아는 쪽이 승인내역에서
+    // 계산할 몫이고, 계산 없이 표시할 수 있는 값이 아니다.
 
     /** 가맹점 사업자등록번호 10자리(마이데이터에서 전달). 사용자는 이 번호로 가맹점 주소를 조회한다(§13). */
     @Column(name = "business_number", length = 10)
@@ -115,7 +116,7 @@ public class UserPayment {
 
     public UserPayment(String paymentId, Long userId, String cardSerial, Long cardCode,
                        LocalDateTime paymentDate, String industryCode, String category2,
-                       int amount, String merchantName, int receivedBenefit, String businessNumber) {
+                       int amount, String merchantName, String businessNumber) {
         this.paymentId = paymentId;
         this.userId = userId;
         this.cardSerial = cardSerial;
@@ -125,7 +126,6 @@ public class UserPayment {
         this.category2 = category2;
         this.amount = amount;
         this.merchantName = merchantName;
-        this.receivedBenefit = receivedBenefit;
         this.businessNumber = businessNumber;
     }
 
@@ -138,7 +138,6 @@ public class UserPayment {
     public String getCategory2() { return category2; }
     public int getAmount() { return amount; }
     public String getMerchantName() { return merchantName; }
-    public int getReceivedBenefit() { return receivedBenefit; }
     public String getBusinessNumber() { return businessNumber; }
     public String getCategory2Llm() { return category2Llm; }
     public String getCategory2Source() { return category2Source; }

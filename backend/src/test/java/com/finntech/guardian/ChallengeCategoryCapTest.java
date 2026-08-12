@@ -32,6 +32,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p><b>판정은 바뀌지 않는다.</b> 챌린지의 성공/실패와 잔디는 여전히 합계 기준이다
  * (사용자 결정 2026-07-31) — 카테고리로 실패까지 가르면 카테고리 수만큼 실패 확률이 오른다.
  */
+/*
+ * 시각 고정(finntech.demo.today)은 여기 걸지 않는다 — seed() 가 이미 오늘 기준 상대 날짜를
+ * 쓰기 때문이다. 둘을 같이 쓰면 **시드는 실시간으로 흐르는데 창만 과거에 멈춰** 한 달쯤 뒤에
+ * 결제가 전부 창 밖으로 나간다. 시드와 창은 같은 시간을 봐야 한다.
+ */
 @SpringBootTest
 @ActiveProfiles("test")   // 인메모리 H2 — 파일 DB 를 쓰면 낡은 스키마가 남는다
 @Transactional

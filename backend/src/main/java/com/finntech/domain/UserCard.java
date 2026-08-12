@@ -35,11 +35,21 @@ public class UserCard {
     @Column(name = "company_name", length = 40)
     private String companyName;
 
-    /** 전월 실적액(마이데이터 제공). */
+    /**
+     * 전월 실적액 — <b>불러온 지난달 승인액 합.</b>
+     *
+     * <p>제공자가 주던 값이었는데, 실 마이데이터 카드 API 에 그런 필드가 없어 없앴다.
+     * 이제 당월 실적과 같은 방식으로 우리가 센다.
+     *
+     * <p><b>승인액 전액 기준이라 실제 카드사 실적과는 다르다.</b> 카드사는 세금·공과금·상품권·
+     * 무이자할부·해외이용분 따위를 실적에서 빼는데, 그 목록은 카드마다 달라 카드 혜택 룰이
+     * 갖춰져야 반영할 수 있다. 그때까지 이 값은 <b>상한</b>으로만 읽어야 한다 —
+     * "채웠다"고 말하면 안 되고 "아직 모자라다"만 말할 수 있다.
+     */
     @Column(name = "prev_performance", nullable = false)
     private int prevPerformance;
 
-    /** 당월 실적액(불러온 이번달 결제 합). */
+    /** 당월 실적액(불러온 이번달 결제 합). 위와 같은 한계를 갖는다. */
     @Column(name = "current_performance", nullable = false)
     private int currentPerformance;
 
