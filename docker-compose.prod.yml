@@ -126,6 +126,13 @@ services:
       FINNTECH_KMS_KEY_ID: ${FINNTECH_KMS_KEY_ID:-}
       FINNTECH_ENCRYPTED_DEK: ${FINNTECH_ENCRYPTED_DEK:-}
       FINNTECH_ENCRYPTED_PEPPER: ${FINNTECH_ENCRYPTED_PEPPER:-}
+      # AWS SDK 의 리전. **명시하지 않으면 IMDS 에 물어본다** — 컨테이너에서 그 길이 막히면
+      # 리전을 못 찾아 KMS 클라이언트가 생성 단계에서 죽고, 앱이 통째로 안 뜬다.
+      #
+      # 2026-08-12 배포가 실제로 그렇게 실패했다. 인스턴스가 IMDSv2 강제에 **홉 제한 1** 이라
+      # 컨테이너(홉 2)에서는 토큰조차 못 받았다. 홉을 2로 올려 고쳤지만, 리전만이라도
+      # 여기서 못박아 두면 그 한 겹에 덜 기댄다. 자격증명은 여전히 인스턴스 역할에서 온다.
+      AWS_REGION: ${AWS_REGION:-ap-northeast-2}
       # ---- 실사용자 신청·승인 (Phase 3) ----
       # 데모 기간에만 켠다. 끄면 신청·승인 경로가 통째로 404가 된다.
       FINNTECH_INTAKE_ENABLED: "${FINNTECH_INTAKE_ENABLED:-false}"
