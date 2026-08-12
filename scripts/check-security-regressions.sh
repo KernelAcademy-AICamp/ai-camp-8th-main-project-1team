@@ -75,7 +75,23 @@ else
   ok "사용자 앱에 관리 화면 진입점 없음"
 fi
 
-# ── 6. 토큰·비밀번호를 평문으로 저장하는가 ───────────────────────────────────
+# ── 6. admin 계정을 HTTP 로 만들 수 있게 됐는가 ──────────────────────────────
+# **admin 생성·초기화는 서버에 닿을 수 있는 사람만** 할 수 있어야 한다. 그 권한은 AWS IAM 이
+# 관리하고(SSM · CloudTrail), 우리가 만든 비밀번호보다 강하다.
+#
+# 여기에 HTTP 경로가 하나라도 생기면 그 순간 **인터넷에서 admin 을 만들 수 있게** 된다.
+# 지금은 부르는 곳이 기동 시 환경변수를 읽는 러너 하나뿐이다. 그 상태를 고정한다.
+callers=$(grep -rn "createAccount\|resetAccount" backend/src/main/java \
+            | grep -v "AdminAuthService.java" | grep -v "AdminBootstrapRunner.java" | wc -l | tr -d ' ')
+if [ "$callers" != "0" ]; then
+  bad "admin 계정 생성·초기화를 러너 밖에서 부르는 곳이 생겼다 ($callers 곳) — HTTP 로 새면 끝이다"
+  grep -rn "createAccount\|resetAccount" backend/src/main/java \
+    | grep -v "AdminAuthService.java" | grep -v "AdminBootstrapRunner.java" | head -3 | while read -r l; do note "$l"; done
+else
+  ok "admin 생성·초기화는 기동 러너에서만 — HTTP 경로 없음"
+fi
+
+# ── 7. 토큰·비밀번호를 평문으로 저장하는가 ───────────────────────────────────
 # 마이그레이션에 `token VARCHAR` 같은 칸이 새로 생기면 지문이 아니라 원문을 저장한다는 뜻이다.
 if grep -rn "token_hash\|password_hash" backend/src/main/resources/db/migration/*.sql >/dev/null 2>&1; then
   ok "토큰·비밀번호가 해시 칸으로 정의돼 있다"

@@ -60,22 +60,105 @@ export interface ParseResult {
   csv: string;
   /** 실패 사유(머리글을 못 찾음 등). */
   error: string | null;
+  /** 별칭표가 아니라 모델이 연결해 준 경우의 통로 이름. 아니면 null. */
+  guessedBy: string | null;
+}
+
+/** 머리글일 수 있는 줄 하나 — `at` 은 격자에서의 번호다(파일 줄 번호가 아니다). */
+export interface HeaderCandidate { at: number; cells: string[] }
+
+/** 모델이 돌려준 연결. `at` 은 격자 번호로 되돌린 값이다. */
+export interface ColumnOverride {
+  at: number;
+  cols: { date: number; merchant: number; amount: number; biz: number };
+  source: string;
+}
+
+const LOOKS_LIKE_DATE = /^\d{2,4}[-./]\d{1,2}[-./]\d{1,2}$|^\d{8}$/;
+const LOOKS_LIKE_AMOUNT = /^[\d,.\s원₩\-+()]*\d[\d,.\s원₩\-+()]*$/;
+const LOOKS_LIKE_BIZ = /\d{3}-\d{2}-\d{5}/;
+
+/**
+ * 모델에게 보낼 <b>머리글 후보</b>를 고른다 — 별칭표가 실패했을 때만 쓴다.
+ *
+ * <p><b>값이 든 줄은 고르지 않는다.</b> 나가는 것은 카드사가 정한 칸 이름뿐이어야 한다.
+ * 머리글은 짧은 낱말들이고 날짜도 금액도 사업자번호도 없다 — 자료 줄과 `성명 : 홍*동` 같은
+ * 머리말은 이 규칙 중 하나에 반드시 걸린다.
+ *
+ * <p>여기서 거르는 것은 <b>편의</b>다. 같은 검사를 서버가 다시 하고 그쪽이 권위다 —
+ * 브라우저 코드는 사용자가 고칠 수 있으므로 신뢰의 근거가 될 수 없다.
+ */
+export function headerCandidates(text: string): HeaderCandidate[] {
+  const out: HeaderCandidate[] = [];
+  const grid = parseCsv(text);
+  for (let i = 0; i < Math.min(grid.length, 30) && out.length < 5; i++) {
+    const cells = grid[i].cells.map((c) => String(c ?? '').replace(/\s+/g, ' ').trim());
+    let filled = 0;
+    let dirty = false;
+    for (const cell of cells) {
+      if (!cell) continue;
+      filled++;
+      if (cell.length > 30 || LOOKS_LIKE_DATE.test(cell)
+          || LOOKS_LIKE_AMOUNT.test(cell) || LOOKS_LIKE_BIZ.test(cell)) { dirty = true; break; }
+    }
+    if (!dirty && filled >= 3) out.push({ at: i, cells: cells.slice(0, 40) });
+  }
+  return out;
 }
 
 /** 칸 이름 비교용 — BOM·공백·괄호를 지운다. 엑셀 저장본은 BOM 으로 시작하기도 한다. */
 const norm = (value: string) => String(value ?? '').replace(/[\s()（）﻿]/g, '');
 
-/** 따옴표 안의 쉼표를 살린다 — 가맹점명에 흔하다. */
-function splitCsvLine(line: string): string[] {
-  const out: string[] = [];
+/** 한 줄이 아니라 <b>한 레코드</b>. `line` 은 파일에서 이 레코드가 시작한 줄이다. */
+interface CsvRecord { cells: string[]; line: number }
+
+/**
+ * CSV 를 격자로 읽는다 — <b>줄바꿈보다 따옴표가 먼저다</b>(RFC 4180).
+ *
+ * <p>줄로 먼저 자르고 나서 따옴표를 보면, 한 칸 안에 줄바꿈이 든 머리글이 두 줄로 쪼개진다:
+ *
+ * <pre>거래일,확정일,카드구분,"이용카드
+ * (뒤4자리)",상품구분,가맹점명,이용금액,…</pre>
+ *
+ * 앞쪽엔 `거래일`만, 뒤쪽엔 `가맹점명`·`이용금액`만 남아 <b>셋이 한 줄에 모인 적이 없어</b>
+ * 머리글을 영영 못 찾는다. 실제 카드사 파일이 이랬다(2026-08-12). 칸 이름은 전부 별칭표에
+ * 있었으므로 별칭을 늘려서는 절대 고쳐지지 않는 결함이다.
+ *
+ * <p>따옴표 안에서는 쉼표도 줄바꿈도 그냥 글자이고, `""` 는 따옴표 한 개다.
+ */
+function parseCsv(text: string): CsvRecord[] {
+  const source = text.replace(/^﻿/, '');   // 엑셀 저장본은 BOM 으로 시작한다
+  const out: CsvRecord[] = [];
+  let cells: string[] = [];
   let cur = '';
   let quoted = false;
-  for (const ch of line) {
-    if (ch === '"') { quoted = !quoted; continue; }
-    if (ch === ',' && !quoted) { out.push(cur); cur = ''; continue; }
+  let line = 1;
+  let startLine = 1;
+
+  for (let i = 0; i < source.length; i++) {
+    const ch = source[i];
+    if (quoted) {
+      if (ch === '"') {
+        if (source[i + 1] === '"') { cur += '"'; i++; continue; }
+        quoted = false; continue;
+      }
+      if (ch === '\n') line++;                 // 칸 안의 줄바꿈도 줄 수는 센다
+      cur += ch;
+      continue;
+    }
+    if (ch === '"') { quoted = true; continue; }
+    if (ch === ',') { cells.push(cur); cur = ''; continue; }
+    if (ch === '\r') continue;
+    if (ch === '\n') {
+      cells.push(cur);
+      out.push({ cells, line: startLine });
+      cells = []; cur = ''; line++; startLine = line;
+      continue;
+    }
     cur += ch;
   }
-  out.push(cur);
+  cells.push(cur);
+  out.push({ cells, line: startLine });
   return out;
 }
 
@@ -117,10 +200,10 @@ const digitsOrEmpty = (raw: string, length: number) => {
   return digits.length === length ? digits : '';
 };
 
-function findHeader(rows: string[][]): { at: number; cols: Record<string, number> } | null {
+function findHeader(rows: CsvRecord[]): { at: number; cols: Record<string, number> } | null {
   // 머리말이 길어야 몇 줄이다.
   for (let i = 0; i < Math.min(rows.length, 30); i++) {
-    const cells = rows[i].map(norm);
+    const cells = rows[i].cells.map(norm);
     const cols: Record<string, number> = {};
     for (const [key, names] of Object.entries(COLUMN_ALIASES)) {
       for (const want of names) {
@@ -145,18 +228,32 @@ function describeMapping(header: string[], cols: Record<string, number>): Record
   return out;
 }
 
-const EMPTY: Omit<ParseResult, 'ok' | 'error'> = {
+/** 모델이 `-1`(없음)로 답한 항목을 빼고 표와 같은 모양으로 만든다. */
+function pruned(cols: ColumnOverride['cols']): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [key, index] of Object.entries(cols)) if (index >= 0) out[key] = index;
+  return out;
+}
+
+const EMPTY: Omit<ParseResult, 'ok' | 'error' | 'guessedBy'> = {
   mapping: {}, rows: [], problems: [], totalAmount: 0, refundCount: 0,
   refundAmount: 0, withBiz: 0, merchants: 0, from: null, to: null, csv: '',
 };
 
-export function parseStatement(text: string, today = new Date()): ParseResult {
-  const lines = text.split(/\r?\n/);
-  const grid = lines.map(splitCsvLine);
-  const header = findHeader(grid);
+/**
+ * @param override 별칭표가 실패했을 때 모델이 대신 알려 준 연결. 주면 <b>표보다 우선한다</b>
+ *                 — 부르는 쪽이 표가 실패한 것을 확인하고서야 부르기 때문이다.
+ */
+export function parseStatement(
+  text: string, today = new Date(), override?: ColumnOverride,
+): ParseResult {
+  const grid = parseCsv(text);
+  const header = override && override.at < grid.length
+    ? { at: override.at, cols: pruned(override.cols) }
+    : findHeader(grid);
   if (!header) {
     return {
-      ...EMPTY, ok: false,
+      ...EMPTY, ok: false, guessedBy: null,
       error: '날짜·가맹점·금액 칸을 찾지 못했어요. 카드사에서 받은 CSV를 그대로 올려 주세요.',
     };
   }
@@ -168,18 +265,25 @@ export function parseStatement(text: string, today = new Date()): ParseResult {
   const earliest = `${today.getFullYear() - 3}-01-01`;
 
   for (let i = header.at + 1; i < grid.length; i++) {
-    const cells = grid[i];
-    const lineNo = i + 1;
+    const cells = grid[i].cells;
+    const lineNo = grid[i].line;
     const cell = (key: string) => {
       const at = header.cols[key];
       return at === undefined || at >= cells.length ? '' : String(cells[at] ?? '').trim();
     };
     const rawDate = cell('date');
-    const merchant = cell('merchant');
+    // 칸 안의 줄바꿈은 표시용 줄맞춤이다 — 공백 하나로 접는다.
+    // 서버는 가맹점명의 제어문자를 거부하므로 여기서 접지 않으면 그 줄이 통째로 버려진다.
+    const merchant = cell('merchant').replace(/\s+/g, ' ').trim();
     const rawAmount = cell('amount');
     if (!rawDate && !merchant && !rawAmount) continue;   // 빈 줄
 
     const date = parseDate(rawDate);
+    // **꼬리말은 조용히 넘긴다.** 명세서 끝에는 `합계,20 건,…` 과 유의사항 문단이 붙는데,
+    // 이것을 "못 읽은 줄"로 세면 멀쩡한 파일에도 문제가 2건 뜬 것처럼 보인다.
+    // 다만 조건을 좁게 잡는다 — **날짜도 못 읽고 가맹점명도 비어야** 넘긴다.
+    // 날짜가 깨졌어도 가맹점명이 있으면 그것은 결제 줄이므로 사유를 달아 돌려준다.
+    if (!date && !merchant) continue;
     if (!date) { problems.push({ line: lineNo, reason: `날짜를 못 읽음: ${rawDate.slice(0, 20)}` }); continue; }
     if (date > todayIso) { problems.push({ line: lineNo, reason: `미래 날짜: ${date}` }); continue; }
     if (date < earliest) { problems.push({ line: lineNo, reason: `3년보다 오래된 날짜: ${date}` }); continue; }
@@ -201,7 +305,9 @@ export function parseStatement(text: string, today = new Date()): ParseResult {
   return {
     ok: rows.length > 0,
     error: rows.length > 0 ? null : '읽을 수 있는 결제가 한 건도 없어요.',
-    mapping: describeMapping(grid[header.at].map((c) => String(c ?? '')), header.cols),
+    guessedBy: override?.source ?? null,
+    mapping: describeMapping(
+      grid[header.at].cells.map((c) => String(c ?? '').replace(/\s+/g, ' ')), header.cols),
     rows,
     problems,
     totalAmount: rows.reduce((sum, row) => sum + row.amount, 0),
