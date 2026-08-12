@@ -107,6 +107,11 @@ jobs:
           FINNTECH_DEV_SEED_ENABLED=false
           GEMINI_API_KEY=
           FSS_API_KEY=
+          # 개인정보 컬럼 암호화는 KMS 키가 있어야 켜진다. 러너에는 키도 자격증명도 없다.
+          # CryptoRequiredGuard 가 mysql 프로파일에서 기동을 막으므로 여기서만 가드를 끈다.
+          # **운영 .env 에는 이 값이 없다** — 그래서 운영에서는 가드가 그대로 산다.
+          # 무엇을 완화했는지 이 파일에서 바로 보이게 두는 것이 요점이다.
+          FINNTECH_CRYPTO_REQUIRED=false
           EOF
 
       # `.env` 에 넣은 값이 컨테이너까지 가는가.
