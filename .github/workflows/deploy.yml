@@ -57,11 +57,38 @@ jobs:
             const owner = context.repo.owner, repo = context.repo.repo;
             const reasons = [];
 
-            // 이 커밋을 담은 PR을 찾는다. 머지 커밋도 스쿼시 커밋도 이 API로 잡힌다.
-            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner, repo, commit_sha: sha,
-            });
-            const pr = prs.find((p) => p.base.ref === 'main' && p.merged_at);
+            // 이 커밋을 담은 PR을 찾는다. 머지 커밋도 스쿼시 커밋도 이 API로 잡힌다 —
+            // **대부분은.** 이 API 는 GitHub 이 따로 만드는 '커밋↔PR 연결 색인'을 읽는데,
+            // 그 색인이 머지 커밋을 못 잡는 경우가 실재한다(#180 · d64e444, 2026-08-12).
+            // 병합 3초 뒤에 배포가 떠서 못 읽은 것이 아니었다 — **20분 뒤에도 빈 배열**이었다.
+            // 그 결과 정상 경로로 들어온 커밋이 "main에 직접 push된 것"으로 몰려 배포가 막혔다.
+            // (같은 종류의 차단이 #48·#49 로도 남아 있다.)
+            let pr = null;
+            try {
+              const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner, repo, commit_sha: sha,
+              });
+              pr = prs.find((p) => p.base.ref === 'main' && p.merged_at) ?? null;
+            } catch (e) {
+              core.info(`연결 색인 조회 실패 — ${e.message}`);
+            }
+
+            // 색인이 못 찾으면 **사실로 찾는다.** 닫힌 main행 PR 중 `merge_commit_sha` 가
+            // 이 커밋인 것을 고른다. 색인이 아니라 PR 자신이 들고 있는 값이라 지연이 없다.
+            // 실측: 색인이 0개를 돌려주는 그 커밋을 이 조회는 #180 으로 정확히 집었다.
+            if (!pr) {
+              const closed = await github.paginate(github.rest.pulls.list, {
+                owner, repo, base: 'main', state: 'closed', sort: 'updated',
+                direction: 'desc', per_page: 100,
+              }, (response, done) => {
+                // 최근 것부터 본다. 찾으면 더 넘기지 않는다 — 오래된 PR 까지 훑을 이유가 없다.
+                const hit = response.data.find((p) => p.merge_commit_sha === sha && p.merged_at);
+                if (hit) done();
+                return hit ? [hit] : [];
+              });
+              pr = closed[0] ?? null;
+              if (pr) core.info(`연결 색인이 못 찾아 merge_commit_sha 로 찾았다 — PR #${pr.number}`);
+            }
 
             if (!pr) {
               reasons.push('이 커밋에 연결된 **main행 PR이 없습니다.** main에 직접 push된 것으로 보입니다.');
