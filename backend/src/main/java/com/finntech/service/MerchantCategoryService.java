@@ -40,13 +40,18 @@ public class MerchantCategoryService {
                                    IndustryCategoryMapper mapper,
                                    BusinessNumberKindService kinds,
                                    MerchantBrandService brands,
-                                   MerchantCategoryVoteService votes) {
+                                   MerchantCategoryVoteService votes,
+                                   java.time.Clock clock) {
         this.repository = repository;
         this.mapper = mapper;
         this.kinds = kinds;
         this.brands = brands;
         this.votes = votes;
+        this.clock = clock;
     }
+
+    /** 백오프가 시각을 읽는다. 엔진처럼 {@code now()} 를 직접 안 읽는다(§4 원칙 3 재현성). */
+    private final java.time.Clock clock;
 
     /**
      * 사전·표가 함께 쓰는 <b>키 규칙</b> — PG 번호는 남의 것이라 지운다.
@@ -107,6 +112,54 @@ public class MerchantCategoryService {
                 .map(m -> !m.isConfirmed())     // 확정(사람·조회)도 종결('기타')도 아니면 남았다
                 .orElse(true);                  // 처음 보는 가맹점
     }
+
+    /**
+     * <b>지금 등록 업종 조회를 걸어도 되는가</b> — {@link #needsWork} 에 쉬는 시간을 얹은 것.
+     *
+     * <p>{@code needsWork} 를 그대로 고치지 않은 이유는 <b>그 판단을 LLM 통로도 쓰기 때문</b>이다.
+     * 시각 기록({@code lastAttemptAt})은 두 통로가 나눠 쓰므로, 거기에 백오프를 걸면
+     * 모델에 물어본 것이 조회를 막고 그 반대도 된다. 끝나는 조건이 다른 둘을 한 시계로 묶으면
+     * 안 된다 — 그래서 <b>부르는 자리에서만</b> 얹는다.
+     */
+    @Transactional(readOnly = true)
+    public boolean needsRegistryLookup(String businessNumber, String merchantName) {
+        if (!needsWork(businessNumber, merchantName)) return false;
+        return find(businessNumber, merchantName, m -> true)
+                .map(m -> !backingOff(m))
+                .orElse(true);
+    }
+
+    /**
+     * <b>물어봤는데 답이 없던 곳은 쉬었다 묻는다.</b>
+     *
+     * <p>여기가 없어서 답 없는 가맹점을 <b>영원히 2분마다</b> 다시 물었다. 운영 로그가 그대로
+     * 보여줬다 — {@code 대상 33, 물어본 곳 24, 분류된 가맹점 0} 이 끝없이 반복됐고, 하루 약
+     * 7,000회가 남의 서버로 헛나갔다(2026-08-13 실측).
+     *
+     * <p>원인은 <b>시도 이력 행이 "아직 할 일 남음"으로 판정된 것</b>이다. 시도를 적어 두면서도
+     * 그 기록을 읽지 않았으니, 기록은 있고 효과는 없었다. 클래스 주석은 "시도 이력이 남아 다시
+     * 묻지 않는다"고 적혀 있었다 — 문서와 동작이 갈라져 있었다.
+     *
+     * <h2>영구히 막지는 않는다</h2>
+     *
+     * <p>지금 답이 없다고 앞으로도 없는 것은 아니다 — 사업자가 나중에 등록될 수도 있고,
+     * 조회처가 고쳐질 수도 있다. 그래서 <b>간격만 벌린다</b>: 시도 1회면 한 시간, 2회면 두 시간,
+     * 이런 식으로 두 배씩 늘리되 <b>하루에서 멈춘다</b>. 24곳을 하루 한 번 묻는 것은 낭비가 아니다.
+     *
+     * <p><b>답을 얻은 곳은 이 판단에 오지 않는다</b> — 확정이 되어 {@code isConfirmed()} 에서
+     * 이미 걸러진다. 여기 오는 것은 "물었는데 못 얻은" 곳뿐이다.
+     */
+    private boolean backingOff(MerchantCategory row) {
+        java.time.LocalDateTime last = row.getLastAttemptAt();
+        if (last == null) return false;                 // 아직 한 번도 안 물어봤다
+        int attempts = Math.max(1, row.getLookupAttempts());
+        // 1회 1시간 · 2회 2시간 · 3회 4시간 … 상한 24시간. 지수라 금방 하루에 닿는다.
+        long hours = Math.min(BACKOFF_MAX_HOURS, 1L << Math.min(attempts - 1, 20));
+        return last.plusHours(hours).isAfter(java.time.LocalDateTime.now(clock));
+    }
+
+    /** 아무리 여러 번 실패해도 하루에 한 번은 다시 묻는다 — 영구 차단이 아니다. */
+    private static final long BACKOFF_MAX_HOURS = 24;
 
     /**
      * 시도를 적을 행을 가져온다 — 없으면 <b>시도 이력 행</b>을 만든다(분류가 아니다).

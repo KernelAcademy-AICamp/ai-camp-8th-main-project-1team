@@ -110,6 +110,15 @@ finntech:
     # 서버간 인증(W7-2): 마이데이터 호출에 X-MyData-Token으로 실어 보낼 공유 시크릿. env MYDATA_SHARED_SECRET.
     # 미설정이면 헤더 미부착(dev 통과). 운영에선 양 모듈에 동일 값 주입.
     shared-secret: ${MYDATA_SHARED_SECRET:}
+    # ---- 내부 구간 TLS (2026-08-13) ----
+    # 제공자와의 구간이 평문 HTTP 였다. `internal: true` 망이라 밖에서는 못 붙지만,
+    # 컨테이너 하나가 뚫리면 그 안에서 신원·결제가 그대로 보인다.
+    #
+    # 제공자는 **자체 서명** 인증서를 쓴다 — 도커 내부망의 `backend-mydata` 라는 이름에
+    # 공인 CA 는 발급하지 않는다. 그래서 이 저장소에 **그 인증서 하나만** 넣고 그것만 믿는다.
+    # 비우면 평문 HTTP 로 돈다(로컬·시험).
+    truststore: ${MYDATA_TRUSTSTORE:}
+    truststore-password: ${MYDATA_TRUSTSTORE_PASSWORD:}
 
   # ---- 등록 업종 조회 (분류 순위 ②-b) --------------------------------------------------------
   # 사업자등록번호로 그 사업자의 **등록 업종**을 물어 소비 중분류를 정한다. 실제 명세서에는
