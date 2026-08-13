@@ -112,6 +112,9 @@ jobs:
           # **운영 .env 에는 이 값이 없다** — 그래서 운영에서는 가드가 그대로 산다.
           # 무엇을 완화했는지 이 파일에서 바로 보이게 두는 것이 요점이다.
           FINNTECH_CRYPTO_REQUIRED=false
+          # 제공자도 같은 이유로 완화한다 — 러너에 KMS 키가 없어 가드가 기동을 막는다.
+          # 운영 .env 에는 이 값이 없으므로 거기서는 가드가 그대로 산다.
+          MYDATA_CRYPTO_REQUIRED=false
           EOF
 
       # `.env` 에 넣은 값이 컨테이너까지 가는가.
