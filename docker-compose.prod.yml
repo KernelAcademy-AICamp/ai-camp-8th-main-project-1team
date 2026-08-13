@@ -91,7 +91,14 @@ services:
       # KMS 클라이언트가 리전을 못 찾으면 생성 단계에서 죽어 앱이 통째로 안 뜬다(본체 전례).
       AWS_REGION: ${AWS_REGION:-ap-northeast-2}
     mem_limit: 768m             # 힙 ≈ 460m. 조회 응답만 만들면 되는 서버라 이 정도면 충분하다.
-    networks: [internal]        # 아웃바운드 없음 — 이 서버는 밖으로 나갈 일이 없다
+    # **격리는 그대로, 구멍은 하나만.** 이 서버에는 실 개인정보가 있어 밖으로 나갈 일이 없다.
+    # 다만 신원 컬럼을 KMS envelope 로 암호화하려면 기동 때 KMS 를 한 번 불러야 한다
+    # (2026-08-13: 안 열어 둔 채 배포해 헬스체크에서 죽고 롤백됐다).
+    #
+    # 인터넷을 열어 주지 않는다. VPC 인터페이스 엔드포인트로 KMS 트래픽이 인터넷을 안 타게 하고
+    # (프라이빗 DNS 로 `kms.…amazonaws.com` 이 VPC 내부 IP 로 풀린다), 이 망의 나가는 길은
+    # `scripts/kms-egress-guard.sh` 가 **그 IP 의 443 하나로** 좁힌다. 나머지는 DROP 이다.
+    networks: [internal, kms-egress]
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8082/actuator/health"]
       interval: 10s
@@ -234,6 +241,13 @@ networks:
   internal:
     internal: true
   edge:
+  # 제공자가 **KMS 하나만** 부르려고 쓰는 망. 도커 수준에서는 평범한 브리지라 그대로 두면
+  # 인터넷이 열린다 — 좁히는 것은 호스트의 iptables(`scripts/kms-egress-guard.sh`)다.
+  # 대역을 여기 고정하는 이유가 그것이다. **이 값이 바뀌면 방화벽 규칙도 함께 바뀌어야 한다.**
+  kms-egress:
+    ipam:
+      config:
+        - subnet: 172.20.53.0/24
 
 volumes:
   mysql-data:
