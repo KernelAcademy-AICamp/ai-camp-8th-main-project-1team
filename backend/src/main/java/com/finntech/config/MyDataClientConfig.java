@@ -36,16 +36,48 @@ public class MyDataClientConfig {
             @Value("${finntech.mydata.base-url:http://localhost:8082}") String baseUrl,
             @Value("${finntech.mydata.shared-secret:}") String sharedSecret,
             @Value("${finntech.mydata.connect-timeout-ms:3000}") long connectMs,
-            @Value("${finntech.mydata.read-timeout-ms:30000}") long readMs) {
+            @Value("${finntech.mydata.read-timeout-ms:30000}") long readMs,
+            @Value("${finntech.mydata.truststore:}") String truststorePath,
+            @Value("${finntech.mydata.truststore-password:}") String truststorePassword) {
         // 읽기 30초는 증분 질의가 큰 표를 훑는 경우까지 견디도록 넉넉히 잡은 값이다.
         // 넉넉한 것과 무한한 것은 다르다 — 유한하기만 하면 위의 연쇄가 끊긴다.
         RestClient.Builder builder = RestClient.builder()
                 .baseUrl(baseUrl)
                 .requestFactory(com.finntech.util.HttpClients.factory(
-                        java.time.Duration.ofMillis(connectMs), java.time.Duration.ofMillis(readMs)));
+                        java.time.Duration.ofMillis(connectMs), java.time.Duration.ofMillis(readMs),
+                        trustOnly(truststorePath, truststorePassword)));
         if (sharedSecret != null && !sharedSecret.isBlank()) {
             builder.defaultHeader("X-MyData-Token", sharedSecret);
         }
         return builder.build();
+    }
+
+    /**
+     * 지정한 신뢰저장소 <b>하나만</b> 믿는 SSL 문맥. 경로가 비면 null(=JDK 기본).
+     *
+     * <p>제공자는 자체 서명 인증서를 쓴다 — 도커 내부망의 `backend-mydata` 라는 이름에는
+     * 공인 CA 가 인증서를 발급하지 않는다. 여기서 필요한 것은 "공인된 신원"이 아니라
+     * <b>"아무나 믿지 않는 것"</b>이고, 그래서 저장소에 그 인증서 하나만 넣는다.
+     *
+     * <p><b>검증을 끄는 선택지는 두지 않았다.</b> `-k` 에 해당하는 스위치를 만들어 두면
+     * 언젠가 그것이 켜진 채로 배포된다. 못 믿으면 <b>기동이 실패하는 편</b>이 낫다.
+     */
+    private static javax.net.ssl.SSLContext trustOnly(String path, String password) {
+        if (path == null || path.isBlank()) return null;
+        try (java.io.InputStream in = new java.io.FileInputStream(path)) {
+            java.security.KeyStore store = java.security.KeyStore.getInstance("PKCS12");
+            store.load(in, password == null ? new char[0] : password.toCharArray());
+            javax.net.ssl.TrustManagerFactory trust = javax.net.ssl.TrustManagerFactory
+                    .getInstance(javax.net.ssl.TrustManagerFactory.getDefaultAlgorithm());
+            trust.init(store);
+            javax.net.ssl.SSLContext context = javax.net.ssl.SSLContext.getInstance("TLS");
+            context.init(null, trust.getTrustManagers(), null);
+            return context;
+        } catch (Exception exception) {
+            // **여기서 멈춘다.** 못 읽은 채로 넘어가면 JDK 기본 저장소로 붙으려다 매 호출이
+            // 실패하고, 증상은 "마이데이터가 안 된다"로만 보인다. 원인을 기동에서 밝힌다.
+            throw new IllegalStateException(
+                    "마이데이터 신뢰저장소를 못 읽었다: " + path, exception);
+        }
     }
 }

@@ -95,6 +95,14 @@ if ! sudo bash scripts/env-from-ssm.sh; then
   exit 1
 fi
 
+# **인증서를 컨테이너보다 먼저 만든다.** 없으면 제공자가 TLS 로 못 뜨고, 본체는 신뢰저장소를
+# 못 읽어 기동에서 멈춘다. 이미 있고 만료가 멀면 그대로 둔다(멱등).
+echo "=== 내부 구간 인증서 ==="
+if ! sudo bash scripts/internal-tls-cert.sh; then
+  echo "  인증서를 못 만들었다 — 평문으로 띄우지 않는다"
+  exit 1
+fi
+
 # **망을 열기 전에 방화벽을 먼저 건다.** `kms-egress` 는 평범한 브리지라 규칙이 없으면
 # 그 순간 제공자에게 인터넷이 열린다 — 실 개인정보가 있는 서버다. 순서가 곧 방어다.
 #
