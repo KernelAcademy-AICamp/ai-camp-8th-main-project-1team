@@ -78,6 +78,31 @@ rollback() {
   exit 1
 }
 
+# **설정을 SSM 에서 받아 `.env` 를 만든다.**
+#
+# 예전에는 `/opt/finntech/.env` 가 디스크에 평문으로 늘 있었다 — DB 비밀번호·공유 시크릿·
+# KMS 암호문·외부 API 키가 38줄, 백업본까지 10개. EBS 를 암호화해 디스크 도난은 막았지만
+# 서버에 들어올 수 있는 사람에게는 그대로 읽혔다.
+#
+# 이제 Parameter Store 가 원본이고(SecureString·CloudTrail 에 열람 기록), 파일은 **컨테이너를
+# 만드는 동안만** 존재한다. 아래에서 지운다.
+#
+# 못 받으면 멈춘다 — 빈 `.env` 로 띄우면 DB 비밀번호가 비고 공유 시크릿이 없는 채로 서비스가
+# 도는 최악이 된다. 스크립트 자신도 10개 미만이면 쓰지 않는다.
+echo "=== 설정 받기 (SSM) ==="
+if ! sudo bash scripts/env-from-ssm.sh; then
+  echo "  설정을 못 받았다 — 옛 .env 로 띄우지 않는다"
+  exit 1
+fi
+
+# **인증서를 컨테이너보다 먼저 만든다.** 없으면 제공자가 TLS 로 못 뜨고, 본체는 신뢰저장소를
+# 못 읽어 기동에서 멈춘다. 이미 있고 만료가 멀면 그대로 둔다(멱등).
+echo "=== 내부 구간 인증서 ==="
+if ! sudo bash scripts/internal-tls-cert.sh; then
+  echo "  인증서를 못 만들었다 — 평문으로 띄우지 않는다"
+  exit 1
+fi
+
 # **망을 열기 전에 방화벽을 먼저 건다.** `kms-egress` 는 평범한 브리지라 규칙이 없으면
 # 그 순간 제공자에게 인터넷이 열린다 — 실 개인정보가 있는 서버다. 순서가 곧 방어다.
 #
@@ -105,5 +130,15 @@ if ! BASE="${SMOKE_BASE:-https://moaa.kro.kr}" HOST="${SMOKE_HOST:-moaa.kro.kr}"
   echo "  스모크 실패"
   rollback
 fi
+
+# **여기서야 지운다.** 롤백 경로도 `.env` 를 쓰므로(`up -d --build`) 그 전에 지우면
+# 되돌리기가 막힌다. 스모크까지 통과한 뒤가 유일하게 안전한 자리다.
+#
+# 만들어진 컨테이너는 환경변수를 자기 안에 들고 있어, 재부팅으로 다시 떠도 이 파일이 필요 없다.
+# 손으로 compose 를 돌려야 할 때는 `scripts/env-from-ssm.sh` 를 먼저 실행한다.
+echo "=== 설정 파일 지우기 ==="
+sudo shred -u /opt/finntech/.env 2>/dev/null || sudo rm -f /opt/finntech/.env
+sudo rm -f /opt/finntech/.env.bak.* 2>/dev/null || true
+echo "  .env 와 옛 백업들을 지웠다 — 원본은 SSM Parameter Store 에 있다"
 
 echo "=== 배포 완료: $(git log --oneline -1) ==="

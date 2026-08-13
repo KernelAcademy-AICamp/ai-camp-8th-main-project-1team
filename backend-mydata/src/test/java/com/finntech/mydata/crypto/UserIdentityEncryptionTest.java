@@ -39,6 +39,7 @@ class UserIdentityEncryptionTest {
     @Autowired UserIdentityIndex index;
     @Autowired FieldCrypto crypto;
     @Autowired UserIdentityBackfill backfill;
+    @Autowired com.finntech.mydata.service.MyDataService service;
 
     private MyDataUser saved(String suffix) {
         return users.save(index.newUser("ci-" + suffix, NAME + suffix, SOCIAL, phoneOf(suffix)));
@@ -145,6 +146,31 @@ class UserIdentityEncryptionTest {
         assertThat(users.findNeedingEncryption(PageRequest.of(0, 100)))
                 .as("두 번째 회차가 같은 행을 다시 집지 않는다")
                 .noneMatch(row -> "ci-backfill".equals(row.getId()));
+    }
+
+    /**
+     * <b>평문을 비운 뒤 빈 값으로 조회하면 어떻게 되는가.</b>
+     *
+     * <p>V14 가 평문 칸을 빈 문자열로 만든다. 그 상태에서 옛 평문 조회를 남겨 두면
+     * <b>빈 번호 하나로 수천 행이 걸린다</b> — 엉뚱한 사람이 잡히거나 질의가 터진다.
+     * 그래서 폴백을 지웠다. 이 시험은 그 결정이 되돌려지지 않게 고정한다.
+     */
+    @Test
+    @DisplayName("빈 값으로는 아무도 안 걸린다 — 평문을 비운 뒤의 함정")
+    void emptyValuesMatchNobody() {
+        // V14 이후의 모습: 평문은 비었고 지문은 아직 없는 행.
+        users.save(new MyDataUser("ci-wiped", "", "", ""));
+
+        // 지문 계산은 빈 입력에 null 을 준다.
+        assertThat(index.ofPhone("")).isNull();
+        assertThat(index.ofPerson("", "")).isNull();
+
+        // **여기가 요점이다.** 그 null 을 파생 질의에 그대로 넘기면 `IS NULL` 이 되어
+        // 지문 없는 행이 전부 걸린다. 서비스가 막아야 하고, 실제로 막는지 본다.
+        var view = service.matchIdentity("", "", "");
+        assertThat(view.exists()).isFalse();
+        assertThat(view.phoneTaken()).as("빈 번호로 남의 행이 잡히면 안 된다").isFalse();
+        assertThat(view.personFound()).isFalse();
     }
 
     @Test

@@ -131,16 +131,24 @@ public class MyDataService {
     @Transactional(readOnly = true)
     public IdentityMatchView matchIdentity(String name, String social7, String phone) {
         String normalized = normalizePhone(phone);
-        // **지문으로 먼저 찾고, 못 찾으면 평문으로 한 번 더.**
+        // **지문으로만 찾는다.**
         //
-        // 암호문은 IV 가 매번 달라 정확일치 조회에 못 쓴다. 그래서 조회는 지문이 맡는다.
-        // 다만 백필이 끝나기 전에는 지문이 빈 행이 남아 있고, 지문만 보면 **그 사람들이
-        // 통째로 로그인하지 못한다.** 옛 길을 남겨 두면 중간 상태에서도 아무도 안 막힌다.
-        // V14 로 평문을 비운 뒤에는 이 폴백을 지운다.
-        var byPhone = userRepository.findByPhoneBlindIndex(identityIndex.ofPhone(normalized))
-                .or(() -> userRepository.findByPhoneNumber(normalized));
-        var byPerson = userRepository.findByPersonBlindIndex(identityIndex.ofPerson(name, social7))
-                .or(() -> userRepository.findByNameAndSocial7(name, social7));
+        // 암호문은 IV 가 매번 달라 정확일치 조회에 못 쓴다. 조회는 지문이 맡는다.
+        //
+        // V13~백필 동안에는 평문 폴백을 함께 뒀다 — 지문이 아직 빈 행이 있으면 그 사람들이
+        // 통째로 로그인하지 못하기 때문이다. V14 가 평문을 비운 지금은 **그 폴백이 오히려
+        // 위험하다**: 비워진 칸은 전부 빈 문자열이라, 빈 번호로 조회하면 수천 행이 한꺼번에
+        // 걸려 엉뚱한 사람이 잡히거나 질의가 터진다. 그래서 함께 지운다.
+        //
+        // 지문이 없는 행은 백필이 다음 기동에 채운다(`UserIdentityBackfill`).
+        // **지문이 없으면 찾지 않는다.**
+        //
+        // 스프링 데이터의 파생 질의는 인자가 null 이면 `= ?` 가 아니라 **`IS NULL`** 로 번역한다.
+        // 그대로 넘기면 "지문이 아직 없는 행"이 전부 걸린다 — 백필이 안 끝난 사람들이고,
+        // V14 로 평문을 비운 뒤에는 빈 입력 하나로 그들이 잡히게 된다. 시험이 이걸 잡았다.
+        var byPhone = lookup(identityIndex.ofPhone(normalized), userRepository::findByPhoneBlindIndex);
+        var byPerson = lookup(identityIndex.ofPerson(name, social7),
+                userRepository::findByPersonBlindIndex);
         boolean phoneNameOk = byPhone.map(u -> u.getName().equals(name)).orElse(false);
         boolean phoneSocialOk = byPhone
                 .map(u -> u.getSocialNumber().length() >= 7
@@ -149,6 +157,20 @@ public class MyDataService {
         boolean exists = byPhone.isPresent() && phoneNameOk && phoneSocialOk;
         return new IdentityMatchView(exists, byPhone.isPresent(), phoneNameOk, phoneSocialOk,
                 byPerson.isPresent());
+    }
+
+    /**
+     * 지문이 있을 때만 찾는다. 없으면 <b>못 찾은 것</b>이다.
+     *
+     * <p>{@code null} 을 파생 질의에 그대로 넘기면 {@code IS NULL} 이 되어 <b>지문이 없는 행이
+     * 전부 걸린다.</b> 조회가 아니라 사고다.
+     */
+    private java.util.Optional<com.finntech.mydata.domain.MyDataUser> lookup(
+            String blindIndex,
+            java.util.function.Function<String, java.util.Optional<com.finntech.mydata.domain.MyDataUser>> find) {
+        return blindIndex == null || blindIndex.isBlank()
+                ? java.util.Optional.empty()
+                : find.apply(blindIndex);
     }
 
     /** 저장 형식은 `010-1234-5678`이다. 입력이 하이픈 없이 와도 같은 사람을 찾게 맞춘다. */
