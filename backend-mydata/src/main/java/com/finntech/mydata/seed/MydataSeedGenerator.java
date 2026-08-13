@@ -38,6 +38,8 @@ public class MydataSeedGenerator implements CommandLineRunner {
             com.finntech.mydata.util.KoreanName.instance();
 
     private final MyDataUserRepository userRepo;
+    /** 신원 지문 — 생성 사용자도 지문이 있어야 본인인증 조회에 걸린다. */
+    private final com.finntech.mydata.crypto.UserIdentityIndex identityIndex;
     private final MyDataCardRepository cardRepo;
     private final MyDataPaymentRepository paymentRepo;
     private final CardCompanyRepository companyRepo;
@@ -65,7 +67,9 @@ public class MydataSeedGenerator implements CommandLineRunner {
                                @Value("${mydata.seed.cards-per-user-min:3}") int cardsMin,
                                @Value("${mydata.seed.cards-per-user-max:6}") int cardsMax,
                                @Value("${mydata.seed.payments-per-card-min:20}") int paymentsMin,
-                               @Value("${mydata.seed.payments-per-card-max:60}") int paymentsMax) {
+                               @Value("${mydata.seed.payments-per-card-max:60}") int paymentsMax,
+                               com.finntech.mydata.crypto.UserIdentityIndex identityIndex) {
+        this.identityIndex = identityIndex;
         this.userRepo = userRepo;
         this.cardRepo = cardRepo;
         this.paymentRepo = paymentRepo;
@@ -134,7 +138,7 @@ public class MydataSeedGenerator implements CommandLineRunner {
             String phoneNumber = generatePhone(rnd);
             String ci = Ci.of(name, social7, phoneNumber);
             String fullSocial = social7 + generateDigits(rnd, 6);
-            MyDataUser user = userRepo.save(new MyDataUser(ci, name, fullSocial, phoneNumber));
+            MyDataUser user = userRepo.save(identityIndex.newUser(ci, name, fullSocial, phoneNumber));
             if (userIndex < 3) {
                 demoIdentities.add(name + " / " + social7 + " / " + phoneNumber
                         + " → CI " + ci.substring(0, 12) + "…");

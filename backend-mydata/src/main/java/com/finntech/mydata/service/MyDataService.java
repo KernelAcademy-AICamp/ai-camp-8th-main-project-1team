@@ -29,6 +29,8 @@ public class MyDataService {
     private final MyDataAccountRepository accountRepository;
     private final MyDataMerchantRepository merchantRepository;
     private final MyDataAccountTxnRepository accountTxnRepository;
+    /** 신원 지문 — 암호화된 뒤 정확일치 조회는 이 길뿐이다. */
+    private final com.finntech.mydata.crypto.UserIdentityIndex identityIndex;
     private final String nowSetting;
     private final LocalDate referenceDate;
     /** 전체 조회 하한(W4-3): 0=무제한(현행), N>0이면 최근 N개월만 반환해 대량 사용자 응답 폭주를 막는다. */
@@ -38,6 +40,7 @@ public class MyDataService {
                          MyDataPaymentRepository paymentRepository, CardCompanyRepository companyRepository,
                          MyDataAccountRepository accountRepository, MyDataMerchantRepository merchantRepository,
                          MyDataAccountTxnRepository accountTxnRepository,
+                         com.finntech.mydata.crypto.UserIdentityIndex identityIndex,
                          @Value("${mydata.now:reference}") String nowSetting,
                          @Value("${mydata.seed.reference-date:2026-07-21}") String referenceDate,
                          @Value("${mydata.query.months-floor:0}") int monthsFloor) {
@@ -48,6 +51,7 @@ public class MyDataService {
         this.accountRepository = accountRepository;
         this.merchantRepository = merchantRepository;
         this.accountTxnRepository = accountTxnRepository;
+        this.identityIndex = identityIndex;
         // 빈 문자열은 '미설정'으로 본다. env(MYDATA_NOW=)가 비어 있으면 Spring은 yml의 기본값이 아니라
         // 빈 문자열을 넘긴다 — 이걸 그대로 parse하면 기동 후 조회에서 DateTimeParseException으로 터진다.
         this.nowSetting = (nowSetting == null || nowSetting.isBlank()) ? "system" : nowSetting.trim();
@@ -127,8 +131,16 @@ public class MyDataService {
     @Transactional(readOnly = true)
     public IdentityMatchView matchIdentity(String name, String social7, String phone) {
         String normalized = normalizePhone(phone);
-        var byPhone = userRepository.findByPhoneNumber(normalized);
-        var byPerson = userRepository.findByNameAndSocial7(name, social7);
+        // **지문으로 먼저 찾고, 못 찾으면 평문으로 한 번 더.**
+        //
+        // 암호문은 IV 가 매번 달라 정확일치 조회에 못 쓴다. 그래서 조회는 지문이 맡는다.
+        // 다만 백필이 끝나기 전에는 지문이 빈 행이 남아 있고, 지문만 보면 **그 사람들이
+        // 통째로 로그인하지 못한다.** 옛 길을 남겨 두면 중간 상태에서도 아무도 안 막힌다.
+        // V14 로 평문을 비운 뒤에는 이 폴백을 지운다.
+        var byPhone = userRepository.findByPhoneBlindIndex(identityIndex.ofPhone(normalized))
+                .or(() -> userRepository.findByPhoneNumber(normalized));
+        var byPerson = userRepository.findByPersonBlindIndex(identityIndex.ofPerson(name, social7))
+                .or(() -> userRepository.findByNameAndSocial7(name, social7));
         boolean phoneNameOk = byPhone.map(u -> u.getName().equals(name)).orElse(false);
         boolean phoneSocialOk = byPhone
                 .map(u -> u.getSocialNumber().length() >= 7

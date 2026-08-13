@@ -77,6 +77,19 @@ services:
       # (공유 시크릿 필터가 /self/** 도 검사한다) 본체는 admin 이 승인한 신청만 보낸다.
       # 데모 기간에만 켠다. 본체의 FINNTECH_INTAKE_ENABLED 와 짝이다(둘 다 켜야 흐른다).
       MYDATA_SELFIMPORT_ENABLED: "${MYDATA_SELFIMPORT_ENABLED:-false}"
+
+      # ---- 실 신원 컬럼 암호화 (2026-08-13) ----
+      # 본체는 신청 대기열을 처음부터 암호화했는데 **승인 뒤 오래 남는 이쪽이 평문이었다**
+      # (실측 4,513행). 키는 본체와 따로 받는다 — 한쪽이 새도 다른 쪽이 함께 열리지 않게.
+      MYDATA_CRYPTO_ENABLED: "${MYDATA_CRYPTO_ENABLED:-false}"
+      # 운영에서 false 면 암호화가 꺼진 채 뜬다. CI 의 '운영 중지 검사'만 이 값을 넣는다.
+      MYDATA_CRYPTO_REQUIRED: "${MYDATA_CRYPTO_REQUIRED:-true}"
+      MYDATA_KMS_KEY_ID: ${MYDATA_KMS_KEY_ID:-}
+      MYDATA_ENCRYPTED_DEK: ${MYDATA_ENCRYPTED_DEK:-}
+      MYDATA_ENCRYPTED_PEPPER: ${MYDATA_ENCRYPTED_PEPPER:-}
+      MYDATA_CRYPTO_BACKFILL: "${MYDATA_CRYPTO_BACKFILL:-true}"
+      # KMS 클라이언트가 리전을 못 찾으면 생성 단계에서 죽어 앱이 통째로 안 뜬다(본체 전례).
+      AWS_REGION: ${AWS_REGION:-ap-northeast-2}
     mem_limit: 768m             # 힙 ≈ 460m. 조회 응답만 만들면 되는 서버라 이 정도면 충분하다.
     networks: [internal]        # 아웃바운드 없음 — 이 서버는 밖으로 나갈 일이 없다
     healthcheck:

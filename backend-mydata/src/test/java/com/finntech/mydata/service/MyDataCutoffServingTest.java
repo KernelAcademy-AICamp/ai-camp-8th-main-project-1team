@@ -43,13 +43,15 @@ class MyDataCutoffServingTest {
     @Autowired com.finntech.mydata.repository.MyDataAccountRepository accountRepository;
     @Autowired com.finntech.mydata.repository.MyDataMerchantRepository merchantRepository;
     @Autowired com.finntech.mydata.repository.MyDataAccountTxnRepository accountTxnRepository;
+    @Autowired com.finntech.mydata.crypto.UserIdentityIndex identityIndex;
 
     private static final LocalDateTime EARLY = LocalDateTime.parse("2026-07-21T23:59:59"); // 시드 기준일 끝
     private static final LocalDateTime LATE  = LocalDateTime.parse("2026-12-31T23:59:59"); // 미래로 전진
 
     private MyDataService serviceAt(LocalDateTime now) {
         return new MyDataService(userRepository, cardRepository, paymentRepository, companyRepository,
-                accountRepository, merchantRepository, accountTxnRepository, now.toString(), "2026-07-21", 0);
+                accountRepository, merchantRepository, accountTxnRepository, identityIndex,
+                now.toString(), "2026-07-21", 0);
     }
 
     private int totalPayments(List<CardView> cards) {

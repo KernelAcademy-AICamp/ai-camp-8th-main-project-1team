@@ -37,6 +37,25 @@ mydata:
   # 미설정이면 dev(h2)는 강제하지 않고 통과, 운영(mysql)은 SharedSecretRequiredGuard가 기동을 막는다(fail-fast).
   shared-secret: ${MYDATA_SHARED_SECRET:}
 
+  # ---- 실 신원 컬럼 암호화 (2026-08-13) --------------------------------------------------
+  # 본체(backend)는 신청 대기열을 처음부터 암호화했는데 **승인 뒤 오래 남는 이쪽이 평문이었다**
+  # (실측: mydata_user 4,513행이 varchar 그대로). 실제 사람들의 이름·주민앞7·전화가 여기 있다.
+  #
+  # 키는 본체와 **따로** 받는다. 같은 CMK 를 쓰더라도 DEK·pepper 를 나눠, 한쪽이 새도 다른 쪽이
+  # 함께 열리지 않게 한다 — 두 모듈을 갈라 둔 이유와 같다.
+  #
+  # 기본은 꺼짐이다. 로컬·시험은 KMS 없이 돌아야 한다. 운영(mysql)에서 꺼져 있으면
+  # CryptoRequiredGuard 가 기동을 막는다 — **조용히 평문으로 도는 것이 가장 나쁘다.**
+  crypto:
+    enabled: ${MYDATA_CRYPTO_ENABLED:false}
+    # 운영에서 이 값을 false 로 두면 암호화가 꺼진 채로 뜬다. CI 의 '운영 중지 검사'만 쓴다.
+    required: ${MYDATA_CRYPTO_REQUIRED:true}
+    kms-key-id: ${MYDATA_KMS_KEY_ID:}
+    encrypted-dek: ${MYDATA_ENCRYPTED_DEK:}
+    encrypted-pepper: ${MYDATA_ENCRYPTED_PEPPER:}
+    # 기동마다 남은 평문 행을 암호문·지문으로 채운다. 끊겨도 다음 기동이 이어받는다.
+    backfill-on-startup: ${MYDATA_CRYPTO_BACKFILL:true}
+
   # '알 수 없는 PG 결제' 추가 작업(§13-11) — true로 1회 기동하면 UnknownPgPaymentRunner가 전 사용자에게
   # PG사 경유 미상 결제를 가끔씩 주입한다(멱등). 상시 false.
   unknown-pg:

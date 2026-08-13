@@ -44,6 +44,7 @@ class RealPersonImportServiceTest {
 
     @Autowired RealPersonImportService service;
     @Autowired MyDataUserRepository userRepository;
+    @Autowired com.finntech.mydata.crypto.UserIdentityIndex identityIndex;
     @Autowired MyDataCardRepository cardRepository;
     @Autowired MyDataPaymentRepository paymentRepository;
 
@@ -269,10 +270,16 @@ class RealPersonImportServiceTest {
         service.importCsv(NAME, SOCIAL7, PHONE, null, "2026-07-01,가게A,10000\n");
         // 원장은 010-1234-5678 로 저장하고 조회도 그 표기로 한다. 숫자만으로 넣으면
         // 있는 사람을 못 찾아 실제 사람이 자기 번호를 정확히 넣고도 PHONE_MISMATCH 를 듣는다.
-        assertThat(userRepository.findByPhoneNumber(PHONE))
+        //
+        // **조회는 이제 지문으로 한다**(2026-08-13 신원 암호화). 번호가 암호문으로 저장되면
+        // 정확일치 조회가 그대로는 안 되기 때문이다. 지문은 저장 표기와 **같은 규칙**으로
+        // 정규화한 값에서 나오므로, 갈리면 여기서 걸린다 — 그것이 이 시험의 목적이다.
+        assertThat(userRepository.findByPhoneBlindIndex(identityIndex.ofPhone(PHONE)))
                 .as("하이픈 표기로 찾힌다").isPresent();
-        assertThat(userRepository.findByPhoneNumber("01044445555"))
-                .as("숫자만으로는 저장돼 있지 않다").isEmpty();
+        assertThat(userRepository.findByPhoneBlindIndex(identityIndex.ofPhone("01044445555")))
+                .as("숫자만 넣어도 같은 사람을 찾는다 — 정규화가 한 벌이다").isPresent();
+        assertThat(userRepository.findByPhoneNumber(PHONE))
+                .as("평문 칸에는 더 이상 안 쌓인다").isEmpty();
     }
 
     @Test
