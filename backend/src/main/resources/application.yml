@@ -451,6 +451,17 @@ finntech:
     anchor-archive:
       enabled: ${FINNTECH_ANCHOR_ARCHIVE_ENABLED:false}
       bucket: ${FINNTECH_ANCHOR_BUCKET:}
+    # **부르는 사람이 없어 3주 동안 아무것도 안 올라갔다**(2026-08-13 운영 실측: audit_batch
+    # PENDING 1건이 2026-07-23 부터 그대로, S3 버킷 Total Objects 0). TSA 키도 Object Lock
+    # 버킷도 다 만들어 두고 `anchorPendingBatches()` 를 부르는 곳이 HTTP 엔드포인트 하나뿐이었다.
+    # **설정이 켜져 있다는 것과 동작한다는 것은 다르다.**
+    #
+    # 간격은 이전 실행이 **끝난 뒤부터** 센다(fixedDelay) — 배치가 밀리면 한 회차가 길어지는데
+    # (건당 15초 대기) 겹쳐 들어오면 공개 TSA 가 거절한다.
+    anchor-schedule:
+      enabled: ${FINNTECH_ANCHOR_SCHEDULE:true}
+      interval-ms: 3600000       # 1시간. 늦게 찍혀도 찍히기만 하면 증명은 성립한다
+      initial-delay-ms: 120000   # 기동 직후엔 돌지 않게
 
   # 감사로그 계층 3 — RFC 3161 TSA 앵커링
   tsa:
