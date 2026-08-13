@@ -76,6 +76,8 @@ public class RealPersonImportService {
             DateTimeFormatter.ofPattern("yy.MM.dd"));
 
     private final MyDataUserRepository userRepository;
+    /** 신원 지문 — 만드는 길을 한 곳으로 모아 지문 빠뜨림을 없앤다. */
+    private final com.finntech.mydata.crypto.UserIdentityIndex identityIndex;
     private final MyDataCardRepository cardRepository;
     private final MyDataPaymentRepository paymentRepository;
     private final CardProductRepository cardProductRepository;
@@ -83,7 +85,9 @@ public class RealPersonImportService {
     public RealPersonImportService(MyDataUserRepository userRepository,
                                    MyDataCardRepository cardRepository,
                                    MyDataPaymentRepository paymentRepository,
-                                   CardProductRepository cardProductRepository) {
+                                   CardProductRepository cardProductRepository,
+            com.finntech.mydata.crypto.UserIdentityIndex identityIndex) {
+        this.identityIndex = identityIndex;
         this.userRepository = userRepository;
         this.cardRepository = cardRepository;
         this.paymentRepository = paymentRepository;
@@ -116,7 +120,7 @@ public class RealPersonImportService {
         // CI 는 숫자만 남겨 만드므로(Ci.of) 표기를 바꿔도 신원은 그대로다.
         String stored = Msisdn.format(phone);
         MyDataUser user = userRepository.findById(ci).orElseGet(() -> {
-            MyDataUser u = new MyDataUser(ci, name, social7, stored);
+            MyDataUser u = identityIndex.newUser(ci, name, social7, stored);
             // 페르소나는 비운다 — 실제 사람에게 생성용 꼬리표를 붙이지 않는다.
             u.setDataSplit(SPLIT);
             return userRepository.save(u);
@@ -128,7 +132,7 @@ public class RealPersonImportService {
         }
         // 숫자만으로 저장돼 있던 사람도 여기서 표기를 맞춘다 — 위와 같은 태도의 재실행 안전이다.
         if (!stored.equals(user.getPhoneNumber())) {
-            user.setPhoneNumber(stored);
+            identityIndex.changePhone(user, stored);
             userRepository.save(user);
         }
         ensureCard(user, cardCode);

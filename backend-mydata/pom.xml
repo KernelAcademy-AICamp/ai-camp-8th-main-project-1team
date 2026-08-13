@@ -81,6 +81,15 @@
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- KMS envelope encryption — 실 개인정보(이름·주민앞7·전화)를 컬럼 암호화한다.
+		     본체(backend)는 이미 하고 있었는데 제공자는 평문이었다(2026-08-13 실측:
+		     mydata_user 4,513행이 varchar 그대로). 실제 사람의 신원이 여기 있다. -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>kms</artifactId>
+			<version>2.31.78</version>
+		</dependency>
 	</dependencies>
 
 	<build>
