@@ -20,6 +20,7 @@ server:
   ssl:
     # 키스토어가 없으면 `enabled: false` 가 되어 평문으로 뜬다 — 값 하나로 켜고 끈다.
     enabled: ${MYDATA_TLS_ENABLED:false}
+    # **`file:` 접두사가 필요하다.** 없으면 스프링이 클래스패스에서 찾아 못 읽는다.
     key-store: ${MYDATA_TLS_KEYSTORE:}
     key-store-password: ${MYDATA_TLS_PASSWORD:}
     key-store-type: PKCS12

@@ -78,7 +78,13 @@ docker run --rm --user 0:0 --entrypoint sh -v "$TMP:/out" "$IMAGE" -c "
         -keystore /out/truststore.p12 -storetype PKCS12 -storepass '$PASS' >/dev/null
 "
 
-install -m 640 -o root -g root "$TMP/server.p12"     "$DIR/server.p12"
+# **개인키는 컨테이너 사용자만 읽게 한다.**
+#
+# 이미지는 `appuser` 로 돌아 root 소유 640 파일을 못 읽는다 — 그대로 두면 제공자가
+# `Could not load store` 로 기동에 실패한다(2026-08-13 실측). 644 로 열면 호스트의 아무
+# 사용자나 개인키를 읽게 되므로 그것도 안 된다. **그룹만 맞춘다.**
+GID="$(docker run --rm --entrypoint id "$IMAGE" -g 2>/dev/null || echo 0)"
+install -m 640 -o root -g "$GID" "$TMP/server.p12" "$DIR/server.p12"
 install -m 644 -o root -g root "$TMP/ca.crt"          "$DIR/ca.crt"
 install -m 644 -o root -g root "$TMP/truststore.p12"  "$DIR/truststore.p12"
 
