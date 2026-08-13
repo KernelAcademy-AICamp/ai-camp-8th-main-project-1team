@@ -78,6 +78,17 @@ rollback() {
   exit 1
 }
 
+# **망을 열기 전에 방화벽을 먼저 건다.** `kms-egress` 는 평범한 브리지라 규칙이 없으면
+# 그 순간 제공자에게 인터넷이 열린다 — 실 개인정보가 있는 서버다. 순서가 곧 방어다.
+#
+# 규칙은 `DOCKER-USER` 에 들어가 컨테이너가 오르내려도 남지만, **재부팅으로는 사라진다.**
+# 그래서 배포마다 다시 건다(멱등). 부팅 직후의 빈 구간은 아래 systemd 유닛이 메운다.
+echo "=== KMS egress 방화벽 ==="
+if ! sudo bash scripts/kms-egress-guard.sh; then
+  echo "  방화벽을 못 걸었다 — 격리가 없는 채로 띄우지 않는다"
+  exit 1
+fi
+
 echo "=== 재빌드·기동 ==="
 if ! "${CO[@]}" up -d --build; then
   echo "  빌드·기동 명령 자체가 실패했다"
