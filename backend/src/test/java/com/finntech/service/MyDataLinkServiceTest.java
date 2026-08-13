@@ -165,6 +165,7 @@ class MyDataLinkServiceTest {
                 new BusinessNumberKindService(kindRepo, 5, 2, 0.10),
                 TestServices.brandService(),
                 new MerchantCategoryVoteService(
-                        mock(com.finntech.repository.MerchantCategoryVoteRepository.class)));
+                        mock(com.finntech.repository.MerchantCategoryVoteRepository.class)),
+                java.time.Clock.systemDefaultZone());
     }
 }

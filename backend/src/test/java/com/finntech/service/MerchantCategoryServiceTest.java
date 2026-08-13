@@ -79,7 +79,7 @@ class MerchantCategoryServiceTest {
                     return m;
                 });
 
-        service = new MerchantCategoryService(repo, mapper, kinds(), noBrands(), votes());
+        service = new MerchantCategoryService(repo, mapper, kinds(), noBrands(), votes(), java.time.Clock.systemDefaultZone());
     }
 
     /** 리포지토리의 {@code ORDER BY CASE source … , id} 를 그대로 옮긴 것. id 가 null 인
@@ -402,7 +402,7 @@ class MerchantCategoryServiceTest {
                     table.add(inv.getArgument(0));
                     return inv.getArgument(0);
                 });
-        var svc = new MerchantCategoryService(repo, mapper, kinds(), noBrands(), votes());
+        var svc = new MerchantCategoryService(repo, mapper, kinds(), noBrands(), votes(), java.time.Clock.systemDefaultZone());
 
         var dummy = payment("77:gen-8a3f-0012");            // 생성기가 만든 결제
         assertThat(svc.confirmFrom(dummy, "식비", 7L)).as("더미는 거절된다").isEmpty();
@@ -682,7 +682,7 @@ class MerchantCategoryServiceTest {
                     table.add(inv.getArgument(0));
                     return inv.getArgument(0);
                 });
-        var svc = new MerchantCategoryService(repo, mapper, kinds(), noBrands(), votes());
+        var svc = new MerchantCategoryService(repo, mapper, kinds(), noBrands(), votes(), java.time.Clock.systemDefaultZone());
 
         var first = svc.confirm("0000000011", "어떤 가게", "쇼핑",
                 MerchantCategory.Source.USER_CSV, null);

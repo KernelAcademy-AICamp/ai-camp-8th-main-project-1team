@@ -620,7 +620,9 @@ public class MyDataLinkService {
             // 쌓이고 동기화마다 다시 쓰였다(2026-08-07 실측: 6곳). 답을 못 얻을 것이 확실한
             // 곳에 "물어봤다"를 적는 것은 기록이 아니라 잡음이다.
             if (!industryLookup.askable(biz)) continue;
-            if (!merchantCategoryService.needsWork(biz, name)) continue;   // 이미 확정·종결
+            // **쉬는 시간까지 본다.** 답 없는 곳을 2분마다 다시 묻던 자리다 — 운영 로그가
+            // `대상 33, 물어본 곳 24, 분류 0` 을 끝없이 반복했다(2026-08-13, 하루 약 7,000회).
+            if (!merchantCategoryService.needsRegistryLookup(biz, name)) continue;
             targets.putIfAbsent(biz + '' + name, p);
         }
         // **물어볼 곳이 없어도 여기서 끝내지 않는다** — 사전이 아는 것을 입히는 일이 남았다.
