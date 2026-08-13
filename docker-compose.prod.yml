@@ -244,10 +244,14 @@ networks:
   # 제공자가 **KMS 하나만** 부르려고 쓰는 망. 도커 수준에서는 평범한 브리지라 그대로 두면
   # 인터넷이 열린다 — 좁히는 것은 호스트의 iptables(`scripts/kms-egress-guard.sh`)다.
   # 대역을 여기 고정하는 이유가 그것이다. **이 값이 바뀌면 방화벽 규칙도 함께 바뀌어야 한다.**
+  #
+  # 172.20 이 아니라 172.21 인 이유: `app_default` 가 172.20.0.0/16 을 통째로 쓰고 있어
+  # 겹쳤다(2026-08-13 배포 실패 — `Pool overlaps with other one on this address space`).
+  # 쓰고 있는 대역은 172.17(bridge)·172.18(edge)·172.19(internal)·172.20(default) 이다.
   kms-egress:
     ipam:
       config:
-        - subnet: 172.20.53.0/24
+        - subnet: 172.21.53.0/24
 
 volumes:
   mysql-data:

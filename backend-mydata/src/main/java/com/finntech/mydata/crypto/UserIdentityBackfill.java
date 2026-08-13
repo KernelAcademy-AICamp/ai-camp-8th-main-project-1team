@@ -9,7 +9,8 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 
@@ -50,12 +51,31 @@ public class UserIdentityBackfill implements ApplicationRunner {
     private final UserIdentityIndex index;
     private final FieldCrypto crypto;
     private final boolean enabled;
+    /**
+     * 트랜잭션을 <b>손으로 연다.</b>
+     *
+     * <p>{@code @Transactional} 을 붙인 메서드를 <b>같은 객체 안에서</b> 부르면 스프링 프록시를
+     * 지나지 않아 애너테이션이 <b>조용히 무시된다.</b> 실제로 그렇게 만들었다가 운영 DB 로
+     * 시험하고서야 잡았다(2026-08-13):
+     *
+     * <pre>
+     *   로그  "백필 — 100000행을 채웠다"   ← 200조각 × 500, 무의미한 반복
+     *   DB    enc 0행, 지문 0행            ← 한 행도 안 써졌다
+     * </pre>
+     *
+     * <p>커밋이 안 되니 다음 조각이 <b>같은 행을 다시 집고</b>, 상한까지 헛돌다 성공했다고
+     * 거짓 로그를 남긴다. 컨테이너는 healthy 라 배포했으면 아무도 몰랐을 것이다.
+     * 그 상태에서 평문까지 지웠으면 <b>암호문도 평문도 없는</b> 행이 됐다.
+     */
+    private final TransactionTemplate tx;
 
     public UserIdentityBackfill(MyDataUserRepository users, UserIdentityIndex index, FieldCrypto crypto,
+                                PlatformTransactionManager txManager,
                                 @Value("${mydata.crypto.backfill-on-startup:true}") boolean enabled) {
         this.users = users;
         this.index = index;
         this.crypto = crypto;
+        this.tx = new TransactionTemplate(txManager);
         this.enabled = enabled;
     }
 
@@ -70,17 +90,52 @@ public class UserIdentityBackfill implements ApplicationRunner {
         }
         int total = 0;
         for (int chunk = 0; chunk < MAX_CHUNKS; chunk++) {
-            int done = encryptChunk();
-            if (done == 0) break;
+            Integer done = backfillOnce();
+            if (done == null || done == 0) break;
             total += done;
+
+            // **진행하지 않으면 멈추고 소리를 낸다.**
+            //
+            // 커밋이 안 되면 다음 조각이 같은 행을 다시 집는다. 그대로 두면 상한까지 헛돌고
+            // 로그에는 "10만 행 채웠다"가 남는다 — 실제로 그렇게 됐고, DB 를 직접 보고서야
+            // 알았다(2026-08-13). 조용히 성공한 척하는 것이 이 기능의 가장 나쁜 실패다.
+            if (!remaining().isEmpty() && chunk > 0 && total > users.count()) {
+                log.error("백필이 진행되지 않는다 — 같은 행을 다시 집고 있다. "
+                        + "쓰기가 커밋되지 않는 것으로 보인다(총 {}행 시도, 표에는 {}행)",
+                        total, users.count());
+                return;
+            }
         }
-        if (total > 0) log.info("제공자 신원 백필 — {}행을 암호문·지문으로 채웠다", total);
-        else log.debug("제공자 신원 백필 — 채울 것 없음");
+        if (total == 0) {
+            log.debug("제공자 신원 백필 — 채울 것 없음");
+            return;
+        }
+        log.info("제공자 신원 백필 — {}행을 암호문·지문으로 채웠다", total);
+        // 다 돌고도 남아 있으면 값이 안 붙은 행이 있다는 뜻이다. 다음 기동이 이어받지만
+        // **왜 남았는지는 사람이 봐야 한다.**
+        if (!remaining().isEmpty()) {
+            log.warn("백필 뒤에도 남은 행이 있다 — 원인을 확인하라");
+        }
     }
 
-    /** 조각 하나를 채우고 커밋한다. 돌려주는 값이 0 이면 더 할 일이 없다는 뜻이다. */
-    @Transactional
-    public int encryptChunk() {
+    /** 아직 안 채워진 행이 하나라도 있는가. 있으면 그 한 행만 들고 온다. */
+    private List<MyDataUser> remaining() {
+        return users.findNeedingEncryption(PageRequest.of(0, 1));
+    }
+
+    /**
+     * 조각 하나를 <b>트랜잭션 안에서</b> 채우고 커밋한다.
+     *
+     * <p>여기가 진짜 진입점이다. {@link #encryptChunk()} 를 직접 부르면 트랜잭션이 없어
+     * 쓰기가 사라진다 — 그 실수를 실제로 했고, 시험은 <b>이 메서드</b>를 불러야 의미가 있다.
+     */
+    int backfillOnce() {
+        Integer done = tx.execute(status -> encryptChunk());
+        return done == null ? 0 : done;
+    }
+
+    /** 조각 하나를 채운다. <b>커밋은 {@link #backfillOnce()} 가 한다</b> — 직접 부르지 마라. */
+    private int encryptChunk() {
         List<MyDataUser> rows = users.findNeedingEncryption(PageRequest.of(0, CHUNK));
         for (MyDataUser user : rows) {
             // 게터가 **암호문 우선**이라, 이미 반쯤 채워진 행도 올바른 값을 돌려준다.

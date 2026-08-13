@@ -38,6 +38,7 @@ class UserIdentityEncryptionTest {
     @Autowired MyDataUserRepository users;
     @Autowired UserIdentityIndex index;
     @Autowired FieldCrypto crypto;
+    @Autowired UserIdentityBackfill backfill;
 
     private MyDataUser saved(String suffix) {
         return users.save(index.newUser("ci-" + suffix, NAME + suffix, SOCIAL, phoneOf(suffix)));
@@ -113,6 +114,37 @@ class UserIdentityEncryptionTest {
         assertThat(users.findNeedingEncryption(PageRequest.of(0, 100)))
                 .as("지문까지 찍힌 행은 대상이 아니다")
                 .noneMatch(row -> "ci-E".equals(row.getId()));
+    }
+
+    /**
+     * <b>백필이 실제로 DB 에 쓰는가.</b>
+     *
+     * <p>이 시험이 없어서 결함이 운영 DB 까지 갔다(2026-08-13). {@code @Transactional} 을
+     * 붙인 메서드를 같은 객체 안에서 부르면 프록시를 안 지나 <b>애너테이션이 조용히 무시된다.</b>
+     * 커밋이 안 되니 다음 조각이 같은 행을 다시 집고, 로그에는 "10만 행 채웠다"가 남는데
+     * <b>DB 에는 한 행도 안 써져 있었다.</b>
+     *
+     * <p>그래서 검사하는 것은 <b>돌려주는 숫자가 아니라 DB 의 상태</b>다. 숫자를 믿으면
+     * 같은 결함을 또 놓친다.
+     */
+    @Test
+    @DisplayName("백필이 실제로 DB 에 쓴다 — 숫자가 아니라 DB 를 본다")
+    void backfillActuallyCommits() {
+        // 백필이 집어야 할 행 — 지문이 없는 상태로 직접 만든다.
+        users.save(new MyDataUser("ci-backfill", "백필대상", "0309303", "010-7777-8888"));
+        assertThat(users.findNeedingEncryption(PageRequest.of(0, 100)))
+                .as("만들 때는 대상이다").anyMatch(row -> "ci-backfill".equals(row.getId()));
+
+        // **트랜잭션 진입점을 부른다.** 안쪽 메서드를 직접 부르면 커밋이 없어, 결함이 있어도
+        // 이 시험이 통과해 버린다 — 실제로 그렇게 놓쳤다.
+        backfill.backfillOnce();
+
+        // **DB 를 다시 읽는다.** 메모리의 엔티티를 보면 커밋 여부를 알 수 없다.
+        MyDataUser reloaded = users.findById("ci-backfill").orElseThrow();
+        assertThat(reloaded.getPhoneBlindIndex()).as("지문이 실제로 저장됐다").isNotBlank();
+        assertThat(users.findNeedingEncryption(PageRequest.of(0, 100)))
+                .as("두 번째 회차가 같은 행을 다시 집지 않는다")
+                .noneMatch(row -> "ci-backfill".equals(row.getId()));
     }
 
     @Test
