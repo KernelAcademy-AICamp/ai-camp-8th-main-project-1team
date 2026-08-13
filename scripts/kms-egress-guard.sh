@@ -27,7 +27,7 @@
 set -euo pipefail
 
 # 제공자가 붙는 egress 전용 망. compose 의 `kms-egress` 와 **같아야 한다**.
-SUBNET="${KMS_EGRESS_SUBNET:-172.20.53.0/24}"
+SUBNET="${KMS_EGRESS_SUBNET:-172.21.53.0/24}"
 CHAIN=DOCKER-USER
 
 kms_endpoint_ip() {
@@ -66,8 +66,17 @@ iptables -I "$CHAIN" 1 -s "$SUBNET" -m state --state ESTABLISHED,RELATED -j RETU
 # ② KMS 엔드포인트 443 만 허용
 iptables -I "$CHAIN" 2 -s "$SUBNET" -d "$IP"/32 -p tcp --dport 443 -j RETURN \
     -m comment --comment "finntech-kms-egress: KMS 엔드포인트만 허용"
-# ③ 나머지는 전부 버린다
-iptables -I "$CHAIN" 3 -s "$SUBNET" -j DROP \
+# ③ IMDS — **이걸 빼면 KMS 를 못 부른다.**
+#
+# AWS SDK 는 자격증명을 인스턴스 메타데이터(169.254.169.254)에서 받는다. 링크로컬이라
+# "밖으로 나가는 것"처럼 안 보이지만 컨테이너 입장에서는 똑같이 라우팅을 탄다.
+# 이걸 막으면 SDK 가 자격증명을 못 얻어, KMS 엔드포인트가 열려 있어도 호출이 실패한다.
+#
+# **인터넷으로 나가는 길이 아니다** — 169.254.0.0/16 은 이 인스턴스 밖으로 나가지 못한다.
+iptables -I "$CHAIN" 3 -s "$SUBNET" -d 169.254.169.254/32 -p tcp --dport 80 -j RETURN \
+    -m comment --comment "finntech-kms-egress: IMDS 자격증명"
+# ④ 나머지는 전부 버린다
+iptables -I "$CHAIN" 4 -s "$SUBNET" -j DROP \
     -m comment --comment "finntech-kms-egress: 그 밖은 전부 차단"
 
 echo "설치됨 — $SUBNET 는 $IP:443 외에는 못 나간다"
