@@ -27,7 +27,7 @@
 set -euo pipefail
 
 # 제공자가 붙는 egress 전용 망. compose 의 `kms-egress` 와 **같아야 한다**.
-SUBNET="${KMS_EGRESS_SUBNET:-172.20.53.0/24}"
+SUBNET="${KMS_EGRESS_SUBNET:-172.21.53.0/24}"
 CHAIN=DOCKER-USER
 
 kms_endpoint_ip() {
