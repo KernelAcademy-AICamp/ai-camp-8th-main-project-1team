@@ -2,8 +2,6 @@ package com.finntech.ledger;
 
 import com.finntech.domain.AppUser;
 import com.finntech.domain.SpendingLedgerDirty;
-import com.finntech.engine.RecurringPaymentDetector;
-import com.finntech.ml.WasteScoringService;
 import com.finntech.repository.AppUserRepository;
 import com.finntech.repository.SpendingLedgerRepository;
 import com.finntech.repository.UserPaymentRepository;
@@ -48,28 +46,20 @@ public class SpendingLedgerBackfill {
     private final SpendingLedgerRepository ledger;
     private final SpendingLedgerDirtyMarker marker;
     private final SpendingLedgerFactsWriter factsWriter;
-    private final SpendingLedgerFixedRecorder fixedRecorder;
-    private final SpendingLedgerWasteRecorder wasteRecorder;
-    private final RecurringPaymentDetector detector;
-    private final WasteScoringService wasteScoring;
+    /** 판정 두 층은 여기 하나에만 맡긴다 — 부르는 자리가 둘이면 규칙이 한쪽에만 들어간다. */
+    private final SpendingLedgerJudgmentRefresher refresher;
     private final Clock clock;
 
     public SpendingLedgerBackfill(AppUserRepository users, UserPaymentRepository payments,
                                   SpendingLedgerRepository ledger, SpendingLedgerDirtyMarker marker,
                                   SpendingLedgerFactsWriter factsWriter,
-                                  SpendingLedgerFixedRecorder fixedRecorder,
-                                  SpendingLedgerWasteRecorder wasteRecorder,
-                                  RecurringPaymentDetector detector,
-                                  WasteScoringService wasteScoring, Clock clock) {
+                                  SpendingLedgerJudgmentRefresher refresher, Clock clock) {
         this.users = users;
         this.payments = payments;
         this.ledger = ledger;
         this.marker = marker;
         this.factsWriter = factsWriter;
-        this.fixedRecorder = fixedRecorder;
-        this.wasteRecorder = wasteRecorder;
-        this.detector = detector;
-        this.wasteScoring = wasteScoring;
+        this.refresher = refresher;
         this.clock = clock;
     }
 
@@ -136,13 +126,16 @@ public class SpendingLedgerBackfill {
      *
      * <p>순서가 있다. 사실 칸이 먼저 있어야 판정을 적을 줄이 존재하고, 낡음 판단
      * ({@code *_recorded_at} 대 {@code facts_updated_at})도 그 순서라야 맞는다.
+     *
+     * <p>판정 두 층은 {@link SpendingLedgerJudgmentRefresher#refreshOne} 에 맡긴다 —
+     * <b>판정을 부르는 자리를 하나로 둔다.</b> 둘로 두었더니 "모델이 꺼졌을 때 손대지 않는다"는
+     * 규칙이 한쪽에만 들어가, 손으로 부른 백필이 이미 적힌 판정을 {@code UNJUDGED} 로 덮을 수
+     * 있었다(2026-08-14 발견).
      */
     private void fillOne(Long userId, LocalDateTime referenceTime) {
         SpendingLedgerFactsWriter.Result facts = factsWriter.write(userId);
         if (facts.skipped()) return;
 
-        fixedRecorder.record(userId, detector.fixedGroups(userId, referenceTime));
-        wasteRecorder.record(userId, wasteScoring.scoreUser(userId),
-                wasteScoring.modelThreshold(), wasteScoring.modelFingerprint());
+        refresher.refreshOne(userId, referenceTime);
     }
 }
