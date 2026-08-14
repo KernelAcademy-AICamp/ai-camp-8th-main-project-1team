@@ -69,17 +69,34 @@ public class RecurringPaymentDetector {
     private final AnalysisProperties props;
     private final IndustryCategoryMapper industryMapper;
 
+    /**
+     * 판정이 났다는 통지를 낸다 — 정리된 소비 원장이 그것을 <b>받아 적는다</b>.
+     *
+     * <p>표가 판정기를 부르지 않고 판정기가 알린다. 그래야 표를 채우려고 없던 계산이 생기지
+     * 않는다. 듣는 쪽이 없으면 통지는 아무 일도 안 한다.
+     */
+    private final org.springframework.context.ApplicationEventPublisher events;
+
     public RecurringPaymentDetector(UserPaymentRepository payments, AnalysisProperties props,
-                                    IndustryCategoryMapper industryMapper) {
+                                    IndustryCategoryMapper industryMapper,
+                                    org.springframework.context.ApplicationEventPublisher events) {
         this.payments = payments;
         this.props = props;
         this.industryMapper = industryMapper;
+        this.events = events;
     }
 
     /** 사용자의 반복 결제(고정형+루틴형)를 탐지한다. */
     public List<RecurringPayment> detect(Long userId, LocalDateTime referenceTime) {
-        return detectFrom(payments.findByUserIdOrderByPaymentDateDesc(userId), referenceTime,
-                props.getRecurring(), props.getDaypart(), industryMapper::isPaymentAgency);
+        List<UserPayment> txns = payments.findByUserIdOrderByPaymentDateDesc(userId);
+        List<FixedGroup> groups = fixedGroupsFrom(txns, referenceTime,
+                props.getRecurring(), industryMapper::isPaymentAgency);
+        events.publishEvent(new com.finntech.ledger.LedgerJudgmentEvents.FixedGroupsDetected(userId, groups));
+
+        List<RecurringPayment> out = new ArrayList<>();
+        for (FixedGroup group : groups) out.add(group.summary());
+        out.addAll(detectRoutine(txns, referenceTime, props.getRecurring(), props.getDaypart()));
+        return out;
     }
 
     /**

@@ -48,10 +48,19 @@ public class WasteScoringService {
     /** category1이 '줄이면 좋은 소비'가 되는 낭비금액 비율 하한. 설계 원칙 4 — 임계치는 application.yml. */
     private final double wasteCategoryRatioThreshold;
 
+    /**
+     * 판정이 났다는 통지를 낸다 — 정리된 소비 원장이 그것을 <b>받아 적는다</b>.
+     *
+     * <p>표가 이 서비스를 부르지 않고 이 서비스가 알린다. 그래야 표를 채우려고 없던 판정이
+     * 생기지 않는다. 듣는 쪽이 없으면 통지는 아무 일도 안 한다.
+     */
+    private final org.springframework.context.ApplicationEventPublisher events;
+
     public WasteScoringService(SpendingClassifier classifier, UserPaymentRepository userPaymentRepository,
                                UserSpendingOverrideRepository overrideRepository,
                                UserMerchantStanceRepository stanceRepository,
                                Clock clock,
+                               org.springframework.context.ApplicationEventPublisher events,
                                @Value("${finntech.ml.waste-category-ratio-threshold:0.35}")
                                double wasteCategoryRatioThreshold,
                                @Value("${finntech.ml.lenient-threshold-shift:0.20}")
@@ -61,6 +70,7 @@ public class WasteScoringService {
         this.overrideRepository = overrideRepository;
         this.stanceRepository = stanceRepository;
         this.clock = clock;
+        this.events = events;
         this.wasteCategoryRatioThreshold = wasteCategoryRatioThreshold;
         this.lenientThresholdShift = lenientThresholdShift;
     }
@@ -172,6 +182,11 @@ public class WasteScoringService {
             out.add(new WasteJudgment(p.getPaymentId(), p.getCategory2(), p.getAmount(),
                     p.getPaymentDate(), prob, waste, explanation, factors));
         }
+        // 판정이 났다고 알린다 — 정리된 소비 원장이 이 답을 **받아 적는다**.
+        // 여기서 표를 부르지 않는 것이 요점이다: 표를 채우려고 없던 계산이 생기면 안 된다.
+        // 모델이 꺼져 있으면 위에서 이미 돌아갔으므로, 이 자리에 온 것은 언제나 진짜 판정이다.
+        events.publishEvent(new com.finntech.ledger.LedgerJudgmentEvents.WasteJudged(
+                userId, out, classifier.threshold(), classifier.fingerprint()));
         return out;
     }
 

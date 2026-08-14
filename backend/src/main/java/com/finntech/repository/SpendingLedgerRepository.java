@@ -33,6 +33,35 @@ public interface SpendingLedgerRepository extends JpaRepository<SpendingLedger, 
 
     long countByUserId(Long userId);
 
+    /** 그 사용자에게 있는 달들 — 판정 결과를 달 단위로 나눠 적을 때 쓴다. 정렬 고정. */
+    @Query("select distinct l.monthKey from SpendingLedger l where l.userId = :userId order by l.monthKey")
+    List<String> findDistinctMonthKeysByUserId(@Param("userId") Long userId);
+
+    /**
+     * 고정지출 판정이 지금 사실보다 낡은 줄이 이 사용자에게 있나.
+     *
+     * <p>판정 결과를 받아 적기 전에 이것부터 본다. 화면을 열 때마다 판정이 도는데 그때마다
+     * 수천 줄을 다시 쓰면, <b>표를 위해 일을 만드는 셈</b>이 된다. 바뀔 것이 없으면 안 쓴다.
+     */
+    @Query("""
+            select count(l) > 0 from SpendingLedger l
+            where l.userId = :userId
+              and (l.fixedRecordedAt is null or l.fixedRecordedAt < l.factsUpdatedAt
+                   or l.detectorVersion is null or l.detectorVersion <> :detectorVersion)
+            """)
+    boolean hasStaleFixed(@Param("userId") Long userId,
+                          @Param("detectorVersion") String detectorVersion);
+
+    /** 낭비 판정이 지금 사실보다 낡거나 다른 모델이 낸 줄이 있나. */
+    @Query("""
+            select count(l) > 0 from SpendingLedger l
+            where l.userId = :userId
+              and (l.wasteRecordedAt is null or l.wasteRecordedAt < l.factsUpdatedAt
+                   or l.modelFingerprint is null or l.modelFingerprint <> :modelFingerprint)
+            """)
+    boolean hasStaleWaste(@Param("userId") Long userId,
+                          @Param("modelFingerprint") String modelFingerprint);
+
     /** 사용자별 줄 수 — 운영 점검이 원장 건수와 견준다. */
     @Query("select l.userId, count(l) from SpendingLedger l group by l.userId order by l.userId")
     List<Object[]> countGroupedByUserId();
