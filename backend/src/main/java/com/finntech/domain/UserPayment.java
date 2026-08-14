@@ -11,6 +11,10 @@ import java.time.LocalDateTime;
 @Table(name = "user_payment", indexes = {
         @Index(name = "idx_user_payment_user_date", columnList = "user_id, payment_date")
 })
+// 결제가 생기거나·분류가 바뀌거나·지워지면 정리된 소비 원장(V34)이 따라와야 한다. 호출부에
+// 심지 않는 이유는 이 클래스가 이미 아는 것이다 — 확정을 적는 자리가 여섯 곳이라 흩어 놓으면
+// 한 곳이 빠진다(아래 confirmCategory2 머리말). 콜백은 누가 바꿨든 걸린다.
+@jakarta.persistence.EntityListeners(com.finntech.ledger.LedgerDirtyListener.class)
 public class UserPayment {
 
     /**
