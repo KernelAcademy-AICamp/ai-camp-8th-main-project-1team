@@ -40,12 +40,30 @@ import java.util.TreeMap;
  * <p><b>주간(6~8일)에는 금액 게이트를 남긴다.</b> 주간 반복은 습관(매주 화요일 카페)과
  * 계약(주 1회 요가원)이 섞이는데 계약 쪽은 실제로 금액이 고정이라, 그 게이트가 둘을 갈라 준다.
  * 월 단위로 같은 곳에서 빠지는 것은 그냥 계약이다.
+ *
+ * <h2>판정은 묶음 명단도 함께 낸다 (2026-08-14)</h2>
+ *
+ * <p>예전에는 판정이 끝나면 <b>어떤 결제가 그 묶음을 이뤘는지 버렸다.</b> 화면에는 요약만
+ * 필요했기 때문이다. 그런데 결제 한 줄마다 "이것이 고정지출인가"를 적어 두려면 그 명단이
+ * 있어야 한다 — 밖에서 다시 묶으려면 {@link #merchantKeyOf} 와 {@code fixedGroupFrom} 의
+ * 규칙을 한 벌 더 적는 수밖에 없고, 그러면 언젠가 한쪽만 고쳐진다.
+ *
+ * <p>그래서 진입점을 둘로 둔다. {@link #detect} 는 예전 그대로 요약만 내고,
+ * {@link #fixedGroups} 는 {@link FixedGroup}(요약 + 명단 + 묶음 키 + 주기 종류 + 간격 CV)을
+ * 낸다. <b>판정 본체는 뒤쪽 하나뿐이고 앞쪽은 그것을 옮겨 담기만 한다</b> — 두 답이
+ * 갈라질 자리를 만들지 않는다.
  */
 @Component
 public class RecurringPaymentDetector {
 
-    /** 그룹 키 구분자 — 가맹점명·카테고리에 절대 안 나오는 제어문자. 눈에 안 보이므로 이스케이프로 쓴다. */
+    /** 루틴형 그룹 키 구분자 — 카테고리·시간대에 절대 안 나오는 제어문자. 밖으로 나가지 않는다. */
     private static final char SEP = (char) 1;
+
+    /** 고정형 묶음 키 접두어 — 사업자번호로 묶였다. {@link #merchantKeyOf} 참조. */
+    public static final String BIZ_KEY_PREFIX = "BIZ:";
+
+    /** 고정형 묶음 키 접두어 — 가맹점명으로 묶였다(번호가 없거나 PG 번호라 버렸다). */
+    public static final String NAME_KEY_PREFIX = "NAME:";
 
     private final UserPaymentRepository payments;
     private final AnalysisProperties props;
@@ -64,6 +82,18 @@ public class RecurringPaymentDetector {
                 props.getRecurring(), props.getDaypart(), industryMapper::isPaymentAgency);
     }
 
+    /**
+     * 사용자의 <b>고정형</b> 묶음을 명단과 함께 낸다 — {@link #detect} 와 같은 판정, 더 많은 값.
+     *
+     * <p>결제 한 줄마다 고정지출 여부를 적어 두려는 쪽이 이것을 쓴다. 루틴형은 담지 않는다:
+     * 루틴형 묶음은 (category2, 시간대)라 분류가 바뀔 때마다 다시 갈리고, 최근 창
+     * ({@code routineWindowDays})에 매여 있어 <b>오늘 날짜를 봐야 아는 값</b>이다.
+     */
+    public List<FixedGroup> fixedGroups(Long userId, LocalDateTime referenceTime) {
+        return fixedGroupsFrom(payments.findByUserIdOrderByPaymentDateDesc(userId), referenceTime,
+                props.getRecurring(), industryMapper::isPaymentAgency);
+    }
+
     /** 순수 탐지 — 테스트 진입점(저장소·Spring 무관). PG 목록이 없으면 번호를 그대로 쓴다. */
     static List<RecurringPayment> detectFrom(List<UserPayment> txns, LocalDateTime referenceTime,
                                              AnalysisProperties.Recurring cfg, AnalysisProperties.Daypart daypart) {
@@ -74,25 +104,36 @@ public class RecurringPaymentDetector {
                                              AnalysisProperties.Recurring cfg, AnalysisProperties.Daypart daypart,
                                              java.util.function.Predicate<String> isPaymentAgency) {
         List<RecurringPayment> out = new ArrayList<>();
-        out.addAll(detectFixed(txns, referenceTime, cfg, isPaymentAgency));
+        // 고정형 판정은 fixedGroupsFrom 한 곳에만 있다 — 여기서는 요약만 꺼내 담는다.
+        for (FixedGroup group : fixedGroupsFrom(txns, referenceTime, cfg, isPaymentAgency)) {
+            out.add(group.summary());
+        }
         out.addAll(detectRoutine(txns, referenceTime, cfg, daypart));
         return out;
     }
 
     // ── 고정형: 한 가맹점에서 일정 주기로 반복. 월간은 금액을 묻지 않는다 ──────────────────
-    private static List<RecurringPayment> detectFixed(List<UserPayment> txns, LocalDateTime referenceTime,
-                                                      AnalysisProperties.Recurring cfg,
-                                                      java.util.function.Predicate<String> isPaymentAgency) {
+
+    /**
+     * 고정형 묶음 판정의 <b>본체</b> — 요약만 필요한 쪽({@link #detectFrom})도 이것을 거친다.
+     *
+     * <p>순수 함수라 저장소·Spring 없이 단위 시험한다. PG 목록이 없으면 번호를 그대로 쓴다.
+     */
+    static List<FixedGroup> fixedGroupsFrom(List<UserPayment> txns, LocalDateTime referenceTime,
+                                            AnalysisProperties.Recurring cfg,
+                                            java.util.function.Predicate<String> isPaymentAgency) {
         TreeMap<String, List<UserPayment>> groups = new TreeMap<>();
         for (UserPayment p : txns) {
-            String key = groupKey(p, isPaymentAgency);
+            String key = merchantKeyOf(p.getBusinessNumber(), p.getMerchantName(), isPaymentAgency);
             if (key == null) continue;
             groups.computeIfAbsent(key, k -> new ArrayList<>()).add(p);
         }
         LocalDate today = referenceTime.toLocalDate();
-        List<RecurringPayment> out = new ArrayList<>();
-        for (List<UserPayment> g : groups.values()) {
-            RecurringPayment whole = fixedFrom(g, today, cfg);
+        List<FixedGroup> out = new ArrayList<>();
+        for (var entry : groups.entrySet()) {
+            String merchantKey = entry.getKey();
+            List<UserPayment> g = entry.getValue();
+            FixedGroup whole = fixedGroupFrom(g, today, cfg, merchantKey);
             if (whole != null) { out.add(whole); continue; }
 
             // 한 가맹점 아래 **구독이 여럿**일 수 있다 — 앱마켓이 그렇다. 통째로 보면 날짜와
@@ -102,20 +143,24 @@ public class RecurringPaymentDetector {
             //
             // **통째로 먼저 보는 순서가 중요하다.** 요금 인상(13,500→17,000)은 금액이 달라도
             // 한 구독이므로, 금액으로 먼저 나누면 그것이 둘로 찢어진다(§8-W).
+            //
+            // 한 결제가 두 묶음에 드는 일은 없다 — 통째로 잡히면 여기 안 오고, 여기 오면
+            // 금액으로만 갈리는데 한 결제의 금액은 하나다. 표가 결제 한 줄에 고정지출 칸
+            // 한 벌만 두는 것이 이 성질에 기댄다.
             java.util.Map<Integer, List<UserPayment>> byAmount = new TreeMap<>();
             for (UserPayment p : g) byAmount.computeIfAbsent(p.getAmount(), k -> new ArrayList<>()).add(p);
             if (byAmount.size() < 2) continue;
             for (List<UserPayment> sub : byAmount.values()) {
-                RecurringPayment r = fixedFrom(sub, today, cfg);
-                if (r != null) out.add(r);
+                FixedGroup part = fixedGroupFrom(sub, today, cfg, merchantKey);
+                if (part != null) out.add(part);
             }
         }
         return out;
     }
 
     /** 한 묶음이 고정 결제인가 — 아니면 {@code null}. 묶는 방법과 판정을 갈라 둔다. */
-    private static RecurringPayment fixedFrom(List<UserPayment> g, LocalDate today,
-                                              AnalysisProperties.Recurring cfg) {
+    private static FixedGroup fixedGroupFrom(List<UserPayment> g, LocalDate today,
+                                             AnalysisProperties.Recurring cfg, String merchantKey) {
         {
             List<LocalDate> days = g.stream().map(p -> p.getPaymentDate().toLocalDate()).distinct().sorted().toList();
             if (days.size() < cfg.getFixedMinCount()) return null;
@@ -126,8 +171,9 @@ public class RecurringPaymentDetector {
             if (meanGap <= 0) return null;
             boolean weekly = inRange(meanGap, cfg.getWeeklyIntervalDays());
             boolean monthly = inRange(meanGap, cfg.getMonthlyIntervalDays());
-            if (!weekly && !monthly) return null;                                    // 주간·월간 어느 주기에도 안 맞음
-            if (Stats.stdDev(gaps) / meanGap > cfg.getFixedGapCvMax()) return null;  // 주기가 수렴하지 않음 — 오탐 방어선
+            if (!weekly && !monthly) return null;                    // 주간·월간 어느 주기에도 안 맞음
+            double gapCv = Stats.stdDev(gaps) / meanGap;
+            if (gapCv > cfg.getFixedGapCvMax()) return null;         // 주기가 수렴하지 않음 — 오탐 방어선
 
             // 금액은 **결제일 오름차순**으로 본다. 변화점("13,500 → 17,000")을 말하려면 순서가 있어야 한다.
             double[] amounts = g.stream()
@@ -167,13 +213,24 @@ public class RecurringPaymentDetector {
             boolean ended = ChronoUnit.DAYS.between(last, today) > periodDays * cfg.getEndedAfterPeriods();
 
             UserPayment sample = g.get(0);
-            return new RecurringPayment(
+            RecurringPayment summary = new RecurringPayment(
                     RecurringPayment.Type.FIXED,
                     ended ? RecurringPayment.Status.ENDED : RecurringPayment.Status.ACTIVE,
                     sample.getCategory2(), sample.getMerchantName(), sample.getBusinessNumber(), null,
                     representative, varies, prior,
                     periodDays, ended ? null : last.plusDays(periodDays),
                     first, last, days.size(), round1(7.0 / meanGap));
+
+            // 명단은 **결제일 오름차순, 같은 날이면 식별자 순**으로 고정한다. 저장소가 내주는
+            // 순서(결제일 내림차순)를 그대로 흘리면 같은 입력에 같은 출력이라는 보장이 없다(원칙 3).
+            List<String> paymentIds = g.stream()
+                    .sorted(java.util.Comparator.comparing(UserPayment::getPaymentDate)
+                            .thenComparing(UserPayment::getPaymentId))
+                    .map(UserPayment::getPaymentId)
+                    .toList();
+            return new FixedGroup(summary, merchantKey,
+                    weekly ? FixedGroup.PeriodKind.WEEKLY : FixedGroup.PeriodKind.MONTHLY,
+                    gapCv, paymentIds);
         }
     }
 
@@ -236,16 +293,6 @@ public class RecurringPaymentDetector {
     }
 
     /**
-     * 고정형 그룹 키 — <b>사업자번호가 있으면 그것만</b> 쓴다.
-     *
-     * <p>예전에는 {@code category2 + 가맹점}이었는데, 사업자번호가 이미 가맹점을 특정하므로
-     * 카테고리는 군더더기였다. 제공자가 업종코드를 갱신하면 <b>한 구독이 두 그룹으로 쪼개져</b>
-     * 각각 최소 건수에 못 미쳐 통째로 사라질 수 있다.
-     *
-     * <p>사업자번호가 없을 때(해외 본사 등)만 {@code category2 + 표시명}으로 물러난다 —
-     * 표시명은 표기가 흔들리므로 최소한 카테고리라도 함께 묶어 둔다.
-     */
-    /**
      * 같은 계약을 한 묶음으로 모으는 키.
      *
      * <p><b>PG 번호는 키로 쓰지 않는다.</b> 번호가 결제를 대행한 회사의 것이라, 같은 구독이
@@ -260,12 +307,21 @@ public class RecurringPaymentDetector {
      * 사용자가 "이건 식비예요"를 누르거나 추정이 확정으로 승격되기만 해도 그때까지 잡히던
      * 정기결제가 사라진다. 계약이 계약인 것은 <b>어디서 얼마를 언제</b> 냈느냐이지
      * 우리가 그것을 무엇으로 분류했느냐가 아니다.
+     *
+     * <p><b>어느 쪽으로 묶였는지 접두어로 밝힌다</b>({@code BIZ:} · {@code NAME:}).
+     * 예전에는 이름 쪽에 제어문자 {@code U+0001} 을 붙였는데, 이 값이 이제 밖으로 나가
+     * 표에 적히므로 눈에 보이는 형태라야 한다. 두 이름공간은 부딪히지 않는다 —
+     * 사업자번호는 숫자뿐이라 {@code BIZ:} 로 시작할 수 없고, 같은 문자열이 양쪽에 걸리는
+     * 일이 없다. <b>묶는 결과는 한 글자도 안 바뀐다.</b>
+     *
+     * @return 묶음 키, 또는 번호도 이름도 없어 어느 묶음에도 못 드는 결제면 {@code null}
      */
-    private static String groupKey(UserPayment p, java.util.function.Predicate<String> isPaymentAgency) {
-        String biz = p.getBusinessNumber();
-        if (biz != null && !biz.isBlank() && !isPaymentAgency.test(biz)) return biz;
-        String name = p.getMerchantName();
-        return name == null || name.isBlank() ? null : SEP + name;
+    public static String merchantKeyOf(String businessNumber, String merchantName,
+                                       java.util.function.Predicate<String> isPaymentAgency) {
+        if (businessNumber != null && !businessNumber.isBlank() && !isPaymentAgency.test(businessNumber)) {
+            return BIZ_KEY_PREFIX + businessNumber;
+        }
+        return merchantName == null || merchantName.isBlank() ? null : NAME_KEY_PREFIX + merchantName;
     }
 
     private static boolean inRange(double v, int[] range) {
