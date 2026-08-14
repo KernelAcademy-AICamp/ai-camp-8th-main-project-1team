@@ -1,0 +1,220 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB NEED AutoSlim카드",
+  "product_id": "KB-09792",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "2026-01-28",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    },
+    {
+      "scope": "모바일단독",
+      "brand": "Local/Master",
+      "total": 14000,
+      "base": 1000,
+      "affiliate": 13000
+    }
+  ],
+  "benefits": [
+    {
+      "group": "차량 구매 연계 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "오토 슬림할부 또는 이지오토할부(신차)",
+          "note": "잔액 유/무에 따라 차등 할인"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 7000,
+        "800000": 11000,
+        "1600000": 20000
+      }
+    },
+    {
+      "group": "주유/충전 청구할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "주유/충전",
+          "brands": [
+            "SK",
+            "GS"
+          ],
+          "industries": [
+            "주유소",
+            "충전소LPG"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 10000
+      }
+    },
+    {
+      "group": "자동차보험 청구할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 20000,
+      "min_amount": 200000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "자동차보험",
+          "industries": [
+            "손해보험"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "SK스피드메이트 현장할인",
+      "kind": "할인",
+      "settle": "현장할인",
+      "targets": [
+        {
+          "category": "차량정비",
+          "brands": [
+            "스피드메이트"
+          ]
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "오토 슬림할부 서비스",
+    "이지오토할부(신차) 서비스"
+  ],
+  "schema_gaps": [
+    "차량 구매 연계 할인 시 잔액 무(無) 구간 할인 한도(3천원, 4천원, 5천원) 별도 존재",
+    "주유/충전 할인 시 전월 실적 40만원 미만 시 월 할인한도 5천원 적용",
+    "자동차보험 할인 시 전월 실적 40만원 미만 시 할인금액 1만원 적용",
+    "자동차보험 할인 연 1회 제공",
+    "스피드메이트 서비스 연 1회 제공",
+    "최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예 및 할인 한도 특례 적용"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09792__prdctOpmn_20260807.pdf",
+  "_extraction_check": {
+    "source_pdf": "09792.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.annual_fee[0].base",
+        "first": 1000,
+        "second": 7000
+      },
+      {
+        "path": "$.annual_fee[0].total",
+        "first": 14000,
+        "second": 20000
+      },
+      {
+        "path": "$.annual_fee[1].base",
+        "first": 7000,
+        "second": 1000
+      },
+      {
+        "path": "$.annual_fee[1].total",
+        "first": 20000,
+        "second": 14000
+      },
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": null,
+        "second": 20000
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.400000",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": 5,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.1600000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.400000",
+        "first": 7000,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.800000",
+        "first": 11000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": null,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[2].amount_krw",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].min_amount",
+        "first": 200000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.1600000",
+        "first": null,
+        "second": 20000
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.400000",
+        "first": null,
+        "second": 7000
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.800000",
+        "first": null,
+        "second": 11000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

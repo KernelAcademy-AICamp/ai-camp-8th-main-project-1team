@@ -1,0 +1,278 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB YOU Wish 카드",
+  "product_id": "KB-09780",
+  "status": "active",
+  "as_of": "2026-04-07",
+  "review_no": "여신금융협회 심의필 제2026-C1a-04817호",
+  "posted_at": "2026-04-15",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard, Amex",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "모바일 단독",
+      "brand": "KB",
+      "total": 9000,
+      "base": 1000,
+      "affiliate": 8000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      400000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고 학교 납입금, 대학(원) 등록금"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금(전기/수도 등)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "후불교통요금"
+      },
+      {
+        "code": "VENDING",
+        "label": "자판기/터널 이용료/항공기내 이용 등"
+      },
+      {
+        "code": "CANCEL",
+        "label": "취소금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "위시 베이직",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "KB Pay",
+          "channel": [
+            "KB Pay"
+          ]
+        },
+        {
+          "category": "음식점, 편의점",
+          "industries": [
+            "음식점",
+            "편의점"
+          ]
+        },
+        {
+          "category": "이동통신요금",
+          "industries": [
+            "이동통신요금 자동납부"
+          ]
+        },
+        {
+          "category": "OTT",
+          "brands": [
+            "넷플릭스",
+            "유튜브프리미엄",
+            "웨이브",
+            "티빙",
+            "디즈니플러스"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000
+      }
+    },
+    {
+      "group": "위시 픽",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "배달/커피",
+          "industries": [
+            "배달앱",
+            "커피/음료전문점"
+          ]
+        },
+        {
+          "category": "일상",
+          "industries": [
+            "택시",
+            "커피/음료전문점",
+            "영화관"
+          ]
+        },
+        {
+          "category": "관리",
+          "industries": [
+            "미용실",
+            "스포츠",
+            "온라인서점",
+            "올리브영"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "TUITION",
+      "label": "초·중·고 학교 납입금, 대학(원) 등록금"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+    },
+    {
+      "code": "TAX",
+      "label": "국세, 지방세"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "공과금(전기/수도 등)"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "4대 사회보험료(건강/연금/고용/산재)"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "CANCEL",
+      "label": "취소금액"
+    }
+  ],
+  "non_monetary": [
+    "Happy Birth Month: 생일월에 위시 픽 할인한도 2배 제공",
+    "전월실적 채워드림: 전월실적 35만원 이상 40만원 미만 시 연 2회 무료로 실적 채워줌"
+  ],
+  "schema_gaps": [
+    "위시 픽 서비스팩 3개 중 택 1 선택 구조",
+    "Happy Birth Month 및 전월실적 채워드림 서비스는 스키마에 직접 매핑 불가",
+    "건당 할인 한도(2,500원) 존재"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09780__prdctOpmn_20260415.pdf",
+  "_extraction_check": {
+    "source_pdf": "09780.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.400000",
+        "first": 5000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": 10,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.400000",
+        "first": 5000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": null,
+        "second": 10
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 10000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

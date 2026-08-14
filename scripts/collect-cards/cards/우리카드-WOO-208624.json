@@ -1,0 +1,249 @@
+{
+  "issuer": "우리카드",
+  "name": "KT패밀리카드",
+  "product_id": "WOO-208624",
+  "status": "active",
+  "as_of": "2022-09-02",
+  "review_no": "여신금융협회 심의필 제2022-C1a-07477호",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 10000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비 10,000원",
+    "연회비 면제기준: 발급월 포함 1년 이내 100만원 이상 이용 시 차년도 연회비 면제"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      300000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비·연체료·각종 수수료/이자"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "국세/지방세/공과금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학등록금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권/기프트카드 구매 및 충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "Woori 5% 할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "음식점/병원/쇼핑/교육",
+          "note": "백화점, 할인점, 병원 내 임대매장 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000
+      }
+    },
+    {
+      "group": "주유할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "amount_krw": 60,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "주유",
+          "note": "LPG 충전소 포함, 1일 2회, 월 6회, 1회 주유 10만원까지"
+        }
+      ]
+    },
+    {
+      "group": "영화 할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "amount_krw": 6000,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "CGV",
+            "롯데시네마",
+            "메가박스"
+          ],
+          "note": "통합 월 1회, 연 12회"
+        }
+      ]
+    },
+    {
+      "group": "패밀리레스토랑",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 25,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "피자헛",
+          "note": "건당 최대 2천원 할인"
+        },
+        {
+          "category": "TGIF, 아웃백",
+          "note": "1일 1회, 월 2회"
+        }
+      ]
+    },
+    {
+      "group": "커피 할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스",
+            "탐앤탐스"
+          ],
+          "note": "1일 1회, 월 2회, 1회 5천원 이상 5만원 이하 결제 시"
+        }
+      ]
+    },
+    {
+      "group": "무이자할부",
+      "kind": "무이자할부",
+      "targets": [
+        {
+          "category": "백화점/대형마트/병원",
+          "note": "2~3개월 무이자"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "놀이공원 서비스(에버랜드, 롯데월드, 서울랜드, 경주월드, 통도환타지아, 이월드, 광주패밀리랜드, 전주동물원)",
+    "kt 서비스(올레뮤직 10~20% 할인, 기프티쇼 5% 할인, 라바짜 20% 할인, kt스포츠 티켓 4장 무료)"
+  ],
+  "schema_gaps": [
+    "Two-in-One(체크) 서비스 제공: 신용카드 결제계좌를 지정하여 체크카드처럼 이용 가능",
+    "놀이공원 서비스는 전월 실적 30만원 이상 시 제공",
+    "신규 발급 시 발급월 포함 다음달 말일까지 실적 유예"
+  ],
+  "posted_at": null,
+  "source_url": "https://m.wooricard.com/dcmw/pdfviewer/jsp/pfileRead.jsp?pdfPath=%2Fupload%2FcardClause%2F2022%2F10%2F17%2F6c23515a-1620-4cef-b419-c16ea65430dc.pdf&pdfKubun=05&pdfName=208624_KT%ED%8C%A8%EB%B0%80%EB%A6%AC%EC%B9%B4%EB%93%9C_202209.pdf",
+  "_extraction_check": {
+    "source_pdf": "208624.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 6,
+        "second": 9
+      },
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": 60,
+        "second": 6000
+      },
+      {
+        "path": "$.benefits[1].amount_krw",
+        "first": 6000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 5000
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": null,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[2].amount_krw",
+        "first": null,
+        "second": 60
+      },
+      {
+        "path": "$.benefits[2].rate_percent",
+        "first": 25,
+        "second": null
+      },
+      {
+        "path": "$.benefits[4].kind",
+        "first": "무이자할부",
+        "second": "할인"
+      },
+      {
+        "path": "$.benefits[4].rate_percent",
+        "first": null,
+        "second": 25
+      },
+      {
+        "path": "$.benefits[4].requires_tier",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[5].monthly_cap_by_tier.300000",
+        "first": 5000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[5].rate_percent",
+        "first": 5,
+        "second": 50
+      },
+      {
+        "path": "$.tiers.length",
+        "first": 1,
+        "second": 0
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 5000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,324 @@
+{
+  "issuer": "하나카드",
+  "name": "하나 주거래 쇼핑 체크카드(후불교통)",
+  "product_id": "HANA-14584",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "compliance_no": "준법심의 L-25-0434 (2025.12.24)",
+  "posted_at": "2025-12-24",
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "하나",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      300000,
+      700000
+    ],
+    "excluded": [
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "수도/전기요금, 도시가스 요금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "그외 공과금(우편요금, 과태료, 범칙금, 벌금, 국가/공공기관/공공단체가 부과하는 부담금)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비, 부동산 임대료"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "국민연금/고용보험료/산재보험료/건강보험료 납부 금액"
+      },
+      {
+        "code": "TUITION",
+        "label": "스쿨뱅킹, 초.중.고학교납입금, 대학등록금, 대학원등록금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 기프트카드구매, 선불카드 및 선불전자지급수단(하나머니 등)충전 금액"
+      },
+      {
+        "code": "ATM",
+        "label": "국내외 ATM 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "국내외 가맹점",
+      "kind": "적립",
+      "rate_percent": 0.2,
+      "targets": [
+        {
+          "category": "국내외 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "대형마트",
+      "kind": "적립",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "대형마트",
+          "brands": [
+            "이마트",
+            "홈플러스",
+            "롯데마트"
+          ],
+          "channel": [
+            "오프라인"
+          ],
+          "exclude_place": [
+            "창고형 할인매장",
+            "대형마트 내 임대 매장"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "700000": 4000
+      },
+      "combined_cap_group": "통합적립"
+    },
+    {
+      "group": "슈퍼마켓/편의점",
+      "kind": "적립",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "슈퍼마켓",
+          "brands": [
+            "GS더프레시",
+            "롯데슈퍼",
+            "이마트에브리데이",
+            "홈플러스익스프레스"
+          ],
+          "channel": [
+            "오프라인"
+          ]
+        },
+        {
+          "category": "편의점",
+          "brands": [
+            "CU",
+            "GS25",
+            "이마트24",
+            "세븐일레븐"
+          ],
+          "channel": [
+            "오프라인"
+          ],
+          "exclude_place": [
+            "대형시설물 입점점포",
+            "임대매장"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "700000": 4000
+      },
+      "combined_cap_group": "통합적립"
+    },
+    {
+      "group": "백화점",
+      "kind": "적립",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "백화점",
+          "brands": [
+            "신세계백화점",
+            "현대백화점",
+            "롯데백화점"
+          ],
+          "channel": [
+            "오프라인"
+          ],
+          "exclude_place": [
+            "상품권 구입",
+            "선불카드 및 선불전자 지급수단 충전",
+            "백화점 내 임대 매장"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "700000": 3000
+      },
+      "combined_cap_group": "통합적립"
+    },
+    {
+      "group": "병원",
+      "kind": "적립",
+      "rate_percent": 2,
+      "targets": [
+        {
+          "category": "병원",
+          "industries": [
+            "종합병원",
+            "일반병원",
+            "치과",
+            "한방병원",
+            "한의원"
+          ],
+          "channel": [
+            "오프라인"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "700000": 2000
+      },
+      "combined_cap_group": "통합적립"
+    },
+    {
+      "group": "생활비",
+      "kind": "적립",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "통신요금",
+          "brands": [
+            "SKT",
+            "KT",
+            "LGU+"
+          ],
+          "note": "자동이체 요금 한정, 알뜰폰 제외"
+        },
+        {
+          "category": "생활요금",
+          "industries": [
+            "아파트관리비",
+            "전기요금",
+            "가스요금"
+          ],
+          "note": "자동납부 등록 건 한정, 관리사무소 일괄 납부 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "700000": 2000
+      },
+      "combined_cap_group": "통합적립"
+    },
+    {
+      "group": "건강",
+      "kind": "적립",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "헬스/골프",
+          "industries": [
+            "헬스 업종",
+            "골프연습장 업종"
+          ],
+          "channel": [
+            "오프라인"
+          ],
+          "exclude_place": [
+            "공립 스포츠센터",
+            "수영장"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "700000": 2000
+      },
+      "combined_cap_group": "통합적립"
+    },
+    {
+      "group": "구독",
+      "kind": "적립",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "영상스트리밍",
+          "brands": [
+            "넷플릭스",
+            "디즈니+",
+            "Wavve",
+            "왓챠",
+            "유튜브 프리미엄"
+          ],
+          "note": "월 정기결제 한정, 인앱결제/간편결제 제외"
+        },
+        {
+          "category": "디지털 멤버십",
+          "brands": [
+            "쿠팡로켓와우"
+          ],
+          "note": "월 정기결제 한정"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "700000": 2000
+      },
+      "combined_cap_group": "통합적립"
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "통합적립",
+      "members": [
+        "대형마트",
+        "슈퍼마켓/편의점",
+        "백화점",
+        "병원",
+        "생활비",
+        "건강",
+        "구독"
+      ],
+      "cap_by_tier": {
+        "300000": 10000,
+        "700000": 20000
+      }
+    }
+  ],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "후불교통 기능 선택 가능"
+  ],
+  "schema_gaps": [
+    "최초 카드 사용 등록일부터 다음달 말일까지 지난달 실적 30만원 미만이어도 30만원 이상 70만원 미만 기준으로 서비스 제공",
+    "적립 한도 초과 시 월 통합 적립한도 내에서 0.2% 적립률 적용",
+    "하이브리드 서비스 제공(체크카드 결제계좌 잔액 부족 시 신용결제)"
+  ],
+  "source_url": "https://m.hanacard.co.kr/leaflet/14/14584_20251224.pdf",
+  "_extraction_check": {
+    "source_pdf": "14584.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 19000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

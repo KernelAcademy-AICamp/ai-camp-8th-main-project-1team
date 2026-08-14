@@ -1,0 +1,163 @@
+{
+  "issuer": "하나카드",
+  "name": "K-패스 하나 신용카드",
+  "product_id": "HANA-14472",
+  "status": "active",
+  "as_of": "2024-04-23",
+  "review_no": "여신금융협회 심의필 제 2024-C1a-04423호",
+  "compliance_no": "준법심의 L-25-0389(2025.12.24)",
+  "posted_at": "2025-12-24",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 17000,
+      "base": 17000,
+      "affiliate": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 17000,
+      "base": 17000,
+      "affiliate": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      500000,
+      1000000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "수도/전기요금, 도시가스 요금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "그외 공과금(우편요금, 여권 발급비용, 과태료, 범칙금, 벌금, 국가/공공기관/공공단체가 부과하는 부담금)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "국민연금/고용보험료/산재보험료/건강보험료 납부금액"
+      },
+      {
+        "code": "TUITION",
+        "label": "스쿨뱅킹, 초.중.고 학교 납입금, 대학등록금, 대학원등록금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 기프트카드 구매, 선불카드 및 선불전자지급수단(하나머니 등) 충전 금액"
+      },
+      {
+        "code": "RENT",
+        "label": "부동산임대료"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 10000,
+        "1000000": 20000
+      }
+    },
+    {
+      "group": "드럭스토어",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "드럭스토어",
+          "brands": [
+            "다이소",
+            "올리브영"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 10000
+      }
+    },
+    {
+      "group": "커피",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스",
+            "커피빈"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 5000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자 할부 이용 건"
+    }
+  ],
+  "non_monetary": [
+    "K-패스 사업참여 대상지역 거주자만 신청 가능"
+  ],
+  "schema_gaps": [
+    "K-패스 서비스는 별도 사업으로 K-패스 앱을 통해 확인 필요",
+    "최초 카드 사용등록일로부터 다음 달 말일까지는 지난달 카드 실적이 50만원 미만이어도 50만원 이상 100만원 미만 기준으로 서비스 제공"
+  ],
+  "source_url": "https://m.hanacard.co.kr/leaflet/14/14472_20251224.pdf",
+  "_extraction_check": {
+    "source_pdf": "14472.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 25000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

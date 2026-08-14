@@ -1,0 +1,277 @@
+{
+  "issuer": "삼성카드",
+  "name": "기후동행 삼성카드",
+  "product_id": "SAM-6542",
+  "status": "active",
+  "as_of": "2024-11-18",
+  "review_no": "여신금융협회 심의필 제 2024-C1a-14328호",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 7000,
+      "base": 7000,
+      "affiliate": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 결제",
+        "무승인 결제(대중교통, 이동통신 등 정기결제)"
+      ]
+    },
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      400000,
+      800000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "SOCIAL_INS",
+        "label": "건강보험/국민연금/고용보험/산재보험 및 장애인 고용부담금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "국세/지방세/공과금 납부건"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트 관리비, 부동산 임대료 납부건"
+      },
+      {
+        "code": "TUITION",
+        "label": "유치원 납입금, 초/중/고등학교 학교납입금, 대학 등록금 납부건"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통(후불교통기능/모바일교통기능 결제건), 택시 이용금액"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "기프트/선불카드(포인트, 사이버머니 등 전자지급수단 포함) 구매 및 충전, 상품권 구매건"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자(할부수수료, 카드대출 이자 등), 연체료, 연회비 납부건"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "커피전문점/편의점",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "커피전문점",
+          "brands": [
+            "스타벅스",
+            "이디야커피",
+            "투썸플레이스",
+            "커피빈",
+            "블루보틀"
+          ],
+          "exclude_place": [
+            "백화점",
+            "할인점",
+            "쇼핑몰 등의 임대매장"
+          ]
+        },
+        {
+          "category": "편의점",
+          "brands": [
+            "CU",
+            "GS25",
+            "세븐일레븐",
+            "이마트24"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000,
+        "800000": 6000
+      }
+    },
+    {
+      "group": "생활 편의 영역",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "배달앱",
+          "brands": [
+            "배달의민족",
+            "요기요",
+            "쿠팡이츠"
+          ],
+          "channel": [
+            "공식 홈페이지",
+            "앱"
+          ]
+        },
+        {
+          "category": "온라인쇼핑몰",
+          "brands": [
+            "쿠팡",
+            "네이버플러스 스토어",
+            "SSG.COM",
+            "롯데ON",
+            "G마켓",
+            "옥션",
+            "11번가",
+            "삼성카드 쇼핑"
+          ]
+        },
+        {
+          "category": "헬스&뷰티",
+          "brands": [
+            "올리브영"
+          ],
+          "exclude_place": [
+            "백화점",
+            "할인점",
+            "쇼핑몰 등의 임대매장"
+          ]
+        },
+        {
+          "category": "생활잡화",
+          "brands": [
+            "다이소"
+          ],
+          "exclude_place": [
+            "백화점",
+            "할인점",
+            "쇼핑몰 등의 임대매장"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000,
+        "800000": 6000
+      }
+    },
+    {
+      "group": "이동통신",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "이동통신",
+          "industries": [
+            "SKT/KT/LG U+/알뜰폰(SK텔링크, KT스카이라이프, KT M모바일, 헬로모바일, 미디어로그) 이동통신요금"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000,
+        "800000": 6000
+      }
+    },
+    {
+      "group": "디지털콘텐츠",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 30,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "디지털콘텐츠",
+          "brands": [
+            "넷플릭스",
+            "디즈니+",
+            "웨이브",
+            "유튜브 프리미엄",
+            "티빙",
+            "멜론"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000,
+        "800000": 6000
+      }
+    },
+    {
+      "group": "해외",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 1,
+      "targets": [
+        {
+          "category": "해외",
+          "scope": "해외 가맹점 및 해외 직접구매 이용건"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "DISCOUNTED_PAYMENT",
+      "label": "삼성카드 할인이 적용된 일시불 및 할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "기프트/선불카드(포인트, 사이버머니 등 전자지급수단 포함) 구매 및 충전, 상품권 구매건"
+    }
+  ],
+  "non_monetary": [
+    "후불교통기능 탑재",
+    "서울시 기후동행카드 정기권 혜택(티머니 홈페이지 등록 필수)"
+  ],
+  "schema_gaps": [
+    "발급월+1개월까지는 전월 실적 40만원 미만 시에도 40만원~80만원 구간 혜택 제공",
+    "이동통신 및 생활 편의 영역 할인율은 40만원 이상 5%, 80만원 이상 7%로 차등 적용됨",
+    "해외겸용카드만 발급 가능",
+    "특수 소재 카드 발급 시 5,000원 수수료 발생"
+  ],
+  "posted_at": "2024-11-25",
+  "source_url": "https://www.samsungcard.com/filedownload.do?grpNo=1zPVy1PuFbwGC7xZyM4qtnB5FqSy18%2FywvX7Xq3s0cg%3D&sn=1",
+  "_extraction_check": {
+    "source_pdf": "6542.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 24000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

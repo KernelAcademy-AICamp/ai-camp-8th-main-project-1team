@@ -1,0 +1,340 @@
+{
+  "issuer": "BC카드",
+  "name": "BC 바로 KaPick",
+  "product_id": "103818",
+  "status": "active",
+  "as_of": "2024-05-27",
+  "review_no": "여신금융협회 심의필 제 2024-C1a-05953호",
+  "compliance_no": "준법감시인 2024-0837호",
+  "posted_at": "2024-05-01",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "policy_card": false,
+  "has_transit": true,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "MasterCard",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비는 카드별로 기본연회비와 제휴연회비를 합산한 총연회비가 청구",
+    "가족카드 발급 불가"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 결제",
+        "무승인결제(대중교통, 통신요금, 자동납부)"
+      ]
+    },
+    "includes": [
+      "국내 일시불",
+      "해외 일시불",
+      "할부"
+    ],
+    "tiers": [
+      150000,
+      300000,
+      600000,
+      1000000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 연체료, 제수수료/이자"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 보험"
+      },
+      {
+        "code": "UTILITY",
+        "label": "상하수도/전기/도시가스 요금"
+      },
+      {
+        "code": "PENALTY",
+        "label": "범칙금, 벌과금, 과태료"
+      },
+      {
+        "code": "PUBLIC_MERCHANT",
+        "label": "국가/공공기관/공공단체에서 개설한 가맹점 이용금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트 관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초/중/고교납입금, 대학등록금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 구매금액, 선불카드/선불 전자 지급수단 구매 및 충전금액"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부(Light 할부, 부분 무이자할부 포함) 이용금액"
+      }
+    ]
+  },
+  "benefit_unit": {},
+  "benefits": [
+    {
+      "group": "쇼픽",
+      "kind": "적립",
+      "rate_percent": 7,
+      "requires_tier": 150000,
+      "targets": [
+        {
+          "category": "온쇼",
+          "brands": [
+            "쿠팡",
+            "G마켓",
+            "올리브영",
+            "오늘의집"
+          ],
+          "channel": [
+            "온라인"
+          ]
+        },
+        {
+          "category": "오쇼",
+          "brands": [
+            "스타필드",
+            "올리브영",
+            "다이소"
+          ],
+          "channel": [
+            "오프라인"
+          ],
+          "note": "전국 스타필드 내 임대매장 결제건 제외"
+        },
+        {
+          "category": "패쇼",
+          "brands": [
+            "자라",
+            "무신사",
+            "에이블리",
+            "29CM"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "150000": 1500,
+        "300000": 4000,
+        "600000": 8000,
+        "1000000": 15000
+      },
+      "exclusive_with": [
+        "카카오페이 기본적립"
+      ]
+    },
+    {
+      "group": "먹픽",
+      "kind": "적립",
+      "rate_percent": 7,
+      "requires_tier": 150000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스",
+            "이디야",
+            "메가MGC커피",
+            "빽다방",
+            "컴포즈커피",
+            "매머드커피"
+          ],
+          "note": "익스프레스 포함"
+        },
+        {
+          "category": "편의점",
+          "brands": [
+            "CU",
+            "GS25",
+            "이마트24",
+            "세븐일레븐"
+          ]
+        },
+        {
+          "category": "배달",
+          "brands": [
+            "배달의민족",
+            "쿠팡이츠",
+            "요기요"
+          ],
+          "note": "공식 앱 및 홈페이지 결제만"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "150000": 1500,
+        "300000": 4000,
+        "600000": 8000,
+        "1000000": 15000
+      },
+      "exclusive_with": [
+        "카카오페이 기본적립"
+      ]
+    },
+    {
+      "group": "생픽",
+      "kind": "적립",
+      "rate_percent": 7,
+      "requires_tier": 150000,
+      "targets": [
+        {
+          "category": "통신",
+          "industries": [
+            "SKT/KT/LGU+ 휴대폰요금 자동이체"
+          ]
+        },
+        {
+          "category": "교통",
+          "industries": [
+            "시내버스",
+            "지하철"
+          ],
+          "note": "카카오T는 앱 자동결제만 적립"
+        },
+        {
+          "category": "영화",
+          "brands": [
+            "CGV",
+            "롯데시네마",
+            "메가박스"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "150000": 3000,
+        "300000": 3000,
+        "600000": 6000,
+        "1000000": 6000
+      },
+      "exclusive_with": [
+        "카카오페이 기본적립"
+      ]
+    },
+    {
+      "group": "카카오페이 기본적립",
+      "kind": "적립",
+      "rate_percent": 1,
+      "targets": [
+        {
+          "category": "국내 카카오페이 결제",
+          "note": "바로카드 Pick! 7% 적립 대상 가맹점 제외"
+        }
+      ],
+      "exclusive_with": [
+        "쇼픽",
+        "먹픽",
+        "생픽"
+      ]
+    },
+    {
+      "group": "해외 적립",
+      "kind": "적립",
+      "rate_percent": 2,
+      "targets": [
+        {
+          "category": "해외",
+          "scope": "해외 온/오프라인 결제"
+        }
+      ]
+    },
+    {
+      "group": "무이자할부",
+      "kind": "무이자할부",
+      "min_amount": 50000,
+      "targets": [
+        {
+          "category": "전국 모든 가맹점"
+        }
+      ],
+      "conditions": [
+        "2~3개월 상시 무이자할부",
+        "무이자할부 이용금액은 포인트 적립 제외"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    }
+  ],
+  "benefit_notes": [
+    "패쇼: 자라·무신사는 온/오프라인 스토어 결제건 모두 적립",
+    "커피: 현장결제 또는 공식앱 온라인 결제건에 한함",
+    "배달: 공식 앱 및 홈페이지 결제건에 한함",
+    "통신: 자동납부 신청 후 결제건에 한함",
+    "교통: 시외버스·고속버스·공항버스 제외",
+    "영화: 공식 홈페이지 및 앱 예매 시에만 적립"
+  ],
+  "benefit_conditions": [
+    "전월 실적 15만원 미만 시 7% 적립 서비스 미제공",
+    "카카오페이포인트는 거래월 기준 다음달 15일 적립"
+  ],
+  "non_monetary": [
+    "MasterCard Platinum 등급 기본 서비스 제공 (발급사 선택 서비스는 미제공)"
+  ],
+  "schema_gaps": [
+    "최초 카드 사용 등록월 실적에 따른 다음달 적립 한도 적용 조건 존재",
+    "그룹별 적립 한도는 매월 1일 생성, 말일 소멸, 이월 불가"
+  ],
+  "source_url": "https://www.bccard.com/down/individual/customer/103818.pdf",
+  "_extraction_check": {
+    "source_pdf": "20240501_BC 바로 KaPick__103818.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[4].min_amount",
+        "first": 50000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 36000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

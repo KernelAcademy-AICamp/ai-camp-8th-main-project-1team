@@ -1,0 +1,211 @@
+{
+  "issuer": "우리카드",
+  "name": "D4카드의정석II",
+  "product_id": "WOO-103305",
+  "status": "active",
+  "as_of": "2024-02-28",
+  "review_no": "여신금융협회 심의필 제 2024-C1a-02188호",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 12000,
+      "base": 7000,
+      "affiliate": 5000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 12000,
+      "base": 7000,
+      "affiliate": 5000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "교통카드 이용금액",
+        "통신료 자동납부금액"
+      ]
+    },
+    "tiers": [
+      300000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "DISCOUNTED_AMOUNT",
+        "label": "할인 서비스가 적용된 이용금액(해당 매출 전액)"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "상하수도 요금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트 관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학교 등록금"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 구매, 기프트카드 구매, 선불카드 충전"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 각종 수수료, 이자"
+      },
+      {
+        "code": "CANCELLED",
+        "label": "매출취소금액"
+      },
+      {
+        "code": "OVERSEAS",
+        "label": "해외 가맹점 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "커피",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 55,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스",
+            "투썸플레이스",
+            "커피빈",
+            "폴바셋"
+          ],
+          "exclude_place": [
+            "백화점",
+            "대형할인점",
+            "면세점",
+            "공항",
+            "미군부대"
+          ],
+          "note": "선불카드 및 앱 충전 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 11000
+      }
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 33,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "교통",
+          "industries": [
+            "시내버스",
+            "지하철",
+            "택시"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5500
+      }
+    },
+    {
+      "group": "편의점",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 11,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "편의점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 3300
+      }
+    },
+    {
+      "group": "영화",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 5500,
+      "min_amount": 9900,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "영화관"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5500
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "DISCOUNTED_AMOUNT",
+      "label": "할인 서비스가 적용된 이용금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "커피 서비스는 11~12월에 월 할인한도가 22,000원으로 상향됨",
+    "영화 서비스는 연 12회 제한이 있음",
+    "대중교통은 후불교통 기능 선택 시에만 제공",
+    "card_type이 UNKNOWN으로 제공되어 CREDIT으로 임의 설정함"
+  ],
+  "posted_at": null,
+  "source_url": "https://m.wooricard.com/dcmw/pdfviewer/jsp/pfileRead.jsp?pdfPath=%2Fupload%2FcardClause%2F2024%2F2%2F29%2Fe7f32ba4-5b50-4f45-8bcb-0ac29a5f68b9.pdf&pdfKubun=05&pdfName=%28%EC%83%81%ED%92%88%EC%95%88%EB%82%B4%EC%9E%A5%29D4%EC%B9%B4%EB%93%9C%EC%9D%98%EC%A0%95%EC%84%9D%E2%85%A1.pdf",
+  "_extraction_check": {
+    "source_pdf": "103305.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 25300,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "issuer": "하나카드",
+  "name": "원더카드2.0",
+  "product_id": "HANA-14126",
+  "status": "active",
+  "as_of": "2026-07-29",
+  "review_no": "여신금융협회 심의필 제 2026-C1a-11301호",
+  "compliance_no": "준법심의 L-26-2081(2026.07.08)",
+  "posted_at": "2026-07-08",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 12000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Visa/Mastercard/AMEX",
+      "total": 12000
+    }
+  ],
+  "annual_fee_notes": [
+    "혜택플러스 신청 시 제휴연회비 7,900원 추가 부과",
+    "가족카드 연회비 없음"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      400000,
+      800000,
+      1200000
+    ],
+    "excluded": [
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금(인터넷/모바일앱 납부 포함)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "국민연금/고용보험료/산재보험료/건강보험료"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 기프트카드 구매"
+      },
+      {
+        "code": "PREPAID_CHARGE",
+        "label": "선불카드 및 선불전자지급수단(하나머니 등) 충전 금액"
+      },
+      {
+        "code": "UTILITY",
+        "label": "수도요금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학등록금, 대학원등록금, 스쿨뱅킹, 초/중/고 학교 납입금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "부동산임대료"
+      },
+      {
+        "code": "BENEFIT_EXCLUDED",
+        "label": "서비스(할인/적립) 받은 전체 매출"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "원더 서비스",
+      "kind": "할인",
+      "targets": [
+        {
+          "category": "선택 영역별 서비스",
+          "note": "범용형, 혼합형, 특화형, 혜택플러스형 중 선택한 서비스 영역 및 크기에 따라 제공"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 및 부분무이자할부 전체 이용금액"
+    }
+  ],
+  "non_monetary": [
+    "트래블로그 스위치 서비스(외화 하나머니 결제)",
+    "온가족 플러스(가족카드 캐시백 및 연회비 지원)"
+  ],
+  "schema_gaps": [
+    "서비스 영역별로 할인/적립률과 한도가 가변적으로 설정되는 구조로, 고정된 benefit 객체로 표현 불가",
+    "범용형, 혼합형, 특화형, 혜택플러스형 등 상품 유형에 따라 서비스 제공 기준이 상이함",
+    "트래블로그 스위치 서비스는 신용 결제와 외화 하나머니 결제를 스위칭하는 기능으로, 카드 타입이 하이브리드와 유사하나 신용카드 기반의 부가 서비스임"
+  ],
+  "source_url": "https://m.hanacard.co.kr/leaflet/14/14126_20260708.pdf",
+  "_extraction_check": {
+    "source_pdf": "14126.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

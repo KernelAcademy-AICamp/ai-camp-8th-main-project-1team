@@ -1,0 +1,343 @@
+{
+  "issuer": "하나카드",
+  "name": "카카오페이 트래블로그 체크",
+  "product_id": "HANA-15172",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "2024-10-31",
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "없음",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      200000,
+      400000
+    ],
+    "excluded": [
+      {
+        "code": "PUBLIC_DUES",
+        "label": "국세, 지방세, 공과금(인터넷/모바일 앱을 통한 공과금 납부금액 포함)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "국민연금/고용보험료/산재보험료/건강보험료 납부금액"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 기프트카드구매, 선불카드 및 선불전자지급수단(하나머니 등)충전금액"
+      },
+      {
+        "code": "UTILITY",
+        "label": "수도/전기요금, 도시가스 요금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트 관리비, 부동산 임대료"
+      },
+      {
+        "code": "TUITION",
+        "label": "스쿨뱅킹, 대학등록금, 대학원등록금, 초·중·고 학교납입금"
+      },
+      {
+        "code": "ATM",
+        "label": "국내외 ATM 이용금액"
+      },
+      {
+        "code": "POINT_EARNED",
+        "label": "‘카카오페이’ 서비스 영역으로 카카오페이포인트가 1% 적립된 매출"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "국내 전가맹점",
+      "kind": "적립",
+      "rate_percent": 0.2,
+      "targets": [
+        {
+          "category": "국내 전가맹점"
+        }
+      ]
+    },
+    {
+      "group": "카카오페이",
+      "kind": "적립",
+      "rate_percent": 1.0,
+      "targets": [
+        {
+          "category": "카카오페이",
+          "channel": [
+            "카카오페이 등록 결제"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "커피",
+      "kind": "적립",
+      "rate_percent": 5.0,
+      "min_amount": 10000,
+      "requires_tier": 200000,
+      "targets": [
+        {
+          "category": "커피",
+          "industries": [
+            "커피업종"
+          ],
+          "exclude_place": [
+            "백화점",
+            "할인점",
+            "아울렛",
+            "쇼핑몰",
+            "휴게소",
+            "공항",
+            "호텔",
+            "리조트",
+            "역사",
+            "마트",
+            "임대매장",
+            "배달앱",
+            "식당 예약앱"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 3000,
+        "400000": 3000
+      }
+    },
+    {
+      "group": "편의점",
+      "kind": "적립",
+      "rate_percent": 5.0,
+      "min_amount": 10000,
+      "requires_tier": 200000,
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "CU",
+            "GS25",
+            "세븐일레븐",
+            "이마트24"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 3000,
+        "400000": 3000
+      }
+    },
+    {
+      "group": "생활비",
+      "kind": "적립",
+      "rate_percent": 5.0,
+      "min_amount": 50000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "통신",
+          "brands": [
+            "SKT",
+            "KT",
+            "LG U+"
+          ],
+          "note": "자동이체 요금 한정"
+        },
+        {
+          "category": "공공요금",
+          "industries": [
+            "전기요금",
+            "가스요금"
+          ],
+          "note": "자동납부 등록 가능 가맹점 한정"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000
+      }
+    },
+    {
+      "group": "쇼핑",
+      "kind": "적립",
+      "rate_percent": 5.0,
+      "min_amount": 30000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "쇼핑",
+          "brands": [
+            "무신사",
+            "지그재그",
+            "더블유컨셉",
+            "29cm"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000
+      }
+    },
+    {
+      "group": "구독",
+      "kind": "적립",
+      "rate_percent": 10.0,
+      "min_amount": 5000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "구독",
+          "brands": [
+            "유튜브 프리미엄",
+            "넷플릭스",
+            "쿠팡와우멤버십"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "PUBLIC_DUES",
+      "label": "국세, 지방세, 공과금"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "국민연금/고용보험료/산재보험료/건강보험료"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 기프트카드구매, 선불카드 및 선불전자지급수단(하나머니 등)충전금액"
+    },
+    {
+      "code": "UTILITY",
+      "label": "수도요금, 아파트 관리비"
+    },
+    {
+      "code": "HOUSING",
+      "label": "부동산 임대료"
+    },
+    {
+      "code": "TUITION",
+      "label": "스쿨뱅킹, 대학등록금, 대학원등록금, 초·중·고 학교납입금"
+    },
+    {
+      "code": "ATM",
+      "label": "국내외 ATM 이용금액"
+    }
+  ],
+  "non_monetary": [
+    "해외 가맹점 이용 수수료 면제",
+    "해외 ATM 인출 수수료 면제"
+  ],
+  "schema_gaps": [
+    "최초 카드 사용 등록일부터 다음달 말일까지 지난달 실적 40만원 미만이어도 40만원 이상 기준으로 서비스 제공",
+    "적립 대상 중복 시 적립금액이 높은 서비스 우선 적용",
+    "카카오페이포인트 적립 불가 시 하나머니로 적립",
+    "해외 이용금액은 하나카드 전산상 해외 가맹점 매출로 분류된 경우에 한함"
+  ],
+  "source_url": "https://m.hanacard.co.kr/leaflet/15/15172_20241031.pdf",
+  "_extraction_check": {
+    "source_pdf": "15172.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[4].min_amount",
+        "first": 10000,
+        "second": 5000
+      },
+      {
+        "path": "$.benefits[4].monthly_cap_by_tier.200000",
+        "first": 3000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[4].rate_percent",
+        "first": 5.0,
+        "second": 10.0
+      },
+      {
+        "path": "$.benefits[4].requires_tier",
+        "first": 200000,
+        "second": 400000
+      },
+      {
+        "path": "$.benefits[5].min_amount",
+        "first": 5000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[5].monthly_cap_by_tier.400000",
+        "first": 3000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[5].rate_percent",
+        "first": 10.0,
+        "second": 0.2
+      },
+      {
+        "path": "$.benefits[5].requires_tier",
+        "first": 400000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[6].min_amount",
+        "first": null,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[6].monthly_cap_by_tier.200000",
+        "first": null,
+        "second": 3000
+      },
+      {
+        "path": "$.benefits[6].monthly_cap_by_tier.400000",
+        "first": null,
+        "second": 3000
+      },
+      {
+        "path": "$.benefits[6].rate_percent",
+        "first": 0.2,
+        "second": 5.0
+      },
+      {
+        "path": "$.benefits[6].requires_tier",
+        "first": null,
+        "second": 200000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 15000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

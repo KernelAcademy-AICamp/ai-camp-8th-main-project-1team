@@ -1,0 +1,180 @@
+{
+  "issuer": "KB국민카드",
+  "name": "보람상조 KB카드",
+  "product_id": "KB-04494",
+  "status": "active",
+  "as_of": "2025-06-10",
+  "review_no": "여신금융협회 심의필 제 2025-C1a-07859호",
+  "compliance_no": "준법감시인 심의필 260406-01115-PIF (2026.04.06)",
+  "posted_at": "2025-06-30",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 22000,
+      "base": 7000,
+      "affiliate": 15000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Master",
+      "total": 22000,
+      "base": 7000,
+      "affiliate": 15000
+    }
+  ],
+  "annual_fee_notes": [
+    "일반카드 기준 연회비이며, 모바일 단독카드는 1만 6천원(기본 1천원 + 제휴 1만 5천원)",
+    "연회비는 카드 발급 시점을 기준으로 1년 단위로 청구",
+    "최초/2차년도 연회비 면제 조건 없음",
+    "해당 카드 연회비는 카드별로 청구"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      400000,
+      800000,
+      1200000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "DISCOUNTED",
+        "label": "보람상조 KB카드로 할인받은 이용건(해당 매출 전체)"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초/중/고 학교납입금 전체, 대학(원) 등록금"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처이용금액 등)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금(국세/지방세 등)"
+      },
+      {
+        "code": "UTILITY",
+        "label": "각종 공과금(전기/수도 등)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입 및 충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(대중교통, 공항버스, 자판기, 터널통행료, 항공기내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "보람상조 자동납부 청구할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "보람상조 자동납부"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 8000,
+        "1200000": 11000
+      }
+    },
+    {
+      "group": "KB Pay 오픈마켓 청구할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "오픈마켓",
+          "brands": [
+            "G마켓",
+            "옥션",
+            "11번가"
+          ],
+          "channel": [
+            "KB Pay"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입/충전금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 동안 보람상조 자동납부 및 KB Pay 오픈마켓 각각 월 2천5백원 할인 제공",
+    "최초 카드 사용등록월의 실적이 40만원 이상일 경우 다음달에 해당 실적구간의 할인한도 적용"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04494__prdctOpmn_20260626.pdf",
+  "_extraction_check": {
+    "source_pdf": "04494.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 11000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

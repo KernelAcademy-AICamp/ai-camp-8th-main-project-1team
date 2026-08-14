@@ -33,7 +33,6 @@ import java.util.*;
 public class ApiController {
 
     private final AnalysisEngine engine;
-    private final RecommendService recommendService;
     private final CardRecommendService cardRecommendService;
     private final ReportService reportService;
     private final AlertService alertService;
@@ -48,8 +47,7 @@ public class ApiController {
     private final AlertRepository alertRepository;
     private final Clock clock;
 
-    public ApiController(AnalysisEngine engine, RecommendService recommendService,
-                         ReportService reportService, AlertService alertService,
+    public ApiController(AnalysisEngine engine, ReportService reportService, AlertService alertService,
                          ScoreService scoreService, NarrativeService narrativeService,
                          AuditService auditService, AppUserRepository userRepository,
                          com.finntech.service.NarrativeCacheService narratives,
@@ -58,7 +56,6 @@ public class ApiController {
                          AlertRepository alertRepository, CardRecommendService cardRecommendService,
                          Clock clock) {
         this.engine = engine;
-        this.recommendService = recommendService;
         this.cardRecommendService = cardRecommendService;
         this.reportService = reportService;
         this.alertService = alertService;
@@ -80,59 +77,20 @@ public class ApiController {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user " + userId + " not found"));
     }
 
-    // ---- 추천 -------------------------------------------------------------
-
-    @GetMapping("/products/recommend")
-    public Map<String, Object> recommend(@RequestParam Long userId) {
-        AppUser u = user(userId);
-        AnalysisResult analysis = engine.analyze(userId, now());
-        RecommendService.Recommendations rec = recommendService.recommend(u, analysis);
-
-        List<Map<String, Object>> items = new ArrayList<>();
-        int rank = 1;
-        for (RecommendService.Scored s : rec.items()) {
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("rank", rank++);
-            m.put("productId", s.product().getId());
-            m.put("name", s.product().getName());
-            m.put("productType", s.product().getProductType());
-            m.put("riskGrade", s.product().getRiskGrade());
-            m.put("expectedRate", s.product().getExpectedRate());
-            m.put("minJoinAmount", s.product().getMinJoinAmount());
-            m.put("minPeriodMonths", s.product().getMinPeriodMonths());
-            m.put("targetCategoryCode", s.product().getTargetCategoryCode());
-            // 근거 필드 — 설명가능성
-            m.put("matchScore", s.totalScore());
-            m.put("scoreBreakdown", Map.of(
-                    "periodFit", s.periodFit(),
-                    "riskFit", s.riskFit(),
-                    "categoryFit", s.categoryFit()));
-            m.put("gateReason", s.gateReason());
-            items.add(m);
-        }
-
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("userId", userId);
-        body.put("items", items);
-        body.put("availableFunds", rec.availableFunds());
-        body.put("gatingRelaxed", rec.gatingRelaxed());
-        body.put("overspendingCategories", analysis.overspendingCategories());
-        body.put("longTermVolatilityIndex", round(analysis.longTermVolatilityIndex()));
-        body.put("dataSourceMode", rec.dataSourceMode());
-        body.put("estimationReason", rec.estimationReason());
-        return body;
-    }
-
     /**
      * 카드 추천 (개편안 {@code s-compare}).
      *
-     * <p>여기 카드는 <b>전부 더미</b>다(마스터 §4 원칙 5). 응답에 소비 요약을 함께 싣는 이유는
-     * 순위의 근거를 화면에서 바로 대조할 수 있게 하기 위함이다 — 근거 없는 순위는 광고다.
+     * <p>여기 카드는 <b>실제 상품</b>이다(마스터 §4 원칙 5 재개정 2026-08-10). 예적금은 별도
+     * 일반 비교 화면에서만 다룬다. 응답에 소비 요약을 함께 싣는 이유는 순위의 근거를 화면에서
+     * 바로 대조할 수 있게 하기 위함이다 — 근거 없는 순위는 광고다.
+     *
+     * <p><b>여기는 혜택 비교까지다.</b> 신청 링크·CTA 를 응답에 싣지 않는다. 카드 정보는 수집
+     * 시점 스냅샷이라 {@code asOf}(공시 기준일)를 함께 보내고, 화면은 그것을 반드시 병기한다.
      */
     @GetMapping("/products/recommend-cards")
     public CardRecommendService.Result recommendCards(@RequestParam Long userId) {
         user(userId);   // 없는 사용자면 404
-        return cardRecommendService.recommend(engine.analyze(userId, now()));
+        return cardRecommendService.recommend(engine.analyze(userId, now()), now());
     }
 
     // ---- 리포트 -----------------------------------------------------------

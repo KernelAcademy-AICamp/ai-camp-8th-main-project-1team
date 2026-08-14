@@ -1,0 +1,209 @@
+{
+  "issuer": "삼성카드",
+  "name": "김제사랑상품권 삼성체크카드",
+  "product_id": "SAM-6097",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "삼성",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "무승인 결제(대중교통, 이동통신 등 자동납부 결제건 등)"
+      ]
+    },
+    "tiers": [
+      100000,
+      200000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "GIFT_CARD",
+        "label": "지역사랑상품권 충전형 선불카드 결제 및 충전건"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "건강보험/국민연금/고용보험/산재보험 및 장애인 고용부담금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "국세/지방세/공과금"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고등학교 학교납입금, 대학 등록금"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통, 택시"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트 관리비, 부동산 임대료"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "기프트/선불카드(포인트, 사이버머니 등 전자지급수단 포함) 구매 및 충전"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 구매건"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자(할부수수료, 카드대출 이자 등), 연체료, 연회비 납부건"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "국내 가맹점",
+      "kind": "적립",
+      "settle": "캐시백",
+      "rate_percent": 0.2,
+      "targets": [
+        {
+          "category": "국내 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "편의점·의료·주유",
+      "kind": "적립",
+      "settle": "캐시백",
+      "rate_percent": 2,
+      "requires_tier": 100000,
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "CU",
+            "GS25",
+            "세븐일레븐",
+            "미니스톱",
+            "이마트24"
+          ]
+        },
+        {
+          "category": "의료",
+          "industries": [
+            "병·의원",
+            "약국"
+          ]
+        },
+        {
+          "category": "주유",
+          "industries": [
+            "모든 주유소"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "100000": 3000,
+        "200000": 6000
+      },
+      "combined_cap_group": "편의점·의료·주유"
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "편의점·의료·주유",
+      "members": [
+        "편의점·의료·주유"
+      ],
+      "cap_by_tier": {
+        "100000": 3000,
+        "200000": 6000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "지역사랑상품권 충전형 선불카드 결제 및 충전건"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "건강보험/국민연금/고용보험/산재보험 및 장애인 고용부담금"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "국세/지방세/공과금"
+    },
+    {
+      "code": "TUITION",
+      "label": "초·중·고등학교 학교납입금, 대학 등록금"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "대중교통, 택시, 고속버스(차내 단말기 및 고속버스 앱 결제), 고속도로 통행요금"
+    },
+    {
+      "code": "HOUSING",
+      "label": "부동산 임대료"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "기프트/선불카드(포인트, 사이버머니 등 전자지급수단 포함) 구매 및 충전"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 구매"
+    },
+    {
+      "code": "FEE",
+      "label": "문자알림서비스, 스마트오토서비스 이용금액"
+    }
+  ],
+  "non_monetary": [
+    "김제사랑상품권 선불결제기능 제공"
+  ],
+  "schema_gaps": [
+    "발급월+1개월까지는 전월 이용금액 10만원 미만 시에도 10만원 이상~20만원 미만 실적구간 혜택 제공",
+    "편의점은 오프라인 결제건에 한하며, 백화점, 할인점, 쇼핑몰 등의 임대매장은 제외",
+    "의료는 오프라인 결제건에 한하며, 요양병원, 보건소, 동물병원은 제외",
+    "주유는 LPG충전소 제외",
+    "자체 가맹점번호로 승인 처리되는 일부 결제건(간편결제, 키오스크 등)은 캐시백 대상에서 제외"
+  ],
+  "posted_at": "2023-05-23",
+  "source_url": "https://www.samsungcard.com/filedownload.do?grpNo=1zPVy1PuFbwGC7xZyM4qtokK9HNFYwDdNirxeImVhH4%3D&sn=1",
+  "_extraction_check": {
+    "source_pdf": "6097.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 6000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

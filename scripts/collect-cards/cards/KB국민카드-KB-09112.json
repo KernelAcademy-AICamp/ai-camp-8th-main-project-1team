@@ -1,0 +1,165 @@
+{
+  "issuer": "KB국민카드",
+  "name": "삼성 AI구독 KB국민카드",
+  "product_id": "KB-09112",
+  "status": "active",
+  "as_of": "2024-08-06",
+  "review_no": "여신금융협회 심의필 제2024-C1a-09463호",
+  "compliance_no": "240719-03539-PIF (2024.07.19)",
+  "posted_at": "2024-08-06",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비는 카드 발급 시점을 기준으로 1년 단위로 청구",
+    "최초/2차년도 연회비 면제 조건 없음",
+    "모바일 단독카드 연회비: 14,000원 (기본 1,000원 + 제휴 13,000원)",
+    "해당카드 연회비(기본연회비 + 제휴연회비)는 카드별로 청구"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "국내 할부",
+      "해외 일시불"
+    ],
+    "tiers": [
+      300000,
+      700000,
+      1000000
+    ],
+    "excluded": [
+      {
+        "code": "DISCOUNTED_AMOUNT",
+        "label": "할인받은 이용건(해당 매출 전체)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초/중/고 학교납입금 전체, 대학(원)등록금"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함)구입/충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(대중교통,공항버스,자판기, 터널통행료, 항공기내 이용 등)"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "삼성 AI구독 자동납부 할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_conditional": "전월 실적별 차등",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "삼성 AI구독 자동납부"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 10000,
+        "700000": 12000,
+        "1000000": 14000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함)구입/충전금액"
+    }
+  ],
+  "non_monetary": [
+    "모바일 단독카드 발급 가능"
+  ],
+  "schema_gaps": [
+    "최초 카드 사용등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시에도 월 할인한도 5천원 제공",
+    "할인금액보다 구독 자동납부 금액이 적을 경우 결제금액까지만 할인 적용"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/_09112__prdctOpmn_20260327.pdf",
+  "_extraction_check": {
+    "source_pdf": "09112.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 14000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -126,8 +126,7 @@ public class MyDataService {
      */
     @Transactional(readOnly = true)
     public IdentityMatchView matchIdentity(String name, String social7, String phone) {
-        String normalized = normalizePhone(phone);
-        var byPhone = userRepository.findByPhoneNumber(normalized);
+        var byPhone = userRepository.findByPhoneDigits(digitsOnly(phone));
         var byPerson = userRepository.findByNameAndSocial7(name, social7);
         boolean phoneNameOk = byPhone.map(u -> u.getName().equals(name)).orElse(false);
         boolean phoneSocialOk = byPhone
@@ -139,10 +138,15 @@ public class MyDataService {
                 byPerson.isPresent());
     }
 
-    /** 저장 형식은 `010-1234-5678`이다. 입력이 하이픈 없이 와도 같은 사람을 찾게 맞춘다. */
-    /** 저장 표기와 <b>같은 규칙</b>을 쓴다 — 갈리면 있는 사람을 못 찾는다({@link Msisdn#format}). */
-    private static String normalizePhone(String phone) {
-        return com.finntech.mydata.util.Msisdn.format(phone);
+    /**
+     * 표기를 지우고 숫자만 남긴다 — 조회의 기준을 <b>표기가 아니라 번호 자체</b>로 옮긴다.
+     *
+     * <p>예전에는 입력을 {@code 010-1234-5678}로 <i>맞춰서</i> 찾았는데, 원장이 숫자만으로
+     * 저장돼 있어 정확일치가 영원히 어긋났다. 표기를 통일하는 대신 <b>양쪽에서 표기를 빼고</b>
+     * 비교한다 — 원장을 건드리지 않아도 되고, 앞으로 표기가 또 갈려도 버티는 쪽이다.
+     */
+    private static String digitsOnly(String phone) {
+        return phone == null ? "" : phone.replaceAll("\\D", "");
     }
 
     /** 가맹점 조회(번호→주소) — 사용자가 결제의 사업자번호로 가맹점명·지번주소를 조회한다. 없으면 empty. */

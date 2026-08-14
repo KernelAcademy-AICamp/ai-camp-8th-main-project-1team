@@ -1,0 +1,130 @@
+{
+  "issuer": "하나카드",
+  "name": "MOVING카드 GLOBAL",
+  "product_id": "HANA-15729",
+  "status": "active",
+  "as_of": "2026-06-19",
+  "review_no": "여신금융협회 심의필 제 2026-C1a-09124호",
+  "compliance_no": "준법심의 L-26-2049(2026.06.08)",
+  "posted_at": "2026-06-08",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내외겸용",
+      "brand": "Mastercard",
+      "total": 20000,
+      "base": 10000,
+      "affiliate": 10000
+    },
+    {
+      "scope": "국내전용",
+      "brand": "하나",
+      "total": 20000,
+      "base": 10000,
+      "affiliate": 10000
+    }
+  ],
+  "annual_fee_notes": [
+    "가족카드 연회비 없음"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      500000
+    ],
+    "excluded": [
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "수도/전기요금, 도시가스 요금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "그외 공과금(우편요금, 과태료, 범칙금, 벌금, 국가/공공기관/공공단체가 부과하는 부담금)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "국민연금/고용보험료/산재보험료/건강보험료 납부 금액"
+      },
+      {
+        "code": "TUITION",
+        "label": "스쿨뱅킹, 초·중·고 학교 납입금, 대학교 납입금, 대학원 납입금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 기프트카드 구매, 선불카드 및 선불전자지급수단(예시: 하나머니) 충전 금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "부동산임대료"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 및 부분무이자할부 이용금액 전체"
+      },
+      {
+        "code": "BENEFIT_EXCLUDED",
+        "label": "PLAY/LIFE 모드로 서비스(적립) 받은 전체 매출"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "3일 쓰면 2배 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내외 가맹점"
+        }
+      ],
+      "conditions": [
+        "영역별 3일 연속 이용 시 기본 적립률의 2배 적립",
+        "지난달 실적 조건 없음",
+        "일 실적 조건 1원 이상"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자 할부 및 부분 무이자할부 전체 이용금액"
+    }
+  ],
+  "non_monetary": [
+    "트래블로그 스위치 서비스",
+    "Mastercard PLATINUM 등급 서비스",
+    "GLOBAL 모드 설정 시 해외이용수수료 면제"
+  ],
+  "schema_gaps": [
+    "5가지 모드(ALLDAY, ONLINE, PLAY, LIFE, GLOBAL)별로 혜택이 상이하며, 하나페이 앱에서 변경 가능함",
+    "3일 쓰면 2배 적립은 연속 이용 3일 초과일부터 적용됨",
+    "일 실적 조건(1원 이상)이 존재함",
+    "트래블로그 스위치 서비스는 외화 하나머니 결제 시 제공됨"
+  ],
+  "source_url": "https://m.hanacard.co.kr/leaflet/15/15729_20260608.pdf",
+  "_extraction_check": {
+    "source_pdf": "15729.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

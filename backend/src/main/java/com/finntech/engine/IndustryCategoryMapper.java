@@ -74,6 +74,8 @@ public class IndustryCategoryMapper {
     private final Map<String, String> midByIndustryName;
     /** 세세분류 이름(정규화) → 국세청 업종코드들. 바깥 조회처의 답을 우리 번호로 옮기는 칸. */
     private final Map<String, java.util.List<String>> ntsByFineName;
+    /** 업종코드 → <b>카드혜택 축</b>. 중분류와 다른 축이다 — {@link #cardAxisOf} 참조. */
+    private final Map<String, String> cardAxisByIndustry;
 
     @SuppressWarnings("unchecked")
     public IndustryCategoryMapper(ObjectMapper objectMapper) {
@@ -94,6 +96,8 @@ public class IndustryCategoryMapper {
             Map<String, java.util.List<String>> fine =
                     (Map<String, java.util.List<String>>) root.get("ntsByFineName");
             this.ntsByFineName = fine == null ? Map.of() : fine;
+            Map<String, String> axes = (Map<String, String>) root.get("cardAxisByIndustry");
+            this.cardAxisByIndustry = axes == null ? Map.of() : axes;
         } catch (IOException e) {
             throw new UncheckedIOException("업종코드 대조표를 읽지 못했다: " + PATH, e);
         }
@@ -248,6 +252,25 @@ public class IndustryCategoryMapper {
     public String midOf(String industryCode) {
         if (industryCode == null || industryCode.isBlank()) return UNCLASSIFIED;
         return midByIndustry.getOrDefault(industryCode, UNCLASSIFIED);
+    }
+
+    /**
+     * 업종코드를 <b>카드혜택 축</b>으로 옮긴다 — 중분류와 <b>다른 축</b>이다.
+     *
+     * <p>중분류는 소비분석용이라 <i>교통/자동차</i> 하나에 주유(505001)·시내버스(602103)·
+     * 택시(602201)가 함께 들어 있는데, <b>카드는 셋을 전부 다르게 취급한다</b>(주유 리터당 할인 /
+     * 대중교통 10% / 택시 별도). 그래서 {@code nts-mid.tsv} 4번째 칸에서 축이 따로 나온다 —
+     * 소비분석은 {@link #midOf}, 카드추천은 이 메서드를 읽는다.
+     *
+     * <p><b>모르는 코드는 {@code null} 이고, 그것이 {@code 혜택축없음} 과 다르다.</b>
+     * {@code 혜택축없음}은 <i>"그 업종에 걸리는 카드 혜택 축이 없다"</i>이고 <b>전월 실적에는
+     * 그대로 들어간다</b>(동네 정육점은 혜택은 못 받아도 실적에는 든다). {@code null} 은
+     * <i>"이 결제가 무엇인지 모른다"</i>라 실적에서도 뺀다 — 둘을 섞으면 실적에서 축 하나가
+     * 통째로 빠지거나, 모르는 결제가 실적에 들어와 <b>"채운 줄 알았는데 못 채웠다"</b>가 난다.
+     */
+    public String cardAxisOf(String industryCode) {
+        if (industryCode == null || industryCode.isBlank()) return null;
+        return cardAxisByIndustry.get(industryCode);
     }
 
     /** 표에 있는 코드 수 — 기동 로그·테스트용. */

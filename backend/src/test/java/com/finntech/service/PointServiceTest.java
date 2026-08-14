@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 게임화 저축 루프 회계·쿠폰 검증 (문서 §5-5). 레포 없이 순수 정적 메서드를 직접 호출해
- * 저축 마이너스 불가·초과 강제차감 계산·적금 이자·쿠폰 임계치를 못박는다.
+ * 저축 마이너스 불가·초과 강제차감 계산·계획 개월수·쿠폰 임계치를 못박는다.
  */
 class PointServiceTest {
 
@@ -37,14 +37,6 @@ class PointServiceTest {
         // 이미 초과 상태에서 20만 더: 이번 소비 전액이 초과분 = 20만
         assertEquals(0, new BigDecimal("200000").compareTo(
                 PointService.incrementalOverspend(new BigDecimal("3600000"), budget, new BigDecimal("200000"))));
-    }
-
-    @Test
-    void lumpFutureValue_zeroRateKeepsPrincipal_positiveRateGrows() {
-        assertEquals(0, new BigDecimal("1000000")
-                .compareTo(PointService.lumpFutureValue(new BigDecimal("1000000"), 0.0, 12)));
-        assertTrue(PointService.lumpFutureValue(new BigDecimal("1000000"), 4.0, 12)
-                .compareTo(new BigDecimal("1000000")) > 0);
     }
 
     @Test

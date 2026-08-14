@@ -1,0 +1,296 @@
+{
+  "issuer": "우리카드",
+  "name": "위비트래블 J 체크카드",
+  "product_id": "WOO-103490",
+  "status": "active",
+  "as_of": "2025-09-08",
+  "review_no": "여신금융협회 심의필 제2025-C1a-16209호",
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      200000,
+      500000,
+      700000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비·연체료·각종 수수료/이자"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "국세/지방세, 우편요금, 여권, 범칙금, 과태료, 인지세, 송달료, 민원수수료 등"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "건강보험·국민연금·고용보험·산재보험·장애인고용부담금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공공요금(상하수도/전기/도시가스) 및 TV수신료"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비, 부동산 임대료(월세), 자동납부서비스 이용수수료"
+      },
+      {
+        "code": "TUITION",
+        "label": "유치원/초/중/고교 납입금, 대학(원) 등록금"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통(시내버스·지하철), 고속버스, 고속도로 통행료"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 등 현금성 유가증권, 기프트/선불카드 구매 및 충전"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "해외 10% 캐시백",
+      "kind": "할인",
+      "settle": "결제일 캐시백",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "일본",
+          "scope": "일본 오프라인 가맹점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 2000,
+        "500000": 4000,
+        "700000": 6000
+      },
+      "combined_cap_group": "해외/국내 통합"
+    },
+    {
+      "group": "국내 쇼핑 5% 캐시백",
+      "kind": "할인",
+      "settle": "결제일 캐시백",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "온라인쇼핑",
+          "brands": [
+            "쿠팡",
+            "무신사",
+            "29CM",
+            "올리브영"
+          ],
+          "channel": [
+            "온라인"
+          ]
+        },
+        {
+          "category": "오프라인쇼핑",
+          "brands": [
+            "올리브영"
+          ],
+          "channel": [
+            "오프라인"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 2000,
+        "500000": 4000,
+        "700000": 6000
+      },
+      "combined_cap_group": "해외/국내 통합"
+    },
+    {
+      "group": "국내 일상 5% 캐시백",
+      "kind": "할인",
+      "settle": "결제일 캐시백",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "시내버스",
+            "지하철"
+          ]
+        },
+        {
+          "category": "통신",
+          "industries": [
+            "SKT",
+            "KT",
+            "LGU+"
+          ]
+        },
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스"
+          ]
+        },
+        {
+          "category": "배달",
+          "brands": [
+            "배달의민족",
+            "쿠팡이츠",
+            "요기요"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 3000,
+        "500000": 6000,
+        "700000": 9000
+      },
+      "combined_cap_group": "해외/국내 통합"
+    },
+    {
+      "group": "일본 여행 서비스",
+      "kind": "할인",
+      "settle": "결제일 캐시백",
+      "rate_percent": 50,
+      "targets": [
+        {
+          "category": "일본 편의점",
+          "brands": [
+            "세븐일레븐",
+            "패밀리마트",
+            "로손"
+          ]
+        },
+        {
+          "category": "일본 패스트푸드",
+          "brands": [
+            "스타벅스",
+            "맥도날드"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000,
+        "500000": 10000
+      },
+      "conditions": [
+        "전월 국내 가맹점 이용실적 30만원 이상 시 제공",
+        "1~6월/7~12월 각 5천원, 연 1만원까지 캐시백 제공"
+      ]
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "해외/국내 통합",
+      "members": [
+        "해외 10% 캐시백",
+        "국내 쇼핑 5% 캐시백",
+        "국내 일상 5% 캐시백"
+      ],
+      "cap_by_tier": {
+        "200000": 7000,
+        "500000": 14000,
+        "700000": 21000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비·연체료·각종 수수료/이자"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권/선불카드 구매 및 충전"
+    }
+  ],
+  "non_monetary": [
+    "해외 가맹점 이용수수료 면제",
+    "해외 국제브랜드수수료 면제"
+  ],
+  "schema_gaps": [
+    "일본 여행 서비스는 전월 실적 30만원 이상 시 제공되며, 1~6월/7~12월 반기별 한도 적용",
+    "일본 여행 서비스는 통합 캐시백 한도와 별도로 운영됨",
+    "최초 카드 사용 등록일로부터 다음달 말일까지는 실적 20만원 미만 시에도 20만원 구간 서비스 제공"
+  ],
+  "posted_at": null,
+  "source_url": "https://m.wooricard.com/dcmw/pdfviewer/jsp/pfileRead.jsp?pdfPath=%2Fupload%2FcardClause%2F2025%2F10%2F13%2F57d376d8-fa7c-4ea7-8a77-afa630536414.pdf&pdfKubun=05&pdfName=%28%EA%B3%B5%EC%8B%9C%29+%EC%9C%84%EB%B9%84%ED%8A%B8%EB%9E%98%EB%B8%94+J+%EC%B2%B4%ED%81%AC%EC%B9%B4%EB%93%9C_%EC%83%81%ED%92%88%EC%95%88%EB%82%B4%EC%9E%A5.pdf",
+  "_extraction_check": {
+    "source_pdf": "103490.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.500000",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.700000",
+        "first": null,
+        "second": 10000
+      },
+      {
+        "path": "$.combined_caps.length",
+        "first": 1,
+        "second": 2
+      },
+      {
+        "path": "$.combined_caps[0].cap_by_tier.200000",
+        "first": 7000,
+        "second": 2000
+      },
+      {
+        "path": "$.combined_caps[0].cap_by_tier.500000",
+        "first": 14000,
+        "second": 4000
+      },
+      {
+        "path": "$.combined_caps[0].cap_by_tier.700000",
+        "first": 21000,
+        "second": 6000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 24000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -101,39 +101,6 @@ class SavingsCompareServiceTest {
                 SavingsCompareService.ProductKind.SAVING);
     }
 
-    // ── FP-01 매칭 계약으로의 변환 (§10 3단계) ─────────────────
-
-    @Test
-    void 적립방식과_상품군으로_매칭_그룹이_갈린다() {
-        assertThat(SavingsCompareService.accrualTypeOf(적금("자유적립식")))
-                .isEqualTo(SavingsMatchInputs.AccrualType.FLEXIBLE);
-        assertThat(SavingsCompareService.accrualTypeOf(적금("정액적립식")))
-                .isEqualTo(SavingsMatchInputs.AccrualType.FIXED);
-        assertThat(SavingsCompareService.accrualTypeOf(예금()))
-                .isEqualTo(SavingsMatchInputs.AccrualType.DEPOSIT);
-    }
-
-    /** 금감원은 최소 가입금액을 주지 않는다 — 없는 값으로 M5가 상품을 지우면 안 된다. */
-    @Test
-    void 변환된_후보는_최소납입금액이_비어_M5를_통과한다() {
-        var candidate = SavingsCompareService.toCandidate(적금("자유적립식"));
-
-        assertThat(candidate.minMonthlyAmount()).isNull();
-        assertThat(SavingsMatchService.fitsSize(candidate, 10_000L)).isTrue();
-    }
-
-    /** spclCnd가 자연어뿐이라(D2) 상품별 조건을 모른다 → 카드실적·급여이체를 대표값으로 넣는다. */
-    @Test
-    void 변환된_후보는_우대조건을_카드실적_급여이체로_가정한다() {
-        var candidate = SavingsCompareService.toCandidate(적금("자유적립식"));
-
-        assertThat(candidate.requiredConditions()).containsExactlyInAnyOrder(
-                SavingsMatchInputs.PreferentialCondition.CARD_PERFORMANCE,
-                SavingsMatchInputs.PreferentialCondition.SALARY_TRANSFER);
-        // null(미파싱)이 아니어야 M6의 이분(전부 충족=최고 / 미충족=기본)이 성립한다
-        assertThat(candidate.requiredConditions()).isNotNull();
-    }
-
     @Test
     void 지원_예치기간에_단기_1개월_3개월이_포함된다() {
         assertThat(SavingsCompareService.PERIOD_BUCKETS).contains(1, 3);
@@ -142,13 +109,4 @@ class SavingsCompareServiceTest {
         assertThat(SavingsCompareService.nearestPeriodBucket(4)).isEqualTo(3);
     }
 
-    private static Account 적금(String reserveType) {
-        return new Account("은행", "적금", 3.0, 4.0, 12, reserveType, "1", "", "", "key:s",
-                SavingsCompareService.ProductKind.SAVING);
-    }
-
-    private static Account 예금() {
-        return new Account("은행", "예금", 3.0, 4.0, 12, "", "1", "", "", "key:d",
-                SavingsCompareService.ProductKind.DEPOSIT);
-    }
 }

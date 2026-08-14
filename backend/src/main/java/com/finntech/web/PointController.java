@@ -97,18 +97,12 @@ public class PointController {
         return guard(() -> pointService.deleteMilestone(user(userId), milestoneId, now()));
     }
 
-    // ---- 저축 계획 · 목표별 통장 추천 --------------------------------------
+    // ---- 저축 계획 ---------------------------------------------------------
 
     /** 이 목표를 위해 '줄일 습관 소비' 카테고리를 저장한다 → 월 절약액·달성 개월수가 파생 계산된다. */
     @PostMapping("/goals/{goalId}/plan")
     public PointService.PointSnapshot setGoalPlan(@PathVariable Long goalId, @RequestBody PlanRequest req) {
         return guard(() -> pointService.setGoalPlan(user(req.userId()), goalId, req.cutCategories(), now()));
-    }
-
-    /** 목표 1·2·3에 계획 기간에 맞는 실 적금을 중복 없이 추천(정보성). */
-    @GetMapping("/recommendations")
-    public java.util.List<PointService.GoalRecommendationView> recommendations(@RequestParam Long userId) {
-        return pointService.recommendForGoals(user(userId), now());
     }
 
     // ---- 치팅데이 쿠폰 -----------------------------------------------------

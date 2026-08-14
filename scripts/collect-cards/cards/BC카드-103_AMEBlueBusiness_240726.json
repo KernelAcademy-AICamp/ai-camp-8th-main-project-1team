@@ -1,0 +1,53 @@
+{
+  "issuer": "BC카드",
+  "name": "고위드 BC 바로 아메리칸익스프레스 블루 비즈니스카드",
+  "product_id": "103_AMEBlueBusiness_240726",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 5000,
+      "base": 5000,
+      "affiliate": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Amex",
+      "total": 5000,
+      "base": 5000,
+      "affiliate": 0
+    }
+  ],
+  "benefits": [],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [],
+  "schema_gaps": [
+    "제공된 PDF 전문 내에 여신금융협회 심의필 번호 및 심의필 날짜 정보가 존재하지 않음",
+    "제공된 PDF 전문 내에 구체적인 포인트 적립률, 할인 혜택, 전월 실적 조건 등 상세 부가서비스 내용이 누락되어 있음"
+  ],
+  "posted_at": "2024-07-26",
+  "source_url": "https://www.bccard.com/down/individual/customer/103_AMEBlueBusiness_240726.pdf",
+  "_extraction_check": {
+    "source_pdf": "20240726_고위드 BC 바로 아메리칸익스프레스 블루 비즈니스카드__103_AMEBlueBusiness_240726.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

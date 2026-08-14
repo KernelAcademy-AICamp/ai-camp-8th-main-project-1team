@@ -1,0 +1,229 @@
+{
+  "issuer": "하나카드",
+  "name": "쿠팡 패밀리 하나카드",
+  "product_id": "HANA-13602",
+  "status": "active",
+  "as_of": "2021-12-17",
+  "review_no": "여신금융협회 심의필 제 2021-C1a-11055호",
+  "compliance_no": "준법심의 L-26-0309(2026.01.30)",
+  "posted_at": "2026-01-30",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "하나",
+      "total": 12000,
+      "base": 12000,
+      "affiliate": 0
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "VISA/JCB",
+      "total": 15000,
+      "base": 15000,
+      "affiliate": 0
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비는 카드 발급일(발급 첫해에는 카드사용등록일)이 속한 카드이용기간의 첫 결제일에 청구",
+    "카드발급 시점을 기준으로 1년 단위로 청구"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "후불교통요금 등 무승인거래",
+        "할부 이용 전체 금액"
+      ]
+    },
+    "tiers": [
+      400000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "PUBLIC_DUES",
+        "label": "국세, 지방세, 공과금(인터넷/모바일 앱 납부 포함)"
+      },
+      {
+        "code": "UTILITY",
+        "label": "수도/전기요금, 도시가스"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비, 부동산 임대료"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "국민연금/고용보험료/산재보험료/건강보험료"
+      },
+      {
+        "code": "TUITION",
+        "label": "스쿨뱅킹, 초.중.고 학교 납입금, 대학등록금, 대학원등록금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 기프트카드 구매, 선불카드 및 선불전자지급수단(하나머니 등) 충전 금액"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자 할부 매출"
+      },
+      {
+        "code": "DISCOUNTED_PURCHASE",
+        "label": "쿠팡 특화 서비스로 할인 받은 매출"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "쿠팡 특화 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "쿠팡",
+          "channel": [
+            "쿠팡"
+          ]
+        },
+        {
+          "category": "쿠팡이츠",
+          "channel": [
+            "쿠페이"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 30000
+      }
+    },
+    {
+      "group": "로켓와우 멤버십",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 100,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "로켓와우 멤버십",
+          "note": "쿠팡페이 등록 결제 시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 2900
+      }
+    },
+    {
+      "group": "생활 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "스타벅스"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 10000
+      }
+    },
+    {
+      "group": "생활 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 7,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "통신요금 자동이체",
+          "industries": [
+            "SKT",
+            "KT",
+            "LGU+"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 10000
+      }
+    },
+    {
+      "group": "생활 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 0.5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "국내/외 모든 가맹점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "PUBLIC_DUES",
+      "label": "국세, 지방세, 공과금"
+    },
+    {
+      "code": "UTILITY",
+      "label": "수도/전기요금, 도시가스"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비, 부동산 임대료"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "국민연금/고용보험료/산재보험료/건강보험료"
+    },
+    {
+      "code": "TUITION",
+      "label": "스쿨뱅킹, 초.중.고 학교 납입금, 대학등록금, 대학원등록금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 기프트카드 구매, 선불카드 및 선불전자지급수단 충전 금액"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자 할부 매출"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "할인 대상 중복 시 할인율이 높은 서비스 우선 적용",
+    "소수점 이하 금액 절사",
+    "해외 결제 시 국제브랜드수수료 및 해외서비스수수료 발생"
+  ],
+  "source_url": "https://m.hanacard.co.kr/leaflet/13/13602_20260130.pdf",
+  "_extraction_check": {
+    "source_pdf": "13602.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 57900,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

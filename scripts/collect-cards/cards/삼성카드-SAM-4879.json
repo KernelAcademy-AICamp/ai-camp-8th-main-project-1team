@@ -1,0 +1,292 @@
+{
+  "issuer": "삼성카드",
+  "name": "이스타항공 패밀리 삼성카드 (데일리형)",
+  "product_id": "SAM-4879",
+  "status": "active",
+  "as_of": "2019-08-27",
+  "review_no": "여신금융협회 심의필 제 2019-C1a-07680호",
+  "posted_at": "2019-08-29",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "삼성",
+      "total": 14000,
+      "base": 7000,
+      "affiliate": 7000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 결제",
+        "무승인결제(대중교통, 이동통신 등 자동납부)"
+      ]
+    },
+    "tiers": [
+      400000,
+      800000
+    ],
+    "excluded": [
+      {
+        "code": "SOCIAL_INS",
+        "label": "건강보험/국민연금/고용보험/산재보험 및 장애인 고용부담금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "국세/지방세/공과금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학 등록금"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통"
+      },
+      {
+        "code": "TAXI",
+        "label": "택시"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트 관리비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "기프트/선불카드(포인트, 사이버머니 등 전자지급수단 포함) 구매 및 충전"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 구매건"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "대중교통·택시·이동통신",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ]
+        },
+        {
+          "category": "택시",
+          "industries": [
+            "택시"
+          ]
+        },
+        {
+          "category": "이동통신",
+          "brands": [
+            "SKT",
+            "KT",
+            "LG U+"
+          ],
+          "note": "자동납부건"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000,
+        "800000": 6000
+      }
+    },
+    {
+      "group": "할인점·온라인쇼핑몰",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "할인점",
+          "brands": [
+            "이마트",
+            "이마트 트레이더스",
+            "롯데마트",
+            "홈플러스"
+          ]
+        },
+        {
+          "category": "온라인쇼핑몰",
+          "brands": [
+            "삼성카드 쇼핑",
+            "G마켓",
+            "옥션",
+            "11번가",
+            "인터파크",
+            "쿠팡",
+            "티몬",
+            "위메프"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000,
+        "800000": 6000
+      }
+    },
+    {
+      "group": "커피전문점·편의점·배달앱",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "커피전문점",
+          "brands": [
+            "스타벅스",
+            "투썸플레이스",
+            "카페베네",
+            "탐앤탐스",
+            "커피빈",
+            "엔제리너스",
+            "할리스커피",
+            "파스쿠찌",
+            "아티제",
+            "폴 바셋"
+          ]
+        },
+        {
+          "category": "편의점",
+          "brands": [
+            "CU",
+            "GS25",
+            "세븐일레븐",
+            "미니스톱"
+          ]
+        },
+        {
+          "category": "배달앱",
+          "brands": [
+            "배달의민족",
+            "요기요",
+            "쿠팡이츠"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000,
+        "800000": 6000
+      }
+    },
+    {
+      "group": "영화",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "amount_krw": 5000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "CGV",
+            "롯데시네마",
+            "메가박스"
+          ],
+          "note": "티켓 12,000원 이상 결제 시"
+        }
+      ]
+    },
+    {
+      "group": "놀이공원·워터파크",
+      "kind": "할인",
+      "settle": "현장할인",
+      "rate_percent": 50,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "에버랜드",
+            "롯데월드",
+            "서울랜드",
+            "통도환타지아",
+            "대전오월드",
+            "경주월드",
+            "이월드"
+          ],
+          "note": "자유이용권 50% 현장할인"
+        },
+        {
+          "category": "워터파크",
+          "brands": [
+            "캐리비안 베이",
+            "아쿠아 환타지아",
+            "캘리포니아비치",
+            "중흥골드스파",
+            "디오션 리조트 워터파크",
+            "스파밸리"
+          ],
+          "note": "입장권 30% 현장할인"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부, 다이어트할부"
+    },
+    {
+      "code": "DISCOUNTED_PURCHASE",
+      "label": "삼성카드 할인이 적용된 일시불 및 할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "기프트/선불카드(포인트, 사이버머니 등 전자지급수단 포함) 구매 및 충전"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 구매건"
+    }
+  ],
+  "non_monetary": [
+    "Mastercard PLATINUM 등급 국제브랜드 서비스 제공"
+  ],
+  "schema_gaps": [
+    "발급월+1개월까지는 전월 실적 40만원 미만 시에도 40만원~80만원 구간의 할인한도 제공",
+    "놀이공원/워터파크 혜택은 통합 월 1회, 연 4회 제공",
+    "영화 혜택은 통합 월 1회 제공"
+  ],
+  "source_url": "https://www.samsungcard.com/filedownload.do?grpNo=1zPVy1PuFbwGC7xZyM4qtvzkMUx4Fmrqp24VvRz%2FyQo%3D&sn=2",
+  "_extraction_check": {
+    "source_pdf": "4879.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 18000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

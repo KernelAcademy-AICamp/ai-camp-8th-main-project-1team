@@ -12,38 +12,6 @@ import { API_BASE } from './config';
 
 export type DataSourceMode = 'ESTIMATED' | 'CONFIRMED';
 
-export interface ScoreBreakdown {
-  periodFit: number;
-  riskFit: number;
-  categoryFit: number;
-}
-
-export interface RecommendItem {
-  rank: number;
-  productId: number;
-  name: string;
-  productType: string;
-  riskGrade: string;
-  expectedRate: number;
-  minJoinAmount: number;
-  minPeriodMonths: number;
-  targetCategoryCode: string | null;
-  matchScore: number;
-  scoreBreakdown: ScoreBreakdown;
-  gateReason: string | null;
-}
-
-export interface RecommendResponse {
-  userId: number;
-  items: RecommendItem[];
-  availableFunds: number;
-  gatingRelaxed: boolean;
-  overspendingCategories: string[];
-  longTermVolatilityIndex: number;
-  dataSourceMode: DataSourceMode;
-  estimationReason: string | null;
-}
-
 /** 카드 추천(개편안 `s-compare`) — 카드보다 근거가 먼저 온다. */
 export interface CardSummaryRow {
   rank: number;
@@ -65,6 +33,12 @@ export interface CardOffer {
   /** 연간 혜택 한도에 걸렸으면 그 한도, 아니면 null. */
   cappedAt: number | null;
   rows: CardBenefitRow[];
+  /**
+   * 공시 기준일(심의필 날짜, `2025-11-07`). **화면에 반드시 병기한다** — 혜택 개정 추적이
+   * 스코프 밖이라 카드 정보는 수집 시점 스냅샷이고, 이 값이 낡음에 대한 유일한 방어다.
+   * 신청 버튼을 두지 않는 것이 이 방어의 전제다.
+   */
+  asOf: string | null;
 }
 export interface CardRecommend {
   summary: CardSummaryRow[];
@@ -72,6 +46,8 @@ export interface CardRecommend {
   /** "2026.05 ~ 2026.07" — 무엇을 근거로 셌는지. */
   periodLabel: string;
   months: number;
+  /** 전월실적을 어느 달로 셌는지. "2026.06". */
+  performanceMonth: string;
 }
 
 export interface AlertItem {
@@ -161,7 +137,6 @@ export interface GoalView {
   emoji: string;
   targetAmount: number;
   balance: number;
-  projected: number;
   progress: number;
   priority: boolean;
   milestones: MilestoneView[];
@@ -184,19 +159,6 @@ export interface CutOption {
   categoryCode: string;
   displayName: string;
   monthlyAmount: number;
-}
-/** 목표별 추천 통장 (실 적금, 중복 없이) */
-export interface GoalRecommendation {
-  goalId: number;
-  goalName: string;
-  emoji: string;
-  periodMonths: number;
-  monthlyAmount: number;
-  planMonths: number;
-  company: string | null;
-  productName: string | null;
-  baseRate: number;
-  live: boolean;
 }
 export interface ForcedWithdrawal { goalName: string; amount: number }
 /** 참는 순간의 목표 진척 변화 — "62% → 68% · D-N 단축" (획득 프레이밍). */
@@ -251,9 +213,6 @@ export interface PointSnapshot {
   lastAmount: number;
   forcedWithdrawal: ForcedWithdrawal | null;
   coupon: CouponView | null;
-  productName: string | null;
-  productRate: number;
-  goalMonths: number;
   goals: GoalView[];
   suggestions: PointSuggestion[];
   recentEvents: PointEventView[];
@@ -282,6 +241,36 @@ export interface SavingsCompare {
   live: boolean;
   totalConsidered: number;
   note: string | null;
+}
+
+/* ── 지킨 돈 굴리기 (결산 화면 · 문서 §4.7) ───────────────────────────────
+ * 개인화가 아니다 — 금액만 자동으로 채워질 뿐 같은 금액이면 누구나 같은 답을 받는다.
+ * 파킹통장만 쓴다: 지킨 돈은 매달 금액이 다르고 결산마다 덩어리로 들어와, 묶이는 상품과 안 맞는다.
+ */
+export interface ParkingOption {
+  company: string;
+  name: string;
+  /** 조건 없이 받는 금리(%). 최고금리는 조건부라 내려오지 않는다. */
+  baseRate: number;
+  /** `이 페이스로 계속` 넣었을 때의 세후 이자(원) */
+  paceInterest: number;
+  /** 위 원금 + 이자 */
+  paceTotal: number;
+  /** 지금까지 모은 돈을 그대로 뒀을 때의 세후 이자(원) */
+  keptInterest: number;
+  keptTotal: number;
+}
+export interface KeptMoneyPlan {
+  /** 이번 챌린지에서 지킨 돈 */
+  thisChallenge: number;
+  /** 확정된 챌린지 전부의 합 */
+  cumulative: number;
+  projectionMonths: number;
+  /** `이 페이스로 N개월` 이어졌을 때의 원금 — **가정**이라 화면이 그 사실을 밝혀야 한다 */
+  pacePrincipal: number;
+  options: ParkingOption[];
+  /** 금리 조회 기준일 */
+  asOf: string;
 }
 
 /* ── 충동예산 절약통 (문서 §5-5) ──────────────────────────────────────── */
@@ -1046,7 +1035,6 @@ export interface ConfirmCategoryResult {
 }
 
 export const api = {
-  recommend: (userId: number) => get<RecommendResponse>(`/api/products/recommend?userId=${userId}`),
   recommendCards: (userId: number) =>
     get<CardRecommend>(`/api/products/recommend-cards?userId=${userId}`),
   alerts: (userId: number) => get<AlertResponse>(`/api/alert/list?userId=${userId}`),
@@ -1144,8 +1132,6 @@ export const api = {
 
   setGoalPlan: (userId: number, goalId: number, cutCategories: string[]) =>
     post<PointSnapshot>(`/api/points/goals/${goalId}/plan`, { userId, cutCategories }),
-  goalRecommendations: (userId: number) =>
-    get<GoalRecommendation[]>(`/api/points/recommendations?userId=${userId}`),
 
   useCoupon: (userId: number, couponId: number) =>
     post<PointSnapshot>(`/api/points/coupon/${couponId}/use?userId=${userId}`),
@@ -1167,20 +1153,20 @@ export const api = {
   deleteWishlist: (userId: number, itemId: number) =>
     del<PointSnapshot>(`/api/points/wishlist/${itemId}?userId=${userId}`),
 
-  /**
-   * 통장 비교 (정보성) — 자격 제한 제외 후 금리순. 판매·중개 아님.
-   *
-   * `userId`를 보내면 서버가 그 사용자의 출생연도로 **나이 자격까지 맞춰** 거른다.
-   * 안 보내면 서버는 나이 조건을 따지지 않는다 — 즉 보내지 않으면 자격 필터가 절반만 도는 셈이라,
-   * 로그인 상태에서는 항상 함께 보낸다.
-   */
-  compareSavings: (limit?: number, userId?: number) => {
+  /** 일반 예적금 비교 — 사용자 데이터 없이 공시 기본금리순으로 조회한다. */
+  compareSavings: (limit?: number) => {
     const q = new URLSearchParams();
     if (limit) q.set('limit', String(limit));
-    if (userId) q.set('userId', String(userId));
     const s = q.toString();
     return get<SavingsCompare>(`/api/savings/compare${s ? `?${s}` : ''}`);
   },
+
+  /**
+   * 지킨 돈 굴리기 — 결산 화면 하단 블록.
+   * 보여줄 게 없으면 서버가 **204**를 준다(지킨 돈 0 · 파킹 조회 막힘) → `null`.
+   */
+  keptMoneyParking: (userId: number) =>
+    get<KeptMoneyPlan | null>(`/api/savings/kept-money?userId=${userId}`),
 
   /* ── 충동예산 절약통 ── */
   impulse: (userId: number) => get<ImpulseSnapshot>(`/api/impulse?userId=${userId}`),

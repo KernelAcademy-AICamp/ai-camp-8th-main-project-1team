@@ -1,7 +1,5 @@
 package com.finntech.service;
 
-import com.finntech.service.SavingsMatchInputs.AccrualType;
-import com.finntech.service.SavingsMatchInputs.ProductCandidate;
 import com.finntech.util.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,25 +16,28 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 파킹통장(수시입출금) 후보 — FP-01의 {@link AccrualType#PARKING} 그룹을 채운다.
+ * 파킹통장(수시입출금) 목록 — 결산 화면의 「지킨 돈 굴리기」가 읽는다(`07_취향분석및추천_Agent_설계.md` §4.7).
  *
  * <p><b>왜 금감원이 아닌 다른 출처인가.</b> 금감원 금융상품통합비교공시는 <b>만기·금리가 정해진 상품</b>만
  * 모은다. 응답이 통째로 `예치기간 → 금리` 표라, <b>만기가 없는</b> 파킹통장은 그 틀에 들어갈 수 없다.
- * 실측(2026-08-04)으로도 적금 58건·정기예금 38건 중 파킹/수시입출금류는 0건이었다. 그런데 FP-01의 M2는
- * `버퍼가 얇거나 목돈이 갑자기 나가면 파킹통장을 상단에`가 핵심이라, 이 그룹이 비면 규칙의 절반이 죽는다.
+ * 실측(2026-08-04)으로도 적금 58건·정기예금 38건 중 파킹/수시입출금류는 0건이었다.
+ *
+ * <p><b>지킨 돈에 파킹이 맞는 이유.</b> 지킨 돈은 <b>매달 금액이 다르고 결산마다 덩어리로</b> 들어온다.
+ * 정기예금은 만기까지 묶여 다음 달 지킨 돈을 못 얹고, 정액적금은 매달 같은 금액을 요구한다.
+ * 파킹은 아무 때나 넣고 뺄 수 있어 이 흐름과 유일하게 맞는다(사용자 결정 2026-08-12).
  *
  * <p><b>비공식 API를 쓰는 근거 (2026-08-04 팀 확정).</b> 실서비스라면 상품 정보는 각 금융사에서 제휴로
  * 받아온다. 이 프로젝트는 <b>가상 환경의 학습용 서비스</b>이고, 여기서 실제 상품을 늘어놓는 목적은 판매가
- * 아니라 <b>추천 규칙(M1~M9)이 현실의 상품 분포에서 제대로 갈리는지 보기 위한 것</b>이다. 그래서 이 출처를
+ * 아니라 <b>지킨 돈을 어디에 둘 수 있는지 실제 분포로 보여 주기 위한 것</b>이다. 그래서 이 출처를
  * 쓰되, <b>그 이유를 알고 쓴다</b>. 뒤따르는 제약을 함께 적어 둔다.
  * <ul>
  *   <li>공식 API가 아니므로 <b>언제든 막히거나 스키마가 바뀔 수 있다</b> → 실패는 조용히 빈 목록이고,
- *       파킹 그룹만 비며 적금·예금 추천은 그대로 산다.</li>
+ *       결산 화면의 파킹 블록만 사라지고 나머지는 그대로 산다.</li>
  *   <li>금감원 공시와 달리 <b>출처의 공신력에 기댈 수 없다</b> → 화면에서 파킹통장을 실 금리로 말할 때는
  *       출처를 밝혀야 한다. 정보성 비교 예외(마스터 §5-5)는 `무판매목적·무제휴·가입편의 없음`이 전제이며,
  *       그 전제는 여기서도 지킨다(가입 버튼·제휴 링크 없음).</li>
- *   <li>실서비스로 전환한다면 <b>이 클래스를 제휴 데이터 소스로 갈아끼운다.</b> 매칭 규칙은 손대지 않는다
- *       — 그러라고 {@link ProductCandidate} 계약을 사이에 뒀다.</li>
+ *   <li>실서비스로 전환한다면 <b>이 클래스를 제휴 데이터 소스로 갈아끼운다.</b> 읽는 쪽은 손대지 않는다
+ *       — 그러라고 {@link ParkingAccount} 라는 자체 레코드를 사이에 뒀다.</li>
  * </ul>
  *
  * <p><b>호출의 함정.</b> {@code depositPeriod}를 <b>보내면 안 된다</b>. 넣으면 0건, 빼면 93건이 온다
@@ -52,12 +53,6 @@ public class ParkingAccountSource {
     /** 파킹통장 상품군 코드. 1002=정기예금·1003=적금은 금감원(공식)에서 받으므로 여기서 쓰지 않는다. */
     static final String PRODUCT_TYPE_PARKING = "1001";
 
-    /**
-     * 파킹통장은 만기가 없다 — 예치기간이 아니라 <b>넣어둔 금액</b>으로 금리 구간이 갈린다.
-     * 매칭의 만기 동점 처리(M9 ②)에서 `가장 짧은 것`으로 다뤄지도록 0을 쓴다.
-     */
-    private static final int NO_TERM = 0;
-
     private final boolean enabled;
     private final String path;
     private final String companyGroupCode;
@@ -70,7 +65,7 @@ public class ParkingAccountSource {
     private final RestClient client;
     private final Clock clock;
 
-    private List<ProductCandidate> cache = List.of();
+    private List<ParkingAccount> cache = List.of();
     private Instant cachedAt;
 
     public ParkingAccountSource(
@@ -102,17 +97,30 @@ public class ParkingAccountSource {
     }
 
     /**
-     * 파킹통장 후보. <b>실패하면 빈 목록</b>이다 — 비공식 출처가 막혔다고 적금·예금 추천까지 죽이지 않는다.
-     * 파킹 그룹만 비고, 화면은 그 사실을 그대로 말하면 된다(§14 거울 원칙).
+     * 파킹통장 한 줄 — 이 출처가 주는 것 전부다.
+     *
+     * <p><b>왜 자체 레코드인가</b>(2026-08-12). 예전에는 개인화 매칭 계약({@code SavingsMatchInputs})의
+     * 타입을 그대로 냈는데, 예적금이 비교만 하기로 되면서 그 계약이 연결을 잃었다. 파킹 조회는 계속 쓰이므로
+     * <b>죽은 계약에 매달아 두지 않는다</b> — 이 출처가 실제로 주는 넉 칸만 남긴다.
+     *
+     * @param productKey {@code 회사코드:상품코드}. 이름은 흔들려도 코드는 안 흔들린다.
+     * @param primeRate  <b>조건부</b> 최고금리(예치금 구간·첫거래). 줄 세우기에 쓰지 않는다.
      */
-    public List<ProductCandidate> candidates() {
+    public record ParkingAccount(String productKey, String company, String name,
+                                 double baseRate, double primeRate) {}
+
+    /**
+     * 파킹통장 목록. <b>실패하면 빈 목록</b>이다 — 비공식 출처가 막혔다고 화면이 죽지 않는다.
+     * 파킹 블록만 사라지고, 화면은 그 사실을 그대로 말하면 된다(§14 거울 원칙).
+     */
+    public List<ParkingAccount> accounts() {
         if (!enabled) return List.of();
         Instant now = clock.instant();
         if (cachedAt != null && Duration.between(cachedAt, now).toMinutes() < cacheTtlMinutes) {
             return cache;
         }
         try {
-            List<ProductCandidate> fetched = fetchAll();
+            List<ParkingAccount> fetched = fetchAll();
             if (!fetched.isEmpty()) {
                 cache = fetched;
                 cachedAt = now;
@@ -125,8 +133,8 @@ public class ParkingAccountSource {
 
     /** offset을 넘겨가며 전 페이지를 모은다. */
     @SuppressWarnings("unchecked")
-    private List<ProductCandidate> fetchAll() {
-        List<ProductCandidate> out = new ArrayList<>();
+    private List<ParkingAccount> fetchAll() {
+        List<ParkingAccount> out = new ArrayList<>();
         int offset = 0;
         for (int page = 0; page < maxPages; page++) {
             final int off = offset;
@@ -150,7 +158,7 @@ public class ParkingAccountSource {
             if (!(result.get("products") instanceof List<?> products) || products.isEmpty()) break;
 
             for (Object po : products) {
-                if (po instanceof Map) out.add(toCandidate((Map<String, Object>) po));
+                if (po instanceof Map) out.add(toAccount((Map<String, Object>) po));
             }
             int size = intOf(result.get("size"), products.size());
             offset += size <= 0 ? products.size() : size;
@@ -161,19 +169,17 @@ public class ParkingAccountSource {
     }
 
     /**
-     * 응답 한 줄 → 매칭 계약. 상품키는 {@code companyCode:code}로 만든다 — 이름은 흔들려도 코드는 안 흔들리고,
-     * M9의 마지막 동점 처리가 이 키로 전순서를 보장한다.
+     * 응답 한 줄 → {@link ParkingAccount}. 상품키는 {@code companyCode:code}로 만든다 —
+     * 이름은 흔들려도 코드는 안 흔들려서 정렬의 마지막 동점 처리를 이 키로 잠글 수 있다.
      *
-     * <p><b>우대조건은 {@code null}(확인 불가)이다.</b> 이 출처는 우대조건을 구조로 주지 않는다
-     * ({@code features}는 화면용 문구다). 금감원 쪽처럼 카드실적·급여이체를 가정하지 않는 이유는, 파킹통장의
-     * 우대는 보통 <b>예치금 구간·첫거래</b>라 그 둘과 성격이 다르기 때문이다. 지어내느니 확인 불가로 둔다.
+     * <p><b>우대조건은 담지 않는다.</b> 이 출처는 그걸 구조로 주지 않는다({@code features}는 화면용
+     * 문구다). 파킹통장의 우대는 보통 <b>예치금 구간·첫거래</b>라 지어내느니 안 담는다.
      */
-    static ProductCandidate toCandidate(Map<String, Object> p) {
+    static ParkingAccount toAccount(Map<String, Object> p) {
         String key = str(p.get("companyCode")) + ":" + str(p.get("code"));
-        return new ProductCandidate(
-                key, str(p.get("companyName")), str(p.get("name")), AccrualType.PARKING,
-                parseRate(p.get("interestRate")), parseRate(p.get("primeInterestRate")),
-                NO_TERM, null, null);
+        return new ParkingAccount(
+                key, str(p.get("companyName")), str(p.get("name")),
+                parseRate(p.get("interestRate")), parseRate(p.get("primeInterestRate")));
     }
 
     static double parseRate(Object v) {
