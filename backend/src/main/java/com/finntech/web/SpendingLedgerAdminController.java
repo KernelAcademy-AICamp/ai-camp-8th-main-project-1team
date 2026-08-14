@@ -9,7 +9,6 @@ import com.finntech.repository.AppUserRepository;
 import com.finntech.repository.SpendingLedgerDirtyRepository;
 import com.finntech.repository.SpendingLedgerRepository;
 import com.finntech.repository.UserPaymentRepository;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,19 +21,33 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 정리된 소비 원장(V34)을 <b>채우고 들여다보는 문</b>.
+ * 정리된 소비 원장(V34)을 <b>채우고 들여다보는 문</b> — <b>admin 전용</b>.
  *
- * <p><b>기본은 꺼져 있다.</b> {@link MerchantDictionaryOpsController} 와 같은 이유다 — nginx 는
- * {@code /api/} 아래를 경로별 구분 없이 백엔드로 넘기므로 여기 만든 매핑은 배포되는 순간
- * 공개된다.
+ * <h2>왜 {@code /api/ops} 가 아닌가</h2>
+ *
+ * <p>처음에는 {@code /api/ops} 에 두었다. 잘못이었다. 그 자리는 <b>운영에서 기본으로 켜져
+ * 있고</b>({@code FINNTECH_OPS_ENABLED:-true}) 켜 두는 근거가 {@link ObservabilityController}
+ * 머리말에 적혀 있다 — <i>"개인정보를 안 내고 사용자별로 쪼개지 않는다."</i> 여기 있는 것은
+ * 그 약속을 두 군데서 어긴다.
+ *
+ * <ul>
+ *   <li>{@code backfill}·{@code drain} 은 <b>쓰기</b>다. 실사용자 전원의 판정을 돌린다.
+ *   <li>{@code verify} 의 표본에는 결제 식별자(사용자 번호를 품는다)·가맹점명·사업자번호가
+ *       담긴다 — <b>남의 개인정보</b>다.
+ *   <li>{@code /api/ops} 는 {@code /api/admin/} 밖이라 {@code AuthFilter} 가 <b>사용자 토큰</b>만
+ *       요구하고, 경로에 사용자 번호가 없어 소유 확인도 안 걸린다. 즉 <b>로그인한 아무나</b>
+ *       부를 수 있었다.
+ * </ul>
+ *
+ * <p>그래서 {@code /api/admin/} 으로 옮긴다. 그 접두는 {@code AuthFilter} 가 admin 쿠키를
+ * 요구하고, 사용자 토큰으로는 <b>403</b> 이다(역할이 경로를 가른다).
  *
  * <p>백필은 <b>기본이 dry-run</b>이다. 이 문 하나가 실사용자 전원의 판정을 한 번씩 돌리므로,
  * 규모를 보지 않고 실행할 일이 아니다.
  */
 @RestController
-@RequestMapping("/api/ops")
-@ConditionalOnProperty(name = "finntech.ops.enabled", havingValue = "true")
-public class SpendingLedgerOpsController {
+@RequestMapping("/api/admin")
+public class SpendingLedgerAdminController {
 
     private final SpendingLedgerBackfill backfill;
     private final SpendingLedgerVerifier verifier;
@@ -45,7 +58,7 @@ public class SpendingLedgerOpsController {
     private final AppUserRepository users;
     private final WasteScoringService wasteScoring;
 
-    public SpendingLedgerOpsController(SpendingLedgerBackfill backfill, SpendingLedgerVerifier verifier,
+    public SpendingLedgerAdminController(SpendingLedgerBackfill backfill, SpendingLedgerVerifier verifier,
                                        SpendingLedgerDrainer drainer, SpendingLedgerRepository ledger,
                                        SpendingLedgerDirtyRepository dirty, UserPaymentRepository payments,
                                        AppUserRepository users, WasteScoringService wasteScoring) {
