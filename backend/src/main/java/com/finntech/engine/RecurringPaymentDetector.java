@@ -118,10 +118,13 @@ public class RecurringPaymentDetector {
      * 고정형 묶음 판정의 <b>본체</b> — 요약만 필요한 쪽({@link #detectFrom})도 이것을 거친다.
      *
      * <p>순수 함수라 저장소·Spring 없이 단위 시험한다. PG 목록이 없으면 번호를 그대로 쓴다.
+     *
+     * <p>{@link #detectFrom} 과 달리 <b>패키지 밖에도 연다.</b> 소비 원장이 저장된 줄을 다시
+     * 만들어 견주는 대조 점검을 하는데, 그때 Spring 없이 같은 판정을 돌릴 길이 있어야 한다.
      */
-    static List<FixedGroup> fixedGroupsFrom(List<UserPayment> txns, LocalDateTime referenceTime,
-                                            AnalysisProperties.Recurring cfg,
-                                            java.util.function.Predicate<String> isPaymentAgency) {
+    public static List<FixedGroup> fixedGroupsFrom(List<UserPayment> txns, LocalDateTime referenceTime,
+                                                   AnalysisProperties.Recurring cfg,
+                                                   java.util.function.Predicate<String> isPaymentAgency) {
         TreeMap<String, List<UserPayment>> groups = new TreeMap<>();
         for (UserPayment p : txns) {
             String key = merchantKeyOf(p.getBusinessNumber(), p.getMerchantName(), isPaymentAgency);

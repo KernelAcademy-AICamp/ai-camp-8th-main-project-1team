@@ -73,13 +73,34 @@ public class WasteScoringService {
      */
     private double thresholdFor(Map<String, UserMerchantStance.Stance> stances, String bizNo) {
         UserMerchantStance.Stance st = bizNo == null ? null : stances.get(bizNo);
-        if (st == null) return classifier.threshold();
-        return switch (st) {
-            case EXCLUDED -> Double.MAX_VALUE;
-            case LENIENT -> classifier.threshold() + lenientThresholdShift;
-            case NORMAL -> classifier.threshold();
+        return thresholdFor(st).orElse(Double.MAX_VALUE);
+    }
+
+    /**
+     * 그 성향에 적용될 임계 — <b>없으면 어떤 확률도 낭비가 아니다</b>({@code EXCLUDED}).
+     *
+     * <p>{@code Double.MAX_VALUE} 를 밖으로 내보내지 않는다. 그것은 임계가 아니라
+     * "판정하지 않는다"는 뜻인데, 숫자로 받은 쪽은 그것으로 산술을 하거나 그대로 저장한다.
+     * 없음은 없음으로 낸다.
+     *
+     * <p>이 규칙을 밖에서 한 벌 더 적지 않게 하려고 연다 — 정리된 소비 원장이 "이 줄에 실제로
+     * 적용된 임계"를 적는데, 같은 계산을 저쪽에도 두면 {@code lenient-threshold-shift} 를
+     * 고쳤을 때 둘이 갈라진다(마스터 §4 원칙 2: 서비스는 임계치를 재계산하지 않는다).
+     */
+    public java.util.OptionalDouble thresholdFor(UserMerchantStance.Stance stance) {
+        if (stance == null) return java.util.OptionalDouble.of(classifier.threshold());
+        return switch (stance) {
+            case EXCLUDED -> java.util.OptionalDouble.empty();
+            case LENIENT -> java.util.OptionalDouble.of(classifier.threshold() + lenientThresholdShift);
+            case NORMAL -> java.util.OptionalDouble.of(classifier.threshold());
         };
     }
+
+    /** 전역 임계 — 성향을 뺀 값. 원장이 집계 쪽 답을 되살릴 수 있게 함께 적는다. */
+    public double modelThreshold() { return classifier.threshold(); }
+
+    /** 지금 판정을 낸 모델 파일의 지문. 재학습을 알아보는 유일한 수단이다. */
+    public String modelFingerprint() { return classifier.fingerprint(); }
 
     /** 거래별 낭비 판정 + 설명. */
     /**
