@@ -52,6 +52,25 @@ public interface SpendingLedgerRepository extends JpaRepository<SpendingLedger, 
     boolean hasStaleFixed(@Param("userId") Long userId,
                           @Param("detectorVersion") String detectorVersion);
 
+    /**
+     * 판정이 낡은 줄을 가진 사용자들 — <b>밤 갱신이 고를 대상</b>.
+     *
+     * <p>두 층 중 하나라도 낡았으면 그 사용자를 집는다. 낡음의 뜻은 넷이다: 판정이 한 번도 안
+     * 돌았거나, 사실이 그 뒤로 바뀌었거나, 판정 규칙 판이 올라갔거나, 모델이 갈렸거나.
+     *
+     * <p>정렬 고정(마스터 §4 원칙 3) — 예산에 걸려 중간에 끊겨도 다음 회차가 같은 순서로 잇는다.
+     */
+    @Query("""
+            select distinct l.userId from SpendingLedger l
+            where l.fixedRecordedAt is null or l.fixedRecordedAt < l.factsUpdatedAt
+               or l.detectorVersion is null or l.detectorVersion <> :detectorVersion
+               or l.wasteRecordedAt is null or l.wasteRecordedAt < l.factsUpdatedAt
+               or l.modelFingerprint is null or l.modelFingerprint <> :modelFingerprint
+            order by l.userId
+            """)
+    List<Long> findUsersWithStaleJudgments(@Param("detectorVersion") String detectorVersion,
+                                           @Param("modelFingerprint") String modelFingerprint);
+
     /** 낭비 판정이 지금 사실보다 낡거나 다른 모델이 낸 줄이 있나. */
     @Query("""
             select count(l) > 0 from SpendingLedger l
