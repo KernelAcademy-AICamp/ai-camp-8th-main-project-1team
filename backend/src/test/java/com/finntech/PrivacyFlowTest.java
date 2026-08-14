@@ -49,6 +49,7 @@ class PrivacyFlowTest {
     @Autowired UserCardRepository userCardRepository;
     @Autowired UserPaymentRepository userPaymentRepository;
     @Autowired UserSpendingOverrideRepository overrideRepository;
+    @Autowired SpendingLedgerRepository spendingLedgerRepository;
 
     private AppUser user;
     private Category category;
@@ -242,6 +243,13 @@ class PrivacyFlowTest {
         consumptionRepository.save(new Consumption(uid, category, new BigDecimal("5000"),
                 NOW.minusDays(1), false, Enums.DataSource.MYDATA));
         overrideRepository.save(new UserSpendingOverride(uid, "카페", false, NOW));
+        // 정리된 소비 원장(V34)은 위 결제의 **사본**이다 — 원본만 지우면 개인정보가 그대로 남는다.
+        spendingLedgerRepository.save(new com.finntech.domain.SpendingLedger("p-erase-1",
+                new com.finntech.domain.SpendingLedger.Facts(uid, "2026-07",
+                        NOW.minusDays(1), NOW.minusDays(1).toLocalDate(), 19, 6, "저녁", "REAL",
+                        "2088612340", false, "이디야커피", "이디야커피", null, "BIZ:2088612340",
+                        5000, "552301", null, "카페", "DICT", null, null),
+                NOW));
 
         privacyService.eraseUserData(uid, NOW);
 
@@ -249,6 +257,7 @@ class PrivacyFlowTest {
         assertEquals(0, userCardRepository.findByUserIdOrderByIdAsc(uid).size(), "연동 카드 0");
         assertEquals(0, userPaymentRepository.findByUserIdOrderByPaymentDateDesc(uid).size(), "연동 결제 0");
         assertEquals(0, overrideRepository.findByUserId(uid).size(), "개인화 override 0");
+        assertEquals(0, spendingLedgerRepository.countByUserId(uid), "정리된 소비 원장 0");
         assertEquals(0, consumptionRepository.findAllForUser(uid).stream()
                 .filter(c -> c.getSource() == Enums.DataSource.MYDATA).count(), "MYDATA 소비 투영 0");
     }

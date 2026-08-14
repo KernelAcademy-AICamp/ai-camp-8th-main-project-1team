@@ -7,7 +7,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,14 +36,20 @@ public class SpendingClassifier {
     private final double threshold;
     private final List<Term> terms;
     private final boolean ready;
+    private final String fingerprint;
 
     public SpendingClassifier(ObjectMapper objectMapper, IndustryCategoryMapper categories) {
         double ic = 0, thr = 0.5;
         List<Term> ts = List.of();
         boolean ok = false;
-        try (InputStream is = new ClassPathResource(MODEL_PATH).getInputStream()) {
+        String fp = null;
+        try {
+            // **바이트를 먼저 손에 쥔다.** 예전에는 스트림을 Jackson 에 바로 넘겼는데, Jackson 이
+            // 그것을 다 읽어 버려 같은 바이트로 지문을 낼 방법이 없었다. 한 번 읽어 두 번 쓴다.
+            byte[] bytes = new ClassPathResource(MODEL_PATH).getContentAsByteArray();
+            fp = fingerprintOf(bytes);
             @SuppressWarnings("unchecked")
-            Map<String, Object> root = objectMapper.readValue(is, Map.class);
+            Map<String, Object> root = objectMapper.readValue(bytes, Map.class);
             ic = ((Number) root.get("intercept")).doubleValue();
             if (root.get("decision_threshold") != null) thr = ((Number) root.get("decision_threshold")).doubleValue();
             ts = parseTerms(root);
@@ -56,6 +61,32 @@ public class SpendingClassifier {
         this.threshold = thr;
         this.terms = ts;
         this.ready = ok;
+        this.fingerprint = fp;
+    }
+
+    /**
+     * 모델 파일의 SHA-256 — 소문자 hex 64자. 파일을 못 읽었으면 {@code null}.
+     *
+     * <p><b>모델에는 버전이 없다.</b> {@code ebm_model.json} 의 최상위 키는
+     * intercept · features · terms · decision_threshold 넷뿐이고, 재학습
+     * ({@code scripts/retrain-ml.sh})은 형상함수와 임계를 <b>통째로 갈아치운다.</b>
+     * 그래서 어제와 오늘의 낭비 확률이 다를 때 <b>모델이 바뀐 것인지 데이터가 바뀐 것인지</b>
+     * 가릴 방법이 없었다 — 임계 하나로는 두 회차가 같은 값을 낼 수 있어 부족하다.
+     * 파일 자체의 지문이 그 답이다.
+     *
+     * <p>{@link #isReady()} 와 무관하게 값이 있다. 카테고리 체계가 안 맞아 모델을 안 쓰는
+     * 상태에서도 <b>어느 파일이 놓여 있었는가</b>는 사실이고, 그 사실이 진단의 절반이다.
+     */
+    public String fingerprint() { return fingerprint; }
+
+    /** 바이트열의 SHA-256 hex — 순수 함수라 따로 시험한다. */
+    static String fingerprintOf(byte[] bytes) {
+        try {
+            return java.util.HexFormat.of()
+                    .formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(bytes));
+        } catch (java.security.NoSuchAlgorithmException e) {
+            return null;   // SHA-256 은 JDK 필수 알고리즘이라 여기 올 일이 없다
+        }
     }
 
     /**

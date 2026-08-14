@@ -118,8 +118,12 @@ class WasteScoringServiceTest {
                 com.finntech.repository.UserMerchantStanceRepository.class);
         org.mockito.Mockito.when(stances.findByUserId(1L)).thenReturn(List.of());
 
+        // 판정 통지는 이 시험의 관심사가 아니다 — 소비 원장이 그것을 받아 적는지는
+        // `SpendingLedgerJudgmentTest` 가 따로 본다.
         return new WasteScoringService(classifier, payments, overrides, stances,
-                java.time.Clock.systemDefaultZone(), threshold, 0.20);
+                java.time.Clock.systemDefaultZone(),
+                org.mockito.Mockito.mock(org.springframework.context.ApplicationEventPublisher.class),
+                threshold, 0.20);
     }
 
     @Test

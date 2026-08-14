@@ -103,6 +103,14 @@ public class MyDataLinkService {
     private final CategoryPromotionService categoryPromotion;
     private final java.util.concurrent.Executor followUps;
 
+    /**
+     * 정리된 소비 원장(V34)을 다시 써야 한다고 적는 창구.
+     *
+     * <p>결제·분류 변경은 엔티티 콜백({@code LedgerDirtyListener})이 알아서 잡는다. 이 서비스가
+     * 직접 부르는 곳은 <b>벌크 삭제 하나뿐</b>이다 — 그 자리는 콜백이 안 뜬다.
+     */
+    private final com.finntech.ledger.SpendingLedgerDirtyMarker ledgerDirtyMarker;
+
     public MyDataLinkService(MyDataClient myDataClient, AppUserRepository userRepository,
                              UserCardRepository userCardRepository, UserPaymentRepository userPaymentRepository,
                              ConsumptionRepository consumptionRepository, CategoryRepository categoryRepository,
@@ -120,9 +128,11 @@ public class MyDataLinkService {
                              CategoryPromotionService categoryPromotion,
                              @org.springframework.beans.factory.annotation.Qualifier(
                                      FollowUpExecutorConfig.BEAN) java.util.concurrent.Executor followUps,
+                             com.finntech.ledger.SpendingLedgerDirtyMarker ledgerDirtyMarker,
                              org.springframework.beans.factory.ObjectProvider<MyDataLinkService> selfProvider) {
         this.categoryPromotion = categoryPromotion;
         this.followUps = followUps;
+        this.ledgerDirtyMarker = ledgerDirtyMarker;
         this.selfProvider = selfProvider;
         this.myDataClient = myDataClient;
         this.userRepository = userRepository;
@@ -470,6 +480,10 @@ public class MyDataLinkService {
 
         userCardRepository.deleteByUserId(userId);
         userPaymentRepository.deleteByUserId(userId);
+        // **벌크 삭제에는 엔티티 콜백이 안 뜬다.** 뒤이은 적재가 어차피 표시하겠지만, 결제가
+        // 0건인 카드사로 재연동하면 넣을 것이 없어 콜백도 없고 — 소비 원장이 없어진 결제의
+        // 줄을 그대로 안고 남는다. 그래서 여기서 손으로 표시한다.
+        ledgerDirtyMarker.mark(userId, com.finntech.domain.SpendingLedgerDirty.Reason.PAYMENT);
         consumptionRepository.deleteByUserIdAndSource(userId, Enums.DataSource.MYDATA);
         userCardCompanyRepository.deleteByUserId(userId);
         userBankRepository.deleteByUserId(userId);
