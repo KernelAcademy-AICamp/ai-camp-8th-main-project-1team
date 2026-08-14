@@ -347,15 +347,17 @@ MYDATA_NOW=system nohup java -jar target/backend-mydata-*.jar > /tmp/finntech-my
 - 현 12명 시드는 미래 결제가 없으므로 system 모드는 기준일이 지나면 "전부 보이고 더는 안 늘어나는" 상태 — **지속되는 실시간감은 W1의 미래 90일 적재(372만 건)로 완성**된다.
 - `dev-up.sh` 확장 시 `MYDATA_NOW` 통과 지원(기본 reference).
 
-#### W2-2. 증분을 당기는 시점 — 온디맨드+수동(A+C), 스케줄러 기각
+#### W2-2. 증분을 당기는 시점 — 셋 다 채택 (B는 2026-07-28 재판정, 2026-08-11 갱신)
 
 | 대안 | 판정 |
 |---|---|
 | A. 프론트 진입 시 온디맨드 sync | **주 경로 채택** — 부하가 사용량 비례, 볼 때만 최신이면 충분, 테스트에서 호출 시점 완전 통제(재현성) |
-| B. 백엔드 `@Scheduled` 폴링 | 기각 — 대량 사용자로 가면 상시 배치, 백그라운드 쓰기가 테스트 결정론과 마찰, 데모 통제 상실. 대량 국면에서 재검토 |
+| B. 백엔드 `@Scheduled` 폴링 | ~~기각~~ → **채택**(2026-07-28, tech_log §8-E). 당초 기각 사유는 "상시 배치·테스트 결정론과 마찰·데모 통제 상실"이었으나, **A만으로는 앱을 안 켠 사이의 결제가 판정·알림으로 이어지지 않는다**는 것이 결정적이었다 — 지킴이는 쓰는 순간에 개입하는 물건이라 하루 뒤 몰아 알리면 의미가 없다. 결정론 우려는 `finntech.mydata.auto-sync.enabled=false`(테스트 기본값)로, 데모 통제는 `MYDATA_NOW` 고정으로 해소된다 |
 | C. 수동 새로고침 버튼 | **보조 채택** — 데모에서 등장 순간을 명시 연출 |
 
-- 신규 `POST /api/mydata/sync?userId=` — 프론트는 ① 앱 로드 ② '내 카드' 탭 진입 시 호출. 서버측 쿨다운(`finntech.mydata.sync.min-interval-seconds: 60`, 원칙대로 yml)으로 중복 no-op. `MyCardPanel`에 새로고침 버튼+"+N건" 표시.
+- 신규 `POST /api/mydata/sync?userId=` — 프론트는 ① 앱 로드 ② 거래내역·지킴이 홈 진입 시 ③ **보고 있는 동안 60초마다**(2026-08-11) 호출.
+- **쿨다운은 서버가 아니라 클라이언트에 있다.** 당초 설계한 `finntech.mydata.sync.min-interval-seconds: 60`은 **구현되지 않았고 코드에 그런 키가 없다**(아래 설정 표의 같은 줄도 무효). 실제로 선 것은 `frontend/src/state/autoSync.ts`의 `THROTTLE_MS = 60_000`으로, 사용자별 마지막 성공 시각을 보고 거르며 진행 중 요청을 합친다(in-flight 공유). 서버측 중복 방지는 쿨다운이 아니라 **멱등**(`UserPayment.paymentId` 존재 확인)과 **사용자별 자물쇠**(`MyDataLinkService.syncing`)가 맡는다.
+- B가 들어오면서 진입로가 셋이 되었고(배치·화면 sync·미분류 화면), 겹칠 때 같은 가맹점을 두 모델에 두 번 묻는 문제는 위 자물쇠로 막는다 — 자세한 것은 마스터 §13-13.
 
 **저장 자리 신설 — `UserCardCompany` 엔티티** (마스터 §13-3 데이터 모델에 이미 예약된 자리):
 `id, userId, companyId, companyName, linkedAt, lastRenewalTime(not null)` + `(userId, companyId)` 유니크. AppUser 컬럼 1개 대안은 기각 — 카드사별 증분 시각이 뭉개져 부분 실패 시 누락·중복이 생기고, AppUser는 PII 최소화 대상이라 연동 메타를 불리지 않는다. 운영은 validate이므로 신설은 **Flyway `V2__user_card_company.sql`을 동반**하고, 배포는 **마이그레이션 선적용 → 앱 교체** 순서다(W4-2·W5-4의 스키마 호환 제약).
@@ -850,11 +852,14 @@ R1 `backend ./mvnw test`(현재 178) / R2 `backend-mydata ./mvnw test` / R3 TSA 
 
 ### 부록 C. 신설 설정 키 (전부 `application.yml` — 원칙 4)
 
+> **W2 세 줄은 계획 당시의 이름이고 그대로 구현되지 않았다**(2026-08-11 대조 확인). 아래에 실제 이름을 적는다. 계획 이름으로 코드를 찾으면 안 나온다.
+
 | 키 | 워크스트림 | 기본값 |
 |---|---|---|
-| `finntech.mydata.sync.min-interval-seconds` | W2 | 60 |
-| `finntech.mydata.sync.floor-days`(적재 0건 카드사의 lastRenewalTime 바닥값 = reference-date−floor-days 자정; generation의 past-window-days=180과 값 정합 유지) | W2 | 180 |
-| `finntech.mydata.time-mode` | W2 | reference |
+| ~~`finntech.mydata.sync.min-interval-seconds`~~ **미구현** → 쿨다운은 클라이언트로 갔다: `frontend/src/state/autoSync.ts`의 `THROTTLE_MS`(및 화면 폴링 간격 `POLL_MS`) | W2 | 60초 |
+| ~~`finntech.mydata.sync.floor-days`~~ → 제공자 쪽 `mydata.query.months-floor`(개월 단위, `MyDataService`). 0이면 무제한 | W2 | 0 |
+| ~~`finntech.mydata.time-mode`~~ → 둘로 갈렸다: 제공자 조회 커트오프는 `mydata.now`(reference·system·ISO), 본체 기준일은 `finntech.mydata.reference-date` | W2 | now: system / reference-date: 빈값 |
+| `finntech.mydata.auto-sync.{enabled,interval-ms,initial-delay-ms}` — 계획에 없던 신설(W2-2 B 재판정, tech_log §8-E) | W2 | true / 300000 / 60000 |
 | `finntech.auth.sms.*`(enabled, 키 3종, code-length, ttl, cooldown, max-attempts, 일일 상한, cleanup-cron) | W3 | enabled: false |
 | `finntech.cors.allowed-origins` | W7 | localhost 5173 2종 |
 | `mydata.generation.*` 신설 5종(seed, users-per-persona, past-window-days, batch-size, demo-users-per-persona) — 기존 키(enabled·target-count·future-window-days·personas)는 재사용. 페르소나 파라미터(onlineRatio·improvement 곡선·injection)의 진실 소스는 `PersonaCatalogData` 자바 상수 | W1 | enabled: false 유지 |

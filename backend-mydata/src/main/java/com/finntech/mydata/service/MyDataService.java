@@ -29,6 +29,8 @@ public class MyDataService {
     private final MyDataAccountRepository accountRepository;
     private final MyDataMerchantRepository merchantRepository;
     private final MyDataAccountTxnRepository accountTxnRepository;
+    /** 신원 지문 — 암호화된 뒤 정확일치 조회는 이 길뿐이다. */
+    private final com.finntech.mydata.crypto.UserIdentityIndex identityIndex;
     private final String nowSetting;
     private final LocalDate referenceDate;
     /** 전체 조회 하한(W4-3): 0=무제한(현행), N>0이면 최근 N개월만 반환해 대량 사용자 응답 폭주를 막는다. */
@@ -38,6 +40,7 @@ public class MyDataService {
                          MyDataPaymentRepository paymentRepository, CardCompanyRepository companyRepository,
                          MyDataAccountRepository accountRepository, MyDataMerchantRepository merchantRepository,
                          MyDataAccountTxnRepository accountTxnRepository,
+                         com.finntech.mydata.crypto.UserIdentityIndex identityIndex,
                          @Value("${mydata.now:reference}") String nowSetting,
                          @Value("${mydata.seed.reference-date:2026-07-21}") String referenceDate,
                          @Value("${mydata.query.months-floor:0}") int monthsFloor) {
@@ -48,6 +51,7 @@ public class MyDataService {
         this.accountRepository = accountRepository;
         this.merchantRepository = merchantRepository;
         this.accountTxnRepository = accountTxnRepository;
+        this.identityIndex = identityIndex;
         // 빈 문자열은 '미설정'으로 본다. env(MYDATA_NOW=)가 비어 있으면 Spring은 yml의 기본값이 아니라
         // 빈 문자열을 넘긴다 — 이걸 그대로 parse하면 기동 후 조회에서 DateTimeParseException으로 터진다.
         this.nowSetting = (nowSetting == null || nowSetting.isBlank()) ? "system" : nowSetting.trim();
@@ -126,8 +130,25 @@ public class MyDataService {
      */
     @Transactional(readOnly = true)
     public IdentityMatchView matchIdentity(String name, String social7, String phone) {
-        var byPhone = userRepository.findByPhoneDigits(digitsOnly(phone));
-        var byPerson = userRepository.findByNameAndSocial7(name, social7);
+        String normalized = normalizePhone(phone);
+        // **지문으로만 찾는다.**
+        //
+        // 암호문은 IV 가 매번 달라 정확일치 조회에 못 쓴다. 조회는 지문이 맡는다.
+        //
+        // V13~백필 동안에는 평문 폴백을 함께 뒀다 — 지문이 아직 빈 행이 있으면 그 사람들이
+        // 통째로 로그인하지 못하기 때문이다. V14 가 평문을 비운 지금은 **그 폴백이 오히려
+        // 위험하다**: 비워진 칸은 전부 빈 문자열이라, 빈 번호로 조회하면 수천 행이 한꺼번에
+        // 걸려 엉뚱한 사람이 잡히거나 질의가 터진다. 그래서 함께 지운다.
+        //
+        // 지문이 없는 행은 백필이 다음 기동에 채운다(`UserIdentityBackfill`).
+        // **지문이 없으면 찾지 않는다.**
+        //
+        // 스프링 데이터의 파생 질의는 인자가 null 이면 `= ?` 가 아니라 **`IS NULL`** 로 번역한다.
+        // 그대로 넘기면 "지문이 아직 없는 행"이 전부 걸린다 — 백필이 안 끝난 사람들이고,
+        // V14 로 평문을 비운 뒤에는 빈 입력 하나로 그들이 잡히게 된다. 시험이 이걸 잡았다.
+        var byPhone = lookup(identityIndex.ofPhone(normalized), userRepository::findByPhoneBlindIndex);
+        var byPerson = lookup(identityIndex.ofPerson(name, social7),
+                userRepository::findByPersonBlindIndex);
         boolean phoneNameOk = byPhone.map(u -> u.getName().equals(name)).orElse(false);
         boolean phoneSocialOk = byPhone
                 .map(u -> u.getSocialNumber().length() >= 7
@@ -139,14 +160,23 @@ public class MyDataService {
     }
 
     /**
-     * 표기를 지우고 숫자만 남긴다 — 조회의 기준을 <b>표기가 아니라 번호 자체</b>로 옮긴다.
+     * 지문이 있을 때만 찾는다. 없으면 <b>못 찾은 것</b>이다.
      *
-     * <p>예전에는 입력을 {@code 010-1234-5678}로 <i>맞춰서</i> 찾았는데, 원장이 숫자만으로
-     * 저장돼 있어 정확일치가 영원히 어긋났다. 표기를 통일하는 대신 <b>양쪽에서 표기를 빼고</b>
-     * 비교한다 — 원장을 건드리지 않아도 되고, 앞으로 표기가 또 갈려도 버티는 쪽이다.
+     * <p>{@code null} 을 파생 질의에 그대로 넘기면 {@code IS NULL} 이 되어 <b>지문이 없는 행이
+     * 전부 걸린다.</b> 조회가 아니라 사고다.
      */
-    private static String digitsOnly(String phone) {
-        return phone == null ? "" : phone.replaceAll("\\D", "");
+    private java.util.Optional<com.finntech.mydata.domain.MyDataUser> lookup(
+            String blindIndex,
+            java.util.function.Function<String, java.util.Optional<com.finntech.mydata.domain.MyDataUser>> find) {
+        return blindIndex == null || blindIndex.isBlank()
+                ? java.util.Optional.empty()
+                : find.apply(blindIndex);
+    }
+
+    /** 저장 형식은 `010-1234-5678`이다. 입력이 하이픈 없이 와도 같은 사람을 찾게 맞춘다. */
+    /** 저장 표기와 <b>같은 규칙</b>을 쓴다 — 갈리면 있는 사람을 못 찾는다({@link Msisdn#format}). */
+    private static String normalizePhone(String phone) {
+        return com.finntech.mydata.util.Msisdn.format(phone);
     }
 
     /** 가맹점 조회(번호→주소) — 사용자가 결제의 사업자번호로 가맹점명·지번주소를 조회한다. 없으면 empty. */

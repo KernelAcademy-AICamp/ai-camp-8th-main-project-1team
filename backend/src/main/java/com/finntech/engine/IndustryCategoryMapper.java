@@ -183,7 +183,30 @@ public class IndustryCategoryMapper {
      * 구조적으로 안 낸다 — 삼성전자의 등록 업종은 영상기기 제조업이라 여기서 자동으로 빠진다.
      */
     public String midOfFineName(String fineName) {
+        return midOfCodes(codesOfFineName(fineName));
+    }
+
+    /**
+     * <b>바깥 조회처가 답한 업종 이름 → 국세청 업종코드들.</b> 모르는 이름이면 빈 목록.
+     *
+     * <p>{@link #midOfFineName} 이 속으로 하던 첫 칸을 떼어 낸 것이다. 떼는 이유는 <b>그 코드를
+     * 사전에 적어 두기 위해서</b>다(V29) — 지금까지 이 목록은 만장일치 검사만 하고 사라지는
+     * 지역변수였고, 그래서 사전은 답만 들고 근거를 안 들었다.
+     *
+     * <p>사본을 준다. 색인의 리스트를 그대로 내주면 부르는 쪽이 공유 상태를 만진다.
+     */
+    public java.util.List<String> codesOfFineName(String fineName) {
         java.util.List<String> codes = ntsByFineName.get(normalizeFineName(fineName));
+        return codes == null ? java.util.List.of() : java.util.List.copyOf(codes);
+    }
+
+    /**
+     * <b>업종코드들 → 중분류.</b> 만장일치일 때만 답하고, 갈리거나 비면 {@link #UNCLASSIFIED}.
+     *
+     * <p>{@link #midOfFineName} 과 재계산이 <b>이 함수 하나를 나눠 쓴다.</b> 두 벌로 적으면
+     * 갈라지고, 갈라지면 "살아 있는 경로는 비우는데 재계산은 답하는" 조용한 어긋남이 난다.
+     */
+    public String midOfCodes(java.util.Collection<String> codes) {
         if (codes == null || codes.isEmpty()) return UNCLASSIFIED;
         String only = null;
         for (String code : codes) {

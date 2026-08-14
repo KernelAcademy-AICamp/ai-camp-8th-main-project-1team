@@ -71,13 +71,22 @@ code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 \
 # **404를 실패로 보지 않는다.** 이 경로들은 대부분 '진행 중 챌린지가 있는 사용자'를 전제하는데,
 # CI의 갓 띄운 스택에는 챌린지가 없다. 여기서 봐야 하는 것은 "라우팅이 살아 있고 서버가
 # 500으로 죽지 않는가"다 — 200/404는 통과, 5xx와 연결 실패는 실패.
+#
+# **401·403도 통과다** (2026-08-12, 인증 도입). 이 스크립트는 토큰 없이 `?userId=1`로 부르는데,
+# `AuthFilter`가 그것을 막는 것이 **정상 동작**이다. 그리고 401은 이 함수가 보려는 것 —
+# "라우팅이 살아 있고 서버가 답하는가" — 을 오히려 증명한다. 서버가 죽었으면 502나 000이 온다.
+#
+# 스모크가 토큰을 받아 부르게 하지 않는 이유: 이 스크립트의 몫은 "서버가 살아서 답하는가"이지
+# "인가가 통과하는가"가 아니다. 인증이 실수로 꺼진 채 배포되는 것은
+# `scripts/check-security-regressions.sh`가 `FINNTECH_AUTH_ENABLED`로 따로 잡는다 —
+# 한 그물이 두 가지를 다 보려 하면 둘 다 헐거워진다.
 expect_routed() {
   local path="$1" desc="$2"
   local code
   code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$BASE$path" || echo 000)
   case "$code" in
-    2*|404|400) ok "$desc ($path → $code)" ;;
-    *)          bad "$desc ($path → $code, 2xx/4xx 기대)" ;;
+    2*|400|401|403|404) ok "$desc ($path → $code)" ;;
+    *)                  bad "$desc ($path → $code, 2xx/4xx 기대)" ;;
   esac
 }
 

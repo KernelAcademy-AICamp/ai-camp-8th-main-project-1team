@@ -331,4 +331,55 @@ class ExternalCallBoundaryTest {
         // 그 자리는 `loadCardCompanies` 가 커밋한 다음이다.
         verify(brands, times(1)).enqueuePending(any(), any());
     }
+
+    @Test
+    @DisplayName("연동은 후속 단계를 기다리지 않는다 — 넘기고 곧바로 돌아온다")
+    void followUpsDoNotBlockTheRequest() {
+        // **실측에서 57초를 기다렸다.** 후속 단계는 바깥 서버를 순차로 부르는데(조회 40곳 +
+        // 주소 40곳 + 모델 둘, 한 곳당 최대 4초) 그것이 요청 스레드에 있었다. 자산연결을 누른
+        // 실사용자가 그 시간을 그대로 기다리다 게이트웨이가 끊었다
+        // (2026-08-12 운영 userId=30 · 08:43:52→08:44:49 · 504 /api/mydata/link).
+        //
+        // 더미는 첫 줄에서 물러나므로 그때까지 아무도 안 겪었다 — 첫 실사용자가 첫 피해자였다.
+        var client = mock(MyDataClient.class);
+        var users = mock(com.finntech.repository.AppUserRepository.class);
+        AppUser user = mock(AppUser.class);
+        when(user.getCi()).thenReturn("ci");
+        when(user.isConsentGiven()).thenReturn(true);
+        when(user.isRealPerson()).thenReturn(true);
+        when(users.findById(1L)).thenReturn(Optional.of(user));
+        when(client.findCards(anyLong(), anyString())).thenReturn(List.<CardView>of());
+        when(client.findAccount(anyString())).thenReturn(null);
+
+        var payments = mock(UserPaymentRepository.class);
+        when(payments.countByUserIdAndCategory2(anyLong(), anyString())).thenReturn(0L);
+        when(payments.findByUserIdOrderByPaymentDateDesc(anyLong())).thenReturn(List.of(
+                new com.finntech.domain.UserPayment("1:real-1", 1L, "card", 1L,
+                        java.time.LocalDateTime.of(2026, 8, 1, 12, 0), "5814",
+                        com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED, 5_000,
+                        "어떤가게", "1234567890")));
+        var brands = mock(MerchantBrandService.class);
+
+        // 넘겨받기만 하고 돌리지 않는 일꾼 — 운영의 배경 큐를 시험에서 멈춰 세운 것이다.
+        java.util.List<Runnable> queued = new java.util.ArrayList<>();
+        MyDataLinkService service = TestServices.linkService(client, users,
+                mock(UserCardRepository.class), payments, mock(ConsumptionRepository.class),
+                mock(CategoryRepository.class),
+                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
+                mock(MerchantCategoryService.class), mock(BusinessNumberKindService.class),
+                mock(IndustryLookupService.class), mock(MerchantAskService.class), brands,
+                mock(UserCardCompanyRepository.class), mock(UserBankRepository.class),
+                mock(ReportRepository.class), java.time.Clock.systemDefaultZone(), "",
+                queued::add);
+
+        service.linkCardCompanies(1L, List.of(9007L), List.of());
+
+        // **여기가 요점이다.** 호출은 이미 돌아왔는데 후속 단계는 아직 시작도 안 했다.
+        assertThat(queued).as("후속 단계는 일꾼에게 넘어갔다").hasSize(1);
+        verify(brands, never()).enqueuePending(any(), any());
+
+        // 넘긴 일은 사라지지 않는다 — 일꾼이 돌면 그대로 실행된다.
+        queued.get(0).run();
+        verify(brands, times(1)).enqueuePending(any(), any());
+    }
 }

@@ -23,16 +23,36 @@ public class MyDataController {
     private final AuthService authService;
     private final MyDataLinkService linkService;
 
-    public MyDataController(AuthService authService, MyDataLinkService linkService) {
+    private final com.finntech.auth.AuthTokenService authTokens;
+
+    public MyDataController(AuthService authService, MyDataLinkService linkService,
+                            com.finntech.auth.AuthTokenService authTokens) {
         this.authService = authService;
         this.linkService = linkService;
+        this.authTokens = authTokens;
     }
 
-    /** 본인인증(가상) — 신원으로 가상 CI 계산·연결, 마이데이터 존재 확인. 실 SMS 없음(§13-2). */
+    /**
+     * 본인인증(가상) — 신원으로 가상 CI 계산·연결, 마이데이터 존재 확인. 실 SMS 없음(§13-2).
+     *
+     * <p><b>여기가 이 앱의 로그인이다.</b> 비밀번호를 따로 두지 않는다 — 신원 셋으로 이미
+     * 사람을 확인했으므로, 통과한 자리에서 토큰을 발급하면 그것이 로그인이다.
+     * 프론트는 그 토큰을 이후 모든 요청의 {@code X-Auth-Token} 헤더에 싣는다.
+     *
+     * <p>실패했을 때는 토큰이 없다 — 실패 응답에 토큰을 얹으면 인증을 통과하지 않은 사람에게
+     * 열쇠를 주는 것이 된다.
+     */
     @PostMapping("/verify")
-    public VerifyResult verify(@RequestBody VerifyRequest request) {
-        return authService.verifyAssumed(request.userId(), request.name(),
+    public VerifyResult verify(@RequestBody VerifyRequest request,
+                               jakarta.servlet.http.HttpServletRequest httpRequest) {
+        VerifyResult result = authService.verifyAssumed(request.userId(), request.name(),
                 request.social7(), request.phone(), request.carrier());
+        if (!result.verified() || result.userId() == null) {
+            return result;
+        }
+        var issued = authTokens.issue(com.finntech.domain.UserToken.Role.USER,
+                result.userId(), httpRequest);
+        return result.withToken(issued.raw());
     }
 
     /** 연동 가능 은행 목록 — 자산연결 화면이 카드사와 함께 보여준다. */

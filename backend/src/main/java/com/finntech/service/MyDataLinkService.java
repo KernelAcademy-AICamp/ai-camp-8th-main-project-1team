@@ -78,6 +78,31 @@ public class MyDataLinkService {
      */
     private final java.util.Set<Long> syncing = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
+    /**
+     * 후속 단계를 도는 <b>단 하나의 배경 일꾼.</b>
+     *
+     * <p><b>왜 요청 스레드에서 빼는가.</b> {@link #runFollowUps} 는 바깥 서버를 <b>순차로</b>
+     * 부르고 사이에 {@code delay-ms} 만큼 쉰다 — 등록 업종 조회 최대 40곳, 주소 채우기 최대
+     * 40곳, 거기에 모델 호출 둘이다. 한 곳이 최대 4초(timeout-ms)라 <b>최악은 몇 분</b>이고,
+     * 주석(:214)이 "트랜잭션 밖"이라 적어 둔 것은 맞지만 <b>요청 밖은 아니었다.</b>
+     * 그래서 자산연결을 누른 실사용자는 이 시간을 그대로 기다리다 게이트웨이 시한에 걸렸다
+     * (2026-08-12 운영, {@code 504 /api/mydata/link}).
+     *
+     * <p><b>왜 이제야 났는가.</b> {@link #runFollowUps} 첫 줄이 더미 사용자를 곧바로 돌려보낸다.
+     * 그동안 연동한 사람이 전부 더미라 이 길로 들어온 적이 없었다 — <b>첫 실사용자가 첫 피해자</b>다.
+     *
+     * <p><b>기다릴 필요가 없다.</b> 응답에 담기는 {@code LinkResult} 는 그 앞의
+     * {@code loadCardCompanies} 가 이미 커밋하고 돌려준 값이다. 후속 단계는 분류·브랜드를
+     * 채우는 일이고, 덜 채워진 동안 화면은 '카테고리없음'으로 정확히 표시된다. 게다가 5분 배치가
+     * 같은 일을 이어받으므로 <b>여기서 놓쳐도 잃는 것이 없다.</b>
+     *
+     * <p><b>왜 한 스레드인가.</b> 이 통로가 지키던 성질이 "남의 서버를 연달아 두드리지 않는다"
+     * 였다. 일꾼을 늘리면 그 성질이 일꾼 수만큼 깨진다 — 순차성은 유지하고 자리만 옮긴다.
+     */
+    /** 조회가 못 닿는 가맹점의 추정을 <b>이 사람의 원장에만</b> 반영한다. 사전은 안 건드린다. */
+    private final CategoryPromotionService categoryPromotion;
+    private final java.util.concurrent.Executor followUps;
+
     public MyDataLinkService(MyDataClient myDataClient, AppUserRepository userRepository,
                              UserCardRepository userCardRepository, UserPaymentRepository userPaymentRepository,
                              ConsumptionRepository consumptionRepository, CategoryRepository categoryRepository,
@@ -92,7 +117,12 @@ public class MyDataLinkService {
                              UserBankRepository userBankRepository, ReportRepository reportRepository,
                              java.time.Clock clock,
                              @Value("${finntech.mydata.reference-date:}") String referenceDate,
+                             CategoryPromotionService categoryPromotion,
+                             @org.springframework.beans.factory.annotation.Qualifier(
+                                     FollowUpExecutorConfig.BEAN) java.util.concurrent.Executor followUps,
                              org.springframework.beans.factory.ObjectProvider<MyDataLinkService> selfProvider) {
+        this.categoryPromotion = categoryPromotion;
+        this.followUps = followUps;
         this.selfProvider = selfProvider;
         this.myDataClient = myDataClient;
         this.userRepository = userRepository;
@@ -207,19 +237,47 @@ public class MyDataLinkService {
      */
     public LinkResult linkCardCompanies(Long userId, List<Long> companyIds, List<Long> bankIds) {
         LinkResult result = selfProvider.getObject().loadCardCompanies(userId, companyIds, bankIds);
-        // 연동도 자물쇠를 든다 — 온보딩 중에 5분 배치가 같은 사용자를 집어 들 수 있다.
-        // 적재는 이미 끝났으므로 후속 단계만 건너뛴다(다음 회차가 이어받는다).
-        if (!syncing.add(userId)) return result;
-        try {
-        // **후속 세 단계는 트랜잭션 밖이다.** 등록 업종 조회·분류 질의·브랜드 라벨링은 전부
-        // 바깥 서버를 부르고, 한 곳당 수 초가 걸린다. 트랜잭션 안에 두면 그 시간만큼
-        // DB 커넥션을 붙잡는다 — 스무 곳이면 몇 분이다(2026-08-07 감사).
-        // 각 단계는 필요한 자리에서 자기 트랜잭션을 연다.
-            runFollowUps(userId);
-        } finally {
-            syncing.remove(userId);
-        }
+        // **후속 단계는 트랜잭션 밖이자 요청 밖이다.** 등록 업종 조회·분류 질의·브랜드 라벨링은
+        // 전부 바깥 서버를 순차로 부르고 한 곳당 수 초가 걸린다 — 최악은 몇 분이다.
+        // 예전에는 트랜잭션만 벗어나고 요청 스레드에는 남아 있어, 자산연결을 누른 실사용자가
+        // 그 시간을 그대로 기다리다 게이트웨이 시한에 걸렸다(2026-08-12 · 504 /api/mydata/link).
+        // 응답에 담을 것은 위에서 이미 커밋됐으므로 **기다릴 이유가 없다.**
+        runFollowUpsInBackground(userId);
         return result;
+    }
+
+    /**
+     * 후속 단계를 배경 일꾼에게 넘긴다 — <b>부르는 쪽은 기다리지 않는다.</b>
+     *
+     * <p>자물쇠는 <b>넘기기 전에</b> 잡는다. 넘긴 뒤에 잡으면 같은 사용자가 대기열에 여러 번
+     * 쌓이고, 자물쇠는 결국 하나만 통과시키므로 나머지는 큐만 차지하다 버려진다.
+     * 푸는 것은 일꾼이 끝낼 때다(성공이든 실패든).
+     *
+     * <p><b>실패는 조용하다.</b> 여기서 터져도 사용자가 할 수 있는 일이 없고, 5분 배치가 같은
+     * 일을 이어받는다. 다만 <b>로그에는 남긴다</b> — 조용한 실패와 조용한 성공이 구별되어야 한다.
+     */
+    private void runFollowUpsInBackground(Long userId) {
+        // 온보딩 중에 5분 배치가 같은 사용자를 집어 들 수 있다. 적재는 이미 끝났으므로
+        // 후속 단계만 건너뛴다(다음 회차가 이어받는다).
+        if (!syncing.add(userId)) {
+            log.debug("이미 돌고 있어 후속 단계를 건너뜀 — userId={}", userId);
+            return;
+        }
+        try {
+            followUps.execute(() -> {
+                try {
+                    runFollowUps(userId);
+                } catch (RuntimeException exception) {
+                    log.warn("후속 단계 실패 — userId={} {}", userId, exception.toString());
+                } finally {
+                    syncing.remove(userId);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException rejected) {
+            // 큐가 찼다. 버려도 안전하다 — 다음 5분 회차가 같은 일을 한다.
+            syncing.remove(userId);
+            log.info("후속 단계 대기열이 찼다 — 다음 회차가 이어받는다. userId={}", userId);
+        }
     }
 
     /**
@@ -262,6 +320,18 @@ public class MyDataLinkService {
             // 1 이라 남은 것을 전부 몰아 묻는다. 그래서 체감 지연이 없다.
             var asked = merchantAskService.ask(userId, MerchantAskService.BACKGROUND_MIN);
             if (asked != null) reclassified += asked.settled().size();
+
+            // **추정을 이 사람의 원장에 반영한다**(2026-08-12 사용자 결정).
+            //
+            // 조회(②-b)가 사실을 못 주는 자리가 있다 — PG·상품권은 한 사업자번호에 토스페이·
+            // 카카오페이·기프티스타가 함께 붙어, 물어봐야 결제대행사의 업종만 나온다. 운영
+            // 로그가 `물어본 곳 24, 분류된 가맹점 0` 을 2분마다 반복했다. 그 결제들은 답이
+            // 있는데도 추정층에 머물고, 계산이 읽는 `Consumption` 에는 확정만 들어가므로
+            // 화면 110,680원이 서버에서 1,200원이 됐다 — 온보딩이 시작조차 안 됐다.
+            //
+            // **전역 사전은 안 건드린다.** 바뀌는 것은 이 사람의 원장뿐이라 오분류가 안 번진다.
+            // 출처를 `LLM_LOCAL` 로 남겨, 뒤에 등록 업종 조회나 사람의 확정이 오면 덮인다.
+            reclassified += categoryPromotion.applyEstimates(userId);
         }
         // **주소를 회차마다 조금씩 채운다.**
         //
@@ -550,7 +620,9 @@ public class MyDataLinkService {
             // 쌓이고 동기화마다 다시 쓰였다(2026-08-07 실측: 6곳). 답을 못 얻을 것이 확실한
             // 곳에 "물어봤다"를 적는 것은 기록이 아니라 잡음이다.
             if (!industryLookup.askable(biz)) continue;
-            if (!merchantCategoryService.needsWork(biz, name)) continue;   // 이미 확정·종결
+            // **쉬는 시간까지 본다.** 답 없는 곳을 2분마다 다시 묻던 자리다 — 운영 로그가
+            // `대상 33, 물어본 곳 24, 분류 0` 을 끝없이 반복했다(2026-08-13, 하루 약 7,000회).
+            if (!merchantCategoryService.needsRegistryLookup(biz, name)) continue;
             targets.putIfAbsent(biz + '' + name, p);
         }
         // **물어볼 곳이 없어도 여기서 끝내지 않는다** — 사전이 아는 것을 입히는 일이 남았다.
@@ -571,11 +643,15 @@ public class MyDataLinkService {
             // **주소는 덤이다.** 같은 문서에 들어 있으므로 호출이 안 는다 — 지금까지 버리고 있었다.
             String addr = looked.map(IndustryLookupService.Found::address).orElse(null);
             if (addr != null) selfProvider.getObject().rememberAddress(biz, p.getMerchantName(), addr);
-            String mid = answer.map(industryMapper::midOfFineName)
-                    .filter(m -> !com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED.equals(m))
-                    .orElse(null);
-            if (mid == null) continue;                                       // 소비 업종이 아니다 → LLM 이 받는다
-            if (merchantCategoryService.rememberRegistry(p, mid).isPresent()) {
+            // **코드를 손에 쥔 채로 내려간다**(V29). 예전에는 이름에서 곧장 중분류를 얻어
+            // 가운데 칸(국세청 코드)이 지역변수로 사라졌고, 그래서 이 통로로 들어온 사전 행은
+            // 근거 없이 답만 들었다 — 나중에 대조표를 고쳐도 다시 계산할 길이 없었다.
+            List<String> codes = answer.map(industryMapper::codesOfFineName).orElse(List.of());
+            String mid = codes.isEmpty() ? null : industryMapper.midOfCodes(codes);
+            if (mid == null || com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED.equals(mid)) {
+                continue;                                                    // 소비 업종이 아니다 → LLM 이 받는다
+            }
+            if (merchantCategoryService.rememberRegistry(p, mid, codes).isPresent()) {
                 found.put(p.getMerchantName(), mid);
             }
         }
@@ -772,15 +848,10 @@ public class MyDataLinkService {
         // 적어 둔 규약과 같게 맞춘다 — <b>빈손으로 돌려보내지 않고 모델만 건너뛴다.</b>
         // (연동 `linkCardCompanies` 도 적재를 자물쇠 밖에서 하므로 두 진입로의 모양이 같아진다.)
         int added = selfProvider.getObject().pullNewPayments(userId);
-        if (syncing.add(userId)) {
-            try {
-                runFollowUps(userId);             // 바깥 서버 호출 — 트랜잭션 밖
-            } finally {
-                syncing.remove(userId);
-            }
-        } else {
-            log.debug("이미 돌고 있어 조회·질의·브랜드만 건너뜀 — userId={}", userId);
-        }
+        // 바깥 서버 호출 — 트랜잭션 밖이자 **요청 밖**이다. 이 메서드는 5분 배치도 부르고
+        // 화면의 `POST /api/mydata/sync` 도 부르는데, 후자는 사람이 기다리는 요청이다.
+        // 돌려주는 `added` 는 위에서 이미 정해졌으므로 후속 단계를 기다릴 이유가 없다.
+        runFollowUpsInBackground(userId);
         // 자동 동기화 배치가 5분마다 이 메서드를 부른다. 대부분 0건이라 INFO 로 남기면
         // 로그가 그것만으로 찬다.
         if (added > 0) log.info("마이데이터 증분 동기화 — userId={} 신규 결제 {}건", userId, added);
@@ -800,7 +871,12 @@ public class MyDataLinkService {
                     org.springframework.http.HttpStatus.FORBIDDEN, "개인정보 수집 동의가 필요합니다");
         }
         int added = 0;
-        MerchantCategoryService.Snapshot dict = merchantCategoryService.snapshot();
+        // **사전은 새 결제를 처음 만났을 때 만든다.** {@code snapshot()} 은 merchant_category 를
+        // 통째로 읽는데(findAll), 증분 회차는 대개 새 결제가 0건이라 그 표를 읽고 그냥 버렸다.
+        // 이 메서드는 5분 배치가 **연동된 사용자 전원**에게 부르므로, 더미까지 합치면 아무 일도
+        // 없는 회차마다 사전을 사람 수만큼 읽고 있었다. 연동(수천 건)에서는 첫 결제에서 바로
+        // 만들어지므로 원래의 이점(건마다 질의하지 않기)은 그대로다.
+        MerchantCategoryService.Snapshot dict = null;
         for (UserCardCompany link : userCardCompanyRepository.findByUserIdOrderByCompanyIdAsc(userId)) {
             LocalDateTime since = link.getLastRenewalTime();
             LocalDateTime maxDate = since;
@@ -808,6 +884,7 @@ public class MyDataLinkService {
                 for (PaymentView payment : card.payments()) {
                     // 멱등 — 계정별 키로 확인한다. 제공자 id로 보면 남의 행을 내 것으로 착각한다.
                     if (userPaymentRepository.existsById(UserPayment.rowId(userId, payment.id()))) continue;
+                    if (dict == null) dict = merchantCategoryService.snapshot();
                     var fromDict = dict.lookup(payment.businessNumber(), payment.merchantName());
                     String mid = fromDict.orElseGet(
                             () -> industryMapper.midOf(payment.industryCode(), payment.businessNumber()));
@@ -838,9 +915,14 @@ public class MyDataLinkService {
             link.setLastRenewalTime(maxDate);      // 다음 증분 기준 전진
             userCardCompanyRepository.save(link);
         }
+        // **관측은 여기서 하지 않는다.** 예전에는 여기서도 한 번 돌았는데, 이 메서드를 부르는 곳은
+        // `renew` 하나뿐이고 그 바로 뒤 `runFollowUps` 가 `observeAll` 을 무조건 돌린다(:284).
+        // 즉 여기 것은 원장을 통째로 한 번 더 읽고서 곧바로 덮였다. 게다가 여기는 분류가 고쳐지기
+        // **전**이라 뒤엣것보다 낡은 관측이다 — 남길 이유가 없다.
+        // 자물쇠에 막혀 후속이 건너뛰어진 회차에는 관측도 같이 밀리지만, `observeAll` 은 새 결제를
+        // 조건으로 걸지 않으므로 다음 회차가 그대로 이어받는다.
         if (added > 0) {
             reportRepository.deleteByUserId(userId);   // 새 결제 반영 위해 리포트 캐시 무효화
-            observeBusinessNumbers(userId);
         }
         return added;
     }
@@ -908,7 +990,8 @@ public class MyDataLinkService {
                             card != null ? card.getCardName() : null,
                             card != null ? card.getCardColor() : null,
                             card != null ? card.getCompanyName() : null,
-                            payment.getBusinessNumber(), payment.getCategory2Llm());
+                            payment.getBusinessNumber(), payment.getCategory2Llm(),
+                            payment.getCategory2Source());
                 })
                 .toList();
     }
@@ -980,5 +1063,12 @@ public class MyDataLinkService {
     public record PaymentHistoryRow(String paymentId, java.time.LocalDateTime date, String category,
                                     String category2, int amount, String merchantName,
                                     String cardName, String cardColor, String companyName,
-                                    String businessNumber, String category2Llm) {}
+                                    String businessNumber, String category2Llm,
+                                    /**
+                                     * 이 값이 어디서 왔는가. 화면이 <b>확정과 추정을 구별</b>하는 근거다 —
+                                     * {@code LLM_LOCAL} 이면 값은 붙어 있어도 근거는 모델이다.
+                                     * 이 칸이 없으면, 추정을 원장에 반영한 순간 화면에서
+                                     * 사람의 확정과 똑같아 보인다.
+                                     */
+                                    String category2Source) {}
 }

@@ -87,6 +87,37 @@ final class TestServices {
             com.finntech.repository.ReportRepository reports,
             java.time.Clock clock,
             String referenceDate) {
+        // 후속 단계를 **같은 스레드에서** 돌리는 것이 기본이다 — 시험이 그 결과를 바로 볼 수 있게.
+        return linkService(client, users, cards, payments, consumptions, categories, mapper,
+                dictionary, kinds, lookup, ask, brands, links, bankLinks, reports, clock,
+                referenceDate, Runnable::run);
+    }
+
+    /**
+     * 일꾼까지 지정하는 변형 — <b>비동기라는 사실 자체</b>를 검사할 때 쓴다.
+     *
+     * <p>운영은 후속 단계를 배경 일꾼에게 넘기고 요청은 기다리지 않는다. 실행을 미루는 일꾼을
+     * 주면 "넘기기만 하고 돌아왔는가"를 볼 수 있다.
+     */
+    static MyDataLinkService linkService(
+            MyDataClient client,
+            com.finntech.repository.AppUserRepository users,
+            com.finntech.repository.UserCardRepository cards,
+            com.finntech.repository.UserPaymentRepository payments,
+            com.finntech.repository.ConsumptionRepository consumptions,
+            com.finntech.repository.CategoryRepository categories,
+            com.finntech.engine.IndustryCategoryMapper mapper,
+            MerchantCategoryService dictionary,
+            BusinessNumberKindService kinds,
+            IndustryLookupService lookup,
+            MerchantAskService ask,
+            MerchantBrandService brands,
+            com.finntech.repository.UserCardCompanyRepository links,
+            com.finntech.repository.UserBankRepository bankLinks,
+            com.finntech.repository.ReportRepository reports,
+            java.time.Clock clock,
+            String referenceDate,
+            java.util.concurrent.Executor followUps) {
         var self = new AtomicReference<MyDataLinkService>();
         // 사전 리포지토리는 여기서 세운다 — 협력자가 하나 늘 때마다 시험 파일이 전부 깨지는 것을
         // 막는 것이 이 조립기의 목적이다(클래스 주석). 주소를 보는 시험은 직접 대역을 준다.
@@ -94,7 +125,10 @@ final class TestServices {
                 categories, mapper, dictionary,
                 mock(com.finntech.repository.MerchantCategoryRepository.class),
                 kinds, lookup, ask, brands, links, bankLinks,
-                reports, clock, referenceDate, selfOf(self));
+                reports, clock, referenceDate,
+                // 추정 반영은 이 조립기를 쓰는 시험의 관심사가 아니다 — 대역으로 둔다.
+                // 규칙 자체는 `CategoryPromotionServiceTest` 가 따로 검사한다.
+                mock(CategoryPromotionService.class), followUps, selfOf(self));
         self.set(service);
         return service;
     }

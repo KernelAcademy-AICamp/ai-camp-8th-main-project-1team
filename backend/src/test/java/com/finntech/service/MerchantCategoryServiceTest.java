@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -36,12 +37,15 @@ import static org.mockito.Mockito.when;
 class MerchantCategoryServiceTest {
 
     private final List<MerchantCategory> table = new ArrayList<>();
+    /** 던져진 표 — 사전 표(table)와 나란히 사는 시험용 저장소다. */
+    private final List<com.finntech.domain.MerchantCategoryVote> ballots = new ArrayList<>();
     private MerchantCategoryService service;
     private IndustryCategoryMapper mapper;
 
     @BeforeEach
     void setUp() {
         table.clear();
+        ballots.clear();
         mapper = new IndustryCategoryMapper(new ObjectMapper());
 
         MerchantCategoryRepository repo = mock(MerchantCategoryRepository.class);
@@ -75,7 +79,7 @@ class MerchantCategoryServiceTest {
                     return m;
                 });
 
-        service = new MerchantCategoryService(repo, mapper, kinds(), noBrands());
+        service = new MerchantCategoryService(repo, mapper, kinds(), noBrands(), votes(), java.time.Clock.systemDefaultZone());
     }
 
     /** 리포지토리의 {@code ORDER BY CASE source … , id} 를 그대로 옮긴 것. id 가 null 인
@@ -112,8 +116,32 @@ class MerchantCategoryServiceTest {
         return new BusinessNumberKindService(repo, 5, 2, 0.10);
     }
 
+    /** 사람의 확정을 세는 표(V30). 대역이 아니라 <b>진짜 집계 규칙</b>을 쓴다 —
+     *  {@code confirmFrom} 이 다수결을 지나는지까지 이 시험이 봐야 하기 때문이다. */
+    private MerchantCategoryVoteService votes() {
+        var repo = mock(com.finntech.repository.MerchantCategoryVoteRepository.class);
+        when(repo.findByBusinessNumberAndMerchantNameAndUserId(anyString(), anyString(), anyLong()))
+                .thenAnswer(inv -> ballots.stream()
+                        .filter(v -> v.getBusinessNumber().equals(inv.getArgument(0))
+                                && v.getMerchantName().equals(inv.getArgument(1))
+                                && v.getUserId().equals(inv.getArgument(2)))
+                        .findFirst());
+        when(repo.findBallots(anyString(), anyString()))
+                .thenAnswer(inv -> ballots.stream()
+                        .filter(v -> v.getBusinessNumber().equals(inv.getArgument(0))
+                                && v.getMerchantName().equals(inv.getArgument(1)))
+                        .toList());
+        when(repo.save(org.mockito.ArgumentMatchers.any(
+                com.finntech.domain.MerchantCategoryVote.class)))
+                .thenAnswer(inv -> {
+                    ballots.add(inv.getArgument(0));
+                    return inv.getArgument(0);
+                });
+        return new MerchantCategoryVoteService(repo);
+    }
+
     private void seed(String biz, String name, String cat) {
-        table.add(new MerchantCategory(biz, name, cat, MerchantCategory.Source.USER_CSV, null));
+        table.add(new MerchantCategory(biz, name, cat, MerchantCategory.Source.USER_CSV, null, null));
     }
 
     @Test
@@ -255,7 +283,7 @@ class MerchantCategoryServiceTest {
         // (씨앗이 틀렸다면 **씨앗을 고치는 것**이 답이다. 실제로 그렇게 했다.)
         seed("0000000099", "", "쇼핑");                       // 씨앗(USER_CSV)
         table.add(new MerchantCategory("0000000099", "티머니 택시-경북15바7380", "교통/자동차",
-                MerchantCategory.Source.USER_CONFIRMED, 7L)); // 사람이 고친 한 대
+                MerchantCategory.Source.USER_CONFIRMED, 7L, null)); // 사람이 고친 한 대
 
         assertThat(service.lookup("0000000099", "티머니 택시-경북15바7380"))
                 .as("고친 그 가맹점은 정확일치로 곧바로 보인다").contains("교통/자동차");
@@ -374,7 +402,7 @@ class MerchantCategoryServiceTest {
                     table.add(inv.getArgument(0));
                     return inv.getArgument(0);
                 });
-        var svc = new MerchantCategoryService(repo, mapper, kinds(), noBrands());
+        var svc = new MerchantCategoryService(repo, mapper, kinds(), noBrands(), votes(), java.time.Clock.systemDefaultZone());
 
         var dummy = payment("77:gen-8a3f-0012");            // 생성기가 만든 결제
         assertThat(svc.confirmFrom(dummy, "식비", 7L)).as("더미는 거절된다").isEmpty();
@@ -393,10 +421,141 @@ class MerchantCategoryServiceTest {
         service.rememberGuess(real, "쇼핑");                       // 먼저 추정이 있었다
         assertThat(service.lookup("0000000021", "어느 가구점")).isEmpty();
 
-        service.rememberRegistry(real, "생활");
+        service.rememberRegistry(real, "생활", java.util.List.of("523991", "523992"));
         assertThat(service.lookup("0000000021", "어느 가구점"))
                 .as("사실이 추정을 덮는다").contains("생활");
         assertThat(table).as("행이 늘지 않고 고쳐진다").hasSize(1);
+        assertThat(table.get(0).getNtsCodes())
+                .as("이 분류를 낳은 업종코드가 근거로 남는다(V29)").isEqualTo("523991,523992");
+    }
+
+    @Test
+    @DisplayName("확정은 덮어쓰기가 아니라 한 표다 — 마지막에 누른 사람이 이기면 안 된다")
+    void confirmingIsAVoteNotAnOverwrite() {
+        UserPayment real = realPayment("0000000041", "배달의민족");
+
+        service.confirmFrom(real, "식비", 1L);
+        assertThat(service.lookup("0000000041", "배달의민족"))
+                .as("혼자면 그 사람이 다수다").contains("식비");
+
+        service.confirmFrom(real, "쇼핑", 2L);
+        assertThat(service.lookup("0000000041", "배달의민족"))
+                .as("1:1 동률 — 예전에는 여기서 뒤집혔다").contains("식비");
+
+        service.confirmFrom(real, "쇼핑", 3L);
+        assertThat(service.lookup("0000000041", "배달의민족"))
+                .as("2:1 — 다수가 정한다").contains("쇼핑");
+    }
+
+    @Test
+    @DisplayName("이긴 값에 동의한 사람만 confirmedBy 에 남는다")
+    void onlyTheWinningSideIsCredited() {
+        UserPayment real = realPayment("0000000042", "어느 가게");
+        service.confirmFrom(real, "식비", 1L);
+        assertThat(table.get(0).getConfirmedBy()).isEqualTo(1L);
+
+        service.confirmFrom(real, "쇼핑", 2L);   // 동률 — 행이 안 바뀐다
+        assertThat(table.get(0).getConfirmedBy())
+                .as("진 표가 '이 사람이 정했다'로 남으면 값과 사람이 어긋난다").isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("동률이어도 행은 돌려준다 — 본인의 나머지 결제를 자기 표로 맞춰야 한다")
+    void tieStillReturnsTheRow() {
+        UserPayment real = realPayment("0000000043", "갈리는 가게");
+        service.confirmFrom(real, "식비", 1L);
+
+        assertThat(service.confirmFrom(real, "쇼핑", 2L))
+                .as("empty 를 주면 부르는 쪽이 alsoFixed 를 건너뛴다").isPresent();
+        assertThat(service.voteOf("0000000043", "갈리는 가게", 2L))
+                .as("져도 자기 표는 남는다").contains("쇼핑");
+    }
+
+    @Test
+    @DisplayName("표의 키도 PG 번호를 지운다 — 사전과 갈리면 표는 쌓이는데 못 찾는다")
+    void votesUseTheSameKeyAsTheDictionary() {
+        // KG이니시스를 거친 넷플릭스. 사전은 번호를 지우고 이름으로 담는다.
+        UserPayment viaPg = realPayment("2208155597", "넷플릭스서비시스코리아 유한회사");
+        service.confirmFrom(viaPg, "취미/여가", 1L);
+
+        assertThat(table.get(0).getBusinessNumber()).isEmpty();
+        assertThat(ballots).singleElement()
+                .satisfies(v -> assertThat(v.getBusinessNumber())
+                        .as("표도 번호를 지운다").isEmpty());
+        assertThat(service.voteOf("2208155597", "넷플릭스서비시스코리아 유한회사", 1L))
+                .as("어느 PG 를 거쳐 물어도 같은 표를 찾는다").contains("취미/여가");
+    }
+
+    @Test
+    @DisplayName("더미 결제는 표도 못 던진다 — 사전 관문과 같은 자리에서 막힌다")
+    void dummyPaymentsCastNoVote() {
+        assertThat(service.confirmFrom(payment("77:gen-8a3f-0012"), "식비", 7L)).isEmpty();
+        assertThat(ballots).isEmpty();
+    }
+
+    @Test
+    @DisplayName("업종코드는 정렬·중복제거해 담는다 — 순서만 다른 같은 근거가 다른 값처럼 보이면 안 된다")
+    void registryCodesAreNormalized() {
+        UserPayment real = realPayment("0000000023", "어느 안경점");
+        service.rememberRegistry(real, "의료", java.util.List.of("523142", "523141", "523142"));
+        assertThat(table.get(0).getNtsCodes()).isEqualTo("523141,523142");
+        assertThat(table.get(0).ntsCodeList()).containsExactly("523141", "523142");
+    }
+
+    @Test
+    @DisplayName("사람이 확정하면 업종코드를 지운다 — 표에서 유도된 행과 사람이 정한 행이 칸 하나로 갈린다")
+    void confirmClearsTableDerivedCodes() {
+        UserPayment real = realPayment("0000000024", "다이소 강남점");
+        service.rememberRegistry(real, "생활", java.util.List.of("523991"));
+        assertThat(table.get(0).getNtsCodes()).isEqualTo("523991");
+
+        service.confirmFrom(real, "쇼핑", 7L);
+        assertThat(table.get(0).getCategory2()).isEqualTo("쇼핑");
+        assertThat(table.get(0).getNtsCodes())
+                .as("사람의 판단은 표에서 나온 것이 아니다 — 지금 값과 무관한 근거를 남기지 않는다")
+                .isNull();
+    }
+
+    @Test
+    @DisplayName("추정에는 업종코드를 적지 않는다 — 한 칸에 '유도'와 '모델의 말'을 섞지 않는다")
+    void guessNeverCarriesCodes() {
+        UserPayment real = realPayment("0000000025", "어느 카페");
+        service.rememberGuess(real, "카페/간식");
+        assertThat(table.get(0).getNtsCodes()).isNull();
+    }
+
+    @Test
+    @DisplayName("'기타'로 종결되면 업종코드가 지워진다 — 종결은 표의 답이 아니다")
+    void givingUpClearsCodes() {
+        UserPayment real = realPayment("0000000026", "알 수 없는 곳");
+        service.rememberRegistry(real, "생활", java.util.List.of("523991"));
+        // 조회로 붙었던 것을 사람이 되돌려 추정층으로 내린 뒤, LLM 이 세 번 헛물을 켠다.
+        table.get(0).reclassify("카테고리없음", MerchantCategory.Source.ATTEMPTED, null,
+                java.util.List.of("523991"));
+        for (int i = 0; i < MerchantCategory.GIVE_UP_AFTER; i++) {
+            service.noteLlmMiss(real, java.time.LocalDateTime.now());
+        }
+        assertThat(table.get(0).getSource()).isEqualTo(MerchantCategory.Source.UNRESOLVED.name());
+        assertThat(table.get(0).getNtsCodes()).isNull();
+    }
+
+    @Test
+    @DisplayName("근거를 든 행은 표에서 유도된 것뿐이다 — 재계산 대상이 source 하나로 떨어진다")
+    void onlyTableDerivedRowsCarryCodes() {
+        service.rememberRegistry(realPayment("0000000031", "가게 하나"), "생활",
+                java.util.List.of("523991"));
+        service.rememberGuess(realPayment("0000000032", "가게 둘"), "쇼핑");
+        service.confirmFrom(realPayment("0000000033", "가게 셋"), "식비", 7L);
+        service.attemptRow(realPayment("0000000034", "가게 넷"));
+
+        for (MerchantCategory row : table) {
+            boolean tableDerived = MerchantCategory.Source.USER_CSV.name().equals(row.getSource())
+                    || MerchantCategory.Source.REGISTRY.name().equals(row.getSource());
+            if (!tableDerived) {
+                assertThat(row.getNtsCodes())
+                        .as("%s 인데 근거가 있다 — 칸의 뜻이 무너진다", row.getSource()).isNull();
+            }
+        }
     }
 
     @Test
@@ -404,8 +563,10 @@ class MerchantCategoryServiceTest {
     void registryNeverOverwritesPeople() {
         UserPayment real = realPayment("0000000022", "그 가게");
         service.confirmFrom(real, "식비", 7L);
-        assertThat(service.rememberRegistry(real, "쇼핑")).isEmpty();
+        assertThat(service.rememberRegistry(real, "쇼핑", java.util.List.of("525101"))).isEmpty();
         assertThat(service.lookup("0000000022", "그 가게")).contains("식비");
+        assertThat(table.get(0).getNtsCodes())
+                .as("거절했으면 근거도 안 남는다 — 사람이 정한 값에 남의 근거가 붙으면 안 된다").isNull();
     }
 
     @Test
@@ -413,7 +574,8 @@ class MerchantCategoryServiceTest {
     void registryRejectsDummyPayments() {
         // 더미 결제에도 실재하는 사업자번호가 섞여 있어 조회 자체는 성공할 수 있다.
         // 그렇게 들어온 행은 아무도 결제한 적 없는 가맹점을 사전에 앉힌다.
-        assertThat(service.rememberRegistry(payment("77:gen-8a3f-0012"), "쇼핑")).isEmpty();
+        assertThat(service.rememberRegistry(payment("77:gen-8a3f-0012"), "쇼핑",
+                java.util.List.of("525101"))).isEmpty();
         assertThat(service.attemptRow(payment("77:gen-8a3f-0012"))).isEmpty();
         assertThat(table).isEmpty();
     }
@@ -520,7 +682,7 @@ class MerchantCategoryServiceTest {
                     table.add(inv.getArgument(0));
                     return inv.getArgument(0);
                 });
-        var svc = new MerchantCategoryService(repo, mapper, kinds(), noBrands());
+        var svc = new MerchantCategoryService(repo, mapper, kinds(), noBrands(), votes(), java.time.Clock.systemDefaultZone());
 
         var first = svc.confirm("0000000011", "어떤 가게", "쇼핑",
                 MerchantCategory.Source.USER_CSV, null);

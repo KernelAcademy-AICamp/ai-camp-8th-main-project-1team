@@ -44,6 +44,7 @@ class RealPersonImportServiceTest {
 
     @Autowired RealPersonImportService service;
     @Autowired MyDataUserRepository userRepository;
+    @Autowired com.finntech.mydata.crypto.UserIdentityIndex identityIndex;
     @Autowired MyDataCardRepository cardRepository;
     @Autowired MyDataPaymentRepository paymentRepository;
 
@@ -264,26 +265,21 @@ class RealPersonImportServiceTest {
     }
 
     @Test
-    @DisplayName("본인인증이 이 사람을 찾아낸다 — 전화번호 표기가 달라도 찾힌다")
+    @DisplayName("본인인증이 이 사람을 찾아낸다 — 전화번호 표기가 원장과 같아야 한다")
     void 본인인증이_찾아낸다() {
         service.importCsv(NAME, SOCIAL7, PHONE, null, "2026-07-01,가게A,10000\n");
-        // 원장에 쓰는 곳이 둘인데 표기가 갈려 있다(적재는 하이픈, 생성기는 숫자만).
-        // 조회가 한쪽 표기를 고집하면 반대쪽은 있는 사람을 영원히 못 찾아,
-        // 어떤 값을 넣어도 "신원 정보가 불일치합니다"가 뜬다. 그래서 숫자로만 맞춘다.
-        assertThat(userRepository.findByPhoneDigits("01044445555"))
-                .as("하이픈으로 저장돼 있어도 숫자로 찾힌다").isPresent();
-    }
-
-    @Test
-    @DisplayName("숫자만으로 저장된 사람도 같은 조회로 찾힌다")
-    void 숫자표기도_찾힌다() {
-        service.importCsv(NAME, SOCIAL7, PHONE, null, "2026-07-01,가게A,10000\n");
-        var u = userRepository.findById(Ci.of(NAME, SOCIAL7, PHONE)).orElseThrow();
-        u.setPhoneNumber("01044445555");                 // 생성기가 쓰는 표기로 되돌려도
-        userRepository.save(u);
-
-        assertThat(userRepository.findByPhoneDigits("01044445555"))
-                .as("표기와 무관하게 찾힌다").isPresent();
+        // 원장은 010-1234-5678 로 저장하고 조회도 그 표기로 한다. 숫자만으로 넣으면
+        // 있는 사람을 못 찾아 실제 사람이 자기 번호를 정확히 넣고도 PHONE_MISMATCH 를 듣는다.
+        //
+        // **조회는 이제 지문으로 한다**(2026-08-13 신원 암호화). 번호가 암호문으로 저장되면
+        // 정확일치 조회가 그대로는 안 되기 때문이다. 지문은 저장 표기와 **같은 규칙**으로
+        // 정규화한 값에서 나오므로, 갈리면 여기서 걸린다 — 그것이 이 시험의 목적이다.
+        assertThat(userRepository.findByPhoneBlindIndex(identityIndex.ofPhone(PHONE)))
+                .as("하이픈 표기로 찾힌다").isPresent();
+        assertThat(userRepository.findByPhoneBlindIndex(identityIndex.ofPhone("01044445555")))
+                .as("숫자만 넣어도 같은 사람을 찾는다 — 정규화가 한 벌이다").isPresent();
+        assertThat(userRepository.findByPhoneNumber(PHONE))
+                .as("평문 칸에는 더 이상 안 쌓인다").isEmpty();
     }
 
     @Test

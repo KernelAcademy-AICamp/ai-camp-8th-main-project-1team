@@ -262,6 +262,43 @@ class CardRecommendServiceTest {
     }
 
     @Test
+    @DisplayName("띄어쓰기·기호가 달라도 같은 브랜드로 건다")
+    void brandMatchIgnoresSpacingAndSymbols() {
+        // 공시와 승인내역이 같은 브랜드를 다르게 적는다. 카드는 '투썸 플레이스'라 쓰고
+        // 승인내역은 '투썸플레이스'로 찍힌다. 글자 그대로 비교하면 한 건도 안 걸린다.
+        CardProduct c = card("카페카드");
+        CardBenefit b = benefit("커피", "10", null);
+        b.add(new CardBenefitTarget("커피", CardBenefitTarget.Kind.BRAND, "투썸 플레이스", null, null, null));
+        c.add(b);
+
+        var offer = service(List.of(c), List.of(payment(cafe, "투썸플레이스 강남점", 100_000)))
+                .recommend(analysis(), NOW).offers().get(0);
+
+        assertThat(offer.yearlySaving()).as("100,000 × 10% × 12 — 띄어쓰기만 다르다")
+                .isEqualByComparingTo(new BigDecimal("120000"));
+    }
+
+    @Test
+    @DisplayName("접어도 쿠팡과 쿠팡이츠는 다른 브랜드다 — 긴 이름이 먼저 가져간다")
+    void foldingDoesNotMergeSiblingBrands() {
+        // 카드사가 실제로 둘을 다른 묶음에 넣는다(BC 바로 ZONE: 쿠팡=LIFE, 쿠팡이츠=EAT).
+        // 접기가 이 둘을 한 값으로 만들면 배달 결제가 쇼핑 한도를 갉아먹는다.
+        CardProduct c = card("쿠팡카드");
+        CardBenefit shopping = benefit("쇼핑", "1", null);
+        shopping.add(new CardBenefitTarget("쇼핑", CardBenefitTarget.Kind.BRAND, "쿠팡", null, null, null));
+        CardBenefit delivery = benefit("배달", "10", null);
+        delivery.add(new CardBenefitTarget("배달", CardBenefitTarget.Kind.BRAND, "쿠팡이츠", null, null, null));
+        c.add(shopping);
+        c.add(delivery);
+
+        var offer = service(List.of(c), List.of(payment(cafe, "쿠팡이츠", 100_000)))
+                .recommend(analysis(), NOW).offers().get(0);
+
+        assertThat(offer.yearlySaving()).as("쿠팡이츠 10% 로 걸려야 한다 — 쿠팡 1% 가 아니다")
+                .isEqualByComparingTo(new BigDecimal("120000"));
+    }
+
+    @Test
     @DisplayName("연회비를 뺀 값을 '아껴요'라고 말한다")
     void subtractsAnnualFee() {
         CardProduct c = card("연회비카드");

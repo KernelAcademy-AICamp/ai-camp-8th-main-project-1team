@@ -91,7 +91,13 @@ public class OnboardingController {
             // 이걸 안 하면 "카테고리없음"이 금액 1위로 맨 위에 앉는데, 사용자가 행동으로 옮길
             // 수 없는 덩어리다 — 실측에서 425만원 중 220만원이 추정으로 이미 답이 있었다
             // (2026-08-05). 확정(category2)은 그대로 두고, 화면에만 반영한다.
-            boolean estimated = isUnclassified(p.category2()) && p.category2Llm() != null;
+            // **추정을 원장에 반영한 뒤에도 추정임을 밝힌다**(2026-08-12).
+            //
+            // 예전에는 "확정이 비었고 추정이 있다"로만 봤다. 그런데 이제 추정이 `category2` 에
+            // 올라가므로(`CategoryPromotionService`), 그 식으로는 값이 붙은 순간 **사람이 확정한
+            // 것과 화면에서 똑같아 보인다.** 근거가 무엇인지는 출처가 들고 있다.
+            boolean estimated = (isUnclassified(p.category2()) && p.category2Llm() != null)
+                    || com.finntech.service.CategoryPromotionService.SOURCE.equals(p.category2Source());
             String cat = estimated ? p.category2Llm()
                     : (p.category2() == null ? IndustryCategoryMapper.UNCLASSIFIED : p.category2());
             WasteScoringService.WasteJudgment j = waste.get(p.paymentId());

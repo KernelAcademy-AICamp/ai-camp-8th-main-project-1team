@@ -174,12 +174,29 @@ public class AuthService {
      *                      인증에 성공하면 이 값으로 갈아타야 한다. 실패하면 null이다.
      */
     public record VerifyResult(String ci, boolean verified, boolean existsInMyData,
-                               String reason, String actualCarrier, Long userId) {
+                               String reason, String actualCarrier, Long userId, String authToken) {
 
         /** 인증 실패 응답 — 계정을 고르지 않았으므로 userId가 없다. */
         public VerifyResult(String ci, boolean verified, boolean existsInMyData,
                             String reason, String actualCarrier) {
-            this(ci, verified, existsInMyData, reason, actualCarrier, null);
+            this(ci, verified, existsInMyData, reason, actualCarrier, null, null);
+        }
+
+        /** 성공 응답(토큰 발급 전) — 컨트롤러가 {@link #withToken} 으로 토큰을 얹는다. */
+        public VerifyResult(String ci, boolean verified, boolean existsInMyData,
+                            String reason, String actualCarrier, Long userId) {
+            this(ci, verified, existsInMyData, reason, actualCarrier, userId, null);
+        }
+
+        /**
+         * 발급된 토큰을 얹는다.
+         *
+         * <p><b>토큰 발급을 서비스가 아니라 컨트롤러에서 하는 이유</b>: 발급 기록에 접속 IP·
+         * User-Agent 를 남기려면 {@code HttpServletRequest} 가 필요한데, 그것을 서비스 층까지
+         * 끌고 내려가면 엔진이 웹 계층에 묶인다(마스터 §4 원칙 3의 태도와 같다).
+         */
+        public VerifyResult withToken(String token) {
+            return new VerifyResult(ci, verified, existsInMyData, reason, actualCarrier, userId, token);
         }
     }
 }

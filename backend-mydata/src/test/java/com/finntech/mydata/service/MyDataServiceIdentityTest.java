@@ -1,6 +1,6 @@
 package com.finntech.mydata.service;
 
-import com.finntech.mydata.domain.MyDataUser;
+import com.finntech.mydata.crypto.UserIdentityIndex;
 import com.finntech.mydata.repository.MyDataUserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,11 +37,16 @@ class MyDataServiceIdentityTest {
 
     @Autowired MyDataService service;
     @Autowired MyDataUserRepository userRepository;
+    @Autowired UserIdentityIndex identityIndex;
 
     // 시드가 만든 명의자는 지우지 않는다(카드가 딸려 있어 지워지지도 않는다). 여기서 넣는 사람은
     // 이름·번호가 시드와 겹치지 않고, @Transactional 이라 검사가 끝나면 되돌아간다.
+    //
+    // **생성자를 직접 부르지 않는다.** 그러면 지문이 빈 채로 저장돼 조회에 안 걸리고,
+    // 이 시험은 "표기 때문에 못 찾았다"가 아니라 "지문이 없어서 못 찾았다"를 보게 된다 —
+    // 잡으려던 것과 다른 이유로 빨개지는 시험은 아무것도 못 잠근다.
     private void 명의자를_둔다(String storedPhone) {
-        userRepository.save(new MyDataUser("ci-" + storedPhone, NAME, FULL_SOCIAL, storedPhone));
+        userRepository.save(identityIndex.newUser("ci-" + storedPhone, NAME, FULL_SOCIAL, storedPhone));
     }
 
     /** 생성기가 쓰는 표기. 이게 막혀 있어서 데모 신원 전원이 본인인증을 통과하지 못했다. */

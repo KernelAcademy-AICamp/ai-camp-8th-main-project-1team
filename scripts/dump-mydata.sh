@@ -26,11 +26,32 @@ mkdir -p "$OUT"
 # 켜면 UTC로 변환돼 들어가 결제 시각이 9시간 밀린다(커트오프·챌린지 판정이 통째로 어긋난다).
 DUMP_OPTS=(--single-transaction --quick --no-tablespaces --set-gtid-purged=OFF --hex-blob --default-character-set=utf8mb4)
 
+# 덤프 암호화 (설계서 Phase 4).
+#
+# **gzip 은 압축이지 암호화가 아니다.** 이 파일에는 실제 사람의 이름·주민번호 앞자리·전화번호와
+# 카드 사용내역 전부가 들어 있다. 노트북에, USB 에, 메일 첨부에 그대로 남는다.
+#
+# `DUMP_PASSPHRASE` 가 있으면 `.sql.gz.enc` 로 떨어진다. 없으면 예전처럼 `.sql.gz` 로 두되
+# **경고를 찍는다** — 조용히 평문으로 두는 것이 가장 나쁘다.
+#
+# 복호화:  openssl enc -d -aes-256-cbc -pbkdf2 -in <파일>.enc -out <파일>
+encrypt_if_possible() {
+  local plain="$1"
+  if [ -z "${DUMP_PASSPHRASE:-}" ]; then
+    echo "      ⚠ DUMP_PASSPHRASE 가 없어 **평문**으로 남긴다. 실 개인정보가 들어 있다면 반드시 넣어라." >&2
+    return 0
+  fi
+  openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:DUMP_PASSPHRASE -in "$plain" -out "$plain.enc"
+  rm -f "$plain"
+  echo "      암호화됨 → $plain.enc"
+}
+
 dump_one() {
   local db="$1" dest="$OUT/$1.sql.gz"
   echo "[$db] 덤프 시작"
   "$MYSQL_BIN/mysqldump" -u root --socket="$SOCK" "${DUMP_OPTS[@]}" "$db" | gzip -1 > "$dest"
   echo "[$db] 완료 — $(du -h "$dest" | cut -f1)  →  $dest"
+  encrypt_if_possible "$dest"
 }
 
 # 앱 원장은 기본으로 뜨지 않는다.

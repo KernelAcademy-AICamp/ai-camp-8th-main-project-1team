@@ -54,11 +54,38 @@
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 
-		<!-- RFC 3161 Time-Stamp Protocol (감사로그 계층 3). ASN.1을 직접 만들지 않기 위해 씀. -->
+		<!-- RFC 3161 Time-Stamp Protocol (감사로그 계층 3). ASN.1을 직접 만들지 않기 위해 씀.
+		     Argon2PasswordEncoder도 이 라이브러리를 쓴다 — 그래서 admin 인증에 새로 들일 것이
+		     사실상 spring-security-crypto 하나뿐이다. -->
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcpkix-jdk18on</artifactId>
 			<version>1.85</version>
+		</dependency>
+
+		<!-- admin 비밀번호 해시(Argon2id) 전용.
+		     **spring-boot-starter-security를 들이지 않는다** — 그것을 넣으면 로그인 필터·CSRF·세션이
+		     통째로 딸려 와 기존 API가 갑자기 401을 내기 시작한다. 이 앱은 지금까지 인증이 없었으므로
+		     그 충격이 크다. 필요한 것은 PasswordEncoder 하나뿐이라 crypto 모듈만 쓴다. -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-crypto</artifactId>
+		</dependency>
+
+		<!-- KMS envelope encryption (Phase 2) — 개인정보 컬럼 암호화 키를 코드·.env에 두지 않는다. -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>kms</artifactId>
+			<version>2.31.78</version>
+		</dependency>
+
+		<!-- 감사 앵커 사본(Phase 5-1) — S3 Object Lock(Compliance) 버킷에 남긴다.
+		     TSA 토큰이 위조 대상과 같은 DB에 있으면, DB를 갈아엎고 도장을 새로 받아
+		     바꿔치기하는 공격이 통과한다. 밖에 옛 도장이 남아 있어야 드러난다. -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+			<version>2.31.78</version>
 		</dependency>
 
 		<dependency>

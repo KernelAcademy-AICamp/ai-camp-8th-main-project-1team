@@ -73,10 +73,48 @@ services:
       # 실제 사람 1명의 카드내역 입력구(/admin/realdata). **실 개인정보**를 받고 파기까지 있다.
       # 기본 꺼짐 — 넣을 때만 켠다. 8082는 외부 미발행이지만 그 격리는 단층 방어라 여기서도 막는다.
       MYDATA_REALDATA_ENABLED: "${MYDATA_REALDATA_ENABLED:-false}"
+      # 승인된 실사용자 신청의 적재구(/self/**). 위와 성질이 다르다 — 부르는 것은 본체뿐이고
+      # (공유 시크릿 필터가 /self/** 도 검사한다) 본체는 admin 이 승인한 신청만 보낸다.
+      # 데모 기간에만 켠다. 본체의 FINNTECH_INTAKE_ENABLED 와 짝이다(둘 다 켜야 흐른다).
+      MYDATA_SELFIMPORT_ENABLED: "${MYDATA_SELFIMPORT_ENABLED:-false}"
+
+      # ---- 실 신원 컬럼 암호화 (2026-08-13) ----
+      # 본체는 신청 대기열을 처음부터 암호화했는데 **승인 뒤 오래 남는 이쪽이 평문이었다**
+      # (실측 4,513행). 키는 본체와 따로 받는다 — 한쪽이 새도 다른 쪽이 함께 열리지 않게.
+      MYDATA_CRYPTO_ENABLED: "${MYDATA_CRYPTO_ENABLED:-false}"
+      # 운영에서 false 면 암호화가 꺼진 채 뜬다. CI 의 '운영 중지 검사'만 이 값을 넣는다.
+      MYDATA_CRYPTO_REQUIRED: "${MYDATA_CRYPTO_REQUIRED:-true}"
+      MYDATA_KMS_KEY_ID: ${MYDATA_KMS_KEY_ID:-}
+      MYDATA_ENCRYPTED_DEK: ${MYDATA_ENCRYPTED_DEK:-}
+      MYDATA_ENCRYPTED_PEPPER: ${MYDATA_ENCRYPTED_PEPPER:-}
+      MYDATA_CRYPTO_BACKFILL: "${MYDATA_CRYPTO_BACKFILL:-true}"
+      # KMS 클라이언트가 리전을 못 찾으면 생성 단계에서 죽어 앱이 통째로 안 뜬다(본체 전례).
+      AWS_REGION: ${AWS_REGION:-ap-northeast-2}
+
+      # ---- 내부 구간 TLS (2026-08-13) ----
+      # 본체와의 구간이 평문 HTTP 였다. `internal: true` 라 밖에서는 못 붙지만, 컨테이너
+      # 하나가 뚫리면 그 안에서 신원·결제가 그대로 보인다. 인증서는
+      # `scripts/internal-tls-cert.sh` 가 호스트에 만들고 아래에서 읽기 전용으로 붙인다.
+      # 키스토어가 없으면 꺼진 채 평문으로 뜬다 — 값 하나로 켜고 끈다.
+      MYDATA_TLS_ENABLED: "${MYDATA_TLS_ENABLED:-false}"
+      MYDATA_TLS_KEYSTORE: ${MYDATA_TLS_KEYSTORE:-file:/tls/server.p12}
+      MYDATA_TLS_PASSWORD: ${MYDATA_TLS_PASSWORD:-finntech-internal}
+    volumes:
+      # 개인키가 든 디렉터리다. **읽기 전용**으로 붙이고, 원본은 호스트에서 root:640 이다.
+      - /opt/finntech/tls:/tls:ro
     mem_limit: 768m             # 힙 ≈ 460m. 조회 응답만 만들면 되는 서버라 이 정도면 충분하다.
-    networks: [internal]        # 아웃바운드 없음 — 이 서버는 밖으로 나갈 일이 없다
+    # **격리는 그대로, 구멍은 하나만.** 이 서버에는 실 개인정보가 있어 밖으로 나갈 일이 없다.
+    # 다만 신원 컬럼을 KMS envelope 로 암호화하려면 기동 때 KMS 를 한 번 불러야 한다
+    # (2026-08-13: 안 열어 둔 채 배포해 헬스체크에서 죽고 롤백됐다).
+    #
+    # 인터넷을 열어 주지 않는다. VPC 인터페이스 엔드포인트로 KMS 트래픽이 인터넷을 안 타게 하고
+    # (프라이빗 DNS 로 `kms.…amazonaws.com` 이 VPC 내부 IP 로 풀린다), 이 망의 나가는 길은
+    # `scripts/kms-egress-guard.sh` 가 **그 IP 의 443 하나로** 좁힌다. 나머지는 DROP 이다.
+    networks: [internal, kms-egress]
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8082/actuator/health"]
+      # TLS 를 켜면 이 주소도 https 라야 한다. `--cacert` 로 **우리 인증서만** 믿는다 —
+      # `-k` 를 쓰면 헬스체크가 아무 인증서나 통과시켜, 검증이 깨진 것을 못 잡는다.
+      test: ["CMD-SHELL", "curl -fsS --cacert /tls/ca.crt https://localhost:8082/actuator/health || curl -fsS http://localhost:8082/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -95,7 +133,12 @@ services:
       DB_USER: ${DB_USER:-finntech}
       DB_PASSWORD: ${DB_PASSWORD:?deploy/.env 에 DB_PASSWORD 를 넣어라}
       # 서비스명 DNS. 호스트나 포트를 아는 사람이 없어도 본체만 도달할 수 있다.
-      MYDATA_BASE_URL: http://backend-mydata:8082
+      # TLS 를 켜면 `https://backend-mydata:8082` 다. 인증서의 SAN 에 이 이름이 들어 있어야
+      # 검증이 통과한다(`scripts/internal-tls-cert.sh` 가 넣는다).
+      MYDATA_BASE_URL: ${MYDATA_BASE_URL:-http://backend-mydata:8082}
+      # 제공자의 자체 서명 인증서 **하나만** 믿는다. 비우면 평문 HTTP 로 돈다.
+      MYDATA_TRUSTSTORE: ${MYDATA_TRUSTSTORE:-}
+      MYDATA_TRUSTSTORE_PASSWORD: ${MYDATA_TRUSTSTORE_PASSWORD:-finntech-internal}
       MYDATA_SHARED_SECRET: ${MYDATA_SHARED_SECRET:?deploy/.env 에 MYDATA_SHARED_SECRET 를 넣어라}
       # 앱(Capacitor) 웹뷰 오리진 + 서비스 도메인. 웹은 같은 오리진이라 원래는 CORS가 필요 없지만,
       # 브라우저는 POST에 Origin을 붙이고 Spring은 프록시 뒤에서 스킴을 http로 보므로
@@ -103,6 +146,43 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-capacitor://localhost,https://localhost,http://localhost}
       # 일반 API로 더미 시드가 생성되면 안 된다(문서 §5-2 ④). 운영에서는 켜지 않는다.
       FINNTECH_DEV_SEED_ENABLED: "false"
+      # ---- 인증 (설계서 Phase 1) ----
+      # **끄지 않는다.** 끄면 `?userId=N`으로 남의 데이터가 그대로 열린다 — 도입 전 상태로 돌아간다.
+      # 기본값을 true로 두되 .env가 덮을 수 있게 한다(끄는 경우가 있다면 그것이 기록에 남아야 한다).
+      FINNTECH_AUTH_ENABLED: "${FINNTECH_AUTH_ENABLED:-true}"
+      # https 뒤라 기본 true. 로컬 http 총연습에서만 false로 내린다.
+      FINNTECH_SECURE_COOKIE: "${FINNTECH_SECURE_COOKIE:-true}"
+      # 기동 1회용 admin 계정 생성. 값이 있으면 만들고 임시 비밀번호를 로그에 한 번 찍는다.
+      # 받아 적은 뒤 .env에서 지운다 — 이미 있는 계정이면 아무것도 하지 않는다.
+      FINNTECH_ADMIN_BOOTSTRAP: ${FINNTECH_ADMIN_BOOTSTRAP:-}
+      # 잠겼을 때 빠져나오는 유일한 길 — 비밀번호·2단계 인증·세션을 처음 상태로 되돌린다.
+      # **쓰고 나면 반드시 지운다.** 기동할 때마다 admin 이 초기화되면 그것도 잠김이다.
+      FINNTECH_ADMIN_RESET: ${FINNTECH_ADMIN_RESET:-}
+      # ---- 개인정보 컬럼 암호화 (Phase 2) ----
+      # mysql 프로파일에서 꺼져 있으면 CryptoRequiredGuard가 기동을 막는다.
+      # 조용히 평문으로 도는 것보다 기동이 실패하는 편이 낫다.
+      FINNTECH_CRYPTO_ENABLED: "${FINNTECH_CRYPTO_ENABLED:-false}"
+      # 가드를 끄는 스위치. **운영 .env 에는 넣지 않는다** — 기본값 true 가 그대로 산다.
+      # CI 의 '운영 중지 검사'만 이 값을 넣는다(러너에 KMS 키가 없다).
+      FINNTECH_CRYPTO_REQUIRED: "${FINNTECH_CRYPTO_REQUIRED:-true}"
+      FINNTECH_KMS_KEY_ID: ${FINNTECH_KMS_KEY_ID:-}
+      FINNTECH_ENCRYPTED_DEK: ${FINNTECH_ENCRYPTED_DEK:-}
+      FINNTECH_ENCRYPTED_PEPPER: ${FINNTECH_ENCRYPTED_PEPPER:-}
+      # AWS SDK 의 리전. **명시하지 않으면 IMDS 에 물어본다** — 컨테이너에서 그 길이 막히면
+      # 리전을 못 찾아 KMS 클라이언트가 생성 단계에서 죽고, 앱이 통째로 안 뜬다.
+      #
+      # 2026-08-12 배포가 실제로 그렇게 실패했다. 인스턴스가 IMDSv2 강제에 **홉 제한 1** 이라
+      # 컨테이너(홉 2)에서는 토큰조차 못 받았다. 홉을 2로 올려 고쳤지만, 리전만이라도
+      # 여기서 못박아 두면 그 한 겹에 덜 기댄다. 자격증명은 여전히 인스턴스 역할에서 온다.
+      AWS_REGION: ${AWS_REGION:-ap-northeast-2}
+      # ---- 실사용자 신청·승인 (Phase 3) ----
+      # 데모 기간에만 켠다. 끄면 신청·승인 경로가 통째로 404가 된다.
+      FINNTECH_INTAKE_ENABLED: "${FINNTECH_INTAKE_ENABLED:-false}"
+      # ---- 감사 앵커 외부 사본 (Phase 5-1) ----
+      # TSA 토큰이 위조 대상과 같은 DB에 있으면 도장을 새로 받아 바꿔치기하는 공격이 통과한다.
+      # Object Lock(Compliance) 버킷에 사본을 남겨야 그것이 드러난다.
+      FINNTECH_ANCHOR_ARCHIVE_ENABLED: "${FINNTECH_ANCHOR_ARCHIVE_ENABLED:-false}"
+      FINNTECH_ANCHOR_BUCKET: ${FINNTECH_ANCHOR_BUCKET:-}
       # 운영 관측(/api/ops/health)은 켜 둔다 — 개인정보가 없고, 켜야 볼 수 있는 관측은 안 보게 된다.
       FINNTECH_OPS_ENABLED: "${FINNTECH_OPS_ENABLED:-true}"
       # 시각 기준. 비우면 실시간. 고정할 때는 마이데이터의 MYDATA_NOW와 같은 날짜로 함께 넣는다(§8-D).
@@ -134,6 +214,10 @@ services:
       FREE_CHANNEL_CONCURRENCY: ${FREE_CHANNEL_CONCURRENCY:-6}
       FREE_CHANNEL_MAX_QUEUED: ${FREE_CHANNEL_MAX_QUEUED:-500}
       TSA_ENABLED: ${TSA_ENABLED:-false}
+    volumes:
+      # 제공자의 인증서를 믿기 위한 신뢰저장소. **개인키는 안 들어 있다** —
+      # 여기 붙는 것은 공개 인증서뿐이라 본체가 새도 제공자를 사칭할 수 없다.
+      - /opt/finntech/tls:/tls:ro
     mem_limit: 1280m            # 힙 ≈ 768m. 분석 엔진·EBM 스코어러가 있어 넷 중 가장 크다.
     # internal로 마이데이터·DB에 닿고, edge로 Gemini·TSA·금리조회 아웃바운드를 유지한다.
     networks: [internal, edge]
@@ -180,6 +264,17 @@ networks:
   internal:
     internal: true
   edge:
+  # 제공자가 **KMS 하나만** 부르려고 쓰는 망. 도커 수준에서는 평범한 브리지라 그대로 두면
+  # 인터넷이 열린다 — 좁히는 것은 호스트의 iptables(`scripts/kms-egress-guard.sh`)다.
+  # 대역을 여기 고정하는 이유가 그것이다. **이 값이 바뀌면 방화벽 규칙도 함께 바뀌어야 한다.**
+  #
+  # 172.20 이 아니라 172.21 인 이유: `app_default` 가 172.20.0.0/16 을 통째로 쓰고 있어
+  # 겹쳤다(2026-08-13 배포 실패 — `Pool overlaps with other one on this address space`).
+  # 쓰고 있는 대역은 172.17(bridge)·172.18(edge)·172.19(internal)·172.20(default) 이다.
+  kms-egress:
+    ipam:
+      config:
+        - subnet: 172.21.53.0/24
 
 volumes:
   mysql-data:

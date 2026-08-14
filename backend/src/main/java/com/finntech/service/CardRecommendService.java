@@ -27,8 +27,10 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 /**
  * 카드 추천 (개편안 {@code s-compare}).
@@ -88,6 +90,9 @@ import java.util.TreeMap;
  */
 @Service
 public class CardRecommendService {
+
+    /** 브랜드 대조에서 지우는 글자 — 띄어쓰기·기호. 한글·영숫자만 남긴다. */
+    private static final Pattern NON_ALNUM = Pattern.compile("[^0-9A-Za-z가-힣]+");
 
     private static final BigDecimal MONTHS_PER_YEAR = BigDecimal.valueOf(12);
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
@@ -266,22 +271,27 @@ public class CardRecommendService {
         Set<String> claimed = new java.util.HashSet<>();
 
         // ① 브랜드 — 긴 이름부터. 한 가맹점은 한 번만 걸린다.
-        record Hit(CardBenefit benefit, String brand) {}
+        record Hit(CardBenefit benefit, String brand, String folded) {}
         List<Hit> byBrand = new ArrayList<>();
         for (CardBenefit benefit : open) {
             for (CardBenefitTarget target : benefit.getTargets()) {
                 if (CardBenefitTarget.Kind.BRAND.name().equals(target.getKind())) {
-                    byBrand.add(new Hit(benefit, target.getValue()));
+                    byBrand.add(new Hit(benefit, target.getValue(), foldBrand(target.getValue())));
                 }
             }
         }
-        byBrand.sort(Comparator.comparingInt((Hit h) -> h.brand().length()).reversed()
+        byBrand.sort(Comparator.comparingInt((Hit h) -> h.folded().length()).reversed()
                 .thenComparing(h -> h.benefit().getSortNo())
                 .thenComparing(Hit::brand));
+        Map<String, String> foldedMerchant = new TreeMap<>();
+        for (String merchant : spend.byMerchant().keySet()) {
+            foldedMerchant.put(merchant, foldBrand(merchant));
+        }
         for (Hit hit : byBrand) {
+            if (hit.folded().isEmpty()) continue;
             for (Map.Entry<String, BigDecimal> e : spend.byMerchant().entrySet()) {
                 if (claimed.contains(e.getKey())) continue;
-                if (!e.getKey().contains(hit.brand())) continue;
+                if (!foldedMerchant.get(e.getKey()).contains(hit.folded())) continue;
                 claimed.add(e.getKey());
                 out.merge(hit.benefit(), e.getValue(), BigDecimal::add);
             }
@@ -309,6 +319,23 @@ public class CardRecommendService {
             }
         }
         return out;
+    }
+
+    /**
+     * 브랜드 대조용 접기 — 띄어쓰기·기호를 지우고 소문자로 만든다.
+     *
+     * <p>공시와 승인내역이 같은 브랜드를 다르게 적는다. '투썸 플레이스'와 '투썸플레이스',
+     * '디즈니+'와 '디즈니플러스', 'LG U+'와 'LGU+', '29CM'과 '29cm'. 글자만 남기면
+     * 한 값이 된다. 실측(2026-08-14): 카드 브랜드 257종 중 매칭되는 것이 120종에서
+     * 132종으로 늘었다 — 배달의 민족·투썸 플레이스·유튜브 프리미엄 등이 살아났다.
+     *
+     * <p><b>브랜드를 합치지는 않는다.</b> 접어도 '쿠팡'·'쿠팡이츠'·'쿠팡플레이'는 서로 다른
+     * 값으로 남는다. 이 셋은 카드가 실제로 다른 묶음에 넣으므로(BC 바로 ZONE: 쿠팡=LIFE,
+     * 쿠팡이츠=EAT) 합치면 한 결제가 엉뚱한 묶음의 한도를 갉아먹는다. 긴 이름부터 거는
+     * 규칙이 그래서 있다.
+     */
+    private static String foldBrand(String value) {
+        return value == null ? "" : NON_ALNUM.matcher(value).replaceAll("").toLowerCase(Locale.ROOT);
     }
 
     /**

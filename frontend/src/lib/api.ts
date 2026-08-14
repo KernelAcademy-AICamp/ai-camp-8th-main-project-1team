@@ -321,6 +321,13 @@ export interface VerifyResult {
    * 앞사람이 쓰던 브라우저에서 인증하면 여기로 갈아타야 한다. 실패하면 null.
    */
   userId: number | null;
+  /**
+   * **이 앱의 로그인 열쇠.** 인증을 통과했을 때만 온다.
+   *
+   * 비밀번호를 따로 두지 않는 이유가 이것이다 — 신원 셋으로 이미 사람을 확인했으므로
+   * 그 자리에서 토큰을 받으면 그게 로그인이다. 이후 모든 요청이 이 값을 헤더에 싣는다.
+   */
+  authToken: string | null;
 }
 export interface MyDataCompany { id: number; name: string; imgUrl: string }
 export interface MyDataLinkResult { cardCount: number; paymentCount: number; bankCount: number }
@@ -979,10 +986,30 @@ async function fail(res: Response, path: string): Promise<never> {
   throw new ApiError(res.status, message);
 }
 
+/**
+ * 인증 토큰 — 본인인증을 통과하면 서버가 준다. 이 앱의 로그인이 그것이다.
+ *
+ * <b>모든 요청이 이 한 곳을 지난다.</b> 그래서 헤더를 여기 한 줄로 붙일 수 있었다 —
+ * 서버 쪽도 같은 이유로 컨트롤러 43개를 안 고치고 필터 한 겹으로 끝냈다.
+ */
+const TOKEN_KEY = 'auth_token';
+const readToken = () => { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } };
+export const saveAuthToken = (token: string) => {
+  try { localStorage.setItem(TOKEN_KEY, token); } catch { /* 사파리 프라이빗 등 */ }
+};
+export const clearAuthToken = () => {
+  try { localStorage.removeItem(TOKEN_KEY); } catch { /* noop */ }
+};
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  const token = readToken();
+  if (token) headers['X-Auth-Token'] = token;
+
   const res = await fetch(`${API_BASE}${path}`, {
     method,
-    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    headers: Object.keys(headers).length > 0 ? headers : undefined,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (!res.ok) return fail(res, path);
@@ -1212,9 +1239,14 @@ export const api = {
    * [dev·데모 전용] 생성 마이데이터 CI를 직접 연결한다(가상 인증 우회, §13-11).
    * 생성 CI는 GenSeed 해시라 정상 verify로 못 맞추므로 데모에선 CI를 직접 주입한다.
    */
-  linkSynthetic: (ci: string, companyIds: number[]) =>
-    post<{ userId: number; ci: string; cardCount: number; paymentCount: number }>(
-      '/api/dev/link-synthetic', { ci, companyIds }),
+  // 이 경로는 본인인증을 건너뛰므로 서버가 토큰을 같이 준다. **바로 저장해야 한다** —
+  // 안 그러면 사람을 바꾼 직후 모든 요청이 앞사람 토큰으로 나가 403이 된다.
+  linkSynthetic: async (ci: string, companyIds: number[]) => {
+    const r = await post<{ userId: number; ci: string; cardCount: number; paymentCount: number;
+                           authToken?: string }>('/api/dev/link-synthetic', { ci, companyIds });
+    if (r.authToken) saveAuthToken(r.authToken);
+    return r;
+  },
 
   /* ── 소비 분석(②③④⑤) ── */
   analysis: (userId: number, days = 90) =>
