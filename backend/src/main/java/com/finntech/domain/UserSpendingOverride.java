@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "user_spending_override",
         uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "category2"}))
+// 개인화가 바뀌면 그 카테고리의 낭비 라벨이 통째로 뒤집힌다 — 소비 원장(V34)이 따라와야 한다.
+@jakarta.persistence.EntityListeners(com.finntech.ledger.LedgerDirtyListener.class)
 public class UserSpendingOverride {
 
     @Id

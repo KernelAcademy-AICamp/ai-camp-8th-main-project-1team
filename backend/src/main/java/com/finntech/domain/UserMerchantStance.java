@@ -20,6 +20,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "user_merchant_stance",
         uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "business_number"}))
+// 성향이 바뀌면 그 가맹점의 낭비 임계가 바뀐다 — 정리된 소비 원장(V34)의 사실 칸이 따라와야 한다.
+@jakarta.persistence.EntityListeners(com.finntech.ledger.LedgerDirtyListener.class)
 public class UserMerchantStance {
 
     /** 판정을 얼마나 엄격하게 할 것인가. */
