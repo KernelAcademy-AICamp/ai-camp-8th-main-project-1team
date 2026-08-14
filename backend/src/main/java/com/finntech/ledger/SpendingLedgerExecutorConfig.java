@@ -51,7 +51,26 @@ public class SpendingLedgerExecutorConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SpendingLedgerExecutorConfig.class);
 
+    /**
+     * 시험용 — <b>부른 그 자리에서</b> 돈다.
+     *
+     * <p>배경 스레드가 도는 채로 단정을 걸면 경주가 된다. 더 나쁜 것은 <b>시험 사이로 흘러드는
+     * 것</b>이다: 앞 시험이 낸 판정 기록이 뒤 시험의 {@code deleteAll()} 뒤에 도착해 없는 줄을
+     * 고치려 든다(CI 실측 2026-08-14: {@code StaleObjectStateException}). 같은 스레드로 두면
+     * 일이 시험 안에서 끝나 그 창이 없어진다.
+     *
+     * <p>{@code FollowUpExecutorConfig} 도 같은 이유로 시험에 같은 스레드 일꾼을 준다.
+     */
     @Bean(BEAN)
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+            name = "finntech.ledger.async", havingValue = "false")
+    public Executor sameThreadSpendingLedgerExecutor() {
+        return Runnable::run;
+    }
+
+    @Bean(BEAN)
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+            name = "finntech.ledger.async", havingValue = "true", matchIfMissing = true)
     public Executor spendingLedgerExecutor() {
         return new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
                 new ArrayBlockingQueue<>(QUEUE),
