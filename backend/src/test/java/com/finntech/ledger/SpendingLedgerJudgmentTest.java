@@ -162,13 +162,34 @@ class SpendingLedgerJudgmentTest {
         List<FixedGroup> groups = detector.fixedGroups(user.getId(), LocalDateTime.of(2026, 8, 1, 12, 0));
         fixedRecorder.record(user.getId(), groups);
 
-        factsWriter.write(user.getId());   // 사실 칸을 다시 쓰면 facts_updated_at 이 앞선다
+        String changed = UserPayment.rowId(user.getId(), "real-sub5");
+        transactions.executeWithoutResult(status ->
+                payments.findById(changed).orElseThrow().confirmCategory2("쇼핑", "USER"));
+        factsWriter.write(user.getId());
 
-        Map<String, SpendingLedger> rows = rowsByPaymentId();
-        SpendingLedger row = rows.get(UserPayment.rowId(user.getId(), "real-sub5"));
+        SpendingLedger row = rowsByPaymentId().get(changed);
         assertTrue(row.getFixedRecordedAt().isBefore(row.getFactsUpdatedAt()),
                 "판정이 사실보다 낡았다는 것이 시각 비교로 드러나야 한다");
         assertTrue(fixedRecorder.record(user.getId(), groups) > 0, "낡았으면 다시 쓴다");
+    }
+
+    @Test
+    @DisplayName("달라진 것이 없으면 사실 칸도 손대지 않는다 — 낡음이 '누가 돌렸나'가 되면 안 된다")
+    void 안_바뀌면_시각도_그대로다() {
+        // 늘 새 시각을 찍으면 분류 한 건을 고쳤을 뿐인데 그 사용자의 모든 줄이 다시 써지고,
+        // 판정 칸이 통째로 낡아 보인다. 그러면 낡음 신호로는 아무것도 판단할 수 없다.
+        seedSubscriptionAndOneOff();
+        fixedRecorder.record(user.getId(),
+                detector.fixedGroups(user.getId(), LocalDateTime.of(2026, 8, 1, 12, 0)));
+        Map<String, LocalDateTime> before = rowsByPaymentId().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getFactsUpdatedAt()));
+
+        assertEquals(0, factsWriter.write(user.getId()).written(), "달라진 줄이 없다");
+
+        rowsByPaymentId().forEach((paymentId, row) ->
+                assertEquals(before.get(paymentId), row.getFactsUpdatedAt(),
+                        paymentId + " 의 사실 기록 시각이 이유 없이 움직였다"));
+        assertEquals(0, ledger.countStaleFixed(), "판정도 낡지 않았어야 한다");
     }
 
     // ── 3층: 낭비 ────────────────────────────────────────────────────────────

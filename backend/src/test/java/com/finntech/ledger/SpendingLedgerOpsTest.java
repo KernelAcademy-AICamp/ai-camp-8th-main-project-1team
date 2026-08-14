@@ -141,10 +141,16 @@ class SpendingLedgerOpsTest {
     void 낡음은_시각으로_안다() {
         backfill.run(false);
         assertEquals(0, ledger.countStaleFixed());
+        assertEquals(0, ledger.countStaleWaste());
 
-        factsWriter.write(user.getId());   // 사실만 다시 쓰면 판정이 그보다 낡는다
+        // 사실이 실제로 바뀌어야 낡는다. 재작성을 돌렸다는 것만으로는 아무것도 안 낡는다 —
+        // 그랬다면 낡음 신호가 "누가 돌렸나"를 뜻하게 되어 쓸모가 없다.
+        transactions.executeWithoutResult(status ->
+                payments.findById(UserPayment.rowId(user.getId(), "real-sub0")).orElseThrow()
+                        .confirmCategory2("쇼핑", "USER"));
+        factsWriter.write(user.getId());
 
-        assertTrue(ledger.countStaleFixed() > 0, "판정이 사실보다 뒤처졌다는 것이 보여야 한다");
-        assertTrue(ledger.countStaleWaste() > 0);
+        assertEquals(1, ledger.countStaleFixed(), "바뀐 그 줄만 낡아야 한다");
+        assertEquals(1, ledger.countStaleWaste());
     }
 }

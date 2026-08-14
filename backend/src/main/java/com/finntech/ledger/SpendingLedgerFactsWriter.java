@@ -93,7 +93,7 @@ public class SpendingLedgerFactsWriter {
         this.selfProvider = selfProvider;
     }
 
-    /** 한 사용자를 다시 쓴 결과 — 로그와 운영 점검이 읽는다. */
+    /** 한 사용자를 다시 쓴 결과 — {@code written} 은 <b>실제로 달라진</b> 줄 수다. */
     public record Result(long userId, int written, int removed, int months, boolean skipped) {
 
         static Result skipped(long userId, int removed) {
@@ -163,19 +163,23 @@ public class SpendingLedgerFactsWriter {
             existing.put(row.getPaymentId(), row);
         }
         List<SpendingLedger> fresh = new ArrayList<>();
+        int changed = 0;
         for (UserPayment payment : monthRows) {
             SpendingLedger.Facts facts = SpendingLedgerRowMapper.factsOf(
                     payment, lookup.merchantFactsOf(payment), props.getDaypart(),
                     industryMapper::isPaymentAgency);
             SpendingLedger row = existing.get(payment.getPaymentId());
             if (row != null) {
-                row.applyFacts(facts, now);      // 더티체킹이 실제로 달라진 줄만 UPDATE 한다
+                // 달라진 줄만 시각을 새로 찍고, 그 줄만 UPDATE 가 나간다. 안 그러면 분류 한 건을
+                // 고쳤을 뿐인데 그 사용자의 수천 줄이 다시 써지고 판정 칸이 통째로 낡아 보인다.
+                if (row.applyFacts(facts, now)) changed++;
             } else {
                 fresh.add(new SpendingLedger(payment.getPaymentId(), facts, now));
+                changed++;
             }
         }
         if (!fresh.isEmpty()) ledger.saveAll(fresh);
-        return monthRows.size();
+        return changed;
     }
 
     /**

@@ -305,8 +305,23 @@ public class SpendingLedger {
         }
     }
 
-    /** 사실 칸을 갈아 끼운다. 고정지출·낭비 칸은 건드리지 않는다 — 그것들은 제 사건에 따라온다. */
-    public void applyFacts(Facts facts, LocalDateTime at) {
+    /**
+     * 사실 칸을 갈아 끼운다. 고정지출·낭비 칸은 건드리지 않는다 — 그것들은 제 사건에 따라온다.
+     *
+     * <p><b>달라진 것이 없으면 {@link #factsUpdatedAt} 도 손대지 않는다.</b> 이유가 둘이다.
+     *
+     * <ul>
+     *   <li>시각을 늘 새로 찍으면 Hibernate 가 <b>모든 줄에 UPDATE 를 낸다</b> — 분류 한 건을
+     *       확정했을 뿐인데 그 사용자의 수천 줄이 다시 써진다(2026-08-14 예행에서 실측: 한 줄을
+     *       고쳤는데 17줄이 전부 갱신됐다).
+     *   <li>그러면 판정 칸이 <b>통째로 낡은 것으로 보인다</b>. 낡음의 뜻이 "사실이 바뀌었다"가
+     *       아니라 "누가 재작성을 돌렸다"가 되어, 그 신호로는 아무것도 판단할 수 없다.
+     * </ul>
+     *
+     * @return 실제로 달라진 것이 있었나
+     */
+    public boolean applyFacts(Facts facts, LocalDateTime at) {
+        if (factsUpdatedAt != null && facts.equals(currentFacts())) return false;
         this.userId = facts.userId();
         this.monthKey = facts.monthKey();
         this.paidAt = facts.paidAt();
@@ -329,6 +344,15 @@ public class SpendingLedger {
         this.category2Llm = facts.category2Llm();
         this.category2LlmSource = facts.category2LlmSource();
         this.factsUpdatedAt = at;
+        return true;
+    }
+
+    /** 지금 담고 있는 사실 — 들어온 것과 견주어 <b>정말 달라졌는지</b> 보려고 만든다. */
+    private Facts currentFacts() {
+        return new Facts(userId, monthKey, paidAt, paidOn, dayOfMonth, dayOfWeek, daypart, origin,
+                businessNumber, paymentAgency, merchantName, brand, merchantAddress, merchantKey,
+                amount, ntsIndustryCode, registryIndustryName,
+                category2, category2Source, category2Llm, category2LlmSource);
     }
 
     /** 고정지출 칸을 갈아 끼운다. */
