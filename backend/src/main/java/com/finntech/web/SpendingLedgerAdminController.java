@@ -3,6 +3,7 @@ package com.finntech.web;
 import com.finntech.ledger.SpendingLedgerBackfill;
 import com.finntech.ledger.SpendingLedgerDrainer;
 import com.finntech.ledger.SpendingLedgerFixedRecorder;
+import com.finntech.ledger.SpendingLedgerJudgmentRefresher;
 import com.finntech.ledger.SpendingLedgerVerifier;
 import com.finntech.ml.WasteScoringService;
 import com.finntech.repository.AppUserRepository;
@@ -51,6 +52,7 @@ public class SpendingLedgerAdminController {
 
     private final SpendingLedgerBackfill backfill;
     private final SpendingLedgerVerifier verifier;
+    private final SpendingLedgerJudgmentRefresher refresher;
     private final SpendingLedgerDrainer drainer;
     private final SpendingLedgerRepository ledger;
     private final SpendingLedgerDirtyRepository dirty;
@@ -59,11 +61,13 @@ public class SpendingLedgerAdminController {
     private final WasteScoringService wasteScoring;
 
     public SpendingLedgerAdminController(SpendingLedgerBackfill backfill, SpendingLedgerVerifier verifier,
+                                       SpendingLedgerJudgmentRefresher refresher,
                                        SpendingLedgerDrainer drainer, SpendingLedgerRepository ledger,
                                        SpendingLedgerDirtyRepository dirty, UserPaymentRepository payments,
                                        AppUserRepository users, WasteScoringService wasteScoring) {
         this.backfill = backfill;
         this.verifier = verifier;
+        this.refresher = refresher;
         this.drainer = drainer;
         this.ledger = ledger;
         this.dirty = dirty;
@@ -90,6 +94,16 @@ public class SpendingLedgerAdminController {
         return userIds == null || userIds.isEmpty()
                 ? verifier.verify(users)
                 : verifier.verifyUsers(userIds);
+    }
+
+    /**
+     * 판정이 낡은 사용자를 지금 갱신한다 — 밤 배치를 손으로 당겨 부르는 문.
+     *
+     * <p>배치가 하루 한 번이라, 방금 들어온 사용자의 고정지출·낭비를 바로 보고 싶을 때 쓴다.
+     */
+    @PostMapping("/spending-ledger/refresh")
+    public SpendingLedgerJudgmentRefresher.Result refresh() {
+        return refresher.refreshStale();
     }
 
     /** 대기 중인 재작성을 지금 돌린다 — 배수가 멎어 있을 때 손으로 민다. */

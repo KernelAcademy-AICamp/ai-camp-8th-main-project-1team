@@ -66,6 +66,7 @@ class SpendingLedgerAdminOnlyTest {
                 "/api/admin/spending-ledger/backfill",
                 "/api/admin/spending-ledger/verify",
                 "/api/admin/spending-ledger/drain",
+                "/api/admin/spending-ledger/refresh",
                 "/api/admin/spending-ledger/health");
     }
 
