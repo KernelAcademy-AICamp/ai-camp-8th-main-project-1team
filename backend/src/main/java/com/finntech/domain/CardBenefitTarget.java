@@ -39,9 +39,19 @@ public class CardBenefitTarget {
 
     /**
      * {@code BRAND} 브랜드명(1순위) · {@code AXIS} 카드혜택 축(2순위) ·
-     * {@code SCOPE} 둘 다 아닌 서술('해외 가맹점'). {@code SCOPE} 는 매칭에 안 쓰고 표시만 한다.
+     * {@code ALL} 전 가맹점('국내 가맹점'·'국내/외 모든 가맹점') ·
+     * {@code SCOPE} 넷 다 아닌 서술('해외 가맹점'). {@code SCOPE} 는 매칭에 안 쓰고 표시만 한다.
+     *
+     * <p><b>{@code ALL} 과 {@code SCOPE} 를 가르는 이유.</b> 페이북 '기본 적립 1%'처럼 전
+     * 가맹점이 대상인 혜택은 <b>셀 것이 없는 게 아니라 전부가 대상</b>이다. 둘을 뭉쳐 놓으면
+     * 기본 적립이 통째로 계산에서 빠진다. 반대로 '해외 가맹점'은 국내 승인내역으로 판정할 수
+     * 없어 표시만 한다 — 같은 "브랜드도 축도 아님"이지만 계산에서의 자리가 정반대다.
+     *
+     * <p>{@code ALL} 은 {@code build_catalog.py} 가 붙인다(그 파일의 {@code ALL_MERCHANT}).
+     * <b>여기 없으면 카탈로그 적재가 {@code No enum constant} 로 죽고, 기동이 통째로 막힌다</b>
+     * — 2026-08-14 실제로 발생해 스프링 컨텍스트를 쓰는 시험 90개가 함께 넘어갔다.
      */
-    public enum Kind { BRAND, AXIS, SCOPE }
+    public enum Kind { BRAND, AXIS, ALL, SCOPE }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
