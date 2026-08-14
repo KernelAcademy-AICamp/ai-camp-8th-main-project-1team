@@ -86,7 +86,27 @@ public class SpendingLedgerVerifier {
         }
         targets.sort(java.util.Comparator.comparing(AppUser::getId));   // 정렬 고정(원칙 3)
         if (targets.size() > limit) targets = targets.subList(0, limit);
+        return verifyAll(targets);
+    }
 
+    /**
+     * <b>고른 사용자</b>만 견준다 — 누구를 볼지 부르는 쪽이 정한다.
+     *
+     * <p>{@link #verify(int)} 는 번호 순으로 앞에서 {@code limit} 명을 자르는데, 그러면 "무엇을
+     * 보고 있는지"가 그 순간의 사용자 목록에 달린다. 특정 사용자를 짚어 보려는 쪽
+     * (운영이 어긋남을 신고받았을 때·시험)이 그 우연에 기대지 않게 한다.
+     */
+    @Transactional(readOnly = true)
+    public Result verifyUsers(List<Long> userIds) {
+        List<AppUser> targets = new ArrayList<>();
+        for (Long userId : userIds) {
+            users.findById(userId).filter(AppUser::isRealPerson).ifPresent(targets::add);
+        }
+        targets.sort(java.util.Comparator.comparing(AppUser::getId));   // 정렬 고정(원칙 3)
+        return verifyAll(targets);
+    }
+
+    private Result verifyAll(List<AppUser> targets) {
         int checkedRows = 0;
         int mismatched = 0;
         List<Long> mismatchedUsers = new ArrayList<>();

@@ -17,6 +17,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -90,11 +91,45 @@ class SpendingLedgerOpsTest {
     }
 
     @Test
+    @DisplayName("앞에 실사용자가 아무리 많아도 짚은 사람은 본다 — 표본 자르기에 기대지 않는다")
+    void 표본_자르기에_기대지_않는다() {
+        // CI 실측(2026-08-14): 앞선 시험들이 만든 실사용자가 쌓여 이 시험의 사용자가
+        // `verify(10)` 의 앞 열 명 밖으로 밀렸고, 어긋남을 넣어 두고도 "0건"이 나왔다.
+        // 내 기계에서는 실행 순서가 달라 통과했다 — 그래서 조건을 여기서 직접 만든다.
+        for (int i = 0; i < 12; i++) {
+            AppUser earlier = users.save(new AppUser("ops-앞선-" + System.nanoTime() + "-" + i,
+                    new BigDecimal("3000000"), new BigDecimal("1000000"), 6));
+            earlier.setRealPerson(true);
+            users.save(earlier);
+        }
+        AppUser later = users.save(new AppUser("ops-나중-" + System.nanoTime(),
+                new BigDecimal("3000000"), new BigDecimal("1000000"), 6));
+        later.setRealPerson(true);
+        later = users.save(later);
+        payments.save(new UserPayment(UserPayment.rowId(later.getId(), "real-solo"), later.getId(),
+                "S1", 9001L, LocalDate.of(2026, 8, 9).atTime(12, 41), "642004", "편의점",
+                3200, "GS25", "2345678901"));
+        factsWriter.write(later.getId());
+        payments.deleteById(UserPayment.rowId(later.getId(), "real-solo"));   // 유령 줄을 남긴다
+
+        SpendingLedgerVerifier.Result byPick = verifier.verifyUsers(List.of(later.getId()));
+        SpendingLedgerVerifier.Result bySample = verifier.verify(10);
+
+        assertTrue(byPick.mismatched() > 0, "짚어서 부르면 번호가 뒤여도 본다");
+        assertEquals(1, byPick.checkedUsers(), "짚은 한 명만 본다");
+        // 대조군 — 표본 자르기는 이 사용자를 **아예 안 본다**. 그래서 여기 기대면
+        // "어긋남이 없다"가 "안 봤다"를 뜻하게 된다. CI 가 초록불을 준 이유가 그것이다.
+        assertTrue(bySample.checkedUsers() <= 10, "표본은 열 명까지다");
+        assertFalse(bySample.mismatchedUsers().contains(later.getId()),
+                "번호가 뒤인 사용자는 표본에 안 들어간다");
+    }
+
+    @Test
     @DisplayName("맞는 표에서는 어긋남이 0")
     void 맞으면_어긋남이_없다() {
         backfill.run(false);
 
-        SpendingLedgerVerifier.Result result = verifier.verify(10);
+        SpendingLedgerVerifier.Result result = verifier.verifyUsers(List.of(user.getId()));
 
         assertEquals(0, result.mismatched(), "어긋남 표본: " + result.samples());
         assertTrue(result.checkedRows() >= 6);
@@ -112,7 +147,7 @@ class SpendingLedgerOpsTest {
                         .confirmCategory2("구독·콘텐츠", "USER"));
         dirty.deleteAll();
 
-        SpendingLedgerVerifier.Result result = verifier.verify(10);
+        SpendingLedgerVerifier.Result result = verifier.verifyUsers(List.of(user.getId()));
 
         assertTrue(result.mismatched() > 0, "분류가 갈렸는데 못 찾았다");
         assertTrue(result.mismatchedUsers().contains(user.getId()));
@@ -130,7 +165,7 @@ class SpendingLedgerOpsTest {
         dirty.deleteAll();
         payments.deleteById(UserPayment.rowId(user.getId(), "real-sub0"));
 
-        SpendingLedgerVerifier.Result result = verifier.verify(10);
+        SpendingLedgerVerifier.Result result = verifier.verifyUsers(List.of(user.getId()));
 
         assertTrue(result.samples().stream().anyMatch(m -> m.column().equals("(유령 줄)")),
                 "없어진 결제의 줄이 남아 있으면 읽는 쪽이 유령을 본다: " + result.samples());

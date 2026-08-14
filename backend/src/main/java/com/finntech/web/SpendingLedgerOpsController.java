@@ -65,10 +65,18 @@ public class SpendingLedgerOpsController {
         return backfill.run(dryRun);
     }
 
-    /** 사실 칸을 다시 만들어 저장된 줄과 견준다 — 쓰지 않는다. 어긋난 사용자는 표시만 남긴다. */
+    /**
+     * 사실 칸을 다시 만들어 저장된 줄과 견준다 — 쓰지 않는다. 어긋난 사용자는 표시만 남긴다.
+     *
+     * <p>{@code userIds} 를 주면 <b>그 사람들만</b> 본다. 안 주면 번호 순으로 앞에서
+     * {@code users} 명을 뜬금 표본으로 본다 — 신고받은 사용자를 짚어 보려면 앞의 형태를 쓴다.
+     */
     @PostMapping("/spending-ledger/verify")
-    public SpendingLedgerVerifier.Result verify(@RequestParam(defaultValue = "5") int users) {
-        return verifier.verify(users);
+    public SpendingLedgerVerifier.Result verify(@RequestParam(defaultValue = "5") int users,
+                                                @RequestParam(required = false) List<Long> userIds) {
+        return userIds == null || userIds.isEmpty()
+                ? verifier.verify(users)
+                : verifier.verifyUsers(userIds);
     }
 
     /** 대기 중인 재작성을 지금 돌린다 — 배수가 멎어 있을 때 손으로 민다. */
