@@ -28,10 +28,14 @@ export interface CardOffer {
   tint: string;
   mark: string;
   footer: string;
-  /** 연 예상 절감액(원). 연회비를 뺀 값이다. */
-  yearlySaving: number;
-  /** 연간 혜택 한도에 걸렸으면 그 한도, 아니면 null. */
-  cappedAt: number | null;
+  /**
+   * 내 소비와 겹친 대상 수. **순위의 근거이자 우리만 할 수 있는 말이다** — 카드 비교
+   * 서비스는 "이 카드는 커피 5%"까지만 말하고, 마이데이터가 있어야 "회원님이 자주 가는
+   * 스타벅스가 그 대상"을 말할 수 있다.
+   */
+  matchCount: number;
+  /** 겹친 이름 — 브랜드 먼저, 축 나중. 화면이 그대로 보여줘 사용자가 반박할 수 있게 한다. */
+  matched: string[];
   rows: CardBenefitRow[];
   /**
    * 공시 기준일(심의필 날짜, `2025-11-07`). **화면에 반드시 병기한다** — 혜택 개정 추적이
@@ -46,8 +50,11 @@ export interface CardRecommend {
   /** "2026.05 ~ 2026.07" — 무엇을 근거로 셌는지. */
   periodLabel: string;
   months: number;
-  /** 전월실적을 어느 달로 셌는지. "2026.06". */
-  performanceMonth: string;
+  /**
+   * 겹침을 어느 구간에서 셌는지. "2026.04 ~ 2026.06".
+   * 실적은 판정하지 않으므로 예전 이름(performanceMonth)은 버렸다.
+   */
+  spendWindow: string;
 }
 
 export interface AlertItem {

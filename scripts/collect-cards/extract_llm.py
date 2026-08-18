@@ -30,7 +30,14 @@ MIN_CHARS_PER_PAGE = 200
 # 그대로 첨부해 모델이 화면대로 읽게 한다. 요청 한 건의 상한은 base64로 부푼 뒤 기준이다.
 MAX_INLINE_PDF_BYTES = 14 * 1024 * 1024
 TEMPERATURES = (0.0, 0.2)
-MAX_ATTEMPTS = 3
+MAX_ATTEMPTS = 5
+# 요청 한도(429)·일시 장애(503)는 **분 단위로 풀린다.** 예전에는 2초·4초만 쉬고 세 번
+# 만에 포기했는데, 그 6초는 한도 창(1분)보다 훨씬 짧아 세 번 다 같은 429를 맞았다 —
+# KB 387장 중 183장이 그렇게 한꺼번에 실패했다(2026-08-14).
+# 서버가 `Retry-After` 를 주면 그 값을 따르고, 없으면 아래 간격으로 물러선다.
+RATE_LIMIT_STATUSES = {429, 500, 503}
+RATE_LIMIT_BACKOFF = (20, 45, 90, 180)
+MAX_RETRY_WAIT = 300
 MAX_PRODUCT_ID_LENGTH = 30
 ISSUER_PREFIX = {
     "삼성카드": "SAM-", "현대카드": "HYU-", "롯데카드": "LOT-",
@@ -324,7 +331,7 @@ def build_prompt(text: str, metadata: Dict[str, Any], examples: str, attached_pd
         "issuer": metadata.get("issuer") or "BC카드",
         "name": metadata.get("name") or metadata.get("product_name"),
         "product_id": product_id_for(metadata),
-        "status": "active",
+        "status": status_of(metadata),
         "posted_at": normalize_date(metadata.get("posted_at") or metadata.get("launch_date")),
         "card_type": metadata.get("card_type"),
     }
@@ -407,6 +414,21 @@ def response_text(payload: Dict[str, Any]) -> str:
     return "".join(text_parts)
 
 
+def retry_delay(attempt: int, error: Exception) -> float:
+    """다음 시도까지 쉴 시간(초). 한도에 걸린 것과 그냥 실패한 것을 다르게 다룬다."""
+    status = getattr(error, "code", None)
+    if status in RATE_LIMIT_STATUSES:
+        header = getattr(error, "headers", None)
+        after = header.get("Retry-After") if header else None
+        if after:
+            try:
+                return min(MAX_RETRY_WAIT, max(1.0, float(after)))
+            except ValueError:
+                pass
+        return RATE_LIMIT_BACKOFF[min(attempt - 1, len(RATE_LIMIT_BACKOFF) - 1)]
+    return 2 ** attempt
+
+
 def call_gemini(
         prompt: str,
         temperature: float,
@@ -427,7 +449,7 @@ def call_gemini(
         except (OSError, ValueError, KeyError, RuntimeError, urllib.error.HTTPError) as error:
             last_error = error
             if attempt < MAX_ATTEMPTS:
-                time.sleep(2 ** attempt)
+                time.sleep(retry_delay(attempt, error))
     error_name = type(last_error).__name__ if last_error else "UnknownError"
     raise RuntimeError(f"Gemini 호출/응답 검증 실패({error_name}, {MAX_ATTEMPTS}회)")
 
@@ -589,11 +611,46 @@ def internal_maximum(card: Dict[str, Any]) -> Tuple[Optional[int], bool]:
     return (max(totals) if totals else None), complete
 
 
+def status_of(metadata: Dict[str, Any]) -> str:
+    """공시 목록이 말한 발급 상태. 중단이라고 말하는 신호가 하나라도 있으면 ``stopped``.
+
+    **PDF 본문이 아니라 목록이 정본이다.** 설명서는 중단된 뒤에도 개정되므로(신한 `Love`
+    는 2021-07 중단인데 약관 게시일이 2024-07) 본문으로는 발급 여부를 못 가린다.
+
+    예전에는 이 자리에 ``"active"`` 가 박혀 있었다. 그래서 **발급이 끝난 카드를 담아도
+    발급 중으로 적혀** 신규 발급 추천에 섞였다 — 신청할 수 없는 카드를 권하게 된다.
+    (표 쪽은 이미 갈라 놓았다: `findRecommendable` 이 `status='ACTIVE'` 만 고른다.)
+
+    신호 이름이 카드사마다 다르다. BC `currently_issued`·`issue_status`, 현대 `issued`,
+    롯데 `issuance_ended`, 우리 `suspended_date`, KB `stop_date`, 후보 목록 `active_verified`.
+    빈 값 표기도 갈려서(``''``·``'-'``·``None``) 날짜 칸은 값이 **있을 때만** 중단으로 본다.
+
+    삼성·농협·신한은 목록에 신호가 아예 없다. 그 경우 ``active`` 로 두는데, 이건
+    "발급 중임을 확인했다"가 아니라 **"중단이라는 말이 없다"** 는 뜻이다 — 발급 여부
+    확인은 후보 선정(`select_youth_cards`)이 맡고 그 결과가 `active_verified` 로 온다.
+    """
+    from collector_policy import real_stop_date
+
+    for key in ("active_verified", "currently_issued", "issued"):
+        if metadata.get(key) is False:
+            return "stopped"
+    if metadata.get("issuance_ended") is True:
+        return "stopped"
+    # 먼 미래 날짜(`9999.12.31`)는 "중단일 없음"의 자리표시자다 — 날짜로 읽으면 발급 중인
+    # 카드가 전부 중단으로 뒤집힌다(KB 388장 중 67장, 2026-08-14). 판단은 한 곳에 있다.
+    for key in ("stop_date", "stop_date_raw", "suspended_date", "issuance_ended_raw"):
+        if real_stop_date(metadata.get(key)):
+            return "stopped"
+    if "중단" in str(metadata.get("issue_status") or ""):
+        return "stopped"
+    return "active"
+
+
 def apply_identity(card: Dict[str, Any], metadata: Dict[str, Any]) -> Dict[str, Any]:
     card["issuer"] = metadata.get("issuer") or "BC카드"
     card["name"] = metadata.get("name") or metadata.get("product_name") or card.get("name")
     card["product_id"] = product_id_for(metadata)
-    card["status"] = "active"
+    card["status"] = status_of(metadata)
     card["posted_at"] = normalize_date(metadata.get("posted_at") or metadata.get("launch_date"))
     card["source_url"] = metadata.get("pdf_url") or metadata.get("url")
     if metadata.get("card_type") in {"CREDIT", "CHECK"}:

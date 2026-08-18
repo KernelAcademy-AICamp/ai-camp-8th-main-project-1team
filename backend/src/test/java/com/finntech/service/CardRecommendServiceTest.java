@@ -1,13 +1,8 @@
 package com.finntech.service;
 
 import com.finntech.config.CardRecommendProperties;
-import com.finntech.domain.CardAnnualFee;
 import com.finntech.domain.CardBenefit;
-import com.finntech.domain.CardBenefitCap;
 import com.finntech.domain.CardBenefitTarget;
-import com.finntech.domain.CardCombinedCap;
-import com.finntech.domain.CardExclusion;
-import com.finntech.domain.CardPerformanceTier;
 import com.finntech.domain.CardProduct;
 import com.finntech.domain.Enums;
 import com.finntech.domain.UserPayment;
@@ -52,20 +47,6 @@ class CardRecommendServiceTest {
     private final IndustryCategoryMapper industries = new IndustryCategoryMapper(new ObjectMapper());
     private final CardExclusionPolicy exclusionPolicy = new CardExclusionPolicy(new ObjectMapper());
 
-    /** 대중교통 축인 업종코드 — 시내버스. */
-    private static final String TRANSIT = "602103";
-    /** 카페/디저트 축인 업종코드를 표에서 찾아 쓴다. */
-    private final String cafe = codeOfAxis("카페/디저트");
-    private final String mart = codeOfAxis("마트");
-
-    private String codeOfAxis(String axis) {
-        for (int code = 100000; code < 999999; code++) {
-            String s = String.valueOf(code);
-            if (axis.equals(industries.cardAxisOf(s))) return s;
-        }
-        throw new IllegalStateException(axis + " 축인 업종코드를 표에서 못 찾았다");
-    }
-
     // ── 재료 ────────────────────────────────────────────────────────────────
 
     private UserPayment payment(String ksic, String merchant, int amount) {
@@ -84,21 +65,14 @@ class CardRecommendServiceTest {
         return c;
     }
 
-    private CardBenefit benefit(String group, String rate, CardPerformanceTier requires) {
-        CardBenefit b = new CardBenefit(group, CardBenefit.Kind.DISCOUNT,
-                CardBenefit.Scope.BRAND, 0);
-        b.rate(new BigDecimal(rate), null, null, null);
-        b.conditions(requires, null, "원", null, true, null, true, false, null, null, "결제일 할인");
-        return b;
-    }
-
     private CardRecommendService service(List<CardProduct> catalog, List<UserPayment> lastMonth) {
         CardProductRepository cards = mock(CardProductRepository.class);
         when(cards.findRecommendable()).thenReturn(catalog);
         UserPaymentRepository payments = mock(UserPaymentRepository.class);
         when(payments.findInPeriod(any(), any(), any())).thenReturn(lastMonth);
         return new CardRecommendService(new CardRecommendProperties(), cards, payments,
-                industries, exclusionPolicy);
+                industries, new CardBenefitEstimator(new CardMatcher(), exclusionPolicy),
+                new CardMatcher());
     }
 
     /** 카페 월 50,000 · 대중교통 월 300,000 (관측 1개월). */
@@ -123,217 +97,95 @@ class CardRecommendServiceTest {
     // ── 시험 ────────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("실적 제외를 빼고 구간을 연다 — 안 빼면 못 채운 구간이 열린다")
-    void subtractsPerformanceExclusions() {
-        // 전달 소비 35만 = 카페 5만 + 대중교통 30만. 실적 조건은 30만이다.
-        //   대중교통을 빼는 카드  → 실적 5만  → 구간 안 열림 → 혜택 0
-        //   안 빼는 카드         → 실적 35만 → 구간 열림   → 카페 5만 × 10% = 5,000/월
-        CardProduct excludes = card("교통제외");
-        CardPerformanceTier t1 = new CardPerformanceTier(1, 300_000);
-        excludes.add(t1);
-        excludes.add(new CardExclusion(CardExclusion.Axis.PERFORMANCE, "TRANSIT", "대중교통"));
-        CardBenefit b1 = benefit("카페", "10", t1);
-        b1.add(new CardBenefitTarget("커피", CardBenefitTarget.Kind.BRAND, "스타벅스", null, null, null));
-        excludes.add(b1);
-
-        CardProduct keeps = card("교통포함");
-        CardPerformanceTier t2 = new CardPerformanceTier(1, 300_000);
-        keeps.add(t2);
-        CardBenefit b2 = benefit("카페", "10", t2);
-        b2.add(new CardBenefitTarget("커피", CardBenefitTarget.Kind.BRAND, "스타벅스", null, null, null));
-        keeps.add(b2);
-
-        List<UserPayment> spend = List.of(
-                payment(cafe, "스타벅스 강남점", 50_000),
-                payment(TRANSIT, "서울버스", 300_000));
-
-        var offers = service(List.of(excludes, keeps), spend).recommend(analysis(), NOW).offers();
-
-        assertThat(offers).extracting(CardRecommendService.Offer::name)
-                .as("실적 제외를 뺀 카드는 구간이 안 열려 절감액이 0 이다")
-                .containsExactly("교통포함", "교통제외");
-        assertThat(offers.get(0).yearlySaving()).isEqualByComparingTo(new BigDecimal("60000"));
-        assertThat(offers.get(1).yearlySaving()).isEqualByComparingTo(BigDecimal.ZERO);
-    }
-
-    @Test
-    @DisplayName("실적 충족은 한도를 여는 것이지 한도를 받는 게 아니다")
-    void capOpensButDoesNotPay() {
-        // 커피 20,000 × 7% = 1,400. 한도가 5,000이어도 받는 건 1,400이다.
-        CardProduct c = card("한도카드");
-        CardPerformanceTier tier = new CardPerformanceTier(1, 10_000);
-        c.add(tier);
-        CardBenefit b = benefit("카페", "7", tier);
+    @DisplayName("겹친 곳을 세어 이름과 함께 싣는다 — 우리만 할 수 있는 말이다")
+    void carriesOverlap() {
+        // 카드 비교 서비스는 "이 카드는 커피 5%"까지만 말한다. 우리는 마이데이터가 있어
+        // "회원님이 자주 가는 스타벅스가 그 대상입니다"를 말할 수 있다 — 그것이 3층이다.
+        CardProduct c = card("겹침카드");
+        CardBenefit b = new CardBenefit("커피", CardBenefit.Kind.DISCOUNT, CardBenefit.Scope.BRAND, 0);
+        b.rate(new java.math.BigDecimal("5"), null, null, null);
+        b.conditions(null, null, "원", null, true, null, true, false, null, null, null);
         b.add(new CardBenefitTarget("커피", CardBenefitTarget.Kind.BRAND, "스타벅스", null, null, null));
-        b.add(new CardBenefitCap(tier, 5_000));
+        b.add(new CardBenefitTarget("편의점", CardBenefitTarget.Kind.BRAND, "CU", null, null, null));
+        b.add(new CardBenefitTarget("영화", CardBenefitTarget.Kind.BRAND, "CGV", null, null, null));
         c.add(b);
 
-        var offer = service(List.of(c), List.of(payment(cafe, "스타벅스 강남점", 20_000)))
-                .recommend(analysis(), NOW).offers().get(0);
+        // 겹침은 "자주 가는 곳"이라 방문 문턱(기본 2회)을 넘어야 센다 — 아래 두 시험 참고.
+        var offer = service(List.of(c), List.of(
+                payment("999999", "스타벅스 강남점", 30_000),
+                payment("999999", "스타벅스 역삼점", 30_000),
+                payment("999999", "CU 역삼점", 10_000),
+                payment("999999", "CU 역삼점", 10_000))).recommend(analysis(), NOW).offers().get(0);
 
-        assertThat(offer.yearlySaving()).as("1,400 × 12 = 16,800")
-                .isEqualByComparingTo(new BigDecimal("16800"));
+        assertThat(offer.matched()).as("걸린 이름을 그대로 보여줘 사용자가 반박할 수 있게 한다")
+                .containsExactly("스타벅스", "CU");
+        assertThat(offer.matchCount()).as("CGV 는 안 갔으므로 세지 않는다").isEqualTo(2);
     }
 
     @Test
-    @DisplayName("한도를 넘으면 한도까지만 — 요율만 곱하면 부풀어 오른다")
-    void truncatesAtMonthlyCap() {
-        // 커피 200,000 × 7% = 14,000 인데 한도가 5,000이다.
-        CardProduct c = card("한도카드");
-        CardPerformanceTier tier = new CardPerformanceTier(1, 10_000);
-        c.add(tier);
-        CardBenefit b = benefit("카페", "7", tier);
+    @DisplayName("요율이 없어도 겹침은 센다 — 금액을 안 세니 요율을 물을 이유가 없다")
+    void overlapDoesNotNeedRate() {
+        // 하나카드처럼 대상마다 요율이 다른 표는 묶음 요율이 비어 있다(10 §8.1).
+        // 절감액은 못 세지만 "그 브랜드가 대상이다"는 참이다.
+        CardProduct c = card("요율없는카드");
+        CardBenefit b = new CardBenefit("하나머니 적립", CardBenefit.Kind.POINT, CardBenefit.Scope.BRAND, 0);
+        b.conditions(null, null, "원", null, true, null, true, false, null, null, null);
         b.add(new CardBenefitTarget("커피", CardBenefitTarget.Kind.BRAND, "스타벅스", null, null, null));
-        b.add(new CardBenefitCap(tier, 5_000));
         c.add(b);
-
-        var offer = service(List.of(c), List.of(payment(cafe, "스타벅스 강남점", 200_000)))
-                .recommend(analysis(), NOW).offers().get(0);
-
-        assertThat(offer.yearlySaving()).as("5,000 × 12 = 60,000")
-                .isEqualByComparingTo(new BigDecimal("60000"));
-    }
-
-    @Test
-    @DisplayName("통합한도가 개별 한도 합보다 작으면 통합한도가 이긴다 — 페이북 실측 구조")
-    void truncatesAtCombinedCap() {
-        // 두 묶음이 각 5,000 한도인데 통합은 8,000. 개별로만 자르면 10,000 이 된다.
-        CardProduct c = card("통합한도카드");
-        CardPerformanceTier tier = new CardPerformanceTier(1, 10_000);
-        c.add(tier);
-        for (String[] pair : new String[][]{{"종합몰", "쿠팡"}, {"패션몰", "무신사"}}) {
-            CardBenefit b = new CardBenefit(pair[0], CardBenefit.Kind.POINT, CardBenefit.Scope.BRAND, 0);
-            b.rate(new BigDecimal("10"), null, null, null);
-            b.conditions(tier, "특별적립", "원", null, true, null, true, false, null, null, null);
-            b.add(new CardBenefitTarget(pair[0], CardBenefitTarget.Kind.BRAND, pair[1], null, null, null));
-            b.add(new CardBenefitCap(tier, 5_000));
-            c.add(b);
-        }
-        c.add(new CardCombinedCap("특별적립", tier, 8_000));
 
         var offer = service(List.of(c), List.of(
-                payment(mart, "쿠팡", 100_000), payment(mart, "무신사", 100_000)))
+                payment("999999", "스타벅스 강남점", 30_000),
+                payment("999999", "스타벅스 강남점", 30_000)))
                 .recommend(analysis(), NOW).offers().get(0);
 
-        assertThat(offer.yearlySaving()).as("통합 8,000 × 12 = 96,000 (개별 합 10,000 이 아니다)")
-                .isEqualByComparingTo(new BigDecimal("96000"));
+        assertThat(offer.matched()).as("요율이 없어도 '그 브랜드가 대상이다'는 참이다")
+                .containsExactly("스타벅스");
     }
 
     @Test
-    @DisplayName("브랜드로 걸린 소비를 축에서 또 세지 않는다")
-    void doesNotDoubleCountBrandAndAxis() {
-        // 카페 소비 100,000 이 전부 스타벅스다. 브랜드 10% + 축 10% 를 둘 다 주면 20,000 이 된다.
-        CardProduct c = card("겹침카드");
-        CardPerformanceTier tier = new CardPerformanceTier(1, 10_000);
-        c.add(tier);
-        CardBenefit brand = benefit("브랜드", "10", tier);
-        brand.add(new CardBenefitTarget("커피", CardBenefitTarget.Kind.BRAND, "스타벅스", null, null, null));
-        c.add(brand);
-        CardBenefit axis = benefit("업종", "10", tier);
-        axis.add(new CardBenefitTarget("카페", CardBenefitTarget.Kind.AXIS, "카페/디저트", null, null, null));
-        c.add(axis);
-
-        var offer = service(List.of(c), List.of(payment(cafe, "스타벅스 강남점", 100_000)))
-                .recommend(analysis(), NOW).offers().get(0);
-
-        assertThat(offer.yearlySaving()).as("10,000 × 12 — 같은 돈을 두 번 아끼지 않는다")
-                .isEqualByComparingTo(new BigDecimal("120000"));
-    }
-
-    @Test
-    @DisplayName("업종코드를 몰라도 브랜드는 걸린다 — 축 실패가 브랜드를 죽이면 안 된다")
-    void unknownIndustryStillMatchesBrand() {
-        // 2026-08-13 실측 사고. 승인내역의 업종코드가 축 표와 자릿수가 안 맞아 전건이 null 이 됐고,
-        // fold() 가 그 결제를 통째로 버려 **브랜드 매칭까지 같이 죽었다**. 결제 248건이 있는데도
-        // 추천이 전부 0 원으로 나갔다. 브랜드는 가맹점명으로 거는 것이라 업종코드와 무관해야 한다.
+    @DisplayName("한 번 들른 곳은 겹침이 아니다 — '자주 가는 곳'을 묻는 값이다")
+    void oneOffVisitIsNotAnOverlap() {
+        // 2026-08-14 실측(3개월 153건): 한 번이라도 갔으면 세던 방식에서 겹침 16 으로 1위였던
+        // 카드가 **대부분 한 번씩만 간 곳**이었고, 2회 문턱을 걸자 순위 밖으로 밀렸다.
+        // 창을 넓히는 것만으로는 겹침 수만 늘어난다 — 문턱과 짝이라야 순위가 달라진다.
         CardProduct c = card("브랜드카드");
-        CardBenefit b = benefit("커피", "10", null);      // 실적 조건 없음
+        CardBenefit b = new CardBenefit("커피", CardBenefit.Kind.DISCOUNT, CardBenefit.Scope.BRAND, 0);
+        b.rate(new BigDecimal("10"), null, null, null);
+        b.conditions(null, null, "원", null, true, null, true, false, null, null, null);
         b.add(new CardBenefitTarget("커피", CardBenefitTarget.Kind.BRAND, "스타벅스", null, null, null));
         c.add(b);
 
-        String unknownKsic = "9999";                     // 축 표에 없는 코드(자릿수부터 다르다)
-        assertThat(industries.cardAxisOf(unknownKsic)).as("표에 없는 코드여야 시험이 성립한다").isNull();
-
-        var offer = service(List.of(c), List.of(payment(unknownKsic, "스타벅스 강남점", 100_000)))
+        var once = service(List.of(c), List.of(payment("999999", "스타벅스 강남점", 30_000)))
                 .recommend(analysis(), NOW).offers().get(0);
+        assertThat(once.matchCount()).as("한 번 들른 곳은 습관인지 어쩌다인지 알 수 없다").isZero();
 
-        assertThat(offer.yearlySaving()).as("100,000 × 10% × 12 — 축을 몰라도 브랜드로 걸린다")
-                .isEqualByComparingTo(new BigDecimal("120000"));
+        var twice = service(List.of(c), List.of(
+                payment("999999", "스타벅스 강남점", 30_000),
+                payment("999999", "스타벅스 강남점", 30_000)))
+                .recommend(analysis(), NOW).offers().get(0);
+        assertThat(twice.matchCount()).as("두 번부터 '계속 가는 곳'으로 본다").isEqualTo(1);
     }
 
     @Test
-    @DisplayName("띄어쓰기·기호가 달라도 같은 브랜드로 건다")
-    void brandMatchIgnoresSpacingAndSymbols() {
-        // 공시와 승인내역이 같은 브랜드를 다르게 적는다. 카드는 '투썸 플레이스'라 쓰고
-        // 승인내역은 '투썸플레이스'로 찍힌다. 글자 그대로 비교하면 한 건도 안 걸린다.
-        CardProduct c = card("카페카드");
-        CardBenefit b = benefit("커피", "10", null);
-        b.add(new CardBenefitTarget("커피", CardBenefitTarget.Kind.BRAND, "투썸 플레이스", null, null, null));
-        c.add(b);
-
-        var offer = service(List.of(c), List.of(payment(cafe, "투썸플레이스 강남점", 100_000)))
-                .recommend(analysis(), NOW).offers().get(0);
-
-        assertThat(offer.yearlySaving()).as("100,000 × 10% × 12 — 띄어쓰기만 다르다")
-                .isEqualByComparingTo(new BigDecimal("120000"));
-    }
-
-    @Test
-    @DisplayName("접어도 쿠팡과 쿠팡이츠는 다른 브랜드다 — 긴 이름이 먼저 가져간다")
-    void foldingDoesNotMergeSiblingBrands() {
-        // 카드사가 실제로 둘을 다른 묶음에 넣는다(BC 바로 ZONE: 쿠팡=LIFE, 쿠팡이츠=EAT).
-        // 접기가 이 둘을 한 값으로 만들면 배달 결제가 쇼핑 한도를 갉아먹는다.
-        CardProduct c = card("쿠팡카드");
-        CardBenefit shopping = benefit("쇼핑", "1", null);
-        shopping.add(new CardBenefitTarget("쇼핑", CardBenefitTarget.Kind.BRAND, "쿠팡", null, null, null));
-        CardBenefit delivery = benefit("배달", "10", null);
-        delivery.add(new CardBenefitTarget("배달", CardBenefitTarget.Kind.BRAND, "쿠팡이츠", null, null, null));
-        c.add(shopping);
-        c.add(delivery);
-
-        var offer = service(List.of(c), List.of(payment(cafe, "쿠팡이츠", 100_000)))
-                .recommend(analysis(), NOW).offers().get(0);
-
-        assertThat(offer.yearlySaving()).as("쿠팡이츠 10% 로 걸려야 한다 — 쿠팡 1% 가 아니다")
-                .isEqualByComparingTo(new BigDecimal("120000"));
-    }
-
-    @Test
-    @DisplayName("연회비를 뺀 값을 '아껴요'라고 말한다")
-    void subtractsAnnualFee() {
-        CardProduct c = card("연회비카드");
-        CardPerformanceTier tier = new CardPerformanceTier(1, 10_000);
-        c.add(tier);
-        CardBenefit b = benefit("카페", "10", tier);
+    @DisplayName("겹침은 최근 3개월에서 센다 — 반복은 여러 달에 걸쳐야 보인다")
+    void overlapCountsAcrossTheWholeWindow() {
+        CardProduct c = card("브랜드카드");
+        CardBenefit b = new CardBenefit("커피", CardBenefit.Kind.DISCOUNT, CardBenefit.Scope.BRAND, 0);
+        b.rate(new BigDecimal("10"), null, null, null);
+        b.conditions(null, null, "원", null, true, null, true, false, null, null, null);
         b.add(new CardBenefitTarget("커피", CardBenefitTarget.Kind.BRAND, "스타벅스", null, null, null));
         c.add(b);
-        c.add(new CardAnnualFee(CardAnnualFee.Scope.DOMESTIC, "BC", 15_000, 10_000, 5_000));
-        c.add(new CardAnnualFee(CardAnnualFee.Scope.GLOBAL, "Mastercard", 25_000, null, null));
 
-        var offer = service(List.of(c), List.of(payment(cafe, "스타벅스 강남점", 100_000)))
+        // 창이 한 달이면 전달의 1회만 보여 문턱을 못 넘는다. 3개월이라야 두 달 치가 합쳐진다.
+        var offer = service(List.of(c), List.of(
+                payment("999999", "스타벅스 강남점", 30_000),
+                payment("999999", "스타벅스 강남점", 30_000)))
                 .recommend(analysis(), NOW).offers().get(0);
 
-        assertThat(offer.yearlySaving()).as("120,000 − 국내전용 연회비 15,000 (해외겸용 25,000 이 아니다)")
-                .isEqualByComparingTo(new BigDecimal("105000"));
-    }
-
-    @Test
-    @DisplayName("셀 수 없는 혜택은 절감액에 안 넣는다 — 무이자할부·해외·간편결제")
-    void skipsUncountableBenefits() {
-        CardProduct c = card("셀수없는카드");
-        CardPerformanceTier tier = new CardPerformanceTier(1, 10_000);
-        c.add(tier);
-        CardBenefit b = new CardBenefit("해외", CardBenefit.Kind.POINT, CardBenefit.Scope.ALL, 0);
-        b.rate(new BigDecimal("50"), null, null, null);
-        b.conditions(tier, null, "원", null, true, null, false, false, null, null, null);
-        b.add(new CardBenefitTarget("해외", CardBenefitTarget.Kind.AXIS, "카페/디저트", null, null, null));
-        c.add(b);
-
-        var offer = service(List.of(c), List.of(payment(cafe, "스타벅스 강남점", 100_000)))
-                .recommend(analysis(), NOW).offers().get(0);
-
-        assertThat(offer.yearlySaving()).as("countable=false 는 표시만 하고 계산에서 뺀다")
-                .isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(offer.matchCount()).isEqualTo(1);
+        // 조회 구간이 3개월인지는 응답의 창 표기로 확인한다.
+        var result = service(List.of(c), List.of()).recommend(analysis(), NOW);
+        assertThat(result.spendWindow()).isEqualTo("2026.04 ~ 2026.06");
     }
 
     @Test
@@ -357,7 +209,8 @@ class CardRecommendServiceTest {
         assertThat(result.summary()).extracting(CardRecommendService.Summary::displayName)
                 .containsExactly("교통/자동차", "카페/간식");
         assertThat(result.periodLabel()).isEqualTo("2026.06 ~ 2026.06");
-        assertThat(result.performanceMonth()).as("어느 달을 실적으로 셌는지").isEqualTo("2026.06");
+        assertThat(result.spendWindow()).as("겹침을 어느 구간에서 셌는지 — 실적은 판정하지 않는다")
+                .isEqualTo("2026.04 ~ 2026.06");
     }
 
     @Test
@@ -371,6 +224,7 @@ class CardRecommendServiceTest {
 
         assertThat(result.summary()).isEmpty();
         assertThat(result.periodLabel()).isEmpty();
-        assertThat(result.offers().get(0).yearlySaving()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(result.offers().get(0).matchCount()).as("겹칠 소비가 없으면 0곳").isZero();
+        assertThat(result.offers().get(0).matched()).isEmpty();
     }
 }

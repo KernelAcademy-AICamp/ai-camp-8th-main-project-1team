@@ -24,12 +24,12 @@ import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-from collector_policy import USER_AGENT, require_robots_allowed
+from collector_policy import USER_AGENT, abc_group, require_robots_allowed
 
 
 BASE_URL = "https://www.hyundaicard.com"
@@ -633,11 +633,36 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         help="첫 오류에서 즉시 중단",
     )
     parser.add_argument(
+        "--abc-baseline",
+        metavar="YYYY-MM-DD",
+        help=(
+            "수집 대상 분류(A/B/C)를 적용하고 기준선을 이 날짜로 둔다. "
+            "개인이 신청할 수 없는 상품(X)과 기준선 이전에 발급이 끝난 상품(C)을 건너뛴다. "
+            "주지 않으면 지금처럼 전부 받는다"
+        ),
+    )
+    parser.add_argument(
+        "--only-stopped",
+        action="store_true",
+        help=(
+            "B군(기준선 이후에 발급이 끝난 상품)만 받는다. --abc-baseline 과 함께 쓴다. "
+            "발급 중인 상품을 이미 받아 둔 뒤 보유자 비교용만 채울 때 쓴다"
+        ),
+    )
+    parser.add_argument(
         "--log-level",
         choices=("DEBUG", "INFO", "WARNING", "ERROR"),
         default="INFO",
     )
     args = parser.parse_args(argv)
+
+    if args.only_stopped and not args.abc_baseline:
+        parser.error("--only-stopped 는 --abc-baseline 이 있어야 합니다(B와 C를 가를 기준선)")
+    if args.abc_baseline:
+        try:
+            args.abc_baseline = date.fromisoformat(args.abc_baseline)
+        except ValueError:
+            parser.error("--abc-baseline은 YYYY-MM-DD 형식이어야 합니다")
 
     if args.limit_products is not None and args.limit_products <= 0:
         parser.error("--limit-products는 0보다 커야 합니다")
@@ -658,6 +683,26 @@ def run(args: argparse.Namespace) -> int:
 
     products_from_page = collector.fetch_products()
     page_total = len(products_from_page)
+    skipped_by_group: Dict[str, int] = {}
+    if args.abc_baseline:
+        # 무엇을 왜 건너뛰었는지 남긴다 — 조용히 줄이면 "다 받았다"로 읽힌다.
+        kept = []
+        for product in products_from_page:
+            group, reason = abc_group(
+                product.get("product_name"), product.get("stop_date"), args.abc_baseline
+            )
+            wanted = ("B",) if args.only_stopped else ("A", "B")
+            if group in wanted:
+                kept.append(product)
+            else:
+                skipped_by_group[f"{group} {reason}"] = (
+                    skipped_by_group.get(f"{group} {reason}", 0) + 1
+                )
+        LOG.info(
+            "수집 대상 분류: 전체 %d → 받을 것 %d (건너뜀 %d)",
+            page_total, len(kept), page_total - len(kept),
+        )
+        products_from_page = kept
     if args.limit_products is not None:
         products_from_page = products_from_page[: args.limit_products]
 
@@ -669,6 +714,8 @@ def run(args: argparse.Namespace) -> int:
         "page_total_products": page_total,
         "selected_products": len(products_from_page),
         "limit_products": args.limit_products,
+        "abc_baseline": args.abc_baseline.isoformat() if args.abc_baseline else None,
+        "skipped_by_group": skipped_by_group,
         "metadata_only": bool(args.metadata_only),
         "run_status": "collecting_file_lists",
         "products": [],

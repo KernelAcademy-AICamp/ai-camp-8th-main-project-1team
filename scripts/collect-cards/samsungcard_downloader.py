@@ -449,14 +449,28 @@ class SamsungCardCollector:
         raise CollectorError(f"PDF 다운로드 최종 실패: {last_error}")
 
 
-def build_products(raw_products: Iterable[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], int]:
+def build_products(
+    raw_products: Iterable[Dict[str, Any]], include_stopped: bool = False
+) -> Tuple[List[Dict[str, Any]], int]:
+    """목록 행을 저장 형식으로 옮긴다.
+
+    ``include_stopped`` 는 **발급이 끝난 상품도 담는다**. 신규 발급은 못 하지만 이미
+    그 카드를 쓰는 사람이 있고, 그 사람에게 "지금 카드와 비교하면" 을 말하려면 혜택이 필요하다.
+
+    담더라도 ``issue_stopped`` 에 사실을 적는다 — 안 적으면 발급 가능한 상품과 구분이
+    안 되어 **신청할 수 없는 카드를 신규 발급으로 권하게 된다.**
+
+    삼성은 발급 상태 칸이 따로 없고 **제목에 '중단' 이 들어간다**(예:
+    `삼성체크카드 & YOUNG (2020.7.24부터 신규 발급 중단)`). 그래서 제목이 곧 신호다.
+    """
     selected: List[Dict[str, Any]] = []
     excluded = 0
     relative_paths = set()
 
     for raw_product in raw_products:
         product_name = normalize_text(raw_product.get("bltnbmTitNm"))
-        if "중단" in product_name:
+        stopped = "중단" in product_name
+        if stopped and not include_stopped:
             excluded += 1
             continue
 
@@ -510,6 +524,7 @@ def build_products(raw_products: Iterable[Dict[str, Any]]) -> Tuple[List[Dict[st
             {
                 "product_name": product_name,
                 "raw_product_name": str(raw_product.get("bltnbmTitNm") or ""),
+                "issue_stopped": stopped,
                 "date": display_date(start_date_raw),
                 "date_raw": start_date_raw,
                 "write_date_raw": str(raw_product.get("bltnbmWrteDt") or "").strip(),
@@ -605,6 +620,11 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         help="실패 후 재시도 횟수(기본값: 4)",
     )
     parser.add_argument(
+        "--include-stopped",
+        action="store_true",
+        help="발급이 끝난 상품도 담기(기존 보유자의 혜택 비교용). issue_stopped 로 구분된다",
+    )
+    parser.add_argument(
         "--overwrite",
         action="store_true",
         help="이미 존재하는 정상 PDF도 다시 받기",
@@ -656,7 +676,8 @@ def run(args: argparse.Namespace) -> int:
         page_size=args.page_size,
         request_delay=args.delay,
     )
-    products, excluded_count = build_products(raw_products)
+    products, excluded_count = build_products(raw_products, args.include_stopped)
+    stopped_kept = sum(1 for product in products if product["issue_stopped"])
     selected_before_limit = len(products)
 
     if args.limit_products is not None:
@@ -668,9 +689,10 @@ def run(args: argparse.Namespace) -> int:
         "source_page": LIST_PAGE_URL,
         "list_api": LIST_API_URL,
         "created_at": now_iso(),
-        "filter": {"exclude_title_containing": "중단"},
+        "filter": {"exclude_title_containing": None if args.include_stopped else "중단"},
         "api_total_products": api_total,
         "excluded_products": excluded_count,
+        "stopped_products_kept": stopped_kept,
         "selected_products_before_limit": selected_before_limit,
         "selected_products": len(products),
         "total_files": total_files,
@@ -681,9 +703,10 @@ def run(args: argparse.Namespace) -> int:
     save_state(output_root, metadata)
 
     LOG.info(
-        "목록 완료: 전체 %d, '중단' 제외 %d, 대상 %d, PDF %d",
+        "목록 완료: 전체 %d, '중단' %d제외/%d포함, 대상 %d, PDF %d",
         api_total,
         excluded_count,
+        stopped_kept,
         len(products),
         total_files,
     )

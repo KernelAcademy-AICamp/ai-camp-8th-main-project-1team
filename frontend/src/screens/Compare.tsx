@@ -91,8 +91,8 @@ export function Compare() {
             {offers.map((o, i) => <Offer key={o.name} offer={o} uid={String(i)} />)}
 
             <div className="pv" style={{ textAlign: 'center' }}>
-              추천 순서는 광고비가 아니라 <b>{data.performanceMonth} 소비에 그 카드를 썼다면
-              연 얼마가 남는지</b>로 정해요. 그래서 가장 많이 쓴 곳과 1위 카드가 다를 수 있어요.<br />
+              추천 순서는 광고비가 아니라 <b>{data.spendWindow} 동안 자주 가신 곳이
+              그 카드 혜택 대상과 몇 곳이나 겹치는지</b>로 정해요. 금액은 말하지 않아요.<br />
               카드사와 제휴하지 않고 <b>혜택 비교만</b> 해요 — 가입은 각 카드사에서 하세요.
             </div>
             <div className="spacer" style={{ height: 32 }} />
@@ -109,18 +109,18 @@ function Offer({ offer, uid }: { offer: CardOffer; uid: string }) {
       <div className="cap">{offer.tagline}</div>
       <div className="nm">{offer.name}</div>
       <CardArt tint={offer.tint} mark={offer.mark} footer={offer.footer} uid={uid} />
+      {/*
+        금액을 말하지 않는다(2026-08-13 결정). 예전에는 "연 180,000원 아껴요"를 냈는데
+        개인화 절감액은 규제상 가장 약한 고리이고, 전월 실적도 카드 한 장 기준이 아니라
+        우리가 셀 수 있는 값이 아니었다. 대신 **겹침**만 말한다 — 마이데이터가 있어야
+        할 수 있는 말이고, 금액 환산이 없어 틀릴 여지도 없다.
+      */}
       <div className="save">
         <SaveMark />
-        {offer.yearlySaving > 0
-          ? <>연 {won(offer.yearlySaving)} 아껴요</>
-          : <>이 소비에는 아낄 게 거의 없어요</>}
+        {offer.matchCount > 0
+          ? <>자주 가는 곳 {offer.matchCount}곳이 대상이에요</>
+          : <>회원님 소비와 겹치는 곳은 없어요</>}
       </div>
-      {/* 한도에 걸렸으면 숨기지 않는다 — 숨기면 "더 쓰면 더 아낀다"로 잘못 읽힌다. */}
-      {offer.cappedAt !== null && (
-        <div className="pv" style={{ marginTop: 8 }}>
-          연간 혜택 한도 {won(offer.cappedAt)}까지예요
-        </div>
-      )}
       <div className="rows">
         {offer.rows.map((r) => (
           <div className="cr-brow" key={r.label}><span>{r.label}</span><b>{r.value}</b></div>

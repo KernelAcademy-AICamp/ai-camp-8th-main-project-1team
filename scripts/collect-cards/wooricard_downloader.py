@@ -29,11 +29,12 @@ import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from collections import Counter
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-from collector_policy import USER_AGENT, require_robots_allowed
+from collector_policy import USER_AGENT, abc_group, require_robots_allowed
 
 
 PC_BASE_URL = "https://pc.wooricard.com"
@@ -862,6 +863,16 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--abc-baseline",
+        metavar="YYYY-MM-DD",
+        help="수집 대상 분류(A/B/C)를 적용하고 기준선을 이 날짜로 둔다",
+    )
+    parser.add_argument(
+        "--groups",
+        default="AB",
+        help="담을 군(기본 AB). --abc-baseline 과 함께 쓴다",
+    )
+    parser.add_argument(
         "--include-suspended",
         action="store_true",
         help="발급중지(issuAt=N) 상품도 포함",
@@ -928,6 +939,11 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     )
     args = parser.parse_args(argv)
 
+    if args.abc_baseline:
+        try:
+            args.abc_baseline = date.fromisoformat(args.abc_baseline)
+        except ValueError:
+            parser.error("--abc-baseline은 YYYY-MM-DD 형식이어야 합니다")
     if not 1 <= args.page_size <= 1000:
         parser.error("--page-size는 1 이상 1000 이하여야 합니다")
     if args.limit_products is not None and args.limit_products <= 0:
@@ -973,6 +989,7 @@ def run(args: argparse.Namespace) -> int:
 
     api_totals: Dict[str, int] = {}
     excluded_total = 0
+    skipped_by_group: Dict[str, int] = Counter()
     products: List[Dict[str, Any]] = []
     standard_terms: List[Dict[str, Any]] = []
 
@@ -982,6 +999,18 @@ def run(args: argparse.Namespace) -> int:
         )
         api_totals[part_name] = api_total
         selected, excluded = build_products(rows, args.include_suspended)
+        if args.abc_baseline:
+            kept = []
+            for product in selected:
+                # 우리 공시의 중단일 칸은 `suspended_date` 다.
+                group, reason = abc_group(
+                    product.get("product_name"), product.get("suspended_date"), args.abc_baseline
+                )
+                if group in args.groups:
+                    kept.append(product)
+                else:
+                    skipped_by_group[f"{group} {reason}"] += 1
+            selected = kept
         excluded_total += excluded
         for product in selected:
             product["part"] = part_name
@@ -1013,7 +1042,9 @@ def run(args: argparse.Namespace) -> int:
             "doc_types": args.selected_doc_types,
             "latest_only": bool(args.latest_only),
             "standard_terms": not args.skip_standard_terms,
+            "abc_baseline": args.abc_baseline.isoformat() if args.abc_baseline else None,
         },
+        "skipped_by_group": dict(skipped_by_group),
         "api_total_products": api_totals,
         "excluded_suspended": excluded_total,
         "selected_products_before_limit": selected_before_limit,

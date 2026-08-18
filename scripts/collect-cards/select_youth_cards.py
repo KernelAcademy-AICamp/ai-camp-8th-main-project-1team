@@ -40,7 +40,10 @@ ISSUERS = {
 # 가격이 높은 상품은 제외하지 않고 감점해 30대 고소득 사용자 선택지를 남긴다.
 EXCLUSION_RULES = (
     ("법인·기업 전용", re.compile(
-        r"법인|CORPORATE|기업|비즈|\bBIZ\b|BUSINESS|CEO|업무용|사업자|셀러|구매카드|구매전용",
+        # \bCOMPANY\b — 현대카드 'MY COMPANY' 가 기업 카드 라인인데 위 낱말에 하나도 안 걸려
+        # 개인 후보로 새어 들어왔다. 낱말 경계를 두는 것은 ACCOMPANY 같은 말에 걸리지 않게
+        # 하려는 것이다(현재 공시 35개는 전부 MY COMPANY 라인이고 오탐은 없다, 2026-08-14 실측).
+        r"법인|CORPORATE|기업|비즈|\bBIZ\b|BUSINESS|\bCOMPANY\b|CEO|업무용|사업자|셀러|구매카드|구매전용",
         re.I,
     )),
     ("제한 발급", re.compile(

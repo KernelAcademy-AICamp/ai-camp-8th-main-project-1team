@@ -75,18 +75,45 @@ BASELINE_EXCLUSION_CODES = {
 # 실측 근거: BC 3장이 각각 10·9·12 개였고, KaPick 을 1개로 잘못 읽은 적이 있다.
 MIN_PERFORMANCE_EXCLUSIONS = 5
 
-# 브랜드도 업종도 아니고 **"어디서 쓰든 다"** 를 뜻하는 말. 카드 절반이 이런 기본 적립을
-# 하나씩 달고 있는데(국내외 가맹점 0.7%), 대상 행이 비어 있다는 이유로 셈에서 빠져 있었다.
-# 셀 것이 없는 게 아니라 **전부가 대상**이다 — V34 의 scope='ALL' 이 이 자리를 위해 있다.
+# LLM 이 category 칸에 자유롭게 쓴 말을 접는 표. **정본은 axis-aliases.json 하나다** —
+# 여기에 같은 목록을 또 두면 둘이 갈라진다(실제로 3개씩 어긋나 있었다, 2026-08-14).
 #
-# **'해외' 가 붙은 말은 여기 넣지 않는다.** 승인내역에 국내·해외를 가르는 칸이 없어
+#   axisAliases  '커피전문점' → '카페/디저트'      브랜드도 업종도 없을 때만 쓴다
+#   notAxis      접지 않는 말 + 접지 않는 이유
+#     · '모든가맹점'  "어디서 쓰든 다" — 셀 것이 없는 게 아니라 **전부가 대상**이다.
+#                    V34 의 scope='ALL' 이 이 자리를 위해 있다. 카드 절반이 이런 기본
+#                    적립을 하나씩 달고 있는데(국내외 가맹점 0.7%) 대상 행이 비어 있다는
+#                    이유로 셈에서 빠져 있었다.
+#     · 그 밖         해외·결제수단·브랜드·범위불명 — 표시만 하고 계산에서 뺀다.
+#
+# **'해외' 는 '모든가맹점' 이 아니다.** 승인내역에 국내·해외를 가르는 칸이 없어
 # (MyDataPayment 에 통화도 해외 플래그도 없다) 국내 결제까지 해외 요율로 세게 된다.
 # 그러면 없는 절감액이 생긴다 — 안 세면 하한 방향으로만 틀리므로 그쪽을 고른다.
-ALL_MERCHANT = {
-    '국내외 가맹점', '국내 가맹점', '모든 가맹점', '전 가맹점', '국내/외 모든 가맹점',
-    '국내 전 가맹점', '국내 및 해외 가맹점', '국내 대상 가맹점', '국내 전가맹점',
-    '전국 모든 가맹점', '국내외 전 가맹점', '전국 가맹점',
-}
+def load_axis_aliases():
+    with open(os.path.join(HERE, 'axis-aliases.json'), encoding='utf-8') as f:
+        root = json.load(f)
+    aliases = {k: v for k, v in root['axisAliases'].items() if not k.startswith('_')}
+    not_axis = {k: v for k, v in root['notAxis'].items() if not k.startswith('_')}
+    all_merchant = {k for k, v in not_axis.items() if v == '모든가맹점'}
+    return aliases, not_axis, all_merchant
+
+
+CATEGORY_TO_AXIS, NOT_AXIS, ALL_MERCHANT = load_axis_aliases()
+
+# 표에 없어서 못 접은 category. 요약에 찍어 사람이 표를 늘릴 거리를 남긴다.
+UNMAPPED_CATEGORIES = Counter()
+
+# 칸 길이 때문에 자른 값. 조용히 자르지 않고 요약에 찍는다.
+TRUNCATED = Counter()
+
+
+def fit_column(value, limit, log):
+    """표의 칸 길이에 맞춘다. 자른 것은 세어 둔다."""
+    text = value or ''
+    if len(text) <= limit:
+        return text
+    log[text] += 1
+    return text[:limit - 1] + '…'
 
 # 카드 공시의 업종 표현 → 카드혜택 축(21종). **사람이 검토해서만 는다.**
 # 여기 없는 말이 나오면 빌드가 선다 — 조용히 '혜택축없음'으로 떨어뜨리면 그 혜택이
@@ -99,6 +126,307 @@ INDUSTRY_TO_AXIS = {
     'KT': '통신',
     'LGU+': '통신',
     '통신요금': '통신',
+    '통신': '통신',          # 축 이름을 그대로 쓴 경우(이마트 e카드 Edition2)
+    # ── KB 387장 추출에서 나온 표현(2026-08-18). 축은 지어내지 않고 기존 선례를 따랐다 —
+    #    좁은 말부터 넓은 말 순으로 규칙을 세워 옮기고, 어느 축에도 안 맞으면 '혜택축없음'
+    #    으로 둔다(표시는 하고 절감액 매칭에서만 뺀다). 자동차 정비·보험·사무기기가 그런 예다.
+    #    **'해외' 가 붙은 말은 축으로 옮기지 않는다** — 승인내역에 국내·해외 칸이 없다.
+    "4대 사회보험료": '공과금/렌탈',
+    "도시가스 업종": '공과금/렌탈',
+    "소노시즌 렌탈요금 자동납부": '공과금/렌탈',
+    "수도": '공과금/렌탈',
+    "수도요금": '공과금/렌탈',
+    "청호나이스 렌탈요금 자동납부": '공과금/렌탈',
+    "기술/사무/가정계": '교육/육아',
+    "기술학원": '교육/육아',
+    "기타 학원 업종": '교육/육아',
+    "독서실": '교육/육아',
+    "문리계": '교육/육아',
+    "문리계 학원": '교육/육아',
+    "문리계/외국어/예체능/기술학원, 서점 업종": '교육/육아',
+    "밀크T 학습비 자동납부": '교육/육아',
+    "스터디카페": '교육/육아',
+    "예체능": '교육/육아',
+    "예체능학원": '교육/육아',
+    "외국어": '교육/육아',
+    "외국어 학원": '교육/육아',
+    "웅진씽크빅 자동납부": '교육/육아',
+    "유아전문 교육기관/놀이기관": '교육/육아',
+    "유아전문교육기관": '교육/육아',
+    "유치원/어린이집/놀이방": '교육/육아',
+    "자동차학원": '교육/육아',
+    "초중고 학교납입금": '교육/육아',
+    "고속/시외버스": '대중교통',
+    "고속·시외버스": '대중교통',
+    "대중교통": '대중교통',
+    "버스, 지하철": '대중교통',
+    "전국 버스": '대중교통',
+    "전국버스": '대중교통',
+    "철도(일반/KTX/SRT)": '대중교통',
+    "후불교통(시내버스/지하철)": '대중교통',
+    "3대 대형마트": '마트',
+    "농·수·축협 직판장": '마트',
+    "농수축산 직판장": '마트',
+    "농수축협 직판매장": '마트',
+    "농축협직판장": '마트',
+    "대형 할인마트": '마트',
+    "대형마트 업종": '마트',
+    "마트": '마트',
+    "슈퍼": '마트',
+    "슈퍼마켓": '마트',
+    "국내 면세점": '백화점/면세점',
+    "면세점(기내제외)": '백화점/면세점',
+    "백화점, 면세점 업종": '백화점/면세점',
+    "온라인면세": '백화점/면세점',
+    "전국백화점": '백화점/면세점',
+    "건강검진": '병원/약국',
+    "건강식품점": '병원/약국',
+    "동물병원 애완동물 업종": '병원/약국',
+    "병의원": '병원/약국',
+    "의료기관": '병원/약국',
+    "의료기기 가맹점": '병원/약국',
+    "의료기기 및 용품": '병원/약국',
+    "의료품도매": '병원/약국',
+    "의약품도매업체": '병원/약국',
+    "일반/치과/한방병원": '병원/약국',
+    "일반/치과/한의원": '병원/약국',
+    "제약회사": '병원/약국',
+    "종합병원, 일반병원(한의원), 동물병원, 약국 업종": '병원/약국',
+    "치과병원": '병원/약국',
+    "한약방": '병원/약국',
+    "미용": '뷰티',
+    "미용실, 화장품, 피부미용업종": '뷰티',
+    "미용업종": '뷰티',
+    "미용원": '뷰티',
+    "피부미용": '뷰티',
+    "피부미용실": '뷰티',
+    "피부미용업종": '뷰티',
+    "피부미용원": '뷰티',
+    "헤어샵(미용실)": '뷰티',
+    "화장품점": '뷰티',
+    "가스판매점": '쇼핑',
+    "가전제품점": '쇼핑',
+    "문구": '쇼핑',
+    "문구업종": '쇼핑',
+    "문구점": '쇼핑',
+    "문방구": '쇼핑',
+    "문방구점": '쇼핑',
+    "서점 업종": '쇼핑',
+    "서점업종": '쇼핑',
+    "연탄 및 유류판매점": '쇼핑',
+    "완구점 업종": '쇼핑',
+    "총포류판매점": '쇼핑',
+    "팬시용품점": '쇼핑',
+    "프리미엄 아울렛": '쇼핑',
+    "경기장": '스포츠/레저',
+    "골프(연습)장": '스포츠/레저',
+    "골프/골프연습장": '스포츠/레저',
+    "골프장, 골프연습장 업종": '스포츠/레저',
+    "기타 레저업소": '스포츠/레저',
+    "놀이공원": '스포츠/레저',
+    "당구": '스포츠/레저',
+    "당구장": '스포츠/레저',
+    "레저용품 업종": '스포츠/레저',
+    "레포츠용품점": '스포츠/레저',
+    "볼링": '스포츠/레저',
+    "수영": '스포츠/레저',
+    "스크린골프": '스포츠/레저',
+    "스키": '스포츠/레저',
+    "스포츠 관련 업종": '스포츠/레저',
+    "스포츠센터": '스포츠/레저',
+    "스포츠용품": '스포츠/레저',
+    "요가 업종": '스포츠/레저',
+    "체력단련장": '스포츠/레저',
+    "테니스": '스포츠/레저',
+    "휘트니스클럽": '스포츠/레저',
+    "애완동물 업종": '애완',
+    "관광여행사": '여행/항공',
+    "기타관광호텔": '여행/항공',
+    "기타호텔": '여행/항공',
+    "숙박": '여행/항공',
+    "숙박(호텔, 민박, 펜션, 기타숙박)": '여행/항공',
+    "온라인항공": '여행/항공',
+    "일반관광호텔": '여행/항공',
+    "일반호텔": '여행/항공',
+    "특급/일반/기타관광호텔": '여행/항공',
+    "특급관광호텔": '여행/항공',
+    "펜션": '여행/항공',
+    "하나투어": '여행/항공',
+    "항공사": '여행/항공',
+    "항공사, 기타관광호텔, 기타숙박업, 일반관광호텔, 특급관광호텔, 펜션/민박, 관광여행사 업종": '여행/항공',
+    "호텔": '여행/항공',
+    "PC방": '영화/문화',
+    "PC방 업종": '영화/문화',
+    "게임방": '영화/문화',
+    "공연장/전시장": '영화/문화',
+    "만화방 등": '영화/문화',
+    "문화센터": '영화/문화',
+    "비디오방": '영화/문화',
+    "온라인티켓": '영화/문화',
+    "3대 소셜커머스": '온라인쇼핑',
+    "3대 온라인쇼핑몰": '온라인쇼핑',
+    "온라인몰": '온라인쇼핑',
+    "전자상거래": '온라인쇼핑',
+    "전자상거래 PG": '온라인쇼핑',
+    "전자상거래 오픈마켓": '온라인쇼핑',
+    "홈쇼핑": '온라인쇼핑',
+    "음식": '외식',
+    "일반 주점": '외식',
+    "일반/휴게음식점": '외식',
+    "일반음식점": '외식',
+    "일반음식점, 휴게음식점, 일반주점 업종": '외식',
+    "일식/생선회집": '외식',
+    "주점": '외식',
+    "패밀리 레스토랑": '외식',
+    "패스트푸드업종": '외식',
+    "패스트푸드점": '외식',
+    "호프": '외식',
+    "휴게음식점": '외식',
+    "GS주유소": '주유',
+    "SK주유소": '주유',
+    "경유": '주유',
+    "국내 GS주유소": '주유',
+    "국내 SK주유소": '주유',
+    "등유": '주유',
+    "수소차 충전소": '주유',
+    "전 주유소(충전소 포함)": '주유',
+    "전 주유소/충전소": '주유',
+    "전기차 충전기": '주유',
+    "주유(충전)": '주유',
+    "주유/충전소": '주유',
+    "주유소 업종(충전소 제외)": '주유',
+    "주유소(휘발유,경유)": '주유',
+    "충전소(LPG)": '주유',
+    "화물차 우대 주유소": '주유',
+    "화물특화 주유소": '주유',
+    "휘발유": '주유',
+    "베이커리": '카페/디저트',
+    "아이스크림": '카페/디저트',
+    "아이스크림점": '카페/디저트',
+    "제과": '카페/디저트',
+    "제과, 아이스크림, 패스트푸드 업종": '카페/디저트',
+    "제과/아이스크림": '카페/디저트',
+    "제과/아이스크림점": '카페/디저트',
+    "커피 전문점": '카페/디저트',
+    "커피/음료": '카페/디저트',
+    "커피/음료 전문점": '카페/디저트',
+    "커피/제과/패스트푸드 업종": '카페/디저트',
+    "커피음료전문점": '카페/디저트',
+    "커피전문점 업종": '카페/디저트',
+    "IPTV": '통신',
+    "IPTV(QOOK TV)": '통신',
+    "IPTV(올레TV)": '통신',
+    "KB Liiv M": '통신',
+    "KMVNO 회원사 알뜰폰 통신요금 자동이체": '통신',
+    "KT LTE 월정액 67 이상 요금제": '통신',
+    "KT Olleh": '통신',
+    "KT olleh": '통신',
+    "KT 스카이라이프 이용료": '통신',
+    "KT 이동통신 요금": '통신',
+    "KT 이동통신요금": '통신',
+    "KT 휴대폰요금": '통신',
+    "KT스카이라이프": '통신',
+    "LG U+ 통신료 자동납부": '통신',
+    "LG U+ 통신요금 자동납부": '통신',
+    "LG U플러스": '통신',
+    "Liiv M 통신료 자동이체": '통신',
+    "Liiv M 통신비 자동납부": '통신',
+    "Olleh": '통신',
+    "SK 7mobile 통신료 자동이체": '통신',
+    "SKT 이동통신요금": '통신',
+    "SKT 이동통신요금 자동납부": '통신',
+    "SKT, KT Olleh, LG U+ 자동이체": '통신',
+    "SKT, KT olleh, LG U+ 이동통신요금 자동납부": '통신',
+    "SKT, KT, LG U+, Liiv M 자동납부": '통신',
+    "SKT/KT/LG U+ 이동통신 자동납부": '통신',
+    "SKT/KT/LG U+ 자동납부 통신요금": '통신',
+    "U+유모바일 통신료 자동납부": '통신',
+    "kt M mobile 통신료 자동납부": '통신',
+    "kt M mobile 통신요금 자동납부": '통신',
+    "kt 이동통신요금 자동납부": '통신',
+    "kt 통신 단말기 포인트연계할부서비스(세이브)": '통신',
+    "국제전화": '통신',
+    "소액결제": '통신',
+    "알뜰폰 통신비 자동이체": '통신',
+    "와이브로": '통신',
+    "우체국 알뜰폰": '통신',
+    "유/무선 인터넷": '통신',
+    "유무선 통신": '통신',
+    "유선전화": '통신',
+    "이동통신요금 자동이체": '통신',
+    "인터넷 상품": '통신',
+    "인터넷 쇼핑몰": '통신',
+    "인터넷 이용료": '통신',
+    "인터넷요금": '통신',
+    "인터넷이용료": '통신',
+    "인터넷전화": '통신',
+    "자동납부(이동통신, 아파트관리비, 도시가스)": '통신',
+    "전화 요금": '통신',
+    "전화요금": '통신',
+    "초고속인터넷": '통신',
+    "케이블": '통신',
+    "케이블 TV": '통신',
+    "케이블TV": '통신',
+    "토스모바일 통신요금 자동납부": '통신',
+    "휴대폰": '통신',
+    "OA기기": '혜택축없음',
+    "공무원 연금매장": '혜택축없음',
+    "공무원연금매장": '혜택축없음',
+    "군휴양시설": '혜택축없음',
+    "기타 차량 서비스 업종": '혜택축없음',
+    "기타보험": '혜택축없음',
+    "목욕탕": '혜택축없음',
+    "방역": '혜택축없음',
+    "보안경비": '혜택축없음',
+    "보안경비업종": '혜택축없음',
+    "복사기": '혜택축없음',
+    "부품": '혜택축없음',
+    "사무용기기판매/수리업종": '혜택축없음',
+    "삼성페이, 네이버페이, 카카오페이, KB Pay 등": '혜택축없음',
+    "생명/손해/기타보험 업종": '혜택축없음',
+    "생활": '혜택축없음',
+    "손해보험 업종": '혜택축없음',
+    "우체국 쇼핑": '혜택축없음',
+    "우체국 우편료": '혜택축없음',
+    "인테리어": '혜택축없음',
+    "자동차 정비 업종": '혜택축없음',
+    "자동차 정비업종": '혜택축없음',
+    "찜질방": '혜택축없음',
+    "차량정비": '혜택축없음',
+    "차량정비/부품/인테리어": '혜택축없음',
+    "청소대행": '혜택축없음',
+    "청소대행/방역업종": '혜택축없음',
+    "팜스넷 가맹점": '혜택축없음',
+    # ── B군(발급중단) 가이드북에서 나온 표현. 축은 지어내지 않고 기존 선례를 따랐다
+    #    (서점→쇼핑은 '온라인서점', 특급호텔→여행/항공은 '국내 특급호텔' 과 같은 처리).
+    '외식': '외식',
+    '병원/약국': '병원/약국',
+    '온라인쇼핑몰': '온라인쇼핑',
+    '면세점': '백화점/면세점',
+    '항공': '여행/항공',
+    '국내 항공사': '여행/항공',
+    '여행사': '여행/항공',
+    '특급호텔': '여행/항공',
+    '화장품': '뷰티',
+    '이미용': '뷰티',
+    '의류': '쇼핑',
+    '제화/잡화': '쇼핑',
+    '서점': '쇼핑',
+    '대형마트': '마트',
+    '창고형 할인점': '마트',
+    '시내·시외버스': '대중교통',
+    '철도': '대중교통',
+    '이동통신요금': '통신',
+    'kt M mobile 통신요금 자동이체': '통신',
+    'SK 7mobile 통신요금 자동이체': '통신',
+    # 축이 없는 것들. 표시는 하고 절감액 매칭에서만 뺀다.
+    '보험': '혜택축없음',              # 생명보험·손해보험과 같은 처리
+    '자동차': '혜택축없음',            # 21개 축에 자동차 관리가 없다
+    '차량 정비': '혜택축없음',
+    '하이패스': '혜택축없음',          # 통행료는 대중교통이 아니다(TOLL 과 같은 판단)
+    # **'해외 이용' 은 축으로 옮기지 않는다.** 승인내역에 국내·해외를 가르는 칸이 없어
+    # 국내 결제까지 해외 요율로 세게 된다 — 없는 절감액이 생긴다.
+    '해외 이용': '혜택축없음',
     '대형할인점': '마트',
     '슈퍼마켓 업종': '마트',
     '병의원 업종': '병원/약국',
@@ -366,6 +694,91 @@ EXCLUSION_CODE_TO_AXES = {
     'ETC': [],                # 잡다한 열거 — 축으로 못 옮긴다
     'TOLL': [],               # 고속도로 통행료. **대중교통이 아니다**
     'ROAD_TOLL': [],
+    # 'GS칼텍스 주유소 이용 금액' — 브랜드 한 곳이지만 업종은 주유가 맞다. 승인내역으로
+    # 주유 업종은 가를 수 있으므로 축을 연결한다(브랜드까지는 못 갈라 조금 넓게 뺀다 —
+    # 실적을 **적게** 잡는 방향이라 "채운 줄 알았는데 못 채웠다"가 안 난다).
+    'GAS_STATION': ['주유'],
+    # ── KB 387장 추출에서 나온 코드(2026-08-18). **대부분 빈 목록이다** — '할인 받은 이용건'
+    #    ·'백화점 입점 매장'·'무승인전표'·'해외이용'은 승인내역에 그 칸이 없어 가를 수 없다.
+    #    빈 목록은 "제외 대상이 없다"가 아니라 **"판정할 수 없다"** 는 뜻이다(머리말 참조).
+    "ADDITIONAL_BENEFIT_USAGE": [],   # 추가 적립(쇼핑/여행)받은 이용금액(해당매출 전체)
+    "AIRLINE": [],   # 항공기내 이용금액
+    "AIR_INFLIGHT": [],   # 항공기내 이용
+    "AIR_ONBOARD": [],   # 항공기 내 이용
+    "AUTO_PAY_EXCLUDED": [],   # KB ALL 카드 자동납부(쇼핑멤버십/OTT/이동통신) 할인 적용 받은 전체 이용금
+    "AUTO_PURCHASE": [],   # 자동차 구매
+    "BENEFIT_USED": [],   # Daily, Monthly, Someday 서비스 받은 이용건(단, 고액 결제리워드
+    "BIZ_FAVORITE_DISCOUNT": [],   # Biz Favorite 서비스 받은 이용 건
+    "BUSINESS_SUPPORT_ADDITIONAL": [],   # 사업지원영역(주유,통신, 전자상거래) 추가 적립 받은 이용건
+    "CHARGE": [],   # 포인트 충전금액
+    "CONTRACT_PRICE": [],   # 기존 외상 고객과 주유소가 사전에 약정된 단가로 거래하는 경우
+    "COUPON": [],   # 쿠폰 서비스 적용 매출
+    "DEPARTMENT_STORE": [],   # 백화점/대형할인점 입점 점포
+    "DEPT_STORE": [],   # 백화점 등 입점 매장
+    "DISCOUNTED_ITEMS": [],   # 병원/약국 및 주유/대형마트 할인받은 이용건(해당매출 전체)
+    "DISCOUNTED_SALES": [],   # 상품서비스로 할인 적용 받은 전체 매출
+    "DISCOUNTED_TRANSACTIONS": [],   # 롯데마트 KB국민카드로 할인받은 이용건(해당 매출 전체)
+    "DISCOUNT_AMOUNT": [],   # 건강보험료 자동납부 및 병원/약국업종 할인금액(해당 이용금액 전체)
+    "DISCOUNT_SALES": [],   # AK KB국민카드 할인 매출 건(현장할인 제외)
+    "DISCOUNT_STORE": [],   # 대형할인점 입점 점포
+    "EDU_DISCOUNT_USAGE": [],   # 에듀 할인서비스 받은 이용건(해당 이용금액 전체)
+    "FOREIGN": [],   # 해외이용금액
+    "FOREIGN_PAYMENT": [],   # 해외이용금액
+    "FUEL": [],   # 주유 서비스 받은 이용건(해당 매출 전체)
+    "FUEL_DISCOUNT": [],   # SK주유할인 받은 이용금액
+    "GOV_GRANT": [],   # 정부지원금
+    "HOTEL": [],   # 호텔 입점 가맹점
+    "HOTEL_DEPT": [],   # 호텔, 백화점, 대형마트, 철도/역사 등에 입점한 가맹점
+    "INSURANCE": [],   # KB손해보험 이용금액
+    "INTEREST": [],   # 이자
+    "IN_STORE": [],   # 백화점, 마트, 역사 등 입점 매장
+    "LF_MALL": [],   # LFmall 이용금액
+    "LIFESTYLE_DISCOUNT": [],   # 생활할인 서비스로 할인 받은 이용건
+    "LPG": ['주유'],   # LPG 충전소 결제 건
+    "MART": [],   # 대형마트 입점 가맹점
+    "MIN_AMOUNT": [],   # 이용금액 건당 1천원 미만
+    "MIN_PAY": [],   # 이용금액 건당 1천원 미만
+    "NEW_CAR": [],   # 신차구매 청구(환급) 할인 전표
+    "NON_APPROVAL": [],   # 무승인전표(RF후불교통요금/자판기/터널이용료/항공기내 이용 등)
+    "NON_KBPAY": [],   # KB Pay 외 다른 결제수단 이용건
+    "NO_APPROVAL": [],   # 무승인 이용금액
+    "OFFLINE_EXCLUDE": [],   # 백화점, 할인점 등 입점 매장
+    "OFFLINE_STORE": [],   # 백화점/마트/역사/철도 등 입점 매장
+    "ONLINE": [],   # 온라인 결제
+    "ONLINE_PAY": [],   # 인터넷/모바일 앱을 통한 온라인 거래
+    "OTHER_TELCO": ['통신'],   # 타 통신사 자동납부 건
+    "POINT": [],   # 포인트리 결제금액
+    "POP_CARD": [],   # POP카드 결제
+    "PRE_CONTRACT": [],   # 기존 외상 고객과 주유소가 사전에 약정된 단가로 거래하는 경우
+    "PURCHASE_PROXY": [],   # 구매중계를 통한 타 사이트 구매
+    "REFUND": [],   # 취소금액
+    "RENTAL_DISCOUNT": [],   # 교원 웰스 렌탈료 할인 서비스 받은 이용건
+    "RESTAURANT_DISCOUNT": [],   # 패밀리레스토랑 할인 서비스 받은 이용건
+    "SCHOOL_FEE": ['교육/육아'],   # 초/중/고등학교(국·공립) 학교납입금
+    "SKT_AUTO": ['통신'],   # SKT 이동통신요금 자동납부금액
+    "SPECIAL_DISCOUNT": [],   # 특별 서비스 할인 받은 이용건(해당 이용금액 전체)
+    "SPECIAL_MILEAGE_TARGET": [],   # 특화마일 적립 대상 가맹점 이용금액
+    "SSM": [],   # SSM(이마트에브리데이, 홈플러스 익스프레스, 롯데슈퍼 등)
+    "STATION": [],   # 철도역사 입점 가맹점
+    "STORE_IN_STORE": [],   # 백화점 및 대형할인점 입점 점포
+    "TMONEY": [],   # 티머니 충전 및 이용금액
+    "TRAVEL": [],   # 여행/항공권/티켓/도서
+    "TUITION_SCHOOL": ['교육/육아'],   # 초·중·고등학교 학교 납입금 전체(수업료/교육비/현장학습비/급식비)
+    "TUITION_UNI": ['교육/육아'],   # 대학(원) 등록금
+    "UNAUTHORIZED": [],   # 무승인전표(자판기, 터널 통행료, 항공기내 이용 등)
+    "UNIVERSITY_TUITION": ['교육/육아'],   # 대학(원)등록금
+    'GS_CALTEX': ['주유'],       # 'GS칼텍스 이용금액' — 위와 같다
+    # 브랜드 한 곳이라 승인내역에서 업종으로 못 가른다(이마트는 마트지만 '7대 가맹점'은
+    # 이마트24·트레이더스 등이 섞여 있고, 넥슨은 우리 축에 게임이 없다).
+    'E_MART_7': [],
+    'NEXON_GAME': [],
+    'AUTO_PAY_FEE': [],          # 수수료는 가맹점 결제가 아니다(FEE 와 같은 처리)
+    'FEE_AUTO': [],              # 위와 같은 말을 코드명만 바꿔 뱉은 것
+    'COMMUNICATION': ['통신'],    # '청구 할인 통신요금' — 승인내역으로 통신은 가를 수 있다
+    # 자사 서비스·할부는 승인내역에 그 칸이 없다. 브랜드 단위이거나 할부 개월이 필요하다.
+    'PRIVIA': [],                # 현대카드 자사 여행몰 — 가맹점명으로만 알 수 있다
+    'PLATINUM': [],              # 등급 서비스라 결제가 아니다
+    'LDF_INSTALLMENT': [],       # 장기할부 — 할부 개월 칸이 승인내역에 없다
     # '대형시설물 입점점포 및 임대매장(백화점/대형마트/면세점/공항 내 매장)'. 백화점 자체는
     # 축이 있지만 이건 **그 안에 든 매장**이라, 승인내역에 '어디 안에 있는지' 칸이 없다.
     # 백화점에 있는 스타벅스와 길가의 스타벅스가 똑같이 찍힌다.
@@ -403,6 +816,13 @@ ANNUAL_FEE_SCOPE = {
     # 모바일 단독카드도 국내전용/해외겸용이 갈린다. 뒤에 붙은 쪽을 따른다.
     '모바일 단독 국내전용': 'DOMESTIC',
     '모바일 단독 해외겸용': 'GLOBAL',
+    # 괄호 안 국제브랜드는 구분에 영향이 없다 — 국내전용이냐 해외겸용이냐만 본다.
+    # B군 가이드북에서 브랜드를 병기한 표기가 여럿 나왔다(2026-08-14).
+    '국내외겸용(VISA)': 'GLOBAL',
+    '국내외겸용(AMEX/UnionPay)': 'GLOBAL',
+    '국내외겸용(VISA/AMEX)': 'GLOBAL',
+    '국내전용(모바일단독)': 'DOMESTIC',
+    '해외겸용(모바일단독)': 'GLOBAL',
     '국내전용(모바일단독)': 'DOMESTIC',
     '해외겸용(모바일단독)': 'GLOBAL',
     '가족카드': 'GLOBAL',
@@ -410,9 +830,43 @@ ANNUAL_FEE_SCOPE = {
 
 # 원천의 복합 국제브랜드 표기를 DB VARCHAR(20)에 맞는 검토된 표시명으로 줄인다.
 # 전체 원문은 cards/*.json에 그대로 남는다.
+# 구분을 다르게 적은 것들. 뜻이 같아 앞머리 규칙 전에 한 번 접는다.
+ANNUAL_FEE_SCOPE_ALIAS = {
+    '모바일단독카드': '모바일 단독카드',
+    'K-WORLD(JCB타입)': '해외겸용',
+    '국내외전용': '국내외겸용',
+}
+
 ANNUAL_FEE_BRAND = {
     'Mastercard/K-World(JCB)': 'Mastercard/K-World',
+    # 표의 브랜드 칸이 20자다. 한 줄에 브랜드를 둘 적는 공시가 있어 등급어(World·Infinite)를
+    # 뗀다 — 위 (JCB) 를 뗀 것과 같은 처리다. **연회비 금액은 그대로다.**
+    # 20자 자체를 넓히려면 마이그레이션이 하나 더 필요하다(규칙 3: 적용된 것은 못 고친다).
+    'MasterCard World/VISA Infinite': 'MasterCard/VISA',
 }
+
+
+# 혜택 방식은 표의 enum 이라 **아는 값 셋뿐**이다(DISCOUNT_POINT·MILEAGE·PREMIUM).
+# 모델이 그 밖의 말을 뱉으면(실제로 `POINT` 가 왔다, 2026-08-14 스타벅스 현대카드) 적재가
+# 기동에서 통째로 터진다 — 카탈로그는 만들어졌는데 앱이 안 뜬다. 여기서 접어 준다.
+BENEFIT_STYLE = {
+    'DISCOUNT_POINT': 'DISCOUNT_POINT',
+    'MILEAGE': 'MILEAGE',
+    'PREMIUM': 'PREMIUM',
+    'POINT': 'DISCOUNT_POINT',      # 적립형은 할인·적립 묶음에 든다
+    'POINT_POINT': 'DISCOUNT_POINT',  # 같은 말을 두 번 붙여 뱉은 것
+    'DISCOUNT': 'DISCOUNT_POINT',
+}
+
+
+def benefit_style(card):
+    raw = card.get('benefit_style') or 'DISCOUNT_POINT'
+    style = BENEFIT_STYLE.get(raw)
+    if style is None:
+        # 조용히 기본값으로 떨어뜨리지 않는다 — 새 말이 생긴 것을 사람이 봐야 한다.
+        sys.exit(f"[{card.get('name')}] 모르는 혜택 방식: '{raw}'\n"
+                 f"  → build_catalog.py 의 BENEFIT_STYLE 에 사람이 검토해서 더한다.")
+    return style
 
 
 def load_axes():
@@ -421,21 +875,43 @@ def load_axes():
         return set(json.load(f)['cardAxisByIndustry'].values())
 
 
+def scope_of(raw):
+    """연회비 구분 → DOMESTIC/GLOBAL. 못 정하면 None.
+
+    괄호 안은 국제브랜드라 구분에 영향이 없다('국내외겸용(AMEX)' = '국내외겸용').
+    카드사마다 표기가 갈려 사전에 한 벌씩 적기보다 **앞머리로 읽는 편**이 오래 간다.
+    """
+    text = ANNUAL_FEE_SCOPE_ALIAS.get(raw, raw)
+    if text in ANNUAL_FEE_SCOPE:
+        return ANNUAL_FEE_SCOPE[text]
+    head = text.split('(')[0].strip()
+    if head in ANNUAL_FEE_SCOPE:
+        return ANNUAL_FEE_SCOPE[head]
+    if head.startswith('국내전용'):
+        return 'DOMESTIC'
+    if head.startswith(('국내외', '해외')):
+        return 'GLOBAL'
+    return None
+
+
 def annual_fees(card, problems):
     out = []
     for fee in card.get('annual_fee', []):
         if fee['scope'] == '가족카드':
             problems.append('가족카드 연회비를 본인카드 연회비와 분리할 수 없음')
-        scope = ANNUAL_FEE_SCOPE.get(fee['scope'])
+        scope = scope_of(fee['scope'])
         if scope is None:
-            sys.exit(f"[{card['name']}] 모르는 연회비 구분: {fee['scope']}")
+            # **지어내지 않는다.** 공시가 국내전용인지 해외겸용인지 안 밝힌 표기가 있다
+            # ('일반카드'·'본인회원'·'제휴연회비'). 빌드를 세우는 대신 참고 모드로 두어
+            # 그 카드의 숫자만 감춘다 — 한 장 때문에 전체 적재가 막히면 안 된다.
+            problems.append(f"연회비 구분을 모른다({fee['scope']})")
+            continue
         base, affiliate, total = fee.get('base'), fee.get('affiliate'), fee['total']
         # 검산은 여기서 한다. DB 에 CHECK 로 걸면 총액만 적는 공시가 아예 못 들어온다.
         if base is not None and affiliate is not None and base + affiliate != total:
             problems.append(f'연회비 합 불일치({fee["scope"]}: {base}+{affiliate}≠{total})')
-        brand = ANNUAL_FEE_BRAND.get(fee['brand'], fee['brand'])
-        if len(brand) > 20:
-            sys.exit(f"[{card['name']}] 연회비 브랜드가 20자를 넘는다: {brand}")
+        # 브랜드는 **표시용 이름**이라 칸에 맞춰 자른다. 자른 것은 요약에 찍는다.
+        brand = fit_column(ANNUAL_FEE_BRAND.get(fee['brand'], fee['brand']), 20, TRUNCATED)
         out.append({'scope': scope, 'brand': brand,
                     'total': total, 'base': base, 'affiliate': affiliate})
     return out
@@ -488,7 +964,12 @@ def targets_of(benefit, card_name, axes):
     seen = set()
     for group in benefit.get('targets', []):
         common = {
-            'targetGroup': group.get('category', ''),
+            # 표의 칸이 40자다(V34 `target_group`, UNIQUE KEY 의 일부). 넘치면 적재가
+            # 기동에서 터진다 — 카탈로그는 만들어졌는데 앱이 안 뜬다(2026-08-14 실측:
+            # 'Travel, Shopping, Gourmet, Lifestyle, Leisure' 45자).
+            # **여기는 표시용 이름이라** 잘라도 판정에 영향이 없다. 칸을 넓히려면
+            # 마이그레이션이 하나 더 필요하다(규칙 3: 적용된 것은 못 고친다).
+            'targetGroup': fit_column(group.get('category', ''), 40, TRUNCATED),
             'channel': ', '.join(group['channel']) if group.get('channel') else None,
             'excludePlace': ', '.join(group['exclude_place']) if group.get('exclude_place') else None,
             'note': group.get('note'),
@@ -514,10 +995,25 @@ def targets_of(benefit, card_name, axes):
         if group.get('scope'):
             add('SCOPE', group['scope'])
         elif not group.get('brands') and not group.get('industries'):
+            # 브랜드도 업종도 없을 때만 category 를 본다. 브랜드가 적힌 자리에서 category 를
+            # 접으면 안 된다 — 공시의 'OTT' 는 업종이 아니라 **그 카드가 제휴한 목록**이고
+            # (BC New KT family 는 디즈니+ 가 없고 BC 바로 K-패스 는 있다) 축으로 접는 순간
+            # 제휴 안 된 결제까지 할인된 것으로 세게 된다.
             category = (group.get('category') or '').strip()
+            axis = category if category in axes else CATEGORY_TO_AXIS.get(category)
             if category in ALL_MERCHANT:
                 add('ALL', category)
+            elif axis and category not in NOT_AXIS:
+                if axis not in axes:
+                    sys.exit(f"[{card_name}] '{axis}' 는 카드혜택 축이 아니다"
+                             f"(axis-aliases.json 의 '{category}')")
+                add('AXIS', axis)
             else:
+                # 접을 말이 없거나(notAxis) 표에 아직 없는 말. 표시만 하고 계산에서 뺀다.
+                # 업종과 달리 여기서 빌드를 세우지 않는다 — category 는 모델이 매번 지어내는
+                # 자유 문자열이라(153장에서 289종) 세우면 카드가 늘 때마다 멈춘다.
+                # 안 접으면 그 혜택이 계산에서 빠질 뿐 하한 방향으로만 틀린다.
+                UNMAPPED_CATEGORIES[category] += 1
                 add('SCOPE', category)
     return out
 
@@ -542,6 +1038,29 @@ def caps_of(benefit, thresholds, card_name, problems):
     return out
 
 
+# 적립 단위가 원이 아닌 것들. 조건문에 이 말이 있고 요율·정액이 없으면 그 단위로 본다.
+#
+# **왜 조건문을 뒤지나.** 추출 스키마에 `benefit_unit` 칸이 있는데 실제로는 한 장도
+# 채워지지 않는다(153장 전부 빈 값, 2026-08-14 실측). 그래서 기본값 '원'이 그대로 적혀,
+# **마일리지 적립에도 카탈로그가 "단위: 원"이라고 말하고 있었다.** 사실이 아니다.
+# 근본 해결은 추출 프롬프트가 이 칸을 채우게 하는 것이고, 여기는 그때까지의 자리다.
+NON_KRW_UNITS = ('마일리지', '마일')
+
+
+def benefit_unit(raw, card_unit):
+    """이 혜택의 적립 단위. 카드 단위가 적혀 있으면 그것이 우선이다."""
+    named = card_unit.get('name')
+    if named:
+        return named
+    if raw.get('rate_percent') is not None or raw.get('amount_krw') is not None:
+        return '원'          # 요율·정액이 있으면 원으로 셀 수 있다
+    text = ' '.join(str(part) for part in (raw.get('conditions') or []))
+    for word in NON_KRW_UNITS:
+        if word in text:
+            return '마일리지'
+    return '원'
+
+
 def benefits_of(card, thresholds, axes, problems):
     out = []
     unit = card.get('benefit_unit') or {}
@@ -555,11 +1074,16 @@ def benefits_of(card, thresholds, axes, problems):
         rate = raw.get('rate_percent')
 
         # ── 셈할 수 있는가. 못 세는 이유를 남긴다(화면에는 혜택이 그대로 보인다).
+        #
+        # 사유를 **정확히** 적는 것이 이 자리의 일이다. '요율·정액이 없다'는 추출이 숫자를
+        # 놓쳤다는 뜻으로 읽히는데, 마일리지 적립은 놓친 게 아니라 **원으로 옮길 수가 없다**.
+        # 둘을 한 사유로 묶으면 "추출을 고치면 되겠네"라고 잘못 읽게 된다(2026-08-14).
+        row_unit = benefit_unit(raw, unit)
         reason = None
         if kind in ('INSTALLMENT_FREE', 'NON_MONETARY'):
             reason = '금액 환산 불가'
         elif rate is None and raw.get('amount_krw') is None:
-            reason = '요율·정액이 없다'
+            reason = f'{row_unit}는 원으로 환산할 수 없다' if row_unit != '원' else '요율·정액이 없다'
         elif not matchable:
             reason = '승인내역에서 고를 대상이 없다'
 
@@ -577,7 +1101,7 @@ def benefits_of(card, thresholds, axes, problems):
             'minAmountPerTxn': raw.get('min_amount'),
             'requiresTierKrw': raw.get('requires_tier'),
             'combinedCapGroup': raw.get('combined_cap_group'),
-            'unit': unit.get('name', '원'),
+            'unit': row_unit,
             'unitThirdParty': unit.get('third_party'),
             # 초안이 '등'으로 끝나는 목록을 표시하기 전까지는 닫힌 것으로 본다.
             'targetsComplete': raw.get('targets_complete', True),
@@ -658,7 +1182,7 @@ def build_card(card, axes, extraction):
         # 초안 3장은 전부 신용카드다 — 카드론·현금서비스가 실적 제외에 있는 것이 근거다.
         'cardType': card.get('card_type') or 'CREDIT',
         'status': 'ACTIVE' if card.get('status') == 'active' else 'STOPPED',
-        'benefitStyle': card.get('benefit_style') or 'DISCOUNT_POINT',
+        'benefitStyle': benefit_style(card),
         'policyCard': card.get('policy_card', False),
         # 공시가 후불교통을 늘 적지는 않는다. 모르면 null 이다.
         'hasTransit': card.get('has_transit'),
@@ -882,12 +1406,22 @@ def main():
     print(f"  {os.path.relpath(REPORT, ROOT)}")
     print(f"  카드 {len(cards)}장 (정밀 {len(cards) - flagged} · 참고 {flagged}) · "
           f"혜택 {benefits}개(셈 가능 {countable}) · 대상 {targets}행")
+    if TRUNCATED:
+        print(f"  칸 길이(40자)에 맞춰 자른 대상 이름 {len(TRUNCATED)}종")
+        for text, count in TRUNCATED.most_common(5):
+            print(f"    · {text} ({len(text)}자, {count}회)")
     if EXCLUDED:
         by_reason = Counter(reason for _, reason in EXCLUDED)
         detail = ' · '.join(f"{reason} {count}장" for reason, count in by_reason.most_common())
         print(f"  개인 추천 대상이 아니라 뺀 카드 {len(EXCLUDED)}장 — {detail}")
         for card_name, reason in EXCLUDED:
             print(f"    · {card_name} ({reason})")
+    if UNMAPPED_CATEGORIES:
+        total = sum(UNMAPPED_CATEGORIES.values())
+        print(f"\n  축으로 못 접은 대상 {total}행 ({len(UNMAPPED_CATEGORIES)}종) — 계산에서 빠졌다."
+              f" 업종이면 axis-aliases.json 의 axisAliases 에, 아니면 notAxis 에 더한다.")
+        for category, count in UNMAPPED_CATEGORIES.most_common(15):
+            print(f"    {count:>3}행  {category}")
 
 
 if __name__ == '__main__':

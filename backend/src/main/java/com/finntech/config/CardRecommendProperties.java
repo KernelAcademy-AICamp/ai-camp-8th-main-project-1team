@@ -27,8 +27,27 @@ public class CardRecommendProperties {
     /** 추천으로 보일 카드 수. */
     private int maxCards = 3;
 
+    /**
+     * 겹침을 셀 창(개월). 09 §2.1 — <b>반복은 여러 달에 걸쳐야 보인다.</b> 한 달만 보면
+     * 습관인지 어쩌다인지 구조적으로 못 가른다.
+     */
+    private int spendMonths = 3;
+
+    /**
+     * 창 안에서 몇 번 이상 가야 "자주 가는 곳"인가.
+     *
+     * <p>1 이면 한 번 들른 곳도 겹침 1 이 되어 순위가 뒤집힌다 — 실측(2026-08-14, 3개월
+     * 153건)에서 겹침 16 으로 1위였던 카드가 대부분 한 번씩만 간 곳이었고, 2회 기준을
+     * 걸자 순위 밖으로 밀렸다. 3개월에 2회는 느슨한 편이라 데이터가 쌓이면 다시 본다.
+     */
+    private int minVisits = 2;
+
     public int getSummaryTop() { return summaryTop; }
     public void setSummaryTop(int v) { this.summaryTop = v; }
     public int getMaxCards() { return maxCards; }
     public void setMaxCards(int v) { this.maxCards = v; }
+    public int getSpendMonths() { return spendMonths; }
+    public void setSpendMonths(int v) { this.spendMonths = v; }
+    public int getMinVisits() { return minVisits; }
+    public void setMinVisits(int v) { this.minVisits = v; }
 }

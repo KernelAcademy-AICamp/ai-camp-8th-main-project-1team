@@ -295,6 +295,40 @@ class ExtractLlmTest(unittest.TestCase):
         self.assertEqual(1, len(rows))
         self.assertEqual("아파트관리비 / 부동산 임대료", rows[0]["label"])
 
+    # ── 발급 상태 ────────────────────────────────────────────────
+    #
+    # 예전에는 `card["status"] = "active"` 가 박혀 있었다. 발급이 끝난 카드를 담아도
+    # 발급 중으로 적혀 신규 발급 추천에 섞인다 — 신청할 수 없는 카드를 권하게 된다.
+    # 카드사마다 신호 이름이 달라서, 한 벌만 잠그면 나머지 카드사에서 다시 샌다.
+
+    def test_stopped_is_read_from_each_issuer_signal(self):
+        for label, metadata in (
+            ("후보 목록", {"active_verified": False}),
+            ("BC 불리언", {"currently_issued": False}),
+            ("BC 문구", {"issue_status": "발급중단"}),
+            ("현대", {"issued": False}),
+            ("롯데", {"issuance_ended": True}),
+            ("우리", {"suspended_date": "2024-03-01"}),
+            ("KB", {"stop_date": "2023-11-30"}),
+        ):
+            with self.subTest(label):
+                self.assertEqual("stopped", extract_llm.status_of(metadata))
+
+    def test_empty_date_markers_are_not_read_as_stopped(self):
+        """빈 값 표기가 카드사마다 다르다. `-` 를 날짜로 읽으면 발급 중인 카드가 전부 중단된다."""
+        for value in ("-", "", None):
+            with self.subTest(repr(value)):
+                self.assertEqual("active", extract_llm.status_of({"stop_date": value}))
+
+    def test_no_signal_means_active(self):
+        """삼성·농협·신한은 목록에 신호가 없다. 발급 여부 확인은 후보 선정이 맡는다."""
+        self.assertEqual("active", extract_llm.status_of({"issuer": "삼성카드"}))
+
+    def test_identity_writes_the_real_status(self):
+        card = sample_card()
+        extract_llm.apply_identity(card, {"name": "옛카드", "product_id": "1", "stop_date": "2022-01-05"})
+        self.assertEqual("stopped", card["status"])
+
 
 if __name__ == "__main__":
     unittest.main()

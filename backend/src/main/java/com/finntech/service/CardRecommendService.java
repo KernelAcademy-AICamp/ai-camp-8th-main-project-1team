@@ -3,14 +3,9 @@ package com.finntech.service;
 import com.finntech.config.CardRecommendProperties;
 import com.finntech.domain.CardAnnualFee;
 import com.finntech.domain.CardBenefit;
-import com.finntech.domain.CardBenefitTarget;
-import com.finntech.domain.CardCombinedCap;
-import com.finntech.domain.CardExclusion;
-import com.finntech.domain.CardPerformanceTier;
 import com.finntech.domain.CardProduct;
 import com.finntech.domain.UserPayment;
 import com.finntech.engine.AnalysisResult;
-import com.finntech.engine.CardExclusionPolicy;
 import com.finntech.engine.IndustryCategoryMapper;
 import com.finntech.repository.CardProductRepository;
 import com.finntech.repository.UserPaymentRepository;
@@ -18,34 +13,27 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Locale;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.regex.Pattern;
 
 /**
  * 카드 추천 (개편안 {@code s-compare}).
  *
- * <p><b>추천 순서는 광고비가 아니라 절감액 순이다.</b> 화면이 "이 카드를 추천해요"라고만 말하면
- * 그건 광고다. 여기서는 <i>당신이 이미 쓴 곳</i>에 그 카드의 요율을 곱해 연 얼마가 남는지를
- * 세고, 그 수치 순으로 세운다. 근거가 되는 소비 요약을 같은 응답에 싣는 것도 그래서다 —
- * 순위와 근거가 한 화면에 있어야 검증이 된다.
+ * <p><b>추천 순서는 광고비가 아니라 근거 순이다.</b> 화면이 "이 카드를 추천해요"라고만 말하면
+ * 그건 광고다. 근거가 되는 소비 요약을 같은 응답에 싣는 것도 그래서다 — 순위와 근거가 한
+ * 화면에 있어야 검증이 된다.
  *
  * <h2>카드는 실제 상품이다</h2>
  *
  * 마스터 원칙 5 재개정(2026-08-10). 예전에는 {@code application.yml} 의 {@code [더미]} 3장을
  * 읽었고 주석도 "실재 상품을 넣는 순간 중개가 된다"고 적혀 있었는데, 카드 추천은 이 프로젝트의
  * 필수 기능이라 더미로는 성립하지 않는다(사용자 결정). 지금은 카드사 상품공시에서 온 실제
- * 상품을 표에서 읽는다({@code V34}). 예적금·펀드는 그대로 더미다.
+ * 상품을 표에서 읽는다({@code V34}).
  *
  * <p><b>그래서 "더미라서 영업이 아니다"라는 방패가 이 화면에는 없다.</b> 대신 금융위·금감원
  * 유권해석(2022.6.15)의 네 요건으로 선다 — 단순 정보제공 · 판매 목적 아님 · 제휴/광고 계약 없음 ·
@@ -57,7 +45,7 @@ import java.util.regex.Pattern;
  *   <li>카드사와 제휴·광고 계약을 맺는 것</li>
  *   <li>수수료를 받는 것</li>
  *   <li><b>카드사로 넘어가는 CTA 버튼·신청 링크를 두는 것</b> — 여기는 혜택 비교까지다</li>
- *   <li>순위를 광고비에 연동하는 것 — 순위는 절감액순이고 그 근거를 같은 응답에 싣는다</li>
+ *   <li>순위를 광고비에 연동하는 것 — 순위의 근거를 같은 응답에 싣는다</li>
  * </ol>
  *
  * <p><b>혜택 개정 추적은 스코프 밖이다</b>(사용자 결정 2026-08-10). 그래서 카드 정보는
@@ -65,80 +53,74 @@ import java.util.regex.Pattern;
  * 병기해 "이 시점 공시 기준"임을 밝히는 것으로 처리한다. <b>③ CTA 금지가 이 방어의
  * 전제다</b> — CTA 를 다는 순간 "낡은 정보로 가입을 유도한 것"이 되어 둘이 함께 무너진다.
  *
- * <h2>절감액을 어떻게 세나 (07 §4.4)</h2>
+ * <h2>계산은 세 클래스가 나눠 맡는다</h2>
  *
  * <pre>
- *   1  전달 승인내역 → 실적 제외 항목 빼기        → 전월실적
- *   2  실적으로 카드의 구간(tier) 결정            → 어떤 한도가 열리나
- *   3  전달 소비를 혜택 묶음별로 분배             → 브랜드 1순위 · 축 2순위
- *   4  묶음마다 min(그 묶음 소비 × 요율, 월한도)
- *   5  통합한도로 한 번 더 자름                  → 페이북: 개별 합 15,000 &gt; 통합 13,000
- *   6  Σ × 12 − 연회비                          → 연 절감액
+ *   CardSpend             승인내역을 축별·가맹점별로 접는다        (입력 정리)
+ *   CardMatcher           내 소비를 혜택 묶음에 붙인다              (브랜드 1순위 · 축 2순위)
+ *   CardBenefitEstimator  붙은 소비로 절감액을 센다                 (채점용 — 화면 밖)
  * </pre>
  *
- * <p><b>이전율 α 같은 임의 상수가 없다.</b> "아직 발급 안 한 카드에 전월실적이 있을 리 없다"는
- * 순환 때문에 α(=0.7 같은 값)를 두려 했는데, <b>전달에 실제로 쓴 돈이 곧 전월실적</b>이라
- * 추정할 것이 없다(사용자 결정 2026-08-10). 여러 카드에 나뉘어 있는 문제는 α로 추정하지 않고
- * <b>가정을 밝혀서</b> 푼다 — "이 소비를 이 카드로 모으면".
- *
- * <p><b>한 결제는 한 묶음에만 간다.</b> 그래서 같은 돈을 두 번 아끼는 일이 구조적으로 안 나고,
- * 공시의 배타 관계({@code exclusive_with})를 계산에 쓸 필요도 없다.
- *
- * <p><b>미분류는 축 집계에서만 뺀다.</b> 실적과 축 매칭은 과소 계산되지만 <b>하한 방향</b>이라
- * "채운 줄 알았는데 못 채웠다"가 구조적으로 안 난다. <b>가맹점명은 축과 무관하게 담는다</b> —
- * 브랜드 매칭이 1순위인데 2순위(업종축)가 실패했다고 같이 죽으면 안 된다(2026-08-13).
+ * <p><b>대조 규칙을 {@link CardMatcher} 한 곳에 둔 이유</b>는 추천과 채점이 같은 답을 보게 하기
+ * 위해서다. 두 벌로 적으면 "화면은 스타벅스가 걸렸다는데 검산은 안 걸렸다"가 난다.
  */
 @Service
 public class CardRecommendService {
-
-    /** 브랜드 대조에서 지우는 글자 — 띄어쓰기·기호. 한글·영숫자만 남긴다. */
-    private static final Pattern NON_ALNUM = Pattern.compile("[^0-9A-Za-z가-힣]+");
-
-    private static final BigDecimal MONTHS_PER_YEAR = BigDecimal.valueOf(12);
-    private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
-    /** 절감액을 100원 단위로 끊는다 — 1원 단위까지 말하면 추정치를 확정치처럼 읽힌다. */
-    private static final BigDecimal SAVING_UNIT = BigDecimal.valueOf(100);
 
     private final CardRecommendProperties props;
     private final CardProductRepository cards;
     private final UserPaymentRepository payments;
     private final IndustryCategoryMapper industries;
-    private final CardExclusionPolicy exclusions;
+    private final CardBenefitEstimator estimator;
+    private final CardMatcher matcher;
 
     public CardRecommendService(CardRecommendProperties props, CardProductRepository cards,
                                 UserPaymentRepository payments, IndustryCategoryMapper industries,
-                                CardExclusionPolicy exclusions) {
+                                CardBenefitEstimator estimator, CardMatcher matcher) {
         this.props = props;
         this.cards = cards;
         this.payments = payments;
         this.industries = industries;
-        this.exclusions = exclusions;
+        this.estimator = estimator;
+        this.matcher = matcher;
     }
 
     @Transactional(readOnly = true)
     public Result recommend(AnalysisResult analysis, LocalDateTime referenceTime) {
         List<Summary> summary = summarize(analysis);
 
-        // 전달 1일 00:00 (포함) ~ 이번달 1일 00:00 (미포함).
+        // 최근 N개월 1일 00:00 (포함) ~ 이번달 1일 00:00 (미포함).
+        //
+        // **한 달이 아니라 여러 달을 본다**(09 §2.1). 겹침은 "이번 달에 얼마 썼나"가 아니라
+        // "계속 가는 곳인가"를 묻는 값이라, 짧은 창은 반복과 우연을 구조적으로 못 가른다.
+        // 창을 넓히는 것만으로는 겹침 수만 늘어나므로 방문 횟수 문턱과 짝으로 쓴다.
         LocalDate firstOfThisMonth = referenceTime.toLocalDate().withDayOfMonth(1);
-        LocalDate firstOfLastMonth = firstOfThisMonth.minusMonths(1);
-        List<UserPayment> lastMonth = payments.findInPeriod(analysis.userId(),
-                firstOfLastMonth.atStartOfDay(), firstOfThisMonth.atStartOfDay());
-        Spend spend = fold(lastMonth);
+        LocalDate windowStart = firstOfThisMonth.minusMonths(Math.max(1, props.getSpendMonths()));
+        List<UserPayment> recent = payments.findInPeriod(analysis.userId(),
+                windowStart.atStartOfDay(), firstOfThisMonth.atStartOfDay());
+        CardSpend spend = CardSpend.fold(recent, industries);
 
         List<Offer> offers = new ArrayList<>();
         for (CardProduct card : cards.findRecommendable()) {
             offers.add(evaluate(card, spend));
         }
-        // 절감액 내림차순. 동점은 이름으로 깨서 매번 같은 순서가 나오게 한다(원칙 3).
+        // 겹친 곳이 많은 순. 동점은 이름으로 깨서 매번 같은 순서가 나오게 한다(원칙 3).
+        //
+        // **금액으로 세우지 않는다**(2026-08-13). 절감액은 화면에 안 나가는 값이라 순위의
+        // 근거가 될 수 없다 — 보여주지 않는 수로 줄을 세우면 사용자가 순서를 검증할 방법이
+        // 없고, 그건 근거 없는 순위와 같다. 겹친 이름은 화면에 그대로 나가므로 반박 가능하다.
         offers.sort(Comparator
-                .comparing(Offer::yearlySaving, Comparator.reverseOrder())
+                .comparingInt(Offer::matchCount).reversed()
                 .thenComparing(Offer::name));
         int max = Math.max(0, props.getMaxCards());
         if (offers.size() > max) offers = new ArrayList<>(offers.subList(0, max));
 
+        // 겹침을 어느 구간에서 셌는지. "2026.04 ~ 2026.06" — 화면이 근거로 병기한다.
+        DateTimeFormatter month = DateTimeFormatter.ofPattern("yyyy.MM");
+        String window = windowStart.format(month) + " ~ "
+                + firstOfThisMonth.minusMonths(1).format(month);
         return new Result(summary, offers, periodLabel(analysis), analysis.monthlySpend().size(),
-                firstOfLastMonth.format(DateTimeFormatter.ofPattern("yyyy.MM")));
+                window);
     }
 
     /** 지출 상위 카테고리 — 개편안 {@code .cr-row} 세 줄. */
@@ -153,275 +135,119 @@ public class CardRecommendService {
         return out;
     }
 
-    // ── 1·3단계의 재료: 전달 소비를 축별·가맹점명별로 접는다 ────────────────────────
-
     /**
-     * 전달 소비 한 달치를 접은 것.
+     * 카드 한 장이 화면에 어떻게 나가는가 — <b>다섯 줄 중 개인화된 것은 겹침 하나뿐</b>이고
+     * 나머지는 카드에 적힌 사실이다(`09_카드추천_판정.md` §5.1).
      *
-     * <p><b>브랜드를 여기서 확정하지 않는다.</b> 어떤 이름이 브랜드인지는 <b>카드가 정한다</b> —
-     * 공시가 혜택 대상 브랜드를 직접 나열하기 때문이다(스타벅스·배달의민족·CU·CGV…). 그래서
-     * 가맹점명을 그대로 들고 있다가 카드마다 대조한다.
-     *
-     * @param byAxis    카드혜택 축 → 금액. 축을 모르는 업종은 여기에만 안 담긴다
-     * @param byMerchant 가맹점 풀네임 → 금액. <b>축을 몰라도 담는다</b> — 브랜드 매칭의 재료다
-     * @param axisOfMerchant 가맹점 풀네임 → 그 가맹점의 축(브랜드가 안 걸렸을 때 쓴다).
-     *                       축을 모르는 가맹점은 없다 — {@code byAxis} 에도 없으니 뺄 몫이 없다
+     * <p><b>여기서 절감액을 부르지 않는다.</b> {@link CardBenefitEstimator} 는 채점용이고
+     * 이 경로는 그것을 모른다 — 부르지 않으므로 금액이 화면으로 샐 통로가 없다.
      */
-    private record Spend(Map<String, BigDecimal> byAxis,
-                         Map<String, BigDecimal> byMerchant,
-                         Map<String, String> axisOfMerchant) {}
+    private Offer evaluate(CardProduct card, CardSpend spend) {
+        List<String> matched = overlap(card, spend);
 
-    private Spend fold(List<UserPayment> rows) {
-        Map<String, BigDecimal> byAxis = new TreeMap<>();
-        Map<String, BigDecimal> byMerchant = new TreeMap<>();
-        Map<String, String> axisOf = new TreeMap<>();
-        for (UserPayment p : rows) {
-            BigDecimal amount = BigDecimal.valueOf(p.getAmount());
-            String axis = industries.cardAxisOf(p.getKsicCode());
-            // 축을 못 찾아도 **가맹점명은 살린다**. 예전에는 여기서 `continue` 로 결제를 통째로
-            // 버렸는데, 브랜드 매칭은 업종코드가 아니라 가맹점명으로 하므로 축이 없다는 이유로
-            // 브랜드까지 같이 죽었다. 2026-08-13 실측에서 그대로 터졌다 — 승인내역의 업종코드가
-            // 표와 자릿수가 안 맞아 전건이 null 이 됐고, 결제 248건이 있는데도 추천이 전부 0 이
-            // 나왔다. 축은 2순위 신호일 뿐이고, 1순위(브랜드)를 2순위 실패로 끌어내리면 안 된다.
-            if (axis != null) {
-                byAxis.merge(axis, amount, BigDecimal::add);
-            }
-            String merchant = p.getMerchantName();
-            if (merchant != null && !merchant.isBlank()) {
-                byMerchant.merge(merchant, amount, BigDecimal::add);
-                // 축이 없으면 넣지 않는다 — byAxis 에도 안 들어갔으니 뺄 몫이 없다.
-                if (axis != null) {
-                    axisOf.put(merchant, axis);
-                }
-            }
-        }
-        return new Spend(byAxis, byMerchant, axisOf);
-    }
-
-    // ── 카드 한 장 ────────────────────────────────────────────────────────────
-
-    private Offer evaluate(CardProduct card, Spend spend) {
-        // 1. 전월실적 = 전달 소비 − 이 카드의 실적 제외 축. **카드마다 목록이 다르다.**
-        Set<String> excluded = exclusions.axesToExclude(
-                card.exclusionsOn(CardExclusion.Axis.PERFORMANCE).stream()
-                        .map(CardExclusion::getCode).toList());
-        BigDecimal performance = BigDecimal.ZERO;
-        for (Map.Entry<String, BigDecimal> e : spend.byAxis().entrySet()) {
-            if (!excluded.contains(e.getKey())) performance = performance.add(e.getValue());
-        }
-
-        // 2. 실적으로 구간을 연다. 못 채웠으면 null — 구간 조건이 붙은 혜택은 안 열린다.
-        CardPerformanceTier tier = card.tierFor(performance.longValue());
-
-        // 3. 전달 소비를 혜택 묶음별로 분배 (브랜드 1순위 · 축 2순위).
-        Map<CardBenefit, BigDecimal> allocated = allocate(card, spend, tier);
-
-        // 4·5. 묶음마다 자르고, 통합한도로 한 번 더 자른다.
-        Map<String, BigDecimal> combinedUsed = new LinkedHashMap<>();
-        BigDecimal monthly = BigDecimal.ZERO;
         List<Row> rows = new ArrayList<>();
-        for (Map.Entry<CardBenefit, BigDecimal> e : allocated.entrySet()) {
-            CardBenefit benefit = e.getKey();
-            BigDecimal earned = e.getValue()
-                    .multiply(benefit.getRatePercent())
-                    .divide(HUNDRED, 2, RoundingMode.HALF_UP);
-            Integer cap = benefit.capFor(tier);
-            if (cap != null) earned = earned.min(BigDecimal.valueOf(cap));
-            earned = capCombined(card, benefit, tier, earned, combinedUsed);
-            if (earned.signum() <= 0) continue;
-            monthly = monthly.add(earned);
-            rows.add(new Row(label(benefit), value(benefit, earned)));
+        rows.add(new Row("혜택", benefitLine(card)));
+        if (!matched.isEmpty()) {
+            rows.add(new Row("겹치는 곳", names(matched)));
         }
-
-        // 6. 연 환산 뒤 연회비를 뺀다 — 빼야 "아낀다"가 참이 된다.
-        BigDecimal annualFee = annualFee(card);
-        BigDecimal saving = monthly.multiply(MONTHS_PER_YEAR).subtract(annualFee);
-        if (saving.signum() < 0) saving = BigDecimal.ZERO;
-        saving = saving.divide(SAVING_UNIT, 0, RoundingMode.DOWN).multiply(SAVING_UNIT);
-
-        rows.add(new Row("지난달 실적", performanceLabel(card, performance, tier)));
-        rows.add(new Row("연회비", annualFee.signum() == 0
-                ? "없음" : String.format("%,d원", annualFee.toBigInteger())));
+        rows.add(new Row("전월 실적", performanceCondition(card)));
+        rows.add(new Row("연회비", annualFeeLine(card)));
 
         return new Offer(card.getName(), tagline(card), tint(card), mark(card), card.getIssuer(),
-                saving, cappedAt(card, tier), rows,
-                card.getAsOf() == null ? null : card.getAsOf().toString());
+                rows, card.getAsOf() == null ? null : card.getAsOf().toString(),
+                matched.size(), matched);
+    }
+
+    /** 겹친 이름 — 셋까지 보여주고 나머지는 수로 접는다. */
+    private String names(List<String> matched) {
+        List<String> head = matched.subList(0, Math.min(3, matched.size()));
+        String joined = String.join("·", head);
+        return matched.size() > head.size()
+                ? joined + " 외 " + (matched.size() - head.size()) + "곳" : joined;
     }
 
     /**
-     * 전달 소비를 혜택 묶음에 나눈다 — <b>한 결제는 한 묶음에만 간다.</b>
+     * 전월 실적 — <b>공시 원문 그대로만</b> 쓴다(사용자 결정 2026-08-14).
      *
-     * <p><b>브랜드가 1순위다.</b> 업종코드로 못 푸는 축이 있기 때문이다 — 배달의민족은
-     * <i>통신판매업</i>으로 등록돼 업종으로는 '쇼핑'이 되고, 넷플릭스와 일부 PG 는 같은 코드
-     * 724000 을 쓴다. 브랜드로 걸린 가맹점은 축 배분에서 빠진다(두 번 세지 않는다).
-     *
-     * <p><b>가장 긴 브랜드 이름이 이긴다.</b> {@code 쿠팡이츠 결제}는 '쿠팡'에도 걸리는데,
-     * 공시가 <i>"쿠팡은 쿠팡이츠 제외"</i>라고 적어 둔 그 자리다. 긴 쪽을 먼저 보면 이 오배정이
-     * 안 난다.
+     * <p>예전에는 {@code "지난달 실적 59만원 · 충족"} 이라 적었는데 <b>그 값은 전월실적이
+     * 아니다</b>. 전월실적은 카드 한 장 기준인데 우리가 센 값은 사용자의 <i>모든</i> 카드
+     * 합이다. 설계는 그것을 "이 소비를 이 카드로 모으면"이라는 가정으로 세웠는데, 화면 문구가
+     * 그 가정을 지우고 사실처럼 말하고 있었다.
      */
-    private Map<CardBenefit, BigDecimal> allocate(CardProduct card, Spend spend,
-                                                  CardPerformanceTier tier) {
-        List<CardBenefit> open = card.getBenefits().stream()
-                .filter(CardBenefit::isCountable)
-                .filter(b -> b.getRatePercent() != null && b.getRatePercent().signum() > 0)
-                .filter(b -> b.opensAt(tier))
-                .toList();
-
-        Map<CardBenefit, BigDecimal> out = new LinkedHashMap<>();
-        Set<String> claimed = new java.util.HashSet<>();
-
-        // ① 브랜드 — 긴 이름부터. 한 가맹점은 한 번만 걸린다.
-        record Hit(CardBenefit benefit, String brand, String folded) {}
-        List<Hit> byBrand = new ArrayList<>();
-        for (CardBenefit benefit : open) {
-            for (CardBenefitTarget target : benefit.getTargets()) {
-                if (CardBenefitTarget.Kind.BRAND.name().equals(target.getKind())) {
-                    byBrand.add(new Hit(benefit, target.getValue(), foldBrand(target.getValue())));
-                }
-            }
-        }
-        byBrand.sort(Comparator.comparingInt((Hit h) -> h.folded().length()).reversed()
-                .thenComparing(h -> h.benefit().getSortNo())
-                .thenComparing(Hit::brand));
-        Map<String, String> foldedMerchant = new TreeMap<>();
-        for (String merchant : spend.byMerchant().keySet()) {
-            foldedMerchant.put(merchant, foldBrand(merchant));
-        }
-        for (Hit hit : byBrand) {
-            if (hit.folded().isEmpty()) continue;
-            for (Map.Entry<String, BigDecimal> e : spend.byMerchant().entrySet()) {
-                if (claimed.contains(e.getKey())) continue;
-                if (!foldedMerchant.get(e.getKey()).contains(hit.folded())) continue;
-                claimed.add(e.getKey());
-                out.merge(hit.benefit(), e.getValue(), BigDecimal::add);
-            }
-        }
-
-        // ② 축 — 브랜드로 안 걸린 나머지. 축 소비에서 브랜드로 가져간 몫을 뺀다.
-        Map<String, BigDecimal> claimedByAxis = new TreeMap<>();
-        for (String merchant : claimed) {
-            String axis = spend.axisOfMerchant().get(merchant);
-            if (axis != null) {
-                claimedByAxis.merge(axis, spend.byMerchant().get(merchant), BigDecimal::add);
-            }
-        }
-        for (CardBenefit benefit : open) {
-            for (CardBenefitTarget target : benefit.getTargets()) {
-                if (!CardBenefitTarget.Kind.AXIS.name().equals(target.getKind())) continue;
-                BigDecimal total = spend.byAxis().get(target.getValue());
-                if (total == null) continue;
-                BigDecimal rest = total.subtract(
-                        claimedByAxis.getOrDefault(target.getValue(), BigDecimal.ZERO));
-                if (rest.signum() <= 0) continue;
-                out.merge(benefit, rest, BigDecimal::add);
-                // 같은 축을 다른 묶음이 또 가져가지 않게 소진 처리한다.
-                claimedByAxis.merge(target.getValue(), rest, BigDecimal::add);
-            }
-        }
-        return out;
+    private String performanceCondition(CardProduct card) {
+        if (card.getTiers().isEmpty()) return "실적 조건 없음";
+        int need = card.getTiers().get(0).getThresholdKrw();
+        return "전월 " + need / 10_000 + "만원 이상";
     }
 
-    /**
-     * 브랜드 대조용 접기 — 띄어쓰기·기호를 지우고 소문자로 만든다.
-     *
-     * <p>공시와 승인내역이 같은 브랜드를 다르게 적는다. '투썸 플레이스'와 '투썸플레이스',
-     * '디즈니+'와 '디즈니플러스', 'LG U+'와 'LGU+', '29CM'과 '29cm'. 글자만 남기면
-     * 한 값이 된다. 실측(2026-08-14): 카드 브랜드 257종 중 매칭되는 것이 120종에서
-     * 132종으로 늘었다 — 배달의 민족·투썸 플레이스·유튜브 프리미엄 등이 살아났다.
-     *
-     * <p><b>브랜드를 합치지는 않는다.</b> 접어도 '쿠팡'·'쿠팡이츠'·'쿠팡플레이'는 서로 다른
-     * 값으로 남는다. 이 셋은 카드가 실제로 다른 묶음에 넣으므로(BC 바로 ZONE: 쿠팡=LIFE,
-     * 쿠팡이츠=EAT) 합치면 한 결제가 엉뚱한 묶음의 한도를 갉아먹는다. 긴 이름부터 거는
-     * 규칙이 그래서 있다.
-     */
-    private static String foldBrand(String value) {
-        return value == null ? "" : NON_ALNUM.matcher(value).replaceAll("").toLowerCase(Locale.ROOT);
-    }
-
-    /**
-     * 통합한도로 한 번 더 자른다.
-     *
-     * <p>페이북 실측: 종합몰·패션몰·생활몰이 각 5,000원인데 통합한도는 13,000원이다.
-     * <b>개별 합(15,000)이 통합(13,000)을 넘으므로 절삭 순서가 결과를 바꾼다</b> —
-     * 개별로 먼저 자르고, 남은 통합 여유만큼만 받는다.
-     */
-    private BigDecimal capCombined(CardProduct card, CardBenefit benefit, CardPerformanceTier tier,
-                                   BigDecimal earned, Map<String, BigDecimal> used) {
-        String group = benefit.getCombinedCapGroup();
-        if (group == null || tier == null) return earned;
-        Integer cap = null;
-        for (CardCombinedCap row : card.getCombinedCaps()) {
-            // 구간을 id 가 아니라 금액으로 맞춘다 — CardBenefit.capFor 와 같은 이유다.
-            if (row.getGroupName().equals(group)
-                    && row.getTier().getThresholdKrw() == tier.getThresholdKrw()) {
-                cap = row.getCapKrw();
-            }
-        }
-        if (cap == null) return earned;
-        BigDecimal room = BigDecimal.valueOf(cap)
-                .subtract(used.getOrDefault(group, BigDecimal.ZERO));
-        BigDecimal taken = earned.min(room).max(BigDecimal.ZERO);
-        used.merge(group, taken, BigDecimal::add);
-        return taken;
-    }
-
-    /**
-     * 연회비 — <b>국내전용 중 가장 싼 것</b>을 쓴다.
-     *
-     * <p>해외겸용을 고르면 안 쓸 수도 있는 비용을 얹어 절감액이 실제보다 작아진다. 반대로
-     * 연회비를 아예 빼먹으면 "아낀다"가 거짓이 된다. 국내전용이 없으면 있는 것 중 최저를 쓴다.
-     */
-    private BigDecimal annualFee(CardProduct card) {
+    /** 연회비 — <b>발급 구분을 함께</b> 보여준다. 계산에는 안 들어간다(§4.5). */
+    private String annualFeeLine(CardProduct card) {
         return card.getAnnualFees().stream()
                 .filter(f -> CardAnnualFee.Scope.DOMESTIC.name().equals(f.getScope()))
-                .map(f -> BigDecimal.valueOf(f.getTotal()))
-                .min(Comparator.naturalOrder())
-                .orElseGet(() -> card.getAnnualFees().stream()
-                        .map(f -> BigDecimal.valueOf(f.getTotal()))
-                        .min(Comparator.naturalOrder())
-                        .orElse(BigDecimal.ZERO));
+                .min(Comparator.comparingInt(CardAnnualFee::getTotal))
+                .or(() -> card.getAnnualFees().stream().min(Comparator.comparingInt(CardAnnualFee::getTotal)))
+                .map(f -> f.getTotal() == 0 ? "없음"
+                        : String.format("%,d원 (%s)", f.getTotal(),
+                                CardAnnualFee.Scope.DOMESTIC.name().equals(f.getScope())
+                                        ? "국내전용" : "해외겸용"))
+                .orElse("없음");
     }
 
-    /** 이 구간에서 이 카드가 한 달에 줄 수 있는 최대 혜택 — 한도에 걸렸는지 화면이 말하는 근거. */
-    private BigDecimal cappedAt(CardProduct card, CardPerformanceTier tier) {
-        if (tier == null) return null;
-        BigDecimal total = BigDecimal.ZERO;
-        boolean any = false;
-        for (CardBenefit benefit : card.getBenefits()) {
-            if (!benefit.isCountable()) continue;
-            Integer cap = benefit.capFor(tier);
-            if (cap == null) return null;      // 한도 없는 혜택이 있으면 상한이 없다
-            any = true;
-            total = total.add(BigDecimal.valueOf(cap));
+    /** 혜택 한 줄 — 요율이 가장 높은 묶음의 대상을 보여준다. 요율이 없으면 묶음 이름만. */
+    private String benefitLine(CardProduct card) {
+        return card.getBenefits().stream()
+                .max(Comparator.comparing((CardBenefit b) ->
+                        b.getRatePercent() == null ? BigDecimal.ZERO : b.getRatePercent()))
+                .map(b -> b.getRatePercent() == null
+                        ? CardBenefitEstimator.label(b)
+                        : CardBenefitEstimator.label(b) + " "
+                                + CardBenefitEstimator.trimRate(b.getRatePercent()) + "%")
+                .orElse("혜택 정보 없음");
+    }
+
+    /**
+     * <b>내가 자주 가는 곳 중 이 카드의 혜택 대상인 것.</b> 판정의 핵심이자 순위의 근거다.
+     *
+     * <p><b>금액을 안 세므로 요율·한도·구간을 묻지 않는다.</b> 절감액 계산은 {@code countable ·
+     * 요율 있음 · 구간 열림}을 요구하지만, 겹침은 아무것도 요구하지 않는다 — 요율이 없어도
+     * "그 브랜드가 이 카드의 적립 대상이다"는 참이기 때문이다. 이 완화로 요율을 못 뽑은 카드
+     * 수십 장이 후보로 돌아온다(`09_카드추천_판정.md` §1.2).
+     *
+     * <p><b>브랜드를 먼저, 축을 나중에</b> 놓는다 — 사용자에게 `카페/디저트`보다 `스타벅스`가
+     * 훨씬 구체적이다.
+     *
+     * <p>⚠️ <b>아직 '자주'를 못 가린다.</b> 설계는 최근 3개월의 성역·반복 결제로 지속 브랜드를
+     * 정하는데(§2.4), 그 재료는 ①이 아직 안 낸다. 지금은 <b>전달에 한 번이라도 쓴 곳</b>이면
+     * 겹침으로 센다 — 어쩌다 간 곳과 매일 가는 곳을 구분하지 못한다(§7.1).
+     */
+    /**
+     * 겹친 이름 — 브랜드 먼저, 축 나중.
+     *
+     * <p><b>브랜드는 방문 문턱을 넘어야 센다.</b> 겹침은 "이번 달에 얼마 썼나"가 아니라
+     * "계속 가는 곳인가"를 묻는 값이다(09 §2.1). 실측(2026-08-14, 3개월 153건)에서 한 번이라도
+     * 갔으면 세던 방식은 겹침 16 으로 1위를 만들었는데 그 대부분이 <b>한 번씩만 간 곳</b>이었고,
+     * 2회 문턱을 걸자 순위 밖으로 밀렸다.
+     *
+     * <p><b>축에는 문턱을 걸지 않는다.</b> 축 겹침은 업종 단위라("외식에 쓴다") 가맹점 방문
+     * 횟수로 자를 값이 아니다.
+     */
+    private List<String> overlap(CardProduct card, CardSpend spend) {
+        Map<CardBenefit, CardMatcher.Matched> matched = matcher.match(card, spend, b -> true);
+        int minVisits = Math.max(1, props.getMinVisits());
+        List<String> brands = new ArrayList<>();
+        List<String> axes = new ArrayList<>();
+        for (CardMatcher.Matched m : matched.values()) {
+            for (String b : m.brands()) {
+                if (m.brandVisits().getOrDefault(b, 0) < minVisits) continue;
+                if (!brands.contains(b)) brands.add(b);
+            }
+            for (String a : m.axes()) if (!axes.contains(a)) axes.add(a);
         }
-        return any ? total.multiply(MONTHS_PER_YEAR) : null;
+        brands.addAll(axes);
+        return List.copyOf(brands);
     }
 
     // ── 화면 문구. **결과만 쓴다** — 계산 과정(제외 항목 내역)은 안 보여준다 ────────────
-
-    private String performanceLabel(CardProduct card, BigDecimal performance,
-                                    CardPerformanceTier tier) {
-        String amount = manwon(performance);
-        if (card.getTiers().isEmpty()) return amount + " · 실적 조건 없음";
-        if (tier == null) {
-            int need = card.getTiers().get(0).getThresholdKrw();
-            return amount + " · " + manwon(BigDecimal.valueOf(need)) + " 필요";
-        }
-        return amount + " · 충족";
-    }
-
-    private String label(CardBenefit benefit) {
-        List<String> groups = benefit.getTargets().stream()
-                .map(CardBenefitTarget::getTargetGroup)
-                .filter(g -> !g.isBlank()).distinct().limit(3).toList();
-        return groups.isEmpty() ? benefit.getGroupName() : String.join("·", groups);
-    }
-
-    private String value(CardBenefit benefit, BigDecimal earned) {
-        String kind = CardBenefit.Kind.DISCOUNT.name().equals(benefit.getKind()) ? "할인" : "적립";
-        return trimRate(benefit.getRatePercent()) + "% " + kind
-                + " · 월 " + String.format("%,d원", earned.setScale(0, RoundingMode.DOWN).toBigInteger());
-    }
 
     /** 카드 성격 한 줄 — 가장 요율이 높은 혜택으로 만든다. 마케팅 문구를 옮기지 않는다. */
     private String tagline(CardProduct card) {
@@ -430,7 +256,8 @@ public class CardRecommendService {
                 .filter(b -> b.getRatePercent() != null)
                 .max(Comparator.comparing(CardBenefit::getRatePercent)
                         .thenComparing(Comparator.comparing(CardBenefit::getSortNo).reversed()))
-                .map(b -> label(b) + " " + trimRate(b.getRatePercent()) + "%")
+                .map(b -> CardBenefitEstimator.label(b) + " "
+                        + CardBenefitEstimator.trimRate(b.getRatePercent()) + "%")
                 .orElse(card.getIssuer());
     }
 
@@ -442,15 +269,6 @@ public class CardRecommendService {
 
     private String mark(CardProduct card) {
         return card.getName().isBlank() ? "C" : card.getName().substring(0, 1);
-    }
-
-    /** "5.0" 이 아니라 "5" 로 — 화면에 소수점이 필요할 때만 남긴다. */
-    private static String trimRate(BigDecimal rate) {
-        return rate.stripTrailingZeros().toPlainString();
-    }
-
-    private static String manwon(BigDecimal won) {
-        return won.divide(BigDecimal.valueOf(10000), 0, RoundingMode.DOWN) + "만원";
     }
 
     /** "2026.05 ~ 2026.07" — 무엇을 근거로 셌는지 밝힌다. */
@@ -468,20 +286,33 @@ public class CardRecommendService {
 
     public record Row(String label, String value) {}
 
+    /**
+     * 화면에 나가는 카드 한 장.
+     *
+     * <p><b>금액 칸이 없는 것이 설계다</b>(2026-08-13). 예전에는 {@code yearlySaving}·
+     * {@code cappedAt} 이 있었고 화면이 "연 180,000원 아껴요"를 냈는데, 개인화 절감액은
+     * 07 §4.4가 "가장 약한 고리"라 적은 자리다. 금액을 안 내면 고리 자체가 없어진다.
+     * 계산은 {@link CardBenefitEstimator} 에 살아 있고 채점에만 쓴다.
+     */
     public record Offer(String name, String tagline, String tint, String mark, String footer,
-                        /** 연 예상 절감액(원). 연회비를 뺀 값이다. */
-                        BigDecimal yearlySaving,
-                        /** 한도에 걸렸으면 그 한도, 아니면 null. */
-                        BigDecimal cappedAt,
                         List<Row> rows,
                         /**
                          * 공시 기준일(심의필 날짜). <b>화면에 반드시 병기한다</b> — 혜택 개정
                          * 추적이 스코프 밖이라 이 값이 유일한 방어다.
                          */
-                        String asOf) {}
+                        String asOf,
+                        /** 내 소비와 겹친 대상 수. <b>순위의 근거이자 우리만 할 수 있는 말이다.</b> */
+                        int matchCount,
+                        /** 겹친 이름 — 브랜드 먼저, 축 나중. 화면이 "자주 가는 곳"으로 보여준다. */
+                        List<String> matched) {}
 
     public record Result(List<Summary> summary, List<Offer> offers,
                          String periodLabel, int months,
-                         /** 실적을 어느 달로 셌는지. "2026.07". */
-                         String performanceMonth) {}
+                         /**
+                          * 겹침을 어느 구간에서 셌는지. {@code "2026.04 ~ 2026.06"}.
+                          *
+                          * <p>예전 이름은 {@code performanceMonth} 였는데 <b>둘 다 틀렸다</b> —
+                          * 실적은 판정하지 않기로 했고(09 §4.2), 창도 한 달이 아니라 여러 달이다.
+                          */
+                         String spendWindow) {}
 }

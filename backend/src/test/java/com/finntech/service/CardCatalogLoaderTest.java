@@ -98,7 +98,18 @@ class CardCatalogLoaderTest {
             }
         }
 
-        assertThat(candidates).allMatch(CardProduct::isPrecise);
+        // 자격 셋 (2026-08-13 개정) — grade 는 더 이상 자격이 아니다.
+        assertThat(candidates).as("발급 중인 것만")
+                .allMatch(c -> CardProduct.Status.ACTIVE.name().equals(c.getStatus()));
+        assertThat(candidates).as("기준일이 없으면 '이 시점 공시 기준'을 못 쓴다")
+                .allMatch(c -> c.getAsOf() != null);
+        assertThat(candidates).as("겹칠 대상이 없으면 할 말이 없다")
+                .allMatch(c -> c.getBenefits().stream().flatMap(b -> b.getTargets().stream())
+                        .anyMatch(t -> CardBenefitTarget.Kind.BRAND.name().equals(t.getKind())
+                                || CardBenefitTarget.Kind.AXIS.name().equals(t.getKind())));
+        assertThat(candidates).as("참고 등급도 후보다 — 요율이 흔들려도 대상은 참이다")
+                .anyMatch(c -> !c.isPrecise());
+
         assertThat(candidates).as("정렬을 이름으로 고정한다(원칙 3)")
                 .isSortedAccordingTo(java.util.Comparator.comparing(CardProduct::getName));
     }

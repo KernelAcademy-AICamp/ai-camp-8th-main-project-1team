@@ -421,14 +421,26 @@ class LotteCardCollector:
         raise CollectorError(f"PDF 다운로드 최종 실패: {last_error}")
 
 
-def build_products(docs: Iterable[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], int, int]:
+def build_products(
+    docs: Iterable[Dict[str, Any]], include_ended: bool = False
+) -> Tuple[List[Dict[str, Any]], int, int]:
+    """검색 결과를 저장 형식으로 옮긴다.
+
+    ``include_ended`` 는 **발급이 끝난 상품도 담는다**. 신규 발급은 못 하지만 이미 그
+    카드를 쓰는 사람이 있고, 그 사람에게 "지금 카드와 비교하면" 을 말하려면 혜택이 필요하다.
+
+    담더라도 ``issuance_ended`` 에 실제 값을 적는다 — 예전에는 여기에 ``False`` 가
+    박혀 있었다. 걸러낼 때는 어차피 전부 발급중이라 티가 안 났지만, 담기 시작하면
+    **발급이 끝난 상품이 발급중으로 적혀** 신규 발급 추천에 섞인다.
+    """
     products: List[Dict[str, Any]] = []
     excluded_ended = 0
     missing_files = 0
     seen_paths = set()
 
     for doc in docs:
-        if str(doc.get("ISU_E_YN") or "").strip().upper() == "Y":
+        ended = str(doc.get("ISU_E_YN") or "").strip().upper() == "Y"
+        if ended and not include_ended:
             excluded_ended += 1
             continue
 
@@ -467,7 +479,7 @@ def build_products(docs: Iterable[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]]
                 "docid": docid,
                 "published_date": display_date(published_raw),
                 "published_date_raw": published_raw,
-                "issuance_ended": False,
+                "issuance_ended": ended,
                 "issuance_ended_raw": str(doc.get("ISU_E_YN") or "").strip(),
                 "relative_directory": directory,
                 "files": files,
@@ -571,6 +583,11 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         help="이미 존재하는 정상 PDF도 다시 받기",
     )
     parser.add_argument(
+        "--include-ended",
+        action="store_true",
+        help="발급이 끝난 상품도 담기(기존 보유자의 혜택 비교용). issuance_ended 로 구분된다",
+    )
+    parser.add_argument(
         "--fail-fast",
         action="store_true",
         help="첫 PDF 다운로드 실패 시 즉시 중단",
@@ -601,7 +618,8 @@ def run(args: argparse.Namespace) -> int:
     output_root.mkdir(parents=True, exist_ok=True)
     collector = LotteCardCollector(timeout=args.timeout, retries=args.retries)
     api_total, docs = collector.collect_all(args.page_size, args.delay)
-    products, excluded_ended, missing_files = build_products(docs)
+    products, excluded_ended, missing_files = build_products(docs, args.include_ended)
+    ended_kept = sum(1 for product in products if product["issuance_ended"])
     selected_before_limit = len(products)
     if args.limit_products is not None:
         products = products[: args.limit_products]
@@ -612,9 +630,10 @@ def run(args: argparse.Namespace) -> int:
         "source_page": PAGE_URL,
         "search_api": SEARCH_API_URL,
         "created_at": now_iso(),
-        "filter": {"exclude_when_ISU_E_YN": "Y"},
+        "filter": {"exclude_when_ISU_E_YN": None if args.include_ended else "Y"},
         "api_total_products": api_total,
         "excluded_issuance_ended": excluded_ended,
+        "ended_products_kept": ended_kept,
         "active_products_before_limit": selected_before_limit,
         "active_products_without_file": missing_files,
         "selected_products": len(products),
@@ -625,9 +644,10 @@ def run(args: argparse.Namespace) -> int:
     }
     save_state(output_root, metadata)
     LOG.info(
-        "목록 완료: 전체 %d, 발급종료 제외 %d, 발급 중 %d, PDF %d",
+        "목록 완료: 전체 %d, 발급종료 %d제외/%d포함, 담은 상품 %d, PDF %d",
         api_total,
         excluded_ended,
+        ended_kept,
         selected_before_limit,
         total_files,
     )

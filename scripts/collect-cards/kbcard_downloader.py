@@ -24,12 +24,13 @@ import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from collections import Counter
+from datetime import date, datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-from collector_policy import USER_AGENT, require_robots_allowed
+from collector_policy import USER_AGENT, abc_group, require_robots_allowed
 
 
 BASE_URL = "https://card.kbcard.com"
@@ -517,9 +518,37 @@ class KBCardCollector:
         raise CollectorError(f"PDF 다운로드 최종 실패: {last_error}")
 
 
-def build_active_products(
-    raw_products: Iterable[Dict[str, Any]], category_key: str
+def keep_abc(products, baseline, groups):
+    """A/B/C 분류로 거른다. 무엇을 왜 뺐는지 함께 돌려준다(조용히 줄이지 않는다)."""
+    kept, dropped = [], Counter()
+    for product in products:
+        # **원문이 아니라 정규화된 날짜를 넘긴다.** KB 공시는 `2023.11.30` 처럼 점으로 적어
+        # 그대로 넘기면 파싱에 실패하고, `abc_group` 은 "중단인데 날짜 불명"을 B로 두므로
+        # C군이 통째로 살아남는다(실제로 188장이 그렇게 새어 들어왔다, 2026-08-14).
+        group, reason = abc_group(
+            product.get("product_name"), product.get("stop_date"), baseline
+        )
+        if group in groups:
+            kept.append(product)
+        else:
+            dropped[f"{group} {reason}"] += 1
+    return kept, dropped
+
+
+def build_products(
+    raw_products: Iterable[Dict[str, Any]],
+    category_key: str,
+    include_stopped: bool = False,
 ) -> Tuple[List[Dict[str, Any]], int, int]:
+    """상품 행을 저장 형식으로 옮긴다.
+
+    ``include_stopped`` 는 **발급이 끝난 상품도 담는다**. 신규 발급은 못 하지만 이미
+    그 카드를 쓰는 사람이 있고, 그 사람에게 "지금 카드와 비교하면" 을 말하려면 혜택이
+    필요하다. 버리면 비교의 과거 축이 사라진다.
+
+    담더라도 ``stop_date`` 에 중단일을 그대로 적는다 — 이걸 비워 두면 발급 가능한
+    상품과 구분이 안 되고, 신규 발급 추천에 섞여 **신청할 수 없는 카드를 권하게 된다.**
+    """
     products: List[Dict[str, Any]] = []
     excluded_stopped = 0
     active_without_pdf = 0
@@ -527,9 +556,10 @@ def build_active_products(
 
     for raw_product in raw_products:
         stop_date_text = normalize_text(raw_product.get("stop_date_text"))
-        if stop_date_text:
+        if stop_date_text and not include_stopped:
             excluded_stopped += 1
             continue
+        _, stop_date = normalize_date(stop_date_text) if stop_date_text else (None, None)
 
         name = normalize_text(raw_product.get("product_name"))
         card_code = str(raw_product.get("card_code") or "").strip()
@@ -569,7 +599,8 @@ def build_active_products(
                 "card_code": card_code,
                 "launch_date": launch_date,
                 "launch_date_raw": launch_raw,
-                "stop_date": None,
+                "stop_date": stop_date,
+                "stop_date_raw": stop_date_text or None,
                 "relative_directory": Path(category_key, directory).as_posix(),
                 "files": files,
             }
@@ -677,6 +708,21 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         help="실패 후 재시도 횟수(기본값: 4)",
     )
     parser.add_argument(
+        "--abc-baseline",
+        metavar="YYYY-MM-DD",
+        help="수집 대상 분류(A/B/C)를 적용하고 기준선을 이 날짜로 둔다",
+    )
+    parser.add_argument(
+        "--groups",
+        default="AB",
+        help="담을 군(기본 AB). --abc-baseline 과 함께 쓴다",
+    )
+    parser.add_argument(
+        "--include-stopped",
+        action="store_true",
+        help="발급이 끝난 상품도 담기(기존 보유자의 혜택 비교용). stop_date 로 구분된다",
+    )
+    parser.add_argument(
         "--overwrite",
         action="store_true",
         help="이미 존재하는 정상 PDF도 다시 받기",
@@ -693,6 +739,11 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     )
     args = parser.parse_args(argv)
 
+    if args.abc_baseline:
+        try:
+            args.abc_baseline = date.fromisoformat(args.abc_baseline)
+        except ValueError:
+            parser.error("--abc-baseline은 YYYY-MM-DD 형식이어야 합니다")
     if args.limit_products is not None and args.limit_products <= 0:
         parser.error("--limit-products는 0보다 커야 합니다")
     if args.delay < 0:
@@ -713,14 +764,19 @@ def run(args: argparse.Namespace) -> int:
 
     category_keys = list(CATEGORIES) if args.category == "all" else [args.category]
     categories: Dict[str, Any] = {}
+    skipped_by_group: Dict[str, int] = Counter()
     for category_key in category_keys:
         config = CATEGORIES[category_key]
         site_total, total_pages, raw_products = collector.collect_category(
             config["card_type"], config["label"], args.delay
         )
-        products, excluded_stopped, active_without_pdf = build_active_products(
-            raw_products, category_key
+        products, excluded_stopped, active_without_pdf = build_products(
+            raw_products, category_key, args.include_stopped
         )
+        if args.abc_baseline:
+            products, dropped = keep_abc(products, args.abc_baseline, args.groups)
+            skipped_by_group.update(dropped)
+        stopped_kept = sum(1 for product in products if product["stop_date_raw"])
         active_before_limit = len(products)
         if args.limit_products is not None:
             products = products[: args.limit_products]
@@ -730,6 +786,7 @@ def run(args: argparse.Namespace) -> int:
             "site_total_products": site_total,
             "total_pages": total_pages,
             "excluded_with_stop_date": excluded_stopped,
+            "stopped_products_kept": stopped_kept,
             "active_products_before_limit": active_before_limit,
             "active_products_without_pdf": active_without_pdf,
             "selected_products": len(products),
@@ -737,10 +794,11 @@ def run(args: argparse.Namespace) -> int:
             "products": products,
         }
         LOG.info(
-            "%s 완료: 전체 %d, 발급중단일 있음 %d 제외, 활성 %d, 선택 %d",
+            "%s 완료: 전체 %d, 발급중단 %d제외/%d포함, 담은 상품 %d, 선택 %d",
             config["label"],
             site_total,
             excluded_stopped,
+            stopped_kept,
             active_before_limit,
             len(products),
         )
@@ -749,7 +807,10 @@ def run(args: argparse.Namespace) -> int:
         "schema_version": 1,
         "source_page": PAGE_URL,
         "created_at": now_iso(),
-        "filter": {"include_only_when_stop_date_is_empty": True},
+        # 무엇을 담았는지 산출물 자체에 적는다 — 나중에 이 파일만 보고도 모수를 알 수 있어야 한다.
+        "filter": {"include_only_when_stop_date_is_empty": not args.include_stopped},
+        "abc_baseline": args.abc_baseline.isoformat() if args.abc_baseline else None,
+        "skipped_by_group": dict(skipped_by_group),
         "category_option": args.category,
         "limit_products_per_category": args.limit_products,
         "metadata_only": bool(args.metadata_only),
