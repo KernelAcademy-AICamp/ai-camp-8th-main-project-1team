@@ -2,8 +2,8 @@
 
 > 프로젝트명: MOA (쌍토끼클럽)
 > 문서 목적: ③의 설계(리포트 3종·라이프스타일 두 축)와 구현계획(현황·순서·계약·레거시·프론트)을 한 문서로 확정한다
-> 상태: 설계 확정 v1 · 구현 진행 중 · **2026-08-04 목표 추천(§4.6) 신설로 추천 3종 체제**
-> 최종 업데이트: 2026-08-04
+> 상태: 설계 확정 v1 · 구현 진행 중 · **예적금 개인화 폐기(§4.5, 08-12) · 지킨 돈 굴리기 신설(§4.7, 08-12) · ①→③ 입력 계약 확정(09 §2.2, 08-14)**
+> 최종 업데이트: 2026-08-18
 > 담당: ③ 취향·추천(가원)
 > 짝 문서: `06_지킴이_Agent_설계.md`(②) · `05_소비분석_Agent_설계.md`(①)
 > 구성: §0~§8 = 설계 · §9~§15 = 구현계획(옛 `14_취향…구현계획`을 합침) · §16 = 참고 · 구현 경로 `backend/src/main/java/com/finntech/service/`(`FundFlow*`·`SavingsCompare*`·`Taste*`)
@@ -478,7 +478,7 @@ scripts/collect-cards/schema-draft.json     ← 사람이 검토한 원천
 backend/.../resources/card-catalog.json     ← 파생물. 앱과 함께 배포된다
   │  CardCatalogLoader — 기동할 때 적재(시드 API 와 무관)
   ▼
-표 아홉 (V34)
+표 아홉 (V36)
   │  CardRecommendService — 실적 → 구간 → 분배 → 한도 → 통합한도 → 연회비
   ▼
 화면 (s-compare)                            ← 기준일 병기 · 신청 버튼 없음
@@ -487,7 +487,7 @@ backend/.../resources/card-catalog.json     ← 파생물. 앱과 함께 배포�
 **표가 아홉인 이유**는 길이가 카드마다 다른 것이 셋이기 때문이다 — 실적 구간(2~4단),
 구간별 월한도, 통합한도. 고정 배열로 두면 안 되고, **한도를 구간 행에 FK 로 매달면
 "없는 구간의 한도"가 구조적으로 못 들어온다**(게이트 규칙 하나가 스키마가 된다).
-설계 근거 전문은 마이그레이션 `V34__card_product.sql` 머리말에 있다.
+설계 근거 전문은 마이그레이션 `V36__card_product.sql` 머리말에 있다.
 
 **혜택 대상은 국세청 6자리가 아니라 카드혜택 축으로 받는다.** 6자리로 받으면 카드 한 장이
 코드 수십 개를 이고 있게 된다. 잇는 길은 `ksic_code → cardAxisByIndustry → 축 → 카드`다.
@@ -556,7 +556,7 @@ as_of 없음                     → 참고
 >
 > **왜.** 판정 가능한 축이 카드 실적·급여이체 둘뿐이라 실측상 **상품의 17%에서만 발화한다**(96건 중
 > 하나라도 걸리는 것 17%). 나머지 83%는 상품 데이터를 더 모아서 풀리는 게 아니다 — 막힌 쪽은 사용자
-> 재료이고, **더미 마이데이터에는 입출금 통장이 사용자당 하나뿐**이라(`V6__account.sql`) 주택청약·예적금
+> 재료이고, **더미 마이데이터에는 입출금 통장이 사용자당 하나뿐**이라(`backend-mydata` 의 `V6__account.sql` — backend 의 V6 는 다른 표다) 주택청약·예적금
 > 보유 같은 축은 계좌 목록을 받아 와도 꺼내 올 것이 없다. 자동이체를 뺀 것과 같은 사유다(§4.1).
 > 발화하지 않는 개인화를 유지하느니 **비교를 정확하게** 하는 쪽이 낫다.
 >
@@ -1233,20 +1233,23 @@ X  "택시는 줄이기 어려운 필수 소비예요."
 
 ## 9. 지금 어디까지 됐나
 
-한 줄 요약: **"뼈대는 좋은데, 핵심 매칭·리포트가 아직이고 옛 코드가 pivot과 부딪힌다."** 실제 코드 대조 결과다.
+한 줄 요약: **"③의 두 축이 아직 어떤 산출에도 닿지 않는다."** 실제 코드 대조 결과다(2026-08-18).
+
+동작하는 기능 셋은 **축을 우회해** ①의 소비분석·②의 지킨 돈·외부 공시에서 직접 재료를 받는다.
+자금흐름 축은 호출부가 없고, 취향 축은 API 까지 나오지만 그것을 부르는 화면이 없다.
 
 | ③ 부분 | 상태 | 근거 파일 / 엔드포인트 |
 |---|---|---|
-| **자금흐름 축 (L1~L5·AoM)** | 🟢 **엔진+seam+잔액소스 커밋됨(`b331e71`)** — 잔액소스(B안)로 L1·L3 실동, L2·L4·L5는 재료 대기 → UNKNOWN. 아직 리포트·추천이 소비 안 함(미연결) | `service/FundFlowService·FundFlowInputs·FundFlowSource·AccountFundFlowSource.java` |
+| **자금흐름 축 (L1~L5·AoM)** | ⚪ **연결 해제됨** — 엔진+seam+잔액소스는 커밋됨(`b331e71`). — 잔액소스(B안)로 L1·L3 실동, L2·L4·L5는 재료 대기 → UNKNOWN. 아직 리포트·추천이 소비 안 함(미연결) | `service/FundFlowService·FundFlowInputs·FundFlowSource·AccountFundFlowSource.java` |
 | **예적금 일반 비교** | 🟢 **개인화 없이 동작** (2026-08-12 개편) — 금감원 예·적금 조회 + 나이 무관 자격 필터 후 **공시 기본금리순**. 응답은 `(회사·상품명·기본금리·최고금리)` 넉 칸뿐이고 `userId`를 받지 않는다 | `service/SavingsCompareService.java` · `GET /api/savings/compare` · `web/SavingsCompareEndpointTest` |
 | **매칭 M1~M10** | ⚪ **연결 해제됨** — 클래스는 남아 있으나 **어디서도 호출하지 않는다.** 개인화를 접기로 하면서 `SavingsCompareService`에서 떼어 냈다 | `SavingsMatchService` · `SavingsMatchInputs` (§12 처리 방침) |
-| **상품 쪽 재료 다섯 칸** | ⚪ **연결 해제됨** — 금액 파싱은 삭제됐고, 우대조건 라벨러·중도해지이율 스냅샷은 파일로 남아 있으나 미연결이다. **비교 화면의 필터·표시 재료로 되살릴 수 있다** | `PreferentialLabelService` · `EarlyTerminationSource` · V35 (§12) |
+| **상품 쪽 재료 다섯 칸** | ⚪ **연결 해제됨** — 금액 파싱은 삭제됐고, 우대조건 라벨러·중도해지이율 스냅샷은 파일로 남아 있으나 미연결이다. **비교 화면의 필터·표시 재료로 되살릴 수 있다** | `PreferentialLabelService` · `EarlyTerminationSource` · V37 (§12) |
 | **목표별 통장 추천** | 🔴 **삭제됨** — `/api/points/recommendations`·`/api/products/recommend` 제거. 목표에 붙던 `projected`(미래가치)·추천 통장 칸도 뺐다 | `PointService` · 프론트 5개 화면 |
-| **카드 추천 (FP-03)** | 🔴 **미구현** — 서비스 없음, 데이터 수집 스크립트만 (수집 중) | `scripts/collect-cards/` |
+| **카드 추천 (FP-03)** | 🟡 **동작 · 판정 v2.1 미반영** — 카탈로그 561장 적재, 소비 원장을 읽어 겹침을 센다. 다만 화면이 아직 금액·실적 판정을 낸다(09 §7.2) | `service/CardRecommendService·CardCatalogLoader.java` · `V36` · `GET /api/products/recommend-cards` |
 | **리포트 3층** | 🔴 **월간만·옛 개념** — "긍정/부정 분류". 주간·연간 없음 | `service/ReportService·ReportCacheWriter.java` · `GET /api/report/monthly` |
-| **취향 분석** | 🟢 **구현+세분 커밋됨(`d3ded22`)** — 취향 축 + 스트리밍 가맹점 세분(멜론→음악) | `service/TasteAnalysisService·HobbyCatalog.java` · `GET /api/taste` |
+| **취향 분석** | 🟡 **백엔드만** — 취향 축·스트리밍 세분(멜론→음악)까지 구현됐으나 **부르는 곳이 컨트롤러 하나뿐**이다. 화면이 두 앱 모두 0개이고, 카드 추천도 이 축을 쓰지 않는다(①의 소비분석을 받는다) | `service/TasteAnalysisService·HobbyCatalog.java` · `GET /api/taste` |
 | **레거시 `RecommendService`** | 🔴 **pivot 상충** — 스코어=0.4×타겟카테고리(취향으로 저축 매칭) = 폐기 대상(R9 위반 경로) | `service/RecommendService.java` · `GET /api/products/recommend` |
-| **프론트** | 🔴 **frontend-moa엔 0개 — 그린필드** | `frontend-moa/src/screens/` |
+| **프론트** | 🔴 **frontend-moa 엔 ③ 화면 0개** — 인증·온보딩·홈·마이룸 등 10개뿐. 반면 **옛 `frontend` 에서는 넷이 돈다**(카드 추천·예적금 비교·지킨 돈 굴리기·리포트). 어느 쪽이 정본인지 미정(§13) | `frontend-moa/src/screens/` · `frontend/src/screens/` |
 
 ## 10. 어떤 순서로 만드나
 
@@ -1273,7 +1276,7 @@ X  "택시는 줄이기 어려운 필수 소비예요."
 | | 하는 일 | 수용기준 | 결과 |
 |---|---|---|---|
 | a | `min/max_amount` — `max_limit` 읽고 `etc_note` 파싱 (M5) | 지킨 돈이 하한에 못 미치는 상품이 목록에서 빠지고, 상한 초과 상품은 **남되 금액 문구가 붙는다** | ✅ 예금은 목돈 기준이라 **금액으로 거르지 않는다**(표시만) — 월 단위 `kept_mean`과 비교 대상이 아니다 |
-| b | `required_conditions`·`condition_scope` — `spcl_cnd` 라벨링 (M6) | 상품마다 요구 조건이 다르게 나오고, 판정 못 한 상품이 `확인 못한 조건 N개`로 내려간다. `퍼스트가계적금`처럼 우대조건이 `없음`인 상품에 **미충족 목록이 안 붙는다** | ✅ `PreferentialLabelService`(V35) · L5를 금융사별로 쪼개 당행 조건까지 판정 |
+| b | `required_conditions`·`condition_scope` — `spcl_cnd` 라벨링 (M6) | 상품마다 요구 조건이 다르게 나오고, 판정 못 한 상품이 `확인 못한 조건 N개`로 내려간다. `퍼스트가계적금`처럼 우대조건이 `없음`인 상품에 **미충족 목록이 안 붙는다** | ✅ `PreferentialLabelService`(V37) · L5를 금융사별로 쪼개 당행 조건까지 판정 |
 | c | `early_termination_rate` — 은행 공시 수집 (M10) | 유동성 우선(M2) 사용자의 동점 처리에 반영되고, 못 구한 상품은 화면에서 그 자리가 **빈다** | 🟡 규칙·로더는 완료, **수집은 9건까지** |
 
 > *실제로 걸린 것:* b는 예상대로 가장 컸다(라벨러 신설 + 마이그레이션 + L5 계약 변경). c는 수집보다
@@ -1326,14 +1329,14 @@ X  "택시는 줄이기 어려운 필수 소비예요."
 ### 12.1 개인화 개편으로 연결이 끊긴 코드 (2026-08-12)
 
 예적금을 비교만 하기로 하면서 아래가 **호출부를 잃었다.** 서로만 참조하는 닫힌 덩어리라 다른 기능에
-영향은 없지만, **컴파일·기동은 그대로 된다**(Spring 빈으로 뜨고 V35 표도 생긴다).
+영향은 없지만, **컴파일·기동은 그대로 된다**(Spring 빈으로 뜨고 V37 표도 생긴다).
 
 | 코드 | 지금 | 되살릴 여지 |
 |---|---|---|
 | `SavingsMatchService`·`SavingsMatchInputs` | 미연결 | 개인화 자체라 비교 화면엔 안 쓴다 |
-| `PreferentialLabelService`·`ProductPreferential`·V35 | 미연결 | **크다** — 우대조건 라벨은 뱅크샐러드식 **필터 축**이 될 수 있다(개인 데이터 아님) |
+| `PreferentialLabelService`·`ProductPreferential`·V37 | 미연결 | **크다** — 우대조건 라벨은 뱅크샐러드식 **필터 축**이 될 수 있다(개인 데이터 아님) |
 | `EarlyTerminationSource` + `savings/early-termination.json` | 미연결 | **크다** — `중간에 깨면 연 0.1%`는 비교표의 칸이다 |
-| `ParkingAccountSource` | 미연결 | 파킹통장을 비교 목록에 넣을지에 달렸다 |
+| `ParkingAccountSource` | **연결됨** — `KeptMoneyParkingService` 가 쓴다(§4.7) | 고아가 아니다. 이 줄은 2026-08-18 정정 |
 | `FinancialCompanyNames` | 라벨러만 씀 | 당행 판정용이라 개인화와 함께 값이 줄었다 |
 | `FundFlowService`·`AccountFundFlowSource` | 미연결 | FP-04(목표 추천)가 예산 산정에 쓸 예정 |
 | `scripts/collect-savings/` | 스크립트라 무관 | 실측 재현·수집은 계속 유효 |
