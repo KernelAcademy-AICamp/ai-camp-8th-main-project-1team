@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * 실적 구간이 2~4단이고, 한도가 구간마다 다르고, 그 위에 통합한도가 또 있고, 실적 제외
  * 목록이 카드마다 다르다.
  *
- * <p>그래서 카드는 표 아홉({@code V34})으로 옮기되, <b>"어느 환경에서 켜도 같은 카드가
+ * <p>그래서 카드는 표 아홉({@code V36})으로 옮기되, <b>"어느 환경에서 켜도 같은 카드가
  * 나온다"는 성질은 잃지 않았다</b> — {@code card-catalog.json} 을 리소스로 함께 배포하고
  * 기동할 때 싣는다({@code CardCatalogLoader}). 시드 API 와 무관하다.
  *

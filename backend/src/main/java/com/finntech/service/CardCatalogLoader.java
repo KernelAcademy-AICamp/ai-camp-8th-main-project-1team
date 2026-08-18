@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 카드 카탈로그를 기동할 때 표로 옮긴다 — {@code card-catalog.json} → 표 아홉(V34).
+ * 카드 카탈로그를 기동할 때 표로 옮긴다 — {@code card-catalog.json} → 표 아홉(V36).
  *
  * <p><b>왜 시드 API 가 아니라 기동 시 적재인가.</b> 카드는 사용자 데이터가 아니라 <b>앱의
  * 상수</b>다. 시드 API 에 두면 "시드를 돌렸는가"에 따라 화면이 달라지고, 실제로
