@@ -13,9 +13,19 @@ services:
   mysql:
     # 버퍼풀 1GB. 6.17GB를 전부 담지는 못하지만, 자주 닿는 인덱스와 최근 구간이 상주해
     # 11.2M행에서도 조회가 디스크를 덜 친다(2GB 검증에서는 256M로도 18~74ms였다).
+    # binlog 보관 3일. **이 줄이 base 파일이 아니라 여기에도 있어야 한다** — compose 의
+    # `command:` 는 파일끼리 합쳐지지 않고 **마지막 파일이 통째로 덮는다.** 배포는
+    # `-f prod.yml -f local-db.yml -f docker-compose.prod.large.yml` 순서라, base 에만 적으면
+    # 조용히 무시된다(2026-08-18 실측: base 에 259200 을 적었는데 운영은 30일 그대로였고,
+    # 돌던 인자가 이 파일의 것이었다 — buffer pool 이 그 증거였다).
+    #
+    # **주석을 `command:` 블록 안에 쓰면 안 된다.** `>` 는 접힌 블록 스칼라라 들여쓴 줄이
+    # 전부 문자열이 된다 — `#` 이 주석이 아니라 명령 인자가 되어 compose 가
+    # `invalid command line string` 으로 거절한다(CI 가 잡았다).
     command: >
       --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
       --innodb-buffer-pool-size=1G
+      --binlog-expire-logs-seconds=259200
     mem_limit: 2g
 
   backend:

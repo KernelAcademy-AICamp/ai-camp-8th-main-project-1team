@@ -75,7 +75,15 @@ verify() {
   gzip -t "$out" 2>/dev/null || { rm -f "$out"; fail "$what 덤프가 깨졌다(gzip)"; }
   local bytes; bytes=$(stat -c %s "$out" 2>/dev/null || stat -f %z "$out" 2>/dev/null)
   [ "${bytes:-0}" -ge 1024 ] || { rm -f "$out"; fail "$what 덤프가 너무 작다(${bytes}B)"; }
-  grep -q . <(zcat "$out" | head -c 200) || { rm -f "$out"; fail "$what 덤프가 비었다"; }
+  # **끝까지 쓰였는지**를 본다. gzip -t 는 gz 스트림이 잘린 것만 잡는데, mysqldump 가
+  # 중간에 죽으면 *온전한 gz 안에 반쪽 덤프*가 들어가고 그건 통과해 버린다. mysqldump 는
+  # 정상 종료할 때만 마지막 줄에 완료 표시를 남기므로 그것을 확인한다.
+  #
+  # 예전에는 앞 200바이트가 비었는지만 봤다(`zcat | head -c 200`). 그러면 반쪽 덤프를 못
+  # 잡는 데다, head 가 먼저 파이프를 닫아 **매일 밤 로그에 `gzip: stdout: Broken pipe` 가
+  # 찍혔다** — 백업은 멀쩡한데 로그만 고장 난 것처럼 보였다.
+  zcat "$out" 2>/dev/null | tail -5 | grep -q "Dump completed on" \
+    || { rm -f "$out"; fail "$what 덤프가 끝까지 안 쓰였다"; }
   log "  $what → $(du -h "$out" | cut -f1)"
 }
 
