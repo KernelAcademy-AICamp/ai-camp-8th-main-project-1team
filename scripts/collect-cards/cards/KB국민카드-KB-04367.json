@@ -5,7 +5,7 @@
   "status": "active",
   "as_of": "2025-03-28",
   "review_no": "여신금융협회 심의필 제 2025-C1a-03845호",
-  "compliance_no": "260406-01115-PIF",
+  "compliance_no": "260406-01115-PIF(2026.04.06)",
   "posted_at": "2025-04-01",
   "card_type": "CREDIT",
   "annual_fee": [
@@ -31,6 +31,12 @@
       "affiliate": 13000
     }
   ],
+  "annual_fee_notes": [
+    "연회비는 카드 발급 시점을 기준으로 1년 단위로 청구",
+    "최초/2차년도 연회비 면제 조건 없음",
+    "모바일 단독카드는 실물 없이 스마트폰 앱(KB Pay)에 등록하여 이용",
+    "모바일 단독카드 발급 시 국내 일부 및 해외 오프라인 가맹점 사용 제한"
+  ],
   "performance": {
     "period": "전월 1일~말일",
     "basis": "승인일",
@@ -43,8 +49,7 @@
     "includes_family_card": true,
     "includes": [
       "국내 일시불",
-      "할부",
-      "해외 일시불"
+      "할부"
     ],
     "tiers": [
       300000,
@@ -104,10 +109,9 @@
   },
   "benefits": [
     {
-      "group": "U+ 유모바일 통신료 할인",
+      "group": "U+ 유모바일 통신요금 할인",
       "kind": "할인",
       "settle": "청구할인",
-      "requires_tier": 300000,
       "targets": [
         {
           "category": "통신",
@@ -119,7 +123,13 @@
       "monthly_cap_by_tier": {
         "300000": 7000,
         "700000": 11000
-      }
+      },
+      "conditions": [
+        "타 통신사 자동납부 건 제외",
+        "최초 카드 사용 등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시 3,500원 할인",
+        "할인금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인",
+        "자동납부 승인 건 합산하여 월 할인금액 내 할인"
+      ]
     }
   ],
   "combined_caps": [],
@@ -134,23 +144,30 @@
     }
   ],
   "non_monetary": [
-    "모바일 단독카드 발급 가능"
+    "가족카드 발급 가능(연회비 없음)",
+    "해외원화결제(DCC) 차단 서비스 제공"
   ],
   "schema_gaps": [
-    "최초 카드 사용 등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시 월 3,500원 할인 제공",
-    "최초 카드 사용등록월 실적이 30만원 이상일 경우 다음달에 해당 실적 구간 할인금액 적용",
-    "할인금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인 적용"
+    "최초 카드 사용 등록월 실적이 30만원 이상일 경우 다음달에 해당 실적 구간 할인금액 적용 조건",
+    "모바일 단독카드 발급 시 사용 제한 가맹점 존재"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/04367__prdctOpmn_20260626.pdf",
   "_extraction_check": {
-    "source_pdf": "04367.pdf",
+    "source_pdf": "01_04367__prdctOpmn_20260626.pdf",
+    "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [
       0.0,
       0.2
     ],
-    "numeric_consensus": true,
-    "mismatches": [],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": null,
+        "second": 300000
+      }
+    ],
     "second_run_error": null,
     "external_max_benefit": {
       "status": "UNAVAILABLE",

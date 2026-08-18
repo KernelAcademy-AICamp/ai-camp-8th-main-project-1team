@@ -1,0 +1,283 @@
+{
+  "issuer": "KB국민카드",
+  "name": "인덕대학원 KB노리체크카드",
+  "product_id": "KB-04211",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Maestro",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      200000,
+      300000,
+      500000,
+      1000000
+    ],
+    "excluded": [
+      {
+        "code": "TRANSIT",
+        "label": "후불교통 이용금액"
+      },
+      {
+        "code": "NO_APPROVAL",
+        "label": "무승인 이용금액"
+      },
+      {
+        "code": "OVERSEAS",
+        "label": "해외 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "영화",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 35,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "CGV",
+          "channel": [
+            "현장구매",
+            "직영 홈페이지",
+            "스마트폰 앱"
+          ],
+          "note": "건당 2만원까지 할인"
+        }
+      ]
+    },
+    {
+      "group": "놀이공원",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 50,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "롯데월드, 에버랜드",
+          "channel": [
+            "현장 예매"
+          ],
+          "note": "건당 5만원까지 할인"
+        }
+      ]
+    },
+    {
+      "group": "커피전문점",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 20,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "스타벅스",
+          "note": "건당 2만원까지 할인"
+        }
+      ]
+    },
+    {
+      "group": "패밀리레스토랑",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 20,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "VIPS, 아웃백",
+          "note": "건당 5만원까지 할인"
+        }
+      ]
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "버스, 지하철",
+          "note": "월 2만원까지 할인"
+        }
+      ]
+    },
+    {
+      "group": "이동통신요금",
+      "kind": "할인",
+      "settle": "환급할인",
+      "amount_krw": 2500,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "SKT, KT, LG U+",
+          "channel": [
+            "자동이체"
+          ],
+          "note": "월 1회, 자동이체금액 5만원 이상 시"
+        }
+      ]
+    },
+    {
+      "group": "편의점",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "GS25",
+          "note": "건당 2만원까지 할인"
+        }
+      ]
+    },
+    {
+      "group": "서점",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 5,
+      "min_amount": 20000,
+      "targets": [
+        {
+          "category": "교보문고",
+          "channel": [
+            "현장구매",
+            "직영 홈페이지",
+            "스마트폰 앱"
+          ],
+          "note": "건당 5만원까지 할인"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "월간 통합 할인한도",
+      "members": [
+        "영화",
+        "놀이공원",
+        "커피전문점",
+        "패밀리레스토랑",
+        "대중교통",
+        "이동통신요금",
+        "편의점",
+        "서점"
+      ],
+      "cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000,
+        "500000": 30000,
+        "1000000": 50000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 구매"
+    },
+    {
+      "code": "STORE_IN_STORE",
+      "label": "백화점 및 대형할인점 입점 점포"
+    }
+  ],
+  "non_monetary": [
+    "금융수수료 면제 서비스 (전월 이용금액 70만원 이상 시)"
+  ],
+  "schema_gaps": [
+    "금융수수료 면제 서비스는 전월 이용실적 70만원 이상 시 제공되는 비금전적 혜택임",
+    "월간 통합 할인한도는 동일계열 체크카드와 합산하여 적용됨"
+  ],
+  "posted_at": "2013-07-09",
+  "source_url": "https://img2.kbcard.com/obj/card/download/04211__prdctOpmn_20260716.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04211__prdctOpmn_20260716.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": 2500,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].min_amount",
+        "first": null,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": null,
+        "second": 35
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": 35,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[2].rate_percent",
+        "first": 5,
+        "second": 20
+      },
+      {
+        "path": "$.benefits[3].min_amount",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].rate_percent",
+        "first": 20,
+        "second": 10
+      },
+      {
+        "path": "$.benefits[3].requires_tier",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[4].amount_krw",
+        "first": null,
+        "second": 2500
+      },
+      {
+        "path": "$.benefits[4].rate_percent",
+        "first": 10,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,271 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 톡톡with Kbank카드",
+  "product_id": "KB-09483",
+  "status": "active",
+  "as_of": "2023-04-05",
+  "review_no": "여신금융협회 심의필 제 2023-C1a-02781호",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 12000,
+      "base": 7000,
+      "affiliate": 5000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Visa",
+      "total": 12000,
+      "base": 7000,
+      "affiliate": 5000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      400000
+    ],
+    "excluded": [
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고등학교 납입금 전체(수업료/교육비/현장학습비/급식비), 대학(대학원)등록금"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통요금"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인전표(자판기, 터널통행료, 항공기내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "스타벅스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 50,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스"
+          ],
+          "note": "사이렌오더 포함. 상품권 및 선불카드 충전 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 10000
+      }
+    },
+    {
+      "group": "온라인 간편결제",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "간편결제",
+          "brands": [
+            "KB Pay",
+            "삼성페이",
+            "LG 페이",
+            "카카오페이",
+            "네이버페이",
+            "PAYCO",
+            "쿠페이",
+            "스마일페이",
+            "SSGPAY",
+            "L.pay"
+          ],
+          "note": "국내 온라인 가맹점 결제 건에 한함. 오프라인 매장 결제 건 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000
+      }
+    },
+    {
+      "group": "구독",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 20,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "디지털구독",
+          "brands": [
+            "YouTube Premium",
+            "넷플릭스",
+            "웨이브",
+            "티빙"
+          ],
+          "note": "공식 홈페이지 및 모바일(앱)을 통한 정기결제 시 제공"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000
+      }
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ],
+          "note": "시외버스, 고속버스, 공항버스 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000
+      }
+    },
+    {
+      "group": "배달",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "배달",
+          "brands": [
+            "배달의민족",
+            "요기요"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "톡톡 with 계열 카드 전월 이용실적 및 서비스별 월 할인한도 통합 적용"
+  ],
+  "schema_gaps": [
+    "최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 제공",
+    "톡톡 with 계열 카드 중복 소지 시 최초 발급된 카드의 사용등록일 기준 통합 적용"
+  ],
+  "posted_at": "2023-04-05",
+  "source_url": "https://img2.kbcard.com/obj/card/download/09483__prdctOpmn_20230901.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09483__prdctOpmn_20230901.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.annual_fee.length",
+        "first": 2,
+        "second": 4
+      },
+      {
+        "path": "$.annual_fee[1].base",
+        "first": 7000,
+        "second": 1000
+      },
+      {
+        "path": "$.annual_fee[1].total",
+        "first": 12000,
+        "second": 6000
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.400000",
+        "first": 10000,
+        "second": 5000
+      },
+      {
+        "path": "$.benefits[3].rate_percent",
+        "first": 50,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[4].monthly_cap_by_tier.400000",
+        "first": 5000,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[4].rate_percent",
+        "first": 5,
+        "second": 50
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 24000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,299 @@
+{
+  "issuer": "KB국민카드",
+  "name": "BeV Ⅲ 카드",
+  "product_id": "KB-09310",
+  "status": "active",
+  "as_of": "2026-03-24",
+  "review_no": "여신금융협회심의필제2026-C1a-03929호",
+  "compliance_no": "준법감시인 260316-00745-PIF(2026.03.16)",
+  "posted_at": "2017-06-14",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내외겸용(K-world UPI)",
+      "brand": "UPI",
+      "total": 200000,
+      "base": 7000,
+      "affiliate": 193000
+    },
+    {
+      "scope": "국내외겸용(Master)",
+      "brand": "Mastercard",
+      "total": 210000,
+      "base": 7000,
+      "affiliate": 203000
+    }
+  ],
+  "annual_fee_notes": [
+    "가족카드는 본인카드와 동일 브랜드의 동일 Type으로 배우자에 한해 신청 가능",
+    "연회비는 최초 카드 발급 월을 기준으로 매년 청구",
+    "연회비 면제 조건 없음"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      500000,
+      1000000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원) 등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자"
+      },
+      {
+        "code": "PENALTY",
+        "label": "연체료"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입/충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(교통요금, 자판기, 터널 통행료, 항공기 내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "주유 할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "amount_krw": 100,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "주유",
+          "industries": [
+            "전 주유소/충전소"
+          ],
+          "note": "리터당 100원 할인"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 200000,
+        "1000000": 400000
+      }
+    },
+    {
+      "group": "포인트 적립",
+      "kind": "적립",
+      "rate_percent": 1.1,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "주중 일반 적립",
+          "note": "전 가맹점 이용금액의 1.1% 적립(주유소, 충전소 제외)"
+        }
+      ]
+    },
+    {
+      "group": "포인트 적립",
+      "kind": "적립",
+      "rate_percent": 1.3,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "주말 일반 적립",
+          "note": "전 가맹점 이용금액의 1.3% 적립(주유소, 충전소 제외)"
+        }
+      ]
+    },
+    {
+      "group": "포인트 적립",
+      "kind": "적립",
+      "rate_percent": 1.3,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "일상 쇼핑 특별 적립",
+          "industries": [
+            "백화점",
+            "대형마트"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "포인트 적립",
+      "kind": "적립",
+      "rate_percent": 1.5,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "프리미엄 쇼핑 특별 적립",
+          "industries": [
+            "면세점",
+            "프리미엄 아울렛"
+          ]
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "FUEL",
+      "label": "주유소, 충전소"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "각종 세금 및 공과금"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원) 등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자"
+    },
+    {
+      "code": "PENALTY",
+      "label": "연체료"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입/충전금액"
+    }
+  ],
+  "non_monetary": [
+    "쿠폰 서비스(연 1회, 4가지 중 택 1)",
+    "해외여행상품 현장 할인",
+    "제주 자연 렌트카 이용요금 현장 할인",
+    "비전힐스 PAR3 주중 할인",
+    "도서 요약 서비스",
+    "금융 서비스(수수료 면제 및 외환 수수료 감면)"
+  ],
+  "schema_gaps": [
+    "쿠폰 서비스: 연 1회 제공, 전년 이용금액 600만원 이상 시 제공(최초 발급 시 50만원 이상)",
+    "주유 할인 한도는 이용금액 기준임",
+    "포인트 적립은 결제일 다음 영업일에 적립",
+    "최초 카드 사용 등록일로부터 다음 달 말일까지는 전월 실적 50만원 미만 시에도 서비스 제공"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09310__prdctOpmn_20260430.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09310__prdctOpmn_20260430.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": null,
+        "second": 100
+      },
+      {
+        "path": "$.benefits[0].kind",
+        "first": "적립",
+        "second": "할인"
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.1000000",
+        "first": null,
+        "second": 400000
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.500000",
+        "first": null,
+        "second": 200000
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": 1.3,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": 1.1,
+        "second": 1.3
+      },
+      {
+        "path": "$.benefits[2].amount_krw",
+        "first": 100,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].kind",
+        "first": "할인",
+        "second": "적립"
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.1000000",
+        "first": 400000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.500000",
+        "first": 200000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].rate_percent",
+        "first": null,
+        "second": 1.3
+      },
+      {
+        "path": "$.benefits[3].rate_percent",
+        "first": 1.3,
+        "second": 1.5
+      },
+      {
+        "path": "$.benefits[4].rate_percent",
+        "first": 1.5,
+        "second": 1.1
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 400000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

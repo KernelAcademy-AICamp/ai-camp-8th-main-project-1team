@@ -1,0 +1,142 @@
+{
+  "issuer": "KB국민카드",
+  "name": "한화손해보험 캐롯 KB국민카드",
+  "product_id": "KB-04339",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "K-WORLD(JCB타입)/Master",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "tiers": [
+      300000,
+      700000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "DISCOUNTED_TRANS",
+        "label": "한화손해보험 캐롯 KB국민카드로 할인 받은 이용건"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전 금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(교통요금, 자판기, 터널통행료, 항공기 내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "한화손해보험 캐롯 자동납부",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "보험료",
+          "note": "한화손해보험 캐롯 요금 자동납부"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 12000,
+        "700000": 17000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "심의필 번호 및 날짜 정보가 문서 내에 존재하지 않음",
+    "실적 유예기간: 최초 카드 사용등록일로부터 다음 달 말일까지 1구간(30만원) 실적 제공"
+  ],
+  "posted_at": "2021-06-04",
+  "source_url": "https://img2.kbcard.com/obj/card/download/04339__prdctOpmn_20260812.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04339__prdctOpmn_20260812.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 17000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

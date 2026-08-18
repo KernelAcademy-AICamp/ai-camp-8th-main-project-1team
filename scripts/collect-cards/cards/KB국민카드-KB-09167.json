@@ -1,0 +1,303 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 가온글로벌카드",
+  "product_id": "KB-09167",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 15000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Master",
+      "total": 20000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      200000,
+      500000
+    ],
+    "excluded": [
+      {
+        "code": "ADDITIONAL_BENEFIT_USAGE",
+        "label": "추가 적립(쇼핑/여행)받은 이용금액(해당매출 전체)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "지방세"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자"
+      },
+      {
+        "code": "PENALTY",
+        "label": "연체료"
+      },
+      {
+        "code": "ANNUAL_FEE",
+        "label": "연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전 금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통 이용 등 무승인전표"
+      },
+      {
+        "code": "OVERSEAS",
+        "label": "해외이용금액"
+      },
+      {
+        "code": "CANCEL",
+        "label": "취소전표"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "국내 기본 적립",
+      "kind": "적립",
+      "rate_percent": 0.3,
+      "targets": [
+        {
+          "category": "국내 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "쇼핑 추가 적립",
+      "kind": "적립",
+      "rate_percent": 0.7,
+      "min_amount": 200000,
+      "targets": [
+        {
+          "category": "소셜커머스",
+          "brands": [
+            "쿠팡",
+            "티켓몬스터",
+            "위메프"
+          ]
+        },
+        {
+          "category": "온라인마켓",
+          "brands": [
+            "G마켓",
+            "옥션",
+            "11번가"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "여행 추가 적립",
+      "kind": "적립",
+      "rate_percent": 0.7,
+      "min_amount": 200000,
+      "targets": [
+        {
+          "category": "여행",
+          "industries": [
+            "면세점",
+            "여행사",
+            "항공사"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "해외 기본 적립",
+      "kind": "적립",
+      "rate_percent": 1.0,
+      "targets": [
+        {
+          "category": "해외 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "해외 추가 적립",
+      "kind": "적립",
+      "rate_percent": 1.0,
+      "min_amount": 200000,
+      "targets": [
+        {
+          "category": "해외 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "해외 특별 적립",
+      "kind": "적립",
+      "rate_percent": 1.0,
+      "min_amount": 500000,
+      "targets": [
+        {
+          "category": "해외 가맹점",
+          "note": "이용금액 50만원까지 제공"
+        }
+      ]
+    },
+    {
+      "group": "배송료 할인",
+      "kind": "할인",
+      "rate_percent": 5.0,
+      "targets": [
+        {
+          "category": "해외 배송대행",
+          "brands": [
+            "아이포터",
+            "이하넥스"
+          ],
+          "note": "월 1회, 이하넥스는 The 빠른서비스 제외"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "(부분)무이자할부 이용 금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "지방세"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원)등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자"
+    },
+    {
+      "code": "PENALTY",
+      "label": "연체료"
+    },
+    {
+      "code": "ANNUAL_FEE",
+      "label": "연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    },
+    {
+      "code": "CANCEL",
+      "label": "취소금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "최초 카드 사용등록일로부터 다음달 말일까지는 전월 실적 조건 없이 서비스 제공 (해외가맹점 특별적립 제외)",
+    "배송료 할인은 월 1회 제공"
+  ],
+  "posted_at": "2015-12-11",
+  "source_url": "https://img2.kbcard.com/obj/card/download/09167__prdctOpmn_20240104.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09167__prdctOpmn_20240104.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 7,
+        "second": 8
+      },
+      {
+        "path": "$.benefits[0].min_amount",
+        "first": 200000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": null,
+        "second": 200000
+      },
+      {
+        "path": "$.benefits[2].min_amount",
+        "first": 500000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].requires_tier",
+        "first": null,
+        "second": 500000
+      },
+      {
+        "path": "$.benefits[4].min_amount",
+        "first": 200000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[4].requires_tier",
+        "first": null,
+        "second": 200000
+      },
+      {
+        "path": "$.benefits[6].min_amount",
+        "first": 200000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[6].requires_tier",
+        "first": null,
+        "second": 200000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,284 @@
+{
+  "issuer": "KB국민카드",
+  "name": "삼성증권 CMA KB국민 nori(노리)체크카드",
+  "product_id": "KB-01702",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "국내전용",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Maestro",
+      "total": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "min_amount": 0,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "시내버스",
+            "지하철",
+            "고속버스",
+            "시외버스"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 2000
+      }
+    },
+    {
+      "group": "통신요금",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 5,
+      "min_amount": 50000,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "통신",
+          "industries": [
+            "SKT",
+            "KT",
+            "LG U플러스"
+          ],
+          "note": "자동납부 시 적용, 월 1회"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 2500
+      }
+    },
+    {
+      "group": "CGV",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 35,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "CGV"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 7000
+      }
+    },
+    {
+      "group": "스타벅스",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 20,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 4000
+      }
+    },
+    {
+      "group": "놀이공원",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 50,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "에버랜드",
+            "롯데월드"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 25000
+      }
+    },
+    {
+      "group": "패밀리레스토랑",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 20,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "외식",
+          "brands": [
+            "아웃백",
+            "VIPS"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000
+      }
+    },
+    {
+      "group": "교보문고",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 5,
+      "min_amount": 20000,
+      "targets": [
+        {
+          "category": "도서",
+          "brands": [
+            "교보문고"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 2500
+      }
+    },
+    {
+      "group": "GS25",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 1000
+      }
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "월간통합할인한도",
+      "members": [
+        "대중교통",
+        "통신요금",
+        "CGV",
+        "스타벅스",
+        "놀이공원",
+        "패밀리레스토랑",
+        "교보문고",
+        "GS25"
+      ],
+      "cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000,
+        "500000": 30000,
+        "1000000": 50000
+      }
+    }
+  ],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "금융수수료 면제 (인터넷/모바일/폰뱅킹 타행이체, KB국민은행 ATM 이용수수료)"
+  ],
+  "schema_gaps": [
+    "카드 타입이 체크카드이나, 하이브리드 기능(후불교통)이 포함되어 있음",
+    "금융수수료 면제 조건: 최근 1개월 노리 동일 계열카드 이용실적 70만원 이상 시 적용",
+    "신규 발급 시 사용등록일 포함 60일간은 실적 없어도 1만원 한도 내 할인 제공 (단, 대중교통/통신/금융수수료 면제 제외)"
+  ],
+  "posted_at": "2011-10-04",
+  "source_url": "https://img2.kbcard.com/obj/card/download/01702__prdctOpmn_20241202.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_01702__prdctOpmn_20241202.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[3].min_amount",
+        "first": 30000,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.200000",
+        "first": 10000,
+        "second": 4000
+      },
+      {
+        "path": "$.benefits[5].min_amount",
+        "first": 20000,
+        "second": 30000
+      },
+      {
+        "path": "$.benefits[5].monthly_cap_by_tier.200000",
+        "first": 2500,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[5].rate_percent",
+        "first": 5,
+        "second": 20
+      },
+      {
+        "path": "$.benefits[6].min_amount",
+        "first": 30000,
+        "second": 20000
+      },
+      {
+        "path": "$.benefits[6].monthly_cap_by_tier.200000",
+        "first": 25000,
+        "second": 2500
+      },
+      {
+        "path": "$.benefits[6].rate_percent",
+        "first": 50,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[7].min_amount",
+        "first": 10000,
+        "second": 30000
+      },
+      {
+        "path": "$.benefits[7].monthly_cap_by_tier.200000",
+        "first": 4000,
+        "second": 25000
+      },
+      {
+        "path": "$.benefits[7].rate_percent",
+        "first": 20,
+        "second": 50
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

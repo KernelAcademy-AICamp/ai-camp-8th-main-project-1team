@@ -1,0 +1,171 @@
+{
+  "issuer": "KB국민카드",
+  "name": "코웨이 KB국민카드",
+  "product_id": "KB-04586",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "2015-09-01",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 10000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Visa",
+      "total": 15000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입완료일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "tiers": [
+      300000,
+      600000,
+      900000
+    ],
+    "excluded": [
+      {
+        "code": "DISCOUNTED_AMOUNT",
+        "label": "뷰티업종/이동통신요금 청구할인 받은 이용금액(전체)"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "(부분)무이자 할부 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통 이용 등 무승인전표"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "렌탈비/멤버십 청구할인 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "코웨이 렌탈비/멤버십",
+          "note": "자동이체 시 적용"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 10000,
+        "600000": 15000,
+        "900000": 20000
+      }
+    },
+    {
+      "group": "뷰티업종 청구할인 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "뷰티업종",
+          "industries": [
+            "미용실",
+            "피부미용원",
+            "화장품점"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000
+      }
+    },
+    {
+      "group": "이동통신요금 청구할인 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 3000,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "이동통신",
+          "brands": [
+            "SKT",
+            "KT",
+            "LG U+"
+          ],
+          "note": "건당 1만원 이상 자동이체 시 월 1회 할인"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "PG",
+      "label": "PG(결제대행) 업체를 통한 결제"
+    },
+    {
+      "code": "IN_STORE",
+      "label": "호텔, 백화점, 대형마트, 철도역사 등에 입점한 가맹점"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 구매"
+    }
+  ],
+  "non_monetary": [
+    "KB Good Touch 서비스 (2020년 1월 1일 이전 발급 카드에 한함)"
+  ],
+  "schema_gaps": [
+    "렌탈비 할인 시 승인금액이 할인금액보다 작을 경우 승인금액만큼만 할인",
+    "최초 발급 후 사용등록일로부터 다음달 말일까지 이용실적 유예 조건 존재"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04586__prdctOpmn_20220617.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04586__prdctOpmn_20220617.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 20000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

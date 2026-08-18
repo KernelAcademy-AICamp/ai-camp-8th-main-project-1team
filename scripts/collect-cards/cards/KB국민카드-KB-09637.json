@@ -5,10 +5,12 @@
   "status": "active",
   "as_of": null,
   "review_no": null,
-  "compliance_no": "B-20250626-9829-00744-01",
+  "compliance_no": null,
   "posted_at": "2025-09-30",
   "card_type": "CHECK",
   "benefit_style": "DISCOUNT_POINT",
+  "policy_card": null,
+  "has_transit": true,
   "annual_fee": [
     {
       "scope": "국내전용",
@@ -21,6 +23,11 @@
       "total": 0
     }
   ],
+  "annual_fee_notes": [
+    "연회비 없음"
+  ],
+  "performance": null,
+  "benefit_unit": {},
   "benefits": [
     {
       "group": "쿠팡 이용 건 적립",
@@ -89,8 +96,16 @@
       "label": "지방세(지방세, 상하수도, 세외수입)"
     },
     {
+      "code": "PENALTY",
+      "label": "연체료"
+    },
+    {
       "code": "GIFT_CARD",
       "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입(충전)금액"
+    },
+    {
+      "code": "CANCEL",
+      "label": "취소금액"
     },
     {
       "code": "HOUSING",
@@ -105,12 +120,13 @@
     "쿠팡 와우 멤버십 가입 필수"
   ],
   "schema_gaps": [
-    "여신금융협회 심의필 번호 및 날짜가 문서에 명시되어 있지 않음",
-    "전월 실적 조건 없음"
+    "심의필 번호 및 날짜 정보가 문서에 없음",
+    "쿠팡 와우 멤버십 가입이 필수 조건임"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/09637__prdctOpmn_20260629.pdf",
   "_extraction_check": {
-    "source_pdf": "09637.pdf",
+    "source_pdf": "01_09637__prdctOpmn_20260629.pdf",
+    "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [
       0.0,

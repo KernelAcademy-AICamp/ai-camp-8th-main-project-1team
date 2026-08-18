@@ -1,0 +1,75 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 e hi-pass 카드(현대)",
+  "product_id": "KB-09313",
+  "status": "active",
+  "as_of": "2023-03-15",
+  "review_no": "여신금융협회심의필 제 2023-C1a-02314호",
+  "compliance_no": "230224-00593-TRM",
+  "posted_at": "2023-06-02",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "policy_card": false,
+  "has_transit": false,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 2000,
+      "base": 0,
+      "affiliate": 2000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비는 카드 발급 시점을 기준으로 1년 단위로 청구",
+    "초회/차기년도 연회비 면제 조건 없음"
+  ],
+  "performance": null,
+  "benefit_unit": {},
+  "benefits": [
+    {
+      "group": "하이패스 적립",
+      "kind": "적립",
+      "rate_percent": 0.1,
+      "targets": [
+        {
+          "category": "고속도로 통행료",
+          "note": "모든 고속도로 및 하이패스가 설치된 지방자치단체의 유료도로"
+        }
+      ],
+      "targets_complete": true
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "실물 플라스틱 카드 없이 차량용 단말기에 설치하여 사용하는 카페이 기반 서비스",
+    "고속도로 통행료 결제 전용",
+    "유효기간 10년"
+  ],
+  "schema_gaps": [
+    "실적 조건 및 적립 한도 없음",
+    "신용 판매, 장기카드대출(카드론), 단기카드대출(현금서비스), ATM, 후불교통카드 기능 이용 불가"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09313__prdctOpmn_20230602.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09313__prdctOpmn_20230602.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

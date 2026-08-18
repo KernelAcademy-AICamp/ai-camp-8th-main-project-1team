@@ -1,0 +1,158 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB 전통시장온누리체크카드",
+  "product_id": "KB-09349",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "compliance_no": "250527-02627-PIF",
+  "posted_at": "2025-06-30",
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      400000
+    ],
+    "excluded": [
+      {
+        "code": "TRANSIT",
+        "label": "후불교통요금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "상하수도/전기/도시가스 요금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 각종 수수료 및 이자"
+      },
+      {
+        "code": "TAX",
+        "label": "지방세(세외수입)"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금 이용금액(보육료, 유치원보조비, 바우처 등)"
+      },
+      {
+        "code": "ETC",
+        "label": "취소금액, 포인트리 충전금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "전통시장",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "전통시장"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 2000
+      }
+    },
+    {
+      "group": "온누리상품권",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "온누리상품권"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 2000
+      }
+    },
+    {
+      "group": "KB Pay 쇼핑",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "KB Pay 쇼핑"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 2000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "ETC",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    },
+    {
+      "code": "ETC",
+      "label": "할인 대상 가맹점 외 결제 건"
+    }
+  ],
+  "non_monetary": [
+    "후불교통기능 탑재"
+  ],
+  "schema_gaps": [
+    "실적 유예: 최초 카드 사용 등록일로부터 다음달 말일까지 40만원 미만 시 서비스 영역별 월 1천원까지 할인 제공",
+    "온누리상품권 차감 이용은 별도 앱 등록 절차 필요",
+    "KB Pay 쇼핑 할인과 온누리상품권 차감 할인 중복 적용 가능"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/__09349__prdctOpmn_20250627.pdf",
+  "_extraction_check": {
+    "source_pdf": "01___09349__prdctOpmn_20250627.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 6000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

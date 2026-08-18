@@ -1,0 +1,176 @@
+{
+  "issuer": "KB국민카드",
+  "name": "HERITAGE Reserve(스카이패스형)",
+  "product_id": "KB-09128",
+  "status": "active",
+  "as_of": "2026-02-12",
+  "review_no": "여신금융협회 심의필 제 2026-C1a-02017호",
+  "compliance_no": "준법감시인 심의필 260209-00340-PIF",
+  "posted_at": "2023-06-08",
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 800000,
+      "base": 7000,
+      "affiliate": 793000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Amex",
+      "total": 800000,
+      "base": 7000,
+      "affiliate": 793000
+    }
+  ],
+  "annual_fee_notes": [
+    "가족카드 연회비 20만원(제휴연회비 20만원)",
+    "초기/차기년도 연회비 면제조건 없음",
+    "카드 훼손/분실 재발급 시 발급비 10만원 부과(최초 발급 및 자동갱신 제외)"
+  ],
+  "benefits": [
+    {
+      "group": "대한항공 마일리지 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내 가맹점",
+          "note": "1천원당 1마일리지 적립"
+        },
+        {
+          "category": "해외 가맹점",
+          "note": "1천원당 2마일리지 적립"
+        }
+      ]
+    },
+    {
+      "group": "쿠폰 서비스",
+      "kind": "할인",
+      "targets": [
+        {
+          "category": "골프클럽 주중 이용권",
+          "note": "60만원 주중 이용권"
+        },
+        {
+          "category": "호텔 멤버십",
+          "note": "인터컨티넨탈/워커힐/메이필드 서울 중 선택"
+        },
+        {
+          "category": "항공권 할인",
+          "note": "60만원 할인"
+        }
+      ],
+      "conditions": [
+        "연 1회 제공",
+        "발급 첫해: 연회비 납부 및 200만원 이상 이용 시",
+        "다음해 이후: 연회비 납부 및 전년도 2천만원 이상 이용 시"
+      ]
+    },
+    {
+      "group": "특별 서비스",
+      "kind": "할인",
+      "targets": [
+        {
+          "category": "골프백 딜리버리 서비스",
+          "note": "연 1회 100% 청구할인"
+        },
+        {
+          "category": "의료 동행 서비스",
+          "note": "연 1회 100% 청구할인"
+        },
+        {
+          "category": "전자책 구독 서비스",
+          "note": "밀리의서재 6개월 구독권 연 1회 100% 청구할인"
+        },
+        {
+          "category": "롯데호텔 우대 서비스",
+          "note": "객실/F&B 할인 및 발레파킹"
+        }
+      ],
+      "conditions": [
+        "전월 이용실적 50만원 이상 시 제공(최초 발급 후 다음달 말일까지는 실적 무관)"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "무승인전표(교통요금/자판기/터널통행료/항공기내 이용 등)"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "국세, 지방세, 각종 공과금(전기/수도 등)"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "TUITION",
+      "label": "초·중·고등학교 납입금, 대학(대학원) 등록금"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "4대 사회보험료"
+    }
+  ],
+  "non_monetary": [
+    "Amex카드 발급 시 Elite 및 ICON 서비스 제공",
+    "KB국민은행 수수료 감면/면제 서비스"
+  ],
+  "schema_gaps": [
+    "쿠폰 서비스 및 특별 서비스는 연 1회 제공 조건이므로 monthly_cap_by_tier로 표현 불가",
+    "마일리지 적립은 전월 실적 조건 및 한도 없음",
+    "특별 서비스 이용금액은 전월 실적에서 제외됨"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09128__prdctOpmn_20260430.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09128__prdctOpmn_20260430.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.tiers.length",
+        "first": 0,
+        "second": 1
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

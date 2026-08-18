@@ -5,12 +5,7 @@
   "status": "active",
   "as_of": null,
   "review_no": null,
-  "compliance_no": "제241119-05864-TRM (2024.11.19)",
-  "posted_at": "2018-09-13",
   "card_type": "CHECK",
-  "benefit_style": "DISCOUNT_POINT",
-  "policy_card": false,
-  "has_transit": true,
   "annual_fee": [
     {
       "scope": "국내전용",
@@ -18,7 +13,7 @@
       "total": 0
     },
     {
-      "scope": "해외겸용",
+      "scope": "국내외겸용",
       "brand": "Master",
       "total": 0
     }
@@ -29,13 +24,12 @@
     "basis_exceptions": {
       "basis": "매입일",
       "applies_to": [
-        "해외이용금액"
+        "해외 이용금액"
       ]
     },
     "tiers": [
       300000
     ],
-    "new_member_grace": {},
     "excluded": [
       {
         "code": "TRANSIT",
@@ -63,7 +57,7 @@
       },
       {
         "code": "FEE",
-        "label": "연체료, 각종 수수료 및 이자"
+        "label": "각종 수수료 및 이자"
       },
       {
         "code": "PUBLIC_DUES",
@@ -72,6 +66,10 @@
       {
         "code": "CANCEL",
         "label": "취소금액"
+      },
+      {
+        "code": "PENALTY",
+        "label": "연체료"
       }
     ]
   },
@@ -89,7 +87,7 @@
       "monthly_cap_by_tier": {
         "300000": 10000
       },
-      "combined_cap_group": "통합적립"
+      "combined_cap_group": "통합"
     },
     {
       "group": "커피/제과/아이스크림",
@@ -110,10 +108,10 @@
       "monthly_cap_by_tier": {
         "300000": 10000
       },
-      "combined_cap_group": "통합적립"
+      "combined_cap_group": "통합"
     },
     {
-      "group": "CU편의점",
+      "group": "편의점",
       "kind": "적립",
       "rate_percent": 1,
       "requires_tier": 300000,
@@ -128,7 +126,7 @@
       "monthly_cap_by_tier": {
         "300000": 10000
       },
-      "combined_cap_group": "통합적립"
+      "combined_cap_group": "통합"
     },
     {
       "group": "대중교통",
@@ -137,7 +135,7 @@
       "requires_tier": 300000,
       "targets": [
         {
-          "category": "교통",
+          "category": "대중교통",
           "industries": [
             "시내버스",
             "지하철",
@@ -156,22 +154,21 @@
       "monthly_cap_by_tier": {
         "300000": 10000
       },
-      "combined_cap_group": "통합적립"
+      "combined_cap_group": "통합"
     }
   ],
   "combined_caps": [
     {
-      "group": "통합적립",
+      "group": "통합",
       "members": [
         "카카오페이 결제",
         "커피/제과/아이스크림",
-        "CU편의점",
+        "편의점",
         "대중교통"
       ],
       "cap_by_tier": {
         "300000": 10000
-      },
-      "note": "월 통합 한도 1만점"
+      }
     }
   ],
   "benefit_excluded": [
@@ -200,7 +197,7 @@
       "label": "정부지원금"
     },
     {
-      "code": "FEE",
+      "code": "PENALTY",
       "label": "연체료"
     },
     {
@@ -209,25 +206,31 @@
     }
   ],
   "non_monetary": [
-    "후불교통기능 탑재",
     "소액신용결제서비스(최고 30만원)"
   ],
   "schema_gaps": [
     "실적조건 유예기간: 최초 사용등록일로부터 다음달 말일까지 이용실적이 없어도 최대 2만점 이내 적립",
-    "카카오페이머니 적립: 주간 단위로 합산하여 다음 주 수요일에 적립",
-    "소액신용결제서비스: 계좌 잔액 부족 시 신용거래로 처리되는 서비스"
+    "카카오페이머니 적립: 주간 단위로 산정하여 다음 주 수요일에 적립",
+    "소수점 이하 포인트는 절사"
   ],
+  "posted_at": "2018-09-13",
   "source_url": "https://img2.kbcard.com/obj/card/download/01782__prdctOpmn_20241129.pdf",
   "_extraction_check": {
-    "source_pdf": "01782.pdf",
+    "source_pdf": "01_01782__prdctOpmn_20241129.pdf",
     "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [
       0.0,
       0.2
     ],
-    "numeric_consensus": true,
-    "mismatches": [],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 4,
+        "second": 5
+      }
+    ],
     "second_run_error": null,
     "external_max_benefit": {
       "status": "UNAVAILABLE",

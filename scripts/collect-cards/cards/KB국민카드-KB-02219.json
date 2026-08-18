@@ -17,17 +17,12 @@
       "affiliate": 8000
     },
     {
-      "scope": "국내외겸용",
+      "scope": "해외겸용",
       "brand": "Master",
       "total": 15000,
       "base": 7000,
       "affiliate": 8000
     }
-  ],
-  "annual_fee_notes": [
-    "일반(실물카드) 연회비 1만5천원(기본 7천원 + 제휴 8천원)",
-    "모바일단독카드 연회비 9천원(기본 1천원 + 제휴 8천원)",
-    "연회비는 카드 발급 시점을 기준으로 1년 단위로 청구되며, 연회비 면제 조건은 없습니다."
   ],
   "performance": {
     "period": "전월 1일~말일",
@@ -38,8 +33,8 @@
     ],
     "excluded": [
       {
-        "code": "DISCOUNTED_TRANS",
-        "label": "할인 적용받은 매출"
+        "code": "DISCOUNTED_TXN",
+        "label": "두산베어스 특화할인 및 생활영역 할인 적용받은 매출"
       },
       {
         "code": "INSTALLMENT_FREE",
@@ -66,6 +61,10 @@
         "label": "유치원/초·중·고 학교 납입금 전체, 대학(원) 등록금"
       },
       {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
         "code": "TAX",
         "label": "국세, 지방세"
       },
@@ -82,7 +81,7 @@
         "label": "각종 수수료 및 이자, 연체료, 연회비"
       },
       {
-        "code": "TRANSIT",
+        "code": "NON_AUTH",
         "label": "무승인전표(RF후불교통요금/자판기/터널 이용료/항공기내 이용 등)"
       }
     ]
@@ -91,11 +90,12 @@
     {
       "group": "야구 홈경기 티켓 /굿즈&용품",
       "kind": "할인",
+      "settle": "결제일 할인",
       "rate_percent": 50,
       "requires_tier": 300000,
       "targets": [
         {
-          "category": "야구"
+          "category": "야구 홈경기 티켓 /굿즈&용품"
         }
       ],
       "monthly_cap_by_tier": {
@@ -106,11 +106,12 @@
     {
       "group": "홈구장 내 F&B",
       "kind": "할인",
+      "settle": "결제일 할인",
       "rate_percent": 20,
       "requires_tier": 300000,
       "targets": [
         {
-          "category": "음식"
+          "category": "홈구장 내 F&B"
         }
       ],
       "monthly_cap_by_tier": {
@@ -121,6 +122,7 @@
     {
       "group": "OTT",
       "kind": "할인",
+      "settle": "결제일 할인",
       "rate_percent": 30,
       "requires_tier": 300000,
       "targets": [
@@ -142,6 +144,7 @@
     {
       "group": "편의점",
       "kind": "할인",
+      "settle": "결제일 할인",
       "rate_percent": 5,
       "requires_tier": 300000,
       "targets": [
@@ -161,6 +164,7 @@
     {
       "group": "배달앱",
       "kind": "할인",
+      "settle": "결제일 할인",
       "rate_percent": 5,
       "requires_tier": 300000,
       "targets": [
@@ -192,84 +196,23 @@
     }
   ],
   "non_monetary": [
-    "모바일 단독카드 발급 가능"
+    "가족카드 발급 가능"
   ],
   "schema_gaps": [
-    "최초 카드 사용등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시에도 30만원 이상 구간 할인 제공(단, 월 할인한도는 50%까지만 적용)",
-    "최초 카드 사용등록월의 실적이 30만원 이상일 경우에는 다음달에 해당 실적 구간의 할인 제공"
+    "최초 카드 사용등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시에도 30만원 이상 구간 할인 제공 (단, 월 할인한도는 50%까지만 적용)",
+    "모바일 단독카드 발급 가능"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/_02219__prdctOpmn_20260330.pdf",
   "_extraction_check": {
-    "source_pdf": "02219.pdf",
+    "source_pdf": "01__02219__prdctOpmn_20260330.pdf",
     "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [
       0.0,
       0.2
     ],
-    "numeric_consensus": false,
-    "mismatches": [
-      {
-        "path": "$.benefits[0].monthly_cap_by_tier.300000",
-        "first": 3000,
-        "second": 5000
-      },
-      {
-        "path": "$.benefits[0].monthly_cap_by_tier.800000",
-        "first": 5000,
-        "second": 10000
-      },
-      {
-        "path": "$.benefits[0].rate_percent",
-        "first": 5,
-        "second": 20
-      },
-      {
-        "path": "$.benefits[1].monthly_cap_by_tier.300000",
-        "first": 5000,
-        "second": 3000
-      },
-      {
-        "path": "$.benefits[1].monthly_cap_by_tier.800000",
-        "first": 10000,
-        "second": 5000
-      },
-      {
-        "path": "$.benefits[1].rate_percent",
-        "first": 30,
-        "second": 5
-      },
-      {
-        "path": "$.benefits[2].monthly_cap_by_tier.300000",
-        "first": 3000,
-        "second": 5000
-      },
-      {
-        "path": "$.benefits[2].monthly_cap_by_tier.800000",
-        "first": 5000,
-        "second": 10000
-      },
-      {
-        "path": "$.benefits[2].rate_percent",
-        "first": 5,
-        "second": 30
-      },
-      {
-        "path": "$.benefits[4].monthly_cap_by_tier.300000",
-        "first": 5000,
-        "second": 3000
-      },
-      {
-        "path": "$.benefits[4].monthly_cap_by_tier.800000",
-        "first": 10000,
-        "second": 5000
-      },
-      {
-        "path": "$.benefits[4].rate_percent",
-        "first": 20,
-        "second": 5
-      }
-    ],
+    "numeric_consensus": true,
+    "mismatches": [],
     "second_run_error": null,
     "external_max_benefit": {
       "status": "UNAVAILABLE",

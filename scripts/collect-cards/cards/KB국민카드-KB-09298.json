@@ -24,23 +24,19 @@
       "affiliate": 43000
     },
     {
-      "scope": "국내전용(모바일단독)",
+      "scope": "모바일 단독 국내전용",
       "brand": "KB",
       "total": 44000,
       "base": 1000,
       "affiliate": 43000
     },
     {
-      "scope": "해외겸용(모바일단독)",
+      "scope": "모바일 단독 해외겸용",
       "brand": "Mastercard",
       "total": 44000,
       "base": 1000,
       "affiliate": 43000
     }
-  ],
-  "annual_fee_notes": [
-    "연회비는 보유 카드별로 청구",
-    "모바일 단독 카드는 실물 카드 미제공"
   ],
   "performance": {
     "period": "전월 1일~말일",
@@ -59,10 +55,6 @@
         "label": "장기카드대출(카드론)"
       },
       {
-        "code": "FEE",
-        "label": "연회비·연체료·각종 수수료/이자"
-      },
-      {
         "code": "GIFT_CARD",
         "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전 금액"
       },
@@ -72,15 +64,23 @@
       },
       {
         "code": "TUITION",
-        "label": "유치원/초·중·고교 납입금, 대학(원) 등록금"
+        "label": "유치원/초·중·고 학교 납입금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
       },
       {
         "code": "PUBLIC_DUES",
-        "label": "정부지원금(보육료/유치원보조/바우처 이용금액 등), 국세, 지방세, 공과금(전기/수도 등)"
+        "label": "공과금(전기/수도 등)"
       },
       {
         "code": "SOCIAL_INS",
-        "label": "4대 사회보험료(건강/연금/고용/산재)"
+        "label": "4대 사회보험료(건강/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비, 신차구매 청구(환급) 할인 전표 전체"
       },
       {
         "code": "TRANSIT",
@@ -100,8 +100,10 @@
       "rate_percent": 10,
       "targets": [
         {
-          "category": "KB Pay 결제",
-          "note": "국내 가맹점 이용건"
+          "category": "국내 가맹점",
+          "channel": [
+            "KB Pay"
+          ]
         }
       ],
       "monthly_cap_by_tier": {
@@ -123,7 +125,8 @@
             "중식",
             "양식",
             "뷔페",
-            "패밀리레스토랑"
+            "패밀리레스토랑",
+            "일반음식점"
           ]
         },
         {
@@ -140,7 +143,7 @@
       }
     },
     {
-      "group": "이동통신",
+      "group": "통신",
       "kind": "할인",
       "settle": "결제일 할인",
       "rate_percent": 10,
@@ -150,10 +153,9 @@
           "industries": [
             "SKT",
             "KT",
-            "LGU+",
+            "LG U+",
             "Liiv M"
-          ],
-          "note": "자동납부 요금"
+          ]
         }
       ],
       "monthly_cap_by_tier": {
@@ -162,7 +164,7 @@
       }
     },
     {
-      "group": "OTT",
+      "group": "구독",
       "kind": "할인",
       "settle": "결제일 할인",
       "rate_percent": 30,
@@ -175,13 +177,12 @@
             "웨이브",
             "티빙",
             "디즈니 플러스"
-          ],
-          "note": "공식 홈페이지 정기결제"
+          ]
         }
       ],
       "monthly_cap_by_tier": {
         "400000": 5000,
-        "800000": 10000
+        "800000": 5000
       }
     },
     {
@@ -191,23 +192,13 @@
       "rate_percent": 5,
       "targets": [
         {
-          "category": "병원",
+          "category": "병원/약국/스포츠",
           "industries": [
             "종합병원",
             "일반병원",
             "일반의원",
-            "건강진단센터"
-          ]
-        },
-        {
-          "category": "약국",
-          "industries": [
-            "약국"
-          ]
-        },
-        {
-          "category": "스포츠",
-          "industries": [
+            "건강진단센터",
+            "약국",
             "스포츠용품점",
             "레저용품점",
             "골프연습장",
@@ -233,7 +224,7 @@
       "rate_percent": 5,
       "targets": [
         {
-          "category": "온라인쇼핑",
+          "category": "온라인쇼핑/주유/커피",
           "brands": [
             "G마켓",
             "11번가",
@@ -243,21 +234,8 @@
             "W컨셉",
             "29CM",
             "오늘의집",
-            "온라인 다이소몰"
-          ],
-          "note": "KB Pay 결제 시"
-        },
-        {
-          "category": "주유",
-          "brands": [
             "SK에너지",
             "GS칼텍스"
-          ]
-        },
-        {
-          "category": "커피",
-          "industries": [
-            "커피전문점"
           ]
         }
       ],
@@ -273,11 +251,7 @@
       "rate_percent": 10,
       "targets": [
         {
-          "category": "주차장/세차장",
-          "industries": [
-            "주차장",
-            "세차장"
-          ]
+          "category": "주차장/세차장"
         }
       ],
       "monthly_cap_by_tier": {
@@ -289,6 +263,10 @@
   "combined_caps": [],
   "benefit_excluded": [
     {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부"
+    },
+    {
       "code": "CASH_ADVANCE",
       "label": "단기카드대출(현금서비스)"
     },
@@ -297,98 +275,58 @@
       "label": "장기카드대출(카드론)"
     },
     {
-      "code": "FEE",
-      "label": "연회비·연체료·각종 수수료/이자"
-    },
-    {
       "code": "GIFT_CARD",
       "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전 금액"
     },
     {
-      "code": "HOUSING",
-      "label": "아파트관리비"
+      "code": "TUITION",
+      "label": "유치원/초·중·고 학교 납입금"
     },
     {
-      "code": "TUITION",
-      "label": "유치원/초·중·고교 납입금, 대학(원) 등록금"
+      "code": "TAX",
+      "label": "대학(원) 등록금, 국세, 지방세"
     },
     {
       "code": "PUBLIC_DUES",
-      "label": "정부지원금(보육료/유치원보조/바우처 이용금액 등), 국세, 지방세, 공과금(전기/수도 등)"
+      "label": "공과금(전기/수도 등)"
     },
     {
       "code": "SOCIAL_INS",
-      "label": "4대 사회보험료(건강/연금/고용/산재)"
+      "label": "4대 사회보험료(건강/고용/산재)"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비, 신차구매 청구(환급) 할인 전표 전체"
     },
     {
       "code": "TRANSIT",
       "label": "RF후불교통요금"
-    },
-    {
-      "code": "INSTALLMENT_FREE",
-      "label": "무이자할부 이용금액"
     }
   ],
   "non_monetary": [
     "쿠폰 서비스(KB국민카드 포인트리 2만점 또는 롯데시네마 모바일 영화관람권 2매 중 택1)",
-    "Mastercard 티타늄 등급 서비스"
+    "Mastercard 티타늄 등급 서비스 제공"
   ],
   "schema_gaps": [
-    "쿠폰 서비스는 발급 첫해 연회비 납부 및 600만원 이상 이용 시 제공",
-    "최초 발급 시 실적 유예 기간(등록일로부터 다음달 말일) 동안 40만원 미만 이용 시에도 1구간 할인 한도의 50% 적용",
+    "쿠폰 서비스는 연간 이용실적 600만원 이상 시 제공",
+    "최초 발급 시 실적 유예 기간(등록일로부터 다음달 말일) 동안 40만원 미만 이용 시에도 1구간 할인 한도 50% 적용",
     "건당 할인 한도(2,500원) 존재"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/09298__prdctOpmn_20260429.pdf",
   "_extraction_check": {
-    "source_pdf": "09298.pdf",
+    "source_pdf": "01_09298__prdctOpmn_20260429.pdf",
     "source_mode": "attached_pdf",
     "runs": 2,
     "temperatures": [
       0.0,
       0.2
     ],
-    "numeric_consensus": false,
-    "mismatches": [
-      {
-        "path": "$.benefits[0].requires_tier",
-        "first": null,
-        "second": 400000
-      },
-      {
-        "path": "$.benefits[1].requires_tier",
-        "first": null,
-        "second": 400000
-      },
-      {
-        "path": "$.benefits[2].requires_tier",
-        "first": null,
-        "second": 400000
-      },
-      {
-        "path": "$.benefits[3].requires_tier",
-        "first": null,
-        "second": 400000
-      },
-      {
-        "path": "$.benefits[4].requires_tier",
-        "first": null,
-        "second": 400000
-      },
-      {
-        "path": "$.benefits[5].requires_tier",
-        "first": null,
-        "second": 400000
-      },
-      {
-        "path": "$.benefits[6].requires_tier",
-        "first": null,
-        "second": 400000
-      }
-    ],
+    "numeric_consensus": true,
+    "mismatches": [],
     "second_run_error": null,
     "external_max_benefit": {
       "status": "UNAVAILABLE",
-      "internal_krw": 55000,
+      "internal_krw": 50000,
       "internal_complete": true,
       "external_krw": null,
       "source_url": null,

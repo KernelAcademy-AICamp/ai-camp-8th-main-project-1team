@@ -1,0 +1,229 @@
+{
+  "issuer": "KB국민카드",
+  "name": "해피오토JDC KB국민카드",
+  "product_id": "KB-02242",
+  "status": "stopped",
+  "as_of": "2021-03-18",
+  "review_no": "여신금융협회 심의필 제 2021- C1a – 02131호",
+  "compliance_no": "241008-05039-PIF (2024.10.08)",
+  "posted_at": "2012-04-05",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 10000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Mastercard",
+      "total": 12000
+    },
+    {
+      "scope": "플래티늄",
+      "brand": "Mastercard",
+      "total": 100000,
+      "base": 10000,
+      "affiliate": 90000
+    }
+  ],
+  "annual_fee_notes": [
+    "초회년도 연회비 면제조건 없음",
+    "연간 300만원 이상 이용 시 차기년도 연회비 면제(골드: 전액, 플래티늄: 기본연회비)",
+    "연회비 반환 기준: 해지 시 발급비용 차감 후 일할 계산하여 10영업일 이내 입금"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "결제회수금액(승인일 기준 아님)",
+    "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      300000,
+      500000,
+      600000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 이자, 각종 수수료"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "AUTO LIFE",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_conditional": "리터당 65원",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "주유",
+          "brands": [
+            "SK주유소"
+          ],
+          "note": "휘발유, 경유, 등유(LPG 제외). 일 20만원, 월 30만원 이용금액까지"
+        }
+      ]
+    },
+    {
+      "group": "AUTO LIFE",
+      "kind": "할인",
+      "settle": "현장 할인",
+      "amount_krw": 20000,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "자동차정비",
+          "brands": [
+            "스피드메이트"
+          ],
+          "note": "7대 정비 항목. 월 1회, 연 3회"
+        }
+      ]
+    },
+    {
+      "group": "HAPPY LIFE",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "면세점",
+          "brands": [
+            "JDC면세점"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 10000,
+        "600000": 40000
+      }
+    },
+    {
+      "group": "HAPPY LIFE",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "골프",
+          "industries": [
+            "골프장",
+            "골프연습장"
+          ],
+          "note": "일 1회, 월 최대 2만원"
+        }
+      ]
+    },
+    {
+      "group": "HAPPY LIFE",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "항공",
+          "brands": [
+            "제주항공"
+          ],
+          "note": "월 20만원 이용분까지"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 10000,
+        "500000": 20000
+      }
+    },
+    {
+      "group": "HAPPY LIFE",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 3000,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "통신",
+          "note": "자동이체 건당 1만원 이상 시"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "ETC",
+      "label": "PG(인터넷)업체, 호텔, 백화점, 대형마트, 철도역사 입점 가맹점, 상품권 구매"
+    }
+  ],
+  "non_monetary": [
+    "스피드메이트 엔진오일 무료교환(연 1회)",
+    "하나손해보험 교통상해보험 무료가입",
+    "플래티늄 등급 국제브랜드 서비스"
+  ],
+  "schema_gaps": [
+    "최초 카드 사용 등록일 이후 90일간 전월 실적과 무관하게 혜택 제공",
+    "포인트리 적립 불가",
+    "기존 해피오토 KB국민카드와 실적 합산 운영"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/02242__prdctOpmn_20241129.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_02242__prdctOpmn_20241129.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 6,
+        "second": 2
+      },
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": 3000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": 10,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].requires_tier",
+        "first": 300000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 40000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

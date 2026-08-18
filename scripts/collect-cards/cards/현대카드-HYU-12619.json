@@ -1,0 +1,146 @@
+{
+  "issuer": "현대카드",
+  "name": "현대카드X CHECK",
+  "product_id": "HYU-12619",
+  "status": "stopped",
+  "as_of": "2025-02-20",
+  "review_no": "여신금융협회 심의필 제 2025-C1a-01952호",
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "현대",
+      "total": 2000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "VISA Platinum",
+      "total": 2000
+    }
+  ],
+  "annual_fee_notes": [
+    "카드 발급 시 선청구",
+    "초년도 300만원 이상 이용 시 2,000 캐시백 입금",
+    "연간 300만원 이상 이용 시 차년도 연회비 면제",
+    "금융상품 이용금액 제외한 체크/신용 일시불 이용금액 기준"
+  ],
+  "performance": {
+    "period": "전월 4일~당월 3일",
+    "basis": "승인일",
+    "tiers": [
+      1000000
+    ],
+    "excluded": [
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 제수수료, 이자"
+      },
+      {
+        "code": "TAX",
+        "label": "지방세·국세 등 세금 납부액"
+      },
+      {
+        "code": "UTILITY",
+        "label": "도시가스 요금"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고교 학교 납입금, 대학·대학원 등록금"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자 할부 이용 금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 M포인트 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내외 가맹점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 5,
+        "1000000": 10
+      },
+      "conditions": [
+        "100만원 미만 0.5% 적립",
+        "100만원 이상 1% 적립",
+        "1회 이용금액 천원 단위 미만 절사"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비, 제수수료, 이자"
+    },
+    {
+      "code": "TAX",
+      "label": "지방세·국세 등 세금 납부액"
+    },
+    {
+      "code": "UTILITY",
+      "label": "도시가스 요금"
+    },
+    {
+      "code": "TUITION",
+      "label": "초·중·고교 학교 납입금, 대학·대학원 등록금"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자 할부 이용 금액"
+    }
+  ],
+  "non_monetary": [
+    "M포인트 사용처 제공(일상사용처, M몰, 자동차 구매 등)",
+    "H-Coin 전환 및 항공 마일리지 교환 가능"
+  ],
+  "schema_gaps": [
+    "하이브리드 카드는 체크카드와 신용결제 서비스가 결합된 형태임",
+    "M포인트 적립률은 백분율(%)이 아닌 포인트 적립률로 표기됨",
+    "포인트 유효기간 60개월(5년) 조건 존재"
+  ],
+  "posted_at": "2013-09-12",
+  "source_url": "https://www.hyundaicard.com/upload/card/%ED%98%84%EB%8C%80%EC%B9%B4%EB%93%9CM%20CHECK%20%EC%99%B8%203%EC%A2%85%20%EC%83%81%ED%92%88%EC%84%A4%EB%AA%85%EC%84%9C.pdf",
+  "_extraction_check": {
+    "source_pdf": "03_20250220_현대카드M CHECK 외 3종 상품설명서.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 10,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

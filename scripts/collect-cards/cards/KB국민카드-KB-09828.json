@@ -5,12 +5,8 @@
   "status": "active",
   "as_of": null,
   "review_no": null,
-  "compliance_no": null,
   "posted_at": "2026-07-31",
   "card_type": "CREDIT",
-  "benefit_style": "DISCOUNT_POINT",
-  "policy_card": null,
-  "has_transit": null,
   "annual_fee": [
     {
       "scope": "국내전용",
@@ -71,7 +67,8 @@
           "category": "항공권",
           "brands": [
             "와이페이모어"
-          ]
+          ],
+          "note": "외화 결제 건은 해외 가맹점으로 분류하여 항공권 할인 미제공"
         }
       ],
       "monthly_cap_by_tier": {
@@ -86,11 +83,11 @@
   "schema_gaps": [
     "심의필 번호 및 심의필 날짜 정보가 문서 내에 존재하지 않음",
     "전월 실적 제외 대상 및 할인 서비스 제외 대상 목록이 문서 내에 구체적으로 명시되지 않음",
-    "항공권 할인 혜택의 경우 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 동안 40만원 미만 시에도 월 10,000원 할인 한도 제공"
+    "항공권 할인 혜택에 대해 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 및 월 10,000원 할인 한도 제공 조건 존재"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/09828__prdctOpmn_20260731.pdf",
   "_extraction_check": {
-    "source_pdf": "09828.pdf",
+    "source_pdf": "01_09828__prdctOpmn_20260731.pdf",
     "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [

@@ -1,0 +1,102 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 Joyful Plus 체크카드_KB국민은행_비소득공제",
+  "product_id": "KB-09585",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "rate_percent": 0.3,
+      "targets": [
+        {
+          "category": "국내 가맹점"
+        }
+      ],
+      "targets_complete": true
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "TUITION",
+      "label": "대학(원) 등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드구입(충전)금액"
+    },
+    {
+      "code": "TAX",
+      "label": "지방세(지방세, 상하수도, 세외수입)"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "GOV_GRANT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "PENALTY",
+      "label": "연체료"
+    },
+    {
+      "code": "CANCEL",
+      "label": "취소금액"
+    },
+    {
+      "code": "MIN_AMOUNT",
+      "label": "이용금액 건당 1천원 미만"
+    },
+    {
+      "code": "POINT_CHARGE",
+      "label": "포인트리 충전금액"
+    }
+  ],
+  "non_monetary": [
+    "전월 이용 실적 조건 없음",
+    "적립 한도 없음"
+  ],
+  "schema_gaps": [
+    "card_type은 체크카드이나, 상품설명서상 '비소득공제'형으로 명시됨",
+    "교통카드 기능 없음",
+    "해외 이용 불가"
+  ],
+  "posted_at": "2024-11-12",
+  "source_url": "https://img2.kbcard.com/obj/card/download/_____09585__prdctOpmn_20241112.pdf",
+  "_extraction_check": {
+    "source_pdf": "01______09585__prdctOpmn_20241112.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

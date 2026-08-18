@@ -1,0 +1,274 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 가온플래티늄카드",
+  "product_id": "KB-09152",
+  "status": "active",
+  "as_of": "2020-07-30",
+  "review_no": "여신금융협회 심의필 제2020-C1a-06849호",
+  "compliance_no": "준법감시인 심의필230720-02735-PIF",
+  "posted_at": "2015-08-24",
+  "card_type": "CREDIT",
+  "benefit_style": "POINT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 95000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master/VISA/AMEX",
+      "total": 100000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외이용금액"
+      ]
+    },
+    "tiers": [
+      300000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자"
+      },
+      {
+        "code": "PENALTY",
+        "label": "연체료"
+      },
+      {
+        "code": "ANNUAL_FEE",
+        "label": "연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통 이용 등 무승인 전표"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "rate_percent": 0.7,
+      "targets": [
+        {
+          "category": "국내 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "주말/공휴일 추가 적립",
+      "kind": "적립",
+      "rate_percent": 0.5,
+      "targets": [
+        {
+          "category": "국내 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "음식/커피 추가 적립",
+      "kind": "적립",
+      "rate_percent": 0.8,
+      "targets": [
+        {
+          "category": "음식점",
+          "industries": [
+            "일반음식점",
+            "한식",
+            "중식",
+            "일식",
+            "양식",
+            "뷔페",
+            "패밀리레스토랑"
+          ]
+        },
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스",
+            "커피빈"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "대중교통/택시 추가 적립",
+      "kind": "적립",
+      "rate_percent": 0.8,
+      "targets": [
+        {
+          "category": "대중교통/택시",
+          "industries": [
+            "버스",
+            "지하철",
+            "택시"
+          ],
+          "note": "시외버스, 고속버스 제외"
+        }
+      ]
+    },
+    {
+      "group": "이동통신요금 추가 적립",
+      "kind": "적립",
+      "rate_percent": 0.8,
+      "targets": [
+        {
+          "category": "이동통신요금",
+          "industries": [
+            "SKT",
+            "KT Olleh",
+            "LG U+"
+          ],
+          "note": "자동납부 등록 시 제공"
+        }
+      ]
+    },
+    {
+      "group": "해외 할인 캐시백",
+      "kind": "할인",
+      "rate_percent": 2.0,
+      "targets": [
+        {
+          "category": "해외",
+          "note": "월 100만원 이용금액까지"
+        }
+      ]
+    },
+    {
+      "group": "영화 할인",
+      "kind": "할인",
+      "amount_krw": 3500,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "메가박스",
+            "CGV"
+          ],
+          "channel": [
+            "온라인 예매"
+          ]
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자 할부 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "지방세"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원)등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자"
+    },
+    {
+      "code": "PENALTY",
+      "label": "연체료"
+    },
+    {
+      "code": "ANNUAL_FEE",
+      "label": "연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "웰컴 포인트리 5만점 제공",
+    "플래티늄 리워드 서비스",
+    "국제브랜드 Platinum 등급 서비스"
+  ],
+  "schema_gaps": [
+    "웰컴 포인트리 및 플래티늄 리워드 등 연간 실적 기반의 비정기적 포인트 적립 서비스 존재",
+    "해외 할인 캐시백은 월 100만원 이용금액까지 제공",
+    "영화 할인은 1일 2회, 월 4회, 연 10회 제한",
+    "놀이공원 할인 서비스(롯데월드, 에버랜드, 캐리비안베이) 존재"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09152__prdctOpmn_20231201.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09152__prdctOpmn_20231201.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.tiers.length",
+        "first": 1,
+        "second": 0
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,295 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 탄탄대로 웰컴카드(09214)",
+  "product_id": "KB-09214",
+  "status": "active",
+  "as_of": "2020-02-04",
+  "review_no": "여신금융협회 심의필 제 2020-C1a-00790호",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(UPI)",
+      "total": 15000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 17000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "tiers": [
+      300000,
+      600000
+    ],
+    "excluded": [
+      {
+        "code": "DISCOUNTED_TRANSACTIONS",
+        "label": "대형마트·백화점 할인서비스 받은 이용건(해당 매출 전체)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "(부분)무이자할부 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "Shopping Life",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "대형마트",
+          "brands": [
+            "이마트",
+            "롯데마트",
+            "홈플러스"
+          ],
+          "exclude_place": [
+            "온라인 쇼핑몰",
+            "상품권 구매",
+            "건물 내 임대매장",
+            "SSM(이마트 에브리데이, 홈플러스 익스프레스, 롯데슈퍼)"
+          ]
+        },
+        {
+          "category": "백화점",
+          "brands": [
+            "롯데",
+            "신세계",
+            "현대"
+          ],
+          "exclude_place": [
+            "온라인 쇼핑몰",
+            "상품권 구매",
+            "건물 내 임대매장"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 7000,
+        "600000": 14000
+      }
+    },
+    {
+      "group": "Favorite Life",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "편의점"
+        },
+        {
+          "category": "면세점"
+        },
+        {
+          "category": "홈쇼핑",
+          "brands": [
+            "현대홈쇼핑",
+            "GS홈쇼핑",
+            "CJ오쇼핑"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000
+      }
+    },
+    {
+      "group": "Daily Life",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "note": "시외, 고속버스 서비스 제외"
+        },
+        {
+          "category": "택시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 3000
+      }
+    },
+    {
+      "group": "Daily Life",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "이동통신요금",
+          "industries": [
+            "SKT",
+            "KT olleh",
+            "LG U+"
+          ],
+          "note": "자동납부"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 3000
+      }
+    },
+    {
+      "group": "Fun Life",
+      "kind": "할인",
+      "settle": "현장할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "외국인 선호 관광지",
+          "note": "고궁 및 N서울타워 전망대 입장권, 시티투어 버스(서울)승차권 20% 할인(월 3천원 한도)"
+        },
+        {
+          "category": "에버랜드",
+          "note": "자유이용권 50% 현장할인(카드별 1일 1매, 회원별 연간 10매)"
+        },
+        {
+          "category": "캐리비안베이",
+          "note": "입장권 30% 현장할인(카드별 1일 1매)"
+        }
+      ]
+    },
+    {
+      "group": "Fun Life",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "외국인 선호/거주 지역 음식",
+          "industries": [
+            "일반음식점",
+            "한식",
+            "중식",
+            "일식",
+            "양식",
+            "뷔페",
+            "패밀리레스토랑",
+            "휴게음식점",
+            "주점"
+          ],
+          "note": "용산구, 영등포구, 안산 단원구 지역"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 3000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "(부분)무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "Fun Life의 관광지 할인 중 에버랜드/캐리비안베이 혜택은 연간 횟수 제한 및 일 1매 제한 조건이 있어 정량적 수치로 표현 불가",
+    "최초 카드 사용등록일로부터 다음 달 말일까지는 실적 유예 기간으로 1구간 혜택 제공"
+  ],
+  "posted_at": "2017-01-25",
+  "source_url": "https://img2.kbcard.com/obj/card/download/09214__prdctOpmn_20241129.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09214__prdctOpmn_20241129.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 6,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.300000",
+        "first": 3000,
+        "second": 6000
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.300000",
+        "first": 7000,
+        "second": 14000
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.600000",
+        "first": 14000,
+        "second": 28000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 21000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

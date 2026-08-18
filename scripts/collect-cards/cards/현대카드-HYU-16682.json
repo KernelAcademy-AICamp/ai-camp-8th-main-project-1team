@@ -1,0 +1,223 @@
+{
+  "issuer": "현대카드",
+  "name": "이마트 e카드 Edition2",
+  "product_id": "HYU-16682",
+  "status": "stopped",
+  "as_of": "2020-10-29",
+  "review_no": "여신금융협회심의필 제2020-C1a-09680호",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "현대",
+      "total": 20000,
+      "base": 10000,
+      "affiliate": 10000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "MasterCard",
+      "total": 20000,
+      "base": 10000,
+      "affiliate": 10000
+    }
+  ],
+  "annual_fee_notes": [
+    "가족카드 연회비 없음",
+    "연회비는 카드 발급 시 선청구",
+    "보유 카드별로 청구"
+  ],
+  "performance": {
+    "period": "결제일별 이용 기간",
+    "basis": "결제일자에 청구된 일시불 및 할부 이용금액",
+    "includes_family_card": true,
+    "tiers": [
+      300000,
+      700000
+    ],
+    "excluded": [
+      {
+        "code": "E_MART_7",
+        "label": "이마트 7대 가맹점 이용금액"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 제수수료, 이자"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "이마트 7대 가맹점 및 생활편의영역",
+      "kind": "적립",
+      "rate_percent": 0.1,
+      "targets": [
+        {
+          "category": "이마트 7대 가맹점",
+          "brands": [
+            "이마트",
+            "이마트 트레이더스",
+            "이마트 에브리데이",
+            "이마트24",
+            "일렉트로마트",
+            "노브랜드",
+            "신세계TV쇼핑"
+          ]
+        },
+        {
+          "category": "커피·베이커리",
+          "brands": [
+            "스타벅스",
+            "폴 바셋",
+            "이디야",
+            "파리바게뜨",
+            "파리크라상",
+            "뚜레쥬르"
+          ]
+        },
+        {
+          "category": "통신",
+          "industries": [
+            "통신"
+          ]
+        },
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 40000,
+        "700000": 40000
+      }
+    },
+    {
+      "group": "일반 가맹점",
+      "kind": "적립",
+      "rate_percent": 0.1,
+      "targets": [
+        {
+          "category": "그 외 가맹점"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비, 제수수료, 이자"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "공과금 납부액(국세, 관세, 지방세, 지방세외수입, 상하수도요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급수수료 등)"
+    },
+    {
+      "code": "UTILITY",
+      "label": "전기요금, 도시가스요금"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "TUITION",
+      "label": "초·중·고교 학교납입금, 대학·대학원 등록금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 등 현금성 유가증권 구매 및 선불카드 구매·충전금액"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "건강보험, 국민연금, 고용보험, 산재보험 및 장애인 고용부담금"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "고속도로 통행요금, 고속버스"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "신규 발급 시 발급일 포함 2회차 결제일자까지는 이용금액 30만원 미만일 경우에도 30만원 이상 적립률 적용",
+    "적립률이 당월 이용금액 구간별로 0.1%~5%로 차등 적용됨(표 참조)",
+    "월 4만 포인트 한도는 결제일별 이용 기간으로 산정"
+  ],
+  "posted_at": "2019-08-14",
+  "source_url": "https://www.hyundaicard.com/upload/card/T_AZX-20220613-1748-47_%EC%83%81%ED%92%88%EC%84%A4%EB%AA%85%EC%84%9C(%EC%95%BD%EA%B4%80)%2B%EA%B0%80%EC%9D%B4%EB%93%9C%EB%B6%81%20%ED%95%A9%EB%B3%B8_v1.pdf",
+  "_extraction_check": {
+    "source_pdf": "10_20220613_T_AZX-20220613-1748-47_상품설명서(약관)+가이드북 합본_v1.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 2,
+        "second": 3
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": 0.1,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 40000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.700000",
+        "first": null,
+        "second": 40000
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": 0.1,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 40000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

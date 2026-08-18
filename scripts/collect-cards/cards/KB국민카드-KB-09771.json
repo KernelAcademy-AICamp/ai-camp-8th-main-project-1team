@@ -19,15 +19,22 @@
     },
     {
       "scope": "해외겸용",
-      "brand": "Mastercard/K-World(JCB)",
+      "brand": "Mastercard",
+      "total": 30000,
+      "base": 7000,
+      "affiliate": 23000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "K-World(JCB)",
       "total": 30000,
       "base": 7000,
       "affiliate": 23000
     }
   ],
   "annual_fee_notes": [
-    "모바일 단독카드: 국내전용 24,000원(기본 1,000원, 제휴 23,000원), 해외겸용 24,000원(기본 1,000원, 제휴 23,000원)",
-    "가족카드 연회비 7,000원(제휴연회비 7,000원)",
+    "모바일 단독카드: 일반카드 대비 기본연회비 6,000원 저렴(총 24,000원)",
+    "가족카드 연회비 7,000원(기본 0원 + 제휴 7,000원)",
     "연회비 면제조건 없음"
   ],
   "performance": {
@@ -88,39 +95,18 @@
   },
   "benefits": [
     {
-      "group": "일상팩",
+      "group": "일상팩/가족팩",
       "kind": "할인",
       "settle": "청구할인",
-      "rate_percent": 10,
       "requires_tier": 400000,
       "targets": [
         {
-          "category": "주유",
-          "industries": [
-            "주유소",
-            "충전소",
-            "전기차충전"
-          ]
+          "category": "주유/생활요금/배달/온라인장보기/통신/보험/앱스토어/일상케어",
+          "note": "영역별 10% 할인"
         },
         {
-          "category": "배달",
-          "brands": [
-            "배달의민족",
-            "쿠팡이츠"
-          ],
-          "channel": [
-            "KB Pay"
-          ],
-          "note": "공식 모바일 앱 결제 건 한정"
-        },
-        {
-          "category": "통신/보험/APP",
-          "industries": [
-            "이동통신",
-            "손해보험",
-            "생명보험"
-          ],
-          "note": "이동통신은 자동납부 한정"
+          "category": "온라인쇼핑/편의점/취미/자기관리/학원/대형마트/카페",
+          "note": "영역별 5% 할인"
         }
       ],
       "monthly_cap_by_tier": {
@@ -130,48 +116,14 @@
       }
     },
     {
-      "group": "가족팩",
+      "group": "해외 이용 수수료 면제",
       "kind": "할인",
-      "settle": "청구할인",
-      "rate_percent": 10,
-      "requires_tier": 400000,
       "targets": [
         {
-          "category": "생활요금",
-          "industries": [
-            "아파트관리비",
-            "도시가스",
-            "손해보험",
-            "생명보험"
-          ]
-        },
-        {
-          "category": "온라인장보기",
-          "brands": [
-            "네이버플러스스토어",
-            "쿠팡",
-            "마켓컬리",
-            "오아시스마켓"
-          ],
-          "channel": [
-            "KB Pay"
-          ]
-        },
-        {
-          "category": "일상케어",
-          "industries": [
-            "병원",
-            "약국",
-            "미용실",
-            "세탁소"
-          ]
+          "category": "해외 가맹점",
+          "note": "국제브랜드 수수료 1% 및 해외서비스 수수료 0.25% 면제"
         }
-      ],
-      "monthly_cap_by_tier": {
-        "400000": 5000,
-        "800000": 7000,
-        "1600000": 10000
-      }
+      ]
     }
   ],
   "combined_caps": [],
@@ -186,19 +138,18 @@
     }
   ],
   "non_monetary": [
-    "해외 이용 수수료 면제(국제브랜드 1%, 해외서비스 0.25%)",
-    "Mastercard 티타늄 등급 서비스",
-    "JCB Platinum 등급 서비스",
-    "전월실적 채워드림 서비스(전월실적 35~40만원 시 40만원 구간 혜택 제공)"
+    "Mastercard 티타늄 서비스",
+    "JCB Platinum 서비스",
+    "전월실적 채워드림 서비스(전월실적 35~40만원 미만 시 40만원 구간 혜택 제공)"
   ],
   "schema_gaps": [
-    "서비스팩(일상팩/가족팩) 중 택 1 구조",
-    "전월실적 채워드림 서비스는 분기 1회(연 4회) 신청 가능",
-    "최초 발급 시 등록월 다음달 말일까지 실적 40만원 미만 시에도 영역별 월 2,500원 한도 제공"
+    "일상팩과 가족팩 중 택1하여 서비스 제공",
+    "최초 발급 시 등록월 다음달 말일까지 전월실적 40만원 미만 시에도 영역별 월 2,500원 한도 제공",
+    "전월실적 채워드림 서비스는 분기 1회(연 4회) 신청 가능"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/09771__prdctOpmn_20260330.pdf",
   "_extraction_check": {
-    "source_pdf": "09771.pdf",
+    "source_pdf": "01_09771__prdctOpmn_20260330.pdf",
     "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [
@@ -208,20 +159,25 @@
     "numeric_consensus": false,
     "mismatches": [
       {
-        "path": "$.benefits[0].rate_percent",
-        "first": 10,
+        "path": "$.benefits[1].monthly_cap_by_tier.1600000",
+        "first": 10000,
         "second": null
       },
       {
-        "path": "$.benefits[1].rate_percent",
-        "first": 10,
+        "path": "$.benefits[1].monthly_cap_by_tier.400000",
+        "first": 5000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.800000",
+        "first": 7000,
         "second": null
       }
     ],
     "second_run_error": null,
     "external_max_benefit": {
       "status": "UNAVAILABLE",
-      "internal_krw": 20000,
+      "internal_krw": 10000,
       "internal_complete": true,
       "external_krw": null,
       "source_url": null,

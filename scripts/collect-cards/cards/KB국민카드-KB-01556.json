@@ -1,0 +1,249 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 포인트리 체크카드",
+  "product_id": "KB-01556",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      200000,
+      300000,
+      500000,
+      1000000
+    ],
+    "excluded": [
+      {
+        "code": "TRANSIT",
+        "label": "후불교통"
+      },
+      {
+        "code": "OVERSEAS",
+        "label": "해외이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "영화",
+      "kind": "적립",
+      "amount_krw": 3000,
+      "targets": [
+        {
+          "category": "CGV",
+          "brands": [
+            "CGV"
+          ],
+          "note": "건당 7천원 이상 결제 시, 월 2회/연 12회"
+        }
+      ]
+    },
+    {
+      "group": "외식",
+      "kind": "적립",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "패밀리레스토랑",
+          "brands": [
+            "아웃백스테이크하우스",
+            "빕스"
+          ],
+          "note": "건당 3만원 이상 시 최대 10만원까지, 1회 최대 1만점"
+        }
+      ]
+    },
+    {
+      "group": "쇼핑",
+      "kind": "적립",
+      "rate_percent": 3,
+      "targets": [
+        {
+          "category": "온라인쇼핑",
+          "brands": [
+            "G마켓",
+            "옥션"
+          ],
+          "note": "건당 3만원 이상 시 최대 10만원까지"
+        }
+      ]
+    },
+    {
+      "group": "주유",
+      "kind": "적립",
+      "rate_conditional": "주중 50점, 주말 60점 (ℓ당)",
+      "targets": [
+        {
+          "category": "주유",
+          "brands": [
+            "GS칼텍스"
+          ],
+          "note": "건당 10만원, 월 30만원 이용금액까지"
+        }
+      ]
+    },
+    {
+      "group": "테마파크",
+      "kind": "적립",
+      "rate_percent": 50,
+      "targets": [
+        {
+          "category": "테마파크",
+          "brands": [
+            "에버랜드"
+          ],
+          "note": "건당 3만원 이상 시 최대 5만원까지, 1회 최대 2만 5천점"
+        }
+      ]
+    },
+    {
+      "group": "뷰티",
+      "kind": "적립",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "뷰티",
+          "brands": [
+            "올리브영"
+          ],
+          "note": "건당 3만원 이상 시 최대 5만원까지, 1회 최대 2,500점"
+        }
+      ]
+    },
+    {
+      "group": "도서",
+      "kind": "적립",
+      "rate_percent": 3,
+      "targets": [
+        {
+          "category": "도서",
+          "brands": [
+            "교보문고"
+          ],
+          "note": "건당 2만원 이상 시 최대 5만원까지, 1회 최대 1,500점"
+        }
+      ]
+    },
+    {
+      "group": "통신",
+      "kind": "적립",
+      "amount_krw": 2500,
+      "targets": [
+        {
+          "category": "통신",
+          "industries": [
+            "이동통신요금 자동이체"
+          ],
+          "note": "5만원 이상 자동이체 시 월 1회, 전월 실적 30만원 이상 시 제공"
+        }
+      ]
+    },
+    {
+      "group": "교통",
+      "kind": "적립",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "지하철",
+            "버스"
+          ],
+          "note": "월 2만원 이용금액까지, 전월 실적 30만원 이상 시 제공"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "월간통합적립한도",
+      "members": [
+        "영화",
+        "외식",
+        "쇼핑",
+        "주유",
+        "테마파크",
+        "뷰티",
+        "도서"
+      ],
+      "cap_by_tier": {
+        "200000": 5000,
+        "300000": 10000,
+        "500000": 20000,
+        "1000000": 50000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 구매 및 선불카드 충전"
+    }
+  ],
+  "non_monetary": [
+    "KB포인트리 자동환급 서비스"
+  ],
+  "schema_gaps": [
+    "최초 발급 시 카드사용등록일을 포함하여 30일간은 직전월 이용금액이 없어도 월간통합적립한도 5천점 내에서 적립(이동통신 및 대중교통 제외)",
+    "만 12~13세 체크카드 이용한도 제한",
+    "포인트리 적립은 매입 순서대로 차감되며 이월되지 않음"
+  ],
+  "posted_at": "2007-03-08",
+  "source_url": "https://img2.kbcard.com/obj/card/download/01556__prdctOpmn_20241129.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_01556__prdctOpmn_20241129.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[7].amount_krw",
+        "first": 2500,
+        "second": null
+      },
+      {
+        "path": "$.benefits[7].rate_percent",
+        "first": null,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[8].amount_krw",
+        "first": null,
+        "second": 2500
+      },
+      {
+        "path": "$.benefits[8].rate_percent",
+        "first": 5,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -8,6 +8,9 @@
   "compliance_no": "준법감시인 심의필 제260406-01115-PIF(2026.04.06)",
   "posted_at": "2025-12-16",
   "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "policy_card": false,
+  "has_transit": false,
   "annual_fee": [
     {
       "scope": "국내전용",
@@ -17,7 +20,7 @@
       "affiliate": 13000
     },
     {
-      "scope": "국내외겸용",
+      "scope": "해외겸용",
       "brand": "Master",
       "total": 20000,
       "base": 7000,
@@ -26,20 +29,32 @@
   ],
   "annual_fee_notes": [
     "연회비는 카드 발급 시점을 기준으로 1년 단위로 청구",
-    "모바일 단독카드 연회비 1만4천원 (기본 1천원 + 제휴 1만3천원)",
-    "최초/2차년도 연회비 면제 조건 없음"
+    "모바일 단독카드 연회비: 1만4천원 (기본 1천원 + 제휴 1만3천원)",
+    "가족카드 연회비 별도 청구 없음"
   ],
   "performance": {
     "period": "전월 1일~말일",
     "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
     "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "국내 할부",
+      "해외 일시불"
+    ],
     "tiers": [
       300000,
       700000
     ],
+    "new_member_grace": {},
     "excluded": [
       {
-        "code": "DISCOUNTED_PAYMENT",
+        "code": "DISCOUNTED_TX",
         "label": "KT스카이라이프 자동납부 할인 적용 매출"
       },
       {
@@ -84,7 +99,7 @@
       },
       {
         "code": "SOCIAL_INS",
-        "label": "4대 사회보험료(건강/연금/고용/산재)"
+        "label": "4대사회보험료(건강/연금/고용/산재)"
       },
       {
         "code": "FEE",
@@ -98,7 +113,7 @@
   },
   "benefits": [
     {
-      "group": "KT스카이라이프 자동납부 청구할인",
+      "group": "KT스카이라이프 자동납부 할인",
       "kind": "할인",
       "settle": "결제일 할인",
       "requires_tier": 300000,
@@ -128,23 +143,29 @@
     }
   ],
   "non_monetary": [
-    "해외원화결제(DCC) 차단서비스 제공"
+    "모바일 단독카드 발급 가능"
   ],
   "schema_gaps": [
-    "최초 카드 사용 등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시 월 2천5백원 할인 제공",
+    "최초 카드 사용 등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시 월 2,500원 할인 제공",
     "최초 카드 사용등록월의 실적이 30만원 이상일 경우 다음달에 해당 실적구간 할인금액 제공"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/04348__prdctOpmn_20260626.pdf",
   "_extraction_check": {
-    "source_pdf": "04348.pdf",
+    "source_pdf": "01_04348__prdctOpmn_20260626.pdf",
     "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [
       0.0,
       0.2
     ],
-    "numeric_consensus": true,
-    "mismatches": [],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": 300000,
+        "second": null
+      }
+    ],
     "second_run_error": null,
     "external_max_benefit": {
       "status": "UNAVAILABLE",

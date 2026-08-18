@@ -1,0 +1,134 @@
+{
+  "issuer": "KB국민카드",
+  "name": "LG U+ 라이트할부 KB국민카드",
+  "product_id": "KB-04245",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "2016-04-15",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(UPI)",
+      "total": 12000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 17000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "대중교통",
+        "무승인 전표(버스/지하철/자판기/터널통행료/항공기내 이용 등 RF접촉방식)",
+        "해외이용금액"
+      ]
+    },
+    "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      300000,
+      700000,
+      1000000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "CANCEL",
+        "label": "취소금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "통합 청구할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "targets": [
+        {
+          "category": "LG U+ 라이트할부 이용 시"
+        },
+        {
+          "category": "LG U+ 라이트할부 미이용 시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 11000,
+        "700000": 15000,
+        "1000000": 17000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "라이트할부 서비스(18/24/36개월 할부)",
+    "원금균등상환 방식"
+  ],
+  "schema_gaps": [
+    "라이트할부 이용 여부에 따라 할인 한도가 이원화됨",
+    "라이트할부 이용 건수 제한: 월 2건, 연 5건",
+    "최초 발급 후 익월 말까지는 전월 실적 미달 시에도 30만원 구간 할인 제공",
+    "청구금액이 할인금액보다 적을 경우 잔여 한도만큼 환급(캐시백) 제공"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04245__prdctOpmn_20220831.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04245__prdctOpmn_20220831.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 1,
+        "second": 2
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": null,
+        "second": 300000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 17000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

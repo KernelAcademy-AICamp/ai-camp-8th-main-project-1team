@@ -77,12 +77,12 @@
       "kind": "적립",
       "targets": [
         {
-          "category": "일반 이용",
-          "note": "일시불, 할부 이용금액 1,200원당 10 포인트 적립"
+          "category": "일반 가맹점",
+          "note": "일시불, 할부 이용금액 1,200원당 10 포인트"
         },
         {
-          "category": "제주항공 이용",
-          "note": "항공권 구매 등 제주항공 이용 시 1,200원당 10 포인트 추가 적립"
+          "category": "제주항공",
+          "note": "항공권 구매 등 이용금액 1,200원당 10 포인트 추가 적립"
         }
       ]
     },
@@ -116,7 +116,7 @@
       "label": "장기카드대출(카드론)"
     },
     {
-      "code": "TAX",
+      "code": "PUBLIC_DUES",
       "label": "지방세"
     },
     {
@@ -146,15 +146,15 @@
   ],
   "non_monetary": [
     "제주항공 J 포인트(10 포인트 = 10원)",
-    "가족카드 발급 가능"
+    "공항라운지 무료 이용 서비스"
   ],
   "schema_gaps": [
-    "포인트 적립 시 1,200원 미만 결제 금액은 반올림하여 적립하는 정책이 있음",
-    "공항라운지 이용 횟수 산정 기준이 연간(1월1일~연말)으로 설정됨"
+    "포인트 적립 시 1,200원 미만 결제 금액은 반올림하여 적립하는 조건이 있음",
+    "공항라운지 연간 이용 횟수(연 2회)는 1월 1일~연말 기준임"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/04420__prdctOpmn_20250529.pdf",
   "_extraction_check": {
-    "source_pdf": "04420.pdf",
+    "source_pdf": "01_04420__prdctOpmn_20250529.pdf",
     "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [
@@ -163,11 +163,6 @@
     ],
     "numeric_consensus": false,
     "mismatches": [
-      {
-        "path": "$.benefits[0].rate_percent",
-        "first": null,
-        "second": 0.83
-      },
       {
         "path": "$.benefits[1].requires_tier",
         "first": null,

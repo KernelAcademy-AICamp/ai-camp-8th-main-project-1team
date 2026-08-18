@@ -1,0 +1,261 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 ONE카드",
+  "product_id": "KB-09158",
+  "status": "stopped",
+  "as_of": "2020-10-21",
+  "review_no": "여신금융협회 심의필 제 2020-C1a-09435호",
+  "compliance_no": "준법감시인 심의필 제241008-05039-PIF호 (2024.10.08)",
+  "posted_at": "2015-07-29",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(UPI)",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA/Master",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외이용금액"
+      ]
+    },
+    "tiers": [
+      300000
+    ],
+    "excluded": [
+      {
+        "code": "BENEFIT_USED",
+        "label": "생활속 추가 적립 서비스 받은 이용건(해당매출 전체)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "NON_APPROVAL",
+        "label": "무승인전표"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TAX",
+        "label": "지방세"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학·대학원 등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "rate_percent": 0.7,
+      "targets": [
+        {
+          "category": "국내 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "주말 추가 적립",
+      "kind": "적립",
+      "rate_percent": 0.5,
+      "targets": [
+        {
+          "category": "주말/공휴일 국내 가맹점",
+          "exclude_place": [
+            "대중교통(지하철/버스)",
+            "이동통신요금"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "생활 속 추가 적립",
+      "kind": "적립",
+      "rate_conditional": "KB국민ONE통장 결제계좌 등록 시 0.8%, 그 외 0.5%",
+      "min_amount": 300000,
+      "targets": [
+        {
+          "category": "생활 영역",
+          "note": "마트, 주유, 음식, 통신, 교육 등"
+        }
+      ]
+    },
+    {
+      "group": "영화/놀이공원 할인",
+      "kind": "할인",
+      "min_amount": 300000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "CGV",
+            "메가박스"
+          ],
+          "channel": [
+            "온라인 예매"
+          ]
+        },
+        {
+          "category": "놀이공원",
+          "brands": [
+            "롯데월드",
+            "에버랜드",
+            "캐리비안베이"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "해외 할인",
+      "kind": "할인",
+      "rate_percent": 2.0,
+      "min_amount": 300000,
+      "targets": [
+        {
+          "category": "해외 이용금액"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "지방세"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학·대학원 등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "포인트리 자동입금 서비스",
+    "KB국민은행 자동화기기 포인트리 인출"
+  ],
+  "schema_gaps": [
+    "생활 속 추가 적립 서비스는 영역별 월 20만원 이용금액까지 적용",
+    "영화 할인: 일 2회, 월 4회, 연간 10회 제한",
+    "놀이공원 할인: 롯데월드(일 1매, 월 2매, 연 5매), 에버랜드(일 1매, 연 10매), 캐리비안베이(일 1매)",
+    "해외 할인: 월 50만원 이용금액까지 적용",
+    "최초 카드 사용 등록일로부터 다음달 말일까지는 실적 조건 없이 혜택 제공",
+    "포인트리 소멸: 적립 시점 기준 60개월 경과 시 선입선출 방식 소멸"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09158__prdctOpmn_20241129.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09158__prdctOpmn_20241129.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].min_amount",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[3].min_amount",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 200000
+      },
+      {
+        "path": "$.benefits[3].rate_percent",
+        "first": null,
+        "second": 0.5
+      },
+      {
+        "path": "$.benefits[3].requires_tier",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[4].min_amount",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[4].requires_tier",
+        "first": null,
+        "second": 300000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

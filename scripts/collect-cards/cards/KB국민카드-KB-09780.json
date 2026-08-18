@@ -5,30 +5,30 @@
   "status": "active",
   "as_of": "2026-04-07",
   "review_no": "여신금융협회 심의필 제2026-C1a-04817호",
+  "compliance_no": "준법감시인 심의필번호 제260323-00882-PIF (2026.03.23)",
   "posted_at": "2026-04-15",
   "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
   "annual_fee": [
     {
       "scope": "국내전용",
       "brand": "KB",
-      "total": 15000,
-      "base": 7000,
-      "affiliate": 8000
+      "total": 15000
     },
     {
       "scope": "해외겸용",
       "brand": "Mastercard, Amex",
-      "total": 15000,
-      "base": 7000,
-      "affiliate": 8000
+      "total": 15000
     },
     {
       "scope": "모바일 단독",
       "brand": "KB",
-      "total": 9000,
-      "base": 1000,
-      "affiliate": 8000
+      "total": 9000
     }
+  ],
+  "annual_fee_notes": [
+    "연회비는 보유 카드별로 청구",
+    "모바일 단독카드는 실물카드 없이 스마트폰 앱을 통해 이용 가능"
   ],
   "performance": {
     "period": "전월 1일~말일",
@@ -58,10 +58,6 @@
         "label": "초·중·고 학교 납입금, 대학(원) 등록금"
       },
       {
-        "code": "GOV_SUPPORT",
-        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
-      },
-      {
         "code": "TAX",
         "label": "국세, 지방세"
       },
@@ -86,12 +82,12 @@
         "label": "후불교통요금"
       },
       {
-        "code": "VENDING",
-        "label": "자판기/터널 이용료/항공기내 이용 등"
+        "code": "VENDING_MACHINE",
+        "label": "자판기 이용료"
       },
       {
-        "code": "CANCEL",
-        "label": "취소금액"
+        "code": "AIRLINE",
+        "label": "항공기내 이용금액"
       }
     ]
   },
@@ -99,14 +95,14 @@
     {
       "group": "위시 베이직",
       "kind": "할인",
-      "settle": "청구할인",
+      "settle": "결제일 할인",
       "rate_percent": 10,
       "requires_tier": 400000,
       "targets": [
         {
           "category": "KB Pay",
           "channel": [
-            "KB Pay"
+            "KB Pay 결제"
           ]
         },
         {
@@ -117,20 +113,21 @@
           ]
         },
         {
-          "category": "이동통신요금",
+          "category": "통신",
           "industries": [
             "이동통신요금 자동납부"
           ]
         },
         {
-          "category": "OTT",
+          "category": "구독",
           "brands": [
             "넷플릭스",
             "유튜브프리미엄",
             "웨이브",
             "티빙",
             "디즈니플러스"
-          ]
+          ],
+          "note": "공식 홈페이지 정기결제"
         }
       ],
       "monthly_cap_by_tier": {
@@ -140,29 +137,45 @@
     {
       "group": "위시 픽",
       "kind": "할인",
-      "settle": "청구할인",
+      "settle": "결제일 할인",
       "requires_tier": 400000,
       "targets": [
         {
           "category": "배달/커피",
+          "brands": [
+            "배달의민족",
+            "요기요",
+            "마켓컬리"
+          ],
           "industries": [
-            "배달앱",
-            "커피/음료전문점"
+            "커피전문점"
           ]
         },
         {
           "category": "일상",
           "industries": [
             "택시",
-            "커피/음료전문점",
+            "커피전문점"
+          ],
+          "channel": [
             "영화관"
-          ]
+          ],
+          "note": "영화관 30% 할인"
         },
         {
           "category": "관리",
           "industries": [
             "미용실",
-            "스포츠",
+            "스포츠센터",
+            "골프연습장",
+            "테니스장",
+            "수영장",
+            "요가",
+            "볼링장",
+            "스포츠용품점",
+            "레저용품점"
+          ],
+          "channel": [
             "온라인서점",
             "올리브영"
           ]
@@ -200,10 +213,6 @@
       "label": "초·중·고 학교 납입금, 대학(원) 등록금"
     },
     {
-      "code": "GOV_SUPPORT",
-      "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
-    },
-    {
       "code": "TAX",
       "label": "국세, 지방세"
     },
@@ -218,24 +227,20 @@
     {
       "code": "FEE",
       "label": "각종 수수료 및 이자, 연체료, 연회비"
-    },
-    {
-      "code": "CANCEL",
-      "label": "취소금액"
     }
   ],
   "non_monetary": [
     "Happy Birth Month: 생일월에 위시 픽 할인한도 2배 제공",
-    "전월실적 채워드림: 전월실적 35만원 이상 40만원 미만 시 연 2회 무료로 실적 채워줌"
+    "전월실적 채워드림: 전월실적 35만원 이상 40만원 미만 시 연 2회 5만원 한도 내 실적 채워줌"
   ],
   "schema_gaps": [
-    "위시 픽 서비스팩 3개 중 택 1 선택 구조",
-    "Happy Birth Month 및 전월실적 채워드림 서비스는 스키마에 직접 매핑 불가",
-    "건당 할인 한도(2,500원) 존재"
+    "위시 베이직/픽 각 항목별 건당 2,500원 할인 한도 존재",
+    "Happy Birth Month 서비스는 전월 실적 40만원 이상 시 제공",
+    "전월실적 채워드림 서비스는 본인회원 월 1회, 연 2회 신청 가능하며 신청 후 취소 불가"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/09780__prdctOpmn_20260415.pdf",
   "_extraction_check": {
-    "source_pdf": "09780.pdf",
+    "source_pdf": "01_09780__prdctOpmn_20260415.pdf",
     "source_mode": "attached_pdf",
     "runs": 2,
     "temperatures": [
@@ -245,24 +250,14 @@
     "numeric_consensus": false,
     "mismatches": [
       {
-        "path": "$.benefits[0].monthly_cap_by_tier.400000",
-        "first": 5000,
-        "second": null
-      },
-      {
         "path": "$.benefits[0].rate_percent",
-        "first": 10,
-        "second": null
-      },
-      {
-        "path": "$.benefits[1].monthly_cap_by_tier.400000",
-        "first": 5000,
-        "second": null
+        "first": null,
+        "second": 10
       },
       {
         "path": "$.benefits[1].rate_percent",
-        "first": null,
-        "second": 10
+        "first": 10,
+        "second": 30
       }
     ],
     "second_run_error": null,

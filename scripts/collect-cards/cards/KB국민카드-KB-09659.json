@@ -1,0 +1,249 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB 틴업 체크카드",
+  "product_id": "KB-09659",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "UPI",
+      "total": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "공통할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 2,
+      "targets": [
+        {
+          "category": "KB Pay",
+          "channel": [
+            "오프라인"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 5000
+      }
+    },
+    {
+      "group": "공통할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "CU",
+            "세븐일레븐"
+          ],
+          "channel": [
+            "오프라인"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 1000
+      }
+    },
+    {
+      "group": "공통할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "쇼핑",
+          "brands": [
+            "다이소",
+            "올리브영",
+            "KB Pay 쇼핑"
+          ],
+          "channel": [
+            "오프라인",
+            "KB Pay 앱"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 1000
+      }
+    },
+    {
+      "group": "공통할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "스터디",
+          "industries": [
+            "독서실"
+          ],
+          "channel": [
+            "오프라인"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 1000
+      }
+    },
+    {
+      "group": "공통할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "문구",
+          "industries": [
+            "서점",
+            "문구점"
+          ],
+          "channel": [
+            "오프라인"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 1000
+      }
+    },
+    {
+      "group": "놀이할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "놀이",
+          "industries": [
+            "비디오방",
+            "게임방"
+          ],
+          "channel": [
+            "오프라인"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 1000
+      }
+    },
+    {
+      "group": "놀이할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "모바일",
+          "brands": [
+            "구글플레이스토어",
+            "애플앱스토어"
+          ],
+          "channel": [
+            "온라인"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 1000
+      }
+    },
+    {
+      "group": "외식할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 10,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "외식",
+          "industries": [
+            "패밀리레스토랑"
+          ],
+          "channel": [
+            "오프라인"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 3000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비·연체료·각종 수수료 및 이자"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "후불교통기능 탑재 가능",
+    "Mastercard 브랜드 비접촉식 결제 지원"
+  ],
+  "schema_gaps": [
+    "연령 구간별(만 15세, 18세, 19세 등)로 전월 실적 조건과 혜택이 상이하게 적용되는 구조임",
+    "최초 발급 시 실적 유예 조건이 존재함",
+    "만 나이 기준은 KB국민카드 회원정보 생년월일 기준임"
+  ],
+  "posted_at": "2025-05-29",
+  "source_url": "https://img2.kbcard.com/obj/card/download/09659__prdctOpmn_20260605.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09659__prdctOpmn_20260605.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[7].min_amount",
+        "first": 30000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

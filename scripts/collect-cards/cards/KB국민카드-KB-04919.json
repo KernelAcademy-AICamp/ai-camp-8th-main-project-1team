@@ -3,13 +3,14 @@
   "name": "KB국민 기후동행체크카드",
   "product_id": "KB-04919",
   "status": "active",
-  "as_of": "2024-10-29",
-  "review_no": "여신금융협회 심의필 제241029-05381-PIF호",
+  "as_of": null,
+  "review_no": null,
   "card_type": "CHECK",
+  "benefit_style": "DISCOUNT_POINT",
   "annual_fee": [
     {
       "scope": "국내전용",
-      "brand": "KB",
+      "brand": "Local",
       "total": 0
     }
   ],
@@ -33,19 +34,11 @@
       },
       {
         "code": "UTILITY",
-        "label": "상하수도/전기/도시가스 요금"
-      },
-      {
-        "code": "SOCIAL_INS",
-        "label": "4대 보험"
-      },
-      {
-        "code": "TAX",
-        "label": "지방세, 세외수입 등"
+        "label": "공공요금(상하수도/전기/도시가스) 및 TV수신료"
       },
       {
         "code": "TUITION",
-        "label": "대학(대학원) 등록금"
+        "label": "대학(원) 등록금"
       },
       {
         "code": "GIFT_CARD",
@@ -56,16 +49,12 @@
         "label": "연회비, 각종 수수료"
       },
       {
-        "code": "PENALTY",
-        "label": "취소 반환수수료"
-      },
-      {
-        "code": "GOV_SUPPORT",
-        "label": "정부지원금 이용금액(보육료, 유치원 보조비, 바우처 이용금액 등)"
+        "code": "TAX",
+        "label": "지방세, 세외수입"
       },
       {
         "code": "ETC",
-        "label": "무승인 금액(자판기, 터널통행료, 유료도로, 기차/고속버스)"
+        "label": "무승인 금액(자판기, 터널통행료, 유료도로, 기차/고속버스), 취소 반환수수료, 정부지원금 이용금액(보육료, 유치원 보조비, 바우처 이용금액 등), 포인트리 충전금액"
       }
     ]
   },
@@ -95,11 +84,7 @@
       "requires_tier": 200000,
       "targets": [
         {
-          "category": "쇼핑",
-          "brands": [
-            "KB Pay 쇼핑",
-            "올리브영"
-          ]
+          "category": "KB Pay 쇼핑, 올리브영"
         }
       ],
       "monthly_cap_by_tier": {
@@ -115,11 +100,7 @@
       "requires_tier": 200000,
       "targets": [
         {
-          "category": "영화",
-          "brands": [
-            "CGV",
-            "롯데시네마"
-          ]
+          "category": "영화(CGV, 롯데시네마)"
         }
       ],
       "monthly_cap_by_tier": {
@@ -147,20 +128,19 @@
   "benefit_excluded": [
     {
       "code": "GIFT_CARD",
-      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전 금액"
+      "label": "상품권 및 선불카드 구입·충전 금액"
     }
   ],
   "non_monetary": [
     "후불 기후동행카드 서비스 제공"
   ],
   "schema_gaps": [
-    "최초 발급 시 사용등록일로부터 다음달 말일까지 전월 실적 20만원 미만 시에도 각 서비스 영역별 월 2,000원까지 할인 제공",
-    "할인 서비스는 건당 1만원 이상 이용 시 제공"
+    "최초 발급 시 사용등록일로부터 다음달 말일까지 전월 실적 20만원 미만 시에도 생활/쇼핑/여가 각 서비스 영역별 월 2,000원까지 할인 제공"
   ],
   "posted_at": "2024-11-25",
   "source_url": "https://img2.kbcard.com/obj/card/download/_04919__prdctOpmn_20241125.pdf",
   "_extraction_check": {
-    "source_pdf": "04919.pdf",
+    "source_pdf": "01__04919__prdctOpmn_20241125.pdf",
     "source_mode": "attached_pdf",
     "runs": 2,
     "temperatures": [

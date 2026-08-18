@@ -1,0 +1,82 @@
+{
+  "issuer": "KB국민카드",
+  "name": "롯데렌탈 묘미 KB국민카드",
+  "product_id": "KB-04341",
+  "status": "stopped",
+  "as_of": "2021-10-01",
+  "review_no": "여신금융협회 심의필 제 2021- C1a- 08784호",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "K-World(JCB),Master",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    }
+  ],
+  "benefits": [
+    {
+      "group": "롯데렌탈 묘미 자동납부요금 청구 할인",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "롯데렌탈 묘미 요금 자동납부"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 12000,
+        "700000": 17000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입/충전금액"
+    }
+  ],
+  "non_monetary": [
+    "가족카드 발급 시 연회비 면제"
+  ],
+  "schema_gaps": [
+    "최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 30만원 미만 시에도 1구간 할인 적용",
+    "할인 금액보다 자동납부 승인금액이 적을 경우 승인금액까지만 할인 적용",
+    "자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인"
+  ],
+  "posted_at": "2021-09-28",
+  "source_url": "https://img2.kbcard.com/obj/card/download/04341__prdctOpmn_20211001.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04341__prdctOpmn_20211001.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

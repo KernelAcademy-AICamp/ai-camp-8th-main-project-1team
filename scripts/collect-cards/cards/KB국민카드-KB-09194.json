@@ -1,0 +1,114 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 아시아나 올림카드",
+  "product_id": "KB-09194",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 28000,
+      "base": 7000,
+      "affiliate": 21000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 30000,
+      "base": 7000,
+      "affiliate": 23000
+    }
+  ],
+  "benefits": [
+    {
+      "group": "아시아나 마일리지 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내 가맹점",
+          "note": "1,500원당 2마일 적립"
+        },
+        {
+          "category": "해외 가맹점",
+          "note": "1,500원당 3마일 적립"
+        }
+      ],
+      "conditions": [
+        "월 500만원 이용금액까지 적립",
+        "전월 실적 조건 없음",
+        "이용건별 결제납부 완료금액 기준"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "(부분)무이자할부"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "지방세"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원)등록금"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "가족카드 이용금액에 대한 마일리지는 본인 회원 앞 적립"
+  ],
+  "schema_gaps": [
+    "심의필 문구에 날짜(YYYY-MM-DD)가 명시되어 있지 않아 as_of는 null로 처리함",
+    "마일리지 적립 방식이 정률(%)이 아닌 1,500원당 마일리지 지급 방식임",
+    "전월 실적 조건이 없어 performance 객체는 생략함"
+  ],
+  "posted_at": "2016-09-21",
+  "source_url": "https://img2.kbcard.com/obj/card/download/09194__prdctOpmn_20240625.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09194__prdctOpmn_20240625.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,256 @@
+{
+  "issuer": "KB국민카드",
+  "name": "kt 할부 Plus KB국민카드",
+  "product_id": "KB-01507",
+  "status": "active",
+  "as_of": "2025-01-10",
+  "review_no": "여신금융협회 심의필 제 2025-C1a-00391호",
+  "compliance_no": "준법감시인 심의필 제260406-01115-PIF (2026.04.06)",
+  "posted_at": "2023-03-07",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "K-World(JCB),Master",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비는 카드발급 시점을 기준으로 1년 단위로 청구",
+    "2025년 1월 2일부터 카드별로 청구(기본+제휴)",
+    "가족카드 연회비 별도 청구 없음"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 일시불"
+      ]
+    },
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      300000,
+      700000,
+      1000000
+    ],
+    "excluded": [
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "(부분)무이자할부 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초/중/고 학교납입금, 대학(원)등록금"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "UTILITY",
+        "label": "도시가스"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입/충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(대중교통, 공항버스, 자판기, 터널이용료, 항공기내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "통합 청구할인 서비스(장기할부 이용 시)",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "kt 통신단말기 장기할부"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 8000,
+        "700000": 12000,
+        "1000000": 14000
+      }
+    },
+    {
+      "group": "통합 청구할인 서비스(장기할부 미이용 시)",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "requires_tier": 700000,
+      "targets": [
+        {
+          "category": "kt 통신단말기 장기할부 미이용"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "700000": 4000
+      }
+    },
+    {
+      "group": "정기결제 추가 청구할인 서비스",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "아파트관리비",
+          "note": "자동납부 시"
+        },
+        {
+          "category": "4대보험, 도시가스, 전기요금",
+          "note": "자동납부 시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 3000
+      }
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "정기결제 추가 청구할인 서비스",
+      "members": [
+        "아파트관리비",
+        "4대보험 또는도시가스또는 전기요금"
+      ],
+      "cap_by_tier": {
+        "300000": 3000
+      },
+      "note": "아파트관리비 2,000원, 4대보험/도시가스/전기요금 1,000원 합산 최대 3,000원"
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "PG",
+      "label": "결제대행업체(PG) 또는 간편결제전용 가맹점"
+    }
+  ],
+  "non_monetary": [
+    "kt 통신단말기 장기할부 서비스(24/36개월)"
+  ],
+  "schema_gaps": [
+    "실적 유예 조건: 최초 사용등록일로부터 익월 말까지 전월 실적 미달 시에도 1구간(30만원 이상) 할인 제공",
+    "환급 캐시백: 카드 청구금액이 할인금액보다 적을 경우 잔여 할인한도만큼 환급",
+    "장기할부 이용 건수 제한: 월 2건, 연 5건"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/01507__prdctOpmn_20260702.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_01507__prdctOpmn_20260702.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 3,
+        "second": 4
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.300000",
+        "first": 3000,
+        "second": 1000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.1000000",
+        "first": null,
+        "second": 14000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 8000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.700000",
+        "first": 4000,
+        "second": 12000
+      },
+      {
+        "path": "$.benefits[1].requires_tier",
+        "first": 700000,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.1000000",
+        "first": 14000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.300000",
+        "first": 8000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.700000",
+        "first": 12000,
+        "second": 4000
+      },
+      {
+        "path": "$.benefits[2].requires_tier",
+        "first": 300000,
+        "second": 700000
+      },
+      {
+        "path": "$.combined_caps.length",
+        "first": 1,
+        "second": 0
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 16000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

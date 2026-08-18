@@ -5,6 +5,7 @@
   "status": "active",
   "as_of": null,
   "review_no": null,
+  "posted_at": "2014-11-17",
   "card_type": "CREDIT",
   "benefit_style": "MILEAGE",
   "annual_fee": [
@@ -16,7 +17,7 @@
       "affiliate": 8000
     },
     {
-      "scope": "국내외겸용",
+      "scope": "해외겸용",
       "brand": "Mastercard",
       "total": 20000,
       "base": 7000,
@@ -28,6 +29,7 @@
     "카드 연회비는 매년 카드 발급월 기준으로 1년 단위로 청구",
     "1년 이상 이용실적이 없는 카드의 연회비는 청구하지 않음(단, 초회년도 제외)"
   ],
+  "performance": null,
   "benefits": [
     {
       "group": "대한항공 마일리지 적립",
@@ -39,7 +41,7 @@
         },
         {
           "category": "해외이용",
-          "note": "1,500원당 2마일(직구, 온라인 포함)"
+          "note": "1,500원당 2마일"
         },
         {
           "category": "면세점",
@@ -63,7 +65,7 @@
       "label": "장기카드대출(카드론)"
     },
     {
-      "code": "PUBLIC_DUES",
+      "code": "TAX",
       "label": "지방세"
     },
     {
@@ -84,16 +86,16 @@
     }
   ],
   "non_monetary": [
-    "대한항공 마일리지 적립 서비스"
+    "해외 이용 시 국제브랜드 수수료 및 해외서비스 수수료 발생"
   ],
   "schema_gaps": [
-    "전월 실적 조건이 없는 상품으로 performance 필드 생략",
-    "마일리지 적립은 건별 이용금액 기준이며, 1,500원 미만 절사 여부 등 상세 계산식은 스키마에 명시되지 않음"
+    "전월 실적 조건이 없는 상품으로 performance 필드는 null 처리함",
+    "마일리지 적립은 건별 이용금액 기준이며, 1,500원 미만 금액은 절사됨"
   ],
-  "posted_at": "2014-11-17",
   "source_url": "https://img2.kbcard.com/obj/card/download/09153__prdctOpmn_20240625.pdf",
   "_extraction_check": {
-    "source_pdf": "09153.pdf",
+    "source_pdf": "01_09153__prdctOpmn_20240625.pdf",
+    "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [
       0.0,

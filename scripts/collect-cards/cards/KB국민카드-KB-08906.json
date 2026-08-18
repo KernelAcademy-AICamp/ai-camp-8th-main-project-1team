@@ -1,0 +1,121 @@
+{
+  "issuer": "KB국민카드",
+  "name": "kt GiGA KB국민비씨카드",
+  "product_id": "KB-08906",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "은련(UPI)",
+      "total": 10000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Visa",
+      "total": 15000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master",
+      "total": 15000
+    }
+  ],
+  "benefits": [
+    {
+      "group": "kt 이동통신요금 할인",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "통신",
+          "industries": [
+            "kt 이동통신요금 자동납부"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 7000,
+        "700000": 15000
+      }
+    },
+    {
+      "group": "포인트연계할부서비스(세이브)",
+      "kind": "적립",
+      "settle": "포인트 적립",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "통신",
+          "industries": [
+            "kt 통신 단말기 포인트연계할부서비스(세이브)"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 7000,
+        "700000": 15000
+      }
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "통합서비스 한도",
+      "members": [
+        "kt 이동통신요금 할인",
+        "포인트연계할부서비스(세이브)"
+      ],
+      "cap_by_tier": {
+        "300000": 7000,
+        "700000": 15000
+      },
+      "note": "kt 이동통신 자동납부와 포인트연계할부서비스 모두 이용 시, 통신요금 자동납부 청구금액이 할인한도보다 적을 경우 차액은 포인트로 적립"
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비, 각종 수수료"
+    }
+  ],
+  "non_monetary": [
+    "단말기대금 포인트연계할부서비스(세이브)약정 축하 포인트 10,000점 제공"
+  ],
+  "schema_gaps": [
+    "최초사용등록일로부터 다음달 말까지 전월실적 미달 시에도 월 3,000원(점) 통합서비스 한도 제공",
+    "포인트연계할부서비스(세이브) 수수료율: 24개월 연 5.8%, 36개월 연 7%",
+    "통합서비스 한도는 매입 순서대로 적용되며 잔여 한도 이월 불가"
+  ],
+  "posted_at": "2016-07-28",
+  "source_url": "https://img2.kbcard.com/obj/card/download/08906__prdctOpmn_20241129.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_08906__prdctOpmn_20241129.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

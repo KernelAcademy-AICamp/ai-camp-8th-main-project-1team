@@ -5,9 +5,10 @@
   "status": "active",
   "as_of": "2026-02-10",
   "review_no": "여신금융협회 심의필 제2026-C1a-01855호",
-  "compliance_no": "준법감시인 심의필번호 260128-00235-PIF(2026.1.28)",
+  "compliance_no": "260128-00235-PIF(2026.1.28)",
   "posted_at": "2026-02-23",
   "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
   "annual_fee": [
     {
       "scope": "국내전용",
@@ -18,22 +19,31 @@
     },
     {
       "scope": "국내외겸용",
-      "brand": "Master",
+      "brand": "Mastercard",
       "total": 30000,
       "base": 7000,
       "affiliate": 23000
     }
   ],
+  "annual_fee_notes": [
+    "모바일 단독카드 연회비: 24,000원 (기본 1,000원 + 제휴 23,000원)",
+    "연회비는 카드 발급 시점을 기준으로 1년 단위로 청구되며, 면제 조건 없음"
+  ],
   "performance": {
     "period": "전월 1일~말일",
     "basis": "승인일",
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
     "tiers": [
       400000,
       800000
     ],
+    "new_member_grace": {},
     "excluded": [
       {
-        "code": "DISCOUNTED",
+        "code": "DISCOUNTED_SALES",
         "label": "상품서비스로 할인 적용 받은 전체 매출"
       },
       {
@@ -61,6 +71,10 @@
         "label": "유치원/초·중·고 학교납입금 전체, 대학(원) 등록금"
       },
       {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
         "code": "TAX",
         "label": "국세, 지방세"
       },
@@ -77,7 +91,7 @@
         "label": "각종 수수료 및 이자, 연체료, 연회비"
       },
       {
-        "code": "TRANSIT",
+        "code": "NON_APPROVAL",
         "label": "무승인전표(RF후불교통요금/자판기/터널이용료/항공기내 이용 등)"
       }
     ]
@@ -91,8 +105,8 @@
       "requires_tier": 400000,
       "targets": [
         {
-          "category": "러너블 APP",
-          "note": "티켓 및 스토어 구매 시 제공"
+          "category": "러너블",
+          "note": "러너블 APP 내 티켓 및 스토어 구매 시 제공"
         }
       ],
       "monthly_cap_by_tier": {
@@ -108,7 +122,7 @@
       "requires_tier": 400000,
       "targets": [
         {
-          "category": "스포츠 업종",
+          "category": "스포츠",
           "industries": [
             "스포츠용품점",
             "레저용품점",
@@ -152,7 +166,8 @@
       "requires_tier": 400000,
       "targets": [
         {
-          "category": "편의점 업종"
+          "category": "편의점",
+          "note": "백화점, 마트 등 일부 입점 매장 및 온라인 가맹점 결제 건 제외"
         }
       ],
       "monthly_cap_by_tier": {
@@ -168,7 +183,7 @@
       "requires_tier": 400000,
       "targets": [
         {
-          "category": "병원/약국 업종",
+          "category": "병원/약국",
           "industries": [
             "종합병원",
             "일반/치과/한방 병(의)원"
@@ -194,20 +209,51 @@
   ],
   "non_monetary": [],
   "schema_gaps": [
-    "최초 카드 사용 등록일로부터 다음달 말일까지 실적유예기간 제공 (40만원 미만 시 40만원 구간 할인혜택의 50% 제공)",
-    "모바일 단독카드 발급 가능 (연회비 24,000원)"
+    "최초 카드 사용 등록일로부터 다음달 말일까지 실적유예기간 적용 (40만원 미만 시 40만원 구간 혜택의 50% 제공)",
+    "모바일 단독카드는 국내 및 해외 오프라인 가맹점에서 사용 제한"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/09821__prdctOpmn_20260327.pdf",
   "_extraction_check": {
-    "source_pdf": "09821.pdf",
+    "source_pdf": "01_09821__prdctOpmn_20260327.pdf",
     "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [
       0.0,
       0.2
     ],
-    "numeric_consensus": true,
-    "mismatches": [],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.400000",
+        "first": 2000,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.800000",
+        "first": 5000,
+        "second": 15000
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.400000",
+        "first": 10000,
+        "second": 5000
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.800000",
+        "first": 15000,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[4].monthly_cap_by_tier.400000",
+        "first": 5000,
+        "second": 2000
+      },
+      {
+        "path": "$.benefits[4].monthly_cap_by_tier.800000",
+        "first": 10000,
+        "second": 5000
+      }
+    ],
     "second_run_error": null,
     "external_max_benefit": {
       "status": "UNAVAILABLE",

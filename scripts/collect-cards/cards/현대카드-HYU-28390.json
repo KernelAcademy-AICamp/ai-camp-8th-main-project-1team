@@ -1,0 +1,141 @@
+{
+  "issuer": "현대카드",
+  "name": "SC제일은행-대한항공카드 030",
+  "product_id": "HYU-28390",
+  "status": "stopped",
+  "as_of": "2025-03-31",
+  "review_no": "여신금융협회 심의필 제2025-C1a-04020호",
+  "compliance_no": "준법감시심의필 제 260311-012호 (2026.03.11)",
+  "posted_at": "2022-08-02",
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "현대",
+      "total": 30000,
+      "base": 10000,
+      "affiliate": 20000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "MasterCard",
+      "total": 30000,
+      "base": 10000,
+      "affiliate": 20000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비는 카드 발급 시 선청구",
+    "가족카드 기본연회비 0원, 제휴연회비 10,000원"
+  ],
+  "benefits": [
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내외 가맹점",
+          "note": "1천원당 1마일리지"
+        }
+      ]
+    },
+    {
+      "group": "추가 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "해외 가맹점/국내 면세점",
+          "note": "1천원당 1마일리지 추가 (기본 1마일 + 추가 1마일)"
+        },
+        {
+          "category": "대한항공 직판 항공권/기내 면세점",
+          "note": "1천원당 1마일리지 추가 (기본 1마일 + 추가 1마일)"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비, 제수수료, 이자"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "공과금 납부액(국세, 관세, 지방세, 지방세외수입, 상하수도 요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급 수수료 등)"
+    },
+    {
+      "code": "UTILITY",
+      "label": "전기요금, 도시가스 요금"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트 관리비"
+    },
+    {
+      "code": "TUITION",
+      "label": "초·중·고교 학교 납입금, 대학·대학원 등록금 납부"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 등 현금성 유가증권 구매 및 선불카드 충전 금액"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "건강보험, 국민연금, 고용보험, 산재보험 및 장애인 고용 부담금"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "고속도로 통행 요금, 고속버스"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자 할부 이용 금액"
+    }
+  ],
+  "non_monetary": [
+    "SC제일은행 영업점 방문 시 75% 우대 환율 적용 (USD, EUR, JPY, CNY)",
+    "SC제일은행 계좌 결제 시 전국 CD/ATM 현금 인출 가능"
+  ],
+  "schema_gaps": [
+    "웰컴보너스 3천 마일리지 (발급월 포함 3개월 내 100만원 이상 이용 시)",
+    "추가 적립 한도: 해외/면세점 월 200만원, 항공권/기내면세점 연 1,000만원",
+    "마일리지 적립 시 소수점 이하 절상"
+  ],
+  "source_url": "https://www.hyundaicard.com/upload/card/T_AOB-20260310-1658-84_%EA%B0%80%EC%9D%B4%EB%93%9C%EB%B6%81_SC_%EB%8C%80%ED%95%9C%ED%95%AD%EA%B3%B5_030_V3.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_20260330_T_AOB-20260310-1658-84_가이드북_SC_대한항공_030_V3.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 2,
+        "second": 3
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

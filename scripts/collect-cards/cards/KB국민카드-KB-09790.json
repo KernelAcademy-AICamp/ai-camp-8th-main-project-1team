@@ -5,6 +5,8 @@
   "status": "active",
   "as_of": "2025-11-26",
   "review_no": "여신금융협회 심의필 제2025-C1a-17091호",
+  "compliance_no": "260406-01115-PIF",
+  "posted_at": "2025-11-28",
   "card_type": "CREDIT",
   "annual_fee": [
     {
@@ -15,21 +17,40 @@
       "affiliate": 18000
     },
     {
-      "scope": "국내외겸용",
+      "scope": "해외겸용",
       "brand": "Visa",
       "total": 26000,
       "base": 7000,
+      "affiliate": 19000
+    },
+    {
+      "scope": "국내전용(모바일단독)",
+      "brand": "Local",
+      "total": 19000,
+      "base": 1000,
+      "affiliate": 18000
+    },
+    {
+      "scope": "해외겸용(모바일단독)",
+      "brand": "Visa",
+      "total": 20000,
+      "base": 1000,
       "affiliate": 19000
     }
   ],
   "performance": {
     "period": "전월 1일~말일",
     "basis": "승인일",
+    "includes": [
+      "일시불",
+      "할부"
+    ],
     "tiers": [
       400000,
       800000,
       1600000
     ],
+    "new_member_grace": {},
     "excluded": [
       {
         "code": "DISCOUNTED",
@@ -61,7 +82,7 @@
       },
       {
         "code": "GOV_SUPPORT",
-        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+        "label": "정부지원금 (보육료/유치원보조비/바우처 이용금액 등)"
       },
       {
         "code": "TAX",
@@ -98,7 +119,7 @@
       "requires_tier": 400000,
       "targets": [
         {
-          "category": "교육",
+          "category": "교육 관련 업종",
           "industries": [
             "기술/사무/가정계학원",
             "예체능계학원",
@@ -116,14 +137,14 @@
       }
     },
     {
-      "group": "KB Pay 추가 할인",
+      "group": "KB Pay 교육 추가 할인",
       "kind": "할인",
       "settle": "결제일 할인",
       "rate_percent": 5,
       "requires_tier": 800000,
       "targets": [
         {
-          "category": "교육",
+          "category": "교육 관련 업종",
           "channel": [
             "KB Pay"
           ]
@@ -141,7 +162,7 @@
       "requires_tier": 800000,
       "targets": [
         {
-          "category": "병원/약국/커피"
+          "category": "병원, 약국, 커피"
         }
       ],
       "monthly_cap_by_tier": {
@@ -161,61 +182,23 @@
     }
   ],
   "non_monetary": [
-    "모바일 단독카드 발급 가능"
+    "가족카드 발급 가능"
   ],
   "schema_gaps": [
-    "교육 관련 업종 서비스는 최초 카드 사용등록일로부터 다음달 말일까지 실적유예기간 적용(40만원 미만 시 40만원 구간 혜택 제공, 월 할인한도 5천원)",
-    "KB Pay 결제 시 추가 할인 서비스는 실적유예 미적용",
-    "생활 영역 할인은 실적유예 미적용"
+    "실적유예기간(최초 카드 사용등록일로부터 다음달 말일) 동안 전월실적 40만원 미만 시 40만원 이상 80만원 미만 구간 할인(월 할인한도 5천원) 적용",
+    "KB Pay 추가 할인 및 생활 영역 할인은 실적유예 미적용"
   ],
-  "posted_at": "2025-11-28",
   "source_url": "https://img2.kbcard.com/obj/card/download/09790__prdctOpmn_20260626.pdf",
   "_extraction_check": {
-    "source_pdf": "09790.pdf",
+    "source_pdf": "01_09790__prdctOpmn_20260626.pdf",
     "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [
       0.0,
       0.2
     ],
-    "numeric_consensus": false,
-    "mismatches": [
-      {
-        "path": "$.annual_fee.length",
-        "first": 2,
-        "second": 4
-      },
-      {
-        "path": "$.annual_fee[1].affiliate",
-        "first": 19000,
-        "second": 18000
-      },
-      {
-        "path": "$.annual_fee[1].base",
-        "first": 7000,
-        "second": 1000
-      },
-      {
-        "path": "$.annual_fee[1].total",
-        "first": 26000,
-        "second": 19000
-      },
-      {
-        "path": "$.benefits[0].requires_tier",
-        "first": 800000,
-        "second": null
-      },
-      {
-        "path": "$.benefits[1].requires_tier",
-        "first": 400000,
-        "second": null
-      },
-      {
-        "path": "$.benefits[2].requires_tier",
-        "first": 800000,
-        "second": null
-      }
-    ],
+    "numeric_consensus": true,
+    "mismatches": [],
     "second_run_error": null,
     "external_max_benefit": {
       "status": "UNAVAILABLE",

@@ -5,8 +5,6 @@
   "status": "active",
   "as_of": null,
   "review_no": null,
-  "compliance_no": "240215-00555-PIF",
-  "posted_at": "2023-04-26",
   "card_type": "CHECK",
   "benefit_style": "DISCOUNT_POINT",
   "has_transit": true,
@@ -31,15 +29,23 @@
     "excluded": [
       {
         "code": "UTILITY",
-        "label": "후불교통요금, 상하수도, 세외수입"
+        "label": "후불교통요금"
       },
       {
         "code": "TRANSIT",
-        "label": "터널통행료, 유료도로"
+        "label": "무승인 금액(자판기, 터널통행료, 유료도로, 기차/고속버스 취소 반환수수료 등)"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금 이용금액(보육료, 유치원 보조비, 바우처 이용금액 등)"
+      },
+      {
+        "code": "POINT_CHARGE",
+        "label": "포인트리 충전금액"
       },
       {
         "code": "TUITION",
-        "label": "보육료, 유치원 보조비, 대학(원)등록금"
+        "label": "대학(대학원)등록금"
       },
       {
         "code": "GIFT_CARD",
@@ -47,15 +53,7 @@
       },
       {
         "code": "FEE",
-        "label": "연체료, 각종 수수료 및 이자"
-      },
-      {
-        "code": "TAX",
-        "label": "지방세"
-      },
-      {
-        "code": "ETC",
-        "label": "정부지원금 이용금액, 바우처 이용금액 등"
+        "label": "연체료, 지방세(지방세, 상하수도, 세외수입), 취소금액, 각종 수수료 및 이자"
       }
     ]
   },
@@ -66,7 +64,7 @@
       "rate_percent": 10,
       "targets": [
         {
-          "category": "대중교통",
+          "category": "교통",
           "industries": [
             "버스",
             "지하철"
@@ -84,31 +82,22 @@
       "min_amount": 10000,
       "targets": [
         {
-          "category": "이동통신요금",
-          "industries": [
-            "SKT",
+          "category": "이동통신요금 자동납부",
+          "brands": [
+            "SK",
             "KT",
             "LG",
             "LiivM"
           ]
         },
         {
-          "category": "커피",
-          "industries": [
-            "커피 업종"
-          ]
+          "category": "커피 업종"
         },
         {
-          "category": "약국",
-          "industries": [
-            "약국 업종"
-          ]
+          "category": "약국 업종"
         },
         {
-          "category": "편의점",
-          "industries": [
-            "편의점 업종"
-          ]
+          "category": "편의점 업종"
         },
         {
           "category": "영화",
@@ -118,15 +107,15 @@
           ]
         },
         {
-          "category": "패스트푸드",
-          "industries": [
-            "패스트푸드 업종"
-          ]
+          "category": "패스트푸드 업종"
         }
       ],
       "monthly_cap_by_tier": {
         "200000": 4000
-      }
+      },
+      "conditions": [
+        "건당 1만원 이상 이용 시"
+      ]
     },
     {
       "group": "KB Pay 추가적립",
@@ -134,10 +123,7 @@
       "rate_percent": 1,
       "targets": [
         {
-          "category": "생활서비스 적립 영역",
-          "channel": [
-            "KB Pay"
-          ]
+          "category": "생활서비스 적립 영역에서 KB Pay 이용 시"
         }
       ],
       "monthly_cap_by_tier": {
@@ -145,69 +131,37 @@
       }
     }
   ],
-  "combined_caps": [
-    {
-      "group": "포인트리 적립",
-      "members": [
-        "대중교통 적립",
-        "생활서비스 적립",
-        "KB Pay 추가적립"
-      ],
-      "cap_by_tier": {
-        "200000": 10000
-      }
-    }
-  ],
+  "combined_caps": [],
   "benefit_excluded": [
     {
-      "code": "ETC",
-      "label": "정부지원금, 상품권, 선불카드 충전 등"
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    },
+    {
+      "code": "FEE",
+      "label": "연체료, 취소금액"
     }
   ],
   "non_monetary": [
-    "후불교통기능 탑재 가능"
+    "후불교통기능 탑재"
   ],
   "schema_gaps": [
     "실적 유예: 최초 카드 사용 등록 후 다음 달 말일까지 전월 실적 미달 시에도 서비스 제공",
-    "하이브리드 카드: 체크카드 결제 계좌 잔액 부족 시 소액신용결제 서비스 제공 가능"
+    "대중교통: 택시, 시외버스, 고속버스, 공항버스 제외",
+    "포인트리 적립은 매입일 + 1영업일 익일에 적립"
   ],
+  "posted_at": "2023-04-26",
   "source_url": "https://img2.kbcard.com/obj/card/download/09322__prdctOpmn_20240424.pdf",
   "_extraction_check": {
-    "source_pdf": "09322.pdf",
+    "source_pdf": "01_09322__prdctOpmn_20240424.pdf",
     "source_mode": "attached_pdf",
     "runs": 2,
     "temperatures": [
       0.0,
       0.2
     ],
-    "numeric_consensus": false,
-    "mismatches": [
-      {
-        "path": "$.benefits[0].min_amount",
-        "first": 10000,
-        "second": null
-      },
-      {
-        "path": "$.benefits[0].requires_tier",
-        "first": null,
-        "second": 200000
-      },
-      {
-        "path": "$.benefits[1].requires_tier",
-        "first": null,
-        "second": 200000
-      },
-      {
-        "path": "$.benefits[2].requires_tier",
-        "first": null,
-        "second": 200000
-      },
-      {
-        "path": "$.combined_caps.length",
-        "first": 1,
-        "second": 0
-      }
-    ],
+    "numeric_consensus": true,
+    "mismatches": [],
     "second_run_error": null,
     "external_max_benefit": {
       "status": "UNAVAILABLE",

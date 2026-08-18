@@ -1,0 +1,189 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 Get100카드",
+  "product_id": "KB-09269",
+  "status": "stopped",
+  "as_of": "2020-12-10",
+  "review_no": "여신금융협회 심의필 제 2020-C1a-10931호",
+  "compliance_no": "준법감시인 심의필 201126-04007-TRM (2020.11.26)",
+  "posted_at": "2020-07-10",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "K-WORLD(JCB타입), UPI, VISA",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외이용금액"
+      ]
+    },
+    "tiers": [
+      500000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CANCEL",
+        "label": "취소금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "전기요금, 수도요금, 공과금(민원서류 발급수수료 등)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고등학교 납입금, 대학(대학원)등록금"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통요금"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인전표(자판기, 터널통행료, 항공기내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "Get100포인트 적립",
+      "kind": "적립",
+      "rate_percent": 0.5,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "국내외 가맹점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 50000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "국세, 지방세"
+    },
+    {
+      "code": "UTILITY",
+      "label": "전기요금, 수도요금, 공과금(민원서류 발급수수료 등)"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+    },
+    {
+      "code": "TUITION",
+      "label": "초·중·고등학교 납입금, 대학(대학원)등록금"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "4대 사회보험료(건강/연금/고용/산재)"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "Get100포인트 선차감 결제 방식 제공"
+  ],
+  "schema_gaps": [
+    "포인트 적립 서비스 실적유예기간: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 없이 적립 서비스 제공",
+    "포인트 유효기간: 적립 시점 기준 60개월 경과 시 소멸",
+    "포인트 사용: Get100포인트 선차감 후 잔여금액 청구 방식",
+    "모바일 단독카드 연회비 별도 책정(9천원)"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09269__prdctOpmn_20210917.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09269__prdctOpmn_20210917.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 50000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

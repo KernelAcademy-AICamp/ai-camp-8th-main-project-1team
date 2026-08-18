@@ -1,0 +1,256 @@
+{
+  "issuer": "KB국민카드",
+  "name": "교원 웰스 KB국민카드",
+  "product_id": "KB-04417",
+  "status": "active",
+  "as_of": "2020-03-23",
+  "review_no": "여신금융협회 심의필 제 2020-C1a-02384호",
+  "compliance_no": "준법감시인 심의필 제260406-01115-PIF (2026.04.06)",
+  "posted_at": "2017-07-03",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(JCB)",
+      "total": 12000,
+      "base": 7000,
+      "affiliate": 5000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 12000,
+      "base": 7000,
+      "affiliate": 5000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "tiers": [
+      300000,
+      700000,
+      1000000
+    ],
+    "excluded": [
+      {
+        "code": "RENTAL_DISCOUNT",
+        "label": "교원 웰스 렌탈료 할인 서비스 받은 이용건"
+      },
+      {
+        "code": "RESTAURANT_DISCOUNT",
+        "label": "패밀리레스토랑 할인 서비스 받은 이용건"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(대중교통, 자판기, 터널이용료, 항공기내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "교원 웰스 렌탈료 할인",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "렌탈",
+          "note": "교원 웰스 렌탈료 자동납부"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 11000,
+        "700000": 15000,
+        "1000000": 20000
+      }
+    },
+    {
+      "group": "패밀리레스토랑 할인",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "rate_percent": 20,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "외식",
+          "brands": [
+            "아웃백스테이크하우스",
+            "VIPS",
+            "생어거스틴"
+          ]
+        }
+      ],
+      "conditions": [
+        "월 2회, 월 20만원 이용금액까지 할인"
+      ]
+    },
+    {
+      "group": "영화 할인",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "amount_krw": 3500,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "메가박스",
+            "CGV"
+          ],
+          "channel": [
+            "온라인 예매"
+          ]
+        }
+      ],
+      "conditions": [
+        "1일 2회, 월 4회, 연간 10회 이내"
+      ]
+    },
+    {
+      "group": "놀이공원 할인",
+      "kind": "할인",
+      "settle": "현장 할인",
+      "rate_percent": 50,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "롯데월드 어드벤처"
+          ]
+        }
+      ],
+      "conditions": [
+        "종합이용권 50% 현장 할인",
+        "회원별 일 1매, 월 2매, 연간 5매 할인"
+      ]
+    },
+    {
+      "group": "놀이공원 할인",
+      "kind": "할인",
+      "settle": "현장 할인",
+      "rate_percent": 50,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "에버랜드"
+          ]
+        }
+      ],
+      "conditions": [
+        "페스티벌월드 자유이용권 50% 현장 할인",
+        "일 1매 할인, 회원별 연간 10매 할인"
+      ]
+    },
+    {
+      "group": "놀이공원 할인",
+      "kind": "할인",
+      "settle": "현장 할인",
+      "rate_percent": 30,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "캐리비안베이"
+          ]
+        }
+      ],
+      "conditions": [
+        "입장권 30% 현장 할인",
+        "일 1매 할인"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "최초 카드 사용등록일로부터 다음 달 말일까지는 전월 실적 30만원 미만 시에도 1구간 혜택 제공",
+    "렌탈료 할인 시 할인금액보다 승인금액이 작으면 승인금액만큼 할인",
+    "롯데월드 어드벤처 할인 시 가족카드 할인 미제공",
+    "에버랜드 및 캐리비안베이 할인 시 본인 및 가족카드 각각 일 1매 할인 적용"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04417__prdctOpmn_20260630.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04417__prdctOpmn_20260630.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 6,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[4].rate_percent",
+        "first": 50,
+        "second": 30
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 20000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

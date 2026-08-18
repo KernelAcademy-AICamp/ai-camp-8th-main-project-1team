@@ -5,13 +5,14 @@
   "status": "active",
   "as_of": "2025-06-11",
   "review_no": "여신금융협회 심의필 제 2025 – C1a – 07945호",
-  "compliance_no": "준법감시인 심의필 250605-02838-PIF",
+  "compliance_no": "준법감시인 250605-02838-PIF",
   "posted_at": "2023-07-20",
   "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
   "annual_fee": [
     {
       "scope": "국내전용",
-      "brand": "Local",
+      "brand": "KB",
       "total": 20000,
       "base": 7000,
       "affiliate": 13000
@@ -24,6 +25,12 @@
       "affiliate": 13000
     }
   ],
+  "annual_fee_notes": [
+    "연회비는 카드 발급 시점을 기준으로 1년 단위로 청구",
+    "초회/차기년도 연회비 면제 조건 없음",
+    "2025년 6월 16일부터 발급된 카드의 연회비는 카드별로 청구"
+  ],
+  "performance": null,
   "benefits": [
     {
       "group": "쿠팡 적립",
@@ -41,7 +48,10 @@
       ],
       "monthly_cap_by_tier": {
         "0": 20000
-      }
+      },
+      "conditions": [
+        "전월 실적 조건 없음"
+      ]
     },
     {
       "group": "일반 적립",
@@ -50,12 +60,15 @@
       "targets": [
         {
           "category": "국내외 가맹점",
-          "note": "쿠팡, 쿠팡이츠, 쿠팡플레이 이용금액은 적립 제외"
+          "note": "쿠팡, 쿠팡이츠, 쿠팡플레이 이용금액 제외"
         }
       ],
       "monthly_cap_by_tier": {
         "0": 2000
-      }
+      },
+      "conditions": [
+        "전월 실적 조건 없음"
+      ]
     }
   ],
   "combined_caps": [],
@@ -82,7 +95,7 @@
     },
     {
       "code": "TUITION",
-      "label": "초/중/고 학교납입금, 대학(원) 등록금"
+      "label": "초/중/고 학교납입금 및 대학(원) 등록금"
     },
     {
       "code": "TAX",
@@ -110,12 +123,13 @@
     "가족카드 발급 불가"
   ],
   "schema_gaps": [
-    "전월 실적 조건 없음",
-    "쿠팡캐시 적립 서비스 제외 대상에 취소금액, 정부지원금, 신차구매 청구 할인전표 포함"
+    "쿠팡캐시 적립 서비스로, 포인트 적립과 유사하나 별도 명칭 사용",
+    "전월 실적 조건이 없는 상품임"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/_09292__prdctOpmn_20250702.pdf",
   "_extraction_check": {
-    "source_pdf": "09292.pdf",
+    "source_pdf": "01__09292__prdctOpmn_20250702.pdf",
+    "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [
       0.0,

@@ -1,0 +1,267 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민행복카드",
+  "product_id": "KB-02065",
+  "status": "active",
+  "as_of": "2022-04-26",
+  "review_no": "여신금융협회 심의필번호 제2022-C1a-03123호",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 0
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Master",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용 금액"
+      ]
+    },
+    "tiers": [
+      400000,
+      800000,
+      1200000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원) 등록금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고등학교 학교 납입금 전체(수업료/교육비/현장학습비/급식비)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통요금"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인전표(자판기, 터널통행료, 항공기내 이용 등)"
+      },
+      {
+        "code": "FEE",
+        "label": "연체료, 연회비, 각종 수수료 및 이자"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "쇼핑",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "대형마트",
+          "brands": [
+            "이마트",
+            "롯데마트",
+            "홈플러스"
+          ]
+        },
+        {
+          "category": "온라인쇼핑몰",
+          "brands": [
+            "옥션",
+            "G마켓",
+            "11번가"
+          ]
+        },
+        {
+          "category": "홈쇼핑",
+          "brands": [
+            "CJ홈쇼핑",
+            "GS홈쇼핑",
+            "현대홈쇼핑"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000,
+        "1200000": 20000
+      },
+      "combined_cap_group": "쇼핑"
+    },
+    {
+      "group": "교육",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "키즈카페"
+        },
+        {
+          "category": "문화센터"
+        },
+        {
+          "category": "학습지"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000,
+        "1200000": 20000
+      },
+      "combined_cap_group": "교육"
+    },
+    {
+      "group": "자동납부",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "통신료",
+          "industries": [
+            "SKT/KT/LG U+ 자동납부 통신요금"
+          ]
+        },
+        {
+          "category": "아파트관리비"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000,
+        "800000": 5000,
+        "1200000": 7000
+      },
+      "combined_cap_group": "자동납부"
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "쇼핑",
+      "members": [
+        "대형마트",
+        "온라인쇼핑몰",
+        "홈쇼핑"
+      ],
+      "cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000,
+        "1200000": 20000
+      }
+    },
+    {
+      "group": "교육",
+      "members": [
+        "키즈카페",
+        "문화센터",
+        "학습지"
+      ],
+      "cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000,
+        "1200000": 20000
+      }
+    },
+    {
+      "group": "자동납부",
+      "members": [
+        "통신료",
+        "아파트관리비"
+      ],
+      "cap_by_tier": {
+        "400000": 3000,
+        "800000": 5000,
+        "1200000": 7000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "KB손해보험 단체보험 무료가입 및 사고 보장"
+  ],
+  "schema_gaps": [
+    "실적 유예기간: 최초 카드 사용등록일로부터 다음달 말일까지 40만원 미만 시에도 40만원 구간 혜택 제공",
+    "국가바우처 기능 포함"
+  ],
+  "posted_at": "2021-02-01",
+  "source_url": "https://img2.kbcard.com/obj/card/download/02065__prdctOpmn_20260401.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_02065__prdctOpmn_20260401.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": 400000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].requires_tier",
+        "first": 400000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].requires_tier",
+        "first": 400000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 47000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

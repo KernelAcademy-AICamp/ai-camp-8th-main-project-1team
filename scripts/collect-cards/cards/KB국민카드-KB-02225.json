@@ -8,6 +8,7 @@
   "compliance_no": "201130-04037-PIF",
   "posted_at": "2020-12-30",
   "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
   "annual_fee": [
     {
       "scope": "국내전용",
@@ -80,7 +81,7 @@
       },
       {
         "code": "TUITION",
-        "label": "초· 중·고등학교 학교 납입금 전체(수업료/교육비/현장학습비/급식비)"
+        "label": "초· 중·고등학교 학교 납입금 전체"
       },
       {
         "code": "GIFT_CARD",
@@ -93,7 +94,7 @@
       "group": "커피빈 이용 할인",
       "kind": "할인",
       "settle": "청구 할인",
-      "rate_conditional": "건당 3천원",
+      "amount_krw": 3000,
       "min_amount": 5000,
       "requires_tier": 500000,
       "targets": [
@@ -111,7 +112,7 @@
       "group": "커피빈 카드 충전 할인",
       "kind": "할인",
       "settle": "청구 할인",
-      "rate_conditional": "건당 5천원",
+      "amount_krw": 5000,
       "min_amount": 30000,
       "requires_tier": 500000,
       "targets": [
@@ -126,20 +127,17 @@
     {
       "group": "커피빈 모바일 쿠폰",
       "kind": "할인",
-      "settle": "쿠폰 제공",
-      "amount_krw": 10000,
       "targets": [
         {
           "category": "커피빈 모바일 쿠폰"
         }
       ],
       "conditions": [
-        "전년도 700만원 이상 이용 시",
-        "연 1회 제공"
+        "전년도 700만원 이상 이용 시 연 1회 제공"
       ]
     },
     {
-      "group": "생활 밀착 서비스",
+      "group": "주요 생활 영역 할인",
       "kind": "할인",
       "settle": "청구 할인",
       "rate_percent": 5,
@@ -183,20 +181,96 @@
     "커피빈 모바일 쿠폰 1만원권 제공"
   ],
   "schema_gaps": [
-    "전월 실적 조건 유예: 최초 사용등록 후 다음달 말일까지 50만원 미만 시에도 50만원 구간 할인 서비스 제공",
+    "전월 실적 조건 유예: 최초 사용등록 후 다음달 말일까지 50만원 미만 시에도 50만원 구간 할인 제공",
     "커피빈 모바일 쿠폰은 전년도 이용금액 기준 연 1회 제공"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/02225__prdctOpmn_20231201.pdf",
   "_extraction_check": {
-    "source_pdf": "02225.pdf",
+    "source_pdf": "01_02225__prdctOpmn_20231201.pdf",
     "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [
       0.0,
       0.2
     ],
-    "numeric_consensus": true,
-    "mismatches": [],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 4,
+        "second": 3
+      },
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": 3000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].min_amount",
+        "first": 5000,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.1000000",
+        "first": 18000,
+        "second": 20000
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.500000",
+        "first": 9000,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": null,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[1].amount_krw",
+        "first": null,
+        "second": 5000
+      },
+      {
+        "path": "$.benefits[1].min_amount",
+        "first": 10000,
+        "second": 30000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.1000000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": 5,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].amount_krw",
+        "first": null,
+        "second": 3000
+      },
+      {
+        "path": "$.benefits[2].min_amount",
+        "first": null,
+        "second": 5000
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.1000000",
+        "first": null,
+        "second": 18000
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.500000",
+        "first": null,
+        "second": 9000
+      },
+      {
+        "path": "$.benefits[2].requires_tier",
+        "first": null,
+        "second": 500000
+      }
+    ],
     "second_run_error": null,
     "external_max_benefit": {
       "status": "UNAVAILABLE",

@@ -1,0 +1,145 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KT Super DC7 KB국민비씨카드",
+  "product_id": "KB-08907",
+  "status": "stopped",
+  "as_of": "2017-06-26",
+  "review_no": "여신금융협회심의필제2017-C1a-07819",
+  "compliance_no": "준법감시인심의필 제241008-05039-PIF (2024.10.08)",
+  "posted_at": "2016-11-01",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "policy_card": false,
+  "has_transit": false,
+  "annual_fee": [
+    {
+      "scope": "국내외겸용(UPI)",
+      "brand": "UPI",
+      "total": 25000
+    },
+    {
+      "scope": "국내외겸용(Master)",
+      "brand": "Mastercard",
+      "total": 27000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비 면제 조건 없음",
+    "연회비 반환 기준 : 유효기간 도래 전에 카드 해지 시 이미 납부한 연회비에서 발급비용을 차감 후 일할 계산된 잔여분을 계약 해지 날로부터 10영업일 이내에 결제 계좌로 환급"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "대중교통 이용 등 무승인 전표",
+        "해외 일시불 이용금액"
+      ]
+    },
+    "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "국내 할부",
+      "해외 일시불"
+    ],
+    "tiers": [
+      300000,
+      700000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자"
+      },
+      {
+        "code": "ANNUAL_FEE",
+        "label": "연회비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "KT 통신요금 자동납부 할인",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "통신",
+          "industries": [
+            "KT 휴대폰요금",
+            "전화요금",
+            "국제전화",
+            "인터넷요금",
+            "인터넷전화",
+            "IPTV",
+            "소액결제",
+            "KT 스카이라이프 이용료"
+          ],
+          "note": "자동납부 건에 한함"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 15000,
+        "700000": 20000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "OTHER_TELCO",
+      "label": "타 통신사 자동납부 건"
+    }
+  ],
+  "benefit_notes": [
+    "할인금액이 KT 통신요금 청구금액보다 클 경우 해당 통신요금 청구금액까지만 할인",
+    "최초사용등록일로부터 다음달 말까지는 전월 실적 30만원 미만 시에도 30만원 구간 할인 제공"
+  ],
+  "benefit_conditions": [
+    "KT 통신요금 자동납부 시에만 할인",
+    "카드명의와 가입자 명의가 동일한 경우에 한함"
+  ],
+  "non_monetary": [
+    "비씨카드 이벤트 적용 가능"
+  ],
+  "schema_gaps": [
+    "연간 할인 한도(180,000원/240,000원) 표기 존재",
+    "가족카드 사용 시 본인회원 할인한도와 합산 적용"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/08907__prdctOpmn_20241129.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_08907__prdctOpmn_20241129.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 20000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

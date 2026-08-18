@@ -1,0 +1,201 @@
+{
+  "issuer": "KB국민카드",
+  "name": "모두투어 투어마일리지 KB국민카드",
+  "product_id": "KB-04422",
+  "status": "stopped",
+  "as_of": "2022-08-18",
+  "review_no": "여신금융협회 심의필 제2022-C1a-06921호",
+  "annual_fee": [
+    {
+      "scope": "국내외겸용",
+      "brand": "K-WORLD(JCB)",
+      "total": 15000
+    }
+  ],
+  "benefits": [
+    {
+      "group": "모두투어 투어마일리지 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "모두투어 여행상품",
+          "note": "1,000원 당 30 투어마일리지(홈페이지/직영대리점/대리점), 1,000원 당 15 투어마일리지(연간 2,000만원 초과 결제액)"
+        },
+        {
+          "category": "모두투어 외 가맹점",
+          "note": "1,000원 당 15 투어마일리지"
+        }
+      ]
+    },
+    {
+      "group": "외식",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "외식",
+          "brands": [
+            "아웃백",
+            "빕스",
+            "생어거스틴"
+          ],
+          "note": "1일 1회, 월 2회, 월 20만원 이용금액까지 할인"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 20000
+      }
+    },
+    {
+      "group": "커피",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스",
+            "커피빈"
+          ],
+          "note": "1일 1회, 월 2회, 월 20만원 이용금액까지 할인"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 20000
+      }
+    },
+    {
+      "group": "놀이공원",
+      "kind": "할인",
+      "settle": "현장할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "롯데월드",
+            "에버랜드",
+            "캐리비안베이"
+          ],
+          "note": "롯데월드 50%(일 1매, 월 2매, 연 5매), 에버랜드 50%(일 1매, 연 10매), 캐리비안베이 30%(일 1매)"
+        }
+      ]
+    },
+    {
+      "group": "영화",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "amount_krw": 3500,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "메가박스",
+            "CGV"
+          ],
+          "channel": [
+            "온라인 예매"
+          ],
+          "note": "승인 건당 3,500원 할인(1일 2회, 월 4회, 연 10회)"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "선불카드 구입 및 충전금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "각종 상품권 구입금액"
+    }
+  ],
+  "non_monetary": [
+    "모두투어 여행상품 또는 항공권 결제 시 투어마일리지 사용 가능"
+  ],
+  "schema_gaps": [
+    "투어마일리지 적립 서비스의 연간 2,000만원 초과 결제액 기준은 스키마에 반영 불가",
+    "놀이공원 및 영화 할인 서비스의 연간 횟수 제한은 스키마에 반영 불가",
+    "신규 발급 시 최초 카드 사용등록일로부터 다음 달 말일까지 전월 실적 없이 할인 서비스 제공"
+  ],
+  "posted_at": "2015-12-17",
+  "source_url": "https://img2.kbcard.com/obj/card/download/_04422__prdctOpmn_20251014.pdf",
+  "_extraction_check": {
+    "source_pdf": "01__04422__prdctOpmn_20251014.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[1].min_amount",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[1].requires_tier",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].min_amount",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[2].requires_tier",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].min_amount",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.300000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].requires_tier",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[4].min_amount",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[4].monthly_cap_by_tier.300000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[4].requires_tier",
+        "first": 300000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,220 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 노리2 체크카드(Play)",
+  "product_id": "KB-07986",
+  "status": "active",
+  "as_of": "2026-05-22",
+  "review_no": "여신금융협회 심의필 제260522-01722-PIF호",
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master, Visa",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      200000,
+      400000,
+      600000,
+      800000
+    ],
+    "excluded": [
+      {
+        "code": "TRANSIT",
+        "label": "후불교통요금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "정부지원금 이용금액(보육료, 유치원보조비, 바우처 이용금액 등)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "포인트리 충전금액, 상품권 및 선불카드(선불전자지급수단 포함) 구입(충전)금액"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원) 등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "연체료, 지방세(지방세, 상하수도, 세외수입), 취소금액, 각종 수수료 및 이자"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "일상 혜택",
+      "kind": "할인",
+      "settle": "환급할인",
+      "requires_tier": 200000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스"
+          ],
+          "note": "월 3만원 이용분까지"
+        },
+        {
+          "category": "디지털콘텐츠",
+          "brands": [
+            "구글플레이스토어",
+            "앱스토어"
+          ],
+          "note": "월 5만원 이용분까지"
+        },
+        {
+          "category": "문화",
+          "brands": [
+            "인터파크티켓"
+          ],
+          "note": "월 7만원 이용분까지"
+        },
+        {
+          "category": "뷰티",
+          "brands": [
+            "올리브영"
+          ],
+          "note": "월 4만원 이용분까지"
+        },
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25",
+            "CU"
+          ],
+          "note": "월 4만원 이용분까지"
+        },
+        {
+          "category": "디지털구독",
+          "brands": [
+            "넷플릭스",
+            "유튜브프리미엄"
+          ],
+          "note": "건당 1만원 이상 결제 시"
+        },
+        {
+          "category": "배달",
+          "brands": [
+            "배달의민족",
+            "요기요"
+          ],
+          "note": "건당 1만원 이상 결제 시"
+        },
+        {
+          "category": "통신",
+          "brands": [
+            "SKT",
+            "KT",
+            "LGU+",
+            "Liiv M"
+          ],
+          "note": "건당 5만원 이상 결제 시"
+        },
+        {
+          "category": "영화",
+          "brands": [
+            "CGV"
+          ],
+          "note": "건당 1만원 이상 결제 시"
+        },
+        {
+          "category": "놀이공원",
+          "brands": [
+            "에버랜드",
+            "롯데월드"
+          ],
+          "note": "건당 3만원 이상 결제 시"
+        }
+      ]
+    },
+    {
+      "group": "Play 혜택",
+      "kind": "할인",
+      "settle": "환급할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "게임",
+          "industries": [
+            "PC방 업종"
+          ],
+          "note": "월 2만원 이용분까지"
+        },
+        {
+          "category": "외식",
+          "industries": [
+            "패스트푸드 업종"
+          ],
+          "note": "건당 1만원 이상 결제 시"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "월간 통합할인한도",
+      "members": [
+        "일상 혜택",
+        "Play 혜택"
+      ],
+      "cap_by_tier": {
+        "200000": 20000,
+        "400000": 30000,
+        "600000": 40000,
+        "800000": 50000
+      }
+    }
+  ],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "후불교통기능 탑재 가능"
+  ],
+  "schema_gaps": [
+    "Play 혜택은 전월 실적 30만원 이상 시 제공",
+    "일상 혜택은 전월 실적 20만원 미만 시 제공되지 않음",
+    "월간 통합할인한도는 일상 혜택과 Play 혜택을 합산하여 적용"
+  ],
+  "posted_at": "2023-06-23",
+  "source_url": "https://img2.kbcard.com/obj/card/download/07986__prdctOpmn_20260716.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_07986__prdctOpmn_20260716.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].requires_tier",
+        "first": 200000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

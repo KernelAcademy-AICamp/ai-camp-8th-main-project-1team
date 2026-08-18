@@ -2,32 +2,49 @@
 
 ## 게이트 3 결과
 
-- 전체: 137장
-- PRECISE: 38장
-- REFERENCE: 99장
-- 통과율: **38/137 (27.7%)**
+- 전체: 561장
+- PRECISE: 86장
+- REFERENCE: 475장
+- 통과율: **86/561 (15.3%)**
 
 ### REFERENCE 원인
 
-- LLM 이중 추출 숫자 불일치: 44장 — BC 바로 K-패스 카드, Diners Club Point, K-패스 삼성체크카드, K-패스 하나 체크카드, KB NEED AutoSlim카드, KB NEED Edu 카드, KB NEED Pay 카드, KB On the Go 체크카드, KB YOU Prime 카드, KB YOU Wish up 카드, KB YOU Wish 카드, KB국민 K-패스체크카드, KREAM 체크카드, KT 36 Plus 우리카드, KT패밀리카드, MOVING카드 ALLDAY, MOVING카드 LIFE, MOVING카드 ONLINE, PORSCHE 삼성카드, SC제일은행 삼성체크카드 YOUNG, SILVER FOR LOTTE DEPARTMENT STORE, Young Hana 체크카드_OK캐쉬백(GREEN, 비교통), 그린카드 v2, 대한항공카드 060, 대한항공카드 120, 대한항공카드 300, 더 로이어스 클래식 삼성카드, 두산베어스 KB카드, 로얄블루1000(대한항공 개인), 삼성카드 SFC 스페셜마일리지 (스카이패스), 세라젬 구독 우리카드, 스타트래블 우리카드, 알파벳카드S BOLD, 알파벳카드T BOLD, 원더카드2.0 Co-brand, 위비트래블 J 체크카드, 자유로운여행(SKYPASS/Asiana Club), 제주항공 J 포인트 KB국민카드, 제주항공 Refresh Point 삼성카드, 카카오페이 트래블로그 체크, 카카오페이신용카드, 플래티늄카드, 하이마트 구독 하나카드, 현대카드 하이브리드(포인트형)
-- 셈할 수 있는 혜택이 하나도 없다: 44장 — CJ ONE 우리체크, KB On the Go 체크카드, KB국민 SK 7mobile Ⅱ 카드, KB국민 U+ 유모바일 Ⅱ 카드, KB국민 기후동행카드, KB국민 마일리지 가온카드(대한항공형), KT 36 Plus 우리카드, KT Plus 우리카드, KT스카이라이프 KB카드, MOVING카드 ALLDAY, MOVING카드 GLOBAL, MOVING카드 LIFE, MOVING카드 ONLINE, MY COMPANY 항공권전용, SC제일은행 삼성카드 스페셜마일리지 (스카이패스), e-플래티늄카드, 고위드 BC 바로 Mastercard, 그린하이브리드, 나비엔 구독 우리카드, 대한항공카드 060, 대한항공카드 120, 대한항공카드 300, 대한항공카드 the First Edition2, 로얄블루1000(대한항공 개인), 삼성 AI 구독 하나카드, 삼성 AI구독 KB국민카드, 삼성AI구독 우리카드, 삼성카드 SFC 스페셜마일리지 (스카이패스), 삼성카드 스페셜마일리지(스카이패스), 세라젬 구독 우리카드, 스타벅스 삼성체크카드, 신세계 더 마일리지 삼성카드(스카이패스), 우체국 하이브리드 하이패스카드, 원더카드2.0, 원더카드2.0 Co-brand, 자유로운여행(SKYPASS/Asiana Club), 제주항공 J 포인트 KB국민카드, 트래블로그 SKYPASS 신용카드(후불교통), 플래티늄카드, 하이마트 구독 하나카드, 하이브리드카드, 현대카드 체크(Apple Pay Rewards), 현대카드 하이브리드(Apple Pay Rewards), 현대홈쇼핑 현대카드
-- as_of: 38장 — CJ ONE 우리체크, FC EXPRESS CHECK, K-패스 삼성체크카드, K-패스 우리카드(체크), K-패스 하나 체크카드, KB Less Go 카드, KB NEED AutoSlim카드, KB국민 K-패스체크카드, KB국민 마일리지 가온카드(대한항공형), KB국민은행 모니모 삼성체크카드, KREAM 체크카드, MY COMPANY 항공권전용, SC제일은행 삼성체크카드 YOUNG, SC제일은행 삼성카드 스페셜마일리지 (스카이패스), Young Hana 체크카드_OK캐쉬백(GREEN, 비교통), 고위드 BC 바로 Mastercard, 국민행복 현대체크카드, 그린하이브리드, 김제사랑상품권 삼성체크카드, 네이버페이 머니 하나 체크카드 (그린), 삼성카드 SFC 스페셜마일리지 (스카이패스), 삼성카드 스페셜마일리지(스카이패스), 스타벅스 삼성체크카드, 우리 기후동행카드(체크), 우리 트래블월렛 체크카드, 우체국 하이브리드 하이패스카드, 위비트래블 체크카드, 카카오페이 MUZI 체크카드, 카카오페이 트래블로그 체크, 카카오페이KB국민 체크카드, 쿠팡 와우 KB체크카드, 트래블GO 체크카드, 하나 주거래 쇼핑 체크카드(후불교통), 하이브리드카드, 현대 기본교통 체크카드, 현대카드 체크(Apple Pay Rewards), 현대카드 체크(캐시백형), 현대카드 체크(포인트형)
-- 실적 제외 0개: 29장 — CJ ONE 우리체크, K-패스 삼성카드, KB Less Go 카드, KB NEED AutoSlim카드, KB국민 마일리지 가온카드(대한항공형), KB국민은행 모니모 삼성체크카드, KT 36 Plus 우리카드, MOVING카드 ALLDAY, MOVING카드 LIFE, MY COMPANY 항공권전용, PORSCHE 삼성카드, SC제일은행 삼성체크카드 YOUNG, SC제일은행 삼성카드 스페셜마일리지 (스카이패스), e-플래티늄카드, 고위드 BC 바로 Mastercard, 그린하이브리드, 로얄블루1000(대한항공 개인), 우리 트래블월렛 체크카드, 우체국 하이브리드 하이패스카드, 자유로운여행(SKYPASS/Asiana Club), 쿠팡 와우 KB체크카드, 쿠팡 와우 카드, 트래블로그 SKYPASS 신용카드(후불교통), 트래블로그 신용카드, 트래블로그 플러스 신용카드, 플래티늄카드, 하이브리드카드, 현대 기본교통 체크카드, 현대카드 ZERO Up(포인트형)
-- 한도의 구간 0원이 실적 구간에 없다: 11장 — Diners Club Point, KREAM 체크카드, MOVING카드 ALLDAY, PORSCHE 삼성카드, 무신사 삼성카드, 제주항공 Refresh Point 삼성카드, 쿠팡 와우 KB체크카드, 쿠팡 와우 카드
-- 한도의 구간 400,000원이 실적 구간에 없다: 8장 — K-패스 삼성카드, KB Less Go 카드, KB NEED AutoSlim카드, KT 36 Plus 우리카드
-- 한도의 구간 800,000원이 실적 구간에 없다: 7장 — K-패스 삼성카드, KB Less Go 카드, KB NEED AutoSlim카드, KT 36 Plus 우리카드
-- 통합한도의 구간 0원이 실적 구간에 없다: 5장 — MOVING카드 ALLDAY, MOVING카드 LIFE, 삼성카드 SFC 스페셜마일리지 (스카이패스), 트래블로그 신용카드, 트래블로그 플러스 신용카드
-- 한도의 구간 500,000원이 실적 구간에 없다: 2장 — CJ ONE 우리체크, 삼성전자 AI 구독 삼성카드
+- LLM 이중 추출 숫자 불일치: 267장 — AK KB국민카드, BC 바로 K-패스 카드, BeV V카드(포인트형), BeV Ⅲ 카드, BeV Ⅴ카드(스카이패스형), BeV Ⅸ 대한항공 카드, BeV Ⅸ 토탈마일 카드, CHALLENGE BAG KB국민카드, Diners Club Point, GS SHOP KB국민카드, GS SHOP link KB국민카드, GS칼텍스 스마트 세이브 KB국민카드, H.Point KB국민 체크카드, H.Point KB국민카드, HCN카드, HERITAGE Reserve(스카이패스형), HERITAGE Smart 대한항공 마일리지형, K-패스 삼성체크카드, K-패스 하나 체크카드, KB ALL point 카드, KB ALL 카드, KB NEED AutoSlim카드, KB NEED Pay 카드, KB On the Go 체크카드, KB Pay 머니백카드, KB WE:SH All+ 카드, KB YOU Prime 카드, KB YOU Wish 카드, KB YOU With 카드, KB 마라톤카드, KB 스타틴즈카드, KB 전통시장온누리카드, KB 틴업 체크카드, KB국민 CLiP카드, KB국민 EVO 티타늄카드, KB국민 Easy all 티타늄카드, KB국민 Easy fly 티타늄카드, KB국민 Easy link 티타늄카드, KB국민 Easy ring 티타늄카드, KB국민 Easy shopping카드, KB국민 Easy study 티타늄카드, KB국민 FINETECH카드(마일리지 대한항공), KB국민 FINETECH카드(마일리지 아시아나), KB국민 GS행복가득카드, KB국민 Get100 체크카드, KB국민 Green Wave 1.5℃카드, KB국민 KB Pay 챌린지카드, KB국민 KT메가플러스카드, KB국민 LG U+ 심플라이트Ⅱ카드, KB국민 Members 체크카드, KB국민 Members 카드, KB국민 My WE:SH 카드, KB국민 ONE체크카드, KB국민 ONE카드, KB국민 SK 7mobile Ⅱ 카드, KB국민 SK내트럭 유가보조금카드, KB국민 SK인텔릭스 올림카드, KB국민 U+ 유모바일 Ⅱ 카드, KB국민 WE:SH Daily 카드, KB국민 WE:SH Together 카드, KB국민 WELCOME PLUS 외국인유학생보험 체크카드, KB국민 Young Youth 체크카드, KB국민 kt M mobile Ⅱ 카드, KB국민 가온 Biz카드, KB국민 가온 올포인트 체크카드, KB국민 가온 올포인트 카드, KB국민 가온글로벌카드, KB국민 가온플래티늄카드, KB국민 골든대로 체크카드, KB국민 국방멤버쉽카드, KB국민 그린재킷 체크카드, KB국민 그린체크카드, KB국민 기후동행카드, KB국민 내고장사랑 체크카드, KB국민 노리 체크카드, KB국민 노리 체크카드(KB스타뱅킹 디자인), KB국민 노리2 체크카드(KB Pay, Global), KB국민 노리2 체크카드(Play), KB국민 누리 체크카드, KB국민 누리올림카드, KB국민 레고랜드 체크카드, KB국민 레고랜드매니아카드, KB국민 리멤버카드, KB국민 마일리지 가온플래티늄카드(대한항공), KB국민 매직카 올림카드, KB국민 민 체크카드, KB국민 비상온리원카드, KB국민 비트윈 체크카드, KB국민 사장님카드, KB국민 새로이 체크카드, KB국민 샘 쏘영 체크카드, KB국민 선생님든든 카드, KB국민 소노시즌Ⅱ카드, KB국민 스마트 지킴이카드, KB국민 스마트렌탈카드, KB국민 스타트럭 체크카드, KB국민 스타트럭 플러스 HD현대오일뱅크 체크카드, KB국민 스타트럭 플러스 HD현대오일뱅크카드, KB국민 스타트럭카드, KB국민 스타트럭플러스 S-OIL카드, KB국민 스타플러스 체크카드, KB국민 알뜰폰HubⅡ카드, KB국민 에듀카드, KB국민 에버랜드 판다카드, KB국민 올라운드카드, KB국민 와이즈멤버스 카드, KB국민 와이즈카드, KB국민 와이즈홈 카드, KB국민 우체국 스마트카드, KB국민 정 체크카드, KB국민 직장인보너스 체크카드, KB국민 청춘대로 매니아 티타늄카드, KB국민 청춘대로 매니아i카드, KB국민 청춘대로 싱글 체크카드, KB국민 청춘대로 톡톡카드, KB국민 첵첵 체크카드, KB국민 총무 체크카드, KB국민 탄탄대로 Biz카드, KB국민 탄탄대로 온리유카드, KB국민 탄탄대로 웰컴카드(09214), KB국민 탄탄대로 호남예향카드, KB국민 톡톡 with 와이페이모어카드, KB국민 톡톡D 카드, KB국민 톡톡M 카드, KB국민 톡톡O 카드, KB국민 톡톡with Kbank카드, KB국민 트래블러스 체크카드, KB국민 트리콜 체크카드, KB국민 티머니 노리체크카드, KB국민 티머니 체크카드, KB국민 패밀리카드, KB국민 포인트리 체크카드, KB국민 해외에선 체크카드, KB국민 햇살론카드, KB국민 행복한대구경북티타늄카드, KB국민 훈 체크카드, KB국민 히어로즈체크카드, KB국민U축구사랑카드, KB국민행복카드, KB라이프 딱좋은 요즘 건강 KB카드, KB매직카 KB국민카드, KREAM 체크카드, KT 36 Plus 우리카드, KT 할부 Plus KB국민카드, KT스카이라이프 KB카드, KT패밀리카드, LG U+ 라이트할부 KB국민카드, LG U+라이트할부ⅡKB국민카드, LGU 라이트할부Ⅱ KB국민카드, LG전자 KB국민카드, LG전자-현대카드M Edition3, LOTTE DUTY FREE 현대카드, LOTTE DUTY FREE-MIUM 현대카드 Visa 선택제공서비스, MOVING카드 ALLDAY, MOVING카드 LIFE, MOVING카드 ONLINE, OLLEH 만마일 KB국민카드, PORSCHE 삼성카드, S-OIL LPG KB국민카드, SC제일은행 삼성체크카드 YOUNG, SC제일은행-the Red Edition5, SC제일은행-대한항공카드 030, SC제일은행-현대카드M BOOST, SC제일은행-현대카드ZERO Edition2(포인트형), SILVER FOR LOTTE DEPARTMENT STORE, SK 7mobile-현대카드M Edition3, SK LPG SAVE KB국민카드, SK에너지 러브유 KB국민카드, SK인텔릭스 KB국민카드, SmileCard Edition2, T 라이트 KB국민카드, TANTUM Ultra 아멕스 카드(아시아나), T라이트 KB국민카드, T보너스 KB국민카드, U+유모바일-현대카드M Edition3, Wavve KB국민카드, Young Hana 체크카드_OK캐쉬백(GREEN, 비교통), kt M mobile-현대카드M Edition3, kt 할부 Plus KB국민카드, the Black Edition3, the Green Edition2, the Pink, the Red Edition5, 갤러리아 KB국민카드(일반), 경기과학기술대 KB노리체크카드, 골프존 KB국민카드(마일리지 아시아나), 교보문고 KB국민카드, 교원 구몬 KB국민카드, 교원 웰스 KB국민카드, 그린카드 v2, 넥센타이어 KB국민카드, 넥슨 현대카드, 대한항공카드 060, 대한항공카드 120, 대한항공카드 300, 대한항공카드070, 대한항공카드150, 대한항공카드theFirst, 더 로이어스 클래식 삼성카드, 랭킹닭컴 신용카드, 로얄블루1000(대한항공 개인), 롯데마트 KB국민카드, 모두투어 투어마일리지 KB국민카드, 몰테일 KB국민카드, 무신사 현대카드 HYBRID, 배민 곱빼기카드, 배민 한그릇카드, 배민 한그릇카드 HYBRID, 배민현대카드, 배민현대카드 HYBRID, 삼성증권 CMA KB국민 nori(노리)체크카드, 삼성카드 SFC 스페셜마일리지 (스카이패스), 서울도시가스 KB국민카드, 세라젬 구독 우리카드, 세스코 KB국민카드, 스카이패스 IoT 티타늄카드, 스카이패스 KB국민 개인카드, 스카이패스 티타늄카드, 스타벅스 현대카드, 스타트래블 우리카드, 아시아나 KB 국민카드, 알파벳카드S BOLD, 알파벳카드T BOLD, 여의도순복음교회 성도증 KB국민 노리 체크카드, 요기패스 신용카드, 원더카드2.0 Co-brand, 위비트래블 J 체크카드, 이마트 e카드 Edition2, 인덕대학원 KB노리체크카드, 자유로운여행(SKYPASS/Asiana Club), 저축은행 KB국민카드 (생활형), 저축은행 KB국민카드 (적립형), 제주항공 J 포인트 KB국민카드, 제주항공 Refresh Point 삼성카드, 청호나이스 KB국민카드, 카카오뱅크 KB국민카드, 카카오페이 트래블로그 체크, 카카오페이KB국민 체크카드, 카카오페이신용카드, 커피빈 신용카드, 코스트코 리워드 현대카드, 토스 USS NEXT KB국민 체크카드, 페퍼저축은행 KB국민 톡톡 my living카드, 플래티늄카드, 하나투어 KB국민카드, 하이마트 구독 하나카드, 하이마트Mobile-현대카드M Edition3(통신할인형), 해피오토JDC KB국민카드, 해피포인트 KB국민 체크카드, 현대카드 M2 BOOST, 현대카드 M3 BOOST, 현대카드 MX Black, 현대카드 하이브리드(포인트형), 현대카드M CHECK, 현대카드M Edition3, 현대카드M HYBRID, 현대카드M2 Edition3, 현대카드M3 Edition3, 현대카드X BOOST, 현대카드X HYBRID, 현대카드X2 BOOST, 현대카드X2 Edition2, 현대카드X3 BOOST, 현대카드X3 Edition2, 현대카드Z family, 현대카드Z ontact, 홈플러스 KB국민카드
+- 셈할 수 있는 혜택이 하나도 없다: 214장 — BeV V카드(포인트형), BeV Ⅸ 대한항공 카드, BeV Ⅸ 토탈마일 카드, CJ ONE 우리체크, GS SHOP link KB국민카드, GS칼텍스 스마트 세이브 KB국민카드, HCN카드, HERITAGE Classic(스카이패스형), HERITAGE Reserve(스카이패스형), HERITAGE Smart 대한항공 마일리지형, KB NEED Pay 카드, KB On the Go 체크카드, KB YOU Prime 카드, KB Youth Club 체크카드, KB 스타B 카드, KB 전통시장온누리체크카드, KB 전통시장온누리카드, KB국민 AIA생명카드, KB국민 CLiP카드, KB국민 Easy all 티타늄카드, KB국민 Easy all카드, KB국민 FINETECH카드(마일리지 대한항공), KB국민 Green Wave 1.5℃카드, KB국민 KB Pay 챌린지카드, KB국민 KB Pay 챌린지플러스카드, KB국민 KMVNO 알뜰폰 카드, KB국민 LG U 심플라이트카드, KB국민 LG U+ 심플라이트Ⅱ카드, KB국민 LG헬로비전Ⅱ 카드, KB국민 LG헬로비전카드, KB국민 Liiv M Ⅱ카드, KB국민 Liiv M 체크카드, KB국민 Liiv M 카드, KB국민 MYCHEF카드, KB국민 SK 7mobile Ⅱ 카드, KB국민 SK 7mobile카드, KB국민 SK내트럭 유가보조금체크카드(RF), KB국민 SK내트럭 유가보조금체크카드(비RF), KB국민 SK내트럭 유가보조금카드, KB국민 TBX 카드, KB국민 TLC 카드, KB국민 U+ 유모바일 Ⅱ 카드, KB국민 e hi-pass 카드(기아), KB국민 e hi-pass 카드(제네시스), KB국민 e hi-pass 카드(현대), KB국민 joyful체크카드(KB라이프생명), KB국민 kt M mobile Ⅱ 카드, KB국민 가온 올포인트 카드, KB국민 경찰대총동창회카드, KB국민 골든대로 체크카드, KB국민 골든라이프올림카드, KB국민 그린체크카드, KB국민 노리2 체크카드(KB Pay, Global), KB국민 노리2 체크카드(Play), KB국민 더피플라이프카드, KB국민 딜라이브카드, KB국민 마일리지 가온카드(대한항공형), KB국민 마일리지 가온카드(아시아나형), KB국민 민 체크카드, KB국민 밀크T 카드, KB국민 보탬e전용체크카드, KB국민 보탬e전용카드, KB국민 비상온리원카드, KB국민 소노시즌 카드, KB국민 소노시즌Ⅱ카드, KB국민 스마트렌탈카드, KB국민 스타트럭 II GS칼텍스카드, KB국민 스타트럭 체크카드, KB국민 스타트럭카드, KB국민 스타트럭플러스 S-OIL카드, KB국민 아시아나 올림카드, KB국민 알뜰폰 Hub 카드, KB국민 알뜰폰HubⅡ카드, KB국민 알파원카드, KB국민 에버랜드 판다카드, KB국민 웅진씽크빅카드, KB국민 웰릭스렌탈 카드, KB국민 웰릭스렌탈Ⅱ카드, KB국민 윙크카드, KB국민 청호나이스Ⅱ카드, KB국민 체크카드, KB국민 첵첵 체크카드, KB국민 코웨이II 카드, KB국민 쿠쿠렌탈 티타늄카드, KB국민 쿠쿠렌탈Ⅱ카드, KB국민 탄탄대로 Biz카드, KB국민 토심이 첵첵 체크카드, KB국민 톡톡 my point카드, KB국민 트래블러스 체크카드, KB국민 플렉스페이카드, KB국민 하이패스2.0 SIM카드, KB국민 하이패스2.0카드, KB국민 해외에선 체크카드, KB국민행복체크카드, KB국민행복카드, KT 36 Plus 우리카드, KT DC Plus KB국민카드, KT Plus 우리카드, KT Super DC7 KB국민비씨카드, KT 할부 Plus KB국민카드, KT스카이라이프 KB카드, Kt M mobile 카드, LFmall 신용카드, LG U+ 라이트할부 KB국민카드, LG U+라이트할부ⅡKB국민카드, LGU 라이트할부Ⅱ KB국민카드, LG전자 KB국민카드, LG전자-현대카드M Edition3, LOTTE DUTY FREE 현대카드, LOTTE DUTY FREE-MIUM 현대카드, LOTTE DUTY FREE-MIUM 현대카드 Visa 선택제공서비스, MOVING카드 ALLDAY, MOVING카드 GLOBAL, MOVING카드 LIFE, MOVING카드 ONLINE, SC제일은행 삼성카드 스페셜마일리지 (스카이패스), SC제일은행-the Red Edition5, SC제일은행-the Red Stripe, SC제일은행-대한항공카드 030, SC제일은행-현대카드M BOOST, SK 7mobile-현대카드M Edition3, SmileCard Edition2, T 라이트 KB국민카드, T-Premium KB국민카드, T-economy KB국민카드, TANTUM Ultra 아멕스 카드(아시아나), T라이트 KB국민카드, U+유모바일-현대카드M Edition3, U＋ 유모바일카드, e-플래티늄카드, kt GiGA KB국민비씨카드, kt M mobile-현대카드M Edition3, kt Super 할부 KB국민카드, kt 할부 Plus KB국민카드, the Black Edition3, the Pink, the Purple osée, the Red Edition5, the Red Stripe, 고위드 BC 바로 Mastercard, 골프존 KB국민카드, 골프존 KB국민카드(마일리지 아시아나), 교보문고 KB국민카드, 그린위치 KB 국민카드, 그린하이브리드, 나비엔 구독 우리카드, 넥센타이어 KB국민카드, 넥슨 현대카드 UNLIMITED, 대상웰라이프 KB국민카드, 대한항공카드 060, 대한항공카드 120, 대한항공카드 300, 대한항공카드 the First Edition2, 대한항공카드030, 대한항공카드theFirst, 로얄블루1000(대한항공 개인), 롯데렌탈 묘미 KB국민카드, 모두렌탈 KB국민카드, 무신사 현대카드 HYBRID, 삼성 AI 구독 하나카드, 삼성 AI구독 KB국민카드, 삼성AI구독 우리카드, 삼성카드 SFC 스페셜마일리지 (스카이패스), 삼성카드 스페셜마일리지(스카이패스), 서울도시가스 KB국민카드, 세라젬 구독 우리카드, 소노아임레디 KB국민카드, 스카이패스 IoT 티타늄카드, 스카이패스 KB국민 개인카드, 스카이패스 티타늄카드, 스타벅스 삼성체크카드, 스타벅스 현대카드, 신세계 더 마일리지 삼성카드(스카이패스), 아시아나 KB 국민카드, 에너지플러스카드 Edition2, 예다함, 우체국 하이브리드 하이패스카드, 원더카드2.0, 원더카드2.0 Co-brand, 윙크Ⅱ카드, 이마트II KB국민카드(옐로우), 자유로운여행(SKYPASS/Asiana Club), 제주항공 J 포인트 KB국민카드, 카카오뱅크 자기주도마일리지 KB체크카드, 카카오뱅크 자기주도마일리지 KB카드, 코스트코 리워드 현대카드, 토스모바일 KB국민카드, 토스페이 플러스 KB카드, 트래블로그 SKYPASS 신용카드(후불교통), 패밀리포인트 체크카드 (주)뉴부자관광, 패밀리포인트 체크카드 삐아, 패밀리포인트 체크카드 앤서스랩코리아, 패밀리포인트 체크카드 주식회사뉴부자, 패밀리포인트 체크카드 포이파트너스, 패밀리포인트 체크카드(브레이슬릿스튜디오), 플래티늄카드, 하이마트 구독 하나카드, 하이마트-현대카드M Edition3, 하이마트Mobile-현대카드M Edition3(통신할인형), 하이브리드카드, 한화손해보험 캐롯 KB국민카드, 현대카드 M BOOST, 현대카드 M3 BOOST, 현대카드 체크(Apple Pay Rewards), 현대카드 하이브리드(Apple Pay Rewards), 현대카드M CHECK, 현대카드M Edition3, 현대카드M3 Edition3, 현대카드X CHECK, 현대카드X HYBRID, 현대카드X2 Edition2, 현대카드X3 Edition2, 현대큐밍 KB국민카드, 현대홈쇼핑 현대카드
+- as_of: 181장 — CJ ONE 우리체크, FC EXPRESS CHECK, GS칼텍스 스마트 세이브 KB국민카드, H.Point KB국민 체크카드, K-패스 삼성체크카드, K-패스 우리카드(체크), K-패스 하나 체크카드, KB Joyful 체크카드(카카오뱅크 DAU), KB Less Go 카드, KB Members Plus 체크카드, KB Members Plus 카드, KB NEED AutoSlim카드, KB Pay 머니백카드, KB YOU With 카드, KB Youth Club 체크카드, KB 스타틴즈카드, KB 전통시장온누리체크카드, KB 틴업 체크카드, KB국민 Get100 체크카드, KB국민 Joyful Plus 체크카드_KB국민은행_비소득공제, KB국민 Joyful Plus 체크카드_KB국민은행_소득공제, KB국민 K-패스체크카드, KB국민 Liiv M 체크카드, KB국민 Members 체크카드, KB국민 ONE체크카드, KB국민 TMAP&LOGI 행복 체크카드, KB국민 TRAVEL Preset카드, KB국민 WELCOME PLUS 외국인유학생보험 체크카드, KB국민 WELCOME PLUS 체크카드, KB국민 Young Youth 체크카드, KB국민 joyful 체크카드, KB국민 joyful 체크카드( KB증권), KB국민 joyful 체크카드(KB금융지주), KB국민 joyful 체크카드(KB데이타시스템), KB국민 joyful 체크카드(KB라이프파트너스), KB국민 joyful 체크카드(KB생명보험), KB국민 joyful 체크카드(KB신용정보), KB국민 joyful 체크카드(KB인베스트먼트), KB국민 joyful 체크카드(KB자산운용), KB국민 joyful 체크카드(KB저축은행), KB국민 joyful 체크카드(KB캐피탈), KB국민 joyful 체크카드(카카오뱅크), KB국민 joyful체크카드(KB라이프생명), KB국민 joyful체크카드(KB손해보험), KB국민 kiwibank 체크카드, KB국민 가온 올포인트 체크카드, KB국민 가온 체크카드, KB국민 가온글로벌카드, KB국민 가온올림카드, KB국민 가족愛 체크카드, KB국민 경찰대총동창회카드, KB국민 골든대로 체크카드, KB국민 국방멤버쉽카드, KB국민 그린재킷 체크카드, KB국민 그린체크카드, KB국민 기후동행체크카드, KB국민 내고장사랑 체크카드, KB국민 노리 체크카드, KB국민 노리 체크카드(KB스타뱅킹 디자인), KB국민 노리2 체크카드(KB Pay, Global), KB국민 누리 체크카드, KB국민 누리올림카드, KB국민 레고랜드 체크카드, KB국민 리멤버카드, KB국민 마일리지 가온카드(대한항공형), KB국민 마일리지 가온카드(아시아나형), KB국민 매직카 올림카드, KB국민 민 체크카드, KB국민 반려애카드, KB국민 보탬e전용체크카드, KB국민 비트윈 체크카드, KB국민 새로이 체크카드, KB국민 샘 쏘영 체크카드, KB국민 스맨파 체크카드, KB국민 스타 체크카드, KB국민 스타트럭 플러스 HD현대오일뱅크 체크카드, KB국민 스타트럭플러스 S-OIL 체크카드, KB국민 쏘영 체크카드, KB국민 아시아나 올림카드, KB국민 아시아나 체크카드, KB국민 알파원카드, KB국민 약사님카드, KB국민 와이즈멤버스 카드, KB국민 우리동네 체크카드, KB국민 우체국 스마트카드, KB국민 위메프페이 체크카드, KB국민 음 체크카드, KB국민 정 체크카드, KB국민 직장인보너스 체크카드, KB국민 청춘대로 싱글 체크카드, KB국민 체크카드, KB국민 첵첵 체크카드, KB국민 총무 체크카드, KB국민 토심이 첵첵 체크카드, KB국민 톡톡 Pay카드, KB국민 트래블러스 체크카드, KB국민 트리콜 체크카드, KB국민 티머니 노리체크카드, KB국민 티머니 체크카드, KB국민 팜스넷 약사님카드, KB국민 포인트리 체크카드, KB국민 해외에선 체크카드, KB국민 해피CU포인트 체크카드, KB국민 해피노리 체크카드, KB국민 훈 체크카드, KB국민 히어로즈체크카드, KB국민U축구사랑카드, KB국민은행 모니모 삼성체크카드, KB국민행복체크카드, KB매직카 KB국민카드, KB저축은행 팡팡 KB체크카드, KREAM 체크카드, LG U+ 라이트할부 KB국민카드, LG U플러스 KB국민 체크카드, LOTTE DUTY FREE-MIUM 현대카드 Visa 선택제공서비스, OLLEH 만마일 KB국민카드, OLLEH 세이브 KB국민카드, SC제일은행 삼성체크카드 YOUNG, SC제일은행 삼성카드 스페셜마일리지 (스카이패스), SK LPG SAVE KB국민카드, SmileCard Edition2, T보너스 KB국민카드, Young Hana 체크카드_OK캐쉬백(GREEN, 비교통), kt GiGA KB국민비씨카드, kt Super 할부 KB국민카드, the Green Edition2, the Pink, the Red Edition5, 경기과학기술대 KB노리체크카드, 고위드 BC 바로 Mastercard, 국민행복 현대체크카드, 그린하이브리드, 김제사랑상품권 삼성체크카드, 네이버페이 머니 하나 체크카드 (그린), 넥슨 현대카드 CHECK, 배민현대카드 HYBRID, 삼성증권 CMA KB국민 nori(노리)체크카드, 삼성카드 SFC 스페셜마일리지 (스카이패스), 삼성카드 스페셜마일리지(스카이패스), 스카이패스 KB국민 개인카드, 스타벅스 삼성체크카드, 아시아나 KB 국민카드, 여의도순복음교회 성도증 KB국민 노리 체크카드, 우리 기후동행카드(체크), 우리 트래블월렛 체크카드, 우체국 하이브리드 하이패스카드, 위비트래블 체크카드, 인덕대학원 KB노리체크카드, 중국공상은행 KB국민 비트윈 체크카드, 카카오뱅크 자기주도마일리지 KB체크카드, 카카오페이 MUZI 체크카드, 카카오페이 트래블로그 체크, 카카오페이KB국민 체크카드, 코웨이 KB국민카드, 쿠팡 와우 KB체크카드, 트래블GO 체크카드, 패밀리포인트 체크카드 (주)뉴부자관광, 패밀리포인트 체크카드 삐아, 패밀리포인트 체크카드 앤서스랩코리아, 패밀리포인트 체크카드 에코에너지솔루션, 패밀리포인트 체크카드 주식회사뉴부자, 패밀리포인트 체크카드 포이파트너스, 패밀리포인트 체크카드(브레이슬릿스튜디오), 하나 주거래 쇼핑 체크카드(후불교통), 하이브리드카드, 한화손해보험 캐롯 KB국민카드, 해피포인트 KB국민 체크카드, 해피포인트 해피리워드 KB국민 체크카드, 현대 기본교통 체크카드, 현대카드 M BOOST, 현대카드 M2 BOOST, 현대카드 M3 BOOST, 현대카드 MX Black, 현대카드 체크(Apple Pay Rewards), 현대카드 체크(캐시백형), 현대카드 체크(포인트형), 현대카드M Edition3, 현대카드M2 Edition3, 현대카드M3 Edition3, 현대카드Z family, 현대카드ZERO Edition2(할인형)
+- 실적 제외 0개: 144장 — BeV Ⅸ 대한항공 카드, CJ ONE 우리체크, GS칼텍스 스마트 세이브 KB국민카드, H.Point KB국민 체크카드, HERITAGE Reserve(스카이패스형), K-패스 삼성카드, KB ALL point 카드, KB Joyful 체크카드(카카오뱅크 DAU), KB Less Go 카드, KB Members Plus 체크카드, KB Members Plus 카드, KB NEED AutoSlim카드, KB NEED Global 카드, KB 스타틴즈카드, KB 틴업 체크카드, KB국민 GS행복가득카드, KB국민 Joyful Plus 체크카드_KB국민은행_비소득공제, KB국민 Joyful Plus 체크카드_KB국민은행_소득공제, KB국민 KB Pay 챌린지카드, KB국민 KT메가플러스카드, KB국민 Liiv M 체크카드, KB국민 MYCHEF카드, KB국민 Members 체크카드, KB국민 TRAVEL Preset카드, KB국민 WE:SH Together 카드, KB국민 e hi-pass 카드(기아), KB국민 e hi-pass 카드(제네시스), KB국민 e hi-pass 카드(현대), KB국민 joyful 체크카드, KB국민 joyful 체크카드( KB증권), KB국민 joyful 체크카드(KB금융지주), KB국민 joyful 체크카드(KB데이타시스템), KB국민 joyful 체크카드(KB라이프파트너스), KB국민 joyful 체크카드(KB생명보험), KB국민 joyful 체크카드(KB신용정보), KB국민 joyful 체크카드(KB인베스트먼트), KB국민 joyful 체크카드(KB자산운용), KB국민 joyful 체크카드(KB저축은행), KB국민 joyful 체크카드(KB캐피탈), KB국민 joyful 체크카드(카카오뱅크), KB국민 joyful체크카드(KB라이프생명), KB국민 joyful체크카드(KB손해보험), KB국민 가온 체크카드, KB국민 가온올림카드, KB국민 가족愛 체크카드, KB국민 경찰대총동창회카드, KB국민 국방멤버쉽카드, KB국민 기후동행카드, KB국민 내고장사랑 체크카드, KB국민 내고장사랑카드, KB국민 노리2 체크카드(KB Pay, Global), KB국민 리멤버카드, KB국민 마일리지 가온카드(대한항공형), KB국민 마일리지 가온카드(아시아나형), KB국민 마일리지 가온플래티늄카드(대한항공), KB국민 반려애카드, KB국민 보탬e전용체크카드, KB국민 보탬e전용카드, KB국민 새로이 체크카드, KB국민 선생님든든 카드, KB국민 스타 체크카드, KB국민 스타트럭 II GS칼텍스카드, KB국민 스타트럭 플러스 HD현대오일뱅크 체크카드, KB국민 스타트럭플러스 S-OIL 체크카드, KB국민 아시아나 올림카드, KB국민 알파원카드, KB국민 약사님카드, KB국민 와이즈멤버스 카드, KB국민 정 체크카드, KB국민 청춘대로 매니아i카드, KB국민 체크카드, KB국민 총무 체크카드, KB국민 톡톡 my point카드, KB국민 팜스넷 약사님카드, KB국민 하이패스2.0 SIM카드, KB국민 하이패스2.0카드, KB국민 훈 체크카드, KB국민서울대총동창회카드, KB국민은행 모니모 삼성체크카드, KB매직카 KB국민카드, KT 36 Plus 우리카드, LFmall 신용카드, LOTTE DUTY FREE-MIUM 현대카드 Visa 선택제공서비스, MOVING카드 ALLDAY, MOVING카드 LIFE, OLLEH 만마일 KB국민카드, OLLEH 세이브 KB국민카드, PORSCHE 삼성카드, SC제일은행 삼성체크카드 YOUNG, SC제일은행 삼성카드 스페셜마일리지 (스카이패스), SC제일은행-대한항공카드 030, SC제일은행-현대카드ZERO Edition2(포인트형), SC제일은행-현대카드ZERO Edition2(할인형), SmileCard Edition2, TANTUM Ultra 아멕스 카드(아시아나), THE CJ KB국민카드, e-플래티늄카드, kt GiGA KB국민비씨카드, the Black Edition3, the Green Edition2, the Purple osée, 고위드 BC 바로 Mastercard, 교보문고 KB국민카드, 그린하이브리드, 넥슨 현대카드 CHECK, 대한항공카드030, 대한항공카드theFirst, 로얄블루1000(대한항공 개인), 롯데렌탈 묘미 KB국민카드, 모두투어 투어마일리지 KB국민카드, 배민 곱빼기카드, 삼성증권 CMA KB국민 nori(노리)체크카드, 스카이패스 KB국민 개인카드, 아시아나 KB 국민카드, 우리 트래블월렛 체크카드, 우체국 하이브리드 하이패스카드, 자유로운여행(SKYPASS/Asiana Club), 카카오뱅크 KB국민카드, 카카오뱅크 자기주도마일리지 KB체크카드, 카카오뱅크 자기주도마일리지 KB카드, 코스트코 리워드 현대카드, 쿠팡 와우 KB체크카드, 쿠팡 와우 카드, 토스페이 플러스 KB카드, 트래블로그 SKYPASS 신용카드(후불교통), 트래블로그 신용카드, 트래블로그 플러스 신용카드, 패밀리포인트 체크카드 (주)뉴부자관광, 패밀리포인트 체크카드 삐아, 패밀리포인트 체크카드 앤서스랩코리아, 패밀리포인트 체크카드 에코에너지솔루션, 패밀리포인트 체크카드 주식회사뉴부자, 패밀리포인트 체크카드 포이파트너스, 패밀리포인트 체크카드(브레이슬릿스튜디오), 플래티늄카드, 하나투어 KB국민카드, 하이브리드카드, 해피포인트 KB국민 체크카드, 현대 기본교통 체크카드, 현대카드 ZERO Up(포인트형), 현대카드X HYBRID, 현대카드X2 Edition2, 현대카드ZERO Edition2(포인트형), 현대카드ZERO Edition2(할인형)
+- 한도의 구간 0원이 실적 구간에 없다: 46장 — Diners Club Point, HERITAGE Reserve(포인트형), KB ALL ez 카드, KB ALL 카드(KB스타뱅킹 전용), KB Pay 머니백카드, KB 스타틴즈카드, KB 틴업 체크카드, KB국민 SK내트럭 유가보조금체크카드(RF), KB국민 SK내트럭 유가보조금체크카드(비RF), KB국민 SK내트럭 유가보조금카드, KB국민 WE:SH Together 카드, KB국민 가온 올포인트 카드, KB국민 국방멤버쉽카드, KB국민 스타트럭 플러스 HD현대오일뱅크카드, KB국민 위메프페이 체크카드, KB국민 톡톡 my point카드, KB국민 햇살론카드, KREAM 체크카드, MOVING카드 ALLDAY, PORSCHE 삼성카드, 넥슨 현대카드, 넥슨 현대카드 UNLIMITED, 무신사 삼성카드, 위메프페이 신용카드, 제주항공 Refresh Point 삼성카드, 코스트코 리워드 현대카드, 쿠팡 와우 KB체크카드, 쿠팡 와우 카드, 현대카드M CHECK, 현대카드X CHECK
+- 한도의 구간 300,000원이 실적 구간에 없다: 39장 — H.Point KB국민 체크카드, KB국민 GS행복가득카드, KB국민 KT메가플러스카드, KB국민 Liiv M 체크카드, KB국민 MYCHEF카드, KB국민 내고장사랑 체크카드, KB국민 반려애카드, KB국민 새로이 체크카드, KB국민 스타플러스 체크카드, KB국민 정 체크카드, KB국민 총무 체크카드, KB국민 훈 체크카드, OLLEH 세이브 KB국민카드, kt GiGA KB국민비씨카드, 롯데렌탈 묘미 KB국민카드, 모두투어 투어마일리지 KB국민카드, 삼성증권 CMA KB국민 nori(노리)체크카드, 위비트래블 J 체크카드
+- 한도의 구간 400,000원이 실적 구간에 없다: 37장 — K-패스 삼성카드, KB Less Go 카드, KB Members Plus 카드, KB NEED AutoSlim카드, KB국민 기후동행카드, KB국민 선생님든든 카드, KB국민 청춘대로 매니아i카드, KT 36 Plus 우리카드, 배민 곱빼기카드
+- 한도의 구간 800,000원이 실적 구간에 없다: 30장 — K-패스 삼성카드, KB Less Go 카드, KB Members Plus 카드, KB NEED AutoSlim카드, KB국민 선생님든든 카드, KB국민 청춘대로 매니아i카드, KT 36 Plus 우리카드, 배민 곱빼기카드
+- 한도의 구간 500,000원이 실적 구간에 없다: 26장 — CJ ONE 우리체크, H.Point KB국민 체크카드, KB국민 정 체크카드, KB국민 총무 체크카드, KB국민 훈 체크카드, OLLEH 세이브 KB국민카드, 넥슨 현대카드 CHECK, 삼성전자 AI 구독 삼성카드, 카카오뱅크 KB국민카드, 코스트코 리워드 현대카드, 현대카드X2 Edition2
+- 실적 제외 3개: 14장 — KB국민 민 체크카드, KB국민 스타트럭 체크카드, KB국민 스타트럭카드, KB국민 티머니 노리체크카드, KB국민 티머니 체크카드, 경기과학기술대 KB노리체크카드, 대한항공카드070, 대한항공카드150, 인덕대학원 KB노리체크카드, 중국공상은행 KB국민 비트윈 체크카드, 해피오토JDC KB국민카드, 현대카드X BOOST, 현대카드X2 BOOST, 현대카드X3 BOOST
+- 실적 제외 2개: 13장 — KB국민 WELCOME PLUS 외국인유학생보험 체크카드, KB국민 WELCOME PLUS 체크카드, KB국민 그린체크카드, KB국민 노리 체크카드, KB국민 노리 체크카드(KB스타뱅킹 디자인), KB국민 비트윈 체크카드, KB국민 음 체크카드, KB국민 직장인보너스 체크카드, KB국민 청춘대로 싱글 체크카드, KB국민 트리콜 체크카드, KB국민 포인트리 체크카드, KB국민 해피노리 체크카드, 여의도순복음교회 성도증 KB국민 노리 체크카드
+- 한도의 구간 200,000원이 실적 구간에 없다: 12장 — CJ ONE 우리체크, KB국민 내고장사랑 체크카드, 삼성증권 CMA KB국민 nori(노리)체크카드
+- 한도의 구간 600,000원이 실적 구간에 없다: 12장 — KB국민 KT메가플러스카드, KB국민 Liiv M 체크카드, KB국민 반려애카드, KB국민 새로이 체크카드
+- 한도의 구간 1,600,000원이 실적 구간에 없다: 10장 — KB Members Plus 카드, KB NEED AutoSlim카드
+- 연회비 구분을 모른다: 9장 — BeV Ⅸ 대한항공 카드, KB국민 TRAVEL Preset카드, KB국민 kt M mobile Ⅱ 카드, KB국민 굿데이카드, KB국민 그린체크카드, KB라이프 딱좋은 요즘 건강 KB카드, TANTUM Ultra 아멕스 카드(아시아나), 해피오토JDC KB국민카드
+- 통합한도의 구간 0원이 실적 구간에 없다: 7장 — KB 스타틴즈카드, KB국민 햇살론카드, MOVING카드 ALLDAY, MOVING카드 LIFE, 삼성카드 SFC 스페셜마일리지 (스카이패스), 트래블로그 신용카드, 트래블로그 플러스 신용카드
+- 한도의 구간 900,000원이 실적 구간에 없다: 5장 — KB국민 KT메가플러스카드, KB국민 반려애카드
+- 한도의 구간 700,000원이 실적 구간에 없다: 5장 — KB국민 MYCHEF카드, kt GiGA KB국민비씨카드, 롯데렌탈 묘미 KB국민카드
+- 통합한도의 구간 200,000원이 실적 구간에 없다: 4장 — CJ ONE 우리체크, KB국민 노리2 체크카드(KB Pay, Global), KB국민 스타 체크카드, 삼성증권 CMA KB국민 nori(노리)체크카드
+- 통합한도의 구간 300,000원이 실적 구간에 없다: 4장 — KB국민 MYCHEF카드, KB국민 스타 체크카드, kt GiGA KB국민비씨카드, 삼성증권 CMA KB국민 nori(노리)체크카드
+- 통합한도의 구간 500,000원이 실적 구간에 없다: 4장 — CJ ONE 우리체크, KB국민 스타 체크카드, 삼성증권 CMA KB국민 nori(노리)체크카드, 카카오뱅크 KB국민카드
+- 한도의 구간 1,000,000원이 실적 구간에 없다: 3장 — 카카오뱅크 KB국민카드, 현대카드X2 Edition2
+- 실적 제외 4개: 3장 — FC EXPRESS CHECK, 이마트 e카드 Edition2, 하이마트Mobile-현대카드M Edition3(통신할인형)
+- 통합한도의 구간 1,000,000원이 실적 구간에 없다: 3장 — KB국민 스타 체크카드, 삼성증권 CMA KB국민 nori(노리)체크카드, 카카오뱅크 KB국민카드
+- 통합한도의 구간 400,000원이 실적 구간에 없다: 2장 — KB국민 노리2 체크카드(KB Pay, Global), 배민 곱빼기카드
+- 통합한도의 구간 800,000원이 실적 구간에 없다: 2장 — KB국민 노리2 체크카드(KB Pay, Global), 배민 곱빼기카드
+- 한도의 구간 100,000원이 실적 구간에 없다: 2장 — 해피포인트 KB국민 체크카드
+- 한도의 구간 1,200,000원이 실적 구간에 없다: 2장 — KB국민 KT메가플러스카드, KT 36 Plus 우리카드
+- 통합한도의 구간 700,000원이 실적 구간에 없다: 2장 — KB국민 MYCHEF카드, kt GiGA KB국민비씨카드
 - 외부 월 최대 혜택 불일치: 1장 — BC 바로 기후동행카드
-- 한도의 구간 1,600,000원이 실적 구간에 없다: 1장 — KB NEED AutoSlim카드
+- 한도의 구간 50,000원이 실적 구간에 없다: 1장 — LOTTE DUTY FREE 현대카드
+- posted_at 날짜 형식이 아니다: 1장 — 볼트업 KB EV 카드
+- 연회비 합 불일치: 1장 — 하나투어 KB국민카드
+- 통합한도의 구간 600,000원이 실적 구간에 없다: 1장 — KB국민 노리2 체크카드(KB Pay, Global)
 - 실적 제외 1개: 1장 — 삼성카드 & YOUNG
-- 한도의 구간 300,000원이 실적 구간에 없다: 1장 — 위비트래블 J 체크카드
-- 한도의 구간 200,000원이 실적 구간에 없다: 1장 — CJ ONE 우리체크
-- 통합한도의 구간 200,000원이 실적 구간에 없다: 1장 — CJ ONE 우리체크
-- 통합한도의 구간 500,000원이 실적 구간에 없다: 1장 — CJ ONE 우리체크
-- 한도의 구간 1,200,000원이 실적 구간에 없다: 1장 — KT 36 Plus 우리카드
 - 가족카드 연회비를 본인카드 연회비와 분리할 수 없음: 1장 — 로얄블루1000(대한항공 개인)
-- 실적 제외 4개: 1장 — FC EXPRESS CHECK
 
 ## 이중 추출 숫자 대조
 
@@ -37,16 +54,199 @@
 - 그린카드 v2: 16곳 불일치
 - 그린카드 개인/법인: 3곳 불일치
 - biz 카드: 5곳 불일치
-- 두산베어스 KB카드: 12곳 불일치
-- 제주항공 J 포인트 KB국민카드: 2곳 불일치
-- KB YOU Wish up 카드: 7곳 불일치
-- KB국민 K-패스체크카드: 5곳 불일치
-- KB On the Go 체크카드: 8곳 불일치
-- KB YOU Prime 카드: 2곳 불일치
-- KB YOU Wish 카드: 4곳 불일치
-- KB NEED Edu 카드: 7곳 불일치
-- KB NEED AutoSlim카드: 16곳 불일치
-- KB NEED Pay 카드: 2곳 불일치
+- 아시아나 KB 국민카드: 3곳 불일치
+- KB국민 국방멤버쉽카드: 7곳 불일치
+- 교보문고 KB국민카드: 3곳 불일치
+- KB국민U축구사랑카드: 8곳 불일치
+- GS칼텍스 스마트 세이브 KB국민카드: 2곳 불일치
+- 하나투어 KB국민카드: 17곳 불일치
+- T라이트 KB국민카드: 2곳 불일치
+- kt 할부 Plus KB국민카드: 11곳 불일치
+- LG U+라이트할부ⅡKB국민카드: 16곳 불일치
+- 스카이패스 KB국민 개인카드: 4곳 불일치
+- KB국민 포인트리 체크카드: 4곳 불일치
+- KB국민 민 체크카드: 14곳 불일치
+- KB국민 샘 쏘영 체크카드: 28곳 불일치
+- KB국민 Get100 체크카드: 3곳 불일치
+- KB국민 해외에선 체크카드: 14곳 불일치
+- KB국민 WELCOME PLUS 외국인유학생보험 체크카드: 1곳 불일치
+- 해피포인트 KB국민 체크카드: 20곳 불일치
+- KB국민 내고장사랑 체크카드: 22곳 불일치
+- KB국민 노리 체크카드: 21곳 불일치
+- KB국민 비트윈 체크카드: 9곳 불일치
+- KB국민 직장인보너스 체크카드: 29곳 불일치
+- KB국민 티머니 체크카드: 16곳 불일치
+- 삼성증권 CMA KB국민 nori(노리)체크카드: 11곳 불일치
+- KB국민 골든대로 체크카드: 4곳 불일치
+- KB국민 새로이 체크카드: 6곳 불일치
+- 카카오페이KB국민 체크카드: 1곳 불일치
+- 여의도순복음교회 성도증 KB국민 노리 체크카드: 31곳 불일치
+- KB국민 노리 체크카드(KB스타뱅킹 디자인): 2곳 불일치
+- KB국민 노리 체크카드(KB스타뱅킹 디자인): 13곳 불일치
+- KB국민 Young Youth 체크카드: 2곳 불일치
+- KB국민 첵첵 체크카드: 9곳 불일치
+- KB국민 정 체크카드: 1곳 불일치
+- KB국민 훈 체크카드: 8곳 불일치
+- KB국민 히어로즈체크카드: 1곳 불일치
+- KB국민 ONE체크카드: 1곳 불일치
+- KB국민 티머니 노리체크카드: 13곳 불일치
+- KB국민 청춘대로 싱글 체크카드: 8곳 불일치
+- KB국민 가온 올포인트 체크카드: 3곳 불일치
+- SK LPG SAVE KB국민카드: 10곳 불일치
+- KB국민 KT메가플러스카드: 14곳 불일치
+- 홈플러스 KB국민카드: 12곳 불일치
+- S-OIL LPG KB국민카드: 4곳 불일치
+- KB국민행복카드: 3곳 불일치
+- KB국민 스타트럭 체크카드: 1곳 불일치
+- KB국민 스타트럭카드: 8곳 불일치
+- KB국민 그린체크카드: 1곳 불일치
+- KB국민 와이즈홈 카드: 4곳 불일치
+- 서울도시가스 KB국민카드: 6곳 불일치
+- KB국민 비상온리원카드: 1곳 불일치
+- 커피빈 신용카드: 15곳 불일치
+- KB국민 레고랜드매니아카드: 11곳 불일치
+- KB국민 레고랜드 체크카드: 18곳 불일치
+- 해피오토JDC KB국민카드: 5곳 불일치
+- SK에너지 러브유 KB국민카드: 1곳 불일치
+- HCN카드: 1곳 불일치
+- KB국민 스타트럭플러스 S-OIL카드: 11곳 불일치
+- KB국민 스타트럭 플러스 HD현대오일뱅크카드: 1곳 불일치
+- KB국민 스타트럭 플러스 HD현대오일뱅크 체크카드: 3곳 불일치
+- 경기과학기술대 KB노리체크카드: 26곳 불일치
+- 인덕대학원 KB노리체크카드: 11곳 불일치
+- T보너스 KB국민카드: 18곳 불일치
+- OLLEH 만마일 KB국민카드: 3곳 불일치
+- LG U+ 라이트할부 KB국민카드: 2곳 불일치
+- KB매직카 KB국민카드: 8곳 불일치
+- 요기패스 신용카드: 11곳 불일치
+- 스카이패스 티타늄카드: 1곳 불일치
+- Wavve KB국민카드: 9곳 불일치
+- 랭킹닭컴 신용카드: 8곳 불일치
+- KB국민 LG U+ 심플라이트Ⅱ카드: 1곳 불일치
+- 카카오뱅크 KB국민카드: 1곳 불일치
+- KB국민 알뜰폰HubⅡ카드: 1곳 불일치
+- KB국민 소노시즌Ⅱ카드: 1곳 불일치
+- KB국민 패밀리카드: 1곳 불일치
+- 스카이패스 IoT 티타늄카드: 3곳 불일치
+- KT스카이라이프 KB카드: 1곳 불일치
+- KB국민 SK 7mobile Ⅱ 카드: 3곳 불일치
+- KB국민 U+ 유모바일 Ⅱ 카드: 1곳 불일치
+- KB국민 kt M mobile Ⅱ 카드: 2곳 불일치
+- CHALLENGE BAG KB국민카드: 2곳 불일치
+- 몰테일 KB국민카드: 7곳 불일치
+- SK인텔릭스 KB국민카드: 6곳 불일치
+- H.Point KB국민카드: 14곳 불일치
+- 청호나이스 KB국민카드: 1곳 불일치
+- 교원 웰스 KB국민카드: 2곳 불일치
+- KB국민 SK인텔릭스 올림카드: 12곳 불일치
+- 제주항공 J 포인트 KB국민카드: 1곳 불일치
+- 교원 구몬 KB국민카드: 7곳 불일치
+- 모두투어 투어마일리지 KB국민카드: 10곳 불일치
+- KB국민 우체국 스마트카드: 1곳 불일치
+- LG전자 KB국민카드: 1곳 불일치
+- 넥센타이어 KB국민카드: 2곳 불일치
+- KB국민 선생님든든 카드: 7곳 불일치
+- 세스코 KB국민카드: 2곳 불일치
+- GS SHOP link KB국민카드: 4곳 불일치
+- KB국민 매직카 올림카드: 4곳 불일치
+- GS SHOP KB국민카드: 4곳 불일치
+- KB국민 에듀카드: 1곳 불일치
+- KB국민 에버랜드 판다카드: 3곳 불일치
+- AK KB국민카드: 4곳 불일치
+- KB국민 스마트렌탈카드: 1곳 불일치
+- KB국민 CLiP카드: 1곳 불일치
+- 갤러리아 KB국민카드(일반): 7곳 불일치
+- KB국민 와이즈멤버스 카드: 12곳 불일치
+- KB국민 SK내트럭 유가보조금카드: 1곳 불일치
+- KB국민 FINETECH카드(마일리지 대한항공): 3곳 불일치
+- KB국민 FINETECH카드(마일리지 아시아나): 5곳 불일치
+- 골프존 KB국민카드(마일리지 아시아나): 13곳 불일치
+- 저축은행 KB국민카드 (생활형): 19곳 불일치
+- KB국민 GS행복가득카드: 3곳 불일치
+- 저축은행 KB국민카드 (적립형): 13곳 불일치
+- H.Point KB국민 체크카드: 3곳 불일치
+- KB국민 기후동행카드: 1곳 불일치
+- KB국민 리멤버카드: 2곳 불일치
+- KB국민 Members 카드: 11곳 불일치
+- KB국민 Members 체크카드: 1곳 불일치
+- KB국민 노리2 체크카드(KB Pay, Global): 6곳 불일치
+- KB국민 총무 체크카드: 7곳 불일치
+- KB국민 노리2 체크카드(Play): 2곳 불일치
+- BeV Ⅸ 토탈마일 카드: 1곳 불일치
+- BeV Ⅸ 대한항공 카드: 3곳 불일치
+- KB국민 Easy shopping카드: 5곳 불일치
+- TANTUM Ultra 아멕스 카드(아시아나): 2곳 불일치
+- KB국민 와이즈카드: 14곳 불일치
+- KB국민 KB Pay 챌린지카드: 2곳 불일치
+- KB국민 Green Wave 1.5℃카드: 4곳 불일치
+- KB ALL 카드: 1곳 불일치
+- KB국민 My WE:SH 카드: 2곳 불일치
+- KB YOU With 카드: 20곳 불일치
+- HERITAGE Smart 대한항공 마일리지형: 7곳 불일치
+- HERITAGE Reserve(스카이패스형): 1곳 불일치
+- KB국민 가온플래티늄카드: 1곳 불일치
+- KB ALL point 카드: 4곳 불일치
+- KB국민 ONE카드: 8곳 불일치
+- KB국민 누리올림카드: 2곳 불일치
+- KB ALL point 카드: 6곳 불일치
+- KB국민 마일리지 가온플래티늄카드(대한항공): 3곳 불일치
+- KB국민 누리 체크카드: 2곳 불일치
+- KB국민 가온글로벌카드: 9곳 불일치
+- KB국민 청춘대로 매니아i카드: 11곳 불일치
+- KB국민 청춘대로 톡톡카드: 1곳 불일치
+- KB국민 가온 Biz카드: 9곳 불일치
+- 롯데마트 KB국민카드: 12곳 불일치
+- KB국민 탄탄대로 Biz카드: 3곳 불일치
+- KB국민 탄탄대로 호남예향카드: 7곳 불일치
+- KB국민 행복한대구경북티타늄카드: 1곳 불일치
+- KB국민 청춘대로 매니아 티타늄카드: 17곳 불일치
+- 페퍼저축은행 KB국민 톡톡 my living카드: 7곳 불일치
+- KB국민 탄탄대로 웰컴카드(09214): 4곳 불일치
+- KB국민 탄탄대로 온리유카드: 1곳 불일치
+- KB국민 가온 올포인트 카드: 1곳 불일치
+- KB국민 Easy fly 티타늄카드: 18곳 불일치
+- KB국민 Easy study 티타늄카드: 3곳 불일치
+- KB국민 Easy link 티타늄카드: 3곳 불일치
+- KB국민 Easy ring 티타늄카드: 19곳 불일치
+- KB국민 Easy all 티타늄카드: 5곳 불일치
+- KB국민 EVO 티타늄카드: 12곳 불일치
+- KB국민 올라운드카드: 9곳 불일치
+- KB국민 톡톡 with 와이페이모어카드: 5곳 불일치
+- KB국민 스마트 지킴이카드: 3곳 불일치
+- KB국민 햇살론카드: 2곳 불일치
+- KB국민 톡톡D 카드: 8곳 불일치
+- KB국민 톡톡O 카드: 8곳 불일치
+- KB국민 톡톡M 카드: 4곳 불일치
+- KB국민 사장님카드: 1곳 불일치
+- KB WE:SH All+ 카드: 4곳 불일치
+- BeV V카드(포인트형): 4곳 불일치
+- BeV Ⅴ카드(스카이패스형): 2곳 불일치
+- KB Pay 머니백카드: 2곳 불일치
+- BeV Ⅲ 카드: 13곳 불일치
+- T 라이트 KB국민카드: 7곳 불일치
+- KT 할부 Plus KB국민카드: 1곳 불일치
+- LGU 라이트할부Ⅱ KB국민카드: 2곳 불일치
+- KB국민 WE:SH Together 카드: 1곳 불일치
+- KB 전통시장온누리카드: 4곳 불일치
+- KB국민 트리콜 체크카드: 13곳 불일치
+- KB국민 톡톡with Kbank카드: 7곳 불일치
+- KB국민 스타플러스 체크카드: 13곳 불일치
+- 토스 USS NEXT KB국민 체크카드: 8곳 불일치
+- KB국민 트래블러스 체크카드: 1곳 불일치
+- KB국민 WE:SH Daily 카드: 4곳 불일치
+- KB라이프 딱좋은 요즘 건강 KB카드: 1곳 불일치
+- KB 스타틴즈카드: 1곳 불일치
+- KB국민 그린재킷 체크카드: 6곳 불일치
+- KB 틴업 체크카드: 1곳 불일치
+- KB On the Go 체크카드: 10곳 불일치
+- KB YOU Prime 카드: 3곳 불일치
+- KB YOU Wish 카드: 2곳 불일치
+- KB NEED AutoSlim카드: 11곳 불일치
+- KB NEED Pay 카드: 5곳 불일치
+- KB 마라톤카드: 6곳 불일치
+- KB ALL 카드: 4곳 불일치
+- KB국민 My WE:SH 카드: 4곳 불일치
+- KB YOU With 카드: 12곳 불일치
 - 삼성카드 SFC 스페셜마일리지 (스카이패스): 3곳 불일치
 - SC제일은행 삼성체크카드 YOUNG: 11곳 불일치
 - 제주항공 Refresh Point 삼성카드: 16곳 불일치
@@ -71,19 +271,64 @@
 - MOVING카드 ALLDAY: 2곳 불일치
 - MOVING카드 ONLINE: 2곳 불일치
 - MOVING카드 LIFE: 2곳 불일치
+- 현대카드M CHECK: 3곳 불일치
+- 현대카드M HYBRID: 2곳 불일치
+- 현대카드X HYBRID: 3곳 불일치
+- 현대카드X2 Edition2: 8곳 불일치
+- 현대카드X3 Edition2: 7곳 불일치
 - 대한항공카드 060: 4곳 불일치
 - 대한항공카드 120: 5곳 불일치
 - 대한항공카드 300: 1곳 불일치
+- 배민 한그릇카드: 4곳 불일치
+- 배민 곱빼기카드: 6곳 불일치
+- 배민 한그릇카드 HYBRID: 2곳 불일치
 - SILVER FOR LOTTE DEPARTMENT STORE: 13곳 불일치
+- 코스트코 리워드 현대카드: 1곳 불일치
+- 이마트 e카드 Edition2: 6곳 불일치
+- 현대카드M Edition3: 1곳 불일치
+- 현대카드M2 Edition3: 4곳 불일치
+- 현대카드M3 Edition3: 1곳 불일치
+- 하이마트Mobile-현대카드M Edition3(통신할인형): 8곳 불일치
 - 현대카드 하이브리드(포인트형): 2곳 불일치
 - 알파벳카드S BOLD: 7곳 불일치
 - 알파벳카드T BOLD: 7곳 불일치
+- 대한항공카드070: 1곳 불일치
+- 대한항공카드150: 4곳 불일치
+- 대한항공카드theFirst: 2곳 불일치
+- LG전자-현대카드M Edition3: 2곳 불일치
+- kt M mobile-현대카드M Edition3: 3곳 불일치
+- U+유모바일-현대카드M Edition3: 6곳 불일치
+- SK 7mobile-현대카드M Edition3: 6곳 불일치
+- 배민현대카드: 2곳 불일치
+- 배민현대카드 HYBRID: 7곳 불일치
+- 현대카드X BOOST: 3곳 불일치
+- 현대카드X2 BOOST: 5곳 불일치
+- 현대카드X3 BOOST: 19곳 불일치
+- 현대카드 M2 BOOST: 10곳 불일치
+- 현대카드 M3 BOOST: 4곳 불일치
+- 현대카드Z family: 2곳 불일치
+- 현대카드Z ontact: 5곳 불일치
+- 무신사 현대카드 HYBRID: 1곳 불일치
+- SmileCard Edition2: 3곳 불일치
+- the Pink: 1곳 불일치
+- the Black Edition3: 3곳 불일치
+- the Red Edition5: 2곳 불일치
+- the Green Edition2: 8곳 불일치
+- 현대카드 MX Black: 7곳 불일치
+- LOTTE DUTY FREE 현대카드: 5곳 불일치
+- 넥슨 현대카드: 7곳 불일치
+- LOTTE DUTY FREE-MIUM 현대카드 Visa 선택제공서비스: 4곳 불일치
+- SC제일은행-대한항공카드 030: 1곳 불일치
+- SC제일은행-현대카드M BOOST: 9곳 불일치
+- SC제일은행-the Red Edition5: 5곳 불일치
+- SC제일은행-현대카드ZERO Edition2(포인트형): 1곳 불일치
+- 스타벅스 현대카드: 2곳 불일치
 
 ## 외부 월 최대 혜택 대조
 
 - MATCH: 1장
 - MISMATCH: 1장
-- UNAVAILABLE: 151장
+- UNAVAILABLE: 576장
 - NON_COMPARABLE: 0장
 
 - New KT family 카드: UNAVAILABLE · 내부 40000원 · 외부 None원
@@ -115,31 +360,393 @@
 - 우체국 하이브리드 하이패스카드: UNAVAILABLE · 내부 None원 · 외부 None원
 - 바로 biz Point: UNAVAILABLE · 내부 None원 · 외부 None원
 - 바로 biz Air Money: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 TBX 카드: UNAVAILABLE · 내부 12000원 · 외부 None원
+- KB국민 EV 카드: UNAVAILABLE · 내부 25000원 · 외부 None원
+- KB국민 에버온 EV 카드: UNAVAILABLE · 내부 25000원 · 외부 None원
+- 볼트업 KB EV 카드: UNAVAILABLE · 내부 25000원 · 외부 None원
+- 아시아나 KB 국민카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민서울대총동창회카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 경찰대총동창회카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 국방멤버쉽카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 교보문고 KB국민카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- THE CJ KB국민카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민U축구사랑카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- GS칼텍스 스마트 세이브 KB국민카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 하나투어 KB국민카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- T라이트 KB국민카드: UNAVAILABLE · 내부 14000원 · 외부 None원
+- kt 할부 Plus KB국민카드: UNAVAILABLE · 내부 16000원 · 외부 None원
+- LG U+라이트할부ⅡKB국민카드: UNAVAILABLE · 내부 18000원 · 외부 None원
+- 스카이패스 KB국민 개인카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 스타 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 포인트리 체크카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 민 체크카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 쏘영 체크카드: UNAVAILABLE · 내부 6000원 · 외부 None원
+- KB국민 샘 쏘영 체크카드: UNAVAILABLE · 내부 6000원 · 외부 None원
+- KB국민 joyful체크카드(KB라이프생명): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 Get100 체크카드: UNAVAILABLE · 내부 6000원 · 외부 None원
+- KB국민 해외에선 체크카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 kiwibank 체크카드: UNAVAILABLE · 내부 33000원 · 외부 None원
+- KB국민 WELCOME PLUS 체크카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 WELCOME PLUS 외국인유학생보험 체크카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- 해피포인트 KB국민 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 내고장사랑 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 노리 체크카드: UNAVAILABLE · 내부 49500원 · 외부 None원
+- KB국민 해피노리 체크카드: UNAVAILABLE · 내부 49500원 · 외부 None원
+- KB국민 비트윈 체크카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 직장인보너스 체크카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 티머니 체크카드: UNAVAILABLE · 내부 160000원 · 외부 None원
+- 삼성증권 CMA KB국민 nori(노리)체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 중국공상은행 KB국민 비트윈 체크카드: UNAVAILABLE · 내부 180000원 · 외부 None원
+- KB국민 해피CU포인트 체크카드: UNAVAILABLE · 내부 12000원 · 외부 None원
+- KB국민 골든대로 체크카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 Liiv M 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 새로이 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
 - 카카오페이KB국민 체크카드: UNAVAILABLE · 내부 10000원 · 외부 None원
+- 여의도순복음교회 성도증 KB국민 노리 체크카드: UNAVAILABLE · 내부 10000원 · 외부 None원
+- KB국민 노리 체크카드(KB스타뱅킹 디자인): UNAVAILABLE · 내부 54000원 · 외부 None원
+- KB국민 노리 체크카드(KB스타뱅킹 디자인): UNAVAILABLE · 내부 54000원 · 외부 None원
+- KB국민 Young Youth 체크카드: UNAVAILABLE · 내부 1000원 · 외부 None원
+- KB국민 첵첵 체크카드: UNAVAILABLE · 내부 36000원 · 외부 None원
+- KB국민 joyful 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 가족愛 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 정 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 훈 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 음 체크카드: UNAVAILABLE · 내부 21500원 · 외부 None원
+- KB국민 히어로즈체크카드: UNAVAILABLE · 내부 25000원 · 외부 None원
+- KB국민 joyful 체크카드(KB저축은행): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 joyful 체크카드( KB증권): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 joyful 체크카드(KB생명보험): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 ONE체크카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 티머니 노리체크카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 joyful 체크카드(KB신용정보): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 joyful 체크카드(KB데이타시스템): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 joyful 체크카드(KB금융지주): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 joyful 체크카드(카카오뱅크): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB Joyful 체크카드(카카오뱅크 DAU): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 joyful체크카드(KB손해보험): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 아시아나 체크카드: UNAVAILABLE · 내부 3000원 · 외부 None원
+- KB국민 청춘대로 싱글 체크카드: UNAVAILABLE · 내부 40000원 · 외부 None원
+- LG U플러스 KB국민 체크카드: UNAVAILABLE · 내부 16000원 · 외부 None원
+- KB국민 가온 올포인트 체크카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- SK LPG SAVE KB국민카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 KT메가플러스카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 홈플러스 KB국민카드: UNAVAILABLE · 내부 30000원 · 외부 None원
+- S-OIL LPG KB국민카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민행복카드: UNAVAILABLE · 내부 47000원 · 외부 None원
+- KB국민행복체크카드: UNAVAILABLE · 내부 10000원 · 외부 None원
+- KB국민 스타트럭 체크카드: UNAVAILABLE · 내부 40000원 · 외부 None원
+- KB국민 스타트럭카드: UNAVAILABLE · 내부 40000원 · 외부 None원
+- KB국민 LG헬로비전Ⅱ 카드: UNAVAILABLE · 내부 11000원 · 외부 None원
+- KB국민 그린카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 그린체크카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 와이즈홈 카드: UNAVAILABLE · 내부 40000원 · 외부 None원
+- 서울도시가스 KB국민카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 AIA생명카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 LG헬로비전카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 웅진씽크빅카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 비상온리원카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- 해피포인트 해피리워드 카드: UNAVAILABLE · 내부 60000원 · 외부 None원
 - 두산베어스 KB카드: UNAVAILABLE · 내부 50000원 · 외부 None원
 - 커피빈 신용카드: UNAVAILABLE · 내부 38000원 · 외부 None원
+- KB국민 레고랜드매니아카드: UNAVAILABLE · 내부 180000원 · 외부 None원
+- KB국민 레고랜드카드: UNAVAILABLE · 내부 70000원 · 외부 None원
+- KB국민 레고랜드 체크카드: UNAVAILABLE · 내부 24000원 · 외부 None원
+- KB국민 팜스넷 약사님카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 해피오토JDC KB국민카드: UNAVAILABLE · 내부 40000원 · 외부 None원
+- SK에너지 러브유 KB국민카드: UNAVAILABLE · 내부 4000원 · 외부 None원
+- KB국민 약사님카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- HCN카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 TRAVEL Preset카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 내고장사랑카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 스타트럭플러스 S-OIL카드: UNAVAILABLE · 내부 325000원 · 외부 None원
+- KB국민 스타트럭플러스 S-OIL 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 스타트럭 플러스 HD현대오일뱅크카드: UNAVAILABLE · 내부 380000원 · 외부 None원
+- KB국민 스타트럭 플러스 HD현대오일뱅크 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 스타트럭 II GS칼텍스카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB Youth Club 체크카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- 경기과학기술대 KB노리체크카드: UNAVAILABLE · 내부 50000원 · 외부 None원
+- 인덕대학원 KB노리체크카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- T보너스 KB국민카드: UNAVAILABLE · 내부 7000원 · 외부 None원
+- OLLEH 세이브 KB국민카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 Liiv M 카드: UNAVAILABLE · 내부 15000원 · 외부 None원
+- KB국민 Liiv M Ⅱ카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- OLLEH 만마일 KB국민카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- kt Super 할부 KB국민카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- LG U+ 라이트할부 KB국민카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- T-Premium KB국민카드: UNAVAILABLE · 내부 21000원 · 외부 None원
+- KB매직카 KB국민카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 반려애카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 요기패스 신용카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- 스카이패스 티타늄카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- Wavve KB국민카드: UNAVAILABLE · 내부 13000원 · 외부 None원
+- T-economy KB국민카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- 랭킹닭컴 신용카드: UNAVAILABLE · 내부 50000원 · 외부 None원
+- KB국민 KMVNO 알뜰폰 카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- 캐시노트 KB국민카드: UNAVAILABLE · 내부 107000원 · 외부 None원
+- KT DC Plus KB국민카드: UNAVAILABLE · 내부 11000원 · 외부 None원
+- KB국민 LG U+ 심플라이트Ⅱ카드: UNAVAILABLE · 내부 11000원 · 외부 None원
+- KB국민 더피플라이프카드: UNAVAILABLE · 내부 15000원 · 외부 None원
+- 카카오뱅크 KB국민카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 밀크T 카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 SK 7mobile카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 알뜰폰 Hub 카드: UNAVAILABLE · 내부 15000원 · 외부 None원
+- KB국민 알뜰폰HubⅡ카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 쿠쿠렌탈Ⅱ카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 웰릭스렌탈Ⅱ카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- 위메프페이 신용카드: UNAVAILABLE · 내부 30000원 · 외부 None원
+- KB국민 쿠쿠렌탈 티타늄카드: UNAVAILABLE · 내부 15000원 · 외부 None원
+- KB국민 웰릭스렌탈 카드: UNAVAILABLE · 내부 15000원 · 외부 None원
+- 현대큐밍 KB국민카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- 모두렌탈 KB국민카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 윙크카드: UNAVAILABLE · 내부 15000원 · 외부 None원
+- 윙크Ⅱ카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 소노시즌Ⅱ카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 청호나이스Ⅱ카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- 그린위치 KB 국민카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- 한화손해보험 캐롯 KB국민카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 패밀리카드: UNAVAILABLE · 내부 630000원 · 외부 None원
+- 롯데렌탈 묘미 KB국민카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 소노아임레디 KB국민카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- 스카이패스 IoT 티타늄카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 딜라이브카드: UNAVAILABLE · 내부 17000원 · 외부 None원
 - KT스카이라이프 KB카드: UNAVAILABLE · 내부 11000원 · 외부 None원
+- toss KB국민카드: UNAVAILABLE · 내부 5000원 · 외부 None원
+- 토스모바일 KB국민카드: UNAVAILABLE · 내부 11000원 · 외부 None원
+- KB국민 TLC 카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 소노시즌 카드: UNAVAILABLE · 내부 15000원 · 외부 None원
+- 이마트II KB국민카드(옐로우): UNAVAILABLE · 내부 75000원 · 외부 None원
 - KB국민 SK 7mobile Ⅱ 카드: UNAVAILABLE · 내부 11000원 · 외부 None원
 - KB국민 U+ 유모바일 Ⅱ 카드: UNAVAILABLE · 내부 11000원 · 외부 None원
+- KB국민 kt M mobile Ⅱ 카드: UNAVAILABLE · 내부 11000원 · 외부 None원
+- 펫코노미카드: UNAVAILABLE · 내부 50000원 · 외부 None원
+- CHALLENGE BAG KB국민카드: UNAVAILABLE · 내부 60000원 · 외부 None원
+- 몰테일 KB국민카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- SK인텔릭스 KB국민카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- H.Point KB국민카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- 청호나이스 KB국민카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- 교원 웰스 KB국민카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 SK인텔릭스 올림카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- B tv KB국민카드: UNAVAILABLE · 내부 20000원 · 외부 None원
 - 제주항공 J 포인트 KB국민카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- 교원 구몬 KB국민카드: UNAVAILABLE · 내부 10000원 · 외부 None원
+- 모두투어 투어마일리지 KB국민카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 코웨이II 카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 우체국 스마트카드: UNAVAILABLE · 내부 15000원 · 외부 None원
+- LG전자 KB국민카드: UNAVAILABLE · 내부 30000원 · 외부 None원
+- 넥센타이어 KB국민카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 선생님든든 카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 세스코 KB국민카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- GS SHOP link KB국민카드: UNAVAILABLE · 내부 15000원 · 외부 None원
+- KB국민 매직카 올림카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- GS SHOP KB국민카드: UNAVAILABLE · 내부 50000원 · 외부 None원
+- KB국민 에듀카드: UNAVAILABLE · 내부 80000원 · 외부 None원
+- 삼성 페이 KB국민카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 에버랜드 판다카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- AK KB국민카드: UNAVAILABLE · 내부 40000원 · 외부 None원
+- KB국민 골든라이프올림카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 골든라이프 티타늄카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- E1 LPG KB국민카드: UNAVAILABLE · 내부 100000원 · 외부 None원
+- KB 스타B 카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 플렉스페이카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 LG U 심플라이트카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- Kt M mobile 카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- U＋ 유모바일카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- 예다함: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 스마트렌탈카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- KB국민 CLiP카드: UNAVAILABLE · 내부 17000원 · 외부 None원
+- 갤러리아 KB국민카드(일반): UNAVAILABLE · 내부 70000원 · 외부 None원
 - 보람상조 KB카드: UNAVAILABLE · 내부 11000원 · 외부 None원
-- KB국민 기후동행카드: UNAVAILABLE · 내부 28000원 · 외부 None원
+- KB국민 와이즈멤버스 카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 SK내트럭 유가보조금카드: UNAVAILABLE · 내부 110000원 · 외부 None원
+- KB국민 SK내트럭 유가보조금체크카드(RF): UNAVAILABLE · 내부 110000원 · 외부 None원
+- KB국민 SK내트럭 유가보조금체크카드(비RF): UNAVAILABLE · 내부 110000원 · 외부 None원
+- KB국민 joyful 체크카드(KB라이프파트너스): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 joyful 체크카드(KB캐피탈): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 joyful 체크카드(KB자산운용): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 FINETECH카드(마일리지 대한항공): UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 FINETECH카드(마일리지 아시아나): UNAVAILABLE · 내부 0원 · 외부 None원
+- 골프존 KB국민카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- 골프존 KB국민카드(마일리지 아시아나): UNAVAILABLE · 내부 0원 · 외부 None원
+- 코웨이 KB국민카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 알파원카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 모바일101카드: UNAVAILABLE · 내부 16000원 · 외부 None원
+- 저축은행 KB국민카드 (생활형): UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 GS행복가득카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 저축은행 KB국민카드 (적립형): UNAVAILABLE · 내부 0원 · 외부 None원
+- H.Point KB국민 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 스맨파 체크카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 기후동행카드: UNAVAILABLE · 내부 None원 · 외부 None원
 - KB국민 기후동행체크카드: UNAVAILABLE · 내부 16000원 · 외부 None원
+- KB국민 리멤버카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 Members 카드: UNAVAILABLE · 내부 23000원 · 외부 None원
+- KB국민 Members 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB Members Plus 카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB Members Plus 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 패밀리포인트 체크카드(브레이슬릿스튜디오): UNAVAILABLE · 내부 None원 · 외부 None원
+- 패밀리포인트 체크카드 에코에너지솔루션: UNAVAILABLE · 내부 None원 · 외부 None원
+- 카카오뱅크 자기주도마일리지 KB카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 카카오뱅크 자기주도마일리지 KB체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 패밀리포인트 체크카드 삐아: UNAVAILABLE · 내부 None원 · 외부 None원
+- 패밀리포인트 체크카드 포이파트너스: UNAVAILABLE · 내부 None원 · 외부 None원
+- 패밀리포인트 체크카드 (주)뉴부자관광: UNAVAILABLE · 내부 None원 · 외부 None원
+- 패밀리포인트 체크카드 주식회사뉴부자: UNAVAILABLE · 내부 None원 · 외부 None원
+- 패밀리포인트 체크카드 앤서스랩코리아: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 토심이 첵첵 체크카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 노리2 체크카드(KB Pay, Global): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 총무 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 노리2 체크카드(Play): UNAVAILABLE · 내부 0원 · 외부 None원
+- kt GiGA KB국민비씨카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KT Super DC7 KB국민비씨카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- BeV Ⅸ 토탈마일 카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- BeV Ⅸ 대한항공 카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 토스페이 플러스 KB카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- CU KB국민카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 굿데이카드: UNAVAILABLE · 내부 830000원 · 외부 None원
+- KB국민 굿데이올림카드: UNAVAILABLE · 내부 730000원 · 외부 None원
+- KB국민 Easy shopping카드: UNAVAILABLE · 내부 30000원 · 외부 None원
+- KB국민 Easy shopping 티타늄카드: UNAVAILABLE · 내부 40000원 · 외부 None원
+- TANTUM Ultra 아멕스 카드(아시아나): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 보탬e전용카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 보탬e전용체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 와이즈카드: UNAVAILABLE · 내부 45000원 · 외부 None원
 - 삼성 AI구독 KB국민카드: UNAVAILABLE · 내부 14000원 · 외부 None원
+- KB국민 KB Pay 챌린지카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 KB Pay 챌린지플러스카드: UNAVAILABLE · 내부 50000원 · 외부 None원
+- American Express Blue KB Kookmin Card: UNAVAILABLE · 내부 71000원 · 외부 None원
+- American Express Rose Gold KB Kookmin Card: UNAVAILABLE · 내부 55000원 · 외부 None원
+- KB국민 Green Wave 1.5℃카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB ALL 카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 My WE:SH 카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB YOU With 카드: UNAVAILABLE · 내부 50000원 · 외부 None원
+- HERITAGE Smart(헤리티지 스마트) 할인형: UNAVAILABLE · 내부 150000원 · 외부 None원
+- HERITAGE Smart 대한항공 마일리지형: UNAVAILABLE · 내부 2000원 · 외부 None원
+- HERITAGE Reserve(포인트형): UNAVAILABLE · 내부 0원 · 외부 None원
+- HERITAGE Reserve(스카이패스형): UNAVAILABLE · 내부 None원 · 외부 None원
+- HERITAGE Exclusive: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 MYCHEF카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB NEED Global 카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- HERITAGE Classic(할인형): UNAVAILABLE · 내부 0원 · 외부 None원
+- HERITAGE Classic(스카이패스형): UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 가온올림카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 가온플래티늄카드: UNAVAILABLE · 내부 0원 · 외부 None원
 - KB국민 마일리지 가온카드(대한항공형): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 마일리지 가온카드(아시아나형): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 가온 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB ALL point 카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 ONE카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 누리올림카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB ALL point 카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 마일리지 가온플래티늄카드(대한항공): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 마일리지 가온플래티늄카드(아시아나): UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 누리 체크카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 가온글로벌카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 하이패스2.0 SIM카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 다담카드: UNAVAILABLE · 내부 15000원 · 외부 None원
+- KB국민 청춘대로 매니아i카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 청춘대로 톡톡카드: UNAVAILABLE · 내부 25000원 · 외부 None원
+- 청춘대로 1코노미카드: UNAVAILABLE · 내부 90000원 · 외부 None원
+- KB국민 가온 Biz카드: UNAVAILABLE · 내부 60000원 · 외부 None원
+- KB국민 하이패스2.0카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 롯데마트 KB국민카드: UNAVAILABLE · 내부 50000원 · 외부 None원
+- KB국민 탄탄대로 Biz카드: UNAVAILABLE · 내부 330000원 · 외부 None원
+- KB국민 탄탄대로 호남예향카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 행복한대구경북티타늄카드: UNAVAILABLE · 내부 30000원 · 외부 None원
+- KB국민 아시아나 올림카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 청춘대로 매니아 티타늄카드: UNAVAILABLE · 내부 50000원 · 외부 None원
+- KB국민 톡톡 my living카드: UNAVAILABLE · 내부 80000원 · 외부 None원
+- KB국민 톡톡 my point카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 페퍼저축은행 KB국민 톡톡 my living카드: UNAVAILABLE · 내부 30000원 · 외부 None원
+- KB국민 탄탄대로 웰컴카드(09214): UNAVAILABLE · 내부 21000원 · 외부 None원
+- KB국민 탄탄대로 온리유카드: UNAVAILABLE · 내부 14000원 · 외부 None원
+- KB국민 탄탄대로 온리유 티타늄카드: UNAVAILABLE · 내부 33000원 · 외부 None원
+- KB국민 톡톡 Pay카드: UNAVAILABLE · 내부 27000원 · 외부 None원
+- KB국민 가온 올포인트 카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 Easy pick카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 Easy on카드: UNAVAILABLE · 내부 15000원 · 외부 None원
+- KB국민 Easy fly 티타늄카드: UNAVAILABLE · 내부 87000원 · 외부 None원
+- KB국민 Easy auto 티타늄카드: UNAVAILABLE · 내부 30000원 · 외부 None원
+- KB국민 마이핏카드(적립형): UNAVAILABLE · 내부 36000원 · 외부 None원
+- KB국민 마이핏카드(할인형): UNAVAILABLE · 내부 35000원 · 외부 None원
+- KB국민 Easy study 티타늄카드: UNAVAILABLE · 내부 100000원 · 외부 None원
+- KB국민 The Easy카드: UNAVAILABLE · 내부 40000원 · 외부 None원
+- KB국민 Easy pick 티타늄카드: UNAVAILABLE · 내부 24000원 · 외부 None원
+- KB국민 Easy link 티타늄카드: UNAVAILABLE · 내부 10000원 · 외부 None원
+- KB국민 Easy ring 티타늄카드: UNAVAILABLE · 내부 85000원 · 외부 None원
+- KB국민 Easy all카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 Easy all 티타늄카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 EVO 티타늄카드: UNAVAILABLE · 내부 50000원 · 외부 None원
+- KB국민 Get100카드: UNAVAILABLE · 내부 50000원 · 외부 None원
+- KB국민 올라운드카드: UNAVAILABLE · 내부 100000원 · 외부 None원
+- KB국민 올라운드 티타늄카드: UNAVAILABLE · 내부 100000원 · 외부 None원
+- KB국민 톡톡 with카드: UNAVAILABLE · 내부 24000원 · 외부 None원
+- KB국민 톡톡 with 토스 카드: UNAVAILABLE · 내부 24000원 · 외부 None원
+- KB국민 톡톡 with 와이페이모어카드: UNAVAILABLE · 내부 24000원 · 외부 None원
+- KB국민 톡톡 with 리브메이트카드: UNAVAILABLE · 내부 24000원 · 외부 None원
+- KB국민 스마트 지킴이카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 햇살론카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB 소상공인 특례 햇살론카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 톡톡F 카드: UNAVAILABLE · 내부 19000원 · 외부 None원
+- KB국민 톡톡D 카드: UNAVAILABLE · 내부 19000원 · 외부 None원
+- KB국민 톡톡O 카드: UNAVAILABLE · 내부 19000원 · 외부 None원
+- KB국민 톡톡M 카드: UNAVAILABLE · 내부 19000원 · 외부 None원
+- KB국민 사장님카드: UNAVAILABLE · 내부 45000원 · 외부 None원
 - 쿠팡 와우 카드: UNAVAILABLE · 내부 None원 · 외부 None원
-- KB YOU Wish up 카드: UNAVAILABLE · 내부 55000원 · 외부 None원
+- KB WE:SH All+ 카드: UNAVAILABLE · 내부 5000원 · 외부 None원
+- KB YOU Wish up 카드: UNAVAILABLE · 내부 50000원 · 외부 None원
+- BeV V카드(포인트형): UNAVAILABLE · 내부 0원 · 외부 None원
+- BeV Ⅴ카드(스카이패스형): UNAVAILABLE · 내부 0원 · 외부 None원
+- KB Pay 머니백카드: UNAVAILABLE · 내부 5000원 · 외부 None원
+- BeV Ⅲ 카드: UNAVAILABLE · 내부 400000원 · 외부 None원
+- KB국민 e hi-pass 카드(제네시스): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 e hi-pass 카드(기아): UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 e hi-pass 카드(현대): UNAVAILABLE · 내부 None원 · 외부 None원
+- LFmall 신용카드: UNAVAILABLE · 내부 None원 · 외부 None원
 - KB국민 K-패스카드: UNAVAILABLE · 내부 15000원 · 외부 None원
 - KB국민 K-패스체크카드: UNAVAILABLE · 내부 10000원 · 외부 None원
+- T 라이트 KB국민카드: UNAVAILABLE · 내부 18000원 · 외부 None원
+- KT 할부 Plus KB국민카드: UNAVAILABLE · 내부 18000원 · 외부 None원
+- LGU 라이트할부Ⅱ KB국민카드: UNAVAILABLE · 내부 14000원 · 외부 None원
+- KB국민 TMAP&LOGI 행복 체크카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 WE:SH Together 카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB 전통시장온누리카드: UNAVAILABLE · 내부 30000원 · 외부 None원
+- KB 전통시장온누리체크카드: UNAVAILABLE · 내부 6000원 · 외부 None원
+- KB차차차 신용카드: UNAVAILABLE · 내부 600000원 · 외부 None원
+- 대상웰라이프 KB국민카드: UNAVAILABLE · 내부 11000원 · 외부 None원
+- KB손해보험 마이펫카드: UNAVAILABLE · 내부 16000원 · 외부 None원
+- TMAP KB국민카드: UNAVAILABLE · 내부 30000원 · 외부 None원
+- KB국민 트리콜 체크카드: UNAVAILABLE · 내부 54000원 · 외부 None원
+- KB국민 톡톡with Kbank카드: UNAVAILABLE · 내부 24000원 · 외부 None원
+- KB국민 스타플러스 체크카드: UNAVAILABLE · 내부 44500원 · 외부 None원
+- 토스 USS NEXT KB국민 체크카드: UNAVAILABLE · 내부 10000원 · 외부 None원
+- KB국민 WE:SH Travel 카드: UNAVAILABLE · 내부 5000원 · 외부 None원
+- KB국민 트래블러스 체크카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB ALL 카드(KB스타뱅킹 전용): UNAVAILABLE · 내부 0원 · 외부 None원
+- KB국민 WE:SH Daily 카드: UNAVAILABLE · 내부 12000원 · 외부 None원
+- KB라이프 딱좋은 요즘 건강 KB카드: UNAVAILABLE · 내부 10000원 · 외부 None원
+- KB저축은행 팡팡 KB체크카드: UNAVAILABLE · 내부 49000원 · 외부 None원
+- KB국민 Joyful Plus 체크카드_KB국민은행_비소득공제: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 Joyful Plus 체크카드_KB국민은행_소득공제: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB 스타틴즈카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB국민 그린재킷 체크카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 위메프페이 체크카드: UNAVAILABLE · 내부 11000원 · 외부 None원
+- KB국민 joyful 체크카드(KB인베스트먼트): UNAVAILABLE · 내부 None원 · 외부 None원
+- 해피포인트 해피리워드 KB국민 체크카드: UNAVAILABLE · 내부 10000원 · 외부 None원
 - 쿠팡 와우 KB체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
-- KB On the Go 체크카드: UNAVAILABLE · 내부 34000원 · 외부 None원
-- KB YOU Prime 카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB국민 우리동네 체크카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB 틴업 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB On the Go 체크카드: UNAVAILABLE · 내부 20000원 · 외부 None원
+- KB ALL ez 카드: UNAVAILABLE · 내부 7000원 · 외부 None원
+- KB YOU Prime 카드: UNAVAILABLE · 내부 10000원 · 외부 None원
 - KB YOU Wish 카드: UNAVAILABLE · 내부 10000원 · 외부 None원
 - KB NEED Edu 카드: UNAVAILABLE · 내부 30000원 · 외부 None원
 - KB NEED AutoSlim카드: UNAVAILABLE · 내부 None원 · 외부 None원
-- KB NEED Pay 카드: UNAVAILABLE · 내부 40000원 · 외부 None원
+- KB NEED Pay 카드: UNAVAILABLE · 내부 30000원 · 외부 None원
 - KB 마라톤카드: UNAVAILABLE · 내부 55000원 · 외부 None원
 - KB Less Go 카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- KB ALL 카드: UNAVAILABLE · 내부 3000원 · 외부 None원
+- KB국민 My WE:SH 카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- KB YOU With 카드: UNAVAILABLE · 내부 50000원 · 외부 None원
 - 삼성카드 & YOUNG: UNAVAILABLE · 내부 12000원 · 외부 None원
 - 삼성카드 SFC 스페셜마일리지 (스카이패스): UNAVAILABLE · 내부 0원 · 외부 None원
 - SC제일은행 삼성체크카드 YOUNG: UNAVAILABLE · 내부 None원 · 외부 None원
@@ -214,14 +821,31 @@
 - MOVING카드 GLOBAL: UNAVAILABLE · 내부 0원 · 외부 None원
 - 런데이 하나카드: UNAVAILABLE · 내부 50000원 · 외부 None원
 - MG+ 트래블로그 하나카드: UNAVAILABLE · 내부 40000원 · 외부 None원
+- 현대카드M CHECK: UNAVAILABLE · 내부 1원 · 외부 None원
+- 현대카드M HYBRID: UNAVAILABLE · 내부 0원 · 외부 None원
+- 현대카드X CHECK: UNAVAILABLE · 내부 10원 · 외부 None원
+- 현대카드X HYBRID: UNAVAILABLE · 내부 None원 · 외부 None원
+- 현대카드X Edition2: UNAVAILABLE · 내부 30000원 · 외부 None원
+- 현대카드X2 Edition2: UNAVAILABLE · 내부 None원 · 외부 None원
+- 현대카드X3 Edition2: UNAVAILABLE · 내부 60000원 · 외부 None원
 - MY COMPANY 항공권전용: UNAVAILABLE · 내부 None원 · 외부 None원
+- 에너지플러스카드 Edition3: UNAVAILABLE · 내부 30000원 · 외부 None원
 - 대한항공카드 060: UNAVAILABLE · 내부 0원 · 외부 None원
 - 대한항공카드 120: UNAVAILABLE · 내부 0원 · 외부 None원
 - 대한항공카드 300: UNAVAILABLE · 내부 0원 · 외부 None원
 - 대한항공카드 the First Edition2: UNAVAILABLE · 내부 0원 · 외부 None원
+- 배민 한그릇카드: UNAVAILABLE · 내부 4000원 · 외부 None원
+- 배민 곱빼기카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 배민 한그릇카드 HYBRID: UNAVAILABLE · 내부 4000원 · 외부 None원
 - GOLD FOR LOTTE DEPARTMENT STORE: UNAVAILABLE · 내부 40000원 · 외부 None원
 - SILVER FOR LOTTE DEPARTMENT STORE: UNAVAILABLE · 내부 20000원 · 외부 None원
 - SC제일은행-대한항공카드060: UNAVAILABLE · 내부 0원 · 외부 None원
+- 코스트코 리워드 현대카드: UNAVAILABLE · 내부 None원 · 외부 None원
+- 이마트 e카드 Edition2: UNAVAILABLE · 내부 40000원 · 외부 None원
+- 현대카드M Edition3: UNAVAILABLE · 내부 0원 · 외부 None원
+- 현대카드M2 Edition3: UNAVAILABLE · 내부 0원 · 외부 None원
+- 현대카드M3 Edition3: UNAVAILABLE · 내부 0원 · 외부 None원
+- 하이마트Mobile-현대카드M Edition3(통신할인형): UNAVAILABLE · 내부 30000원 · 외부 None원
 - 현대홈쇼핑 현대카드 Edition2: UNAVAILABLE · 내부 30000원 · 외부 None원
 - 현대 기본교통 체크카드: UNAVAILABLE · 내부 None원 · 외부 None원
 - 현대카드 체크(포인트형): UNAVAILABLE · 내부 5000원 · 외부 None원
@@ -238,12 +862,58 @@
 - 국민행복 현대체크카드: UNAVAILABLE · 내부 0원 · 외부 None원
 - 국민행복 현대카드: UNAVAILABLE · 내부 10000원 · 외부 None원
 - 지마켓 꼭 현대카드: UNAVAILABLE · 내부 14000원 · 외부 None원
+- 대한항공카드030: UNAVAILABLE · 내부 None원 · 외부 None원
+- 대한항공카드070: UNAVAILABLE · 내부 0원 · 외부 None원
+- 대한항공카드150: UNAVAILABLE · 내부 0원 · 외부 None원
+- 대한항공카드theFirst: UNAVAILABLE · 내부 None원 · 외부 None원
+- 현대카드ZERO Edition2(할인형): UNAVAILABLE · 내부 None원 · 외부 None원
+- 현대카드ZERO Edition2(포인트형): UNAVAILABLE · 내부 None원 · 외부 None원
+- LG전자-현대카드M Edition3: UNAVAILABLE · 내부 18000원 · 외부 None원
+- kt M mobile-현대카드M Edition3: UNAVAILABLE · 내부 0원 · 외부 None원
+- U+유모바일-현대카드M Edition3: UNAVAILABLE · 내부 0원 · 외부 None원
+- SK 7mobile-현대카드M Edition3: UNAVAILABLE · 내부 0원 · 외부 None원
+- 배민현대카드: UNAVAILABLE · 내부 400000원 · 외부 None원
+- 배민현대카드 HYBRID: UNAVAILABLE · 내부 14000원 · 외부 None원
+- 현대카드X BOOST: UNAVAILABLE · 내부 110000원 · 외부 None원
+- 현대카드X2 BOOST: UNAVAILABLE · 내부 110000원 · 외부 None원
+- 현대카드X3 BOOST: UNAVAILABLE · 내부 110000원 · 외부 None원
+- 현대카드 M BOOST: UNAVAILABLE · 내부 10000원 · 외부 None원
+- 현대카드 M2 BOOST: UNAVAILABLE · 내부 0원 · 외부 None원
+- 현대카드 M3 BOOST: UNAVAILABLE · 내부 20000원 · 외부 None원
+- the Purple osée: UNAVAILABLE · 내부 None원 · 외부 None원
+- 현대카드Z family: UNAVAILABLE · 내부 45000원 · 외부 None원
+- 현대카드Z work: UNAVAILABLE · 내부 45000원 · 외부 None원
+- 현대카드Z ontact: UNAVAILABLE · 내부 45000원 · 외부 None원
+- 무신사 현대카드: UNAVAILABLE · 내부 30000원 · 외부 None원
+- 무신사 현대카드 HYBRID: UNAVAILABLE · 내부 30000원 · 외부 None원
+- SmileCard Edition2: UNAVAILABLE · 내부 None원 · 외부 None원
+- the Pink: UNAVAILABLE · 내부 1000001원 · 외부 None원
 - 현대홈쇼핑 현대카드: UNAVAILABLE · 내부 60000원 · 외부 None원
+- 에너지플러스카드 Edition2: UNAVAILABLE · 내부 50000원 · 외부 None원
+- the Black Edition3: UNAVAILABLE · 내부 None원 · 외부 None원
+- the Red Edition5: UNAVAILABLE · 내부 0원 · 외부 None원
+- the Green Edition2: UNAVAILABLE · 내부 None원 · 외부 None원
+- 현대카드 MX Black: UNAVAILABLE · 내부 80000원 · 외부 None원
+- 하이마트-현대카드M Edition3: UNAVAILABLE · 내부 13000원 · 외부 None원
+- 넥슨 현대카드 CHECK: UNAVAILABLE · 내부 None원 · 외부 None원
+- LOTTE DUTY FREE 현대카드: UNAVAILABLE · 내부 200000원 · 외부 None원
+- 넥슨 현대카드: UNAVAILABLE · 내부 10000000원 · 외부 None원
+- 넥슨 현대카드 UNLIMITED: UNAVAILABLE · 내부 3원 · 외부 None원
+- LOTTE DUTY FREE-MIUM 현대카드 Visa 선택제공서비스: UNAVAILABLE · 내부 2원 · 외부 None원
+- LOTTE DUTY FREE-MIUM 현대카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- SC제일은행-대한항공카드 030: UNAVAILABLE · 내부 None원 · 외부 None원
+- SC제일은행-현대카드M BOOST: UNAVAILABLE · 내부 20000원 · 외부 None원
+- SC제일은행-the Red Edition5: UNAVAILABLE · 내부 2원 · 외부 None원
+- SC제일은행-현대카드ZERO Edition2(포인트형): UNAVAILABLE · 내부 None원 · 외부 None원
+- SC제일은행-현대카드ZERO Edition2(할인형): UNAVAILABLE · 내부 None원 · 외부 None원
+- the Red Stripe: UNAVAILABLE · 내부 0원 · 외부 None원
+- 스타벅스 현대카드: UNAVAILABLE · 내부 0원 · 외부 None원
+- SC제일은행-the Red Stripe: UNAVAILABLE · 내부 0원 · 외부 None원
 
 ## 어휘 표 변경
 
-- `INDUSTRY_TO_AXIS` 추가: 160개 — EV(전기차)충전, HD현대오일뱅크, KT, KT 단말기 장기할부, KT 통신요금 자동납부, KT스카이라이프 자동납부, LG, LG U+, LG U+ 이동통신요금 자동이체, LGU+, LPG, LPG 충전소, Liiv M, LiivM, Mbest, SKT, SKT/KT/LG U+ 통신요금 자동이체, SKT/KT/LG U+/알뜰폰(SK텔링크, KT스카이라이프, KT M모바일, 헬로모바일, 미디어로그) 이동통신요금, SKT/KT/LGU+ 자동납부요금, SKT/KT/LGU+ 자동이체, SKT/SKB/KT/LGU+ 월납요금 자동이체, SK텔링크 휴대폰 통신요금 자동납부, U+ 유모바일 통신요금 자동납부, U+ 휴대폰요금 자동이체, 가스요금, 간이음식점, 건강보험, 건강보험료, 건강진단센터, 고속버스, 고용보험, 고용보험료, 골프, 골프연습장, 골프연습장 업종, 골프장, 공항버스, 공항철도, 광역버스, 교육사이트 megastudy, 국내 일반음식점, 국내 특급호텔, 국민연금, 기술/사무/가정계학원, 기타학원, 노래방, 단란주점, 대형할인점, 도시가스, 도시가스요금, 동물병원, 레저용품점, 레포츠클럽, 마을버스, 모든 주유소, 문리계학원, 미용실, 배달앱, 백화점, 버스, 병/의원, 병·의원, 병원, 병의원 업종, 볼링장, 뷔페, 산재보험, 산재보험료, 생명보험, 세차장, 세차장 업종, 세탁소, 손해보험, 수소, 수소충전, 수영장, 슈퍼마켓 업종, 스키장, 스포츠, 스포츠용품점, 시외버스, 아파트 관리비, 아파트관리비, 알뜰폰, 알뜰폰(SK텔링크, KT M모바일, 헬로모바일, 미디어로그), 약국, 약국 업종, 양식, 어린이집, 어학시험(TOEIC, OPIC, JPT, HSK), 어학시험(TOEIC/OPIc/HSK), 어학원(해커스/파고다), 에쓰오일, 영화(CGV, 롯데시네마), 영화관, 예체능계학원, 온라인서점, 올리브영, 외국어학원, 외국어학원 업종, 요가, 웅진프리드라이프, 유선전화요금, 유치원, 유흥주점, 음식점, 음식점 업종, 의원, 이동통신, 이동통신요금 자동납부, 이동통신요금 자동납부(SK, KT, LG, LiivM), 인터넷, 일반/치과/한방 병(의)원, 일반병원, 일반의원, 일반주점, 일식, 입시/보습/외국어/예체능계 학원, 전 주유 업종, 전 주유소, 전기, 전기/가스요금 자동납부, 전기요금, 전기차충전, 제과점, 종합병원, 종합스포츠센터, 주류판매점, 주유, 주유 업종, 주유소, 주차장, 중식, 충전소, 충전소LPG, 치과, 커피, 커피 업종, 커피/음료전문점, 커피업종, 커피전문점, 택시, 택시업종, 테니스장, 통신요금, 통신요금 자동이체, 패밀리레스토랑, 패스트푸드, 패스트푸드 업종, 편의점, 편의점 업종, 학습지, 학원, 학원 업종, 한방병원, 한식, 한의원, 할인점, 헬스 업종, 헬스클럽 업종 가맹점
-- `EXCLUSION_CODE_TO_AXES` 추가: 74개 — ANNUAL_FEE, ATM, AUTO_SERVICE, BENEFIT_APPLIED, BENEFIT_EXCLUDED, BUS, CANCEL, CANCELLED, CASHBACK_CONTRACT, CASHBACK_EXCLUDE, CASHBACK_EXCLUDED, CASHBACK_PARTNER, DIET_INSTALLMENT, DISCOUNT, DISCOUNTED, DISCOUNTED_AMOUNT, DISCOUNTED_PAYMENT, DISCOUNTED_PURCHASE, DISCOUNTED_TRANS, DISCOUNTED_TRANSACTION, DISCOUNTED_TX, DISCOUNTED_TXN, DISCOUNT_APPLIED, DISCOUNT_EXCLUDED, DISCOUNT_INSTALLMENT, ETC, EVENT, EVENT_BENEFIT, EVENT_PROMO, EXPRESS_BUS, FEE_OVERSEAS, FOREIGN_MONEY, GOV_SUPPORT, INTL_FEE, KAKAO_FRIENDS, KAKAO_PAY, KREAM_PAY, KREAM_PURCHASE, LARGE_FACILITY, LEASE, LOTTE_DEPT, MOBILE_TMONEY, NON_AUTH, NON_GAS, OKCASHBAG_CHARGE, OTHER_BENEFIT, OTHER_DISCOUNT, OTHER_PROMO, OVERSEAS, PAY_CHANNEL, PAY_CHANNEL_EXCLUSION, PG, PG_PAY, POINT_CHARGE, POINT_EARNED, PREPAID_CARD, PREPAID_CHARGE, PREPAID_PAY, PROMOTION, PUBLIC_RENT, REFUND_FEE, RENT, ROAD_TOLL, SCHOOL_BANKING, SERVICE_FEE, SMS_AUTO, SMS_FEE, TAXI, TOLL, TRANSIT_PURCHASE, TRANSPORT, VENDING, VENDING_MACHINE, VOUCHER
+- `INDUSTRY_TO_AXIS` 추가: 452개 — 3대 대형마트, 3대 소셜커머스, 3대 온라인쇼핑몰, 4대 사회보험료, EV(전기차)충전, GS주유소, HD현대오일뱅크, IPTV, IPTV(QOOK TV), IPTV(올레TV), KB Liiv M, KMVNO 회원사 알뜰폰 통신요금 자동이체, KT, KT LTE 월정액 67 이상 요금제, KT Olleh, KT olleh, KT 단말기 장기할부, KT 스카이라이프 이용료, KT 이동통신 요금, KT 이동통신요금, KT 통신요금 자동납부, KT 휴대폰요금, KT스카이라이프, KT스카이라이프 자동납부, LG, LG U+, LG U+ 이동통신요금 자동이체, LG U+ 통신료 자동납부, LG U+ 통신요금 자동납부, LG U플러스, LGU+, LPG, LPG 충전소, Liiv M, Liiv M 통신료 자동이체, Liiv M 통신비 자동납부, LiivM, Mbest, OA기기, Olleh, PC방, PC방 업종, SK 7mobile 통신료 자동이체, SK 7mobile 통신요금 자동이체, SKT, SKT 이동통신요금, SKT 이동통신요금 자동납부, SKT, KT Olleh, LG U+ 자동이체, SKT, KT olleh, LG U+ 이동통신요금 자동납부, SKT, KT, LG U+, Liiv M 자동납부, SKT/KT/LG U+ 이동통신 자동납부, SKT/KT/LG U+ 자동납부 통신요금, SKT/KT/LG U+ 통신요금 자동이체, SKT/KT/LG U+/알뜰폰(SK텔링크, KT스카이라이프, KT M모바일, 헬로모바일, 미디어로그) 이동통신요금, SKT/KT/LGU+ 자동납부요금, SKT/KT/LGU+ 자동이체, SKT/SKB/KT/LGU+ 월납요금 자동이체, SK주유소, SK텔링크 휴대폰 통신요금 자동납부, U+ 유모바일 통신요금 자동납부, U+ 휴대폰요금 자동이체, U+유모바일 통신료 자동납부, kt M mobile 통신료 자동납부, kt M mobile 통신요금 자동납부, kt M mobile 통신요금 자동이체, kt 이동통신요금 자동납부, kt 통신 단말기 포인트연계할부서비스(세이브), 가스요금, 가스판매점, 가전제품점, 간이음식점, 건강검진, 건강보험, 건강보험료, 건강식품점, 건강진단센터, 게임방, 경기장, 경유, 고속/시외버스, 고속·시외버스, 고속버스, 고용보험, 고용보험료, 골프, 골프(연습)장, 골프/골프연습장, 골프연습장, 골프연습장 업종, 골프장, 골프장, 골프연습장 업종, 공무원 연금매장, 공무원연금매장, 공연장/전시장, 공항버스, 공항철도, 관광여행사, 광역버스, 교육사이트 megastudy, 국내 GS주유소, 국내 SK주유소, 국내 면세점, 국내 일반음식점, 국내 특급호텔, 국내 항공사, 국민연금, 국제전화, 군휴양시설, 기술/사무/가정계, 기술/사무/가정계학원, 기술학원, 기타 레저업소, 기타 차량 서비스 업종, 기타 학원 업종, 기타관광호텔, 기타보험, 기타학원, 기타호텔, 노래방, 놀이공원, 농·수·축협 직판장, 농수축산 직판장, 농수축협 직판매장, 농축협직판장, 단란주점, 당구, 당구장, 대중교통, 대형 할인마트, 대형마트, 대형마트 업종, 대형할인점, 도시가스, 도시가스 업종, 도시가스요금, 독서실, 동물병원, 동물병원 애완동물 업종, 등유, 레저용품 업종, 레저용품점, 레포츠용품점, 레포츠클럽, 마을버스, 마트, 만화방 등, 면세점, 면세점(기내제외), 모든 주유소, 목욕탕, 문구, 문구업종, 문구점, 문리계, 문리계 학원, 문리계/외국어/예체능/기술학원, 서점 업종, 문리계학원, 문방구, 문방구점, 문화센터, 미용, 미용실, 미용실, 화장품, 피부미용업종, 미용업종, 미용원, 밀크T 학습비 자동납부, 방역, 배달앱, 백화점, 백화점, 면세점 업종, 버스, 버스, 지하철, 베이커리, 병/의원, 병·의원, 병원, 병원/약국, 병의원, 병의원 업종, 보안경비, 보안경비업종, 보험, 복사기, 볼링, 볼링장, 부품, 뷔페, 비디오방, 사무용기기판매/수리업종, 산재보험, 산재보험료, 삼성페이, 네이버페이, 카카오페이, KB Pay 등, 생명/손해/기타보험 업종, 생명보험, 생활, 서점, 서점 업종, 서점업종, 세차장, 세차장 업종, 세탁소, 소노시즌 렌탈요금 자동납부, 소액결제, 손해보험, 손해보험 업종, 수도, 수도요금, 수소, 수소차 충전소, 수소충전, 수영, 수영장, 숙박, 숙박(호텔, 민박, 펜션, 기타숙박), 슈퍼, 슈퍼마켓, 슈퍼마켓 업종, 스크린골프, 스키, 스키장, 스터디카페, 스포츠, 스포츠 관련 업종, 스포츠센터, 스포츠용품, 스포츠용품점, 시내·시외버스, 시외버스, 아이스크림, 아이스크림점, 아파트 관리비, 아파트관리비, 알뜰폰, 알뜰폰 통신비 자동이체, 알뜰폰(SK텔링크, KT M모바일, 헬로모바일, 미디어로그), 애완동물 업종, 약국, 약국 업종, 양식, 어린이집, 어학시험(TOEIC, OPIC, JPT, HSK), 어학시험(TOEIC/OPIc/HSK), 어학원(해커스/파고다), 에쓰오일, 여행사, 연탄 및 유류판매점, 영화(CGV, 롯데시네마), 영화관, 예체능, 예체능계학원, 예체능학원, 온라인면세, 온라인몰, 온라인서점, 온라인쇼핑몰, 온라인티켓, 온라인항공, 올리브영, 와이브로, 완구점 업종, 외국어, 외국어 학원, 외국어학원, 외국어학원 업종, 외식, 요가, 요가 업종, 우체국 쇼핑, 우체국 알뜰폰, 우체국 우편료, 웅진씽크빅 자동납부, 웅진프리드라이프, 유/무선 인터넷, 유무선 통신, 유선전화, 유선전화요금, 유아전문 교육기관/놀이기관, 유아전문교육기관, 유치원, 유치원/어린이집/놀이방, 유흥주점, 음식, 음식점, 음식점 업종, 의료기관, 의료기기 가맹점, 의료기기 및 용품, 의료품도매, 의류, 의약품도매업체, 의원, 이동통신, 이동통신요금, 이동통신요금 자동납부, 이동통신요금 자동납부(SK, KT, LG, LiivM), 이동통신요금 자동이체, 이미용, 인터넷, 인터넷 상품, 인터넷 쇼핑몰, 인터넷 이용료, 인터넷요금, 인터넷이용료, 인터넷전화, 인테리어, 일반 주점, 일반/치과/한방 병(의)원, 일반/치과/한방병원, 일반/치과/한의원, 일반/휴게음식점, 일반관광호텔, 일반병원, 일반음식점, 일반음식점, 휴게음식점, 일반주점 업종, 일반의원, 일반주점, 일반호텔, 일식, 일식/생선회집, 입시/보습/외국어/예체능계 학원, 자동납부(이동통신, 아파트관리비, 도시가스), 자동차, 자동차 정비 업종, 자동차 정비업종, 자동차학원, 전 주유 업종, 전 주유소, 전 주유소(충전소 포함), 전 주유소/충전소, 전국 버스, 전국백화점, 전국버스, 전기, 전기/가스요금 자동납부, 전기요금, 전기차 충전기, 전기차충전, 전자상거래, 전자상거래 PG, 전자상거래 오픈마켓, 전화 요금, 전화요금, 제과, 제과, 아이스크림, 패스트푸드 업종, 제과/아이스크림, 제과/아이스크림점, 제과점, 제약회사, 제화/잡화, 종합병원, 종합병원, 일반병원(한의원), 동물병원, 약국 업종, 종합스포츠센터, 주류판매점, 주유, 주유 업종, 주유(충전), 주유/충전소, 주유소, 주유소 업종(충전소 제외), 주유소(휘발유,경유), 주점, 주차장, 중식, 찜질방, 차량 정비, 차량정비, 차량정비/부품/인테리어, 창고형 할인점, 철도, 철도(일반/KTX/SRT), 청소대행, 청소대행/방역업종, 청호나이스 렌탈요금 자동납부, 체력단련장, 초고속인터넷, 초중고 학교납입금, 총포류판매점, 충전소, 충전소(LPG), 충전소LPG, 치과, 치과병원, 커피, 커피 업종, 커피 전문점, 커피/음료, 커피/음료 전문점, 커피/음료전문점, 커피/제과/패스트푸드 업종, 커피업종, 커피음료전문점, 커피전문점, 커피전문점 업종, 케이블, 케이블 TV, 케이블TV, 택시, 택시업종, 테니스, 테니스장, 토스모바일 통신요금 자동납부, 통신, 통신요금, 통신요금 자동이체, 특급/일반/기타관광호텔, 특급관광호텔, 특급호텔, 팜스넷 가맹점, 패밀리 레스토랑, 패밀리레스토랑, 패스트푸드, 패스트푸드 업종, 패스트푸드업종, 패스트푸드점, 팬시용품점, 펜션, 편의점, 편의점 업종, 프리미엄 아울렛, 피부미용, 피부미용실, 피부미용업종, 피부미용원, 하나투어, 하이패스, 학습지, 학원, 학원 업종, 한방병원, 한식, 한약방, 한의원, 할인점, 항공, 항공사, 항공사, 기타관광호텔, 기타숙박업, 일반관광호텔, 특급관광호텔, 펜션/민박, 관광여행사 업종, 해외 이용, 헤어샵(미용실), 헬스 업종, 헬스클럽 업종 가맹점, 호텔, 호프, 홈쇼핑, 화물차 우대 주유소, 화물특화 주유소, 화장품, 화장품점, 후불교통(시내버스/지하철), 휘발유, 휘트니스클럽, 휴게음식점, 휴대폰
+- `EXCLUSION_CODE_TO_AXES` 추가: 150개 — ADDITIONAL_BENEFIT_USAGE, AIRLINE, AIR_INFLIGHT, AIR_ONBOARD, ANNUAL_FEE, ATM, AUTO_PAY_EXCLUDED, AUTO_PAY_FEE, AUTO_PURCHASE, AUTO_SERVICE, BENEFIT_APPLIED, BENEFIT_EXCLUDED, BENEFIT_USED, BIZ_FAVORITE_DISCOUNT, BUS, BUSINESS_SUPPORT_ADDITIONAL, CANCEL, CANCELLED, CASHBACK_CONTRACT, CASHBACK_EXCLUDE, CASHBACK_EXCLUDED, CASHBACK_PARTNER, CHARGE, COMMUNICATION, CONTRACT_PRICE, COUPON, DEPARTMENT_STORE, DEPT_STORE, DIET_INSTALLMENT, DISCOUNT, DISCOUNTED, DISCOUNTED_AMOUNT, DISCOUNTED_ITEMS, DISCOUNTED_PAYMENT, DISCOUNTED_PURCHASE, DISCOUNTED_SALES, DISCOUNTED_TRANS, DISCOUNTED_TRANSACTION, DISCOUNTED_TRANSACTIONS, DISCOUNTED_TX, DISCOUNTED_TXN, DISCOUNT_AMOUNT, DISCOUNT_APPLIED, DISCOUNT_EXCLUDED, DISCOUNT_INSTALLMENT, DISCOUNT_SALES, DISCOUNT_STORE, EDU_DISCOUNT_USAGE, ETC, EVENT, EVENT_BENEFIT, EVENT_PROMO, EXPRESS_BUS, E_MART_7, FEE_AUTO, FEE_OVERSEAS, FOREIGN, FOREIGN_MONEY, FOREIGN_PAYMENT, FUEL, FUEL_DISCOUNT, GAS_STATION, GOV_GRANT, GOV_SUPPORT, GS_CALTEX, HOTEL, HOTEL_DEPT, INSURANCE, INTEREST, INTL_FEE, IN_STORE, KAKAO_FRIENDS, KAKAO_PAY, KREAM_PAY, KREAM_PURCHASE, LARGE_FACILITY, LDF_INSTALLMENT, LEASE, LF_MALL, LIFESTYLE_DISCOUNT, LOTTE_DEPT, LPG, MART, MIN_AMOUNT, MIN_PAY, MOBILE_TMONEY, NEW_CAR, NEXON_GAME, NON_APPROVAL, NON_AUTH, NON_GAS, NON_KBPAY, NO_APPROVAL, OFFLINE_EXCLUDE, OFFLINE_STORE, OKCASHBAG_CHARGE, ONLINE, ONLINE_PAY, OTHER_BENEFIT, OTHER_DISCOUNT, OTHER_PROMO, OTHER_TELCO, OVERSEAS, PAY_CHANNEL, PAY_CHANNEL_EXCLUSION, PG, PG_PAY, PLATINUM, POINT, POINT_CHARGE, POINT_EARNED, POP_CARD, PREPAID_CARD, PREPAID_CHARGE, PREPAID_PAY, PRE_CONTRACT, PRIVIA, PROMOTION, PUBLIC_RENT, PURCHASE_PROXY, REFUND, REFUND_FEE, RENT, RENTAL_DISCOUNT, RESTAURANT_DISCOUNT, ROAD_TOLL, SCHOOL_BANKING, SCHOOL_FEE, SERVICE_FEE, SKT_AUTO, SMS_AUTO, SMS_FEE, SPECIAL_DISCOUNT, SPECIAL_MILEAGE_TARGET, SSM, STATION, STORE_IN_STORE, TAXI, TMONEY, TOLL, TRANSIT_PURCHASE, TRANSPORT, TRAVEL, TUITION_SCHOOL, TUITION_UNI, UNAUTHORIZED, UNIVERSITY_TUITION, VENDING, VENDING_MACHINE, VOUCHER
 
 ## 현재 스키마로 표현하지 못한 조건
 
@@ -319,71 +989,1137 @@
 - 바로 biz Air Money: Air Money 유효기간 5년(60개월)
 - 바로 biz Air Money: Air Money 적립 방식: 사업자번호 단위
 - 바로 biz Air Money: Air Money 사용 방식: 차감청구방식
+- KB국민 TBX 카드: 리워드 서비스는 라이트할부 잔액 유무에 따라 한도가 달라지는 구조임(잔액 없음 시 3천/4천/5천원)
+- KB국민 TBX 카드: 실적 유예 조건: 최초 발급 후 다음 달 말까지 신용판매 5만원 이상 이용 시 라이트할부 이용 여부에 따라 4,000원 또는 1,500원 리워드 제공
+- KB국민 TBX 카드: 리워드 혜택금액보다 청구금액이 적을 경우 잔여 한도만큼 환급(캐시백) 처리
+- KB국민 EV 카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 동안의 별도 할인 한도 존재
+- KB국민 EV 카드: 자동차보험 할인은 연 1회 제공 조건
+- KB국민 에버온 EV 카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 동안의 별도 할인 한도 존재(전기차 5천원, 기타 2천5백원, 자동차보험 5천원)
+- KB국민 에버온 EV 카드: 자동차보험 할인 연 1회 제한 조건 존재
+- 볼트업 KB EV 카드: 자동차보험 할인 연 1회 제공 조건
+- 볼트업 KB EV 카드: 실적 유예기간 동안의 할인 한도 50% 제공 조건
+- 아시아나 KB 국민카드: 연회비는 실버/골드/플래티늄S/플래티늄 등급별로 상이하며, 본 데이터는 실버 등급 기준 예시임
+- 아시아나 KB 국민카드: 국내전용 발급 불가(갱신만 가능)
+- 아시아나 KB 국민카드: 가족카드 발급 가능
+- KB국민서울대총동창회카드: 연회비가 회원 등급(실버, 골드, 플래티늄)에 따라 다르게 책정됨
+- KB국민서울대총동창회카드: 동문회비 면제 조건은 연간 이용실적 기준임
+- KB국민 경찰대총동창회카드: 연회비 등급별(실버/골드) 구분이 존재함
+- KB국민 경찰대총동창회카드: 심의필 날짜(2018-08-31)는 준법감시인 심의필 문구에 포함되어 있으나, 여신금융협회 심의필 번호가 아니므로 as_of는 null 처리함
+- KB국민 국방멤버쉽카드: 주유 할인 한도는 월 25만원 이용 시 리터당 70원 할인 기준(약 17,500원)으로 계산됨
+- KB국민 국방멤버쉽카드: 전월 실적 조건이 명시되어 있지 않음
+- KB국민 국방멤버쉽카드: K-CASH 기능에 대한 상세 혜택은 별도 전자화폐 약관을 따름
+- 교보문고 KB국민카드: 연회비 구분(실버/골드)에 따른 상세 금액이 표기되어 있으나 스키마상 통합 표기함
+- 교보문고 KB국민카드: 교보북클럽 등급별 포인트 적립률 차등 적용
+- 교보문고 KB국민카드: 기본연회비 면제 기준 존재(연간 30만원 이상 사용 시 차기년도 면제)
+- THE CJ KB국민카드: 실적 기준이 '전월'이 아닌 '직전 3개월 월평균 결제회수금액'으로 스키마의 '전월 실적' 개념과 다름
+- THE CJ KB국민카드: 영화 할인 한도가 실적 구간 및 결제 금액에 따라 복합적으로 구성되어 있음
+- THE CJ KB국민카드: CJ적립금 관련 상세 적립률 및 사용처 조건 포함
+- KB국민U축구사랑카드: 실적유예기간: 최초 카드 사용등록일로부터 60일 동안 전월 실적 조건 미달 시에도 주유할인 제공
+- KB국민U축구사랑카드: 주유할인 제외 대상: 주유할인 받은 이용건 전체는 실적에서 제외
+- GS칼텍스 스마트 세이브 KB국민카드: 전월 실적 기준이 '서비스 이용 직전 월 3개월 평균 결제회수 실적'으로 일반적인 전월 실적과 다름
+- GS칼텍스 스마트 세이브 KB국민카드: 최초 사용등록일로부터 120일간 실적 유예 조건 존재
+- GS칼텍스 스마트 세이브 KB국민카드: 주유 할인액이 실적 구간별(30만원 미만/이상)로 차등 적용됨
+- GS칼텍스 스마트 세이브 KB국민카드: 정비 서비스 대상이 5인 이하 가솔린 승용차로 제한됨
+- GS칼텍스 스마트 세이브 KB국민카드: 연간 10만원 이상 이용 시 차기년도 기본 연회비 면제 조건 존재
+- 하나투어 KB국민카드: 영화할인 서비스: 1일 2회, 월 4회, 연 10회 제한 조건 존재
+- 하나투어 KB국민카드: 포인트연계할부서비스: 50만원 이상 결제 시 30~70만원 한도 내 이용 가능
+- 하나투어 KB국민카드: 연회비: 이퀸즈 제휴연회비가 포함된 합계 금액을 별도 표기함
+- T라이트 KB국민카드: 실적 유예: 최초 사용등록일로부터 익월 말까지 전월 실적 조건 미달 시에도 1구간 혜택 제공
+- T라이트 KB국민카드: 라이트할부 이용 건수 제한: 월 2건, 연 5건
+- T라이트 KB국민카드: 카드 청구금액이 할인금액보다 적을 경우 잔여 할인한도만큼 환급(캐시백) 처리
+- kt 할부 Plus KB국민카드: 실적 유예 조건: 최초 사용등록일로부터 익월 말까지 전월 실적 미달 시에도 1구간(30만원 이상) 할인 제공
+- kt 할부 Plus KB국민카드: 환급 캐시백: 카드 청구금액이 할인금액보다 적을 경우 잔여 할인한도만큼 환급
+- kt 할부 Plus KB국민카드: 장기할부 이용 건수 제한: 월 2건, 연 5건
+- LG U+라이트할부ⅡKB국민카드: 실적 유예: 최초 사용등록일로부터 익월 말까지 전월 실적 미달 시에도 1구간(8천원/4천원) 할인 제공
+- LG U+라이트할부ⅡKB국민카드: 라이트할부 이용 건수 제한: 월 2건, 연 5건
+- LG U+라이트할부ⅡKB국민카드: 할인금액보다 청구금액이 적을 경우 잔여 할인한도만큼 환급(캐시백) 제공
+- 스카이패스 KB국민 개인카드: 전월 실적 조건 없음
+- 스카이패스 KB국민 개인카드: 월간/연간 마일리지 적립 제한 없음
+- 스카이패스 KB국민 개인카드: 이용건별 결제납부 완료된 금액을 기준으로 적립
+- 스카이패스 KB국민 개인카드: 소수점 첫번째에서 반올림하여 마일리지 적립
+- 스카이패스 KB국민 개인카드: 연회비 반환 기준 존재
+- KB국민 체크카드: 연회비 없음
+- KB국민 체크카드: 전월 실적 조건 없음
+- KB국민 체크카드: 교통카드 이용대금 결제일: 매월 말일 + 3영업일
+- KB국민 체크카드: 만 12~13세 이용한도 제한(1회/1일 3만원, 월 30만원)
+- KB국민 스타 체크카드: card_type은 체크카드이나 스키마 요구사항에 따라 null로 유지
+- KB국민 스타 체크카드: 전월 실적 산정 시 교통 및 해외 이용금액 제외
+- KB국민 스타 체크카드: 최초 발급 후 사용등록일 포함 30일간 전월 실적 없어도 5천원 한도 제공
+- KB국민 스타 체크카드: 동일 계열 체크카드와 통합 할인한도 및 이용실적 통합 관리
+- KB국민 스타 체크카드: 포인트리 적립 불가(스타샵 가맹점 제외)
+- KB국민 포인트리 체크카드: 최초 발급 시 카드사용등록일을 포함하여 30일간은 직전월 이용금액이 없어도 월간통합적립한도 5천점 내에서 적립(이동통신 및 대중교통 제외)
+- KB국민 포인트리 체크카드: 만 12~13세 체크카드 이용한도 제한
+- KB국민 포인트리 체크카드: 포인트리 적립은 매입 순서대로 차감되며 이월되지 않음
+- KB국민 민 체크카드: 심의필 문구에 날짜가 명시되어 있지 않아 as_of는 null 처리함
+- KB국민 민 체크카드: 하이브리드 카드(소액신용결제) 기능이 있으나 주 결제 방식이 체크카드이므로 card_type을 CHECK로 설정함
+- KB국민 민 체크카드: 스피드메이트 서비스는 월간통합할인한도 적용 제외됨
+- KB국민 민 체크카드: 최초 발급 후 30일간 전월 실적 없이 5천원 한도 내 할인 제공 조건 존재
+- KB국민 쏘영 체크카드: 실적 유예기간: 최초 사용등록일로부터 다음달 말일까지 문구점, 독서실, 편의점 서비스 제공
+- KB국민 쏘영 체크카드: 카드 타입: 체크카드이나 소액신용결제서비스(최대 30만원) 탑재 가능
+- KB국민 샘 쏘영 체크카드: 실적 유예기간: 최초 사용등록일로부터 다음달 말일까지 문구점, 독서실, 편의점 서비스 제공
+- KB국민 샘 쏘영 체크카드: 체크카드 소액신용결제서비스: 계좌 잔액 부족 시 신용거래로 처리(최고 30만원)
+- KB국민 joyful체크카드(KB라이프생명): 실적 조건 없음
+- KB국민 joyful체크카드(KB라이프생명): 이용금액 1,000원 미만 시 포인트리 미적립
+- KB국민 joyful체크카드(KB라이프생명): 포인트리 유효기간 5년
+- KB국민 joyful체크카드(KB라이프생명): 해외 이용 및 교통카드 기능 불가
+- KB국민 Get100 체크카드: 실적조건 유예기간 적용: 최초 사용등록일로부터 다음달 말일까지 각 서비스 별 월간 1천점 한도 내 적립
+- KB국민 Get100 체크카드: Get100 포인트 우선 결제 방식 적용
+- KB국민 Get100 체크카드: 포인트 소멸: 적립 시점 기준 60개월 경과 시 월 단위 소멸
+- KB국민 해외에선 체크카드: 해외 캐시백은 전월 30만원 이상 시 월 30만원 한도 제공
+- KB국민 해외에선 체크카드: 실적조건 유예기간: 최초 사용등록일로부터 다음달 말일까지 국내 할인 1구간 및 해외 캐시백 제공
+- KB국민 해외에선 체크카드: 해외 캐시백은 다음달 10일 결제계좌로 입금
+- KB국민 해외에선 체크카드: 체크카드 소액신용결제서비스는 계좌 잔액 부족 시 신용거래로 처리
+- KB국민 kiwibank 체크카드: 심의필 문구에 적힌 날짜(as_of)가 문서 내에 존재하지 않아 null로 처리함
+- KB국민 kiwibank 체크카드: 적립 예시에서 기본적립 0.1%와 추가적립 1.5%가 합산되어 제공됨을 명시함
+- KB국민 WELCOME PLUS 체크카드: 최초 카드 발급 후 사용등록일로부터 다음 달 말일까지는 이용실적이 없는 경우에도 1구간(월간 통합할인한도 1만원) 서비스 제공
+- KB국민 WELCOME PLUS 외국인유학생보험 체크카드: 최초 카드 발급 후 사용등록일로부터 다음 달 말일까지는 이용실적이 없는 경우에도 1구간(1만원) 서비스 제공
+- KB국민 WELCOME PLUS 외국인유학생보험 체크카드: 체크카드 환급할인 방식(매입 후 계좌로 환급)
+- 해피포인트 KB국민 체크카드: 전월 실적 산정 시 교통이용금액, 무승인, 해외이용금액 제외
+- 해피포인트 KB국민 체크카드: 최초 발급 후 60일까지 전월 실적 없이 서비스 제공
+- 해피포인트 KB국민 체크카드: 해피포인트 현장적립 및 제너두 둔내 펜션 할인은 전월 실적 10만원 조건에서 제외됨
+- 해피포인트 KB국민 체크카드: 카드 타입은 체크카드이나 소액신용결제서비스 신청 시 신용카드 거래로 처리될 수 있음
+- KB국민 내고장사랑 체크카드: 전월 실적 산정 시 후불교통, 무승인, 해외이용금액 제외
+- KB국민 내고장사랑 체크카드: 최초 발급 후 60일까지는 전월 실적 없어도 월간 통합 할인한도 1만원 내 혜택 제공 (단, 대중교통 및 금융수수료 면제 제외)
+- KB국민 내고장사랑 체크카드: 금융수수료 면제 서비스는 별도 실적 기준(70만원) 적용
+- KB국민 노리 체크카드: 신규 발급 시 60일간 전월 실적 없이 월 1만원 할인 한도 제공
+- KB국민 노리 체크카드: 금융수수료 면제 조건: 이용실적 70만원 이상 시 제공
+- KB국민 해피노리 체크카드: 금융수수료 면제 조건: 최근 1개월 이용실적 70만원 이상
+- KB국민 해피노리 체크카드: 신규 발급 시 사용등록일 포함 60일간 전월 실적 없이 1만원 한도 제공 (대중교통, 통신, 금융수수료 제외)
+- KB국민 해피노리 체크카드: 소액신용결제 서비스 제공 (최고 30만원)
+- KB국민 비트윈 체크카드: 소액신용결제서비스(최대 30만원) 제공
+- KB국민 비트윈 체크카드: 최초 사용등록일 포함 60일간 전월 실적 없이 1만원 한도 제공(대중교통/금융수수료 제외)
+- KB국민 비트윈 체크카드: 금융수수료 면제는 전월 실적 70만원 이상 시 제공
+- KB국민 비트윈 체크카드: 동일계열 카드 이용실적 통합 적용
+- KB국민 직장인보너스 체크카드: 최초 발급 시 사용등록일로부터 60일간 전월 실적 없어도 5천원 한도 내 할인 제공
+- KB국민 직장인보너스 체크카드: 스피드메이트 및 SK렌터카 할인은 월간 통합할인한도 예외 적용 서비스임
+- KB국민 직장인보너스 체크카드: 포인트리는 적립되지 않으나 스타샵 가맹점 이용 시 적립 가능
+- KB국민 티머니 체크카드: 동일 계열 카드(슈퍼스타 Be*Twin, Be*Twin SM, 중국공상은행 Be*Twin, WELCOME, 티머니 체크카드) 이용 실적 통합 적용
+- KB국민 티머니 체크카드: 최초 발급일 포함 60일간 실적 없어도 1만원 한도 내 할인 제공(금융수수료 면제 제외)
+- KB국민 티머니 체크카드: 소액신용결제 서비스 제공(최고 30만원 이내)
+- 삼성증권 CMA KB국민 nori(노리)체크카드: 카드 타입이 체크카드이나, 하이브리드 기능(후불교통)이 포함되어 있음
+- 삼성증권 CMA KB국민 nori(노리)체크카드: 금융수수료 면제 조건: 최근 1개월 노리 동일 계열카드 이용실적 70만원 이상 시 적용
+- 삼성증권 CMA KB국민 nori(노리)체크카드: 신규 발급 시 사용등록일 포함 60일간은 실적 없어도 1만원 한도 내 할인 제공 (단, 대중교통/통신/금융수수료 면제 제외)
+- 중국공상은행 KB국민 비트윈 체크카드: 최초 발급 후 사용 등록일부터 60일까지는 전월 실적 없어도 월간 통합 할인한도 1만원 제공
+- 중국공상은행 KB국민 비트윈 체크카드: 금융수수료 면제서비스는 전월 실적 70만원 이상 시 제공
+- 중국공상은행 KB국민 비트윈 체크카드: 동일계열 체크카드 이용실적 통합 적용
+- KB국민 해피CU포인트 체크카드: 실적 유예기간: 최초 사용등록일로부터 다음달 말일까지 이용실적이 없어도 각 서비스별 최대 1천점 내에서 CU편의점 1%, 해피포인트 가맹점 1% 적립 제공
+- KB국민 해피CU포인트 체크카드: 포인트 적립 시 소수점 이하 절사
+- KB국민 해피CU포인트 체크카드: CU 포인트 및 해피포인트 적립은 제휴사 멤버십 기본 적립과 별개로 제공
+- KB국민 골든대로 체크카드: 실적조건 유예기간: 최초 사용등록일로부터 다음달 말일까지 1구간 서비스 제공(보험료 적립 제외)
+- KB국민 골든대로 체크카드: 포인트 적립 시 소수점 이하 절사
+- KB국민 골든대로 체크카드: 체크카드 소액신용결제서비스는 신용카드 거래로 처리되며 리볼빙 불가
+- KB국민 Liiv M 체크카드: 심의필 날짜(as_of)가 문서에 명시되어 있지 않아 null로 처리함
+- KB국민 Liiv M 체크카드: 생활 할인 그룹 내 3개 가맹점(11번가, 야놀자, CU)의 월간 할인한도가 통합되어 표기됨
+- KB국민 Liiv M 체크카드: 카드 타입은 체크카드이나, 소액신용결제서비스가 포함되어 있음
+- KB국민 새로이 체크카드: card_type은 체크카드이나 소액신용결제서비스(최대 30만원)가 포함되어 있음
+- KB국민 새로이 체크카드: as_of(여신금융협회 심의필 날짜)가 문서상 명시되지 않아 null 처리함
 - 카카오페이KB국민 체크카드: 실적조건 유예기간: 최초 사용등록일로부터 다음달 말일까지 이용실적이 없어도 최대 2만점 이내 적립
-- 카카오페이KB국민 체크카드: 카카오페이머니 적립: 주간 단위로 합산하여 다음 주 수요일에 적립
-- 카카오페이KB국민 체크카드: 소액신용결제서비스: 계좌 잔액 부족 시 신용거래로 처리되는 서비스
-- 두산베어스 KB카드: 최초 카드 사용등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시에도 30만원 이상 구간 할인 제공(단, 월 할인한도는 50%까지만 적용)
-- 두산베어스 KB카드: 최초 카드 사용등록월의 실적이 30만원 이상일 경우에는 다음달에 해당 실적 구간의 할인 제공
-- 커피빈 신용카드: 전월 실적 조건 유예: 최초 사용등록 후 다음달 말일까지 50만원 미만 시에도 50만원 구간 할인 서비스 제공
+- 카카오페이KB국민 체크카드: 카카오페이머니 적립: 주간 단위로 산정하여 다음 주 수요일에 적립
+- 카카오페이KB국민 체크카드: 소수점 이하 포인트는 절사
+- 여의도순복음교회 성도증 KB국민 노리 체크카드: 최초 발급 시 사용등록일 포함 60일간 전월 실적 없이 월간 할인한도 1만원 제공 (단, 대중교통/통신/금융수수료 제외)
+- 여의도순복음교회 성도증 KB국민 노리 체크카드: 금융수수료 면제는 최근 1개월 동일 계열 카드 이용실적 70만원 이상 시 적용
+- 여의도순복음교회 성도증 KB국민 노리 체크카드: 소액신용결제 서비스 제공 (최고 30만원 이내)
+- KB국민 노리 체크카드(KB스타뱅킹 디자인): 신규 발급 시 최초 60일간 전월 실적 없이 월 통합 할인한도 1만원 제공
+- KB국민 노리 체크카드(KB스타뱅킹 디자인): 금융수수료 면제 조건: 이용일 기준 최근 1개월 노리 체크카드 이용실적 70만원 이상 시 제공
+- KB국민 노리 체크카드(KB스타뱅킹 디자인): 신규 발급 시 최초 60일간 전월 실적 없이 월 1만원 통합 할인 한도 제공
+- KB국민 노리 체크카드(KB스타뱅킹 디자인): 금융수수료 면제 조건: KB국민은행 계좌 이용 시 전월 실적 70만원 이상 필요
+- KB국민 Young Youth 체크카드: 실적조건 유예기간: 최초 사용등록일로부터 다음달 말일까지 실적 없어도 총 2,500원(각 서비스별 500원) 한도 내 할인 제공
+- KB국민 Young Youth 체크카드: 할인한도: 서비스별 월 1,000원(총 6개 서비스)
+- KB국민 Young Youth 체크카드: 서점/CGV는 건당 7천원 이상 시 할인, 그 외는 건당 3천원 이상 시 할인
+- KB국민 Young Youth 체크카드: POP카드 서비스는 전월 실적과 무관하게 제공되나, POP카드 결제 시에는 환급할인서비스가 적용되지 않음
+- KB국민 첵첵 체크카드: 실적조건 유예기간: 최초 사용등록일로부터 다음달 말일까지 1구간 서비스 제공
+- KB국민 첵첵 체크카드: 대중교통 할인 기준: 실제 이용일이 아닌 이메일 이용내역서상 기재된 이용일 기준
+- KB국민 첵첵 체크카드: 소액신용결제서비스: 계좌 잔액 부족 시 신용카드 거래로 처리되는 기능
+- KB국민 joyful 체크카드: 소액신용결제서비스 신청 시 신용결제 가능(할부, 포인트리 복합결제, 바우처 결제 시 적용 불가)
+- KB국민 joyful 체크카드: 만 12~13세 체크카드 직불 이용 기본한도 별도 적용(1회/1일 3만원, 월간 30만원)
+- KB국민 가족愛 체크카드: 본 상품은 비교통 체크카드로 교통이용 불가
+- KB국민 가족愛 체크카드: 실적유예조건 없음
+- KB국민 가족愛 체크카드: 할부결제, 포인트리 복합결제, 바우처 복합결제 적용 불가
+- KB국민 가족愛 체크카드: 매출전표 매입 이후 2영업일에 적립
+- KB국민 가족愛 체크카드: card_type은 체크카드이나 명시된 스키마에 따라 CHECK로 분류
+- KB국민 정 체크카드: 카드 타입이 체크카드이나 소액신용 결제 서비스(최대 30만원)가 탑재되어 신용카드 거래로 처리될 수 있음
+- KB국민 정 체크카드: 최초 발급 후 사용등록일로부터 다음달 말일까지는 실적 없어도 1구간 서비스 제공(뷰티, 대중교통, 해외 이용 제외)
+- KB국민 훈 체크카드: card_type은 체크카드이나 소액 신용 결제 서비스가 포함되어 있음
+- KB국민 훈 체크카드: 최초 카드 발급 후 사용등록일로부터 다음달 말일까지 이용실적이 없는 경우에도 학원, 서점, 동물병원에서 1구간 서비스 제공
+- KB국민 훈 체크카드: 대중교통 할인 시 실제 이용일이 아닌 이메일 이용내역서상 기재된 이용일 기준으로 할인 적용
+- KB국민 음 체크카드: 평일(월~금)에 한하여 할인 적용(주말, 공휴일 제외)
+- KB국민 음 체크카드: 최초 카드 발급 후 사용등록일로부터 다음달 말일까지 이용 실적이 없는 경우에도 1구간 서비스 제공(단, 제과점/아이스크림/대중교통 제외)
+- KB국민 음 체크카드: 대중교통 할인 시 실제 이용일이 아닌 이메일 이용내역서상 기재된 이용일 기준으로 할인 적용
+- KB국민 음 체크카드: 하이브리드 카드(소액신용결제) 구조: 계좌 잔액 부족 시 신용카드 거래로 처리
+- KB국민 히어로즈체크카드: 실적 유예 제공: 최초 발급받은 카드는 사용등록일(KB Pay 등 간편결제 등록 포함)로부터 다음 달 말일까지 전월 실적 조건 미달 시에도 서비스 제공
+- KB국민 joyful 체크카드(KB저축은행): 심의필 날짜(as_of)가 문서에 명시되어 있지 않음
+- KB국민 joyful 체크카드(KB저축은행): 소액신용결제 서비스가 포함된 하이브리드 체크카드임
+- KB국민 joyful 체크카드(KB저축은행): 포인트리 유효기간 5년
+- KB국민 joyful 체크카드( KB증권): 심의필 번호 및 심의필 날짜 정보가 문서에 없음
+- KB국민 joyful 체크카드( KB증권): 전월 실적 조건 없음
+- KB국민 joyful 체크카드( KB증권): 해외 이용 및 교통 기능 불가
+- KB국민 joyful 체크카드( KB증권): 매출전표 매입 이후 2영업일에 적립
+- KB국민 joyful 체크카드(KB생명보험): 실적 조건 없음
+- KB국민 joyful 체크카드(KB생명보험): 매출전표 매입 이후 2영업일에 적립
+- KB국민 joyful 체크카드(KB생명보험): 소액신용결제 서비스 이용 시 신용결제로 처리됨
+- KB국민 ONE체크카드: 실적 유예 조건: 최초 카드발급 후 사용등록일로부터 다음달 말일까지는 기본적립을 제외한 추가 포인트리 적립 서비스 제공
+- KB국민 ONE체크카드: 포인트리 자동환급: KB국민ONE통장 결제계좌 지정 시 매월 마지막 영업일 기준 적립 포인트리를 익월 둘째주에 백원 단위로 자동환급
+- KB국민 티머니 노리체크카드: 신규 발급 시 사용등록일로부터 60일까지 전월 실적 없어도 1만원 한도 제공 (단, 대중교통, 이동통신, 금융수수료 제외)
+- KB국민 티머니 노리체크카드: 금융수수료 면제 서비스는 별도 실적 기준(70만원) 적용
+- KB국민 joyful 체크카드(KB신용정보): 실적 조건 없음
+- KB국민 joyful 체크카드(KB신용정보): 소액신용결제 서비스 제공(체크카드이나 신용결제 기능 포함)
+- KB국민 joyful 체크카드(KB신용정보): 교통카드 기능 없음
+- KB국민 joyful 체크카드(KB데이타시스템): 소액신용결제서비스 이용 시 신용카드처럼 결제되나 기본은 체크카드임
+- KB국민 joyful 체크카드(KB데이타시스템): 실적 조건 없음
+- KB국민 joyful 체크카드(KB금융지주): 실적유예조건 없음
+- KB국민 joyful 체크카드(KB금융지주): 교통카드 기능 없음
+- KB국민 joyful 체크카드(KB금융지주): 해외 이용 불가
+- KB국민 joyful 체크카드(KB금융지주): 소액신용결제서비스 적용 시 신용결제로 처리됨
+- KB국민 joyful 체크카드(카카오뱅크): 실적유예조건 없음
+- KB국민 joyful 체크카드(카카오뱅크): 할부결제, 포인트리 복합결제, 바우처 복합결제 적용 불가
+- KB국민 joyful 체크카드(카카오뱅크): 매출전표 매입 이후 2영업일에 적립
+- KB Joyful 체크카드(카카오뱅크 DAU): 전월 실적 조건 없음
+- KB Joyful 체크카드(카카오뱅크 DAU): 포인트리는 적립월로부터 5년간 유효
+- KB Joyful 체크카드(카카오뱅크 DAU): 매출전표 매입(거래확정) 이후 2영업일에 적립
+- KB Joyful 체크카드(카카오뱅크 DAU): 매월 세번째 일요일 00:00~06:00 이용 불가
+- KB Joyful 체크카드(카카오뱅크 DAU): 일자변경시간(매일 00:00~00:05) 포인트리 결제 불가
+- KB국민 joyful체크카드(KB손해보험): 심의필 날짜(as_of)가 문서에 명시되지 않음
+- KB국민 joyful체크카드(KB손해보험): 소액신용결제서비스는 체크카드 기반의 신용결제 기능으로, 할부 및 포인트 복합결제 시 적용 불가
+- KB국민 아시아나 체크카드: 최초 발급 후 사용등록일로부터 다음달 말일까지는 전월 실적 없이 추가할인 서비스 제공(기본 적립은 실적 조건 충족 시 제공)
+- KB국민 아시아나 체크카드: 마일리지 적립은 건별 이용금액을 2,500원으로 나눈 후 소수점 첫째 자리에서 반올림
+- KB국민 아시아나 체크카드: 체크카드 소액신용결제서비스는 할부결제, 포인트리 복합결제, 바우처 결제 시 적용 불가
+- KB국민 청춘대로 싱글 체크카드: 싱글데이(매월 1, 11, 21, 31일) 5% 추가 환급할인 조건 존재
+- KB국민 청춘대로 싱글 체크카드: 최초 카드 발급 후 사용등록일로부터 다음 달 말일까지 이용 실적이 없는 경우에도 1구간 내에서 할인 제공
+- KB국민 청춘대로 싱글 체크카드: 해외 이용 시 전신환매도율 및 국제브랜드 수수료 등 상세 계산식 존재
+- KB국민 청춘대로 싱글 체크카드: 체크카드이나 소액 신용결제 서비스(최대 30만원) 신청 가능
+- LG U플러스 KB국민 체크카드: 실적 유예기간: 최초 발급 후 사용등록일로부터 다음 달 말일까지 전월 실적 없어도 각 서비스별 월 2천원(총 6천원) 한도 제공
+- LG U플러스 KB국민 체크카드: 체크카드 소액신용결제서비스: 최고 30만원 이내 소액신용한도 부여 가능
+- KB국민 가온 올포인트 체크카드: 포인트리 적립 서비스는 건당 1천원 미만 금액 제외
+- KB국민 가온 올포인트 체크카드: 대형마트/주유소 추가 적립은 건당 3만원 이상 결제 시에만 적용
+- KB국민 가온 올포인트 체크카드: 해외 이용 시 국제브랜드 수수료 및 해외서비스 수수료 부과
+- SK LPG SAVE KB국민카드: 전월실적 기준이 '직전 3개월 월 평균 30만원'으로 일반적인 전월실적과 다름
+- SK LPG SAVE KB국민카드: 최초 카드 사용등록일로부터 120일간 실적 조건 없이 서비스 제공
+- SK LPG SAVE KB국민카드: 기본포인트리 적립 불가
+- KB국민 KT메가플러스카드: 전월 실적 기준이 '결제회수금액(실제 납부한 카드대금)'임
+- KB국민 KT메가플러스카드: 최초 카드 사용등록일로부터 60일간은 전월 실적 미달 시에도 혜택 제공
+- KB국민 KT메가플러스카드: 통신 할인율: 30만원(10%), 60만원(20%), 90만원(30%), 120만원(40%)
+- KB국민 KT메가플러스카드: 학원 할인율: 30만원(2%), 60만원(3%), 90만원(5%)
+- KB국민 KT메가플러스카드: 영화 할인 한도: 1일 2매, 예매일 기준 월 4매, 연간 10회 이내
+- KB국민 KT메가플러스카드: 연회비 면제 조건: 연간 100만원 이상 사용 시 차기년도 기본연회비 면제
+- 홈플러스 KB국민카드: 최초 카드 사용등록일로부터 90일간 이용실적 미달 시에도 5% 할인율 및 패밀리레스토랑/미용/통신 할인 적용
+- 홈플러스 KB국민카드: 홈플러스 이용 시 마이홈플러스포인트 기본적립 + 0.5% 추가적립 제공
+- 홈플러스 KB국민카드: 홈플러스 2~3개월 무이자 할부 제공
+- S-OIL LPG KB국민카드: 실적 산정 기준이 '결제금액 회수'로 일반적인 승인/매입 기준과 다름
+- S-OIL LPG KB국민카드: 최초 카드 사용등록일로부터 120일간 실적 유예 조건 존재
+- KB국민행복카드: 실적 유예기간: 최초 카드 사용등록일로부터 다음달 말일까지 40만원 미만 시에도 40만원 구간 혜택 제공
+- KB국민행복카드: 국가바우처 기능 포함
+- KB국민행복체크카드: 하이브리드 카드(소액신용결제 서비스) 지원: 계좌 잔액 부족 시 신용결제로 전환되며, 해당 금액은 신용카드 거래로 처리됨
+- KB국민행복체크카드: 실적 유예기간: 최초 카드 사용등록일로부터 다음달 말일까지 30만원 미만 시에도 30만원 구간 할인 제공
+- KB국민행복체크카드: 포인트리 적립 제외(스타샵 가맹점 제외)
+- KB국민 스타트럭 체크카드: 하이브리드 카드(체크카드 소액신용결제서비스)로, 계좌 잔액 부족 시 신용카드 거래로 처리됨
+- KB국민 스타트럭 체크카드: 유가보조금 지원 혜택은 정부 정책에 따라 변경 가능
+- KB국민 스타트럭 체크카드: GS포인트 적립과 청구할인이 혼합된 구조
+- KB국민 스타트럭카드: 하이브리드 카드(체크카드 기반 소액신용결제 서비스 탑재)
+- KB국민 스타트럭카드: 유가보조금 지원 한도량은 차량 최대적재량에 따라 차등 적용
+- KB국민 스타트럭카드: 최초 사용등록일로부터 90일간은 이용실적 관계없이 월간 통합 할인한도 5천원 제공
+- KB국민 스타트럭카드: 전전월 이용실적 산정 시 KB국민 STARTLUCK 신용/체크카드 통합 산정
+- KB국민 LG헬로비전Ⅱ 카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 제공 (30만원 미만 시 3,500원 할인)
+- KB국민 LG헬로비전Ⅱ 카드: 최초 등록월 실적이 30만원 이상일 경우 다음달에 해당 실적 구간 할인금액 적용
+- KB국민 LG헬로비전Ⅱ 카드: 할인금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인
+- KB국민 LG헬로비전Ⅱ 카드: LG U+를 통한 요금 자동납부 시 LG U+ 청구요금과 통합할인 적용
+- KB국민 그린카드: 쇼핑업종 추가적립률은 실적 구간별로 0.5%(20만), 1.0%(50만), 1.5%(100만), 2.5%(150만)로 차등 적용됨
+- KB국민 그린카드: 대중교통 추가적립률은 버스/지하철(9.5% 또는 19.5%)과 철도(4.5% 또는 9.5%)로 구분됨
+- KB국민 그린카드: 최초 사용등록일로부터 60일까지는 전월 실적 관계없이 기본적립 가능
+- KB국민 그린카드: 에코머니 포인트는 포인트리 전환, ATM 출금, 현금 전환, 자동차감 결제 등 다양한 사용처 존재
+- KB국민 그린체크카드: 최초 카드사용등록일로부터 60일이 포함되는 월말까지는 이용실적에 관계없이 대중교통 10~50만원 구간, 쇼핑 30~50만원 구간 서비스 제공
+- KB국민 그린체크카드: 에코머니 포인트 사용처(포인트리 전환, 현금전환, ATM출금, 가맹점 이용)에 대한 상세 조건 존재
+- KB국민 와이즈홈 카드: 신규 발급 시 사용등록일로부터 60일이 속한 월말까지 전월 실적 미달 시에도 1구간 할인 제공
+- KB국민 와이즈홈 카드: 월간 통합 할인한도 적용 방식(매입 순서대로 차감, 이월 불가)
+- 서울도시가스 KB국민카드: 서울도시가스 요금할인 서비스에 대해 최초 카드 사용등록일 이후 60일이 포함된 월의 월말까지는 전월 실적 미달 시에도 5% 할인 제공
+- 서울도시가스 KB국민카드: 외식 서비스는 1일 1회, 월 2회 한도 적용
+- KB국민 AIA생명카드: 할인 금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인 적용
+- KB국민 AIA생명카드: AIA생명 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- KB국민 AIA생명카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간 할인 서비스 적용
+- KB국민 LG헬로비전카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 미달 시에도 1구간(30만원 이상) 혜택 적용
+- KB국민 LG헬로비전카드: 할인 금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인
+- KB국민 LG헬로비전카드: LG헬로비전 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- KB국민 웅진씽크빅카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간(30만원 이상) 할인 서비스 적용
+- KB국민 웅진씽크빅카드: 할인 금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인 적용
+- KB국민 웅진씽크빅카드: 웅진씽크빅 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- KB국민 비상온리원카드: 할인 금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인 적용
+- KB국민 비상온리원카드: 비상온리원 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- 해피포인트 해피리워드 카드: 전월 실적 조건 유예 기준: 본인 회원 기준 최초 사용등록 후 다음달 말일까지 전월 실적 30만원 미만 시에도 30만원 이상 구간 서비스 제공
+- 두산베어스 KB카드: 최초 카드 사용등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시에도 30만원 이상 구간 할인 제공 (단, 월 할인한도는 50%까지만 적용)
+- 두산베어스 KB카드: 모바일 단독카드 발급 가능
+- 커피빈 신용카드: 전월 실적 조건 유예: 최초 사용등록 후 다음달 말일까지 50만원 미만 시에도 50만원 구간 할인 제공
 - 커피빈 신용카드: 커피빈 모바일 쿠폰은 전년도 이용금액 기준 연 1회 제공
-- KT스카이라이프 KB카드: 최초 카드 사용 등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시 월 2천5백원 할인 제공
+- KB국민 레고랜드매니아카드: 레고랜드 리조트 서비스 연간 할인한도 60만원 존재
+- KB국민 레고랜드매니아카드: 레고랜드 포인트리 적립 및 소멸 조건 존재
+- KB국민 레고랜드매니아카드: 실적 유예기간: 최초 카드 사용 등록일로부터 다음달 말일까지 40만원 실적 구간 서비스 제공
+- KB국민 레고랜드카드: 실적 유예기간: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 40만원 미만이어도 1구간(40만원 이상) 서비스 제공
+- KB국민 레고랜드카드: 레고랜드 할인 연간 한도 30만원 존재
+- KB국민 레고랜드카드: KB Pay 할인 서비스는 대형마트/온라인쇼핑/교육 청구할인과 중복 적용 가능하며 서비스별 할인한도는 각각 차감
+- KB국민 레고랜드 체크카드: 최초 카드 사용 등록일로부터 다음 달 말일까지 실적 유예기간 제공(30만원 미만 시에도 1구간 혜택 제공, 단 대중교통/통신요금 제외)
+- KB국민 레고랜드 체크카드: 레고랜드 서비스는 통합 월 할인한도에서 제외됨
+- KB국민 레고랜드 체크카드: 체크카드 환급할인은 매입 완료 후 출금계좌로 환급되는 방식
+- KB국민 레고랜드 체크카드: 할인한도는 매월 1일~말일 승인시점 기준
+- KB국민 팜스넷 약사님카드: 전월 실적 조건이 명시되어 있지 않음
+- KB국민 팜스넷 약사님카드: 연회비 면제 조건(100만원 이상 이용 시 차기년도 기본연회비 면제)은 스키마에 포함할 필드가 없음
+- 해피오토JDC KB국민카드: 최초 카드 사용 등록일 이후 90일간 전월 실적과 무관하게 혜택 제공
+- 해피오토JDC KB국민카드: 포인트리 적립 불가
+- 해피오토JDC KB국민카드: 기존 해피오토 KB국민카드와 실적 합산 운영
+- SK에너지 러브유 KB국민카드: 연회비 면제 조건: 연간 300만원 이상 이용 시 차기년도 면제
+- SK에너지 러브유 KB국민카드: 주유 할인 시 SK에너지 고시 휘발유가 기준 적용
+- KB국민 약사님카드: 연회비 면제 조건(연간 100만원 이상 이용)은 전표매입기준이며 포인트리 결제분, 각종 수수료, 연회비는 제외됨
+- KB국민 약사님카드: 포인트리 적립률은 특별포인트리 0.9%와 기본포인트리 0.1%의 합산임
+- KB국민 약사님카드: 무이자할부 및 포인트리 적립 대상 가맹점은 당사 가맹점 업종 분류 기준에 따름
+- HCN카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간 할인 적용
+- HCN카드: 할인 금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인 적용
+- KB국민 TRAVEL Preset카드: 충전식 선불카드로, 일반적인 신용/체크카드와 달리 특정 여행 서비스 이용 전용임
+- KB국민 TRAVEL Preset카드: 카드 타입은 선불카드이나 스키마상 CHECK로 분류함
+- KB국민 TRAVEL Preset카드: 충전 한도 존재(기명식 500만원, 무기명식 50만원)
+- KB국민 TRAVEL Preset카드: 잔액 환불 조건 존재(최종 잔액의 60% 이상 소진 시 가능)
+- KB국민 내고장사랑카드: 최초 카드 사용등록일로부터 90일간 실적 유예 제공(주유 65원, 교통 3%, 학원 2% 할인 적용)
+- KB국민 내고장사랑카드: 전월 실적 기준이 '결제(회수)금액'으로 명시됨
+- KB국민 내고장사랑카드: 카드 타입이 명시되지 않아 null 처리함
+- KB국민 스타트럭플러스 S-OIL카드: S-OIL 주유할인 중 현장할인(리터당 35원)은 전월 실적 무관하게 제공됨
+- KB국민 스타트럭플러스 S-OIL카드: 생활 편의 서비스의 월간 청구할인 한도는 구간별로 마트/커피/정비 합산 적용됨
+- KB국민 스타트럭플러스 S-OIL카드: 유가보조금 지원은 정부 정책에 따라 변경될 수 있음
+- KB국민 스타트럭플러스 S-OIL 체크카드: 심의필 날짜(as_of)가 문서에 명시되어 있지 않아 null로 처리함
+- KB국민 스타트럭플러스 S-OIL 체크카드: 카드 타입은 체크카드이나 소액신용결제서비스가 탑재되어 있음
+- KB국민 스타트럭플러스 S-OIL 체크카드: 유가보조금 환급할인 방식은 일반적인 카드 혜택과 구조가 달라 별도 기재함
+- KB국민 스타트럭 플러스 HD현대오일뱅크카드: 주유 할인액은 전월 실적 구간별로 리터당 20~85원 차등 적용되며, 청구할인 한도와 별개로 현장할인(리터당 15원)이 존재함
+- KB국민 스타트럭 플러스 HD현대오일뱅크카드: 커피전문점 할인 한도는 30만원 이상 5천원, 150만원 이상 1만원으로 구간이 비대칭적임
+- KB국민 스타트럭 플러스 HD현대오일뱅크카드: 자동차 정비 할인은 70만원 이상 구간부터 5천원 한도 제공
+- KB국민 스타트럭 플러스 HD현대오일뱅크카드: 정유사 포인트 적립은 전월 실적 70만원 이상 시 리터당 15포인트 제공
+- KB국민 스타트럭 플러스 HD현대오일뱅크 체크카드: 전월 이용실적 및 한도 제한 없음
+- KB국민 스타트럭 플러스 HD현대오일뱅크 체크카드: 화물차 최대적재량에 따라 유가보조금 차등 지원
+- KB국민 스타트럭 플러스 HD현대오일뱅크 체크카드: 체크카드 소액신용결제서비스(최고 30만원) 탑재
+- KB국민 스타트럭 II GS칼텍스카드: 주유 할인 혜택이 리터당 금액으로 제공되며, 전월 기준리터 충족 여부 및 차량 톤수에 따라 할인액이 결정되는 구조임
+- KB국민 스타트럭 II GS칼텍스카드: 현장할인(리터당 15원)과 청구할인(리터당 25원 또는 65원)이 결합된 형태임
+- KB국민 스타트럭 II GS칼텍스카드: 기준리터 산정 방식이 복잡하며, 차량 톤수별로 국토부 유가보조금 지급한도량과 연동됨
+- KB국민 스타트럭 II GS칼텍스카드: 카드 2개 이상 소지 시 가장 작은 톤수의 기준리터를 적용하는 등 특수 계산 로직 존재
+- KB Youth Club 체크카드: 선택형 서비스(A팩/B팩) 중 택 1
+- KB Youth Club 체크카드: 최초 발급 시 실적 유예기간(등록월 다음달 말일까지) 20만원 미만 시에도 할인한도의 50% 제공
+- KB Youth Club 체크카드: 할인 서비스는 환급할인 방식
+- KB Youth Club 체크카드: 후불교통기능 탑재
+- 경기과학기술대 KB노리체크카드: 금융수수료 면제 서비스는 전월 실적 70만원 이상 시 제공되는 별도 혜택으로, 통합 할인한도와 별개로 운영됨
+- 경기과학기술대 KB노리체크카드: 대중교통 할인 조건: 월 2만원까지 할인
+- 경기과학기술대 KB노리체크카드: 이동통신 할인 조건: 자동이체금액 5만원 이상 시 제공
+- 인덕대학원 KB노리체크카드: 금융수수료 면제 서비스는 전월 이용실적 70만원 이상 시 제공되는 비금전적 혜택임
+- 인덕대학원 KB노리체크카드: 월간 통합 할인한도는 동일계열 체크카드와 합산하여 적용됨
+- T보너스 KB국민카드: 현장할인 선택 시 할인금액의 50% 고객 포인트 차감 (롯데시네마는 2,000p 차감)
+- T보너스 KB국민카드: 최초 카드 사용등록일로부터 60일간 전월 실적 조건 미달시에도 SKT통신요금 자동납부 시 3천 OK캐쉬백 포인트 적립
+- OLLEH 세이브 KB국민카드: 전월 실적 제외 항목에 '기본/추가 적립을 받은 이용건(해당매출 전체)'이 포함되어 있어 실적 계산이 복잡함
+- OLLEH 세이브 KB국민카드: 포인트연계할부서비스(세이브) 이용 여부에 따라 기본 적립률이 달라지는 조건 존재
+- OLLEH 세이브 KB국민카드: 주유소 특별 적립은 3.3% 적립과 리터당 최대 80포인트 적립 조건이 혼재됨
+- KB국민 Liiv M 카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 실적 없이 1구간(10,000원) 할인 적용
+- KB국민 Liiv M 카드: 할인금액보다 자동이체 승인금액이 작을 경우 승인금액만큼 할인
+- KB국민 Liiv M 카드: 마스터 티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적유예기간 없음
+- KB국민 Liiv M Ⅱ카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 실적 유예 및 1구간 혜택 적용
+- KB국민 Liiv M Ⅱ카드: 할인금액보다 자동이체 승인금액이 적을 경우 승인금액만큼 할인 적용
+- OLLEH 만마일 KB국민카드: 아시아나 마일리지 적립은 12개월 유지 기준 5,000 마일리지 제공으로, 일반적인 적립률/한도 구조와 달라 별도 로직으로 기술됨
+- OLLEH 만마일 KB국민카드: 가족카드 발급 불가
+- OLLEH 만마일 KB국민카드: 카드 타입은 명시되지 않았으나 일반적인 신용카드 구조로 판단됨
+- kt Super 할부 KB국민카드: 라이트할부 이용 여부는 전월 말일 기준 라이트할부 잔액 유무로 판단
+- kt Super 할부 KB국민카드: 최초 카드발급 후 사용등록일로부터 익월 말까지는 전월 실적 조건 미달 시에도 5만원 이상 사용 시 30만원 구간 할인 제공
+- kt Super 할부 KB국민카드: 통신단말 라이트할부 이용 건수 제한 (월 2건, 연 5건)
+- LG U+ 라이트할부 KB국민카드: 라이트할부 이용 여부에 따라 할인 한도가 이원화됨
+- LG U+ 라이트할부 KB국민카드: 라이트할부 이용 건수 제한: 월 2건, 연 5건
+- LG U+ 라이트할부 KB국민카드: 최초 발급 후 익월 말까지는 전월 실적 미달 시에도 30만원 구간 할인 제공
+- LG U+ 라이트할부 KB국민카드: 청구금액이 할인금액보다 적을 경우 잔여 한도만큼 환급(캐시백) 제공
+- T-Premium KB국민카드: 추가할인 조건(1회 승인금액 5만 5천원 이상)이 존재함
+- T-Premium KB국민카드: 할인금액이 청구금액보다 클 경우 청구금액까지만 할인
+- T-Premium KB국민카드: 최초사용등록일로부터 다음달 말까지 전월 실적 없이 40만원 구간 혜택 제공
+- KB매직카 KB국민카드: 보험료 할인 실적 기준이 '직전 3개월 평균 30만원'으로 일반적인 전월 실적과 다름
+- KB매직카 KB국민카드: 최초 카드 사용등록일로부터 다음달 말일까지 실적 유예 조건 존재
+- KB매직카 KB국민카드: 보험료 할인 연간 3만원 한도 존재
+- KB국민 반려애카드: 최초 카드 사용등록일로부터 다음달 말일까지 실적 유예(1구간 서비스 제공)
+- KB국민 반려애카드: 본인 회원 기준 월간 할인한도 제공
+- KB국민 반려애카드: 할인/적립이 적용된 매출 취소 시 한도 복원 지연 가능성
+- 요기패스 신용카드: 실적 유예기간: 최초 사용등록 후 다음 달 말일까지 전월 실적 30만원 미만 시에도 30만원 이상 구간 혜택 제공
+- 스카이패스 티타늄카드: 마일리지 적립 한도(월 5,000마일)는 스키마의 monthly_cap_by_tier로 표현하기 어려워 조건에 명시함
+- 스카이패스 티타늄카드: 티타늄 서비스의 연간 횟수 제한(연 12회, 연 2회)은 스키마에 포함되지 않음
+- 스카이패스 티타늄카드: 최초 카드 사용 등록 후 다음달 말일까지 실적 유예 기간 존재
+- Wavve KB국민카드: 식음료 혜택은 건당 1만원 이용금액까지만 할인 적용됨
+- Wavve KB국민카드: 실적 유예기간: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 없어도 서비스 제공
+- T-economy KB국민카드: 최초 카드 사용등록일로부터 다음달 말일까지는 전월 실적 30만원 미만 시에도 1구간(12,000원) 할인 적용
+- T-economy KB국민카드: 할인금액보다 자동이체 승인금액이 작을 경우 승인금액만큼 할인 적용
+- 랭킹닭컴 신용카드: 실적 유예기간: 최초 사용등록 후 다음 달 말일까지 전월 실적 30만원 미만 시에도 30만원 구간 서비스 제공
+- KB국민 KMVNO 알뜰폰 카드: 최초 카드 사용 등록일로부터 다음 달 말일까지 전월 실적 없이 1구간(12,000원) 할인 적용
+- 캐시노트 KB국민카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 제공
+- 캐시노트 KB국민카드: 건당 고액결제 청구할인은 구간별 할인율이 상이함
+- KT DC Plus KB국민카드: 최초 발급 시 사용등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시에도 월 3,500원 할인 제공
+- KT DC Plus KB국민카드: 할인금액보다 자동납부 승인금액이 작을 경우 승인금액만큼 할인 적용
+- KB국민 LG U+ 심플라이트Ⅱ카드: 최초 발급 시 등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시에도 월 3,500원 할인 한도 제공
+- KB국민 LG U+ 심플라이트Ⅱ카드: 최초 카드 사용등록월 실적이 30만원 이상일 경우 다음달에 해당 실적 구간 할인한도 적용
+- KB국민 LG U+ 심플라이트Ⅱ카드: 할인금액보다 자동납부 승인금액이 작을 경우 승인금액만큼 할인 적용
+- KB국민 더피플라이프카드: 상조요금 할인 서비스는 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 제공
+- KB국민 더피플라이프카드: Master 티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적 유예기간 없음
+- 카카오뱅크 KB국민카드: 전월 실적 유예기간(최초 카드 사용등록일로부터 다음달 말일) 동안 50만원 미만 이용 시에도 50만원 이상 구간의 할인 서비스 제공
+- 카카오뱅크 KB국민카드: 영역별 1일 1회 할인 제한
+- 카카오뱅크 KB국민카드: 기본 포인트리 적립 불가(단, KB국민카드 스타샵 가맹점 포인트리는 적립)
+- KB국민 밀크T 카드: 최초 카드 사용 등록일로부터 다음 달 말일까지 실적 유예기간 제공(1구간 혜택 적용)
+- KB국민 밀크T 카드: 할인 금액보다 자동이체 승인금액이 작을 경우 승인금액만큼 할인 제공
+- KB국민 밀크T 카드: 밀크T 학습비 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인 제공
+- KB국민 SK 7mobile카드: 최초 카드 사용등록일로부터 다음달 말일까지는 전월 실적 없이 1구간(12,000원) 할인 적용
+- KB국민 SK 7mobile카드: 할인금액보다 자동이체 승인금액이 작을 경우 승인금액만큼 할인 적용
+- KB국민 알뜰폰 Hub 카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 실적 없어도 1구간(50만원) 혜택 제공
+- KB국민 알뜰폰 Hub 카드: 티타늄 서비스는 실적유예기간이 적용되지 않음
+- KB국민 알뜰폰 Hub 카드: 할인금액보다 자동이체 승인금액이 작을 경우 승인금액 만큼 할인 적용
+- KB국민 알뜰폰HubⅡ카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 실적 유예(1구간 혜택 적용)
+- KB국민 알뜰폰HubⅡ카드: 할인금액보다 자동이체 승인금액이 적을 경우 승인금액만큼 할인 적용
+- KB국민 쿠쿠렌탈Ⅱ카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간(30만원 이상) 할인 서비스 적용
+- KB국민 쿠쿠렌탈Ⅱ카드: 할인 금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인 적용
+- KB국민 웰릭스렌탈Ⅱ카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간 할인 적용
+- KB국민 웰릭스렌탈Ⅱ카드: 할인 금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인 적용
+- 위메프페이 신용카드: 전월 실적 유예 기준: 최초 사용등록 후 다음달 말일까지 50만원 미만 시에도 50만원 이상 구간 서비스 제공
+- 위메프페이 신용카드: 적립 제외 대상 이외 이용금액의 0.2% 기본 적립은 전월 실적 조건 및 적립 한도 없음
+- KB국민 쿠쿠렌탈 티타늄카드: 티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적유예기간이 없음
+- KB국민 쿠쿠렌탈 티타늄카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 실적 없어도 1구간(1만원) 할인 적용(티타늄 서비스 제외)
+- KB국민 웰릭스렌탈 카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 실적 없이 1구간(10,000원) 혜택 제공
+- KB국민 웰릭스렌탈 카드: 티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적 유예기간 없음
+- KB국민 웰릭스렌탈 카드: 할인금액보다 자동이체 승인금액이 작을 경우 승인금액만큼 할인
+- 현대큐밍 KB국민카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간 할인 적용
+- 현대큐밍 KB국민카드: 할인 금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인 적용
+- 현대큐밍 KB국민카드: 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- 모두렌탈 KB국민카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간 할인 적용
+- 모두렌탈 KB국민카드: 할인 금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인
+- 모두렌탈 KB국민카드: 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인한도 내에서 할인
+- KB국민 윙크카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 실적 없이 1구간(10,000원) 혜택 제공
+- KB국민 윙크카드: 할인금액보다 자동이체 승인금액이 작을 경우 승인금액만큼 할인
+- KB국민 윙크카드: 마스터 티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적 유예기간 없음
+- 윙크Ⅱ카드: 할인 금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인 적용
+- 윙크Ⅱ카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간 할인 적용
+- KB국민 소노시즌Ⅱ카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간 할인 적용
+- KB국민 소노시즌Ⅱ카드: 할인 금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인 적용
+- KB국민 소노시즌Ⅱ카드: 소노시즌 렌탈요금 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- KB국민 청호나이스Ⅱ카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간 할인 적용
+- KB국민 청호나이스Ⅱ카드: 할인 금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인
+- KB국민 청호나이스Ⅱ카드: 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- 그린위치 KB 국민카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간(30만원 이상) 할인 적용
+- 그린위치 KB 국민카드: 할인금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인 적용
+- 그린위치 KB 국민카드: 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- 한화손해보험 캐롯 KB국민카드: 심의필 번호 및 날짜 정보가 문서 내에 존재하지 않음
+- 한화손해보험 캐롯 KB국민카드: 실적 유예기간: 최초 카드 사용등록일로부터 다음 달 말일까지 1구간(30만원) 실적 제공
+- KB국민 패밀리카드: 연간 포인트 리워드 서비스: 연간 결제실적(1~12월)에 따라 700만원 이상 6만점, 1500만원 이상 12만점 적립
+- KB국민 패밀리카드: 영화/놀이공원 할인 서비스: 전월 실적 30만원 이상 시 제공 (영화 예매 3,500원 할인, 놀이공원 30~50% 할인)
+- KB국민 패밀리카드: 최초 카드 사용등록일로부터 다음 달 말일까지는 실적 유예(1구간 서비스 제공)
+- 롯데렌탈 묘미 KB국민카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 30만원 미만 시에도 1구간 할인 적용
+- 롯데렌탈 묘미 KB국민카드: 할인 금액보다 자동납부 승인금액이 적을 경우 승인금액까지만 할인 적용
+- 롯데렌탈 묘미 KB국민카드: 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- 소노아임레디 KB국민카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 30만원 미만 시에도 1구간 할인 적용
+- 소노아임레디 KB국민카드: 할인 금액보다 자동납부 승인 금액이 작을 경우 승인금액까지만 할인
+- 소노아임레디 KB국민카드: 상조 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인 금액 내에서 할인
+- 스카이패스 IoT 티타늄카드: IoT카드는 가족카드 및 모바일 단독카드 발급 불가
+- 스카이패스 IoT 티타늄카드: 티타늄 서비스는 최초 사용등록 후 다음달 말일까지 실적 30만원 미만 시 서비스 미제공
+- 스카이패스 IoT 티타늄카드: 발급비 35,000원 별도 청구
+- KB국민 딜라이브카드: 최초 카드 사용 등록일로부터 다음 달 말일까지 실적 유예기간 제공
+- KB국민 딜라이브카드: 할인 금액보다 자동이체 승인 금액이 작을 경우 승인 금액만큼 할인 제공
+- KB국민 딜라이브카드: 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인 금액 내에서 할인 제공
+- KT스카이라이프 KB카드: 최초 카드 사용 등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시 월 2,500원 할인 제공
 - KT스카이라이프 KB카드: 최초 카드 사용등록월의 실적이 30만원 이상일 경우 다음달에 해당 실적구간 할인금액 제공
+- toss KB국민카드: 추가 적립 혜택은 기본 적립 1%와 합산되어 총 5% 적립으로 안내됨
+- toss KB국민카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 조건 없이 혜택 제공
+- 토스모바일 KB국민카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 30만원 미만이어도 1구간(7000원) 할인 제공
+- 토스모바일 KB국민카드: 할인 금액보다 자동납부 승인 금액이 작을 경우 승인 금액까지만 할인 적용
+- KB국민 TLC 카드: 할인 금액보다 자동이체 승인금액이 작을 경우 승인금액만큼 할인 제공
+- KB국민 TLC 카드: TLC 요금 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인 제공
+- KB국민 소노시즌 카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 실적 없어도 1구간 혜택 제공(티타늄 서비스 제외)
+- KB국민 소노시즌 카드: 할인금액보다 자동이체 승인금액이 작을 경우 승인금액만큼 할인
+- KB국민 소노시즌 카드: 소노시즌 렌탈료 자동이체 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- 이마트II KB국민카드(옐로우): 실적 유예기간: 최초 사용등록 후 다음 달 말일까지 전월 실적 50만원 미만 시에도 50만원 구간 서비스 제공
 - KB국민 SK 7mobile Ⅱ 카드: 최초 카드 사용 등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시 월 3,500원 할인 제공
-- KB국민 SK 7mobile Ⅱ 카드: 최초 카드 사용 등록월 실적이 30만원 이상일 경우 다음달에 해당 실적 구간 할인금액 적용
-- KB국민 SK 7mobile Ⅱ 카드: 할인금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인 적용
-- KB국민 U+ 유모바일 Ⅱ 카드: 최초 카드 사용 등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시 월 3,500원 할인 제공
-- KB국민 U+ 유모바일 Ⅱ 카드: 최초 카드 사용등록월 실적이 30만원 이상일 경우 다음달에 해당 실적 구간 할인금액 적용
-- KB국민 U+ 유모바일 Ⅱ 카드: 할인금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인 적용
-- 제주항공 J 포인트 KB국민카드: 포인트 적립 시 1,200원 미만 결제 금액은 반올림하여 적립하는 정책이 있음
-- 제주항공 J 포인트 KB국민카드: 공항라운지 이용 횟수 산정 기준이 연간(1월1일~연말)으로 설정됨
-- 보람상조 KB카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 동안 보람상조 자동납부 및 KB Pay 오픈마켓 각각 월 2천5백원 할인 제공
-- 보람상조 KB카드: 최초 카드 사용등록월의 실적이 40만원 이상일 경우 다음달에 해당 실적구간의 할인한도 적용
-- KB국민 기후동행카드: 실적 유예 조건: 최초 발급 시 사용등록일로부터 다음달 말일까지 실적 40만원 이상 시 할인 제공
-- KB국민 기후동행카드: 할인 제공 조건: 건당 1만원 이상 이용 시 할인 제공
-- KB국민 기후동행카드: 가족카드 발급 불가
-- KB국민 기후동행체크카드: 최초 발급 시 사용등록일로부터 다음달 말일까지 전월 실적 20만원 미만 시에도 각 서비스 영역별 월 2,000원까지 할인 제공
-- KB국민 기후동행체크카드: 할인 서비스는 건당 1만원 이상 이용 시 제공
-- 삼성 AI구독 KB국민카드: 최초 카드 사용등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시에도 월 할인한도 5천원 제공
+- KB국민 SK 7mobile Ⅱ 카드: 최초 등록월 실적이 30만원 이상일 경우 다음달에 해당 실적 구간 할인금액 적용
+- KB국민 SK 7mobile Ⅱ 카드: 할인금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인
+- KB국민 U+ 유모바일 Ⅱ 카드: 최초 카드 사용 등록월 실적이 30만원 이상일 경우 다음달에 해당 실적 구간 할인금액 적용 조건
+- KB국민 U+ 유모바일 Ⅱ 카드: 모바일 단독카드 발급 시 사용 제한 가맹점 존재
+- KB국민 kt M mobile Ⅱ 카드: 최초 카드 사용 등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시 월 3,500원 할인 제공
+- KB국민 kt M mobile Ⅱ 카드: 최초 카드 사용등록월 실적이 30만원 이상일 경우 다음달에 해당 실적 구간 할인금액 적용
+- 펫코노미카드: 최초 카드 사용등록일로부터 다음달 말일까지는 전월 실적 30만원 미만 시에도 1구간 혜택 적용
+- 펫코노미카드: 반려견 단체보험은 유효카드 1매당 1마리 등록 가능하며, 생후 12개월 초과 96개월 이하 반려견 대상
+- CHALLENGE BAG KB국민카드: 생활밀착업종 특별적립은 실적유예기간 중 이용실적이 없어도 월 1만점 한도 제공
+- CHALLENGE BAG KB국민카드: 11번가 특별적립은 실적유예기간 중 이용실적이 없어도 제공
+- CHALLENGE BAG KB국민카드: OK캐쉬백 포인트 적립 서비스는 기본 포인트리가 적립되지 않음
+- 몰테일 KB국민카드: 배송료 할인 횟수 제한: 월 3회
+- 몰테일 KB국민카드: 전월실적 유예기간: 최초 카드 사용등록일로부터 다음 달 말일까지 추가적립 서비스 제공
+- SK인텔릭스 KB국민카드: 놀이공원 할인서비스의 회원별 통합할인한도 조건 존재
+- SK인텔릭스 KB국민카드: 영화 할인: 1일 2회, 월 4회, 연 10회 이내
+- SK인텔릭스 KB국민카드: 놀이공원(롯데월드): 회원별 일 1매, 월 2매, 연간 5매
+- SK인텔릭스 KB국민카드: 놀이공원(에버랜드): 회원별 연간 10매
+- SK인텔릭스 KB국민카드: 놀이공원(캐리비안베이): 일 1매
+- H.Point KB국민카드: 전월 실적 조건 유예: 최초 사용등록 후 다음달 말일까지 전월 실적 관계없이 3대 생활영역 할인 월 1만원 한도 제공
+- H.Point KB국민카드: 놀이공원 할인 횟수 제한 조건 존재
+- H.Point KB국민카드: H.Point 적립은 결제일 다음 주 첫 영업일에 현대백화점으로 전송됨
+- 청호나이스 KB국민카드: 영화 할인: 1일 2회, 월 4회, 연간 10회 제한
+- 청호나이스 KB국민카드: 놀이공원 할인: 회원별 일 1매, 월 2매, 연간 5매(에버랜드 연간 10매) 제한
+- 청호나이스 KB국민카드: 워터파크 할인: 일 1매 제한
+- 청호나이스 KB국민카드: 신규 발급 시 최초 카드 사용등록일로부터 다음 달 말일까지 실적 유예 제공
+- 교원 웰스 KB국민카드: 최초 카드 사용등록일로부터 다음 달 말일까지는 전월 실적 30만원 미만 시에도 1구간 혜택 제공
+- 교원 웰스 KB국민카드: 렌탈료 할인 시 할인금액보다 승인금액이 작으면 승인금액만큼 할인
+- 교원 웰스 KB국민카드: 롯데월드 어드벤처 할인 시 가족카드 할인 미제공
+- 교원 웰스 KB국민카드: 에버랜드 및 캐리비안베이 할인 시 본인 및 가족카드 각각 일 1매 할인 적용
+- KB국민 SK인텔릭스 올림카드: 영화/놀이공원 할인 서비스의 일/월/연간 횟수 제한 조건 존재
+- KB국민 SK인텔릭스 올림카드: 최초 카드 사용등록일로부터 다음 달 말일까지 실적 유예 조건 존재
+- KB국민 SK인텔릭스 올림카드: 할인금액보다 자동이체 승인 금액이 작을 경우 승인금액 만큼 할인 적용
+- B tv KB국민카드: B tv 월정액 콘텐츠 할인 서비스의 30만원 미만 구간 할인 한도는 3,000원임
+- B tv KB국민카드: 최초 카드 사용등록일로부터 다음 달 말일까지는 전월 실적 없이 30만원 이상 구간의 생활편의업종 할인 서비스 제공
+- B tv KB국민카드: B tv 월정액 콘텐츠 승인 건이 여러 건인 경우 이용한 순서대로 할인 적용
+- 제주항공 J 포인트 KB국민카드: 포인트 적립 시 1,200원 미만 결제 금액은 반올림하여 적립하는 조건이 있음
+- 제주항공 J 포인트 KB국민카드: 공항라운지 연간 이용 횟수(연 2회)는 1월 1일~연말 기준임
+- 교원 구몬 KB국민카드: 놀이공원 혜택은 할인율이 30~50%로 다양하고 횟수 제한이 있어 정형화된 필드에 모두 담기 어려움
+- 교원 구몬 KB국민카드: 구몬학습지 할인은 할인금액보다 이용금액이 작을 경우 이용금액만큼 할인되는 조건이 있음
+- 모두투어 투어마일리지 KB국민카드: 투어마일리지 적립 서비스의 연간 2,000만원 초과 결제액 기준은 스키마에 반영 불가
+- 모두투어 투어마일리지 KB국민카드: 놀이공원 및 영화 할인 서비스의 연간 횟수 제한은 스키마에 반영 불가
+- 모두투어 투어마일리지 KB국민카드: 신규 발급 시 최초 카드 사용등록일로부터 다음 달 말일까지 전월 실적 없이 할인 서비스 제공
+- KB국민 코웨이II 카드: 코웨이 연간리워드 적립률(5~10%) 및 한도(5~10만점)는 연간 결제실적 구간에 따라 상이함
+- KB국민 코웨이II 카드: 놀이공원 할인 횟수 제한(일/월/연) 존재
+- KB국민 코웨이II 카드: 최초 카드 사용등록일로부터 다음달 말일까지는 전월 실적 미달 시에도 렌탈료 할인 및 놀이공원 할인 제공
+- KB국민 우체국 스마트카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예 조건 존재
+- KB국민 우체국 스마트카드: 통신료 할인 시 승인금액이 할인금액보다 작을 경우 승인금액만큼 할인 적용
+- LG전자 KB국민카드: 라이트할부 이용 건수 제한(월 2건, 연 5건)
+- LG전자 KB국민카드: 라이트할부 이용 시 청구금액이 할인금액보다 적을 경우 차액 환급(캐시백)
+- LG전자 KB국민카드: 최초 발급 시 사용등록일로부터 다음 달 말까지는 실적 조건 미달 시에도 1구간 할인 적용
+- LG전자 KB국민카드: 라이트할부 할인 적용 여부는 전월 말일 기준 라이트할부 잔액 유무로 판단
+- 넥센타이어 KB국민카드: 영화/놀이공원 할인 서비스의 횟수 제한(일/월/연간)은 스키마에 반영 불가
+- 넥센타이어 KB국민카드: 렌탈료 할인 시 승인금액이 할인금액보다 작을 경우 승인금액만큼 할인되는 조건 반영 불가
+- KB국민 선생님든든 카드: 전월실적 유예 조건: 최초 카드 사용 등록일로부터 다음달 말일까지 40만원 이상 구간 혜택 제공
+- KB국민 선생님든든 카드: 엔진오일 무료교환 서비스는 연 1회, 정비할인 서비스는 월 1회/연 3회 제공
+- KB국민 선생님든든 카드: 포인트 리워드는 연간 결제납부실적 기준이며 매년 2월 28일 적립
+- KB국민 선생님든든 카드: 엔터테인먼트(외식, 영화, 놀이공원) 혜택은 별도 할인한도 및 횟수 제한이 존재함
+- 세스코 KB국민카드: 최초 카드 사용등록일로부터 다음 달 말일까지는 전월 실적 미달 시에도 1구간 혜택 제공
+- 세스코 KB국민카드: 할인금액보다 자동납부 승인금액이 작을 경우 승인금액만큼 할인 적용
+- 세스코 KB국민카드: 세스코 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- GS SHOP link KB국민카드: 기본 할인(13,000원)과 추가 할인(2,000원)이 합산되어 월 최대 15,000원 한도로 제공됨
+- GS SHOP link KB국민카드: 최초 카드 사용등록일로부터 다음달 말일까지는 전월 실적 50만원 미만 시에도 할인 서비스 제공
+- KB국민 매직카 올림카드: KB손해보험 연간 리워드 적립은 연간 결제납부실적 기준이며, 초회연도 결제납부실적이 5백만원 미만인 경우 비율 적용하여 산정하는 조건이 있음
+- KB국민 매직카 올림카드: 포인트리 소멸 조건(60개월 경과 시 선입선출) 존재
+- KB국민 매직카 올림카드: KB손해보험 감사포인트리 적립 시점은 익월 27일로 일반 적립과 상이함
+- GS SHOP KB국민카드: 실적 유예기간: 최초 카드 사용등록일로부터 다음달 말일까지 실적 없이 서비스 제공(단, GS SHOP 12% 할인은 월 2만원 한도 내 제공)
+- GS SHOP KB국민카드: 해외 이용 시 국제브랜드 수수료 및 해외서비스 수수료 부과 방식 명시
+- KB국민 에듀카드: 최초 카드 사용등록일로부터 다음 달 말일까지는 전월 실적 없이 100만원 구간 혜택 제공
+- KB국민 에듀카드: 에듀 할인서비스 이용 시 해당 매출 전액이 전월 실적에서 제외되는 구조
+- KB국민 에듀카드: 약국 할인서비스는 전월 실적 150만원 이상 시에만 제공
+- 삼성 페이 KB국민카드: 최초 카드 사용등록일로부터 다음 달 말일까지는 전월 이용실적이 없는 경우에도 할인서비스 제공
+- KB국민 에버랜드 판다카드: 에버랜드 할인 서비스는 최초 카드사용등록일로부터 익월 말까지 전월 실적 없이 제공되는 유예기간이 있음
+- KB국민 에버랜드 판다카드: 주유/외식 할인 서비스는 최초 카드사용등록일로부터 익월 말까지 전월 실적 없이 제공되는 유예기간이 있음
+- KB국민 에버랜드 판다카드: 연간 할인한도(숙박 5만원) 개념이 존재함
+- AK KB국민카드: 엔터테인먼트 할인(영화, 놀이공원)은 횟수 제한이 존재함
+- AK KB국민카드: 전월 실적 유예 기준: 최초 사용등록 후 다음달 말일까지 전월 실적 관계없이 제공(단, AK PLAZA 청구할인은 월 1만원 한도 내 제공)
+- KB국민 골든라이프올림카드: Golden Choice 서비스는 병원/약국 또는 주유/대형마트 중 택 1하여 제공
+- KB국민 골든라이프올림카드: 6대 영역 포인트리 적립 서비스(우대 2%, 일반 1%) 존재
+- KB국민 골든라이프올림카드: 연간 결제납부실적 7백만원 이상 시 포인트리 1만점 리워드 제공
+- KB국민 골든라이프올림카드: 최초 카드 사용등록일로부터 다음달 말일까지는 실적 유예 적용
+- KB국민 골든라이프 티타늄카드: Golden Choice 서비스는 병원/약국 또는 주유/대형마트 중 택 1 선택 가능
+- KB국민 골든라이프 티타늄카드: 6대 영역 포인트리 적립 서비스(별도 명시) 및 연간 리워드(7백만원 이상 시 1만점) 존재
+- KB국민 골든라이프 티타늄카드: 결제계좌 등록에 따른 우대 적립(2%) vs 일반 적립(1%) 차등 존재
+- KB국민 골든라이프 티타늄카드: 반려동물업종 10% 할인 및 음식업종 5% 할인 서비스 존재
+- KB국민 골든라이프 티타늄카드: 신규 발급 시 다음달 말일까지 실적 유예 조건 존재
+- E1 LPG KB국민카드: 최초 카드 사용등록일로부터 다음 달 말일까지 이용실적 유예 조건(월 1만원 한도 제공)
+- E1 LPG KB국민카드: E1 오렌지 포인트 적립 혜택(월 70만원 이용금액까지 1천원당 4~7P 적립)
+- KB 스타B 카드: 선택서비스는 17개 중 6개를 선택하여 구성하는 구조임
+- KB 스타B 카드: 선택서비스는 월 1회 변경 가능하며 다음달부터 적용됨
+- KB 스타B 카드: 최초 카드 사용등록일로부터 다음 달 말일까지는 실적과 관계없이 40만원 이상 구간 혜택 제공
+- KB 스타B 카드: 선택서비스 간 중복 적용 가능하며 할인한도는 각각 차감됨
+- KB 스타B 카드: 해외 이용금액 캐시백은 다음달 둘째주에 결제계좌로 입금됨
+- KB국민 플렉스페이카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간 할인 적용
+- KB국민 플렉스페이카드: 할인금액보다 자동납부 승인금액이 작을 경우 승인금액만큼 할인
+- KB국민 플렉스페이카드: 렌탈료 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- KB국민 LG U 심플라이트카드: 최초 카드 사용등록일로부터 다음달 말일까지는 전월 실적 30만원 미만 시에도 1구간 할인 적용
+- KB국민 LG U 심플라이트카드: 할인금액보다 자동납부 승인금액이 작을 경우 승인금액만큼 할인 적용
+- KB국민 LG U 심플라이트카드: LG U+ 통신료 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- Kt M mobile 카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간(12,000원) 할인 적용
+- Kt M mobile 카드: 할인금액보다 자동이체 승인금액이 적을 경우 승인금액만큼 할인 적용
+- U＋ 유모바일카드: 할인금액보다 자동이체 승인금액이 적을 경우 승인금액만큼 할인 적용
+- U＋ 유모바일카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간 혜택 제공
+- 예다함: 최초 카드 사용등록일로부터 다음달 말일까지는 전월 실적 없이 1구간 할인 서비스 적용
+- 예다함: 할인금액보다 자동납부 승인금액이 작을 경우 승인금액만큼 할인 적용
+- KB국민 스마트렌탈카드: 최초 카드 사용등록일로부터 다음달 말일까지는 전월 실적 없이 1구간(12,000원) 할인 적용
+- KB국민 스마트렌탈카드: 할인금액보다 자동납부 승인금액이 작을 경우 승인금액만큼 할인 적용
+- KB국민 스마트렌탈카드: 스마트렌탈 렌탈료 자동이체 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- KB국민 CLiP카드: 최초 카드 사용등록일로부터 다음달 말일까지는 전월 실적 30만원 미만 시에도 1구간(12,000원) 할인 적용
+- KB국민 CLiP카드: 할인금액보다 자동이체 승인금액이 작을 경우 승인금액만큼 할인 적용
+- 갤러리아 KB국민카드(일반): 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 50만원 미만 시에도 1구간(50만원) 서비스 제공
+- 갤러리아 KB국민카드(일반): 갤러리아 G포인트 적립률 및 상세 기준은 갤러리아 백화점 운영 정책에 따름
+- 보람상조 KB카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 적용 (40만원 미만 시 보람상조/오픈마켓 각각 월 2,500원 할인)
+- 보람상조 KB카드: 최초 등록월 실적이 40만원 이상인 경우 다음달에 해당 실적구간 할인한도 적용
+- KB국민 와이즈멤버스 카드: 연간 할인 한도 적용 기간은 1월~12월까지임
+- KB국민 와이즈멤버스 카드: 대한항공 마일리지 적립 시 각종 세금 및 공과금 추가 제외
+- KB국민 와이즈멤버스 카드: 플러스포인트는 적립월로부터 5년 유효
+- KB국민 와이즈멤버스 카드: 선택 서비스는 카드 발급 시 선택하여 신청
+- KB국민 SK내트럭 유가보조금카드: 신용카드와 체크카드가 하나의 상품설명서에 포함되어 있으나, 본 데이터는 체크카드 기준으로 작성됨
+- KB국민 SK내트럭 유가보조금카드: 주유 할인 혜택은 전월 실적 구간별로 리터당 할인 금액이 다름 (30만원 미만 30원, 30만원 이상 50원, 60만원 이상 60원, 90만원 이상 70원)
+- KB국민 SK내트럭 유가보조금카드: 현장할인 15원은 실적과 무관하게 적용되며, 나머지 금액은 환급할인으로 제공됨
+- KB국민 SK내트럭 유가보조금카드: 체크카드 소액신용결제서비스는 최대 30만원 한도 내에서 제공됨
+- KB국민 SK내트럭 유가보조금체크카드(RF): 주유 할인 혜택은 현장할인(15원)과 환급할인(구간별 차등)이 합산되어 제공됨
+- KB국민 SK내트럭 유가보조금체크카드(RF): 체크카드 소액신용결제서비스 이용 시 신용카드 거래로 처리됨
+- KB국민 SK내트럭 유가보조금체크카드(RF): 해외 이용 시 승인 시점과 매입 시점의 환율 차이로 인한 환급 또는 추가 출금 발생 가능
+- KB국민 SK내트럭 유가보조금체크카드(비RF): 체크카드와 신용카드가 통합 실적 산정 및 각 상품별 할인한도 적용
+- KB국민 SK내트럭 유가보조금체크카드(비RF): 주유 할인액은 전월 실적 구간별로 현장할인(15원)과 환급할인(15~55원)이 합산되어 총 30~70원/리터가 적용됨
+- KB국민 SK내트럭 유가보조금체크카드(비RF): 현장할인은 전월 실적 무관하게 15원 적용
+- KB국민 SK내트럭 유가보조금체크카드(비RF): 환급할인 월간 한도는 전월 실적 구간별로 차등 적용됨
+- KB국민 SK내트럭 유가보조금체크카드(비RF): 해외 이용 시 승인 시점과 매입 시점의 환율 차이로 인한 환급 또는 추가 출금 발생 가능
+- KB국민 joyful 체크카드(KB라이프파트너스): 실적 유예 조건 없음
+- KB국민 joyful 체크카드(KB라이프파트너스): 해외 이용 및 교통 이용 불가
+- KB국민 joyful 체크카드(KB라이프파트너스): 매출전표 매입 이후 2영업일에 적립
+- KB국민 joyful 체크카드(KB캐피탈): 실적 조건 없음
+- KB국민 joyful 체크카드(KB캐피탈): 카드 타입은 체크카드이나 하이브리드 기능은 없음
+- KB국민 joyful 체크카드(KB캐피탈): 포인트리는 적립월로부터 5년간 유효
+- KB국민 joyful 체크카드(KB자산운용): 해외 이용 및 교통카드 기능 불가
+- KB국민 joyful 체크카드(KB자산운용): 포인트리는 적립월로부터 5년간 유효
+- KB국민 joyful 체크카드(KB자산운용): 이용금액 1,000원 미만 시 포인트리 미적립
+- KB국민 FINETECH카드(마일리지 대한항공): 마일리지 적립 단위가 1,500원당 1.2마일로, rate_percent나 amount_krw로 정확히 표현 불가
+- KB국민 FINETECH카드(마일리지 대한항공): 특화마일 서비스는 월 20만원 이용금액까지 제공되는 한도 조건이 있음
+- KB국민 FINETECH카드(마일리지 아시아나): 마일리지 적립은 1,000원당 마일리지 단위로 제공되며, 원 단위 절삭 후 적립됨
+- KB국민 FINETECH카드(마일리지 아시아나): 최초 발급 후 사용등록일로부터 다음달 말일까지는 실적 조건 없이 혜택 제공
+- 골프존 KB국민카드: Basic Type과 Mileage Type이 하나의 상품설명서에 포함되어 있으나, 스키마는 단일 카드 기준으로 작성됨
+- 골프존 KB국민카드: Mileage Type의 마일리지 적립은 1,000원당 마일리지 단위로 제공되어 rate_percent로 표현 불가
+- 골프존 KB국민카드: Basic Type의 주유 할인(리터당 60원) 및 통신 할인(3천원)은 정액/정률 혼합형으로 rate_percent로 표현 불가
+- 골프존 KB국민카드(마일리지 아시아나): 마일리지 적립은 1,000원 단위로 계산되며 반올림 적용
+- 골프존 KB국민카드(마일리지 아시아나): Basic Type과 Mileage Type이 혼재된 상품설명서이나, 요청된 메타데이터에 따라 Mileage Type 위주로 추출함
+- 코웨이 KB국민카드: 렌탈비 할인 시 승인금액이 할인금액보다 작을 경우 승인금액만큼만 할인
+- 코웨이 KB국민카드: 최초 발급 후 사용등록일로부터 다음달 말일까지 이용실적 유예 조건 존재
+- KB국민 알파원카드: 본 카드는 자체적인 할인/적립 혜택이 없는 '원카드' 서비스 전용 카드임
+- KB국민 알파원카드: 결제 시 KB Pay에 설정된 다른 카드(결제카드)의 혜택이 적용됨
+- KB국민 알파원카드: 2020년 1월 1일 이후 발급분부터 스마트 기능(Good Touch, 스마트 OTP) 미제공
+- KB국민 알파원카드: 연회비는 본 카드 자체가 아닌, 알파원 결제카드로 설정된 각 카드별 기준에 따라 청구됨
+- KB국민 모바일101카드: 최초 발급 후 사용등록일로부터 다음달 말일까지 이용실적이 없는 경우에도 1구간 할인 제공
+- KB국민 모바일101카드: 대중교통 할인은 익월 10일 경 캐시백
+- 저축은행 KB국민카드 (생활형): 실적유예기간: 최초 카드 사용등록일로부터 30일이 속한 해당월말까지 1구간 혜택 제공
+- 저축은행 KB국민카드 (생활형): 주유 할인율은 휘발유 가격 기준 변동형(60원/L)
+- 저축은행 KB국민카드 (생활형): 포인트리 적립은 KB국민카드 가맹점만 해당
+- KB국민 GS행복가득카드: 주유 할인 실적 산정 시 GS칼텍스 주유 할인 이용 건은 실적에서 제외됨
+- KB국민 GS행복가득카드: 엔진오일 무료교환 및 정비할인 서비스는 본인회원 기준(가족회원 제외)
+- KB국민 GS행복가득카드: 대중교통 할인 한도는 월 4천원(10% 할인 시 4만원 이용분까지)
+- 저축은행 KB국민카드 (적립형): 주유, 통신, 대중교통은 전월 30만원 이상 시 제공
+- 저축은행 KB국민카드 (적립형): 음식점, 커피, 편의점, 약국은 전월 60만원 이상 시 제공
+- 저축은행 KB국민카드 (적립형): 학원, 휘트니스센터는 전월 120만원 이상 시 제공
+- 저축은행 KB국민카드 (적립형): 포인트리 적립은 전월 30만원 이상 시 제공
+- 저축은행 KB국민카드 (적립형): 실적유예기간: 최초 카드 사용등록일로부터 30일이 속한 해당월말까지 1구간 혜택 제공
+- H.Point KB국민 체크카드: H.Point 추가적립은 월간 최대 3만점 한도
+- H.Point KB국민 체크카드: 생활할인 서비스는 전월 실적 30만원 미만 시 제공되지 않음
+- H.Point KB국민 체크카드: 체크카드 소액신용결제서비스는 최고 30만원 이내 부여
+- H.Point KB국민 체크카드: card_type은 체크카드이나 소액신용결제서비스가 포함되어 있음
+- KB국민 스맨파 체크카드: KB국민 스맨파 체크카드와 KB국민 새로이 체크카드의 전월 이용실적 및 할인한도가 합산됨
+- KB국민 스맨파 체크카드: 최초 사용등록일로부터 다음달 말일까지 1구간 혜택 제공
+- KB국민 스맨파 체크카드: 어학시험 응시료는 온라인 접수 시에만 할인 적용
+- KB국민 기후동행카드: 실적 유예: 최초 발급 시 사용등록일로부터 다음달 말일까지 실적 40만원 미만 시에도 각 서비스 영역별 월 3,500원까지 할인 제공
+- KB국민 기후동행카드: 후불 기후동행카드 기능은 별도 정책에 따름
+- KB국민 기후동행체크카드: 최초 발급 시 사용등록일로부터 다음달 말일까지 전월 실적 20만원 미만 시에도 생활/쇼핑/여가 각 서비스 영역별 월 2,000원까지 할인 제공
+- KB국민 리멤버카드: 전월 실적 조건에 대한 정보가 문서에 명시되어 있지 않음
+- KB국민 리멤버카드: 연회비 반환 기준에 대한 상세 내용 포함
+- KB국민 Members 카드: 연간 포인트 리워드 서비스는 연간 실적 기준이므로 월간 혜택 스키마에 포함되지 않음
+- KB국민 Members 카드: 엔터테인먼트 서비스의 횟수 제한(연 5회, 연 10회 등)은 스키마에 포함되지 않음
+- KB국민 Members 카드: 전월 실적 유예 조건: 최초 사용 등록 후 다음달 말일까지 실적 관계없이 제공
+- KB국민 Members 체크카드: card_type은 체크카드이나 소액신용결제서비스(하이브리드) 기능이 포함되어 있음
+- KB국민 Members 체크카드: 전월 실적 제외 대상에 '교통이용 금액 및 무승인 이용금액'이 포함됨
+- KB국민 Members 체크카드: 최초 발급 후 사용등록일로부터 다음달 말일까지 실적 유예 조건 존재
+- KB Members Plus 카드: 최초 카드 사용 등록일로부터 다음달 말일까지 전월실적 40만원 미만 시 40만원 이상 구간 월 할인한도의 50%(각 서비스별 1천원) 제공
+- KB Members Plus 카드: 최초 카드 사용등록월 실적이 40만원 이상일 경우 다음 달에 해당 실적 구간 할인 제공
+- KB Members Plus 체크카드: 전월 이용실적 조건 없음
+- KB Members Plus 체크카드: 적립 한도 없음
+- KB Members Plus 체크카드: 체크카드 직불 이용한도 존재(연령별 상이)
+- 패밀리포인트 체크카드(브레이슬릿스튜디오): 심의필 번호 및 심의필 날짜가 문서상에 명시되어 있지 않음
+- 패밀리포인트 체크카드(브레이슬릿스튜디오): 전월 실적 조건이 없음
+- 패밀리포인트 체크카드(브레이슬릿스튜디오): 매출전표 매입 이후 2영업일에 적립됨
+- 패밀리포인트 체크카드 에코에너지솔루션: 심의필 번호 및 날짜가 문서에 명시되어 있지 않음
+- 패밀리포인트 체크카드 에코에너지솔루션: 전월 실적 조건 없음
+- 패밀리포인트 체크카드 에코에너지솔루션: 해외 이용 및 교통 기능 불가
+- 카카오뱅크 자기주도마일리지 KB카드: 전월 이용 실적 조건 및 적립 한도 없음
+- 카카오뱅크 자기주도마일리지 KB카드: 포인트리 1원 단위 적립
+- 카카오뱅크 자기주도마일리지 KB체크카드: 전월 실적 조건 및 적립 한도 없음
+- 카카오뱅크 자기주도마일리지 KB체크카드: 포인트리는 매출전표 매입 후 2영업일에 적립
+- 카카오뱅크 자기주도마일리지 KB체크카드: 카카오뱅크 임직원만 발급 가능
+- 패밀리포인트 체크카드 삐아: 심의필 번호 및 심의필 날짜가 문서에 명시되어 있지 않음
+- 패밀리포인트 체크카드 삐아: 전월 실적 조건이 없음
+- 패밀리포인트 체크카드 삐아: 해외 이용 및 교통 이용 불가
+- 패밀리포인트 체크카드 포이파트너스: 여신금융협회 심의필 번호 및 날짜가 문서에 명시되어 있지 않음
+- 패밀리포인트 체크카드 포이파트너스: 실적 조건이 없는 상품으로 performance 항목은 null 처리함
+- 패밀리포인트 체크카드 (주)뉴부자관광: 여신금융협회 심의필 번호 및 날짜가 문서에 명시되어 있지 않음
+- 패밀리포인트 체크카드 (주)뉴부자관광: 전월 실적 조건이 없음
+- 패밀리포인트 체크카드 (주)뉴부자관광: 포인트리는 적립월로부터 5년간 유효
+- 패밀리포인트 체크카드 주식회사뉴부자: 심의필 번호 및 날짜가 문서에 명시되어 있지 않음
+- 패밀리포인트 체크카드 주식회사뉴부자: 전월 실적 조건 없음
+- 패밀리포인트 체크카드 주식회사뉴부자: 포인트리는 적립월로부터 5년간 유효
+- 패밀리포인트 체크카드 주식회사뉴부자: 매출전표 매입 이후 2영업일에 적립
+- 패밀리포인트 체크카드 주식회사뉴부자: 만 12~13세 이용 한도 별도 규정 존재
+- 패밀리포인트 체크카드 앤서스랩코리아: 전월 실적 조건 없음
+- 패밀리포인트 체크카드 앤서스랩코리아: 포인트리 유효기간 5년
+- 패밀리포인트 체크카드 앤서스랩코리아: 체크카드 직불 이용 한도 존재(기본 1회 600만원/1일 600만원/월 2,000만원)
+- 패밀리포인트 체크카드 앤서스랩코리아: 만 12~13세 이용 한도 별도 적용
+- KB국민 토심이 첵첵 체크카드: 영역별 할인금액이 1구간(30만원 이상) 1천원, 2구간(60만원 이상) 2천원으로 차등 적용됨
+- KB국민 토심이 첵첵 체크카드: 실적조건 유예기간: 최초 사용등록일로부터 다음달 말일까지 1구간 서비스 제공
+- KB국민 토심이 첵첵 체크카드: 동일계열 카드(KB국민 첵첵 체크카드, KB국민 위글위글 첵첵 체크카드)와 실적 및 할인한도 합산
+- KB국민 노리2 체크카드(KB Pay, Global): 일상혜택 내 개별 항목별 월 이용금액 한도 및 할인한도가 상이함
+- KB국민 노리2 체크카드(KB Pay, Global): KB Pay 혜택 및 Global 혜택은 전월 실적 30만원 이상 시 제공
+- KB국민 노리2 체크카드(KB Pay, Global): 일상혜택은 전월 실적 20만원 이상 시 제공
+- KB국민 노리2 체크카드(KB Pay, Global): 공항라운지 서비스는 전월 실적 30만원 이상 시 제공
+- KB국민 총무 체크카드: card_type은 체크카드이나, 후불교통기능이 포함되어 있음
+- KB국민 총무 체크카드: 한식/커피/제과 업종 할인 시 평일 1일 1회, 최대 2,500원 할인 한도 적용
+- KB국민 총무 체크카드: 제과아이스크림 업종은 30만원 구간에서 할인 미제공
+- KB국민 노리2 체크카드(Play): Play 혜택은 전월 실적 30만원 이상 시 제공
+- KB국민 노리2 체크카드(Play): 일상 혜택은 전월 실적 20만원 미만 시 제공되지 않음
+- KB국민 노리2 체크카드(Play): 월간 통합할인한도는 일상 혜택과 Play 혜택을 합산하여 적용
+- kt GiGA KB국민비씨카드: 최초사용등록일로부터 다음달 말까지 전월실적 미달 시에도 월 3,000원(점) 통합서비스 한도 제공
+- kt GiGA KB국민비씨카드: 포인트연계할부서비스(세이브) 수수료율: 24개월 연 5.8%, 36개월 연 7%
+- kt GiGA KB국민비씨카드: 통합서비스 한도는 매입 순서대로 적용되며 잔여 한도 이월 불가
+- KT Super DC7 KB국민비씨카드: 연간 할인 한도(180,000원/240,000원) 표기 존재
+- KT Super DC7 KB국민비씨카드: 가족카드 사용 시 본인회원 할인한도와 합산 적용
+- BeV Ⅸ 토탈마일 카드: 마일리지 적립 기준이 주 단위 합산 방식임
+- BeV Ⅸ 토탈마일 카드: 쿠폰 서비스는 연 4회 제공되며 카드 발급 월 기준 1년 유효함
+- BeV Ⅸ 토탈마일 카드: 라운지 서비스는 전월 실적 50만원 이상 시 제공되며 연 10회 한도임
+- BeV Ⅸ 대한항공 카드: 마일리지 적립은 주 단위(토~금) 결제 합계액 기준이며, 월간 적립 한도는 3만 마일리지임.
+- BeV Ⅸ 대한항공 카드: 쿠폰 서비스는 연 4회 제공되며, 카드 발급 월 기준 1년 단위로 유효함.
+- BeV Ⅸ 대한항공 카드: THE LOUNGE 서비스는 전월 실적 50만원 이상 시 연 10회 제공됨.
+- BeV Ⅸ 대한항공 카드: 카드 타입은 명시되지 않았으나 프리미엄 신용카드로 분류됨.
+- 토스페이 플러스 KB카드: 해당 카드는 부가서비스가 없는 토스 제휴 신용카드임
+- 토스페이 플러스 KB카드: 가족카드 발급 불가
+- CU KB국민카드: CU포인트 적립에 대한 구체적인 적립률 및 한도 정보가 상품설명서에 명시되지 않음
+- CU KB국민카드: 각 서비스별 월 할인한도 금액이 명시되지 않음
+- KB국민 굿데이카드: 주유 할인 시 LPG, 경유, 등유는 휘발유 가격에 비례하여 할인율 적용
+- KB국민 굿데이카드: 주유 할인 일 이용금액 한도 10만원
+- KB국민 굿데이카드: 최초 카드 사용등록일로부터 90일간 실적 조건 미달 시에도 1구간 서비스 제공
+- KB국민 굿데이카드: 할인 서비스는 가맹점 업종코드 기준이며 PG, 백화점, 대형마트 등 입점 매장은 제외될 수 있음
+- KB국민 굿데이올림카드: 기본서비스 최초 카드사용등록일로 부터 다음달 말일까지 실적 없어도 1구간 서비스 제공
+- KB국민 굿데이올림카드: 해외이용 캐시백은 다음달 둘째주 결제계좌 입금
+- KB국민 굿데이올림카드: 대중교통 할인 기준은 이용대금 명세서상 기재된 이용일 기준
+- KB국민 Easy shopping카드: 선택서비스는 3개 항목 중 1개 선택 필수
+- KB국민 Easy shopping카드: 실적 유예기간(최초 카드 사용 등록일로부터 다음달 말일까지)에는 실적 없어도 1구간 혜택 제공
+- KB국민 Easy shopping카드: 포인트리 적립 시점 기준 60개월 경과 시 소멸
+- KB국민 Easy shopping 티타늄카드: 선택서비스는 3개 항목 중 1개 선택 필수
+- KB국민 Easy shopping 티타늄카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적유예기간 제공(1구간 혜택 적용)
+- KB국민 Easy shopping 티타늄카드: 티타늄 서비스는 전월 실적 30만원 이상 시 제공(실적유예 없음)
+- KB국민 Easy shopping 티타늄카드: 모바일 단독카드는 연회비가 다름(2만 4천원)
+- TANTUM Ultra 아멕스 카드(아시아나): 매년 1회 아시아나항공 7만 마일리지 적립 혜택 존재
+- TANTUM Ultra 아멕스 카드(아시아나): 카드 발급 첫 해 연회비 납부 및 300만원 이상 이용 시 마일리지 적립
+- TANTUM Ultra 아멕스 카드(아시아나): 2차년도부터는 연회비 납부 시 마일리지 적립
+- TANTUM Ultra 아멕스 카드(아시아나): Luxury 여행 전용상품 할인(연 1회)은 전년도 5천만원 이상 이용 시 제공
+- TANTUM Ultra 아멕스 카드(아시아나): Priority Pass 월간 10회 무료 이용 제한
+- TANTUM Ultra 아멕스 카드(아시아나): 롯데호텔 객실 할인율은 성수기/비수기 및 지점별로 상이함
+- TANTUM Ultra 아멕스 카드(아시아나): 회원 자격심의위원회 심사를 통해 발급되는 VVIP 카드
+- KB국민 보탬e전용카드: 보조금 전용 카드로 별도의 포인트 적립이나 할인 혜택이 없음
+- KB국민 보탬e전용카드: 일시불 거래만 가능하며 할부, 단기카드대출(현금서비스), 장기카드대출(카드론), 리볼빙 거래 불가
+- KB국민 보탬e전용체크카드: 본 카드는 지방보조금 결제 전용 카드로, 일반적인 포인트 적립이나 할인 혜택이 없는 상품임
+- KB국민 보탬e전용체크카드: 교통기능 미탑재
+- KB국민 보탬e전용체크카드: 일시불 거래만 가능(할부, 단기카드대출, 장기카드대출, 리볼빙 불가)
+- KB국민 보탬e전용체크카드: 심의필 문구에 날짜가 명시되어 있지 않아 as_of는 null로 처리함
+- KB국민 와이즈카드: 특별 적립률은 전월 실적 50만원(0.5%), 100만원(1.5%), 150만원(2.5%), 200만원(4.5%)으로 차등 적용됨
+- KB국민 와이즈카드: 특별 적립은 7대 영역 중 가장 많이 쓴 3대 영역에 대해 영역별 15,000점, 월 최대 45,000점 한도 적용
+- KB국민 와이즈카드: 포인트연계할부서비스(굿세이브) 잔액 유지 시 기본 적립률 0.8% 적용
+- KB국민 와이즈카드: 영화/놀이공원 서비스는 전월 실적 30만원 이상 시 제공
+- KB국민 와이즈카드: 금융수수료 면제 서비스는 전월 실적 50만원 이상 시 제공
+- 삼성 AI구독 KB국민카드: 최초 카드 사용등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시에도 월 할인한도 5천원까지 제공되는 실적 유예 조건 존재
 - 삼성 AI구독 KB국민카드: 할인금액보다 구독 자동납부 금액이 적을 경우 결제금액까지만 할인 적용
-- KB국민 마일리지 가온카드(대한항공형): 전월 실적 조건이 없는 상품으로 performance 필드 생략
-- KB국민 마일리지 가온카드(대한항공형): 마일리지 적립은 건별 이용금액 기준이며, 1,500원 미만 절사 여부 등 상세 계산식은 스키마에 명시되지 않음
-- 쿠팡 와우 카드: 전월 실적 조건 없음
-- 쿠팡 와우 카드: 쿠팡캐시 적립 서비스 제외 대상에 취소금액, 정부지원금, 신차구매 청구 할인전표 포함
-- KB YOU Wish up 카드: 쿠폰 서비스는 발급 첫해 연회비 납부 및 600만원 이상 이용 시 제공
-- KB YOU Wish up 카드: 최초 발급 시 실적 유예 기간(등록일로부터 다음달 말일) 동안 40만원 미만 이용 시에도 1구간 할인 한도의 50% 적용
+- 삼성 AI구독 KB국민카드: 삼성AI구독 자동납부 결제 건이 여러 건인 경우 합산하여 월 할인 금액 내에서 할인
+- KB국민 KB Pay 챌린지카드: 전월 실적 조건이 없는 상품임
+- KB국민 KB Pay 챌린지카드: 스탬프 서비스의 월간 적립 한도 적용 기간이 매월 고정된 날짜가 아닌 특정 요일 기준임
+- KB국민 KB Pay 챌린지카드: 출석체크 서비스는 주 단위 적립 방식임
+- KB국민 KB Pay 챌린지플러스카드: 스탬프 서비스의 월간 적립 한도 적용 기간이 매월 말일이 아닌 '전월 마지막 토요일의 다음날~당월 마지막 토요일'로 산정됨
+- KB국민 KB Pay 챌린지플러스카드: 출석체크 서비스는 주 단위 적립이며, 취소 시 이용 횟수 차감 및 적립 제외 조건이 있음
+- KB국민 KB Pay 챌린지플러스카드: 이용 리워드는 당월 실적 기준 다음달 25일 적립됨
+- American Express Blue KB Kookmin Card: 놀이공원 할인 횟수 제한: 롯데월드(회원별 1일 1매, 월 2매, 연간 5매), 에버랜드(카드별 1일 1매, 회원별 연간 10매), 캐리비안베이(카드별 1일 1매)
+- American Express Blue KB Kookmin Card: 패밀리레스토랑 연간 할인 한도 6만원 존재
+- American Express Blue KB Kookmin Card: 실적유예기간: 최초 사용등록일로부터 다음달 말일까지 30만원 미만 시에도 1구간 서비스 제공
+- American Express Rose Gold KB Kookmin Card: 온라인 항공/면세점 혜택은 연간 6만원 한도 제한이 있음
+- American Express Rose Gold KB Kookmin Card: 최초 발급 시 등록일로부터 다음달 말일까지 전월 실적 30만원 미만이어도 1구간 할인 서비스 제공
+- KB국민 Green Wave 1.5℃카드: 기부포인트 적립 서비스: 전월 실적 120만원 초과 이용금액의 0.3% 적립
+- KB국민 Green Wave 1.5℃카드: 최초 발급 시 기부포인트 2천점 적립
+- KB국민 Green Wave 1.5℃카드: 모바일 단독카드 이용 시 포인트리 1천점 적립(월 1회, 실적 조건 없음)
+- KB국민 Green Wave 1.5℃카드: 영상/음원 정기결제 시 포인트리 1천점 적립(월 1회)
+- KB국민 Green Wave 1.5℃카드: 굿윌스토어 이용 시 포인트리 1천점 적립(월 2회)
+- KB국민 Green Wave 1.5℃카드: 서비스 실적 유예기간: 최초 카드 사용등록일로부터 다음달 말일까지 40만원 이상 80만원 미만 구간 서비스 제공
+- KB ALL 카드: 통합 할인 한도 3,000원은 전월 실적 40만원 이상 시 제공
+- KB ALL 카드: 최초 발급 시 카드 사용 등록일로부터 다음달 말일까지는 실적 40만원 미만이어도 할인 제공
+- KB국민 My WE:SH 카드: Happy Birth Month: 생일 월에 더욱 진심 서비스 할인한도 2배 제공
+- KB국민 My WE:SH 카드: 실적유예기간: 최초 발급 후 다음달 말일까지 전월 실적 40만원 미만 시에도 할인 제공
+- KB국민 My WE:SH 카드: 더욱 진심 서비스: 3개 팩 중 택 1하여 제공
+- KB국민 My WE:SH 카드: 영화관 할인: 연 4회(연 2만원) 한도
+- KB YOU With 카드: Happy Family Month: 5월은 2nd 선택서비스 할인한도 2배 제공
+- KB YOU With 카드: 전월실적 채워드림: 전월실적 35만원 이상 40만원 미만 시 1구간 혜택 제공 신청 가능
+- KB YOU With 카드: 선택서비스는 영역별 1개씩 총 2개 필수 선택
+- HERITAGE Smart(헤리티지 스마트) 할인형: 쿠폰 서비스 제공 조건: 첫해 연회비 납부 및 50만원 이상 이용, 다음해부터 전년도 600만원 이상 이용
+- HERITAGE Smart(헤리티지 스마트) 할인형: 신규 발급 시 등록월 다음달 말일까지 실적 무관 40만원 구간 서비스 제공
+- HERITAGE Smart(헤리티지 스마트) 할인형: 특별 서비스 할인 한도 초과 시 국내 가맹점 1% 할인만 적용
+- HERITAGE Smart(헤리티지 스마트) 할인형: 해외 이용 시 국제브랜드 수수료(1.0%) 및 해외서비스 수수료(0.25%) 부과
+- HERITAGE Smart 대한항공 마일리지형: 쿠폰 서비스는 발급 첫해 50만원 이상, 다음해 이후 전년도 600만원 이상 이용 시 제공
+- HERITAGE Smart 대한항공 마일리지형: KB Pay 적립은 최초 발급 시 사용등록일로부터 다음달 말일까지 실적 유예 적용
+- HERITAGE Smart 대한항공 마일리지형: 마일리지 적립은 소수점 첫째 자리에서 반올림하여 적립
+- HERITAGE Reserve(포인트형): 쿠폰 서비스 제공 조건: 발급 첫해 연회비 납부 및 200만원 이상 이용, 다음해 이후 전년도 2천만원 이상 이용
+- HERITAGE Reserve(포인트형): 특별 서비스(골프백 딜리버리, 의료 동행, 전자책 구독)는 전월 실적 50만원 이상 시 제공
+- HERITAGE Reserve(포인트형): 최초 발급 시 사용등록일로부터 다음달 말일까지는 전월 실적 없이 특별 서비스 제공
+- HERITAGE Reserve(스카이패스형): 쿠폰 서비스 및 특별 서비스는 연 1회 제공 조건이므로 monthly_cap_by_tier로 표현 불가
+- HERITAGE Reserve(스카이패스형): 마일리지 적립은 전월 실적 조건 및 한도 없음
+- HERITAGE Reserve(스카이패스형): 특별 서비스 이용금액은 전월 실적에서 제외됨
+- HERITAGE Exclusive: 연 1회 제공되는 쿠폰 서비스(골프, 호텔, 항공 등)는 스키마에 포함되지 않음
+- HERITAGE Exclusive: 골프백 딜리버리, 의료 동행, 밀리의 서재 등 특별 서비스의 청구할인 조건은 스키마에 포함되지 않음
+- HERITAGE Exclusive: 전월 실적 산정 시 연간 이용실적 제외 대상 목록이 별도로 존재함
+- HERITAGE Exclusive: 포인트리 적립 시 가맹점 분류에 따른 제외 조건이 상세히 명시됨
+- KB국민 MYCHEF카드: 할인 금액보다 승인 금액이 적을 경우 승인 금액만큼 할인 적용
+- KB국민 MYCHEF카드: 자동이체 정기 구독료는 KB국민카드에 청구되는 시점부터 할인 적용
+- KB NEED Global 카드: 전월 실적 조건이 없으므로 performance 객체는 생략함
+- KB NEED Global 카드: 해외 이용 시 국제브랜드 수수료(1.0%) 및 해외서비스 수수료(0.25%) 부과
+- HERITAGE Classic(할인형): 쿠폰 서비스는 연 1회 제공되며, 발급 첫해는 연회비 납부 후, 다음해부터는 연간 이용실적 600만원 이상 시 제공됨
+- HERITAGE Classic(할인형): Flex 서비스는 분기당 영역 통합 1회 제공
+- HERITAGE Classic(할인형): 카 라이프 서비스는 월 1만원 한도
+- HERITAGE Classic(할인형): 최초 발급 시 사용등록일부터 다음달 말일까지 실적 유예기간 적용
+- HERITAGE Classic(할인형): 공항 라운지 서비스는 Local(국내전용) 카드 발급 시 미제공
+- HERITAGE Classic(스카이패스형): 쿠폰 서비스: 연 1회 제공, 전년도 이용실적 600만원 이상 시 제공(발급 첫해 제외)
+- HERITAGE Classic(스카이패스형): 실적 유예: 최초 발급 시 사용등록일부터 다음달 말일까지 실적 50만원 미만 시에도 혜택 제공
+- HERITAGE Classic(스카이패스형): 마일리지 적립: 1,500원 단위 미만 금액은 반올림 처리
+- HERITAGE Classic(스카이패스형): 공항 라운지: 연 3회(1~12월 기준), 동반 1인 포함(본인+동반 시 2회 차감)
+- KB국민 가온올림카드: 올림 리워드 서비스는 연간 결제납부실적(1천만원~2천만원 이상)에 따라 연 1회 포인트리를 차등 지급함
+- KB국민 가온올림카드: 가온 서비스는 전월 실적 조건 및 적립 한도 제한 없음
+- KB국민 가온올림카드: 해외 이용금액은 1% 할인 캐시백 서비스 제공(월 100만원 이용금액까지)
+- KB국민 가온플래티늄카드: 웰컴 포인트리 및 플래티늄 리워드 등 연간 실적 기반의 비정기적 포인트 적립 서비스 존재
+- KB국민 가온플래티늄카드: 해외 할인 캐시백은 월 100만원 이용금액까지 제공
+- KB국민 가온플래티늄카드: 영화 할인은 1일 2회, 월 4회, 연 10회 제한
+- KB국민 가온플래티늄카드: 놀이공원 할인 서비스(롯데월드, 에버랜드, 캐리비안베이) 존재
+- KB국민 마일리지 가온카드(대한항공형): 전월 실적 조건이 없는 상품으로 performance 필드는 null 처리함
+- KB국민 마일리지 가온카드(대한항공형): 마일리지 적립은 건별 이용금액 기준이며, 1,500원 미만 금액은 절사됨
+- KB국민 마일리지 가온카드(아시아나형): 심의필 날짜(as_of)가 문서 내에 명시되어 있지 않아 null 처리함
+- KB국민 마일리지 가온카드(아시아나형): 마일리지 적립은 전월 실적 조건이 없음
+- KB국민 마일리지 가온카드(아시아나형): 마일리지 적립은 건별 이용금액 기준으로 적립됨
+- KB국민 가온 체크카드: 가온 체크카드와 누리 체크카드가 하나의 상품설명서에 포함되어 있으나, 본 JSON은 가온 체크카드 기준으로 작성됨
+- KB국민 가온 체크카드: 전월실적 산정 시 교통이용금액, 무승인, 해외이용금액 제외
+- KB국민 가온 체크카드: 최초 발급 후 사용등록일로부터 다음 달 말일까지는 실적 유예 제공(단, 기본 적립은 제외)
+- KB국민 가온 체크카드: 포인트리 적립 시점 기준 60개월 경과 시 소멸
+- KB ALL point 카드: 전월 실적 조건 없음(일부 혜택 제외)
+- KB ALL point 카드: 영화/놀이공원 혜택은 전월 실적 30만원 이상 시 제공
+- KB ALL point 카드: 해외 캐시백 월 이용금액 100만원 한도
+- KB ALL point 카드: 영화/놀이공원 혜택별 상세 횟수 제한 존재(연 10회, 월 2회 등)
+- KB국민 ONE카드: 생활 속 추가 적립 서비스는 영역별 월 20만원 이용금액까지 적용
+- KB국민 ONE카드: 영화 할인: 일 2회, 월 4회, 연간 10회 제한
+- KB국민 ONE카드: 놀이공원 할인: 롯데월드(일 1매, 월 2매, 연 5매), 에버랜드(일 1매, 연 10매), 캐리비안베이(일 1매)
+- KB국민 ONE카드: 해외 할인: 월 50만원 이용금액까지 적용
+- KB국민 ONE카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 실적 조건 없이 혜택 제공
+- KB국민 ONE카드: 포인트리 소멸: 적립 시점 기준 60개월 경과 시 선입선출 방식 소멸
+- KB국민 누리올림카드: 올림 리워드 서비스는 연간 결제납부실적 기반의 연 1회 리워드이므로 benefits 스키마로 표현 불가
+- KB국민 누리올림카드: 해외이용 할인 캐시백은 익월 둘째 주 결제계좌 입금 방식
+- KB ALL point 카드: 전월 실적 조건 없음(모든 적립 서비스)
+- KB ALL point 카드: 영화/놀이공원 할인은 전월 이용실적 30만원 이상 시 제공
+- KB ALL point 카드: 영화 할인: 1일 2회, 월 4회, 연 10회 이내
+- KB ALL point 카드: 롯데월드 할인: 1일 1매, 월 2매, 연간 5매
+- KB ALL point 카드: 에버랜드 할인: 1일 1매, 연간 10매
+- KB ALL point 카드: 캐리비안베이 할인: 1일 1매
+- KB국민 마일리지 가온플래티늄카드(대한항공): 마일리지 적립형 카드로, rate_percent는 1,500원당 마일리지 비율을 기반으로 환산한 근사치임
+- KB국민 마일리지 가온플래티늄카드(대한항공): 연간 결제납부실적에 따른 리워드 포인트리 제공 (500만원/1,000만원/2,000만원 구간별)
+- KB국민 마일리지 가온플래티늄카드(대한항공): 카드 타입은 마일리지 적립형으로 별도 명시되지 않았으나 신용카드임
+- KB국민 마일리지 가온플래티늄카드(아시아나): 마일리지 적립은 전표 건별 1,000원 단위로 계산됨
+- KB국민 마일리지 가온플래티늄카드(아시아나): 연간 결제납부실적에 따른 리워드 포인트리 제공 (500만원/1,000만원/2,000만원 구간)
+- KB국민 마일리지 가온플래티늄카드(아시아나): 해외이용 할인 캐시백 서비스(2.0%)는 마일리지 적립과 별개로 존재함
+- KB국민 누리 체크카드: 최초 카드발급 후 사용등록일로부터 다음 달 말일까지는 전월 실적 없이 추가 할인 서비스 제공
+- KB국민 누리 체크카드: 해외이용 할인 캐시백은 다음달 둘째 주에 결제계좌로 입금
+- KB국민 가온글로벌카드: 최초 카드 사용등록일로부터 다음달 말일까지는 전월 실적 조건 없이 서비스 제공 (해외가맹점 특별적립 제외)
+- KB국민 가온글로벌카드: 배송료 할인은 월 1회 제공
+- KB국민 하이패스2.0 SIM카드: 본 카드는 하이패스 통행료 결제 전용 카드로, 일반 신용카드 기능(구매, 현금서비스, ATM, 후불교통 등)이 없음
+- KB국민 하이패스2.0 SIM카드: card_type은 신용카드 회원 기반의 후불 결제 전용이므로 CREDIT으로 분류함
+- KB국민 다담카드: 선택 적립 서비스팩(생활/쇼핑/교육/직장인/레저) 중 택1 구조는 본 스키마로 모두 담기 어려워 생략함
+- KB국민 다담카드: 영화 할인 횟수 제한(일 2회, 월 4회, 연간 10회) 및 놀이공원 할인 횟수 제한 존재
+- KB국민 다담카드: 연간 리워드 서비스(연간 실적 800만원/1000만원 이상 시 포인트리 적립) 존재
+- KB국민 다담카드: 해외 할인 캐시백은 다음달 둘째주 입금
+- KB국민 다담카드: 스피드메이트 서비스는 전월 실적 유예기간 예외 적용
+- KB국민 청춘대로 매니아i카드: 주유 적립은 리터당 100점이며, 전월 실적에 따라 적립 대상 이용금액 한도가 다름(1구간 20만원, 2구간 30만원)
+- KB국민 청춘대로 매니아i카드: 영화/놀이동산 할인 서비스는 횟수 제한이 있음(영화 1일 2회/월 4회/연 10회, 롯데월드 1일 1매/월 2매/연 5매 등)
+- KB국민 청춘대로 매니아i카드: 해외 이용 캐시백은 월 50만원 이용금액까지 제공
+- KB국민 청춘대로 매니아i카드: 플러스 O2O 적립 서비스(월 5천점 한도) 존재
+- KB국민 청춘대로 매니아i카드: 카드 타입은 명시되지 않았으나 신용카드임
+- KB국민 청춘대로 톡톡카드: 간편결제 할인 서비스는 타 서비스와 중복 적용 가능하며, 이 경우 할인한도는 각각 차감됨
+- KB국민 청춘대로 톡톡카드: 모바일 단독카드 연회비 별도 존재
+- 청춘대로 1코노미카드: 고액결제리워드 및 영화 서비스의 연간 횟수 제한은 스키마에 반영되지 않음
+- 청춘대로 1코노미카드: 최초 발급 시 등록일로부터 다음 달 말일까지 실적 유예 조건 존재
+- KB국민 가온 Biz카드: 추가적립 서비스의 사업지원영역과 고액결제는 중복 적용되지 않으며, 고액결제 추가 적립이 우선 적용됨
+- KB국민 가온 Biz카드: 최초 카드 사용등록일로부터 다음 달 말일까지 이용실적 없는 경우에도 기본 적립 및 추가 적립 1구간 서비스 제공
+- KB국민 가온 Biz카드: 포인트리 자동 캐시백: 매월 마지막 영업일 기준 3만점 이상 보유 시 익월 첫 영업일에 1만점 단위로 결제계좌 환급
+- KB국민 하이패스2.0카드: 포인트리 사용 방법: 매월 마지막 영업일 기준 3만점 이상 보유 시 다음달 첫 영업일에 1만점 단위로 결제계좌 환급
+- 롯데마트 KB국민카드: 롯데마트 할인 서비스는 주중(평일)과 주말(토,일) 적용처가 구분됨
+- 롯데마트 KB국민카드: 커피 및 택시 할인은 월 20만원 이용금액까지 적용
+- 롯데마트 KB국민카드: 놀이공원 할인 횟수 제한(일/월/연 단위) 존재
+- 롯데마트 KB국민카드: 영화 할인은 1일 2회, 월 4회, 연 10회 제한 존재
+- KB국민 탄탄대로 Biz카드: Biz Favorite 서비스는 4종 중 택1 방식이나, 문서상 3종만 명시되어 있음
+- KB국민 탄탄대로 Biz카드: Biz Favorite 서비스는 전월 실적 40만원 미만 시에도 1구간 혜택 제공(유예)
+- KB국민 탄탄대로 Biz카드: Biz Basic 서비스는 전월 실적 40만원 미만 시에도 1구간 혜택 제공(유예)
+- KB국민 탄탄대로 Biz카드: 포인트리 적립 한도는 월간 통합 한도가 아닌 각 그룹별 한도 적용
+- KB국민 탄탄대로 호남예향카드: 주유 적립은 리터당 100점 단위로 제공되어 rate_percent 필드에 담기 어려움
+- KB국민 탄탄대로 호남예향카드: 마트/백화점 적립 혜택은 구체적인 적립률이 명시되지 않음
+- KB국민 탄탄대로 호남예향카드: 광주 패밀리랜드 혜택은 월 2회, 연 5회 제한 조건 존재
+- KB국민 탄탄대로 호남예향카드: 지역 유명 관광지 혜택은 월 할인한도 5천원 존재
+- KB국민 행복한대구경북티타늄카드: 지역사랑 캐시백은 월 3회 이용 조건 등 횟수 제한이 있음
+- KB국민 행복한대구경북티타늄카드: 티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적 유예기간 없음
+- KB국민 행복한대구경북티타늄카드: 배달/스트리밍 할인은 건당 이용금액 조건(2만원/5천원)이 있음
+- KB국민 아시아나 올림카드: 심의필 문구에 날짜(YYYY-MM-DD)가 명시되어 있지 않아 as_of는 null로 처리함
+- KB국민 아시아나 올림카드: 마일리지 적립 방식이 정률(%)이 아닌 1,500원당 마일리지 지급 방식임
+- KB국민 아시아나 올림카드: 전월 실적 조건이 없어 performance 객체는 생략함
+- KB국민 청춘대로 매니아 티타늄카드: 매니아 티타늄 Special 서비스의 각 영역별 월간 적립한도가 1구간/2구간으로 나뉘어 있으나, 통합 한도 표기가 아닌 개별 영역별 한도로 명시됨
+- KB국민 청춘대로 매니아 티타늄카드: 영화/놀이동산 서비스의 연간/월간 횟수 제한 존재
+- KB국민 청춘대로 매니아 티타늄카드: 해외 이용금액 할인 캐시백은 월 50만원 이용금액까지 제공
+- KB국민 청춘대로 매니아 티타늄카드: 최초 카드 사용등록일로부터 다음 달 말일까지는 실적 유예(40만원 구간 서비스 제공)
+- KB국민 톡톡 my living카드: 전월 이용실적 120만원 이상 시 미선택한 서비스팩의 2구간 서비스가 추가 제공되는 조건 존재
+- KB국민 톡톡 my living카드: 최초 카드 사용등록일로부터 다음달 말일까지 1구간(30만원 이상) 서비스 제공되는 실적 유예 조건 존재
+- KB국민 톡톡 my point카드: 연간 리워드 적립 조건(연간 3백만원 실적)은 현재 스키마로 표현 불가
+- KB국민 톡톡 my point카드: 모바일 단독카드는 실물 카드 없이 KB Pay 전용으로 사용
+- 페퍼저축은행 KB국민 톡톡 my living카드: 전월 실적 120만원 이상 시 미선택 서비스팩의 2구간 서비스가 추가 제공되는 복합 로직 존재
+- 페퍼저축은행 KB국민 톡톡 my living카드: 최초 카드 사용등록일로부터 다음달 말일까지 실적 유예기간 제공
+- KB국민 탄탄대로 웰컴카드(09214): Fun Life의 관광지 할인 중 에버랜드/캐리비안베이 혜택은 연간 횟수 제한 및 일 1매 제한 조건이 있어 정량적 수치로 표현 불가
+- KB국민 탄탄대로 웰컴카드(09214): 최초 카드 사용등록일로부터 다음 달 말일까지는 실적 유예 기간으로 1구간 혜택 제공
+- KB국민 탄탄대로 온리유카드: 주유 서비스 적립률은 전월 실적 구간별로 110점/L, 130점/L, 150점/L로 차등 적용됨
+- KB국민 탄탄대로 온리유카드: 놀이공원 할인 조건이 복잡하여(일/월/연간 횟수 제한) 상세 내용은 본문 참조
+- KB국민 탄탄대로 온리유카드: 포인트리 적립 시점은 신용공여기간에 따른 결제일 익영업일임
+- KB국민 탄탄대로 온리유카드: 해외 이용 시 국제브랜드 수수료 및 해외서비스 수수료가 부과됨
+- KB국민 탄탄대로 온리유 티타늄카드: 주유 적립률이 전월 실적 구간별로 리터당 130~200점으로 차등 적용됨
+- KB국민 탄탄대로 온리유 티타늄카드: 놀이공원 할인 횟수 제한(일/월/연)이 존재함
+- KB국민 탄탄대로 온리유 티타늄카드: 티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적 유예 없음
+- KB국민 탄탄대로 온리유 티타늄카드: 신규 발급 시 주유 및 Auto Life 서비스는 실적 없어도 1구간 혜택 제공
+- KB국민 톡톡 Pay카드: 간편결제 1일 할인 한도 5천원 존재
+- KB국민 톡톡 Pay카드: 최초 카드 사용등록일로부터 다음 달 말일까지 실적 유예기간(1구간 혜택 제공)
+- KB국민 가온 올포인트 카드: 리워드 추가 적립은 이용실적을 산정한 달의 다음달 26일에 적립됨
+- KB국민 가온 올포인트 카드: 포인트리는 적립 시점 기준 60개월 경과 시 월 단위 소멸
+- KB국민 가온 올포인트 카드: K-WORLD(JCB타입) 해외 이용 시 2019.12.31까지 국제브랜드 수수료 0.5% 할인
+- KB국민 Easy pick카드: Pick 서비스는 8개 영역 중 1개를 선택하는 구조임
+- KB국민 Easy pick카드: Easy 서비스와 Basic 서비스는 중복 적용 가능하며 적립한도가 각각 적용됨
+- KB국민 Easy pick카드: 월간 포인트리 적립한도는 전월 이용실적에 따라 차등 제공되나 상세 구간별 한도 금액이 명시되지 않음
+- KB국민 Easy on카드: Easy on + 서비스는 전월 실적 100만원 이상 시에만 제공됨
+- KB국민 Easy on카드: Easy on 특화 서비스와 Easy on + 서비스는 중복 적용 가능하며 할인한도는 각각 차감됨
+- KB국민 Easy on카드: 최초 카드사용 등록일로부터 다음달 말일까지는 실적 없어도 1구간 혜택 제공
+- KB국민 Easy fly 티타늄카드: 실적 유예기간: 최초 카드 사용 등록일로부터 다음달 말일까지 50만원 이상 100만원 미만 구간 서비스 제공
+- KB국민 Easy fly 티타늄카드: 티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적 유예기간 없음
+- KB국민 Easy fly 티타늄카드: 전 가맹점 0.5% 할인은 전월 실적 조건 및 월 할인한도 없음
+- KB국민 Easy auto 티타늄카드: 주유 적립은 이용금액 x 리터당 적립포인트(150점) / 기준유가로 산정됨
+- KB국민 Easy auto 티타늄카드: 실적 유예기간: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 없어도 50만원 구간 서비스 제공
+- KB국민 Easy auto 티타늄카드: 티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적 유예 없음
+- KB국민 Easy auto 티타늄카드: 포인트리는 결제일 다음 영업일에 적립됨
+- KB국민 마이핏카드(적립형): 최초 카드 사용등록일로부터 다음달 말일까지 실적 유예기간 제공
+- KB국민 마이핏카드(적립형): 포인트리 적립 시점 기준 60개월 경과 시 소멸
+- KB국민 마이핏카드(적립형): 가족카드 발급 불가
+- KB국민 마이핏카드(할인형): 실적 유예기간: 최초 카드 사용등록일로부터 다음달 말일까지 실적 없어도 1구간(30만원) 서비스 제공
+- KB국민 마이핏카드(할인형): 알파원 오토체인지: 해시태그별로 사전 설정한 결제카드로 자동 변환 기능
+- KB국민 Easy study 티타늄카드: 실적 유예기간: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 없어도 50만원 이상 구간 서비스 제공
+- KB국민 Easy study 티타늄카드: 티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적 유예기간 없음
+- KB국민 Easy study 티타늄카드: 대형마트/통신요금/패스트푸드 할인 서비스는 전월 실적 50만원 이상 시 제공
+- KB국민 Easy study 티타늄카드: 할인 서비스는 월간 할인한도 내에서 제공되며 잔여한도 이월 불가
+- KB국민 The Easy카드: 적립형과 할인형 중 하나를 선택해야 하는 선택형 카드임
+- KB국민 The Easy카드: 추가 적립/할인 서비스는 월간 이용횟수(적립) 또는 건당 이용금액(할인)이 높은 상위 2개 영역에 대해 제공됨
+- KB국민 The Easy카드: 간편결제(Pay) 이용금액은 추가 적립/할인에서 제외됨
+- KB국민 The Easy카드: 모바일 단독카드 발급 가능(연회비 상이)
+- KB국민 Easy pick 티타늄카드: Pick 서비스는 월 1회 변경 가능한 선택형 서비스임
+- KB국민 Easy pick 티타늄카드: 티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적 유예기간 없음
+- KB국민 Easy pick 티타늄카드: Basic 서비스 내 대중교통은 이용대금명세서상 기재된 이용일 기준
+- KB국민 Easy pick 티타늄카드: 포인트리 적립 시점 기준 60개월 경과 시 소멸
+- KB국민 Easy link 티타늄카드: 자동납부 캐시백 서비스의 경우 2건 이상 시 5천원, 4건 이상 시 1만원으로 구간별 차등 적용됨
+- KB국민 Easy link 티타늄카드: Easy link 선택서비스(패밀리팩, 사업자팩, 직장인팩)는 전월 실적 50만원 이상 시 제공되며, 실적 구간별로 할인 한도가 상이함
+- KB국민 Easy link 티타늄카드: 자동납부 2건 이상 시 선택서비스 할인한도가 2배로 상향됨
+- KB국민 Easy link 티타늄카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 실적 유예기간이 적용됨
+- KB국민 Easy ring 티타늄카드: 선택서비스는 월 1회 변경 가능하며 신청일 기준 다음달 1일부터 적용
+- KB국민 Easy ring 티타늄카드: 티타늄 서비스는 전월 실적 30만원 이상 시 제공(실적 유예 없음)
+- KB국민 Easy ring 티타늄카드: 리워드 특별 적립: 전월 실적 150만원 초과 이용금액 0.3% 포인트리 적립(한도 없음)
+- KB국민 Easy ring 티타늄카드: 통신요금 할인금액은 승인건별로 산정(건별 1만원 미만 절사)
+- KB국민 Easy ring 티타늄카드: 모바일 단독카드 발급 가능
+- KB국민 Easy all카드: Auto 모드와 DIY 모드라는 복잡한 선택형 서비스 구조를 가지고 있어, 개별 영역별 할인율과 한도가 고정되어 있지 않고 사용자가 설정하는 패턴에 따라 달라짐
+- KB국민 Easy all카드: 실적 유예기간 동안 1구간(50만원 이상 100만원 미만) 혜택 제공
+- KB국민 Easy all카드: 모바일 단독카드 발급 가능(연회비 1만4천원)
+- KB국민 Easy all 티타늄카드: Auto 모드와 DIY 모드라는 복합적인 할인 구조를 가지고 있어, 개별 영역별 할인율과 한도가 사용자 설정에 따라 가변적임
+- KB국민 Easy all 티타늄카드: 티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적 유예기간이 없음
+- KB국민 Easy all 티타늄카드: 모바일 단독카드 발급 시 연회비 차등 적용
+- KB국민 EVO 티타늄카드: 기부생활 서비스: 이용건별 적립 포인트를 기본포인트리와 기부포인트리로 분할 적립하는 구조
+- KB국민 EVO 티타늄카드: 기부생활 1+1 적립: 이용건별 적립 기부포인트리와 동일한 금액을 당사가 추가 제공
+- KB국민 EVO 티타늄카드: 모바일단독카드: 실물카드 없이 스마트폰 앱에 등록하여 사용
+- KB국민 EVO 티타늄카드: 티타늄 서비스: 전월 실적 30만원 이상 시 제공 (실적 유예 없음)
+- KB국민 Get100카드: 포인트 적립 서비스 실적유예기간: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 없이 적립 서비스 제공
+- KB국민 Get100카드: 포인트 유효기간: 적립 시점 기준 60개월 경과 시 소멸
+- KB국민 Get100카드: 포인트 사용: Get100포인트 선차감 후 잔여금액 청구 방식
+- KB국민 Get100카드: 모바일 단독카드 연회비 별도 책정(9천원)
+- KB국민 올라운드카드: 할인 서비스는 주유 할인과 스토어 할인 중 택1하여 신청해야 함
+- KB국민 올라운드카드: 실적 유예기간(최초 카드 사용 등록일로부터 다음달 말일)에는 실적 없이 40만원 이상 구간 서비스 제공
+- KB국민 올라운드카드: 할인 서비스 변경은 신청일 기준 다음달 1일부터 적용됨
+- KB국민 올라운드카드: 할인 받은 매출 전체가 전월 실적에서 제외되는 구조로 인해 실제 필요 실적이 명시된 구간보다 높을 수 있음
+- KB국민 올라운드 티타늄카드: 할인 서비스는 주유 할인과 스토어 할인 중 택1 방식임
+- KB국민 올라운드 티타늄카드: 티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적 유예기간 없음
+- KB국민 올라운드 티타늄카드: 할인 서비스 실적 유예기간: 최초 카드 사용 등록일로부터 다음달 말일까지 40만원 이상 구간 서비스 제공
+- KB국민 올라운드 티타늄카드: 할인 서비스 변경 신청: 최초 카드 사용 등록일 기준 다음 달부터 월 단위 변경 가능
+- KB국민 톡톡 with카드: 톡톡 with 계열 카드 간 전월 실적 및 할인한도 통합 적용
+- KB국민 톡톡 with카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 제공
+- KB국민 톡톡 with카드: 모바일 단독카드 연회비 별도 규정(6천원)
+- KB국민 톡톡 with 토스 카드: 톡톡 with 계열 카드 간 전월 이용실적 및 월간 할인한도 통합 적용
+- KB국민 톡톡 with 토스 카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 제공
+- KB국민 톡톡 with 토스 카드: 모바일 단독카드 발급 시 국내 일부 및 해외 오프라인 가맹점 사용 제한
+- KB국민 톡톡 with 와이페이모어카드: 톡톡 with 계열 카드 간 전월 이용실적 및 월간 할인한도 통합 적용
+- KB국민 톡톡 with 와이페이모어카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 제공
+- KB국민 톡톡 with 와이페이모어카드: 전월 실적 제외 항목에 '청구할인 서비스 받은 이용건(해당 매출 전체)' 포함
+- KB국민 톡톡 with 리브메이트카드: 톡톡 with 계열 카드 간 전월 실적 및 할인한도 통합 적용
+- KB국민 톡톡 with 리브메이트카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 제공
+- KB국민 스마트 지킴이카드: 실적유예기간: 최초 카드 사용 등록일로부터 다음달 말일까지 50만원 이상 구간 서비스 제공
+- KB국민 스마트 지킴이카드: 단말기 할부 할인액이 50만원/100만원 구간에 따라 5천원/1만원으로 차등 적용됨
+- KB국민 햇살론카드: 최초 발급 시 등록일로부터 다음달 말일까지 전월 실적 없어도 30만원 실적 구간 혜택 적용
+- KB국민 햇살론카드: 포인트리 복합결제 불가
+- KB 소상공인 특례 햇살론카드: 기본 할인 서비스와 추가 할인 서비스의 통합 월 한도가 2만원으로 명시됨
+- KB 소상공인 특례 햇살론카드: 신규 발급 시 등록월로부터 다음달 말일까지 전월 실적 30만원 미만 시에도 추가 할인 서비스 제공
+- KB국민 톡톡F 카드: 최초 카드 사용등록일로부터 다음달 말일까지 실적 유예기간 제공
+- KB국민 톡톡F 카드: 톡톡 알파벳계열 카드 2종 이상 이용 시 전월실적 합산 서비스 제공 (F카드 실적 1원 이상 시 적용)
+- KB국민 톡톡D 카드: 톡톡 알파벳계열 전월실적 합산서비스: 전월실적 30만원 미만이라도 합산 조건 충족 시 할인한도 제공
+- KB국민 톡톡D 카드: 모바일 단독카드 발급 시 일부 오프라인 가맹점 사용 제한
+- KB국민 톡톡O 카드: 톡톡 알파벳계열 전월실적 합산서비스: 타 톡톡 알파벳 카드와 실적 합산 가능
+- KB국민 톡톡O 카드: 모바일 단독카드 발급 시 일부 오프라인 가맹점 사용 제한
+- KB국민 톡톡M 카드: 톡톡 알파벳계열 전월실적 합산서비스: 톡톡M 카드 실적이 30만원 미만이라도 합산 조건 충족 시 할인한도 제공
+- KB국민 톡톡M 카드: 최초 카드 사용등록일로부터 다음달 말일까지 실적유예기간 제공
+- KB국민 톡톡M 카드: 멤버십 청구할인과 온라인 간편결제 청구할인 중복 적용 가능(총 할인금액이 이용금액 초과 시 멤버십 할인 우선 적용)
+- KB국민 사장님카드: 스피드메이트 서비스는 전월 실적 조건 없음, 연간 1회 제공
+- KB국민 사장님카드: 실적유예기간: 최초 발급 후 사용등록일로부터 다음달 말일까지는 전월 실적 50만원 미만 시에도 1구간 적립 서비스 제공
+- 쿠팡 와우 카드: 쿠팡캐시 적립 서비스로, 포인트 적립과 유사하나 별도 명칭 사용
+- 쿠팡 와우 카드: 전월 실적 조건이 없는 상품임
+- KB WE:SH All+ 카드: 분기 보너스 적립은 연간 최대 4만점 한도
+- KB WE:SH All+ 카드: 최초 발급 시 등록월 다음달 말일까지는 실적 40만원 미만 시에도 할인 제공
+- KB YOU Wish up 카드: 쿠폰 서비스는 연간 이용실적 600만원 이상 시 제공
+- KB YOU Wish up 카드: 최초 발급 시 실적 유예 기간(등록일로부터 다음달 말일) 동안 40만원 미만 이용 시에도 1구간 할인 한도 50% 적용
 - KB YOU Wish up 카드: 건당 할인 한도(2,500원) 존재
-- KB국민 K-패스카드: 실적 유예 제공: 최초 카드 사용 등록 후 다음 달 말일까지 전월 실적 조건 미달 시에도 서비스 제공
-- KB국민 K-패스카드: 생활서비스 할인은 건당 1만원 이상 이용 시 제공
+- BeV V카드(포인트형): 쿠폰 서비스는 연 1회 제공되며, 최초 발급 첫해는 100만원 이상, 다음해부터는 전년도 1,000만원 이상 이용 시 제공됨
+- BeV V카드(포인트형): 포인트 적립 한도는 월 최대 50만점이며, 적립된 포인트리는 결제일 다음 영업일에 적립됨
+- BeV V카드(포인트형): 스카이패스형 상품이 별도로 존재하나 본 JSON은 포인트형을 기준으로 작성됨
+- BeV Ⅴ카드(스카이패스형): 마일리지 적립은 결제금액(회수금액) 기준이며 1,500원당 마일리지 단위로 적립됨
+- BeV Ⅴ카드(스카이패스형): 주말(금~일) 이용 시 기본 1.5마일리지, 프리미엄 업종(골프장/호텔/면세점) 3마일리지 적립
+- BeV Ⅴ카드(스카이패스형): 월 최대 3만 마일리지 적립 한도 존재
+- BeV Ⅴ카드(스카이패스형): 쿠폰 서비스는 전년도 이용금액 1,000만원 이상 시 제공(첫해는 100만원)
+- KB Pay 머니백카드: 카드 타입: 선불카드(본 스키마상 CHECK로 분류)
+- KB Pay 머니백카드: 실적 유예: 최초 사용등록일로부터 다음달 말일까지 전월 실적 없이 적립 제공
+- KB Pay 머니백카드: 통합 적립 한도: 월간 최대 2만원(다 되는 적립 1만원 + 더 되는 적립 5천원*2개 채널 합산 구조로 보이나, 본문상 통합 한도 2만원 명시)
+- KB Pay 머니백카드: 적립 방식: 전표 매입 완료 후 KB Pay머니로 환급
+- BeV Ⅲ 카드: 쿠폰 서비스: 연 1회 제공, 전년 이용금액 600만원 이상 시 제공(최초 발급 시 50만원 이상)
+- BeV Ⅲ 카드: 주유 할인 한도는 이용금액 기준임
+- BeV Ⅲ 카드: 포인트 적립은 결제일 다음 영업일에 적립
+- BeV Ⅲ 카드: 최초 카드 사용 등록일로부터 다음 달 말일까지는 전월 실적 50만원 미만 시에도 서비스 제공
+- KB국민 e hi-pass 카드(제네시스): 실적 조건 및 적립 한도 없음
+- KB국민 e hi-pass 카드(제네시스): 고속도로 통행료 결제 외 신용판매, 카드론, 현금서비스, ATM, 후불교통카드 기능 이용 불가
+- KB국민 e hi-pass 카드(제네시스): 포인트리는 3만점 이상 보유 시 1만점 단위로 결제계좌 환급 가능
+- KB국민 e hi-pass 카드(기아): 전월 실적 조건 및 적립 한도 없음
+- KB국민 e hi-pass 카드(기아): 포인트리는 3만점 이상 보유 시 1만점 단위로 결제계좌 환급 가능
+- KB국민 e hi-pass 카드(기아): 카드 타입은 신용카드이나 하이패스 전용으로 일반 신용판매/현금서비스/카드론 등 이용 불가
+- KB국민 e hi-pass 카드(현대): 실적 조건 및 적립 한도 없음
+- KB국민 e hi-pass 카드(현대): 신용 판매, 장기카드대출(카드론), 단기카드대출(현금서비스), ATM, 후불교통카드 기능 이용 불가
+- LFmall 신용카드: 상품설명서 전문에 구체적인 할인율, 적립률, 전월 실적 기준 금액, 월간 한도 등 상세 혜택 정보가 누락되어 있음
+- LFmall 신용카드: 카드 타입은 신용카드로 명시되어 있음
+- KB국민 K-패스카드: 생활서비스 할인 영역은 건당 1만원 이상 이용 시에만 할인 적용
+- KB국민 K-패스카드: 실적 유예: 최초 카드 사용 등록 후 다음 달 말일까지 전월 실적 조건 미달 시에도 서비스 제공
 - KB국민 K-패스체크카드: 실적 유예: 최초 카드 사용 등록 후 다음 달 말일까지 전월 실적 미달 시에도 서비스 제공
-- KB국민 K-패스체크카드: 하이브리드 카드: 체크카드 결제 계좌 잔액 부족 시 소액신용결제 서비스 제공 가능
-- 쿠팡 와우 KB체크카드: 여신금융협회 심의필 번호 및 날짜가 문서에 명시되어 있지 않음
-- 쿠팡 와우 KB체크카드: 전월 실적 조건 없음
-- KB On the Go 체크카드: 보험 할인은 연 1회 제공 조건이 있음
-- KB On the Go 체크카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 30만원 미만 시에도 30만원 이상 구간의 50% 통합할인한도 제공
-- KB On the Go 체크카드: 주유, 음료, 푸드, 이동통신(Liiv M)은 1천 5백원까지 할인이라는 문구가 있으나 표의 할인한도와 상충되어 표의 내용을 우선함
-- KB YOU Prime 카드: 서비스팩(일상팩/가족팩) 중 택 1 구조
+- KB국민 K-패스체크카드: 대중교통: 택시, 시외버스, 고속버스, 공항버스 제외
+- KB국민 K-패스체크카드: 포인트리 적립은 매입일 + 1영업일 익일에 적립
+- T 라이트 KB국민카드: 라이트할부 이용 건수 제한(월 2건, 연 5건)
+- T 라이트 KB국민카드: 실적 유예 조건: 최초 사용등록일로부터 익월 말까지 전월 실적 조건 미달 시에도 1구간 할인 제공
+- T 라이트 KB국민카드: 카드 청구금액이 할인금액보다 적을 경우 잔여 할인한도만큼 환급(캐시백) 제공
+- KT 할부 Plus KB국민카드: 실적 유예 조건: 최초 사용등록일로부터 익월 말까지 전월 실적 미달 시에도 1구간 할인 제공
+- KT 할부 Plus KB국민카드: 장기할부 이용 건수 제한: 월 2건, 연 5건
+- KT 할부 Plus KB국민카드: 할부수수료율: 24개월 5.9%, 36개월 7.0%
+- LGU 라이트할부Ⅱ KB국민카드: 라이트할부 이용 여부는 전월 말일 기준 라이트할부 잔액 유무로 판단
+- LGU 라이트할부Ⅱ KB국민카드: 실적 유예 조건: 최초 사용등록일로부터 익월 말까지 전월 실적 미달 시에도 1구간(8천원/4천원) 할인 제공
+- LGU 라이트할부Ⅱ KB국민카드: 카드 청구금액이 할인금액보다 적을 경우 잔여 할인한도만큼 환급(캐시백)
+- LGU 라이트할부Ⅱ KB국민카드: 라이트할부 이용 건수 제한: 월 2건, 연 5건
+- LGU 라이트할부Ⅱ KB국민카드: 정기결제 추가 할인 한도는 아파트관리비(2천원)와 4대보험/도시가스/전기요금(1천원) 합산 최대 3천원
+- KB국민 TMAP&LOGI 행복 체크카드: 금융수수료 면제 혜택은 전월 실적 70만원 이상 시 적용
+- KB국민 TMAP&LOGI 행복 체크카드: 대중교통 할인 중 시내버스/지하철은 청구할인, 고속/시외버스는 환급할인으로 구분됨
+- KB국민 TMAP&LOGI 행복 체크카드: 통신요금 할인은 건당 5만원 이상 시 2,500원 정액할인 적용
+- KB국민 TMAP&LOGI 행복 체크카드: 각 할인 항목별로 건당 이용금액 제한 및 월간 통합 할인 한도 조건이 존재함
+- KB국민 WE:SH Together 카드: 연간 리워드 조건(연간 결제실적 300만원 이상)은 전월 실적과 별개로 운영됨
+- KB국민 WE:SH Together 카드: 연간 결제실적 산정 시 'WE:SH Together 카드' 최초 발급월 기준
+- KB 전통시장온누리카드: 할인 서비스는 전월 실적 40만원 이상 시 제공되며, 80만원 이상 시 할인율과 한도가 상향됨
+- KB 전통시장온누리카드: KB Pay 쇼핑 이용 시 상품권, 여행, 티켓, 도서 및 제휴몰 등은 제외됨
+- KB 전통시장온누리카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 실적 40만원 미만 시에도 40만원 구간의 할인 혜택 제공
+- KB 전통시장온누리체크카드: 실적 유예: 최초 카드 사용 등록일로부터 다음달 말일까지 40만원 미만 시 서비스 영역별 월 1천원까지 할인 제공
+- KB 전통시장온누리체크카드: 온누리상품권 차감 이용은 별도 앱 등록 절차 필요
+- KB 전통시장온누리체크카드: KB Pay 쇼핑 할인과 온누리상품권 차감 할인 중복 적용 가능
+- KB차차차 신용카드: 주유 할인액이 리터당 금액(150원~300원)으로 고정되어 있어 rate_percent 대신 별도 로직 필요
+- KB차차차 신용카드: 실적 유예기간: 최초 카드 사용등록일로부터 다음달 말일까지 1구간(40만원) 실적 제공
+- 대상웰라이프 KB국민카드: 할인금액보다 정기배송 결제금액이 적을 경우 결제금액까지만 할인 적용
+- 대상웰라이프 KB국민카드: 정기배송 결제 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인
+- KB손해보험 마이펫카드: 실적 유예기간 조건 존재
+- TMAP KB국민카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 제공
+- TMAP KB국민카드: 티맵 할인 서비스는 티맵 유료서비스에 한함
+- KB국민 트리콜 체크카드: 금융수수료 면제 혜택은 전월 실적 70만원 이상 시 적용
+- KB국민 트리콜 체크카드: 대중교통 할인 적용 시 이용내역서상 기재된 이용일 기준 적용
+- KB국민 트리콜 체크카드: 미성년자 이용한도 별도 규정 존재
+- KB국민 톡톡with Kbank카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 제공
+- KB국민 톡톡with Kbank카드: 톡톡 with 계열 카드 중복 소지 시 최초 발급된 카드의 사용등록일 기준 통합 적용
+- KB국민 스타플러스 체크카드: 국내 혜택은 전월실적 20만원 이상 시 제공, 해외 혜택은 전월실적 30만원 이상 시 제공
+- KB국민 스타플러스 체크카드: 국내 혜택 통합 할인 한도는 실적 구간별로 차등 적용 (20만원 이상 2만원, 40만원 이상 3만원, 60만원 이상 4만원, 80만원 이상 5만원)
+- KB국민 스타플러스 체크카드: 해외 혜택은 전월실적 30만원 이상 시 제공되며 월 할인한도는 5천원
+- KB국민 스타플러스 체크카드: 국내 혜택 중 커피 할인과 기타 혜택의 통합 한도 구조가 복합적임
+- 토스 USS NEXT KB국민 체크카드: 신규 발급 시 최초 카드 사용 등록일로부터 다음달 말일까지 실적 조건 없이 혜택 제공
+- 토스 USS NEXT KB국민 체크카드: 하이브리드 카드 기능 탑재 가능(체크카드 결제계좌 잔액 부족 시 지정된 한도 내에서 신용결제)
+- KB국민 WE:SH Travel 카드: 최초 발급 시 사용등록일로부터 다음달 말일까지는 전월 실적 30만원 미만 시에도 일상 할인 월 5천원 한도 제공 및 라운지 무료 이용 제공
+- KB국민 WE:SH Travel 카드: 여행 할인 서비스는 전월 실적 30만원 미만 시에도 월 할인한도의 50%까지 제공
+- KB국민 WE:SH Travel 카드: 해외 이용 수수료 면제 및 환율 우대는 전월 실적 조건 및 한도 없음
+- KB국민 트래블러스 체크카드: 해외 서비스는 전월 실적 조건 없음
+- KB국민 트래블러스 체크카드: 국내 서비스는 전월 실적 20만원 이상 시 제공
+- KB국민 트래블러스 체크카드: 할인 한도는 월간 기준이며 이월되지 않음
+- KB국민 트래블러스 체크카드: 해외 ATM 이용 수수료 면제는 월 10회까지 제공
+- KB ALL 카드(KB스타뱅킹 전용): 최초 발급 시 실적 유예: 최초 카드 사용 등록일로부터 다음달 말일까지 전월 이용실적 40만원 미만 시에도 할인 제공
+- KB국민 WE:SH Daily 카드: 데일리 스탬프 서비스: 전월 실적 구간 미달 시에도 스탬프 달성 여부에 따라 상위 구간 혜택을 제공하는 유예/보완 로직 존재
+- KB국민 WE:SH Daily 카드: 선택 할인 건당 한도: 5,000원
+- KB라이프 딱좋은 요즘 건강 KB카드: 최초 카드 사용등록일로부터 다음달 말일까지 실적 유예기간 제공
+- KB라이프 딱좋은 요즘 건강 KB카드: 실적 유예기간 중 전월 실적 40만원 미만 시 건강보험료 및 병원/약국 각각 월 5천원 할인 한도 제공
+- KB라이프 딱좋은 요즘 건강 KB카드: 최초 카드 사용등록월 실적이 40만원 이상인 경우 다음달에 해당 실적구간 할인한도 적용
+- KB저축은행 팡팡 KB체크카드: 영화: 월 2회 제한
+- KB저축은행 팡팡 KB체크카드: 패밀리레스토랑: 월 1회 제한
+- KB저축은행 팡팡 KB체크카드: 통신 자동납부: 월 1회 제한
+- KB저축은행 팡팡 KB체크카드: 놀이공원: 월 1회 제한
+- KB저축은행 팡팡 KB체크카드: 카드 발급 당월은 할인서비스 미제공(실적 유예 없음)
+- KB국민 Joyful Plus 체크카드_KB국민은행_비소득공제: card_type은 체크카드이나, 상품설명서상 '비소득공제'형으로 명시됨
+- KB국민 Joyful Plus 체크카드_KB국민은행_비소득공제: 교통카드 기능 없음
+- KB국민 Joyful Plus 체크카드_KB국민은행_비소득공제: 해외 이용 불가
+- KB국민 Joyful Plus 체크카드_KB국민은행_소득공제: 심의필 문구에 날짜가 명시되어 있지 않아 as_of는 null로 처리함
+- KB국민 Joyful Plus 체크카드_KB국민은행_소득공제: 포인트리 적립 제외 항목이 명시되어 있으나 전월 실적 조건 자체가 없어 performance.excluded는 null로 처리함
+- KB 스타틴즈카드: 하이브리드 카드: KB스타틴즈 포켓(선불전자지급수단) 연동형 체크카드
+- KB 스타틴즈카드: 전월 실적 없음
+- KB 스타틴즈카드: 할인 방식: 결제 후 포켓으로 환급(충전)되는 방식
+- KB 스타틴즈카드: 할인 한도: 월 통합 1천원, 잔여 한도 이월 불가
+- KB 스타틴즈카드: 할부 거래 불가
+- KB 스타틴즈카드: 포인트리 적립 불가
+- KB 스타틴즈카드: 후불 교통서비스 미제공
+- KB국민 그린재킷 체크카드: 실적 유예기간: 최초 사용등록일로부터 다음달 말일까지 골프연습장/스크린골프 서비스 제공
+- KB국민 그린재킷 체크카드: 소액신용결제서비스: 최고 30만원 이내 소액신용한도 부여 가능
+- KB국민 위메프페이 체크카드: 2025.1.31부터 위메프포인트가 KB국민카드 포인트리로 대체적립됨
+- KB국민 위메프페이 체크카드: 11번가/위메프오 적립은 실적 조건이 상이함(11번가: 실적무관, 위메프오: 30만원 이상)
+- KB국민 위메프페이 체크카드: 실적 유예기간: 최초 사용등록일로부터 다음달 말일까지 서비스 제공
+- KB국민 joyful 체크카드(KB인베스트먼트): 전월 실적 조건 없음
+- KB국민 joyful 체크카드(KB인베스트먼트): 할부결제, 포인트리 복합결제, 바우처 복합결제 적용 불가
+- KB국민 joyful 체크카드(KB인베스트먼트): 교통카드 기능 없음
+- KB국민 joyful 체크카드(KB인베스트먼트): 해외 이용 불가
+- 해피포인트 해피리워드 KB국민 체크카드: 실적 유예기간: 최초 사용등록일로부터 다음달 말일까지 해피오더 서비스 제공
+- 해피포인트 해피리워드 KB국민 체크카드: 월간 통합할인한도: 체크카드별(동일계열 카드 포함)로 월간 할인 받을 수 있는 최대 금액으로 잔여한도는 이월되지 않음
+- 쿠팡 와우 KB체크카드: 심의필 번호 및 날짜 정보가 문서에 없음
+- 쿠팡 와우 KB체크카드: 쿠팡 와우 멤버십 가입이 필수 조건임
+- KB국민 우리동네 체크카드: 실적유예기간: 최초 사용등록일로부터 다음달 말일까지 [우리동네 정육점] 서비스 제공
+- KB국민 우리동네 체크카드: 체크카드 이용 시 출금 시점: 일반가맹점은 승인시점 즉시 출금, 무승인/T&E업종은 매입일 출금
+- KB 틴업 체크카드: 연령 구간별(만 15세, 18세, 19세 등)로 전월 실적 조건과 혜택이 상이하게 적용되는 구조임
+- KB 틴업 체크카드: 최초 발급 시 실적 유예 조건이 존재함
+- KB 틴업 체크카드: 만 나이 기준은 KB국민카드 회원정보 생년월일 기준임
+- KB On the Go 체크카드: 보험 할인은 연 1회 제공되며 통합할인한도에서 제외됨
+- KB On the Go 체크카드: 최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 30만원 미만 시에도 5천원의 통합할인한도 제공
+- KB On the Go 체크카드: 전월 실적 30만원 미만 시에도 30만원 이상 60만원 미만 구간 할인한도의 50% 제공(주유, 음료, 푸드, 이동통신 대상)
+- KB ALL ez 카드: 최초 발급 후 다음달 말일까지 전월 실적 미충족 시에도 월 할인한도 50% 제공 (단, 국내외 가맹점 및 KB Pay 할인은 100% 제공)
+- KB ALL ez 카드: KB Pay 추가 할인은 월 이용금액 100만원까지 제공
+- KB ALL ez 카드: 커피 할인은 월 이용금액 4만원까지 제공
+- KB ALL ez 카드: 티켓 할인은 월 이용금액 2만 5천원까지 제공
+- KB YOU Prime 카드: 일상팩과 가족팩 중 택1하여 서비스 제공
+- KB YOU Prime 카드: 최초 발급 시 등록월 다음달 말일까지 전월실적 40만원 미만 시에도 영역별 월 2,500원 한도 제공
 - KB YOU Prime 카드: 전월실적 채워드림 서비스는 분기 1회(연 4회) 신청 가능
-- KB YOU Prime 카드: 최초 발급 시 등록월 다음달 말일까지 실적 40만원 미만 시에도 영역별 월 2,500원 한도 제공
-- KB YOU Wish 카드: 위시 픽 서비스팩 3개 중 택 1 선택 구조
-- KB YOU Wish 카드: Happy Birth Month 및 전월실적 채워드림 서비스는 스키마에 직접 매핑 불가
-- KB YOU Wish 카드: 건당 할인 한도(2,500원) 존재
-- KB NEED Edu 카드: 교육 관련 업종 서비스는 최초 카드 사용등록일로부터 다음달 말일까지 실적유예기간 적용(40만원 미만 시 40만원 구간 혜택 제공, 월 할인한도 5천원)
-- KB NEED Edu 카드: KB Pay 결제 시 추가 할인 서비스는 실적유예 미적용
-- KB NEED Edu 카드: 생활 영역 할인은 실적유예 미적용
-- KB NEED AutoSlim카드: 차량 구매 연계 할인 시 잔액 무(無) 구간 할인 한도(3천원, 4천원, 5천원) 별도 존재
-- KB NEED AutoSlim카드: 주유/충전 할인 시 전월 실적 40만원 미만 시 월 할인한도 5천원 적용
-- KB NEED AutoSlim카드: 자동차보험 할인 시 전월 실적 40만원 미만 시 할인금액 1만원 적용
-- KB NEED AutoSlim카드: 자동차보험 할인 연 1회 제공
-- KB NEED AutoSlim카드: 스피드메이트 서비스 연 1회 제공
-- KB NEED AutoSlim카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예 및 할인 한도 특례 적용
-- KB NEED Pay 카드: 실적 유예기간: 최초 발급 후 다음달 말일까지 전월실적 40만원 미만 시에도 40만원 이상 80만원 미만 구간 할인한도의 50% 제공
-- KB NEED Pay 카드: 전월실적 채워드림 서비스는 반기 1회(연 2회) 신청 가능하며 신청 후 취소 불가
-- KB NEED Pay 카드: 간편결제 할인 선택 서비스는 월 1회 변경 가능
-- KB 마라톤카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적유예기간 제공 (40만원 미만 시 40만원 구간 할인혜택의 50% 제공)
-- KB 마라톤카드: 모바일 단독카드 발급 가능 (연회비 24,000원)
+- KB YOU Wish 카드: 위시 베이직/픽 각 항목별 건당 2,500원 할인 한도 존재
+- KB YOU Wish 카드: Happy Birth Month 서비스는 전월 실적 40만원 이상 시 제공
+- KB YOU Wish 카드: 전월실적 채워드림 서비스는 본인회원 월 1회, 연 2회 신청 가능하며 신청 후 취소 불가
+- KB NEED Edu 카드: 실적유예기간(최초 카드 사용등록일로부터 다음달 말일) 동안 전월실적 40만원 미만 시 40만원 이상 80만원 미만 구간 할인(월 할인한도 5천원) 적용
+- KB NEED Edu 카드: KB Pay 추가 할인 및 생활 영역 할인은 실적유예 미적용
+- KB NEED AutoSlim카드: 차량 구매 연계 할인: 잔액 무(無) 구간 할인(40만:3천, 80만:4천, 160만:5천) 및 신규 발급 시 40만원 미만 구간 할인(잔액 유:3,500원, 잔액 무:5,000원) 존재
+- KB NEED AutoSlim카드: 주유/충전 할인: 신규 발급 시 40만원 미만 구간 할인한도 5,000원 적용
+- KB NEED AutoSlim카드: 자동차보험 할인: 신규 발급 시 40만원 미만 구간 할인금액 10,000원 적용
+- KB NEED AutoSlim카드: SK스피드메이트 할인: 연간 1회 제공 조건 존재
+- KB NEED AutoSlim카드: 전월 실적 제외 대상 및 할인 서비스 제외 대상 상세 내용이 PDF 전문에 누락되어 있음
+- KB NEED Pay 카드: 전월실적 채워드림 서비스: 전월실적 35만원 이상 40만원 미만 시 신청을 통해 40만원 이상 80만원 미만 구간 혜택 제공 (반기 1회, 연 2회)
+- KB NEED Pay 카드: 실적 유예기간: 최초 발급 후 다음달 말일까지 40만원 미만 시에도 40만원 구간 한도의 50% 제공
+- KB NEED Pay 카드: 간편결제 할인율이 페이별로 상이함 (KB Pay 15%, 기타 10%)
+- KB NEED Pay 카드: 디지털 콘텐츠/멤버십 할인율 30% 적용
+- KB 마라톤카드: 최초 카드 사용 등록일로부터 다음달 말일까지 실적유예기간 적용 (40만원 미만 시 40만원 구간 혜택의 50% 제공)
+- KB 마라톤카드: 모바일 단독카드는 국내 및 해외 오프라인 가맹점에서 사용 제한
 - KB Less Go 카드: 심의필 번호 및 심의필 날짜 정보가 문서 내에 존재하지 않음
 - KB Less Go 카드: 전월 실적 제외 대상 및 할인 서비스 제외 대상 목록이 문서 내에 구체적으로 명시되지 않음
-- KB Less Go 카드: 항공권 할인 혜택의 경우 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 동안 40만원 미만 시에도 월 10,000원 할인 한도 제공
+- KB Less Go 카드: 항공권 할인 혜택에 대해 최초 카드 사용 등록일로부터 다음달 말일까지 실적 유예기간 및 월 10,000원 할인 한도 제공 조건 존재
+- KB ALL 카드: 최초 발급 시 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 40만원 미만이어도 할인 서비스 제공
+- KB국민 My WE:SH 카드: Happy Birth Month: 생일 월에 더욱 진심 서비스 할인한도 2배 제공
+- KB국민 My WE:SH 카드: 전월실적 채워드림: 연 2회, 월 1회 신청 가능, 생일 월 신청 불가
+- KB국민 My WE:SH 카드: 실적 유예: 최초 발급 후 다음달 말일까지 실적 40만원 미만 시에도 할인 제공
+- KB국민 My WE:SH 카드: 더욱 진심 서비스: 3개 팩 중 택 1 (먹는데/노는데/관리에 진심)
+- KB YOU With 카드: Happy Family Month: 5월은 2nd 선택서비스 할인한도 2배 제공
+- KB YOU With 카드: 전월실적 채워드림: 전월실적 부족 시 1구간 혜택을 채워주는 서비스(연 2회)
 - 삼성카드 & YOUNG: 영화 및 놀이공원 혜택은 전월 실적이 아닌 직전 3개월 월평균 일시불 및 할부 이용금액 30만원 이상 시 제공
 - 삼성카드 & YOUNG: 가족카드 실적 및 한도 산정 방식이 본인카드와 별도 적용됨
 - 삼성카드 & YOUNG: 정액할부 혜택은 무이자할부가 아닌 1회차에 이자가 부과되는 형태임
@@ -625,8 +2361,33 @@
 - MG+ 트래블로그 하나카드: 하이브리드 카드(신용결제와 외화 하나머니 선불결제 혼용)로, 주 결제 방식은 체크카드이나 신용결제 기능이 포함됨
 - MG+ 트래블로그 하나카드: 신규 발급 시 최초 카드 사용등록일로부터 다음달 말일까지는 전월 실적 50만원 미만이어도 50만원 이상 100만원 미만 구간의 혜택 제공
 - MG+ 트래블로그 하나카드: 결제 계좌는 새마을금고 계좌로 한정됨
+- 현대카드M CHECK: 하이브리드 카드는 체크카드와 신용결제 서비스가 결합된 형태임
+- 현대카드M CHECK: M포인트 적립률이 0.5%와 1%로 구간별로 나뉘어 있어 monthly_cap_by_tier에 적립률을 기재함
+- 현대카드M CHECK: 연간 적립 한도 무제한
+- 현대카드M HYBRID: 하이브리드 카드로 신용결제 기능이 포함되어 있으며, 체크카드 결제 계좌 잔액 부족 시 신용결제로 자동 전환됨
+- 현대카드M HYBRID: M포인트 유효기간은 60개월(5년)이며 선입선출 방식 적용
+- 현대카드M HYBRID: 1회 이용금액 천원 단위 미만 절사 후 적립
+- 현대카드M HYBRID: 연간 적립 한도 무제한
+- 현대카드X CHECK: 하이브리드 카드는 체크카드와 신용결제 서비스가 결합된 형태임
+- 현대카드X CHECK: M포인트 적립률은 백분율(%)이 아닌 포인트 적립률로 표기됨
+- 현대카드X CHECK: 포인트 유효기간 60개월(5년) 조건 존재
+- 현대카드X HYBRID: 하이브리드 카드는 체크카드 기반에 신용결제 기능이 결합된 형태임
+- 현대카드X HYBRID: 연간 300만원 이상 이용 시 차년도 연회비 면제 조건 존재
+- 현대카드X HYBRID: 초년도 300만원 이상 이용 시 2,000 캐시백 지급 조건 존재
+- 현대카드X Edition2: 시즌 스페셜 할인은 별도 신청 필요
+- 현대카드X Edition2: 최초 발급 시 발급일 포함 2회차 결제일까지 기본 할인 1%, 시즌 스페셜 할인 5% 제공(실적 무관)
+- 현대카드X Edition2: 시즌 스페셜 할인 한도는 본인+가족카드 합산 적용
+- 현대카드X2 Edition2: 시즌 스페셜 할인처는 분기별로 변경됨
+- 현대카드X2 Edition2: 현대카드 플래티넘서비스는 별도의 연간 횟수 및 월 한도 조건이 존재함
+- 현대카드X2 Edition2: 신규 발급 시 발급월 포함 3개월간 이용금액 무관하게 혜택 제공
+- 현대카드X3 Edition2: 시즌 스페셜 할인처는 분기별로 변경됨
+- 현대카드X3 Edition2: 신규 발급 시 발급월 포함 3개월간 실적 무관 혜택 제공
+- 현대카드X3 Edition2: 최초 발급 시 발급일 포함 2회차 결제일까지 기본 할인 1% 및 시즌 스페셜 5% 제공(200만원 이상 시 10%)
+- 현대카드X3 Edition2: 시즌 스페셜 할인 신청 시기에 따른 분기별 적용
 - MY COMPANY 항공권전용: 법인 전용 카드로, 개인 신용카드와 달리 전월 실적 조건이 명시되지 않음
 - MY COMPANY 항공권전용: card_type은 법인카드이나 스키마 규칙에 따라 CREDIT으로 분류함
+- 에너지플러스카드 Edition3: 바로할인 보너스 카드 혜택(신규 발급 시 2만원 제공)은 스키마에 포함되지 않음
+- 에너지플러스카드 Edition3: M포인트 적립 한도 및 산정 방식이 복잡하여 일부 요약됨
 - 대한항공카드 060: 연간 보너스 제공 기준(발급 첫해/2차년도 이후) 및 제공 시기 조건
 - 대한항공카드 060: 항공권 할인 쿠폰 제공 및 사용 조건
 - 대한항공카드 060: 매출 건별 소수점 이하 반올림 적립 방식
@@ -641,6 +2402,15 @@
 - 대한항공카드 the First Edition2: 항공권 할인 쿠폰 제공 및 사용 조건은 스키마에 포함되지 않음
 - 대한항공카드 the First Edition2: 공항 라운지 및 발레파킹 서비스의 상세 이용 방법 및 한도는 스키마에 포함되지 않음
 - 대한항공카드 the First Edition2: 메탈 플레이트 발급 수수료 정보는 스키마에 포함되지 않음
+- 배민 한그릇카드: 최초 신규 발급 시 카드 수령 등록월 다음 달 이용 건까지는 전월 이용 금액 30만원 미만도 혜택 제공
+- 배민 한그릇카드: 매출 건별로 소수점 이하 반올림 후 적립
+- 배민 곱빼기카드: 신규 발급 시 카드 수령 등록월 다음 달까지 전월 실적 40만원 미만이어도 혜택 제공(추가 혜택은 40~80만원 구간 한도 적용)
+- 배민 곱빼기카드: 매출 건별 소수점 이하 반올림 적립
+- 배민 곱빼기카드: 현대카드 할인 및 무이자 할부 적용 건은 전체 이용 금액 적립 제외
+- 배민 한그릇카드 HYBRID: 하이브리드 카드: 체크결제 계좌 잔액 부족 시 신용 한도 내에서 신용결제로 자동 전환되는 구조
+- 배민 한그릇카드 HYBRID: 신규 발급 시 카드 수령 등록월 다음 달까지 전월 실적 30만원 미만이어도 혜택 제공
+- 배민 한그릇카드 HYBRID: 적립 한도 초과 시 미적립
+- 배민 한그릇카드 HYBRID: 매출 건별 소수점 이하 반올림 적립
 - GOLD FOR LOTTE DEPARTMENT STORE: 연간 보너스: 연간 이용 금액 1,200만원 이상 시 10만 M포인트 적립
 - GOLD FOR LOTTE DEPARTMENT STORE: 신규 발급 시 카드 수령 등록월 다음 달 이용 건까지는 전월 이용 금액 50만원 미만도 혜택 제공
 - GOLD FOR LOTTE DEPARTMENT STORE: M 긴급적립(선지급 포인트 서비스) 제공
@@ -652,6 +2422,28 @@
 - SC제일은행-대한항공카드060: 연간 보너스 제공 조건(발급 첫해 100만원, 2차년도 이후 600만원 이상 이용)
 - SC제일은행-대한항공카드060: 항공권 할인 쿠폰 제공 및 사용 조건
 - SC제일은행-대한항공카드060: 신규 발급 시 카드 수령 등록월 다음 달까지 실적 유예
+- 코스트코 리워드 현대카드: 연간 이용금액 30만원 이상 시 차년도 연회비 면제 조건
+- 코스트코 리워드 현대카드: 코스트코 리워드 포인트 바우처 교환 및 이월 정책
+- 코스트코 리워드 현대카드: 포인트 적립률이 당월 이용금액 구간별로 상이함(50만원 기준)
+- 코스트코 리워드 현대카드: 코스트코 매장 적립은 연간 50만 포인트 한도 존재
+- 이마트 e카드 Edition2: 신규 발급 시 발급일 포함 2회차 결제일자까지는 이용금액 30만원 미만일 경우에도 30만원 이상 적립률 적용
+- 이마트 e카드 Edition2: 적립률이 당월 이용금액 구간별로 0.1%~5%로 차등 적용됨(표 참조)
+- 이마트 e카드 Edition2: 월 4만 포인트 한도는 결제일별 이용 기간으로 산정
+- 현대카드M Edition3: 업종별 적립률이 0.5%~3%로 다양하며 당월 이용금액 100만원 이상 시 1.5배 적립되는 구조임
+- 현대카드M Edition3: 특별 적립(자동차 1.5%, 주유 리터당 60P)은 기본 적립과 중복 불가
+- 현대카드M Edition3: Welcome 리워드 적립 조건 및 시기 별도 존재
+- 현대카드M2 Edition3: M포인트 적립률이 업종별로 0.5%~3%로 세분화되어 있어 개별 항목으로 모두 나열하지 않음
+- 현대카드M2 Edition3: Welcome 리워드 적립(신규 발급 후 3개월간 200만원 이상 이용 시 2만 M포인트)
+- 현대카드M2 Edition3: 연회비 감면 조건(연간 600만원 이상 이용 시 차년도 감면)
+- 현대카드M2 Edition3: M포인트 사용처별 환산 비율 상이(1원 또는 2/3원)
+- 현대카드M3 Edition3: M포인트 적립률이 당월 이용금액 구간(50만/100만/200만)에 따라 업종별로 배수(1배/1.5배/2배) 적용되는 복합 구조임
+- 현대카드M3 Edition3: Welcome 리워드: 신규 발급 시 3개월간 200만원 이상 이용 시 2만 M포인트 적립
+- 현대카드M3 Edition3: 현대자동차·기아 신차 구매 시 2% M포인트 적립
+- 현대카드M3 Edition3: GS칼텍스 주유 시 리터당 80 M포인트 적립(일 2회, 1회 10만원 한도)
+- 현대카드M3 Edition3: 제휴 온라인쇼핑몰 추가 적립(G마켓 1%, GS SHOP 2%, 신세계몰 2%)
+- 하이마트Mobile-현대카드M Edition3(통신할인형): 통신요금 할인 혜택이 1~24개월 차와 25개월 차 이후로 구분됨
+- 하이마트Mobile-현대카드M Edition3(통신할인형): M포인트 적립률이 이용금액 구간(50만원 미만, 50~100만원, 100만원 이상) 및 업종별로 세분화됨
+- 하이마트Mobile-현대카드M Edition3(통신할인형): 신규 발급 시 2회차 결제일까지 실적 유예 조건 존재
 - 현대홈쇼핑 현대카드 Edition2: 신규 발급 시 카드 수령 등록월 다음 달 이용 건까지는 전월 이용 금액 40만원 미만도 기본·추가 혜택 제공
 - 현대홈쇼핑 현대카드 Edition2: 추가 혜택 할인 한도 초과 후 취소 시, 한도 초과로 혜택 미적용된 이전 결제 건에 대해 다음 달 15일경 혜택 적용
 - 현대 기본교통 체크카드: 후불교통카드 이용 한도 월 10만원
@@ -712,6 +2504,148 @@
 - 지마켓 꼭 현대카드: 최초 신규 발급 시 카드 수령 등록월 다음 달 이용 건까지는 전월 이용 금액 30만원 미만도 혜택 제공
 - 지마켓 꼭 현대카드: 적립 한도 초과 시 추가 혜택 미적립
 - 지마켓 꼭 현대카드: 매출 건별로 소수점 이하 반올림 후 적립
+- 대한항공카드030: 웰컴보너스 3,000 마일리지 제공 조건(발급월 포함 3개월 내 100만원 이상)은 스키마에 명시된 실적 구간과 성격이 달라 별도 기재함
+- 대한항공카드030: 추가 적립 한도가 월/연 단위로 구분되어 있으며, 스키마의 monthly_cap_by_tier로 표현 불가하여 combined_caps에 기재함
+- 대한항공카드070: 웰컴보너스 5천 마일리지 적립 조건 및 유예 기간 존재
+- 대한항공카드070: 마일리지 적립 시 소수점 이하 절상 로직 존재
+- 대한항공카드070: 신규 발급 시 발급월 포함 3개월간 실적 무관 서비스 제공 조건 존재
+- 대한항공카드150: 웰컴보너스 및 바우처 서비스의 상세 조건은 본문 참조
+- 대한항공카드150: 추가 적립 한도는 월/연 단위로 구분됨
+- 대한항공카드150: 커피 할인 및 프리미엄 서비스는 전월 실적 50만원 기준이 적용됨
+- 대한항공카드theFirst: 마일리지 적립형 카드로, 할인/적립률이 아닌 마일리지 적립 단위로 구성되어 있어 benefit_unit 및 rate_percent 스키마와 상이함
+- 대한항공카드theFirst: 전월 실적 기준이 서비스별로 상이함(라운지/발레파킹/주차는 당월 50만원 이상)
+- 대한항공카드theFirst: 바우처 서비스 및 페이백 서비스는 전년도 이용금액 기준을 따름
+- 현대카드ZERO Edition2(할인형): 전월 실적 조건이 없는 무실적 카드임
+- 현대카드ZERO Edition2(할인형): 해외 이용금액 할인은 국내외겸용카드에 한해 적용
+- 현대카드ZERO Edition2(포인트형): M포인트 적립 한도 없음
+- 현대카드ZERO Edition2(포인트형): 1회 이용금액 1,000원 미만 절사
+- 현대카드ZERO Edition2(포인트형): M포인트 유효기간 60개월
+- 현대카드ZERO Edition2(포인트형): 일부 사용처에서 1 M포인트 = 2/3원 환산 적용
+- LG전자-현대카드M Edition3: LG전자 렌탈요금 할인 서비스는 1~36개월 차에 한해 제공됨
+- LG전자-현대카드M Edition3: 신규 발급 시 발급월 포함 2개월간 전월 이용금액 무관하게 13,000원 할인 제공
+- LG전자-현대카드M Edition3: M포인트 적립률이 업종별로 0.5~3%로 세분화되어 있으며, 당월 이용금액 100만원 이상 시 1.5배 적립됨
+- LG전자-현대카드M Edition3: M포인트 유효기간은 적립월로부터 60개월임
+- kt M mobile-현대카드M Edition3: 통신 할인 혜택이 1~24개월 차와 25개월 차 이후로 구분됨
+- kt M mobile-현대카드M Edition3: M포인트 적립률이 당월 이용금액(50만원 미만/이상, 100만원 이상)에 따라 차등 적용됨
+- kt M mobile-현대카드M Edition3: 신규 발급 시 2회차 결제일까지 실적 유예 조건 존재
+- kt M mobile-현대카드M Edition3: 제휴통합 상품으로 kt M mobile, U+유모바일, SK 7mobile 3종이 동일한 구조로 가이드북에 포함됨
+- U+유모바일-현대카드M Edition3: 통신 할인 혜택은 1~24개월 차와 25개월 차 이후로 구분되는 기간별 차등 혜택임
+- U+유모바일-현대카드M Edition3: M포인트 적립은 당월 이용금액 기준이며, 50만원 미만 시 적립 제외
+- U+유모바일-현대카드M Edition3: 신규 발급 시 2회차 결제일까지 실적 유예 조건 존재
+- SK 7mobile-현대카드M Edition3: 통신 할인 혜택이 1~24개월 차와 25개월 차 이후로 구분되는 기간 조건 존재
+- SK 7mobile-현대카드M Edition3: M포인트 적립률이 당월 이용금액 50만원 미만/이상/100만원 이상 구간에 따라 차등 적용
+- SK 7mobile-현대카드M Edition3: 신규 발급 시 발급일 포함 2회차 결제일까지 실적 유예 조건 존재
+- 배민현대카드: 연회비 감면 조건(연간 이용금액 10만원 이상)은 스키마에 포함되지 않음
+- 배민현대카드: 신규 발급 시 발급일 포함 2회차 결제일자까지 실적 유예 조건 존재
+- 배민현대카드 HYBRID: 하이브리드 카드: 체크결제 우선 이용 후 잔고 부족 시 신용결제로 자동 전환. 체크결제는 일 600만원, 월 2,000만원 한도.
+- 배민현대카드 HYBRID: 신규 발급 시 발급일 포함 2회차 결제일자까지는 실적 30만원 미만 시에도 혜택 적용
+- 배민현대카드 HYBRID: 배민 앱 영역은 월 이용금액 20만원 한도 내 적립
+- 배민현대카드 HYBRID: 온라인쇼핑 및 디지털 콘텐츠 서비스 영역은 합산 월 이용금액 20만원 한도 내 적립
+- 현대카드X BOOST: 신규 발급 시 발급일 포함 2회차 결제일자에 포함되는 이용 건까지는 이용금액 50만원 미만도 기본 할인 제공
+- 현대카드X BOOST: 5% 할인 한도 초과 시 기본 할인율 적용
+- 현대카드X2 BOOST: 당월 이용금액 산정 시 결제일자 기준(예: 25일 결제 시 전월 14일~당월 13일)
+- 현대카드X2 BOOST: 신규 발급 시 발급월 포함 3개월 내 이용 건까지는 전월 실적 50만원 미만도 플래티넘 서비스 제공
+- 현대카드X3 BOOST: 보너스 캐시백은 결제일로부터 7영업일 이내 결제계좌로 입금되는 형태임
+- 현대카드X3 BOOST: 신규 발급 시 발급일 포함 2회차 결제일자까지는 실적 미달 시에도 기본 할인 제공
+- 현대카드X3 BOOST: 플래티넘 서비스(커피, 주차)는 전월 실적 50만원 이상 시 제공(신규 발급 시 발급월 포함 3개월 내 이용 건까지는 실적 무관 제공)
+- 현대카드 M BOOST: 업종별 적립률이 0.5%~3%로 다양하며 100만원 이상 시 1.5배 적용되는 구조를 benefits 배열에 모두 나열하기 어려워 요약함
+- 현대카드 M BOOST: 보너스 리워드 적립은 1만 M포인트 정액 적립임
+- 현대카드 M BOOST: 신규 발급 시 발급일 포함 2회차 결제일까지는 실적 50만원 미만이어도 적립 제공
+- 현대카드 M2 BOOST: 기본 적립률이 당월 이용금액 50만원 이상 100만원 미만(기본)과 100만원 이상(1.5배)으로 나뉘어 있음
+- 현대카드 M2 BOOST: 보너스 리워드 적립(100만원 이상 시 1만 M포인트) 별도 존재
+- 현대카드 M2 BOOST: 현대자동차/기아 신차 구매 시 1.5% 적립 및 GS칼텍스 리터당 60 M포인트 적립 등 특별 적립 존재
+- 현대카드 M2 BOOST: M포인트 사용처에 따라 1:1 또는 1:2/3 환산 비율 적용
+- 현대카드 M3 BOOST: 업종별 적립률이 당월 이용금액 구간(50만, 100만, 200만)에 따라 0.5%~6%로 차등 적용됨
+- 현대카드 M3 BOOST: 신규 발급 시 발급월 포함 2회차 결제일자까지는 50만원 미만 실적이어도 적립률 제공
+- 현대카드 M3 BOOST: 보너스 리워드: 당월 100만원 이상 이용 시 1만 M포인트 적립
+- 현대카드 M3 BOOST: 플래티넘 서비스(커피 할인, 주차)는 당월 50만원 이상 시 제공
+- 현대카드 M3 BOOST: 간편결제/해외 적립 한도는 월 2만 M포인트 통합 한도
+- the Purple osée: 항공마일리지형/M포인트형 중 선택하여 리워드 적립하는 구조
+- the Purple osée: 연간 이용실적에 따른 로열티 보너스(연 1회) 제공
+- the Purple osée: 바우처 및 라운지 이용을 위한 전년도 이용실적 조건(1,600만원 등) 존재
+- the Purple osée: 발급 초년도 이용실적에 따른 혜택 제공 조건 존재
+- 현대카드Z family: 주유 할인 시 리터당 100원 할인으로, 정유사 고시 휘발유가 기준 산정
+- 현대카드Z family: 신규 발급 시 발급월 다음 달 이용건까지는 전월 실적 40만원 미만이어도 40만원 이상 구간 혜택 제공
+- 현대카드Z work: 신규 발급 시 발급월 다음 달 이용건까지는 전월 이용금액 40만원 미만일 경우에도 40만원 이상 구간 할인 혜택 제공
+- 현대카드Z work: 영역별 할인한도 및 1일 1회 할인은 결제 순서가 아닌 현대카드 매출전표 접수 순서를 기준으로 적용
+- 현대카드Z ontact: 신규 발급 시 발급월 다음 달 이용건까지는 전월 이용금액 40만원 미만일 경우에도 40만원 이상 구간 할인 혜택 제공
+- 현대카드Z ontact: 영역별 할인한도 및 1일 1회 할인은 결제 순서가 아닌 현대카드 매출전표 접수 순서를 기준으로 적용
+- 현대카드Z ontact: 온라인 간편결제 영역과 타 영역 중복 시 타 영역 혜택 우선 적용
+- 무신사 현대카드: 최초 신규 발급 시 발급월 기준 다음 달 이용 건까지는 전월 이용금액 30만원 미만도 혜택 제공
+- 무신사 현대카드: 무신사 적립금 적립·사용 조회 및 유효기간 확인은 무신사 정책을 따름
+- 무신사 현대카드 HYBRID: 하이브리드 카드: 체크결제 우선 이용 후 잔고 부족 시 신용한도(30만원) 내 신용결제 전환
+- 무신사 현대카드 HYBRID: 체크결제 한도: 일 600만원, 월 2,000만원
+- 무신사 현대카드 HYBRID: 일반 가맹점 적립은 무신사 적립금으로 제공되며 한도 제한 없음
+- 무신사 현대카드 HYBRID: 캐시백은 월 3만원 한도, 적립은 한도 없음
+- SmileCard Edition2: 전월 실적 조건 및 한도 제한 없음
+- SmileCard Edition2: 해외 가맹점 적립 혜택은 국내외겸용카드 보유 회원에 한함
+- SmileCard Edition2: 이용 건별 소수점 이하 절사 후 적립
+- the Pink: 연간 보너스(1,000만원 이용 시 혜택)는 스키마에 직접 대응하는 필드가 없어 non_monetary에 기재함
+- the Pink: 웰컴 바우처 및 연간 보너스 등 비금전적 혜택은 benefits 배열에 포함하지 않음
+- the Pink: 특별 적립 II의 주유 혜택(리터당 적립)은 rate_percent로 표현 불가하여 targets note에 기재함
 - 현대홈쇼핑 현대카드: 최초 신규 발급 시 발급월 기준 다음 달 이용 건까지는 전월 이용금액 30만원 미만일 경우에도 혜택 적용
 - 현대홈쇼핑 현대카드: 현대홈쇼핑 Hmall에서 네이버페이로 결제 시 그 외 가맹점으로 분류되어 1% 적립률 적용
 - 현대홈쇼핑 현대카드: 부분 무이자할부 이용 시 수수료 납부 개월에 대한 이용금액에 한해 H.Point 적립
+- 에너지플러스카드 Edition2: 최초 신규 발급 시 발급월 기준 다음 달 이용 건까지는 전월 이용금액 30만원 미만 시에도 30만원 이상 70만원 미만 구간의 할인 혜택 제공
+- 에너지플러스카드 Edition2: GS칼텍스 이용금액과 Mobility 업종 이용금액의 월 할인한도는 각각 별도로 적용됨
+- the Black Edition3: 바우처 제공 조건이 연간 이용금액 기준(1천만원/4천만원)으로, 일반적인 월간 실적 기반 혜택과 구조가 다름
+- the Black Edition3: 항공 마일리지 적립 및 M포인트 적립 기준이 복잡하여 benefits 배열에 상세 적립률을 모두 담지 못함
+- the Black Edition3: 연간 이용금액에 따른 우수 회원 리워드(PRIVIA 이용권) 존재
+- the Red Edition5: 항공마일리지형과 M포인트형 중 선택하여 가입하는 구조
+- the Red Edition5: 바우처 제공 조건이 발급 초년도와 2차년도 이후로 상이함
+- the Red Edition5: 로열티 보너스(연간 2천만원 이상 이용 시 10만 M포인트 또는 연회비 감면) 조건 존재
+- the Red Edition5: M포인트 적립 시 1,000원 미만 절사, 항공마일리지 적립 시 소수점 이하 절상 등 상세 계산 로직 존재
+- the Green Edition2: 보너스 리워드(7만 M포인트 적립 또는 연회비 7만원 감면) 조건 존재
+- the Green Edition2: the Green 바우처 교환 혜택 존재
+- the Green Edition2: 라운지 및 발레파킹 이용 조건이 전월 실적과 연동됨
+- 현대카드 MX Black: 신규 발급 시 발급월 다음 달까지는 전월 실적 50만원 미만이어도 혜택 제공
+- 현대카드 MX Black: M포인트 적립은 1,000원 미만 절사
+- 현대카드 MX Black: M포인트 유효기간 60개월
+- 현대카드 MX Black: 할인 서비스는 결제 순서가 아닌 매출전표 접수 순서 적용
+- 하이마트-현대카드M Edition3: 하이마트 장기할부 최초 1회 이용 시에 한해 할인 적용(재이용 시 M포인트 적립)
+- 하이마트-현대카드M Edition3: 신규 발급 시 발급월 기준 다음 달 이용 건까지는 전월 실적 50만원 미만 시에도 1만원 할인 적용
+- 하이마트-현대카드M Edition3: M포인트 적립률이 당월 이용금액에 따라 0.5~3% 및 1.5배로 차등 적용되는 복합 구조
+- 하이마트-현대카드M Edition3: M포인트 유효기간 60개월(5년)
+- 넥슨 현대카드 CHECK: 체크카드 상품으로 할부 이용 불가
+- 넥슨 현대카드 CHECK: 포인트 적립 한도는 월 이용금액 50만원까지로 명시됨
+- LOTTE DUTY FREE 현대카드: LDF PAY 적립한도는 각 업종별로 상이함(면세점 20만원, 항공/여행/호텔/해외 5만원, 일반 10만원)
+- LOTTE DUTY FREE 현대카드: 장기할부 추가 적립은 최대 12개월간 제공
+- LOTTE DUTY FREE 현대카드: 최초 신규 발급 시 발급월 기준 다음 달 이용 건까지는 전월 실적 미달 시에도 혜택 제공
+- 넥슨 현대카드: 추가 적립 한도는 월 이용금액 1천만원 기준이며, 초과 시 기본 적립만 제공됨
+- 넥슨 현대카드: 신규 발급 시 발급월 기준 다음 달 이용 건까지는 전월 실적 미달 시에도 2% 적립률 적용
+- 넥슨 현대카드: 넥슨 게임 결제 건은 전월 실적 합산에서 제외되나 포인트 적립은 가능함
+- 넥슨 현대카드 UNLIMITED: 연간 이용금액 기준 바우처 및 할인 혜택 제공 조건 존재
+- 넥슨 현대카드 UNLIMITED: 신규 발급 시 발급월 다음 달까지 전월 실적 100만원 미만이어도 3% 적립률 적용
+- 넥슨 현대카드 UNLIMITED: 포인트 적립은 매출 건별 소수점 이하 반올림
+- 넥슨 현대카드 UNLIMITED: 메탈 플레이트 발급 수수료 10만원 별도 부과
+- LOTTE DUTY FREE-MIUM 현대카드 Visa 선택제공서비스: 연간 횟수 제한(라운지 연 2회, 발레파킹 연 12회)은 스키마에 명시적 필드가 없어 조건에 기재함
+- LOTTE DUTY FREE-MIUM 현대카드 Visa 선택제공서비스: 신규 발급 시 발급월 포함 2개월간 실적 무관 혜택 제공 조건 존재
+- LOTTE DUTY FREE-MIUM 현대카드 Visa 선택제공서비스: 카드 타입이 명시되지 않았으나 Visa 프리미엄 서비스 제공 카드로 CREDIT으로 간주함
+- LOTTE DUTY FREE-MIUM 현대카드: LDF PAY 적립률 및 한도가 전월 이용금액 구간별로 복잡하게 구성되어 있어 benefits 내 상세 필드에 모두 담지 못함
+- LOTTE DUTY FREE-MIUM 현대카드: 쇼핑 할인서비스의 연 1회 제공 및 이용금액 조건(발급 1차년도/2차년도 이후 구분)은 스키마로 표현 불가
+- LOTTE DUTY FREE-MIUM 현대카드: 롯데인터넷면세점 장기할부 서비스의 다다음달부터 12개월간 적립되는 조건은 스키마로 표현 불가
+- SC제일은행-대한항공카드 030: 웰컴보너스 3천 마일리지 (발급월 포함 3개월 내 100만원 이상 이용 시)
+- SC제일은행-대한항공카드 030: 추가 적립 한도: 해외/면세점 월 200만원, 항공권/기내면세점 연 1,000만원
+- SC제일은행-대한항공카드 030: 마일리지 적립 시 소수점 이하 절상
+- SC제일은행-현대카드M BOOST: 당월 이용 금액 100만원 이상 시 기본 적립률의 1.5배 적립
+- SC제일은행-현대카드M BOOST: 신규 발급 시 발급일 포함 2회차 결제일자에 포함되는 이용 건까지는 당월 이용 금액 50만원 미만도 기본 적립률 제공
+- SC제일은행-현대카드M BOOST: 보너스 리워드: 당월 이용 금액 100만원 이상 시 1만 M포인트 적립
+- SC제일은행-현대카드M BOOST: 특별 적립: 현대자동차·기아 신차 구매 시 1.5% 적립, GS칼텍스 주유 시 리터당 60 M포인트 적립
+- SC제일은행-the Red Edition5: 바우처 제공 조건이 발급 첫해와 2차년도 이후 이용 금액 기준이 상이함
+- SC제일은행-the Red Edition5: 로열티 보너스(10만 M포인트 적립 또는 연회비 감면) 조건 존재
+- SC제일은행-the Red Edition5: M포인트 적립률이 % 단위가 아닌 구간별 차등 적립임
+- SC제일은행-the Red Edition5: 바우처 사용처별 상세 조건이 매우 복잡함
+- SC제일은행-현대카드ZERO Edition2(포인트형): 전월 실적 조건이 없는 상품임
+- SC제일은행-현대카드ZERO Edition2(포인트형): 적립 한도 제한 없음
+- SC제일은행-현대카드ZERO Edition2(포인트형): M포인트 적립 및 사용에 관한 상세 기준(선입선출, 소멸 등)은 가이드북 내 별도 관리 기준을 따름
+- SC제일은행-현대카드ZERO Edition2(할인형): 전월 실적 조건이 없는 무실적 카드임
+- SC제일은행-현대카드ZERO Edition2(할인형): 생활 필수 영역 할인은 기본 할인과 중복 적용 불가하며 생활 필수 영역 우선 적용
+- the Red Stripe: 항공 마일리지형과 M포인트형 중 선택하여 가입하는 구조
+- the Red Stripe: 바우처 제공 조건이 발급 첫 해와 2차년도 이후로 상이함
+- the Red Stripe: 로열티 보너스 및 바우처 제공 시점과 실적 산정 기준이 복잡함
+- 스타벅스 현대카드: 스타벅스 별 적립은 3만원 누적 단위로 이루어지며, 잔여 금액은 다음 달로 이월됨
+- 스타벅스 현대카드: 신규 발급 시 발급 월 기준 다음 달까지는 전월 실적 30만원 미만이어도 혜택 제공
+- 스타벅스 현대카드: 스타벅스 별 적립 완료 후 이용금액 취소 시 마이너스 별 생성 및 현금 청구 조건 존재
+- SC제일은행-the Red Stripe: 바우처 제공 조건이 발급 첫해와 2차년도 이후로 나뉘어 있음
+- SC제일은행-the Red Stripe: 로열티 보너스 및 바우처 사용 조건에 연간 이용 금액 기준이 포함됨
+- SC제일은행-the Red Stripe: M포인트 적립 및 사용 시 1 M포인트 = 1원 또는 2/3원 등 환산 비율이 다름

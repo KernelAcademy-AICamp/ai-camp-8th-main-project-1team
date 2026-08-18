@@ -1,0 +1,260 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 Easy on카드",
+  "product_id": "KB-09244",
+  "status": "active",
+  "as_of": "2024-02-26",
+  "review_no": "여신금융협회 심의필 제 2024-C1a-01981호",
+  "compliance_no": "준법감시인 240205-00408-PIF(2024.02.05)",
+  "posted_at": "2019-06-27",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(UPI타입)",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    }
+  ],
+  "annual_fee_notes": [
+    "모바일 단독카드 발급 시 1만 4천원 (기본 1천원 + 제휴 1만 3천원)",
+    "초회/차기년도 연회비 면제조건 없음"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      500000,
+      1000000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고등학교납입금, 대학(대학원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전 금액"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "Easy on 특화 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "푸드",
+          "industries": [
+            "한식",
+            "중식",
+            "일식/생선회집",
+            "양식",
+            "뷔페",
+            "패밀리레스토랑",
+            "일반음식점",
+            "패스트푸드"
+          ]
+        },
+        {
+          "category": "인터넷쇼핑몰",
+          "brands": [
+            "G마켓",
+            "옥션",
+            "11번가"
+          ]
+        },
+        {
+          "category": "소셜커머스",
+          "brands": [
+            "쿠팡",
+            "티몬",
+            "위메프"
+          ]
+        },
+        {
+          "category": "배달앱",
+          "brands": [
+            "배달의민족",
+            "마켓컬리"
+          ]
+        },
+        {
+          "category": "백화점",
+          "brands": [
+            "롯데",
+            "신세계",
+            "현대"
+          ],
+          "channel": [
+            "오프라인"
+          ]
+        },
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스",
+            "커피빈"
+          ]
+        },
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25",
+            "CU"
+          ]
+        },
+        {
+          "category": "제과/아이스크림",
+          "industries": [
+            "제과점",
+            "아이스크림점"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 5000,
+        "1000000": 10000
+      }
+    },
+    {
+      "group": "Easy on + 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 1000000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ]
+        },
+        {
+          "category": "이동통신",
+          "industries": [
+            "SKT",
+            "KT",
+            "LG U+ 이동통신요금 자동이체"
+          ]
+        },
+        {
+          "category": "온라인음원",
+          "brands": [
+            "멜론",
+            "지니"
+          ]
+        },
+        {
+          "category": "숙박 App",
+          "brands": [
+            "야놀자",
+            "여기어때",
+            "데일리호텔"
+          ]
+        },
+        {
+          "category": "인터넷쇼핑몰 KB Pay 결제",
+          "brands": [
+            "G마켓",
+            "옥션",
+            "11번가"
+          ],
+          "channel": [
+            "KB Pay"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "1000000": 5000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "Easy on + 서비스는 전월 실적 100만원 이상 시에만 제공됨",
+    "Easy on 특화 서비스와 Easy on + 서비스는 중복 적용 가능하며 할인한도는 각각 차감됨",
+    "최초 카드사용 등록일로부터 다음달 말일까지는 실적 없어도 1구간 혜택 제공"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09244__prdctOpmn_20240228.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09244__prdctOpmn_20240228.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 15000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

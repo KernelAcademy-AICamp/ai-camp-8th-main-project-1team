@@ -1,0 +1,226 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB 전통시장온누리카드",
+  "product_id": "KB-09348",
+  "status": "active",
+  "as_of": "2025-05-27",
+  "review_no": "여신금융협회 심의필 제2025-C1a-07821호",
+  "compliance_no": "준법감시인 심의필 250527-02628-PIF",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Master",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    },
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 14000,
+      "base": 1000,
+      "affiliate": 13000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Master",
+      "total": 14000,
+      "base": 1000,
+      "affiliate": 13000
+    }
+  ],
+  "annual_fee_notes": [
+    "일반카드 연회비 2만원(기본 7천원 + 제휴 1만3천원)",
+    "모바일단독카드 연회비 1만4천원(기본 1천원 + 제휴 1만3천원)",
+    "연회비는 카드발급 시점을 기준으로 1년 단위로 청구되며, 초회/2차년도 이후 연회비 면제 조건은 없음"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      400000,
+      800000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전 금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "유치원/초·중·고 학교 납입금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원) 등록금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "국세, 지방세, 공과금(전기/수도 등)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "PENALTY",
+        "label": "무승인전표(교통요금/자판기/터널통행료/항공기내 이용 등)"
+      },
+      {
+        "code": "CANCEL",
+        "label": "취소금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "전통시장",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "전통시장 가맹점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    },
+    {
+      "group": "온누리상품권",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "온누리상품권 차감 이용"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    },
+    {
+      "group": "KB Pay",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "KB Pay 쇼핑"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전 금액"
+    },
+    {
+      "code": "CANCEL",
+      "label": "취소금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "할인 서비스는 전월 실적 40만원 이상 시 제공되며, 80만원 이상 시 할인율과 한도가 상향됨",
+    "KB Pay 쇼핑 이용 시 상품권, 여행, 티켓, 도서 및 제휴몰 등은 제외됨",
+    "최초 카드 사용 등록일로부터 다음달 말일까지는 실적 40만원 미만 시에도 40만원 구간의 할인 혜택 제공"
+  ],
+  "posted_at": "2025-06-30",
+  "source_url": "https://img2.kbcard.com/obj/card/download/09348__prdctOpmn_20250627.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09348__prdctOpmn_20250627.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.annual_fee[0].base",
+        "first": 1000,
+        "second": 7000
+      },
+      {
+        "path": "$.annual_fee[0].total",
+        "first": 14000,
+        "second": 20000
+      },
+      {
+        "path": "$.annual_fee[1].base",
+        "first": 7000,
+        "second": 1000
+      },
+      {
+        "path": "$.annual_fee[1].total",
+        "first": 20000,
+        "second": 14000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 30000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

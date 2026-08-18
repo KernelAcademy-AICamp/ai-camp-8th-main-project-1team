@@ -1,0 +1,279 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 탄탄대로 온리유 티타늄카드",
+  "product_id": "KB-09218",
+  "status": "active",
+  "as_of": "2022-04-13",
+  "review_no": "여신금융협회 심의필 제2022-C1a-02628호",
+  "compliance_no": "230720-02735-PIF",
+  "posted_at": "2017-06-15",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(JCB타입)",
+      "total": 30000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 30000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "tiers": [
+      400000,
+      800000,
+      1500000,
+      2000000
+    ],
+    "excluded": [
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "BENEFIT_APPLIED",
+        "label": "주유 서비스 받은 이용건(해당 매출 전체)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인전표(교통요금, 자판기, 터널통행료, 항공기 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "주유 서비스",
+      "kind": "적립",
+      "settle": "포인트리 적립",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "주유소",
+          "industries": [
+            "전 주유소",
+            "충전소"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 6000,
+        "800000": 6000,
+        "1500000": 6000,
+        "2000000": 6000
+      }
+    },
+    {
+      "group": "이동통신",
+      "kind": "적립",
+      "settle": "포인트리 적립",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "통신",
+          "brands": [
+            "SK",
+            "KT Olleh",
+            "LG U+"
+          ],
+          "note": "자동납부 시 적용"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 6000,
+        "800000": 6000,
+        "1500000": 6000,
+        "2000000": 6000
+      }
+    },
+    {
+      "group": "놀이공원",
+      "kind": "할인",
+      "settle": "현장할인",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "롯데월드",
+            "에버랜드",
+            "캐리비안베이"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "자동차보험",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 10000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "자동차보험",
+          "brands": [
+            "삼성화재",
+            "DB손해보험",
+            "현대해상",
+            "AXA",
+            "메리츠화재",
+            "하나손해보험"
+          ],
+          "note": "연 1회, 10만원 이상 결제 시"
+        }
+      ]
+    },
+    {
+      "group": "플러스 O2O",
+      "kind": "적립",
+      "settle": "포인트리 적립",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "O2O",
+          "note": "KB국민카드 앱 내 플러스 O2O 이용 시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 6000,
+        "800000": 6000,
+        "1500000": 6000,
+        "2000000": 6000
+      }
+    },
+    {
+      "group": "영화",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 3500,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "메가박스",
+            "CGV"
+          ],
+          "channel": [
+            "온라인 예매"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "차량정비/주차/세차",
+      "kind": "적립",
+      "settle": "포인트리 적립",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "차량서비스",
+          "industries": [
+            "차량정비",
+            "부품",
+            "인테리어",
+            "주차장",
+            "세차장"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 10000,
+        "800000": 15000,
+        "1500000": 15000,
+        "2000000": 15000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "티타늄 서비스(공항/호텔 발레파킹, 공항 라운지 등)",
+    "Mastercard 브랜드 발급 시 마스터 티타늄 서비스 제공"
+  ],
+  "schema_gaps": [
+    "주유 적립률이 전월 실적 구간별로 리터당 130~200점으로 차등 적용됨",
+    "놀이공원 할인 횟수 제한(일/월/연)이 존재함",
+    "티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적 유예 없음",
+    "신규 발급 시 주유 및 Auto Life 서비스는 실적 없어도 1구간 혜택 제공"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09218__prdctOpmn_20231201.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09218__prdctOpmn_20231201.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 33000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

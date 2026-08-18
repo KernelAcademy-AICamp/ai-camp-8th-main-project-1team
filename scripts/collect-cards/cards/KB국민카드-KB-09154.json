@@ -1,0 +1,116 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 마일리지 가온카드(아시아나형)",
+  "product_id": "KB-09154",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "2014-11-17",
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Mastercard",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비 면제조건 없음",
+    "카드 연회비는 매년 카드 발급월 기준으로 1년 단위로 청구",
+    "1년 이상 이용실적이 없는 카드의 연회비는 청구하지 않음(단, 초회년도 제외)"
+  ],
+  "benefits": [
+    {
+      "group": "아시아나 마일리지 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내이용",
+          "note": "1,000원당 1마일 적립"
+        },
+        {
+          "category": "해외이용",
+          "note": "1,000원당 2마일 적립(직구, 온라인 포함)"
+        },
+        {
+          "category": "면세점",
+          "note": "1,000원당 2마일 적립"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "(부분)무이자할부 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "지방세"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원) 등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "대한항공/아시아나항공 마일리지 적립 서비스"
+  ],
+  "schema_gaps": [
+    "심의필 날짜(as_of)가 문서 내에 명시되어 있지 않아 null 처리함",
+    "마일리지 적립은 전월 실적 조건이 없음",
+    "마일리지 적립은 건별 이용금액 기준으로 적립됨"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09154__prdctOpmn_20240625.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09154__prdctOpmn_20240625.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

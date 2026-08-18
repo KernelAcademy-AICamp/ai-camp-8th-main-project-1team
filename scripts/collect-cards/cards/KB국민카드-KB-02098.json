@@ -1,0 +1,191 @@
+{
+  "issuer": "KB국민카드",
+  "name": "서울도시가스 KB국민카드",
+  "product_id": "KB-02098",
+  "status": "active",
+  "as_of": "2024-11-25",
+  "review_no": "여신금융협회 심의필 제 2024-C1a- 14696호",
+  "compliance_no": "준법감시인 심의필 250702-03451-PIF (2025.07.02)",
+  "posted_at": "2012-02-16",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "골드",
+      "total": 5000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "JCB",
+      "total": 10000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Mastercard",
+      "total": 10000
+    }
+  ],
+  "annual_fee_notes": [
+    "최초연도 연회비 면제 없음",
+    "차기년도 기본연회비: 연간 300만원(일시불+할부) 이상 사용 시 면제"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      300000,
+      600000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 각종 수수료, 이자"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "후불교통이용금액"
+      },
+      {
+        "code": "UTILITY",
+        "label": "이동통신요금 자동이체 금액"
+      },
+      {
+        "code": "POINT",
+        "label": "포인트리 결제금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "서울도시가스 요금할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "도시가스",
+          "note": "월 최대 20만원 이용금액까지 할인"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 10000,
+        "600000": 20000
+      }
+    },
+    {
+      "group": "생활밀착 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "외식",
+          "brands": [
+            "아웃백",
+            "VIPS",
+            "생어거스틴"
+          ],
+          "exclude_place": [
+            "백화점",
+            "대형할인마트 입점 매장"
+          ],
+          "note": "월 최대 2만원 할인(월 최대 이용금액 20만원까지)"
+        },
+        {
+          "category": "대중교통",
+          "industries": [
+            "시내버스",
+            "지하철",
+            "고속버스",
+            "시외버스"
+          ],
+          "note": "월 최대 5천원 할인"
+        },
+        {
+          "category": "통신",
+          "industries": [
+            "이동통신요금 자동이체"
+          ],
+          "note": "월 3천원 정액 할인"
+        }
+      ]
+    },
+    {
+      "group": "해피포인트",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "해피포인트 가맹점"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [],
+  "schema_gaps": [
+    "서울도시가스 요금할인 서비스에 대해 최초 카드 사용등록일 이후 60일이 포함된 월의 월말까지는 전월 실적 미달 시에도 5% 할인 제공",
+    "외식 서비스는 1일 1회, 월 2회 한도 적용"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/_02098__prdctOpmn_20251014.pdf",
+  "_extraction_check": {
+    "source_pdf": "01__02098__prdctOpmn_20251014.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.annual_fee.length",
+        "first": 3,
+        "second": 2
+      },
+      {
+        "path": "$.annual_fee[1].total",
+        "first": 10000,
+        "second": 5000
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.300000",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.600000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.600000",
+        "first": null,
+        "second": 20000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 20000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

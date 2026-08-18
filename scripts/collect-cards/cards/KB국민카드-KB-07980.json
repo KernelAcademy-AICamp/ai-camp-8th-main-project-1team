@@ -1,0 +1,189 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 총무 체크카드",
+  "product_id": "KB-07980",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "한식, 휴게음식점",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "min_amount": 20000,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "한식, 휴게음식점",
+          "note": "일식, 중식, 양식, 부페, 패밀리레스토랑, 주점 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000,
+        "500000": 10000
+      }
+    },
+    {
+      "group": "커피음료전문점",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "커피음료전문점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000,
+        "500000": 10000
+      }
+    },
+    {
+      "group": "제과아이스크림",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "제과아이스크림"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 10000
+      }
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 1500,
+        "500000": 1500
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "TRANSIT",
+      "label": "후불교통요금"
+    },
+    {
+      "code": "VENDING_MACHINE",
+      "label": "무승인결제(자판기)"
+    },
+    {
+      "code": "TOLL",
+      "label": "터널통행료, 유료도로"
+    },
+    {
+      "code": "REFUND_FEE",
+      "label": "기차/고속버스 취소 반환수수료"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금 이용금액"
+    },
+    {
+      "code": "TUITION",
+      "label": "보육료, 유치원보조비, 바우처 이용금액, 대학(대학원)등록금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입(충전)금액"
+    },
+    {
+      "code": "FEE",
+      "label": "연체료, 지방세(지방세, 상하수도, 세외수입), 취소금액, 각종 수수료 및 이자"
+    }
+  ],
+  "non_monetary": [
+    "후불교통기능 제공"
+  ],
+  "schema_gaps": [
+    "card_type은 체크카드이나, 후불교통기능이 포함되어 있음",
+    "한식/커피/제과 업종 할인 시 평일 1일 1회, 최대 2,500원 할인 한도 적용",
+    "제과아이스크림 업종은 30만원 구간에서 할인 미제공"
+  ],
+  "posted_at": "2023-05-10",
+  "source_url": "https://img2.kbcard.com/obj/card/download/07980__prdctOpmn_20260716.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_07980__prdctOpmn_20260716.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[1].min_amount",
+        "first": 20000,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.300000",
+        "first": 5000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].requires_tier",
+        "first": 300000,
+        "second": 500000
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 5000
+      },
+      {
+        "path": "$.benefits[2].requires_tier",
+        "first": 500000,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[3].min_amount",
+        "first": 10000,
+        "second": 20000
+      },
+      {
+        "path": "$.tiers.length",
+        "first": 0,
+        "second": 2
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

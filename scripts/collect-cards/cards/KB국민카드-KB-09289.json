@@ -1,0 +1,270 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 톡톡O 카드",
+  "product_id": "KB-09289",
+  "status": "stopped",
+  "as_of": "2022-04-14",
+  "review_no": "여신금융협회 심의필 제 2022-C1a- 02690호",
+  "compliance_no": "준법감시인 심의필 220325-00785-PIF(2022.03.25)",
+  "posted_at": "2021-11-29",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 12000,
+      "base": 7000,
+      "affiliate": 5000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Master/Amex",
+      "total": 12000,
+      "base": 7000,
+      "affiliate": 5000
+    }
+  ],
+  "annual_fee_notes": [
+    "모바일 단독카드 연회비 6천원 (기본 1천원 + 제휴 5천원)",
+    "연회비는 카드발급 시점을 기준으로 1년 단위로 청구",
+    "초회/차기년도 연회비 면제조건 없음"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외이용금액"
+      ]
+    },
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      300000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "DISCOUNTED_TRANSACTIONS",
+        "label": "할인서비스 받은 이용 건(해당 매출 전체)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "전기·수도"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원 보조비/바우처 이용금액 등)"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고 학교납입금 전체, 대학(대학원)등록금"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입/충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(교통, 자판기, 터널통행료, 항공기내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "OTT 플랫폼",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 100,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "OTT",
+          "brands": [
+            "넷플릭스",
+            "디즈니 플러스",
+            "웨이브",
+            "왓챠",
+            "티빙",
+            "YouTube Premium"
+          ],
+          "note": "공식 홈페이지를 통한 정기결제 시 제공"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 10000
+      }
+    },
+    {
+      "group": "온라인 간편결제",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "간편결제",
+          "brands": [
+            "KB Pay",
+            "삼성페이",
+            "LG페이",
+            "카카오페이",
+            "네이버페이",
+            "PAYCO",
+            "쿠페이",
+            "스마일페이",
+            "SSGPAY",
+            "L.Pay"
+          ],
+          "note": "국내 온라인가맹점 결제건에 한함"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 3000
+      }
+    },
+    {
+      "group": "편의점",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "편의점",
+          "industries": [
+            "편의점 업종"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 3000
+      }
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 3000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입/충전금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "톡톡 알파벳계열 전월실적 합산서비스: 타 톡톡 알파벳 카드와 실적 합산 가능",
+    "모바일 단독카드 발급 시 일부 오프라인 가맹점 사용 제한"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09289__prdctOpmn_20220427.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09289__prdctOpmn_20220427.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].min_amount",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].min_amount",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[1].requires_tier",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].min_amount",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[2].requires_tier",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].min_amount",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[3].requires_tier",
+        "first": 300000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 19000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

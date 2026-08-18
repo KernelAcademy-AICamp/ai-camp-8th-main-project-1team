@@ -1,0 +1,278 @@
+{
+  "issuer": "KB국민카드",
+  "name": "저축은행 KB국민카드 (적립형)",
+  "product_id": "KB-04897",
+  "status": "stopped",
+  "as_of": "2019-12-19",
+  "review_no": "여신금융협회 심의필 제2019-C1a-11127호",
+  "posted_at": "2015-01-21",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(UPI)",
+      "total": 5000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 10000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "회수된 결제원금 기준",
+    "tiers": [
+      300000,
+      600000,
+      1200000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "DISCOUNTED_AMOUNT",
+        "label": "할인 받은 이용건(해당매출 전체)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트 관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금(국세/지방세 등)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "선불카드 구입 및 충전금액, 각종 상품권 매출"
+      },
+      {
+        "code": "FEE",
+        "label": "각종수수료 (할부수수료, 단기카드대출 이용수수료, 이자 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "주유",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 60,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "주유",
+          "industries": [
+            "주유소",
+            "충전소"
+          ],
+          "note": "리터당 60원 할인, 일 이용금액 10만원, 월 이용금액 20만원까지"
+        }
+      ]
+    },
+    {
+      "group": "통신",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "통신",
+          "industries": [
+            "전화요금",
+            "인터넷이용료",
+            "케이블TV"
+          ],
+          "note": "월 이용금액 3만원까지"
+        }
+      ]
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철",
+            "택시"
+          ],
+          "note": "월 이용금액 5만원까지"
+        }
+      ]
+    },
+    {
+      "group": "생활형",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 600000,
+      "targets": [
+        {
+          "category": "음식점/커피/편의점/약국",
+          "industries": [
+            "일반음식점",
+            "커피전문점",
+            "편의점",
+            "약국"
+          ],
+          "note": "월 이용금액 5만원까지"
+        }
+      ]
+    },
+    {
+      "group": "학원/휘트니스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 1200000,
+      "targets": [
+        {
+          "category": "학원/휘트니스",
+          "industries": [
+            "학원",
+            "독서실",
+            "종합스포츠센터"
+          ],
+          "note": "월 이용금액 30만원까지"
+        }
+      ]
+    },
+    {
+      "group": "전가맹점",
+      "kind": "적립",
+      "rate_percent": 0.8,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "전가맹점"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부(부분 무이자 포함) 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "선불카드 구입 및 충전금액, 각종 상품권 구입금액"
+    }
+  ],
+  "non_monetary": [
+    "저축은행 ATM 예금인출 서비스"
+  ],
+  "schema_gaps": [
+    "주유, 통신, 대중교통은 전월 30만원 이상 시 제공",
+    "음식점, 커피, 편의점, 약국은 전월 60만원 이상 시 제공",
+    "학원, 휘트니스센터는 전월 120만원 이상 시 제공",
+    "포인트리 적립은 전월 30만원 이상 시 제공",
+    "실적유예기간: 최초 카드 사용등록일로부터 30일이 속한 해당월말까지 1구간 혜택 제공"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04897__prdctOpmn_20220616.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04897__prdctOpmn_20220616.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": 60,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 50000
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": null,
+        "second": 10
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.1200000",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.600000",
+        "first": null,
+        "second": 50000
+      },
+      {
+        "path": "$.benefits[2].requires_tier",
+        "first": 300000,
+        "second": 600000
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 30000
+      },
+      {
+        "path": "$.benefits[4].kind",
+        "first": "할인",
+        "second": "적립"
+      },
+      {
+        "path": "$.benefits[4].rate_percent",
+        "first": 10,
+        "second": 0.8
+      },
+      {
+        "path": "$.benefits[4].requires_tier",
+        "first": 600000,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[5].kind",
+        "first": "적립",
+        "second": "할인"
+      },
+      {
+        "path": "$.benefits[5].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 200000
+      },
+      {
+        "path": "$.benefits[5].rate_percent",
+        "first": 0.8,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

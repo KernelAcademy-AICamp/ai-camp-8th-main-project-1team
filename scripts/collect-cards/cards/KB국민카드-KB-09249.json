@@ -1,0 +1,315 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 Easy study 티타늄카드",
+  "product_id": "KB-09249",
+  "status": "stopped",
+  "as_of": "2019-12-18",
+  "review_no": "여신금융협회 심의필번호 제2019-C1a-11096호",
+  "compliance_no": "준법감시인심의필 191210-04091-PIF",
+  "posted_at": "2020-01-09",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 35000,
+      "base": 7000,
+      "affiliate": 28000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Master",
+      "total": 35000,
+      "base": 7000,
+      "affiliate": 28000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      500000,
+      1000000,
+      1500000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "전기/수도"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료"
+      },
+      {
+        "code": "TUITION",
+        "label": "초,중,고등학교 납입금, 대학(대학원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통요금"
+      },
+      {
+        "code": "ETC",
+        "label": "무승인전표(자판기/터널통행료,항공기내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "학습",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "rate_percent": 3,
+      "min_amount": 100000,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "학원",
+          "industries": [
+            "문리계",
+            "외국어",
+            "예체능",
+            "기술/사무/가정계",
+            "자동차",
+            "독서실",
+            "기타 학원 업종"
+          ],
+          "note": "오프라인 결제 건에 한함"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 10000,
+        "1000000": 20000,
+        "1500000": 40000
+      }
+    },
+    {
+      "group": "온라인 강의",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "rate_percent": 5,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "온라인 강의",
+          "brands": [
+            "메가스터디",
+            "아발론",
+            "디지털대성",
+            "박문각",
+            "영단기공단기",
+            "해커스어학원",
+            "시원스쿨",
+            "에듀윌"
+          ],
+          "channel": [
+            "공식 홈페이지",
+            "APP"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 10000,
+        "1000000": 20000,
+        "1500000": 30000
+      }
+    },
+    {
+      "group": "취미/자기계발",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "rate_percent": 3,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "취미/자기계발",
+          "industries": [
+            "수영장",
+            "요가",
+            "레포츠클럽",
+            "문화센터",
+            "종합스포츠센터"
+          ],
+          "note": "오프라인 결제 건에 한함"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 5000,
+        "1000000": 10000,
+        "1500000": 15000
+      }
+    },
+    {
+      "group": "서점/문구",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "rate_percent": 5,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "서점/문구",
+          "industries": [
+            "서점",
+            "문방구점",
+            "학습지"
+          ]
+        },
+        {
+          "category": "온라인서점",
+          "brands": [
+            "Yes24",
+            "교보문고 인터넷"
+          ],
+          "channel": [
+            "공식 홈페이지",
+            "APP"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 5000,
+        "1000000": 10000,
+        "1500000": 15000
+      }
+    },
+    {
+      "group": "대형마트",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "amount_krw": 3000,
+      "min_amount": 100000,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "대형마트"
+        }
+      ],
+      "conditions": [
+        "월 1회 제공"
+      ]
+    },
+    {
+      "group": "통신요금",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "amount_krw": 2000,
+      "min_amount": 30000,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "통신요금",
+          "brands": [
+            "SKT",
+            "KT",
+            "LG U+",
+            "KB Liiv M"
+          ],
+          "note": "자동납부 이용금액"
+        }
+      ],
+      "conditions": [
+        "월 1회 제공"
+      ]
+    },
+    {
+      "group": "패스트푸드",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "amount_krw": 1000,
+      "min_amount": 10000,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "패스트푸드"
+        }
+      ],
+      "conditions": [
+        "월 2회 제공"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    }
+  ],
+  "non_monetary": [
+    "공항/호텔 발레파킹",
+    "공항라운지",
+    "Master 브랜드 발급 시 Master 티타늄 서비스(공항라운지, F&B, 국내면세점 할인 등) 추가 제공"
+  ],
+  "schema_gaps": [
+    "실적 유예기간: 최초 카드 사용 등록일로부터 다음달 말일까지 실적 없어도 50만원 이상 구간 서비스 제공",
+    "티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적 유예기간 없음",
+    "대형마트/통신요금/패스트푸드 할인 서비스는 전월 실적 50만원 이상 시 제공",
+    "할인 서비스는 월간 할인한도 내에서 제공되며 잔여한도 이월 불가"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09249__prdctOpmn_20240105.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09249__prdctOpmn_20240105.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.500000",
+        "first": null,
+        "second": 2000
+      },
+      {
+        "path": "$.benefits[5].monthly_cap_by_tier.500000",
+        "first": null,
+        "second": 3000
+      },
+      {
+        "path": "$.benefits[6].monthly_cap_by_tier.500000",
+        "first": null,
+        "second": 2000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 100000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

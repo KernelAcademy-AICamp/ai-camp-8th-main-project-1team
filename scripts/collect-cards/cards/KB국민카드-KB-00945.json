@@ -1,0 +1,113 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 경찰대총동창회카드",
+  "product_id": "KB-00945",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "1995-06-26",
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 13000,
+      "base": 3000,
+      "affiliate": 10000
+    },
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 15000,
+      "base": 5000,
+      "affiliate": 10000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Visa/Mastercard",
+      "total": 15000,
+      "base": 5000,
+      "affiliate": 10000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Visa/Mastercard",
+      "total": 20000,
+      "base": 10000,
+      "affiliate": 10000
+    }
+  ],
+  "annual_fee_notes": [
+    "초회년도 연회비는 면제되지 않음",
+    "차기년도 연회비는 해당카드로 연간 100만원 이상 이용 시(단기카드대출 포함) 기본연회비 면제",
+    "연간 500만원 이상 이용 시(단기카드대출 포함) 기본 및 제휴 연회비 면제"
+  ],
+  "benefits": [
+    {
+      "group": "마일리지 서비스",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "아시아나항공",
+          "note": "1,000원당 1마일 제공"
+        }
+      ],
+      "conditions": [
+        "일시불 및 할부 이용금액에 한함",
+        "무이자할부 이용금액(부분무이자 포함) 제외"
+      ]
+    },
+    {
+      "group": "발전기금 제공 서비스",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "발전기금",
+          "note": "카드이용금액의 일부를 매년 동창회 발전기금으로 제공"
+        }
+      ],
+      "conditions": [
+        "일시불 및 할부 이용금액에 한함",
+        "단기카드대출(현금서비스) 제외"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액(부분무이자 포함)"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "연회비 등급별(실버/골드) 구분이 존재함",
+    "심의필 날짜(2018-08-31)는 준법감시인 심의필 문구에 포함되어 있으나, 여신금융협회 심의필 번호가 아니므로 as_of는 null 처리함"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/00945__prdctOpmn_20210916.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_00945__prdctOpmn_20210916.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

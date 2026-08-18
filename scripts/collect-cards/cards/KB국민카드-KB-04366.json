@@ -5,27 +5,27 @@
   "status": "active",
   "as_of": "2025-03-28",
   "review_no": "여신금융협회 심의필 제 2025-C1a-03847호",
-  "compliance_no": "260406-01115-PIF(2026.04.06)",
+  "compliance_no": "준법감시인 260406-01115-PIF(2026.04.06)",
   "posted_at": "2025-04-01",
   "card_type": "CREDIT",
   "annual_fee": [
     {
       "scope": "국내전용",
-      "brand": "Local",
+      "brand": "KB",
       "total": 20000,
       "base": 7000,
       "affiliate": 13000
     },
     {
-      "scope": "국내외겸용",
-      "brand": "Master",
+      "scope": "해외겸용",
+      "brand": "Mastercard",
       "total": 20000,
       "base": 7000,
       "affiliate": 13000
     },
     {
       "scope": "모바일 단독카드",
-      "brand": "Local/Master",
+      "brand": "KB",
       "total": 14000,
       "base": 1000,
       "affiliate": 13000
@@ -33,21 +33,15 @@
   ],
   "annual_fee_notes": [
     "연회비는 카드 발급 시점을 기준으로 1년 단위로 청구",
-    "최초/2차년도 연회비 면제 조건 없음"
+    "최초/2차년도 연회비 면제 조건 없음",
+    "모바일 단독카드는 실물 없이 KB Pay에 등록하여 이용"
   ],
   "performance": {
     "period": "전월 1일~말일",
     "basis": "승인일",
-    "basis_exceptions": {
-      "basis": "매입일",
-      "applies_to": [
-        "해외 이용금액"
-      ]
-    },
     "includes_family_card": true,
     "includes": [
       "국내 일시불",
-      "해외 일시불",
       "할부"
     ],
     "tiers": [
@@ -57,8 +51,8 @@
     "new_member_grace": {},
     "excluded": [
       {
-        "code": "DISCOUNTED",
-        "label": "KB국민SK 7mobileⅡ 카드로 할인받은 이용건(해당 매출 전체)"
+        "code": "DISCOUNTED_AMOUNT",
+        "label": "할인받은 이용건(해당 매출 전체)"
       },
       {
         "code": "CASH_ADVANCE",
@@ -115,9 +109,10 @@
       "targets": [
         {
           "category": "통신",
-          "industries": [
-            "SK텔링크 휴대폰 통신요금 자동납부"
-          ]
+          "brands": [
+            "SK텔링크"
+          ],
+          "note": "자동납부 청구서에 부과되는 휴대폰 통신요금"
         }
       ],
       "monthly_cap_by_tier": {
@@ -137,22 +132,41 @@
       "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입/충전금액"
     }
   ],
-  "non_monetary": [],
+  "non_monetary": [
+    "모바일 단독카드 발급 시 국내 일부 및 해외 오프라인 가맹점 사용 제한"
+  ],
   "schema_gaps": [
     "최초 카드 사용 등록일로부터 다음달 말일까지 전월 실적 30만원 미만 시 월 3,500원 할인 제공",
-    "최초 카드 사용 등록월 실적이 30만원 이상일 경우 다음달에 해당 실적 구간 할인금액 적용",
-    "할인금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인 적용"
+    "최초 등록월 실적이 30만원 이상일 경우 다음달에 해당 실적 구간 할인금액 적용",
+    "할인금액보다 자동납부 승인금액이 작을 경우 승인금액까지만 할인"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/04366__prdctOpmn_20260626.pdf",
   "_extraction_check": {
-    "source_pdf": "04366.pdf",
+    "source_pdf": "01_04366__prdctOpmn_20260626.pdf",
+    "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [
       0.0,
       0.2
     ],
-    "numeric_consensus": true,
-    "mismatches": [],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.annual_fee.length",
+        "first": 3,
+        "second": 4
+      },
+      {
+        "path": "$.annual_fee[2].base",
+        "first": 7000,
+        "second": 1000
+      },
+      {
+        "path": "$.annual_fee[2].total",
+        "first": 20000,
+        "second": 14000
+      }
+    ],
     "second_run_error": null,
     "external_max_benefit": {
       "status": "UNAVAILABLE",

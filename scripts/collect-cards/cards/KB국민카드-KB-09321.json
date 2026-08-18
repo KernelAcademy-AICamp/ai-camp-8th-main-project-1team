@@ -5,7 +5,7 @@
   "status": "active",
   "as_of": "2023-04-26",
   "review_no": "여신금융협회 심의필 제2023-C1a-03862호",
-  "compliance_no": "240215-00555-PIF(2024.02.15)",
+  "compliance_no": "240215-00555-PIF",
   "posted_at": "2023-04-26",
   "card_type": "CREDIT",
   "benefit_style": "DISCOUNT_POINT",
@@ -20,7 +20,7 @@
       "affiliate": 1000
     },
     {
-      "scope": "국내외겸용",
+      "scope": "해외겸용",
       "brand": "Visa",
       "total": 8000,
       "base": 7000,
@@ -28,7 +28,8 @@
     }
   ],
   "annual_fee_notes": [
-    "연회비는 카드 발급 시점을 기준으로 1년 단위로 청구되며, 초회/차기년도 연회비 면제 조건은 없습니다."
+    "연회비는 카드 발급 시점을 기준으로 1년 단위로 청구",
+    "초회/차기년도 연회비 면제 조건 없음"
   ],
   "performance": {
     "period": "전월 1일~말일",
@@ -68,7 +69,7 @@
       },
       {
         "code": "FEE",
-        "label": "각종 수수료 및 이자, 연체료, 연회비"
+        "label": "각종 수수료 및 이자, 연회비"
       },
       {
         "code": "GIFT_CARD",
@@ -159,11 +160,10 @@
       "requires_tier": 300000,
       "targets": [
         {
-          "category": "생활서비스",
+          "category": "생활서비스 영역 KB Pay 결제",
           "channel": [
             "KB Pay"
-          ],
-          "note": "생활서비스 할인 영역에서 KB Pay 이용 시 추가할인"
+          ]
         }
       ],
       "monthly_cap_by_tier": {
@@ -183,19 +183,19 @@
     },
     {
       "code": "FEE",
-      "label": "연체료"
+      "label": "연회비"
     }
   ],
   "non_monetary": [
     "가족카드 발급 불가"
   ],
   "schema_gaps": [
-    "실적 유예 제공: 최초 카드 사용 등록 후 다음 달 말일까지 전월 실적 조건 미달 시에도 서비스 제공",
-    "생활서비스 할인은 건당 1만원 이상 이용 시 제공"
+    "생활서비스 할인 영역은 건당 1만원 이상 이용 시에만 할인 적용",
+    "실적 유예: 최초 카드 사용 등록 후 다음 달 말일까지 전월 실적 조건 미달 시에도 서비스 제공"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/09321__prdctOpmn_20240424.pdf",
   "_extraction_check": {
-    "source_pdf": "09321.pdf",
+    "source_pdf": "01_09321__prdctOpmn_20240424.pdf",
     "source_mode": "attached_pdf",
     "runs": 2,
     "temperatures": [

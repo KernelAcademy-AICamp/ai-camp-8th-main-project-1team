@@ -1,0 +1,192 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB손해보험 마이펫카드",
+  "product_id": "KB-09383",
+  "status": "active",
+  "as_of": "2024-03-13",
+  "review_no": "여신금융협회심의필 제 2024-C1a-02656호",
+  "compliance_no": "240207-00434-PIF",
+  "posted_at": "2023-10-13",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "includes_family_card": true,
+    "tiers": [
+      400000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "DISCOUNTED_TRANS",
+        "label": "할인받은 이용건 전체"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "(부분)무이자할부"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초/중/고학교납입금전체, 대학(원)등록금"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처이용금액등)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종세금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종수수료및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권및 선불카드(선불전자지급수단포함)구입/충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(대중교통,공항버스,자판기, 터널통행료, 항공기내 이용등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "펫 보험료",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 20,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "보험료"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 10000
+      }
+    },
+    {
+      "group": "동물병원&애완동물",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 20,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "동물병원 및 애완동물 업종"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000
+      }
+    },
+    {
+      "group": "배달 및 간식",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "배달 및 간식",
+          "brands": [
+            "배달의민족",
+            "마켓컬리",
+            "요기요"
+          ],
+          "industries": [
+            "제과",
+            "커피",
+            "패스트푸드"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "(부분)무이자할부"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함)구입/충전금액"
+    }
+  ],
+  "non_monetary": [
+    "실적 유예기간: 최초 사용등록일부터 다음 달 말일까지 전월 실적 40만원 미만 시에도 할인서비스 제공"
+  ],
+  "schema_gaps": [
+    "실적 유예기간 조건 존재"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09383__prdctOpmn_20240327.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09383__prdctOpmn_20240327.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 16000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

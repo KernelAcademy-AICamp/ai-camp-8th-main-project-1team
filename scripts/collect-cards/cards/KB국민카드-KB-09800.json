@@ -26,17 +26,22 @@
     }
   ],
   "annual_fee_notes": [
-    "가족카드 연회비 7,000원(기본연회비 0원, 제휴연회비 7,000원)",
-    "연회비 면제조건 없음",
-    "모바일 단독카드 발급 시 연회비 13,000원(기본 1,000원, 제휴 12,000원)"
+    "모바일 단독카드: 일반카드 대비 연회비 상이(13,000원)",
+    "가족카드 연회비 7,000원",
+    "연회비 면제조건 없음"
   ],
   "performance": {
     "period": "전월 1일~말일",
     "basis": "승인일",
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
     "tiers": [
       400000,
       800000
     ],
+    "new_member_grace": {},
     "excluded": [
       {
         "code": "INSTALLMENT_FREE",
@@ -52,7 +57,7 @@
       },
       {
         "code": "GIFT_CARD",
-        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전 금액"
+        "label": "상품권 및 선불카드 구입·충전 금액"
       },
       {
         "code": "HOUSING",
@@ -60,7 +65,15 @@
       },
       {
         "code": "TUITION",
-        "label": "유치원/초·중·고 학교 납입금 전체, 대학(원) 등록금"
+        "label": "유치원/초·중·고 학교 납입금"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION_UNI",
+        "label": "대학(원) 등록금"
       },
       {
         "code": "TAX",
@@ -72,7 +85,7 @@
       },
       {
         "code": "SOCIAL_INS",
-        "label": "4대 사회보험료(건강/연금/고용/산재)"
+        "label": "4대 사회보험료"
       },
       {
         "code": "FEE",
@@ -88,7 +101,6 @@
     {
       "group": "자주 쓰는 간편결제",
       "kind": "할인",
-      "settle": "결제일 할인",
       "targets": [
         {
           "category": "간편결제",
@@ -98,22 +110,22 @@
             "카카오페이",
             "토스페이"
           ],
-          "note": "4개 중 택 1"
+          "channel": [
+            "국내 온/오프라인 가맹점"
+          ]
         }
       ],
       "monthly_cap_by_tier": {
-        "400000": 15000,
-        "800000": 30000
+        "400000": 10000,
+        "800000": 20000
       }
     },
     {
       "group": "온라인패션몰",
       "kind": "할인",
-      "settle": "결제일 할인",
-      "rate_percent": 5,
       "targets": [
         {
-          "category": "온라인패션몰",
+          "category": "패션몰",
           "brands": [
             "무신사",
             "지그재그",
@@ -124,8 +136,7 @@
           "channel": [
             "공식 홈페이지",
             "모바일앱"
-          ],
-          "note": "KB Pay로 결제한 이용건"
+          ]
         }
       ],
       "monthly_cap_by_tier": {
@@ -136,8 +147,6 @@
     {
       "group": "디지털 콘텐츠/멤버십",
       "kind": "할인",
-      "settle": "결제일 할인",
-      "rate_percent": 30,
       "targets": [
         {
           "category": "디지털 콘텐츠",
@@ -165,14 +174,12 @@
       }
     },
     {
-      "group": "해외 가맹점",
+      "group": "해외",
       "kind": "할인",
-      "settle": "결제일 할인",
-      "rate_percent": 2,
       "targets": [
         {
           "category": "해외",
-          "scope": "해외 온·오프라인 가맹점"
+          "scope": "해외 온/오프라인 가맹점"
         }
       ]
     }
@@ -193,7 +200,7 @@
     },
     {
       "code": "GIFT_CARD",
-      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전 금액"
+      "label": "상품권 및 선불카드 구입·충전 금액"
     },
     {
       "code": "HOUSING",
@@ -201,7 +208,15 @@
     },
     {
       "code": "TUITION",
-      "label": "유치원/초·중·고 학교 납입금 전체, 대학(원) 등록금"
+      "label": "유치원/초·중·고 학교 납입금"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "TUITION_UNI",
+      "label": "대학(원) 등록금"
     },
     {
       "code": "TAX",
@@ -213,7 +228,7 @@
     },
     {
       "code": "SOCIAL_INS",
-      "label": "4대 사회보험료(건강/연금/고용/산재)"
+      "label": "4대 사회보험료"
     },
     {
       "code": "FEE",
@@ -225,16 +240,17 @@
     }
   ],
   "non_monetary": [
-    "전월실적 채워드림 서비스: 전월실적 35만원 이상 40만원 미만 시 신청하면 40만원~80만원 구간 혜택 제공 (반기 1회, 연 2회)"
+    "전월실적 채워드림 서비스 (전월실적 35~40만원 미만 시 40만원 구간 혜택 제공)"
   ],
   "schema_gaps": [
-    "실적 유예기간: 최초 발급 후 다음달 말일까지 전월실적 40만원 미만 시에도 40만원 이상 80만원 미만 구간 할인한도의 50% 제공",
-    "전월실적 채워드림 서비스는 반기 1회(연 2회) 신청 가능하며 신청 후 취소 불가",
-    "간편결제 할인 선택 서비스는 월 1회 변경 가능"
+    "전월실적 채워드림 서비스: 전월실적 35만원 이상 40만원 미만 시 신청을 통해 40만원 이상 80만원 미만 구간 혜택 제공 (반기 1회, 연 2회)",
+    "실적 유예기간: 최초 발급 후 다음달 말일까지 40만원 미만 시에도 40만원 구간 한도의 50% 제공",
+    "간편결제 할인율이 페이별로 상이함 (KB Pay 15%, 기타 10%)",
+    "디지털 콘텐츠/멤버십 할인율 30% 적용"
   ],
   "source_url": "https://img2.kbcard.com/obj/card/download/09800__prdctOpmn_20260330.pdf",
   "_extraction_check": {
-    "source_pdf": "09800.pdf",
+    "source_pdf": "01_09800__prdctOpmn_20260330.pdf",
     "source_mode": "extracted_text",
     "runs": 2,
     "temperatures": [
@@ -244,21 +260,36 @@
     "numeric_consensus": false,
     "mismatches": [
       {
-        "path": "$.benefits[1].requires_tier",
+        "path": "$.benefits[0].rate_percent",
         "first": null,
-        "second": 400000
+        "second": 5
       },
       {
-        "path": "$.benefits[3].requires_tier",
+        "path": "$.benefits[1].monthly_cap_by_tier.400000",
+        "first": 10000,
+        "second": 15000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.800000",
+        "first": 20000,
+        "second": 30000
+      },
+      {
+        "path": "$.benefits[2].rate_percent",
         "first": null,
-        "second": 400000
+        "second": 2
+      },
+      {
+        "path": "$.benefits[3].rate_percent",
+        "first": null,
+        "second": 30
       }
     ],
     "second_run_error": null,
     "external_max_benefit": {
       "status": "UNAVAILABLE",
-      "internal_krw": 40000,
-      "internal_complete": false,
+      "internal_krw": 30000,
+      "internal_complete": true,
       "external_krw": null,
       "source_url": null,
       "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
