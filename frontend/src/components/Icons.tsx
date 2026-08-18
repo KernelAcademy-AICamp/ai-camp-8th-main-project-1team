@@ -1,5 +1,5 @@
 /**
- * 아이콘 — 목업(frontend-moa/components/Icons.tsx)의 SVG 심볼 세트를 스프라이트로 한 번
+ * 아이콘 — 초기 목업 앱(2026-07 폐기)의 SVG 심볼 세트를 스프라이트로 한 번
  * 마운트하고(<IconSprite/>), 각 자리에서 <Icon id="i-food"/>로 참조한다(토스 일러스트 톤).
  * 심볼 정의는 목업과 100% 동일하고, 화면이 늘어나며 필요해진 4개(i-bank·i-doc·i-shield·i-dots)만 같은 톤으로 더했다.
  */

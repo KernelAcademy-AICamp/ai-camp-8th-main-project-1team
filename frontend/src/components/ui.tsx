@@ -1,5 +1,5 @@
 /**
- * 공용 UI 프리미티브 — 목업(frontend-moa/components/ui.tsx)에서 가져오되
+ * 공용 UI 프리미티브 — 초기 목업 앱(2026-07 폐기)에서 가져오되
  * 폰 목업(PhoneFrame·노치·상태바)은 걷어냈다. 여기서는 화면 하나가 곧 문서 한 장이다.
  * 스타일은 styles/app.css.
  */
