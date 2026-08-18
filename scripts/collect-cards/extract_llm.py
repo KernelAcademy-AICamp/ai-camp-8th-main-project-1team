@@ -277,7 +277,7 @@ def normalize_date(raw: Optional[str]) -> Optional[str]:
 
 
 def product_id_for(metadata: Dict[str, Any]) -> str:
-    """V34의 VARCHAR(30)에 맞는 안정적인 재적재 키를 고른다."""
+    """V36의 VARCHAR(30)에 맞는 안정적인 재적재 키를 고른다."""
     raw_product_id = str(metadata.get("product_id", "")).strip()
     if raw_product_id:
         prefix = ISSUER_PREFIX.get(str(metadata.get("issuer", "")), "")

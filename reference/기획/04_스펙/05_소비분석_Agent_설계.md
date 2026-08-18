@@ -3,7 +3,7 @@
 > 프로젝트명: MOA
 > 문서 목적: ① 소비 분석 Agent의 집계 규칙·판정 임계·산출물을 확정한다
 > 상태: 확정 v1.1 · 백엔드 구현 완료 · **§10.1 세 건은 구현 대기(2026-07-29 결정)**
-> 최종 업데이트: 2026-07-29
+> 최종 업데이트: 2026-08-03
 > 담당: ① 소비 분석(상현)
 > 구현: `backend/src/main/java/com/finntech/engine/` · `ml/` · `web/ConsumptionAnalysisController.java`
 
