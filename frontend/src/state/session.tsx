@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { DEFAULT_USER_ID } from '../lib/config';
 import { ApiError, api, clearAuthToken } from '../lib/api';
+import { usageReset, usageScreen, usageStart } from '../lib/usage';
 import type { AnalysisSummary, OnboardingPayment } from '../lib/api';
 
 export type ScreenId =
@@ -167,6 +168,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [draft, setDraft] = useState<ChallengeDraft>(emptyDraft);
   const [analysis, setAnalysis] = useState<AnalysisSummary | null>(null);
 
+  /**
+   * 행태 수집 — **화면 상태 하나에만 건다.**
+   *
+   * 이동 경로가 셋이다: {@link go}(코드가 옮김) · `popstate`(뒤로가기) · `hashchange`(주소 직접
+   * 입력·링크). 셋을 따로 계측하면 언젠가 넷째가 생기고 그것만 조용히 빠진다 — 실제로 이 파일의
+   * `ALL_SCREENS`가 같은 방식으로 `r-account`를 빠뜨린 적이 있다. 셋 다 결국 `screen`을 바꾸므로
+   * **그 결과 하나만** 본다.
+   *
+   * 서버는 동의한 실사용자가 아니면 조용히 버린다. 그래서 여기서 자격을 따지지 않는다 —
+   * 관문을 두 곳에 두면 둘이 어긋나는 날이 온다.
+   */
+  useEffect(() => {
+    usageStart();
+    usageScreen(screen);
+  }, [screen]);
+
   // 주소 ↔ 화면 동기화. 뒤로가기/앞으로가기는 브라우저가 맡는다.
   useEffect(() => {
     const onPop = () => setScreen(hashScreen() ?? 'home');
@@ -222,6 +239,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
    * 셈이라, 로그아웃했는데도 앞사람 계정으로 요청이 나간다.
    */
   const resetOnboarding = useCallback(() => {
+    // 세션을 먼저 끊는다. 안 끊으면 뒷사람의 클릭이 앞사람의 세션 순번을 이어받아
+    // 한 세션 안에 두 사람의 발자취가 섞인다.
+    usageReset();
     clearAuthToken();
     remove('mydata_onboarded');
     remove('demo_user_id');

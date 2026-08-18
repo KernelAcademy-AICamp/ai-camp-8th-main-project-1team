@@ -20,6 +20,7 @@
  * 실제로 첫 사용자가 "인증번호를 아직 등록도 안 했는데 뭘 넣나"에서 막혔다(2026-08-12).
  */
 import { useCallback, useEffect, useState } from 'react';
+import { UsageStats } from './UsageStats';
 
 const API_BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? '';
 
@@ -348,7 +349,14 @@ function Setup({ me, onDone }: { me: Me; onDone: (notice?: string) => void }) {
 }
 
 /** 대기 목록 — 요약만 보고 승인하거나 반려한다. */
+/**
+ * 관리 화면의 본체 — 탭 둘.
+ *
+ * 신청 대기가 먼저다. 그쪽은 <b>사람이 기다리는 일</b>이고 통계는 언제 봐도 되는 일이라,
+ * 열었을 때 보이는 것이 처리할 일이라야 한다.
+ */
 function Queue({ me, onLogout }: { me: Me; onLogout: () => void }) {
+  const [tab, setTab] = useState<'intake' | 'usage'>('intake');
   const [items, setItems] = useState<Intake[]>([]);
   const [reasons, setReasons] = useState<{ code: string; label: string }[]>([]);
   const [message, setMessage] = useState<string | null>(null);
@@ -362,7 +370,8 @@ function Queue({ me, onLogout }: { me: Me; onLogout: () => void }) {
     } catch (e) { setError(e instanceof Error ? e.message : '불러오지 못했어요.'); }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  // 통계 탭에서는 대기 목록을 다시 묻지 않는다 — 안 보이는 것을 새로 고칠 이유가 없다.
+  useEffect(() => { if (tab === 'intake') void load(); }, [load, tab]);
 
   async function approve(id: number) {
     setBusy(id); setError(null); setMessage(null);
@@ -388,7 +397,7 @@ function Queue({ me, onLogout }: { me: Me; onLogout: () => void }) {
   return (
     <main>
       <header className="bar">
-        <b>대기 중 {items.length}건</b>
+        <b>{tab === 'intake' ? `대기 중 ${items.length}건` : '이용 통계'}</b>
         <span>
           {me.username}
           <button type="button" className="link" onClick={async () => {
@@ -397,6 +406,16 @@ function Queue({ me, onLogout }: { me: Me; onLogout: () => void }) {
         </span>
       </header>
 
+      <nav className="tabs">
+        <button type="button" aria-current={tab === 'intake' ? 'page' : undefined}
+          onClick={() => setTab('intake')}>신청 대기</button>
+        <button type="button" aria-current={tab === 'usage' ? 'page' : undefined}
+          onClick={() => setTab('usage')}>이용 통계</button>
+      </nav>
+
+      {tab === 'usage' && <UsageStats call={call} />}
+
+      {tab === 'intake' && <>
       {message && <p className="notice ok" role="status">{message}</p>}
       {error && <p className="notice error" role="alert">{error}</p>}
       {items.length === 0 && <p className="muted">대기 중인 신청이 없습니다.</p>}
@@ -434,6 +453,7 @@ function Queue({ me, onLogout }: { me: Me; onLogout: () => void }) {
           </div>
         </article>
       ))}
+      </>}
     </main>
   );
 }

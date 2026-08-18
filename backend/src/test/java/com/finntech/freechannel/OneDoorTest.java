@@ -36,6 +36,8 @@ class OneDoorTest {
      *   <li>{@code TempClassifierService} — 통로 그 자체(HTTP 를 실제로 내는 곳)</li>
      *   <li>{@code MerchantBrandService} — 큐가 부르는 콜백 안에서만 쓴다</li>
      *   <li>{@code NarrativeCacheService} — 같음</li>
+     *   <li>{@code UsageGlossaryService} — 같음. 통계 용어의 말투 다듬기를 {@link Lane#ADMIN} 으로
+     *       올린다(맨 뒤 차선 — 늦어도 사용자는 아무것도 안 나빠지고 원문이 그대로 뜬다)</li>
      *   <li>{@code MerchantAskService} — ②-c 임시 분류. 결제 적재 흐름에 붙어 있어 아직 큐 밖이다
      *       (다음 차례다 — 그때 이 줄이 지워진다)</li>
      * </ul>
@@ -44,6 +46,7 @@ class OneDoorTest {
             "TempClassifierService",
             "MerchantBrandService",
             "NarrativeCacheService",
+            "UsageGlossaryService",
             "MerchantAskService");
 
     /** 통로를 쓴다는 표시 — 이 이름이 소스에 보이면 바깥으로 나갈 수 있다는 뜻이다. */
@@ -69,6 +72,7 @@ class OneDoorTest {
                     고르는 물음은 하나다 — "이 일을 안 하면 사용자가 지금 나쁜 것을 보는가."
                       본다   → Lane.USER_NOW
                       아니다 → Lane.USER_REFRESH · USER_BACKGROUND · DUMMY
+                      운영자만 본다 → Lane.ADMIN
 
                     통로를 직접 부르면 예산도 순서도 없다. 브랜드 273곳이 실사용자의 문장을 굶기고,
                     그 사실이 아무 데도 안 남는다.""")
