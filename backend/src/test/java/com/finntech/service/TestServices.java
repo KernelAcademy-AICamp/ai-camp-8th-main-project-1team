@@ -128,7 +128,11 @@ final class TestServices {
                 reports, clock, referenceDate,
                 // 추정 반영은 이 조립기를 쓰는 시험의 관심사가 아니다 — 대역으로 둔다.
                 // 규칙 자체는 `CategoryPromotionServiceTest` 가 따로 검사한다.
-                mock(CategoryPromotionService.class), followUps, selfOf(self));
+                mock(CategoryPromotionService.class), followUps,
+                // 소비 원장 표시도 마찬가지 — 표가 원장을 따라오는지는
+                // `SpendingLedgerFactsTest` 가 통합으로 본다.
+                mock(com.finntech.ledger.SpendingLedgerDirtyMarker.class),
+                selfOf(self));
         self.set(service);
         return service;
     }

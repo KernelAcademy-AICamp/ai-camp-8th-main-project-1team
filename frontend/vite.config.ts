@@ -5,6 +5,21 @@ import { resolve } from 'node:path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // **개발 서버에서만 쓰는 프록시.** 빌드 산출물에는 안 들어간다.
+  //
+  // 왜 필요한가: `admin.html`·`apply.html` 번들은 API 주소를 **상대 경로**로 부른다
+  // (`/api/admin/...`). 운영에서는 nginx 뒤 **동일 출처**라 그게 맞는데, 로컬에서는 그 요청이
+  // 백엔드가 아니라 vite 자신에게 가서 화면에 'Load failed' 만 떴다.
+  //
+  // CORS 를 여는 것으로도 뚫리긴 한다. 그러지 않는 이유는 admin 토큰이 **HttpOnly 쿠키**라
+  // 교차 출처로 보내려면 `allowCredentials` 까지 켜야 하고, 그러면 <b>운영에는 없는 경로</b>를
+  // 하나 만들어 두는 셈이 된다. 프록시는 반대로 로컬을 운영과 **같은 모양**(동일 출처)으로
+  // 만든다 — 로컬에서 되는 것이 운영에서도 되는 이유가 우연이 아니게 된다.
+  server: {
+    proxy: {
+      '/api': { target: 'http://localhost:8080', changeOrigin: false },
+    },
+  },
   build: {
     rollupOptions: {
       // **번들을 셋으로 가른다** (설계서 Phase 3).

@@ -137,6 +137,9 @@ public class ObservabilityController {
         m.put("ready", wasteScoringService.modelReady());
         // 임계는 F0.5로 고른 값이다(tech_log §8-Q). 배포된 모델이 그 값을 들고 있는지 눈으로 본다.
         m.put("threshold", classifier.isReady() ? classifier.threshold() : null);
+        // 지문은 **isReady 와 무관하게** 낸다 — 체계가 안 맞아 모델을 안 쓰는 상태에서도
+        // "어느 파일이 놓여 있는가"는 사실이고, 그때가 오히려 그 사실이 가장 필요한 때다.
+        m.put("fingerprint", classifier.fingerprint());
         return m;
     }
 

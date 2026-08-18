@@ -214,3 +214,195 @@ button.link {
 
 /* 로그인은 좁게 가운데 — 넣을 것이 셋뿐이라 넓으면 오히려 헤맨다 */
 .narrow { max-width: 940px; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * 이용 통계 (GA4 대응 화면)
+ *
+ * 숫자가 많은 화면이라 규칙을 넷만 둔다.
+ *   ① **먼저 큰 그림, 그다음 상세.** 맨 위 큰 그래프 하나로 흐름을 보고 아래로 파고든다.
+ *   ② **비교는 길이로.** 순위는 막대를 함께 그린다 — 숫자만 쌓으면 1위와 3위 차이를 못 읽는다.
+ *   ③ **설명은 숨긴다.** 화면에 설명을 늘어놓으면 정작 숫자가 안 보인다. `?` 뒤에 둔다.
+ *   ④ **자릿수를 맞춘다**(tabular-nums). 안 맞추면 세로로 훑을 때 눈이 미끄러진다.
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+.tabs { display: flex; gap: 4px; margin: 0 0 28px; border-bottom: 1px solid var(--line-strong); }
+.tabs button {
+  width: auto; margin: 0; padding: 10px 18px; border: 0; border-bottom: 2px solid transparent;
+  background: none; font-size: 15px; font-weight: 600; color: var(--muted-ink); border-radius: 0;
+}
+.tabs button:hover:not(:disabled) { background: none; color: var(--ink-2); }
+.tabs button[aria-current="page"] { color: var(--blue); border-bottom-color: var(--blue); }
+
+/* ── 기간 고르기 ─────────────────────────────────────────────────────── */
+.range { display: flex; gap: 6px; align-items: center; margin: 0 0 24px; flex-wrap: wrap; }
+.range button { width: auto; margin: 0; padding: 7px 14px; font-size: 14px; }
+.range button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.range .spacer { flex: 1; }
+
+/* ── 설명 버튼 — 물음표 하나. 눌러야 보인다 ──────────────────────────── */
+.why {
+  width: 17px; height: 17px; min-width: 17px; margin: 0 0 0 6px; padding: 0;
+  border: 1px solid var(--line-strong); border-radius: 50%; background: var(--paper);
+  color: var(--muted-ink); font-size: 11px; font-weight: 700; line-height: 1;
+  vertical-align: middle; display: inline-flex; align-items: center; justify-content: center;
+}
+.why:hover:not(:disabled) { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+.explain-back {
+  position: fixed; inset: 0; z-index: 40; display: flex; align-items: center;
+  justify-content: center; padding: 24px; background: rgba(25, 31, 40, .38);
+}
+.explain {
+  background: var(--paper); border-radius: 16px; padding: 28px 30px 24px;
+  max-width: 480px; width: 100%; box-shadow: 0 18px 48px rgba(25, 31, 40, .22);
+}
+.explain h4 { margin: 0 0 12px; font-size: 19px; font-weight: 700; }
+.explain p { margin: 0 0 22px; font-size: 15px; line-height: 1.75; color: var(--ink-2); }
+.explain .primary { width: 100%; }
+
+/* ── 큰 그래프 ───────────────────────────────────────────────────────── */
+.hero {
+  border: 1px solid var(--line); border-radius: 16px; padding: 24px 26px 12px;
+  background: var(--paper); margin: 0 0 32px;
+}
+.hero-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 24px; flex-wrap: wrap; margin-bottom: 8px;
+}
+.hero-head h2 { margin: 0; font-size: 17px; font-weight: 700; }
+.hero-figures { display: flex; gap: 32px; margin: 0; flex-wrap: wrap; }
+.hero-figures dt { font-size: 12px; color: var(--muted-ink); margin-bottom: 2px; }
+.hero-figures dd {
+  margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+.hero-figures dd i {
+  font-size: 14px; font-weight: 500; font-style: normal; color: var(--ink-2); margin-left: 2px;
+}
+
+/* ── 그림 공통 ───────────────────────────────────────────────────────── */
+.chart { display: block; width: 100%; overflow: visible; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .axis { stroke: var(--line-strong); stroke-width: 1; }
+.chart .tick { fill: var(--muted-ink); font-size: 11px; }
+.chart .tick.alt { fill: var(--green); }
+.chart .bar { fill: var(--blue); opacity: .9; }
+.chart .bar.zero { fill: var(--line-strong); opacity: .5; }
+.chart .bar.hot { fill: var(--blue-dark); }
+.chart .line { stroke: var(--green); stroke-width: 2.5; fill: none; stroke-linejoin: round; }
+.chart .dot { fill: var(--green); }
+.chart .area { fill: var(--blue); opacity: .1; }
+.chart rect:hover, .chart circle:hover { filter: brightness(.9); }
+
+/* ── 도넛 ────────────────────────────────────────────────────────────── */
+.donut-wrap { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.donut-wrap .track { stroke: var(--panel); }
+.donut-total {
+  font-size: 26px; font-weight: 700; fill: var(--ink); font-variant-numeric: tabular-nums;
+}
+.donut-unit { font-size: 12px; fill: var(--muted-ink); }
+.legend-list { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 150px; font-size: 13px; }
+.legend-list li { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.legend-list i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.legend-list .k {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.legend-list .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+.legend-list .p {
+  color: var(--muted-ink); min-width: 34px; text-align: right; font-variant-numeric: tabular-nums;
+}
+
+/* ── 판 ──────────────────────────────────────────────────────────────── */
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
+.panel {
+  border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px 20px;
+  background: var(--paper); min-width: 0;
+}
+.panel > h3 { margin: 0 0 14px; font-size: 15px; font-weight: 700; }
+.panel > .empty { margin: 0; font-size: 14px; color: var(--muted-ink); }
+.panel.wide { grid-column: 1 / -1; }
+.panel .rank { margin-top: 14px; }
+
+.group-title {
+  margin: 40px 0 16px; font-size: 13px; font-weight: 700; letter-spacing: .06em;
+  color: var(--muted-ink); text-transform: uppercase;
+}
+
+/* ── 스코어카드 ──────────────────────────────────────────────────────── */
+.scorecards {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+  gap: 12px; margin: 0 0 8px;
+}
+.scorecard {
+  border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; background: var(--paper);
+}
+.scorecard dt { font-size: 13px; color: var(--muted-ink); margin: 0 0 6px; }
+.scorecard dd {
+  margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+.scorecard dd .unit { font-size: 15px; font-weight: 500; color: var(--ink-2); margin-left: 2px; }
+.scorecard .sub {
+  display: block; margin-top: 4px; font-size: 12px; color: var(--muted-ink); font-weight: 400;
+}
+.scorecard.live { border-color: var(--blue); }
+.scorecard.live dd { color: var(--blue); }
+
+/* ── 순위 막대 ───────────────────────────────────────────────────────── */
+.rank { list-style: none; margin: 0; padding: 0; }
+.rank li { position: relative; padding: 7px 0; border-top: 1px solid var(--line); }
+.rank li:first-child { border-top: 0; }
+.rank .fill {
+  position: absolute; left: 0; top: 3px; bottom: 3px; border-radius: 5px;
+  background: color-mix(in srgb, var(--blue) 13%, transparent);
+}
+.rank .row { position: relative; display: flex; align-items: baseline; gap: 8px; padding: 0 8px; }
+.rank .name {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 14px;
+}
+.rank .name small { color: var(--muted-ink); margin-left: 6px; }
+.rank .val { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.rank .aside {
+  font-size: 12px; color: var(--muted-ink); font-variant-numeric: tabular-nums;
+  min-width: 54px; text-align: right;
+}
+
+/* ── 표 ──────────────────────────────────────────────────────────────── */
+.grid { width: 100%; border-collapse: collapse; font-size: 14px; }
+.grid th, .grid td { padding: 8px 10px; text-align: right; border-top: 1px solid var(--line); }
+.grid th {
+  color: var(--muted-ink); font-weight: 600; font-size: 12px; border-top: 0; white-space: nowrap;
+}
+.grid th:first-child, .grid td:first-child { text-align: left; }
+.grid th:last-child, .grid td:last-child { text-align: left; }
+.grid td { font-variant-numeric: tabular-nums; }
+.grid tbody tr:hover { background: var(--panel); }
+.scroll-x { overflow-x: auto; margin: 14px -20px 0; padding: 0 20px; }
+
+/* ── 흐름(A → B) ─────────────────────────────────────────────────────── */
+.flow { list-style: none; margin: 0; padding: 0; font-size: 14px; }
+.flow li {
+  display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line);
+}
+.flow li:first-child { border-top: 0; }
+.flow .from, .flow .to { flex: 1; min-width: 0; }
+.flow .to { font-weight: 600; }
+.flow .arrow { color: var(--muted-ink); }
+.flow .count {
+  font-variant-numeric: tabular-nums; color: var(--ink-2); min-width: 52px; text-align: right;
+}
+
+/*
+ * 화면에는 안 보이고 스크린리더에만 읽히는 것.
+ *
+ * 표의 `<caption>`이 이것을 쓴다 — 판 제목(`h3`)이 이미 같은 말을 하고 있어 눈으로는
+ * 두 번 읽힐 이유가 없지만, 표는 자기 안에 이름을 갖고 있어야 한다. 표만 따로 훑는
+ * 방식(스크린리더의 표 목록)에서는 바깥의 제목이 안 들리기 때문이다.
+ *
+ * `display:none`이 아니라 잘라내는 이유가 그것이다 — 감추면 읽히지도 않는다.
+ */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}

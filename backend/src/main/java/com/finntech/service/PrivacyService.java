@@ -70,6 +70,23 @@ public class PrivacyService {
     private final UserSpendingOverrideRepository overrideRepository;
     private final com.finntech.repository.UserMerchantStanceRepository merchantStanceRepository;
     private final CutCandidateSelectionRepository cutSelectionRepository;
+    /**
+     * 정리된 소비 원장(V34)과 그 재작성 대기열.
+     *
+     * <p><b>이 표는 개인정보의 사본이다</b> — 어디서 무엇을 언제 얼마에 샀는지가 한 줄에 다
+     * 들어 있다. 원본을 지우고 사본을 남기면 "파기했다"고 해놓고 개인정보가 그대로 남는다
+     * ({@code purgeExpired} 의 alert 처리와 같은 이유).
+     */
+    private final com.finntech.repository.SpendingLedgerRepository spendingLedgerRepository;
+    private final com.finntech.repository.SpendingLedgerDirtyRepository spendingLedgerDirtyRepository;
+    /**
+     * 행태 기록(V35).
+     *
+     * <p>방침 33조가 행태정보의 보유기간을 <b>"회원 탈퇴, 동의 철회까지"</b> 로 정해 두었다.
+     * 그러니 여기서 지우는 것은 선택이 아니라 그 조항의 이행이다.
+     */
+    private final com.finntech.repository.UsageEventRepository usageEventRepository;
+    private final com.finntech.repository.UsageSessionRepository usageSessionRepository;
     private final AuditService auditService;
     private final int retentionDays;
 
@@ -90,6 +107,10 @@ public class PrivacyService {
                           UserSpendingOverrideRepository overrideRepository,
                           com.finntech.repository.UserMerchantStanceRepository merchantStanceRepository,
                           CutCandidateSelectionRepository cutSelectionRepository,
+                          com.finntech.repository.SpendingLedgerRepository spendingLedgerRepository,
+                          com.finntech.repository.SpendingLedgerDirtyRepository spendingLedgerDirtyRepository,
+                          com.finntech.repository.UsageEventRepository usageEventRepository,
+                          com.finntech.repository.UsageSessionRepository usageSessionRepository,
                           AuditService auditService,
                           @Value("${finntech.privacy.retention-days:90}") int retentionDays) {
         this.userRepository = userRepository;
@@ -109,6 +130,10 @@ public class PrivacyService {
         this.overrideRepository = overrideRepository;
         this.merchantStanceRepository = merchantStanceRepository;
         this.cutSelectionRepository = cutSelectionRepository;
+        this.spendingLedgerRepository = spendingLedgerRepository;
+        this.spendingLedgerDirtyRepository = spendingLedgerDirtyRepository;
+        this.usageEventRepository = usageEventRepository;
+        this.usageSessionRepository = usageSessionRepository;
         this.auditService = auditService;
         this.retentionDays = retentionDays;
     }
@@ -232,9 +257,20 @@ public class PrivacyService {
         // 가맹점 판정 성향도 사용자가 쌓은 판단이다 — 어디서 무엇을 사는지가 드러난다.
         merchantStanceRepository.deleteByUserId(userId);
         cutSelectionRepository.deleteByUserId(userId);   // 절약후보 선택추적(⑤)도 소비결정 정보이므로 파기
+        // 정리된 소비 원장(V34)은 위 결제들의 **사본**이다 — 어디서 무엇을 언제 샀는지가
+        // 한 줄에 다 있다. 원본만 지우면 파기했다고 해놓고 그대로 남는다.
+        spendingLedgerRepository.deleteByUserId(userId);
+        // 대기 중인 재작성 표시도 치운다. 남겨 두면 배수가 지워진 사용자를 한 번 더 집어
+        // "쓸 것이 없다"를 확인하고 지운다 — 결과는 같지만 그 헛걸음이 로그를 흐린다.
+        spendingLedgerDirtyRepository.deleteByUserId(userId);
+        // 행태 기록 — 방침 33조가 "탈퇴·철회까지"로 정한 보유기간의 끝이 여기다.
+        // 어느 화면에 얼마나 머물렀는지는 그 사람이 무엇에 관심 있는지를 그대로 말한다.
+        usageEventRepository.deleteByUserId(userId);
+        usageSessionRepository.deleteByUserId(userId);
         userRepository.findById(userId).ifPresent(user -> {
             user.setCi(null);
             user.setBirthYear(null);   // 본인인증에서 파생한 출생연도도 개인정보다 — 함께 파기한다.
+            user.setGender(null);      // 성별도 같은 한 글자에서 나온 값이라 보유 근거가 같다.
             userRepository.save(user);
         });
 

@@ -126,6 +126,32 @@ location / {
 접근 제한(Basic 게이트)을 걸 때는 **443 블록에만** 건다. 80 블록의 ACME 챌린지 location에는
 걸지 않는다 — 게이트가 인증서 갱신을 막는다.
 
+## 7-B. 백업 타이머 (필수)
+
+**백업이 없으면 이 서버는 한 번의 사고로 끝난다.** 2026-08-18 까지 실제로 그 상태였다 —
+자동 백업이 하나도 없었고, 서버에 있던 큰 덤프는 전부 손으로 뜬 **더미 DB** 것이었다.
+
+```bash
+sudo cp deploy/finntech-backup.service deploy/finntech-backup.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now finntech-backup.timer
+
+systemctl list-timers finntech-backup.timer      # 다음 실행 시각
+sudo systemctl start finntech-backup.service     # 지금 한 번 돌려 본다
+journalctl -u finntech-backup.service -n 30      # 결과
+```
+
+뜨는 것은 **되돌릴 수 없는 것만**이다 — `finntech` 통째와 제공자의 실사람 몫 세 표.
+생성 결제 1,092만 건은 `scripts/gen-mydata.sh` 로 다시 만들 수 있어 뜨지 않는다.
+합쳐 하루 수 MB 라 14벌을 남겨도 100 MB 를 안 넘는다(`scripts/backup-daily.sh` 머리말 참조).
+
+**S3 를 붙이기 전까지는 절반짜리다.** 로컬 사본은 디스크가 통째로 날아가는 경우 —
+백업이 막아야 할 대표적인 경우 — 에 함께 사라진다. 인스턴스 역할에 버킷 하나에 대한
+`s3:PutObject` 를 준 뒤 서비스 파일에 `Environment=BACKUP_S3_BUCKET=<버킷>` 한 줄을 더한다.
+(2026-08-18 확인: 역할 `finntech-ec2-ssm` 에 S3 권한이 없어 `AccessDenied` 다.)
+
+떴다는 것과 되살릴 수 있다는 것은 다르므로, 가끔 `scripts/backup-drill.sh` 로 복원까지 해 본다.
+
 ## 8. 검증
 
 ```bash

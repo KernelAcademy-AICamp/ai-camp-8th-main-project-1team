@@ -138,7 +138,18 @@ const has = (re, hay = tsx) => re.test(hay);
 /* 나머지 — 구조·정책 항목 */
 const simple = [
   ['5.2.1', '자막 제공', !has(/<video|<audio/), '동영상·음성 없음'],
-  ['5.3.1', '표의 구성', !has(/<table/) , '<table> 미사용'],
+  // 표를 안 쓰면 자동 충족, 쓰면 **구조를 갖췄는지** 본다.
+  //
+  // 예전에는 `!has(/<table/)` 하나였다 — 표가 없으면 통과. 표를 처음 쓰는 순간
+  // (admin 의 이용 통계) 그 규칙은 "표를 쓰지 말라"는 뜻이 되어 버렸는데, 지침이 요구하는
+  // 것은 표를 피하는 것이 아니라 **제목 셀과 데이터 셀의 관계를 알 수 있게** 하는 것이다.
+  // 그래서 표 개수만큼 caption 이 있고 열 제목에 scope 가 붙었는지로 바꾼다.
+  ['5.3.1', '표의 구성',
+    count(/<table/g) === 0
+      || (count(/<caption/g) >= count(/<table/g) && has(/scope="col"/)),
+    count(/<table/g) === 0
+      ? '<table> 미사용'
+      : `표 ${count(/<table/g)} · caption ${count(/<caption/g)} · scope=col 사용`],
   ['5.3.2', '콘텐츠의 선형구조', has(/<main/), 'main 랜드마크'],
   ['5.3.3', '명확한 지시사항', !has(/(왼쪽|오른쪽|위쪽|아래쪽)\s*(버튼|링크)을?\s*(누르|클릭)/), '방향만으로 지시 안 함'],
   ['5.4.1', '색에 무관한 인식', has(/aria-pressed/) && has(/aria-current/), '상태를 aria로도 전달'],
