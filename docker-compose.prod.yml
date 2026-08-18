@@ -39,9 +39,18 @@ services:
       TZ: Asia/Seoul
     # 버퍼풀을 명시한다. 기본 128MB로는 13.6M행을 다룰 때 디스크만 읽는다.
     # 컨테이너 한도(1g) 안에서 절반을 데이터 캐시로 준다.
+    #
+    # binlog 보관을 3일로 줄인다(기본 30일). 2026-08-18 에 **디스크가 95% 까지 찬 원인**이
+    # 이것이었다 — 7/28~7/31 의 대량 작업(1,092만 건 생성 + 복원 2회)이 binlog 를 12.6 GB
+    # 만들었고, 30일 기본값 때문에 3주가 지나도록 그대로 앉아 있었다.
+    #
+    # 끄지 않고 3일을 남기는 이유: **사고 직후 몇 시간을 되짚을 여지**는 남긴다. 평상시 증가가
+    # 하루 5 MB 라(실측) 3일치는 15 MB 남짓이고, 대량 작업을 한 날에만 잠깐 커졌다가 사흘 뒤
+    # 스스로 사라진다. 복제도 PITR 절차도 없으므로 그 이상 들고 있을 이유가 없다.
     command: >
       --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
       --innodb-buffer-pool-size=512M
+      --binlog-expire-logs-seconds=259200
     mem_limit: 1g
     volumes:
       - mysql-data:/var/lib/mysql

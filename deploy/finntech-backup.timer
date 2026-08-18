@@ -1,0 +1,44 @@
+# 매일 04:10 **UTC** 백업.
+#
+# ## 시각이 UTC 인 이유 — 고를 수가 없다
+#
+# 호스트가 `Etc/UTC` 이고 systemd 가 **249** 다. `OnCalendar` 뒤에 시간대를 붙이는 문법
+# (`... Asia/Seoul`)은 systemd **252** 부터라 여기서는 못 쓴다. 그래서 이 시각은 UTC 이고,
+# 한국 시각으로는 **13:10** 이다.
+#
+# ## 왜 하필 04:10 UTC 인가 — 파기 바로 뒤다
+#
+# 백엔드의 보유기간 파기가 `@Scheduled(cron = "0 0 4 * * *")` 인데 **zone 을 안 준다.**
+# 컨테이너도 TZ 가 없어 JVM 이 UTC 로 돌므로 그 배치는 **04:00 UTC** 에 돈다.
+# 그 10분 뒤에 뜨는 것이 이 타이머다.
+#
+# **파기보다 뒤여야 한다.** 앞에 두면 방금 파기하기로 한 개인정보가 백업에 담겨 14일을 더
+# 산다 — "삭제 요청·보유기간 만료 시 파기"라는 방침(§5-3)과 어긋난다.
+#
+# ## 참고: 04시대 배치들의 실제 시각이 갈려 있다 (2026-08-18 확인)
+#
+#   04:00 UTC (13:00 KST)  보유기간 파기      PrivacyController — **zone 없음**
+#   04:10 UTC (13:10 KST)  ← 이 백업
+#   19:20 UTC (04:20 KST)  만료 신청 정리     IntakeMaintenance — zone="Asia/Seoul"
+#   19:50 UTC (04:50 KST)  소비 원장 갱신     SpendingLedgerRefreshScheduler — zone="Asia/Seoul"
+#
+# 앞의 하나만 zone 이 없어 같은 "04시"가 서로 다른 시각을 뜻한다. 이 타이머는 **파기 뒤**라는
+# 조건만 지키면 되므로 UTC 04:10 으로 맞췄다. 갈린 것 자체는 별도로 정리할 일이다.
+#
+# ## Persistent
+#
+# 서버가 꺼져 있어 시각을 놓치면 **다음 부팅 직후 한 번 돈다.** 안 그러면 재부팅이 낀 날은
+# 조용히 백업이 없는 날이 되는데, 그런 날일수록 백업이 필요하다.
+
+[Unit]
+Description=finntech: 하루 한 번 백업 타이머
+
+[Timer]
+OnCalendar=*-*-* 04:10:00
+Persistent=true
+# 다른 배치와 정확히 겹치지 않게 살짝 흩는다.
+RandomizedDelaySec=120
+Unit=finntech-backup.service
+
+[Install]
+WantedBy=timers.target
