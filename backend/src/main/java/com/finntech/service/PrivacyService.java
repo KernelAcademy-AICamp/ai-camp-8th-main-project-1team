@@ -79,6 +79,14 @@ public class PrivacyService {
      */
     private final com.finntech.repository.SpendingLedgerRepository spendingLedgerRepository;
     private final com.finntech.repository.SpendingLedgerDirtyRepository spendingLedgerDirtyRepository;
+    /**
+     * 행태 기록(V35).
+     *
+     * <p>방침 33조가 행태정보의 보유기간을 <b>"회원 탈퇴, 동의 철회까지"</b> 로 정해 두었다.
+     * 그러니 여기서 지우는 것은 선택이 아니라 그 조항의 이행이다.
+     */
+    private final com.finntech.repository.UsageEventRepository usageEventRepository;
+    private final com.finntech.repository.UsageSessionRepository usageSessionRepository;
     private final AuditService auditService;
     private final int retentionDays;
 
@@ -101,6 +109,8 @@ public class PrivacyService {
                           CutCandidateSelectionRepository cutSelectionRepository,
                           com.finntech.repository.SpendingLedgerRepository spendingLedgerRepository,
                           com.finntech.repository.SpendingLedgerDirtyRepository spendingLedgerDirtyRepository,
+                          com.finntech.repository.UsageEventRepository usageEventRepository,
+                          com.finntech.repository.UsageSessionRepository usageSessionRepository,
                           AuditService auditService,
                           @Value("${finntech.privacy.retention-days:90}") int retentionDays) {
         this.userRepository = userRepository;
@@ -122,6 +132,8 @@ public class PrivacyService {
         this.cutSelectionRepository = cutSelectionRepository;
         this.spendingLedgerRepository = spendingLedgerRepository;
         this.spendingLedgerDirtyRepository = spendingLedgerDirtyRepository;
+        this.usageEventRepository = usageEventRepository;
+        this.usageSessionRepository = usageSessionRepository;
         this.auditService = auditService;
         this.retentionDays = retentionDays;
     }
@@ -251,9 +263,14 @@ public class PrivacyService {
         // 대기 중인 재작성 표시도 치운다. 남겨 두면 배수가 지워진 사용자를 한 번 더 집어
         // "쓸 것이 없다"를 확인하고 지운다 — 결과는 같지만 그 헛걸음이 로그를 흐린다.
         spendingLedgerDirtyRepository.deleteByUserId(userId);
+        // 행태 기록 — 방침 33조가 "탈퇴·철회까지"로 정한 보유기간의 끝이 여기다.
+        // 어느 화면에 얼마나 머물렀는지는 그 사람이 무엇에 관심 있는지를 그대로 말한다.
+        usageEventRepository.deleteByUserId(userId);
+        usageSessionRepository.deleteByUserId(userId);
         userRepository.findById(userId).ifPresent(user -> {
             user.setCi(null);
             user.setBirthYear(null);   // 본인인증에서 파생한 출생연도도 개인정보다 — 함께 파기한다.
+            user.setGender(null);      // 성별도 같은 한 글자에서 나온 값이라 보유 근거가 같다.
             userRepository.save(user);
         });
 
