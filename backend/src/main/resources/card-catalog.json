@@ -1,5 +1,5 @@
 {
- "_note": "카드 상품 카탈로그 — scripts/collect-cards/build_catalog.py 가 schema-draft.json 과 cards/*.json 에서 만든다. productId가 겹치면 사람이 검수한 schema-draft.json이 이긴다. 표 아홉(V34)에 그대로 대응한다. **실제 카드다**(마스터 원칙 5 재개정 2026-08-10) — 수집 시점 스냅샷이고 asOf(심의필 날짜)를 화면에 반드시 병기한다.",
+ "_note": "카드 상품 카탈로그 — scripts/collect-cards/build_catalog.py 가 schema-draft.json 과 cards/*.json 에서 만든다. productId가 겹치면 사람이 검수한 schema-draft.json이 이긴다. 표 아홉(V36)에 그대로 대응한다. **실제 카드다**(마스터 원칙 5 재개정 2026-08-10) — 수집 시점 스냅샷이고 asOf(심의필 날짜)를 화면에 반드시 병기한다.",
  "_gradeNote": "PRECISE 는 게이트 3(규칙 검산)을 통과한 것, REFERENCE 는 걸린 것이다. REFERENCE 는 화면에 숫자를 보여주지 않는다 — 걸린 이유는 gradeReason 에 있다.",
  "_countableNote": "countable=false 는 혜택이 없다는 뜻이 아니라 **금액으로 셀 수 없다**는 뜻이다(무이자할부·라운지·해외·간편결제 조건). 표시는 하고 절감액에서만 뺀다. 빼면 하한 방향으로 틀리므로 \"채운 줄 알았는데 못 채웠다\"가 안 난다.",
  "_sourceNote": "출처는 각 카드사 자사 상품공시정보(1차 원천)이고 원문 PDF 는 저장소 밖이다. 신청 링크·CTA 는 두지 않는다 — 넘으면 금소법상 중개업 등록 대상이 된다.",
@@ -3006,7 +3006,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "BC카드",
@@ -3566,7 +3566,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "BC카드",
@@ -3613,7 +3613,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": "이용 시점 기준 3개월 전 1일~전월 말일 국내 신용판매 금액 합산 30만원 이상 시 제공",
      "exclusiveWith": null,
@@ -3646,7 +3646,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": "이용 시점 기준 3개월 전 1일~전월 말일 국내 신용판매 금액 합산 30만원 이상 시 제공",
      "exclusiveWith": null,
@@ -3714,7 +3714,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "BC카드",
@@ -4303,7 +4303,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(16곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(11곳)"
   },
   {
    "issuer": "BC카드",
@@ -4364,7 +4364,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": "이용 시점 기준 3개월 전 1일~전월 말일 국내 신용판매 금액 합산 30만원 이상 시 제공",
      "exclusiveWith": null,
@@ -4397,7 +4397,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": "이용 시점 기준 3개월 전 1일~전월 말일 국내 신용판매 금액 합산 30만원 이상 시 제공",
      "exclusiveWith": null,
@@ -4465,7 +4465,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "BC카드",
@@ -4547,7 +4547,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "BC카드",
@@ -4638,7 +4638,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "하나카드",
@@ -6801,8 +6801,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "하나카드",
@@ -7003,7 +7003,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "하나카드",
@@ -8048,7 +8048,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(8곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(6곳)"
   },
   {
    "issuer": "하나카드",
@@ -8820,7 +8820,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "하나카드",
@@ -9986,8 +9986,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "하나카드",
@@ -10523,7 +10523,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(13곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(9곳)"
   },
   {
    "issuer": "하나카드",
@@ -11284,7 +11284,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(6곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(6곳)"
   },
   {
    "issuer": "하나카드",
@@ -12136,7 +12136,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 0원이 실적 구간에 없다(ALLDAY 적립) · 셈할 수 있는 혜택이 하나도 없다 · 통합한도의 구간 0원이 실적 구간에 없다(ALLDAY_INTEGRATED) · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 0원이 실적 구간에 없다(ALLDAY 적립) · 통합한도의 구간 0원이 실적 구간에 없다(ALLDAY_INTEGRATED) · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "하나카드",
@@ -12655,7 +12655,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "하나카드",
@@ -12984,7 +12984,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · 통합한도의 구간 0원이 실적 구간에 없다(ALLDAY 적립) · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 통합한도의 구간 0원이 실적 구간에 없다(ALLDAY 적립) · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "하나카드",
@@ -13195,8 +13195,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "하나카드",
@@ -14588,7 +14588,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(기본 M포인트 적립) · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(기본 M포인트 적립) · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "현대카드",
@@ -14899,7 +14899,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "현대카드",
@@ -15112,7 +15112,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(기본 M포인트 적립) · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(기본 M포인트 적립)"
   },
   {
    "issuer": "현대카드",
@@ -15263,7 +15263,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "현대카드",
@@ -15872,7 +15872,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 500,000원이 실적 구간에 없다(기본 할인) · 한도의 구간 1,000,000원이 실적 구간에 없다(기본 할인) · 한도의 구간 500,000원이 실적 구간에 없다(시즌 스페셜 할인) · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(8곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 500,000원이 실적 구간에 없다(기본 할인) · 한도의 구간 1,000,000원이 실적 구간에 없다(기본 할인) · 한도의 구간 500,000원이 실적 구간에 없다(시즌 스페셜 할인) · LLM 이중 추출 숫자 불일치(5곳)"
   },
   {
    "issuer": "현대카드",
@@ -16339,7 +16339,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(7곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "현대카드",
@@ -16893,7 +16893,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(4곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "현대카드",
@@ -17189,7 +17189,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(5곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(5곳)"
   },
   {
    "issuer": "현대카드",
@@ -17573,8 +17573,8 @@
      ]
     }
    ],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "현대카드",
@@ -17927,8 +17927,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "현대카드",
@@ -19640,7 +19640,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(13곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(11곳)"
   },
   {
    "issuer": "현대카드",
@@ -20630,7 +20630,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 4개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(6곳)"
+   "gradeReason": "실적 제외 4개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(4곳)"
   },
   {
    "issuer": "현대카드",
@@ -20952,7 +20952,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "현대카드",
@@ -21322,7 +21322,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(4곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "현대카드",
@@ -21754,7 +21754,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "현대카드",
@@ -21989,7 +21989,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 4개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(8곳)"
+   "gradeReason": "실적 제외 4개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "현대카드",
@@ -23215,7 +23215,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "현대카드",
@@ -24041,8 +24041,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "현대카드",
@@ -25837,7 +25837,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(7곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(4곳)"
   },
   {
    "issuer": "현대카드",
@@ -27293,7 +27293,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "현대카드",
@@ -27497,7 +27497,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": null,
      "exclusiveWith": null,
@@ -28082,7 +28082,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(4곳)"
+   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "현대카드",
@@ -28501,7 +28501,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "현대카드",
@@ -29619,7 +29619,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "현대카드",
@@ -29833,8 +29833,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "현대카드",
@@ -30073,7 +30073,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(6곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "현대카드",
@@ -30362,7 +30362,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(6곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "현대카드",
@@ -31332,7 +31332,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(7곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(4곳)"
   },
   {
    "issuer": "현대카드",
@@ -31682,7 +31682,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "현대카드",
@@ -32081,7 +32081,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(5곳)"
+   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "현대카드",
@@ -32486,7 +32486,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(19곳)"
+   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(14곳)"
   },
   {
    "issuer": "현대카드",
@@ -32902,7 +32902,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "현대카드",
@@ -33332,7 +33332,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(10곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(7곳)"
   },
   {
    "issuer": "현대카드",
@@ -33711,7 +33711,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(4곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "현대카드",
@@ -33906,7 +33906,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": null,
      "exclusiveWith": null,
@@ -34055,7 +34055,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "현대카드",
@@ -36137,7 +36137,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "현대카드",
@@ -36390,7 +36390,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "현대카드",
@@ -36739,7 +36739,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "현대카드",
@@ -37015,8 +37015,8 @@
      ]
     }
    ],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "현대카드",
@@ -37230,8 +37230,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "현대카드",
@@ -37316,7 +37316,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": null,
      "exclusiveWith": null,
@@ -37507,7 +37507,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "현대카드",
@@ -37742,7 +37742,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": null,
      "exclusiveWith": null,
@@ -37843,7 +37843,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "현대카드",
@@ -38783,7 +38783,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(7곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "현대카드",
@@ -39070,8 +39070,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "현대카드",
@@ -39534,7 +39534,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "한도의 구간 50,000원이 실적 구간에 없다(LDF PAY 추가 적립) · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(5곳)"
+   "gradeReason": "한도의 구간 50,000원이 실적 구간에 없다(LDF PAY 추가 적립) · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "현대카드",
@@ -39801,7 +39801,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(포인트 적립) · LLM 이중 추출 숫자 불일치(7곳)"
+   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(포인트 적립) · LLM 이중 추출 숫자 불일치(4곳)"
   },
   {
    "issuer": "현대카드",
@@ -40034,7 +40034,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": "연간 6만 포인트 제공\n1차년도 누적 100만원 이상, 2차년도부터 전년도 1,000만원 이상 이용 시",
      "exclusiveWith": null,
@@ -40385,7 +40385,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(넥슨 현대카드 포인트 적립) · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(넥슨 현대카드 포인트 적립)"
   },
   {
    "issuer": "현대카드",
@@ -40447,7 +40447,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": "본인 회원 월 1회, 연간 2회 한도\n실물카드 소지 필수",
      "exclusiveWith": null,
@@ -40485,7 +40485,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": "제1·2여객터미널 통합 월 1회, 연 12회 한도\n주차비 별도\n실물카드 소지 필수",
      "exclusiveWith": null,
@@ -40942,7 +40942,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(4곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "현대카드",
@@ -41285,8 +41285,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "현대카드",
@@ -41505,7 +41505,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "현대카드",
@@ -41955,7 +41955,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(9곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(6곳)"
   },
   {
    "issuer": "현대카드",
@@ -42231,7 +42231,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": null,
      "exclusiveWith": null,
@@ -42356,7 +42356,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(5곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "현대카드",
@@ -43564,8 +43564,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "현대카드",
@@ -43813,7 +43813,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "현대카드",
@@ -44187,8 +44187,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -44451,8 +44451,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -45782,7 +45782,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -46186,7 +46186,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -46425,7 +46425,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 0원이 실적 구간에 없다(국군복지단 할인) · 한도의 구간 0원이 실적 구간에 없다(주유 할인) · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(7곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 0원이 실적 구간에 없다(국군복지단 할인) · 한도의 구간 0원이 실적 구간에 없다(주유 할인) · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(5곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -46596,7 +46596,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -47371,7 +47371,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -48019,7 +48019,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -48313,7 +48313,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(11곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(7곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -48644,7 +48644,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(16곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(14곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -48851,7 +48851,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(4곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(4곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -48966,7 +48966,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -50069,7 +50069,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(14곳)"
+   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(8곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -50801,7 +50801,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(28곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(22곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -50937,7 +50937,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -51616,7 +51616,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(14곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(5곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -53102,7 +53102,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 100,000원이 실적 구간에 없다(해피포인트 가맹점 환급할인) · 한도의 구간 100,000원이 실적 구간에 없다(인터넷 쇼핑 환급할인) · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(20곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 100,000원이 실적 구간에 없다(해피포인트 가맹점 환급할인) · 한도의 구간 100,000원이 실적 구간에 없다(인터넷 쇼핑 환급할인) · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(15곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -53812,7 +53812,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 2개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(21곳)"
+   "gradeReason": "실적 제외 2개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(9곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -55299,7 +55299,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 2개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(29곳)"
+   "gradeReason": "실적 제외 2개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(27곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -55834,7 +55834,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(16곳)"
+   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -57447,7 +57447,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(4곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(4곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -57624,7 +57624,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 300,000원이 실적 구간에 없다(통신) · 한도의 구간 600,000원이 실적 구간에 없다(통신) · 한도의 구간 300,000원이 실적 구간에 없다(생활) · 한도의 구간 600,000원이 실적 구간에 없다(생활) · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) "
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 300,000원이 실적 구간에 없다(통신) · 한도의 구간 600,000원이 실적 구간에 없다(통신) · 한도의 구간 300,000원이 실적 구간에 없다(생활) · 한도의 구간 600,000원이 실적 구간에 없다(생활) · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -58737,7 +58737,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 2개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(31곳)"
+   "gradeReason": "실적 제외 2개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(20곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -60451,7 +60451,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(9곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(9곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -64471,7 +64471,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 2개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(8곳)"
+   "gradeReason": "실적 제외 2개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(6곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -66032,7 +66032,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(12곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(6곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -66793,7 +66793,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -67058,7 +67058,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -67293,7 +67293,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -67528,7 +67528,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(8곳)"
+   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -67729,8 +67729,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -68457,7 +68457,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "연회비 구분을 모른다(전체) · 실적 제외 2개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "연회비 구분을 모른다(전체) · 실적 제외 2개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -68856,7 +68856,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(4곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -69094,7 +69094,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(6곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -69261,8 +69261,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -69458,8 +69458,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -69626,8 +69626,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -69800,7 +69800,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -70875,7 +70875,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(15곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(12곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -71449,7 +71449,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(11곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(9곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -72391,7 +72391,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(18곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(11곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -73239,8 +73239,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -73589,7 +73589,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -74340,7 +74340,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(11곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(7곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -75033,7 +75033,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -75150,7 +75150,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "KB국민카드",
@@ -75611,7 +75611,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -76175,7 +76175,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(26곳)"
+   "gradeReason": "실적 제외 3개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -77070,7 +77070,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(18곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(12곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -77515,8 +77515,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -77707,8 +77707,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -78104,7 +78104,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -78296,7 +78296,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -78477,8 +78477,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -79342,7 +79342,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(11곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(7곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -79681,7 +79681,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -80039,7 +80039,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(9곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(8곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -80206,8 +80206,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -80657,8 +80657,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -81195,8 +81195,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -81364,7 +81364,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -81560,8 +81560,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -82040,8 +82040,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -82272,8 +82272,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -82497,8 +82497,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -82678,7 +82678,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -82845,8 +82845,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -83013,8 +83013,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -83661,8 +83661,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -83891,8 +83891,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -84059,8 +84059,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -84251,8 +84251,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -84476,8 +84476,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -84644,8 +84644,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -84837,7 +84837,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -85004,8 +85004,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -85172,8 +85172,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -85341,7 +85341,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -85875,7 +85875,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 300,000원이 실적 구간에 없다(롯데렌탈 묘미 자동납부요금 청구 할인) · 한도의 구간 700,000원이 실적 구간에 없다(롯데렌탈 묘미 자동납부요금 청구 할인) · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 300,000원이 실적 구간에 없다(롯데렌탈 묘미 자동납부요금 청구 할인) · 한도의 구간 700,000원이 실적 구간에 없다(롯데렌탈 묘미 자동납부요금 청구 할인)"
   },
   {
    "issuer": "KB국민카드",
@@ -86066,8 +86066,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -86386,7 +86386,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -86582,8 +86582,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -86785,7 +86785,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -87221,8 +87221,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -87389,8 +87389,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -87607,8 +87607,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -87994,8 +87994,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -88199,7 +88199,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -88427,7 +88427,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -88593,7 +88593,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "연회비 구분을 모른다(일반(실물)카드) · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "연회비 구분을 모른다(일반(실물)카드) · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -89622,7 +89622,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(7곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(5곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -90384,7 +90384,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(14곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(9곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -91369,7 +91369,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(12곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(6곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -91878,7 +91878,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": "전월 이용실적 30만원 이상 시 제공\n본인회원에 한함",
      "exclusiveWith": null,
@@ -91946,7 +91946,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -92315,7 +92315,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(7곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(5곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -92600,7 +92600,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 300,000원이 실적 구간에 없다(외식) · 한도의 구간 300,000원이 실적 구간에 없다(커피) · LLM 이중 추출 숫자 불일치(10곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 300,000원이 실적 구간에 없다(외식) · 한도의 구간 300,000원이 실적 구간에 없다(커피) · LLM 이중 추출 숫자 불일치(8곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -92902,8 +92902,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -93156,7 +93156,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -93389,7 +93389,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -93673,7 +93673,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -94378,8 +94378,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(2곳)"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -94660,7 +94660,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(4곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(4곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -95658,8 +95658,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -96223,7 +96223,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -96885,8 +96885,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -98016,8 +98016,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -98208,8 +98208,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -98405,8 +98405,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -98602,8 +98602,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -98775,8 +98775,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -98987,8 +98987,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -99185,7 +99185,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -99382,7 +99382,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -99634,7 +99634,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(7곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -100340,7 +100340,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(12곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(8곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -100587,7 +100587,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(SK에너지 주유할인) · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(SK에너지 주유할인) · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -100825,7 +100825,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(SK에너지 주유할인) · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(SK에너지 주유할인)"
   },
   {
    "issuer": "KB국민카드",
@@ -101068,7 +101068,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(SK에너지 화물특화 주유소 할인) · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(SK에너지 화물특화 주유소 할인)"
   },
   {
    "issuer": "KB국민카드",
@@ -101736,7 +101736,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -102387,8 +102387,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -102677,7 +102677,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(13곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(9곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -103043,7 +103043,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -103779,7 +103779,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(19곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(5곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -104073,7 +104073,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 300,000원이 실적 구간에 없다(대중교통 할인) · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 300,000원이 실적 구간에 없다(대중교통 할인) · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -104450,7 +104450,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(13곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(6곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -104698,7 +104698,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 300,000원이 실적 구간에 없다(H.Point 추가적립) · 한도의 구간 300,000원이 실적 구간에 없다(생활할인) · 한도의 구간 500,000원이 실적 구간에 없다(생활할인) · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 300,000원이 실적 구간에 없다(H.Point 추가적립) · 한도의 구간 300,000원이 실적 구간에 없다(생활할인) · 한도의 구간 500,000원이 실적 구간에 없다(생활할인) · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -106202,7 +106202,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(11곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(6곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -107191,7 +107191,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -107481,7 +107481,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "KB국민카드",
@@ -107663,7 +107663,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -107775,7 +107775,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -107887,7 +107887,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -107999,7 +107999,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -108111,7 +108111,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -108223,7 +108223,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -108785,7 +108785,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -109084,7 +109084,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": null,
      "exclusiveWith": null,
@@ -109133,7 +109133,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · 통합한도의 구간 200,000원이 실적 구간에 없다(월간 통합할인한도) · 통합한도의 구간 400,000원이 실적 구간에 없다(월간 통합할인한도) · 통합한도의 구간 600,000원이 실적 구간에 없다(월간 통합할인한도) · 통합한도의 구간 800,000원이 실"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 통합한도의 구간 200,000원이 실적 구간에 없다(월간 통합할인한도) · 통합한도의 구간 400,000원이 실적 구간에 없다(월간 통합할인한도) · 통합한도의 구간 600,000원이 실적 구간에 없다(월간 통합할인한도) · 통합한도의 구간 800,000원이 실적 구간에 없다(월간 통합할인한도) ·"
   },
   {
    "issuer": "KB국민카드",
@@ -109714,7 +109714,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -110029,8 +110029,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -110491,7 +110491,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -110840,7 +110840,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "연회비 구분을 모른다(제휴연회비) · 실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "연회비 구분을 모른다(제휴연회비) · 실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -110922,7 +110922,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "KB국민카드",
@@ -112529,7 +112529,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(5곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -113541,7 +113541,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "연회비 구분을 모른다(본인회원) · 연회비 구분을 모른다(가족회원) · 실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "연회비 구분을 모른다(본인회원) · 연회비 구분을 모른다(가족회원) · 실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -113630,7 +113630,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "KB국민카드",
@@ -113743,7 +113743,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -114207,7 +114207,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(14곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(8곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -114440,8 +114440,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -114649,7 +114649,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -114989,8 +114989,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -116356,7 +116356,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(4곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(4곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -116772,7 +116772,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(해외 할인) · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(해외 할인)"
   },
   {
    "issuer": "KB국민카드",
@@ -118431,7 +118431,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(7곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(4곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -119123,7 +119123,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -120840,8 +120840,8 @@
      ]
     }
    ],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -121711,7 +121711,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -121866,7 +121866,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -122518,7 +122518,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(4곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -122905,7 +122905,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(8곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(7곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -123564,7 +123564,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(6곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(5곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -125108,7 +125108,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "KB국민카드",
@@ -127400,7 +127400,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(9곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(7곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -127539,7 +127539,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "KB국민카드",
@@ -127898,7 +127898,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(12곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(4곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -128424,7 +128424,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -128900,7 +128900,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(7곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(5곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -129488,8 +129488,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -129641,7 +129641,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -130378,7 +130378,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(17곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(6곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -131070,7 +131070,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 0원이 실적 구간에 없다(KB Pay 적립) · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 0원이 실적 구간에 없다(KB Pay 적립)"
   },
   {
    "issuer": "KB국민카드",
@@ -133671,7 +133671,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(기본 적립) · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(기본 적립) · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -134994,7 +134994,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(18곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(12곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -136940,8 +136940,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(3곳)"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -138840,7 +138840,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(19곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(16곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -139044,8 +139044,8 @@
      ]
     }
    ],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -139274,7 +139274,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(5곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(5곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -139657,7 +139657,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(12곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(6곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -142667,7 +142667,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -142997,7 +142997,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(기본 적립) · 통합한도의 구간 0원이 실적 구간에 없다(통합 적립 한도) · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(기본 적립) · 통합한도의 구간 0원이 실적 구간에 없다(통합 적립 한도)"
   },
   {
    "issuer": "KB국민카드",
@@ -146971,7 +146971,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(4곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(4곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -148165,7 +148165,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(13곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(7곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -148280,7 +148280,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "KB국민카드",
@@ -148395,7 +148395,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "KB국민카드",
@@ -148534,7 +148534,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "KB국민카드",
@@ -148655,7 +148655,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다"
   },
   {
    "issuer": "KB국민카드",
@@ -149592,7 +149592,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(7곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(7곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -149918,8 +149918,8 @@
      ]
     }
    ],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -150188,7 +150188,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(2곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -151138,7 +151138,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(4곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(4곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -151383,7 +151383,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "KB국민카드",
@@ -151842,8 +151842,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -152945,7 +152945,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 2개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(13곳)"
+   "gradeReason": "실적 제외 2개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(12곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -155098,7 +155098,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -157603,7 +157603,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(6곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -159893,7 +159893,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(10곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(8곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -160573,8 +160573,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -161992,7 +161992,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(5곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(5곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -162944,8 +162944,8 @@
      ]
     }
    ],
-   "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(4곳)"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "KB국민카드",
@@ -163250,7 +163250,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(4곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(2곳)"
   },
   {
    "issuer": "KB국민카드",
@@ -164265,7 +164265,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · 통합한도의 구간 0원이 실적 구간에 없다(특별적립한도) · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "통합한도의 구간 0원이 실적 구간에 없다(특별적립한도) · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(3곳)"
   },
   {
    "issuer": "삼성카드",
@@ -164541,7 +164541,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(11곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(9곳)"
   },
   {
    "issuer": "삼성카드",
@@ -164760,7 +164760,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "삼성카드",
@@ -165781,7 +165781,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "삼성카드",
@@ -167070,7 +167070,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(추가 적립) · LLM 이중 추출 숫자 불일치(16곳)"
+   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(추가 적립) · LLM 이중 추출 숫자 불일치(9곳)"
   },
   {
    "issuer": "삼성카드",
@@ -167865,7 +167865,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(10곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(9곳)"
   },
   {
    "issuer": "삼성카드",
@@ -168711,8 +168711,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "삼성카드",
@@ -169383,7 +169383,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "as_of(심의필 날짜) 없음 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "삼성카드",
@@ -171128,7 +171128,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · as_of(심의필 날짜) 없음"
+   "gradeReason": "as_of(심의필 날짜) 없음"
   },
   {
    "issuer": "삼성카드",
@@ -172422,7 +172422,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(11곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(8곳)"
   },
   {
    "issuer": "삼성카드",
@@ -172775,7 +172775,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 0원이 실적 구간에 없다(주유/전기차 충전 적립) · 한도의 구간 0원이 실적 구간에 없다(전기차 충전 적립) · LLM 이중 추출 숫자 불일치(14곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 0원이 실적 구간에 없다(주유/전기차 충전 적립) · 한도의 구간 0원이 실적 구간에 없다(전기차 충전 적립) · LLM 이중 추출 숫자 불일치(8곳)"
   },
   {
    "issuer": "삼성카드",
@@ -173578,7 +173578,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(해외/면세점 포인트 적립) · LLM 이중 추출 숫자 불일치(6곳)"
+   "gradeReason": "한도의 구간 0원이 실적 구간에 없다(해외/면세점 포인트 적립) · LLM 이중 추출 숫자 불일치(5곳)"
   },
   {
    "issuer": "우리카드",
@@ -176093,7 +176093,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "한도의 구간 300,000원이 실적 구간에 없다(일본 여행 서비스) · LLM 이중 추출 숫자 불일치(6곳)"
+   "gradeReason": "한도의 구간 300,000원이 실적 구간에 없다(일본 여행 서비스) · LLM 이중 추출 숫자 불일치(4곳)"
   },
   {
    "issuer": "우리카드",
@@ -176865,8 +176865,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "우리카드",
@@ -177017,7 +177017,7 @@
     }
    ],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 200,000원이 실적 구간에 없다(CJ ONE 포인트 적립) · 한도의 구간 500,000원이 실적 구간에 없다(CJ ONE 포인트 적립) · 셈할 수 있는 혜택이 하나도 없다 · 통합한도의 구간 200,000원이 실적 구간에 없다(CJ ONE 포인트 적립) · 통합한도의 구간 500"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 200,000원이 실적 구간에 없다(CJ ONE 포인트 적립) · 한도의 구간 500,000원이 실적 구간에 없다(CJ ONE 포인트 적립) · 통합한도의 구간 200,000원이 실적 구간에 없다(CJ ONE 포인트 적립) · 통합한도의 구간 500,000원이 실적 구간에 없다(CJ O"
   },
   {
    "issuer": "우리카드",
@@ -177759,8 +177759,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "우리카드",
@@ -177931,7 +177931,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "우리카드",
@@ -178050,7 +178050,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 400,000원이 실적 구간에 없다(KT 청구할인 서비스) · 한도의 구간 800,000원이 실적 구간에 없다(KT 청구할인 서비스) · 한도의 구간 1,200,000원이 실적 구간에 없다(KT 청구할인 서비스) · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 한도의 구간 400,000원이 실적 구간에 없다(KT 청구할인 서비스) · 한도의 구간 800,000원이 실적 구간에 없다(KT 청구할인 서비스) · 한도의 구간 1,200,000원이 실적 구간에 없다(KT 청구할인 서비스) · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "우리카드",
@@ -178559,8 +178559,8 @@
     }
    ],
    "combinedCaps": [],
-   "grade": "REFERENCE",
-   "gradeReason": "셈할 수 있는 혜택이 하나도 없다"
+   "grade": "PRECISE",
+   "gradeReason": null
   },
   {
    "issuer": "우리카드",
@@ -178928,7 +178928,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "LLM 이중 추출 숫자 불일치(13곳)"
+   "gradeReason": "LLM 이중 추출 숫자 불일치(11곳)"
   },
   {
    "issuer": "우리카드",
@@ -179069,7 +179069,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": null,
      "exclusiveWith": null,
@@ -179266,7 +179266,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "가족카드 연회비를 본인카드 연회비와 분리할 수 없음 · 실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(1곳)"
+   "gradeReason": "가족카드 연회비를 본인카드 연회비와 분리할 수 없음 · 실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "우리카드",
@@ -179614,7 +179614,7 @@
      "targetsComplete": true,
      "payChannel": null,
      "countable": false,
-     "countableNote": "요율·정액이 없다",
+     "countableNote": "금액 환산 불가",
      "isHeadline": false,
      "conditionsText": null,
      "exclusiveWith": null,
@@ -179682,7 +179682,7 @@
    ],
    "combinedCaps": [],
    "grade": "REFERENCE",
-   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · 셈할 수 있는 혜택이 하나도 없다 · LLM 이중 추출 숫자 불일치(3곳)"
+   "gradeReason": "실적 제외 0개(<5) — 지면 일부만 읽었을 수 있다 · LLM 이중 추출 숫자 불일치(1곳)"
   },
   {
    "issuer": "우리카드",

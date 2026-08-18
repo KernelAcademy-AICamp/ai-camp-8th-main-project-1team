@@ -5,17 +5,18 @@ import com.finntech.domain.CardBenefit;
 import com.finntech.domain.CardBenefitTarget;
 import com.finntech.domain.CardProduct;
 import com.finntech.domain.Enums;
-import com.finntech.domain.UserPayment;
+import com.finntech.domain.SpendingLedger;
 import com.finntech.engine.AnalysisResult;
 import com.finntech.engine.CardExclusionPolicy;
 import com.finntech.engine.IndustryCategoryMapper;
 import com.finntech.repository.CardProductRepository;
-import com.finntech.repository.UserPaymentRepository;
+import com.finntech.repository.SpendingLedgerRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,12 +50,24 @@ class CardRecommendServiceTest {
 
     // ── 재료 ────────────────────────────────────────────────────────────────
 
-    private UserPayment payment(String ksic, String merchant, int amount) {
-        UserPayment p = mock(UserPayment.class);
-        when(p.getKsicCode()).thenReturn(ksic);
-        when(p.getMerchantName()).thenReturn(merchant);
-        when(p.getAmount()).thenReturn(amount);
-        return p;
+    /**
+     * 원장 한 줄. <b>③ 은 이제 소비 원장을 읽는다</b>(09 §2.2) — 브랜드·결제대행사 여부·
+     * 국세청 업종코드를 ① 이 이미 붙여 둔다.
+     *
+     * @param ntsCode 국세청 업종코드. 축을 못 찾는 값을 넣으면 브랜드만으로 걸린다
+     */
+    private SpendingLedger payment(String ntsCode, String merchant, int amount) {
+        return payment(ntsCode, merchant, amount, LocalDate.of(2026, 6, 1));
+    }
+
+    /** 같은 곳을 여러 날 간 것을 만들 때 쓴다 — 겹침은 날짜 수로 센다. */
+    private SpendingLedger payment(String ntsCode, String merchant, int amount, LocalDate on) {
+        SpendingLedger row = mock(SpendingLedger.class);
+        when(row.getNtsIndustryCode()).thenReturn(ntsCode);
+        when(row.getMerchantName()).thenReturn(merchant);
+        when(row.getAmount()).thenReturn(amount);
+        when(row.getPaidOn()).thenReturn(on);
+        return row;
     }
 
     private CardProduct card(String name) {
@@ -65,12 +78,12 @@ class CardRecommendServiceTest {
         return c;
     }
 
-    private CardRecommendService service(List<CardProduct> catalog, List<UserPayment> lastMonth) {
+    private CardRecommendService service(List<CardProduct> catalog, List<SpendingLedger> lastMonth) {
         CardProductRepository cards = mock(CardProductRepository.class);
         when(cards.findRecommendable()).thenReturn(catalog);
-        UserPaymentRepository payments = mock(UserPaymentRepository.class);
-        when(payments.findInPeriod(any(), any(), any())).thenReturn(lastMonth);
-        return new CardRecommendService(new CardRecommendProperties(), cards, payments,
+        SpendingLedgerRepository ledger = mock(SpendingLedgerRepository.class);
+        when(ledger.findInPeriod(any(), any(), any())).thenReturn(lastMonth);
+        return new CardRecommendService(new CardRecommendProperties(), cards, ledger,
                 industries, new CardBenefitEstimator(new CardMatcher(), exclusionPolicy),
                 new CardMatcher());
     }
@@ -112,10 +125,11 @@ class CardRecommendServiceTest {
 
         // 겹침은 "자주 가는 곳"이라 방문 문턱(기본 2회)을 넘어야 센다 — 아래 두 시험 참고.
         var offer = service(List.of(c), List.of(
-                payment("999999", "스타벅스 강남점", 30_000),
-                payment("999999", "스타벅스 역삼점", 30_000),
-                payment("999999", "CU 역삼점", 10_000),
-                payment("999999", "CU 역삼점", 10_000))).recommend(analysis(), NOW).offers().get(0);
+                payment("999999", "스타벅스 강남점", 30_000, LocalDate.of(2026, 6, 1)),
+                payment("999999", "스타벅스 역삼점", 30_000, LocalDate.of(2026, 6, 8)),
+                payment("999999", "CU 역삼점", 10_000, LocalDate.of(2026, 6, 2)),
+                payment("999999", "CU 역삼점", 10_000, LocalDate.of(2026, 6, 9))))
+                .recommend(analysis(), NOW).offers().get(0);
 
         assertThat(offer.matched()).as("걸린 이름을 그대로 보여줘 사용자가 반박할 수 있게 한다")
                 .containsExactly("스타벅스", "CU");
@@ -134,8 +148,8 @@ class CardRecommendServiceTest {
         c.add(b);
 
         var offer = service(List.of(c), List.of(
-                payment("999999", "스타벅스 강남점", 30_000),
-                payment("999999", "스타벅스 강남점", 30_000)))
+                payment("999999", "스타벅스 강남점", 30_000, LocalDate.of(2026, 6, 1)),
+                payment("999999", "스타벅스 강남점", 30_000, LocalDate.of(2026, 6, 8))))
                 .recommend(analysis(), NOW).offers().get(0);
 
         assertThat(offer.matched()).as("요율이 없어도 '그 브랜드가 대상이다'는 참이다")
@@ -159,11 +173,17 @@ class CardRecommendServiceTest {
                 .recommend(analysis(), NOW).offers().get(0);
         assertThat(once.matchCount()).as("한 번 들른 곳은 습관인지 어쩌다인지 알 수 없다").isZero();
 
-        var twice = service(List.of(c), List.of(
-                payment("999999", "스타벅스 강남점", 30_000),
-                payment("999999", "스타벅스 강남점", 30_000)))
+        var sameDay = service(List.of(c), List.of(
+                payment("999999", "스타벅스 강남점", 30_000, LocalDate.of(2026, 6, 1)),
+                payment("999999", "스타벅스 강남점", 30_000, LocalDate.of(2026, 6, 1))))
                 .recommend(analysis(), NOW).offers().get(0);
-        assertThat(twice.matchCount()).as("두 번부터 '계속 가는 곳'으로 본다").isEqualTo(1);
+        assertThat(sameDay.matchCount()).as("하루에 두 번은 하루다 — 날짜 수로 센다").isZero();
+
+        var twoDays = service(List.of(c), List.of(
+                payment("999999", "스타벅스 강남점", 30_000, LocalDate.of(2026, 6, 1)),
+                payment("999999", "스타벅스 강남점", 30_000, LocalDate.of(2026, 6, 8))))
+                .recommend(analysis(), NOW).offers().get(0);
+        assertThat(twoDays.matchCount()).as("이틀부터 '계속 가는 곳'으로 본다").isEqualTo(1);
     }
 
     @Test
@@ -178,8 +198,8 @@ class CardRecommendServiceTest {
 
         // 창이 한 달이면 전달의 1회만 보여 문턱을 못 넘는다. 3개월이라야 두 달 치가 합쳐진다.
         var offer = service(List.of(c), List.of(
-                payment("999999", "스타벅스 강남점", 30_000),
-                payment("999999", "스타벅스 강남점", 30_000)))
+                payment("999999", "스타벅스 강남점", 30_000, LocalDate.of(2026, 4, 3)),
+                payment("999999", "스타벅스 강남점", 30_000, LocalDate.of(2026, 6, 9))))
                 .recommend(analysis(), NOW).offers().get(0);
 
         assertThat(offer.matchCount()).isEqualTo(1);

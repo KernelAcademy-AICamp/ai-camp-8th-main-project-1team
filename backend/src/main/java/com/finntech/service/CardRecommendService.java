@@ -4,11 +4,11 @@ import com.finntech.config.CardRecommendProperties;
 import com.finntech.domain.CardAnnualFee;
 import com.finntech.domain.CardBenefit;
 import com.finntech.domain.CardProduct;
-import com.finntech.domain.UserPayment;
+import com.finntech.domain.SpendingLedger;
 import com.finntech.engine.AnalysisResult;
 import com.finntech.engine.IndustryCategoryMapper;
 import com.finntech.repository.CardProductRepository;
-import com.finntech.repository.UserPaymentRepository;
+import com.finntech.repository.SpendingLedgerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,17 +69,17 @@ public class CardRecommendService {
 
     private final CardRecommendProperties props;
     private final CardProductRepository cards;
-    private final UserPaymentRepository payments;
+    private final SpendingLedgerRepository ledger;
     private final IndustryCategoryMapper industries;
     private final CardBenefitEstimator estimator;
     private final CardMatcher matcher;
 
     public CardRecommendService(CardRecommendProperties props, CardProductRepository cards,
-                                UserPaymentRepository payments, IndustryCategoryMapper industries,
+                                SpendingLedgerRepository ledger, IndustryCategoryMapper industries,
                                 CardBenefitEstimator estimator, CardMatcher matcher) {
         this.props = props;
         this.cards = cards;
-        this.payments = payments;
+        this.ledger = ledger;
         this.industries = industries;
         this.estimator = estimator;
         this.matcher = matcher;
@@ -96,9 +96,9 @@ public class CardRecommendService {
         // 창을 넓히는 것만으로는 겹침 수만 늘어나므로 방문 횟수 문턱과 짝으로 쓴다.
         LocalDate firstOfThisMonth = referenceTime.toLocalDate().withDayOfMonth(1);
         LocalDate windowStart = firstOfThisMonth.minusMonths(Math.max(1, props.getSpendMonths()));
-        List<UserPayment> recent = payments.findInPeriod(analysis.userId(),
+        List<SpendingLedger> recent = ledger.findInPeriod(analysis.userId(),
                 windowStart.atStartOfDay(), firstOfThisMonth.atStartOfDay());
-        CardSpend spend = CardSpend.fold(recent, industries);
+        CardSpend spend = CardSpend.fold(recent, industries::cardAxisOf);
 
         List<Offer> offers = new ArrayList<>();
         for (CardProduct card : cards.findRecommendable()) {

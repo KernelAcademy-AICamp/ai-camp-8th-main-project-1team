@@ -520,6 +520,30 @@ def ordered_by_label(items: List[Tuple[List[str], Dict[str, Any]]]) -> List[Dict
     ]
 
 
+# 할인이냐 적립이냐는 **사용자에게 같은 값이다** — 둘 다 돈이 돌아오고, 화면은 금액을
+# 보여주지 않으며 순위도 겹친 곳 수로 매긴다. 그런데 이 한 글자가 달랐다는 이유로 카드가
+# 통째로 참고 모드로 떨어지고 있었다(97건 중 70건, 2026-08-18).
+# **무이자할부는 접지 않는다** — 그건 금액으로 셀 수 없는 다른 갈래다.
+COMPARABLE_KIND = {"할인": "금전혜택", "적립": "금전혜택"}
+
+
+def comparable_kind(kind: Any) -> Any:
+    return COMPARABLE_KIND.get(kind, kind)
+
+
+def cap_values(caps: Any) -> List[Any]:
+    """한도를 **구간 키 없이** 값만 줄 세워 본다.
+
+    두 실행이 같은 한도를 다른 구간에 붙이면(`5만원 구간에 5천원` vs `30만원 구간에 5천원`)
+    사전끼리 비교할 때 양쪽 다 "한쪽만 있음"으로 잡힌다 — 1,058건 중 379건이 그랬다.
+    구간 배정은 화면에 나가지 않으므로(첫 구간 문턱만 보여준다) 여기서 따지지 않는다.
+    **금액 자체가 다르면 여전히 잡힌다.**
+    """
+    if not caps:
+        return []
+    return sorted((str(v) for v in caps.values()))
+
+
 def numeric_projection(card: Dict[str, Any]) -> Dict[str, Any]:
     performance = card.get("performance") or {}
     fees = ordered_by_label([
@@ -534,12 +558,12 @@ def numeric_projection(card: Dict[str, Any]) -> Dict[str, Any]:
         (
             label_tokens(benefit.get("targets")),
             {
-                "kind": benefit.get("kind"),
+                "kind": comparable_kind(benefit.get("kind")),
                 "rate_percent": benefit.get("rate_percent"),
                 "amount_krw": benefit.get("amount_krw"),
                 "min_amount": benefit.get("min_amount"),
                 "requires_tier": benefit.get("requires_tier"),
-                "monthly_cap_by_tier": benefit.get("monthly_cap_by_tier") or {},
+                "monthly_cap_by_tier": cap_values(benefit.get("monthly_cap_by_tier")),
             },
         )
         for benefit in card.get("benefits", [])
@@ -548,7 +572,7 @@ def numeric_projection(card: Dict[str, Any]) -> Dict[str, Any]:
     combined = ordered_by_label([
         (
             label_tokens(cap.get("group"), cap.get("members")),
-            {"cap_by_tier": cap.get("cap_by_tier") or {}},
+            {"cap_by_tier": cap_values(cap.get("cap_by_tier"))},
         )
         for cap in card.get("combined_caps", [])
     ])

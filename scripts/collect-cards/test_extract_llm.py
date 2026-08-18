@@ -214,12 +214,37 @@ class ExtractLlmTest(unittest.TestCase):
         self.assertEqual(2, len(found))
         self.assertTrue(all(item["path"].endswith("rate_percent") for item in found))
 
-    def test_benefit_kind_disagreement_is_still_caught(self):
+    def test_discount_and_point_are_the_same_to_the_user(self):
+        """할인이냐 적립이냐로 카드를 버리지 않는다(사용자 결정 2026-08-18).
+
+        둘 다 돈이 돌아오고, 화면은 금액을 보여주지 않으며 순위도 겹친 곳 수로 매긴다.
+        이 한 글자 때문에 97건 중 70건이 참고 모드로 떨어지고 있었다.
+        """
         found = self._compare(
             [self._benefit("여가", 10, "영화", kind="적립")],
             [self._benefit("여가", 10, "영화", kind="할인")],
         )
+        self.assertEqual([], found)
+
+    def test_installment_free_is_not_folded_into_discount(self):
+        """**무이자할부는 다르다** — 금액으로 셀 수 없는 갈래라 접으면 안 된다."""
+        found = self._compare(
+            [self._benefit("여가", 10, "영화", kind="무이자할부")],
+            [self._benefit("여가", 10, "영화", kind="할인")],
+        )
         self.assertEqual(["$.benefits[0].kind"], [item["path"] for item in found])
+
+    def test_same_cap_on_a_different_tier_is_not_a_mismatch(self):
+        """한도를 어느 구간에 붙였는지는 화면에 안 나간다 — 금액이 같으면 같은 것으로 본다."""
+        a = self._benefit("여가", 10, "영화"); a["monthly_cap_by_tier"] = {"50000": 5000}
+        b = self._benefit("여가", 10, "영화"); b["monthly_cap_by_tier"] = {"300000": 5000}
+        self.assertEqual([], self._compare([a], [b]))
+
+    def test_different_cap_amount_is_still_caught(self):
+        """**금액이 다르면 여전히 잡는다.** 느슨해진 것은 구간 배정뿐이다."""
+        a = self._benefit("여가", 10, "영화"); a["monthly_cap_by_tier"] = {"50000": 5000}
+        b = self._benefit("여가", 10, "영화"); b["monthly_cap_by_tier"] = {"50000": 9000}
+        self.assertEqual(1, len(self._compare([a], [b])))
 
     def test_annual_fee_rows_line_up_regardless_of_order(self):
         first = {**sample_card(), "annual_fee": [

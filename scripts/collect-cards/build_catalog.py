@@ -870,6 +870,28 @@ def benefit_style(card):
     return style
 
 
+# 저장된 불일치 기록을 **지금 기준으로 다시 판정한다.** 기록은 추출 시점에 박히는데
+# 기준이 그 뒤에 바뀌었고, 561장을 다시 뽑는 대신 증거를 다시 읽는다(2026-08-18).
+#
+#   할인 ↔ 적립          접는다 — 사용자에게 같은 값이고 화면에 금액이 안 나간다
+#   한도의 구간 배정 차이    접는다 — 한쪽만 값이 있으면 같은 한도를 다른 구간에 붙인 것이다
+#   그 밖                남긴다 — 요율이 5%인지 20%인지는 여전히 갈라야 한다
+SAME_TO_USER_KINDS = {'할인', '적립'}
+
+
+def meaningful_mismatches(check):
+    kept = []
+    for row in check.get('mismatches') or []:
+        path = str(row.get('path') or '')
+        first, second = row.get('first'), row.get('second')
+        if path.endswith('.kind') and {first, second} <= SAME_TO_USER_KINDS:
+            continue
+        if 'cap_by_tier' in path and (first is None or second is None):
+            continue
+        kept.append(row)
+    return kept
+
+
 def iso_date(value, field, problems):
     """`YYYY-MM-DD` 가 아니면 버리고 사유를 남긴다.
 
@@ -1063,6 +1085,19 @@ def caps_of(benefit, thresholds, card_name, problems):
 NON_KRW_UNITS = ('마일리지', '마일')
 
 
+# 요율도 정액도 없는데 **원래 금액이 없는 서비스**인 것들. 공시가 이것을 '할인' 갈래로
+# 적어 보내서(라운지 무료입장이 kind='할인') 사유가 '요율·정액이 없다'로 찍혔고, 그러면
+# **추출이 숫자를 놓쳤다는 뜻으로 읽힌다.** 놓친 게 아니라 셀 금액이 애초에 없다.
+SERVICE_BENEFIT = re.compile(
+    r'라운지|발렛|발레파킹|등급 ?서비스|무료 ?입장|우선탑승|동반|컨시어지|바우처|무료 ?제공')
+
+
+def is_service_benefit(raw):
+    if raw.get('rate_percent') is not None or raw.get('amount_krw') is not None:
+        return False
+    return bool(SERVICE_BENEFIT.search(raw.get('group') or ''))
+
+
 def benefit_unit(raw, card_unit):
     """이 혜택의 적립 단위. 카드 단위가 적혀 있으면 그것이 우선이다."""
     named = card_unit.get('name')
@@ -1096,7 +1131,7 @@ def benefits_of(card, thresholds, axes, problems):
         # 둘을 한 사유로 묶으면 "추출을 고치면 되겠네"라고 잘못 읽게 된다(2026-08-14).
         row_unit = benefit_unit(raw, unit)
         reason = None
-        if kind in ('INSTALLMENT_FREE', 'NON_MONETARY'):
+        if kind in ('INSTALLMENT_FREE', 'NON_MONETARY') or is_service_benefit(raw):
             reason = '금액 환산 불가'
         elif rate is None and raw.get('amount_krw') is None:
             reason = f'{row_unit}는 원으로 환산할 수 없다' if row_unit != '원' else '요율·정액이 없다'
@@ -1146,8 +1181,17 @@ def benefits_of(card, thresholds, axes, problems):
             'sortNo': len(out), 'caps': [], 'targets': [],
         })
 
-    if not any(b['countable'] for b in out):
-        problems.append('셈할 수 있는 혜택이 하나도 없다')
+    # **셈할 게 없다고 카드를 감추지 않는다**(사용자 결정 2026-08-18).
+    #
+    # 예전에는 여기서 참고 모드로 떨어뜨려 카드가 추천 목록에서 통째로 사라졌다. 그런데
+    # 라운지 무료입장·발렛파킹·등급 서비스는 **분명한 혜택이고, 그것 때문에 그 카드를
+    # 고르는 사람이 있다.** 211장이 그렇게 감춰지고 있었다.
+    #
+    # 감출 이유가 없는 더 큰 근거: **화면에 절감액 금액이 안 나간다**(2026-08-13 결정).
+    # 순위도 금액이 아니라 '내 소비와 겹친 곳 수'로 매긴다(`CardRecommendService`).
+    # 셈할 수 있느냐는 화면에 닿지 않는 값이라, 그것으로 카드를 거를 근거가 없다.
+    #
+    # `countable=false` 는 그대로 남는다 — 채점용 절감액 계산에서만 빠진다.
     return out
 
 
@@ -1223,8 +1267,8 @@ def build_card(card, axes, extraction):
 
     if extraction == 'LLM':
         check = card.get('_extraction_check') or {}
-        if check.get('numeric_consensus') is not True:
-            mismatches = check.get('mismatches') or []
+        mismatches = meaningful_mismatches(check)
+        if mismatches:
             problems.append(f'LLM 이중 추출 숫자 불일치({len(mismatches)}곳)')
         external = check.get('external_max_benefit') or {}
         if external.get('status') == 'MISMATCH':

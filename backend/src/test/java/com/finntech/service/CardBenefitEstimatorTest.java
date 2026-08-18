@@ -8,7 +8,7 @@ import com.finntech.domain.CardCombinedCap;
 import com.finntech.domain.CardExclusion;
 import com.finntech.domain.CardPerformanceTier;
 import com.finntech.domain.CardProduct;
-import com.finntech.domain.UserPayment;
+import com.finntech.domain.SpendingLedger;
 import com.finntech.engine.CardExclusionPolicy;
 import com.finntech.engine.IndustryCategoryMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,12 +63,24 @@ class CardBenefitEstimatorTest {
 
     // ── 재료 ────────────────────────────────────────────────────────────────
 
-    private UserPayment payment(String ksic, String merchant, int amount) {
-        UserPayment p = mock(UserPayment.class);
-        when(p.getKsicCode()).thenReturn(ksic);
-        when(p.getMerchantName()).thenReturn(merchant);
-        when(p.getAmount()).thenReturn(amount);
-        return p;
+    /**
+     * 원장 한 줄. <b>③ 은 이제 소비 원장을 읽는다</b>(09 §2.2) — 브랜드·결제대행사 여부·
+     * 국세청 업종코드를 ① 이 이미 붙여 둔다.
+     *
+     * @param ntsCode 국세청 업종코드. 축을 못 찾는 값을 넣으면 브랜드만으로 걸린다
+     */
+    private SpendingLedger payment(String ntsCode, String merchant, int amount) {
+        return payment(ntsCode, merchant, amount, LocalDate.of(2026, 6, 1));
+    }
+
+    /** 같은 곳을 여러 날 간 것을 만들 때 쓴다 — 겹침은 날짜 수로 센다. */
+    private SpendingLedger payment(String ntsCode, String merchant, int amount, LocalDate on) {
+        SpendingLedger row = mock(SpendingLedger.class);
+        when(row.getNtsIndustryCode()).thenReturn(ntsCode);
+        when(row.getMerchantName()).thenReturn(merchant);
+        when(row.getAmount()).thenReturn(amount);
+        when(row.getPaidOn()).thenReturn(on);
+        return row;
     }
 
     private CardProduct card(String name) {
@@ -87,8 +100,8 @@ class CardBenefitEstimatorTest {
     }
 
     /** 연 절감액. 화면에는 안 나가지만 채점의 기준값이다. */
-    private BigDecimal saving(CardProduct card, List<UserPayment> spend) {
-        return estimator.estimate(card, CardSpend.fold(spend, industries)).yearlySaving();
+    private BigDecimal saving(CardProduct card, List<SpendingLedger> spend) {
+        return estimator.estimate(card, CardSpend.fold(spend, industries::cardAxisOf)).yearlySaving();
     }
 
     // ── 시험 ────────────────────────────────────────────────────────────────
@@ -114,7 +127,7 @@ class CardBenefitEstimatorTest {
         b2.add(new CardBenefitTarget("커피", CardBenefitTarget.Kind.BRAND, "스타벅스", null, null, null));
         keeps.add(b2);
 
-        List<UserPayment> spend = List.of(
+        List<SpendingLedger> spend = List.of(
                 payment(cafe, "스타벅스 강남점", 50_000),
                 payment(TRANSIT, "서울버스", 300_000));
 
