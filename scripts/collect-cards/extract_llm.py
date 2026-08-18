@@ -263,9 +263,15 @@ def normalize_date(raw: Optional[str]) -> Optional[str]:
     if not raw:
         return None
     value = raw.strip().replace(".", "-").replace("/", "-")
+    compact = re.fullmatch(r"(\d{4})(\d{2})(\d{2})", value)
+    if compact:
+        value = "-".join(compact.groups())
     match = re.fullmatch(r"(\d{4})-(\d{1,2})-(\d{1,2})", value)
     if not match:
-        return value
+        # **날짜가 아니면 날짜라고 적지 않는다.** 예전에는 못 읽은 값을 그대로 흘려보내
+        # `2025072`(7자리) 같은 것이 카탈로그를 지나 **앱 기동에서 터졌다**(2026-08-18).
+        # 모르는 것은 비워 두면 게이트 3 이 as_of 없음으로 잡아 참고 모드로 떨어뜨린다.
+        return None
     year, month, day = (int(part) for part in match.groups())
     return f"{year:04d}-{month:02d}-{day:02d}"
 

@@ -47,6 +47,7 @@
 """
 import json
 import glob
+import re
 import os
 import sys
 from collections import Counter, defaultdict
@@ -869,6 +870,21 @@ def benefit_style(card):
     return style
 
 
+def iso_date(value, field, problems):
+    """`YYYY-MM-DD` 가 아니면 버리고 사유를 남긴다.
+
+    표의 칸이 DATE 라 형식이 어긋난 값은 **적재가 기동에서 터진다** — 카탈로그는
+    만들어졌는데 앱이 안 뜬다. 여기서 걸러 그 카드만 참고 모드로 둔다.
+    """
+    if value in (None, ''):
+        return None
+    text = str(value)
+    if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', text):
+        problems.append(f'{field} 날짜 형식이 아니다({text})')
+        return None
+    return text
+
+
 def load_axes():
     """카드혜택 축의 정본 — industry-mid.json 이 이미 갖고 있다. 여기서 새로 짓지 않는다."""
     with open(INDUSTRY, encoding='utf-8') as f:
@@ -1186,9 +1202,9 @@ def build_card(card, axes, extraction):
         'policyCard': card.get('policy_card', False),
         # 공시가 후불교통을 늘 적지는 않는다. 모르면 null 이다.
         'hasTransit': card.get('has_transit'),
-        'asOf': card.get('as_of'),
+        'asOf': iso_date(card.get('as_of'), 'as_of', problems),
         'reviewNo': card.get('review_no'),
-        'postedAt': card.get('posted_at'),
+        'postedAt': iso_date(card.get('posted_at'), 'posted_at', problems),
         'sourceUrl': card.get('source_url'),
         'annualFeeNote': '\n'.join(card['annual_fee_notes']) if card.get('annual_fee_notes') else None,
         # 혜택 전체에 걸리는 단서 둘을 한 칸에 모은다 — 계산에는 못 넣지만 숨기지도 않는다.
