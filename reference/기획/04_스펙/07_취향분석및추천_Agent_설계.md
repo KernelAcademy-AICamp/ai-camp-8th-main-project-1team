@@ -1249,7 +1249,7 @@ X  "택시는 줄이기 어려운 필수 소비예요."
 | **리포트 3층** | 🔴 **월간만·옛 개념** — "긍정/부정 분류". 주간·연간 없음 | `service/ReportService·ReportCacheWriter.java` · `GET /api/report/monthly` |
 | **취향 분석** | 🟡 **백엔드만** — 취향 축·스트리밍 세분(멜론→음악)까지 구현됐으나 **부르는 곳이 컨트롤러 하나뿐**이다. 화면이 두 앱 모두 0개이고, 카드 추천도 이 축을 쓰지 않는다(①의 소비분석을 받는다) | `service/TasteAnalysisService·HobbyCatalog.java` · `GET /api/taste` |
 | **레거시 `RecommendService`** | 🔴 **pivot 상충** — 스코어=0.4×타겟카테고리(취향으로 저축 매칭) = 폐기 대상(R9 위반 경로) | `service/RecommendService.java` · `GET /api/products/recommend` |
-| **프론트** | 🔴 **frontend-moa 엔 ③ 화면 0개** — 인증·온보딩·홈·마이룸 등 10개뿐. 반면 **옛 `frontend` 에서는 넷이 돈다**(카드 추천·예적금 비교·지킨 돈 굴리기·리포트). 어느 쪽이 정본인지 미정(§13) | `frontend-moa/src/screens/` · `frontend/src/screens/` |
+| **프론트** | 🟢 **`frontend` 로 일원화** (2026-08-18) — ③ 화면 넷이 돈다(카드 추천·예적금 비교·지킨 돈 굴리기·리포트). `frontend-moa` 는 폐기·삭제했다(§13) | `frontend/src/screens/` |
 
 ## 10. 어떤 순서로 만드나
 
@@ -1345,9 +1345,21 @@ X  "택시는 줄이기 어려운 필수 소비예요."
 > 정해야 한다. 지금 응답(`AccountView`)은 *"원문 우대조건·가입대상은 노출하지 않는다"* 로 최소화돼 있어,
 > 되살리려면 그 결정부터 뒤집어야 한다.
 
-## 13. 프론트 (frontend-moa)
+## 13. 프론트 (frontend)
 
-**frontend-moa가 우리 기본 앱**이다. 옛 `frontend`의 `Report*`·`My*`(25개)는 ①개발자의 데이터 가시화 테스트베드일 뿐 ③ 타깃도 재사용 대상도 아니다. ③ 화면은 **frontend-moa에 처음부터** 짓는다(지금 0개, 그린필드).
+**`frontend` 하나로 관리한다** (2026-08-18 결정). 앞서 이 절은 *"frontend-moa가 우리 기본 앱이고
+③ 화면은 거기 처음부터 짓는다(그린필드)"* 라고 적고 있었는데, **그 방향은 폐기됐다.**
+
+`frontend-moa` 는 2026-07-27 이후 손대지 않았고(30일간 커밋 2건 · 화면 10개), CI·compose·배포
+스크립트 어디에도 걸려 있지 않았다. 반면 `frontend` 는 같은 기간 커밋 107건 · 화면 43개이고
+**③ 화면 넷이 실제로 여기서 돈다** — 카드 추천(`Compare`) · 예적금 비교(`ReportSavings`) ·
+지킨 돈 굴리기(`Settle`) · 리포트(`ReportSpending`).
+
+옛 문장대로 하면 **이미 도는 화면을 버리고 다시 짓게 된다.** 그래서 `frontend-moa` 는 저장소에서
+지웠다(되살릴 일이 있으면 `git show <2026-07-27 커밋>:frontend-moa/…`).
+
+> **옛 `frontend` 를 "①개발자의 테스트베드일 뿐"이라 적었던 것도 함께 무효다.** 그 판단 위에
+> 그린필드 결정이 서 있었는데, 지금은 그 앱이 제품이다.
 
 | 신설 화면 | 대응(IA) | 비고 |
 |---|---|---|
