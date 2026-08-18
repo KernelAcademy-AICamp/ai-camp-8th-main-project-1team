@@ -72,6 +72,19 @@ public class AppUser {
     private Integer birthYear;
 
     /**
+     * 성별 — {@code MALE} · {@code FEMALE}. 출생연도와 같은 한 글자(주민번호 성별세대코드)에서
+     * 파생하고, 정본이 이미 수집항목으로 적고 있다(`legal/privacy-policy.md` 33조).
+     *
+     * <p>쓰는 곳은 <b>admin 의 행태 통계</b>뿐이다 — GA4 의 인구통계 보고서에 해당한다.
+     * 판단(추천·판정)에는 쓰지 않는다. 성별로 금융상품을 가르면 그 자체가 차별이 된다.
+     *
+     * <p>미연동이거나 성별 도입 전에 인증한 사람은 null 이고, 통계는 '미상'으로 센다.
+     * 삭제권 행사 시 CI·출생연도와 함께 파기한다.
+     */
+    @Column(name = "gender", length = 10)
+    private String gender;
+
+    /**
      * 이 사용자가 정한 하루 알림 상한. <b>0이면 '설정 안 함'</b>이고 전역 기본값을 따른다.
      *
      * <p>전역값(`finntech.guardian.notification.daily-push-limit`)은 운영이 정하는 기본값이고,
@@ -109,4 +122,6 @@ public class AppUser {
     public void setCi(String v) { this.ci = v; }
     public Integer getBirthYear() { return birthYear; }
     public void setBirthYear(Integer v) { this.birthYear = v; }
+    public String getGender() { return gender; }
+    public void setGender(String v) { this.gender = v; }
 }
