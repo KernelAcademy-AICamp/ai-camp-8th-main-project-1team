@@ -1,0 +1,281 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 선생님든든 카드",
+  "product_id": "KB-04427",
+  "status": "active",
+  "as_of": "2020-08-20",
+  "review_no": "여신금융협회 심의필 제2020-C1a-07511호",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(JCB)",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    }
+  ],
+  "benefits": [
+    {
+      "group": "주유",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_conditional": "리터당 60원 또는 80원",
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "주유소/충전소",
+          "industries": [
+            "주유소",
+            "충전소"
+          ],
+          "note": "월 이용금액 20만원까지 할인. 경유/등유/LPG는 휘발유가로 환산"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    },
+    {
+      "group": "쇼핑",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "대형마트",
+          "brands": [
+            "이마트",
+            "홈플러스",
+            "롯데마트"
+          ]
+        },
+        {
+          "category": "온라인몰",
+          "brands": [
+            "G마켓",
+            "옥션",
+            "인터파크",
+            "11번가",
+            "롯데ON몰",
+            "티켓몬스터",
+            "쿠팡",
+            "위메프"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "교통",
+          "industries": [
+            "버스",
+            "지하철",
+            "택시"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    },
+    {
+      "group": "생활",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "커피/베이커리/편의점",
+          "industries": [
+            "커피전문점",
+            "베이커리",
+            "편의점"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    },
+    {
+      "group": "통신",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "이동통신",
+          "brands": [
+            "SKT",
+            "KT",
+            "LG U+"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    },
+    {
+      "group": "뷰티",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "뷰티",
+          "industries": [
+            "화장품점",
+            "미용원",
+            "피부미용실"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    },
+    {
+      "group": "여행",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 3,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "여행/호텔",
+          "industries": [
+            "관광여행사",
+            "특급관광호텔",
+            "일반관광호텔",
+            "기타관광호텔"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 30000
+      }
+    },
+    {
+      "group": "해외",
+      "kind": "할인",
+      "settle": "캐시백",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "해외가맹점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 10000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입/충전금액"
+    }
+  ],
+  "non_monetary": [
+    "Speed Mate 엔진오일 무료교환 및 정비 할인 서비스",
+    "포인트 리워드 (연간 결제실적 1,500만원 이상 시 2만점)"
+  ],
+  "schema_gaps": [
+    "전월실적 유예 조건: 최초 카드 사용 등록일로부터 다음달 말일까지 40만원 이상 구간 혜택 제공",
+    "엔진오일 무료교환 서비스는 연 1회, 정비할인 서비스는 월 1회/연 3회 제공",
+    "포인트 리워드는 연간 결제납부실적 기준이며 매년 2월 28일 적립",
+    "엔터테인먼트(외식, 영화, 놀이공원) 혜택은 별도 할인한도 및 횟수 제한이 존재함"
+  ],
+  "posted_at": "2018-08-22",
+  "source_url": "https://img2.kbcard.com/obj/card/download/_04427__prdctOpmn_20251014.pdf",
+  "_extraction_check": {
+    "source_pdf": "01__04427__prdctOpmn_20251014.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.400000",
+        "first": 30000,
+        "second": 5000
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.800000",
+        "first": null,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[3].rate_percent",
+        "first": 3,
+        "second": 10
+      },
+      {
+        "path": "$.benefits[4].rate_percent",
+        "first": 10,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[6].monthly_cap_by_tier.400000",
+        "first": 5000,
+        "second": 30000
+      },
+      {
+        "path": "$.benefits[6].monthly_cap_by_tier.800000",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[6].rate_percent",
+        "first": 5,
+        "second": 3
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "issuer": "KB국민카드",
+  "name": "카카오뱅크 자기주도마일리지 KB체크카드",
+  "product_id": "KB-07950",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "compliance_no": "251215-05685-PIF",
+  "posted_at": "2025-12-17",
+  "card_type": "CHECK",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 0
+    }
+  ],
+  "performance": null,
+  "benefits": [
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "rate_percent": 0.5,
+      "targets": [
+        {
+          "category": "국내·외 가맹점"
+        }
+      ],
+      "conditions": [
+        "전월 이용 실적 조건 없음",
+        "적립 한도 없음"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함)"
+    },
+    {
+      "code": "UTILITY",
+      "label": "충전금액, 아파트관리비, 공공요금(전기/수도 등)"
+    },
+    {
+      "code": "TUITION",
+      "label": "유치원/초·중·고교납입금"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "정부지원금(보육료/유치원 보조비/바우처 이용금액 등), 4대사회보험료(건강/연금/고용/산재)"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(원) 등록금"
+    },
+    {
+      "code": "TAX",
+      "label": "국세, 지방세, 취소금액"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비, 신차구매청구(환급) 할인 전표 전체"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "RF후불교통요금"
+    }
+  ],
+  "non_monetary": [
+    "카카오뱅크 임직원 전용 상품",
+    "교통카드 기능 불가",
+    "Mastercard 브랜드 발급 시 비접촉식(Contactless) 칩 탑재"
+  ],
+  "schema_gaps": [
+    "전월 실적 조건 및 적립 한도 없음",
+    "포인트리는 매출전표 매입 후 2영업일에 적립",
+    "카카오뱅크 임직원만 발급 가능"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/07950__prdctOpmn_20260331.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_07950__prdctOpmn_20260331.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

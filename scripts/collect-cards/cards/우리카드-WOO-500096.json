@@ -1,0 +1,106 @@
+{
+  "issuer": "우리카드",
+  "name": "우리 트래블월렛 체크카드",
+  "product_id": "WOO-500096",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CHECK",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 0
+    }
+  ],
+  "performance": null,
+  "benefits": [
+    {
+      "group": "국내외 가맹점 적립",
+      "kind": "적립",
+      "rate_percent": 0.3,
+      "targets": [
+        {
+          "category": "국내외 가맹점"
+        }
+      ],
+      "conditions": [
+        "전월 실적 조건 없음",
+        "적립 한도 제한 없음",
+        "트래블월렛 유효 회원에 한해 제공"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금(보육료, 유치원보조비, 바우처 이용금액 등)"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트 관리비, LH/SH/전북개발공사 등 공공임대료, 부동산임대료"
+    },
+    {
+      "code": "TUITION",
+      "label": "초·중·고 학교 납부금, 대학(대학원)등록금"
+    },
+    {
+      "code": "TAX",
+      "label": "국세, 지방세, 관세"
+    },
+    {
+      "code": "UTILITY",
+      "label": "공공요금(4대보험, 전기요금, 우편요금, 도시가스요금, 상하수도요금, 과태료·범칙금·벌금, 여권발급비용, 국가·공공기관·공공단체 가맹점)"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권/선불카드/기프트카드 구매 및 충전금액"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "교통카드 구매 및 충전금액, 시외버스/고속버스 요금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자"
+    }
+  ],
+  "non_monetary": [
+    "해외 서비스 수수료 면제",
+    "국제 브랜드 수수료 면제",
+    "VISA Platinum 서비스 제공"
+  ],
+  "schema_gaps": [
+    "트래블월렛 선불 충전금 잔액 내에서 결제되는 체크카드임",
+    "포인트는 1포인트=1원 단위로 트래블월렛 계정으로 적립됨",
+    "해외 이용 시 현지통화로, 국내 이용 시 원화로 결제됨"
+  ],
+  "posted_at": null,
+  "source_url": "https://m.wooricard.com/dcmw/pdfviewer/jsp/pfileRead.jsp?pdfPath=%2Fupload%2FcardClause%2F2026%2F8%2F12%2F747f5257-181e-489d-9687-199a26034ff3.pdf&pdfKubun=05&pdfName=%EC%9A%B0%EB%A6%AC+%ED%8A%B8%EB%9E%98%EB%B8%94%EC%9B%94%EB%A0%9B+%EC%B2%B4%ED%81%AC%EC%B9%B4%EB%93%9C+%EC%83%81%ED%92%88%EC%95%88%EB%82%B4%EC%9E%A5%2826.07%29.pdf",
+  "_extraction_check": {
+    "source_pdf": "500096.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,343 @@
+{
+  "_": "중도해지이율 — 금감원에 없어 각 은행 자사 공시에서 모은 값이다(M10).",
+  "_현황": {
+    "수집일": "2026-08-12",
+    "은행": [
+      "주식회사 케이뱅크",
+      "토스뱅크 주식회사"
+    ],
+    "상품": 9,
+    "실패": 2,
+    "남은_일": "은행권 전체는 18곳이다. robots.txt가 막지 않은 곳부터 TARGETS에 추가한다."
+  },
+  "_막힌_곳": {
+    "은행연합회 소비자포털": "robots.txt `Disallow: /` — 카드다모아와 같은 판단으로 쓰지 않는다",
+    "국민은행": "대문(www.kbstar.com)은 Allow지만 **상품 페이지 호스트 obank.kbstar.com 이 `User-agent: * / Disallow: /`** 다. 검색봇만 허용돼 있다",
+    "카카오뱅크": "`*`에 /app-ads.txt 만 허용",
+    "IBK기업은행": "robots.txt `Disallow: /`",
+    "하나은행": "`Disallow: /*.do$` + `Disallow: /*?` — 상품 페이지가 대부분 그 모양이라 사실상 막힘",
+    "부산은행": "robots는 Allow인데 메뉴가 전부 `javascript:goSiteMenu()`라 상품 URL을 못 얻었다. 렌더링으로 메뉴를 눌러 들어가야 한다 — 미착수"
+  },
+  "banks": [
+    {
+      "bank": "주식회사 케이뱅크",
+      "robots": "Allow: /",
+      "as_of": "2026-08-12",
+      "products": [
+        {
+          "name": "코드K 자유적금",
+          "url": "https://www.kbanknow.com/web/product/deposit/codek-saving",
+          "tiers": [
+            {
+              "from_months": 0,
+              "rate": 0.1
+            },
+            {
+              "from_months": 1,
+              "rate": 0.3
+            },
+            {
+              "from_months": 3,
+              "rate": 0.5
+            },
+            {
+              "from_months": 6,
+              "multiplier": 0.7,
+              "prorated": true,
+              "floor_rate": 0.5
+            },
+            {
+              "from_months": 9,
+              "multiplier": 0.8,
+              "prorated": true,
+              "floor_rate": 0.5
+            },
+            {
+              "from_months": 11,
+              "multiplier": 0.9,
+              "prorated": true,
+              "floor_rate": 0.5
+            }
+          ]
+        },
+        {
+          "name": "코드K 정기예금",
+          "url": "https://www.kbanknow.com/web/product/deposit/codek-fixed",
+          "tiers": [
+            {
+              "from_months": 0,
+              "rate": 0.1
+            },
+            {
+              "from_months": 1,
+              "rate": 0.3
+            },
+            {
+              "from_months": 3,
+              "rate": 0.5
+            },
+            {
+              "from_months": 6,
+              "multiplier": 0.7,
+              "prorated": true,
+              "floor_rate": 0.5
+            },
+            {
+              "from_months": 9,
+              "multiplier": 0.8,
+              "prorated": true,
+              "floor_rate": 0.5
+            },
+            {
+              "from_months": 11,
+              "multiplier": 0.9,
+              "prorated": true,
+              "floor_rate": 0.5
+            }
+          ]
+        },
+        {
+          "name": "주거래우대 자유적금",
+          "url": "https://www.kbanknow.com/web/product/deposit/primary-saving",
+          "tiers": [
+            {
+              "from_months": 0,
+              "rate": 0.1
+            },
+            {
+              "from_months": 1,
+              "rate": 0.3
+            },
+            {
+              "from_months": 3,
+              "rate": 0.5
+            },
+            {
+              "from_months": 6,
+              "multiplier": 0.7,
+              "prorated": true,
+              "floor_rate": 0.5
+            },
+            {
+              "from_months": 9,
+              "multiplier": 0.8,
+              "prorated": true,
+              "floor_rate": 0.5
+            },
+            {
+              "from_months": 11,
+              "multiplier": 0.9,
+              "prorated": true,
+              "floor_rate": 0.5
+            }
+          ]
+        },
+        {
+          "name": "마이키즈 적금",
+          "url": "https://www.kbanknow.com/web/product/deposit/mykids-saving",
+          "tiers": [
+            {
+              "from_months": 0,
+              "rate": 0.1
+            },
+            {
+              "from_months": 1,
+              "rate": 0.3
+            },
+            {
+              "from_months": 3,
+              "rate": 0.5
+            },
+            {
+              "from_months": 6,
+              "multiplier": 0.7,
+              "prorated": true,
+              "floor_rate": 0.5
+            },
+            {
+              "from_months": 9,
+              "multiplier": 0.8,
+              "prorated": true,
+              "floor_rate": 0.5
+            },
+            {
+              "from_months": 11,
+              "multiplier": 0.9,
+              "prorated": true,
+              "floor_rate": 0.5
+            }
+          ]
+        },
+        {
+          "name": "데굴데굴 농장",
+          "url": "https://www.kbanknow.com/web/product/deposit/rolling-farm",
+          "tiers": [
+            {
+              "from_months": 0,
+              "rate": 0.1
+            }
+          ]
+        }
+      ],
+      "missed": [
+        {
+          "name": "궁금한 적금",
+          "url": "https://www.kbanknow.com/web/product/deposit/curious-saving",
+          "reason": "중도해지금리 표를 못 찾았다"
+        },
+        {
+          "name": "챌린지박스",
+          "url": "https://www.kbanknow.com/web/product/deposit/challengebox",
+          "reason": "중도해지금리 표를 못 찾았다"
+        }
+      ]
+    },
+    {
+      "bank": "토스뱅크 주식회사",
+      "robots": "Allow: /",
+      "as_of": "2026-08-12",
+      "products": [
+        {
+          "name": "토스뱅크 굴비 적금",
+          "url": "https://www.tossbank.com/product-service/savings/savings-gulbi",
+          "tiers": [
+            {
+              "from_months": 0,
+              "rate": 1.8
+            }
+          ]
+        },
+        {
+          "name": "토스뱅크 자유 적금",
+          "url": "https://www.tossbank.com/product-service/savings/savings-freedom",
+          "tiers": [
+            {
+              "from_months": 0,
+              "rate": 0.1
+            },
+            {
+              "from_months": 1,
+              "from_exclusive": true,
+              "rate": 0.3
+            },
+            {
+              "from_months": 3,
+              "from_exclusive": true,
+              "multiplier": 0.5,
+              "prorated": true,
+              "floor_rate": 0.3
+            },
+            {
+              "from_months": 6,
+              "from_exclusive": true,
+              "multiplier": 0.7,
+              "prorated": true,
+              "floor_rate": 0.4
+            },
+            {
+              "from_months": 9,
+              "from_exclusive": true,
+              "multiplier": 0.8,
+              "prorated": true,
+              "floor_rate": 0.5
+            },
+            {
+              "from_months": 11,
+              "from_exclusive": true,
+              "multiplier": 0.9,
+              "prorated": true,
+              "floor_rate": 0.5
+            }
+          ]
+        },
+        {
+          "name": "토스뱅크 아이 적금",
+          "url": "https://www.tossbank.com/product-service/savings/savings-fetus",
+          "tiers": [
+            {
+              "from_months": 0,
+              "rate": 0.1
+            },
+            {
+              "from_months": 1,
+              "from_exclusive": true,
+              "rate": 0.3
+            },
+            {
+              "from_months": 3,
+              "from_exclusive": true,
+              "multiplier": 0.5,
+              "prorated": true,
+              "floor_rate": 0.3
+            },
+            {
+              "from_months": 6,
+              "from_exclusive": true,
+              "multiplier": 0.7,
+              "prorated": true,
+              "floor_rate": 0.4
+            },
+            {
+              "from_months": 9,
+              "from_exclusive": true,
+              "multiplier": 0.8,
+              "prorated": true,
+              "floor_rate": 0.5
+            },
+            {
+              "from_months": 11,
+              "from_exclusive": true,
+              "multiplier": 0.9,
+              "prorated": true,
+              "floor_rate": 0.5
+            }
+          ]
+        },
+        {
+          "name": "토스뱅크 먼저 이자 받는 정기예금",
+          "url": "https://www.tossbank.com/product-service/savings/time-deposit",
+          "tiers": [
+            {
+              "from_months": 0,
+              "rate": 0.1
+            },
+            {
+              "from_months": 1,
+              "from_exclusive": true,
+              "rate": 0.3
+            },
+            {
+              "from_months": 3,
+              "from_exclusive": true,
+              "multiplier": 0.5,
+              "prorated": true,
+              "floor_rate": 0.3
+            },
+            {
+              "from_months": 6,
+              "from_exclusive": true,
+              "multiplier": 0.7,
+              "prorated": true,
+              "floor_rate": 0.4
+            },
+            {
+              "from_months": 9,
+              "from_exclusive": true,
+              "multiplier": 0.8,
+              "prorated": true,
+              "floor_rate": 0.5
+            },
+            {
+              "from_months": 11,
+              "from_exclusive": true,
+              "multiplier": 0.9,
+              "prorated": true,
+              "floor_rate": 0.5
+            }
+          ]
+        }
+      ],
+      "missed": []
+    }
+  ]
+}

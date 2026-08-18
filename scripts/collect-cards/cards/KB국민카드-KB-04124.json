@@ -1,0 +1,231 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB Youth Club 체크카드",
+  "product_id": "KB-04124",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "2025-12-05",
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      200000
+    ],
+    "excluded": [
+      {
+        "code": "POINT_CHARGE",
+        "label": "포인트리 충전금액"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입∙충전 금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료, 유치원보조비, 바우처 이용금액 등)"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(원)등록금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(RF후불교통요금/자판기/터널이용료/고속버스 취소 반환수수료 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "선택형 A팩",
+      "kind": "할인",
+      "settle": "환급할인",
+      "targets": [
+        {
+          "category": "OTT",
+          "brands": [
+            "넷플릭스",
+            "유튜브",
+            "티빙",
+            "스포티파이"
+          ],
+          "note": "공식 홈페이지 정기결제 이용권 결제 시 제공"
+        },
+        {
+          "category": "APP",
+          "brands": [
+            "구글 플레이스토어",
+            "애플 앱스토어"
+          ],
+          "note": "건당 5천원 이상 이용 시 제공"
+        },
+        {
+          "category": "여가",
+          "industries": [
+            "노래방",
+            "PC방"
+          ],
+          "note": "건당 5천원 이상 이용 시 제공"
+        },
+        {
+          "category": "교통",
+          "industries": [
+            "택시",
+            "철도"
+          ],
+          "note": "건당 5천원 이상 이용 시 제공"
+        },
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25",
+            "CU"
+          ],
+          "channel": [
+            "KB Pay"
+          ],
+          "note": "오프라인 매장 결제 시 제공"
+        },
+        {
+          "category": "영화",
+          "brands": [
+            "CGV",
+            "롯데시네마",
+            "메가박스"
+          ],
+          "note": "건당 1만 5천원 이상 이용 시 제공"
+        },
+        {
+          "category": "쇼핑 멤버십",
+          "brands": [
+            "네이버 플러스 멤버십",
+            "쿠팡 와우 멤버십"
+          ],
+          "note": "공식 홈페이지/모바일 앱 정기결제 이용권 결제 시 제공"
+        },
+        {
+          "category": "통신요금",
+          "brands": [
+            "SKT",
+            "KT",
+            "LG U+",
+            "Liiv M"
+          ],
+          "note": "자동납부 시 납부금액 기준 제공"
+        }
+      ]
+    },
+    {
+      "group": "선택형 B팩",
+      "kind": "할인",
+      "settle": "환급할인",
+      "targets": [
+        {
+          "category": "패션/라이프",
+          "brands": [
+            "무신사",
+            "29CM",
+            "W컨셉",
+            "지그재그",
+            "에이블리",
+            "올리브영",
+            "야놀자"
+          ]
+        },
+        {
+          "category": "배달",
+          "brands": [
+            "배달의민족",
+            "쿠팡이츠"
+          ]
+        },
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25",
+            "CU"
+          ],
+          "channel": [
+            "KB Pay"
+          ]
+        },
+        {
+          "category": "데이트",
+          "brands": [
+            "아웃백스테이크하우스",
+            "VIPS",
+            "에버랜드",
+            "롯데월드"
+          ],
+          "note": "건당 1만원 이상 이용 시 제공"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입∙충전 금액"
+    }
+  ],
+  "non_monetary": [
+    "Mastercard 브랜드 발급 시 Mastercard 플래티늄 등급 기본 서비스 제공"
+  ],
+  "schema_gaps": [
+    "선택형 서비스(A팩/B팩) 중 택 1",
+    "최초 발급 시 실적 유예기간(등록월 다음달 말일까지) 20만원 미만 시에도 할인한도의 50% 제공",
+    "할인 서비스는 환급할인 방식",
+    "후불교통기능 탑재"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04124__prdctOpmn_20260330.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04124__prdctOpmn_20260330.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "issuer": "BC카드",
+  "name": "고위드 BC 바로 Mastercard",
+  "product_id": "104904",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "2026-07-06",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 5000,
+      "base": 5000,
+      "affiliate": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 10000,
+      "base": 10000,
+      "affiliate": 0
+    }
+  ],
+  "benefits": [],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "고위드 회원으로서의 추가 혜택(카드 서비스 아님) www.gowid.com의 고위드 홈페이지 베넷핏 참고"
+  ],
+  "schema_gaps": [
+    "제공된 PDF 전문 내에 구체적인 카드 혜택(할인/적립) 내용 및 여신금융협회 심의필 번호와 날짜가 명시되어 있지 않음"
+  ],
+  "source_url": "https://www.bccard.com/down/individual/customer/104904.pdf",
+  "_extraction_check": {
+    "source_pdf": "20260706_고위드 BC 바로 Mastercard__104904.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

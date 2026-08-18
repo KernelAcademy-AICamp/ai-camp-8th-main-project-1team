@@ -1,0 +1,192 @@
+{
+  "issuer": "우리카드",
+  "name": "KREAM 체크카드",
+  "product_id": "WOO-103117",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "compliance_no": "준법 심의필 2023 - C02631호 (2023.12.19)",
+  "posted_at": null,
+  "card_type": "CHECK",
+  "benefit_style": "DISCOUNT_POINT",
+  "policy_card": false,
+  "has_transit": false,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "우리카드",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 가맹점",
+        "교통카드 이용금액",
+        "통신료 자동납부"
+      ]
+    },
+    "tiers": [
+      200000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "KREAM_PURCHASE",
+        "label": "KREAM 이용금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비(임대료)"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료, 유치원보조비, 바우처 이용금액 등)"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세·지방세"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공공요금(공과금)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권·기프트카드·선불카드 구매 및 충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통카드(모바일 포함) 구매 및 충전 금액"
+      },
+      {
+        "code": "BUS",
+        "label": "고속버스(차내 단말기 및 고속버스 APP 결제)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "KREAM 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "min_amount": 1000,
+      "requires_tier": 200000,
+      "targets": [
+        {
+          "category": "KREAM",
+          "note": "매출 건당 최대 1천원 할인, 월 최대 5천원 한도"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 5000
+      }
+    },
+    {
+      "group": "국내외 가맹점 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 0.2,
+      "requires_tier": null,
+      "targets": [
+        {
+          "category": "국내외 가맹점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 5000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금(보육료, 유치원보조비, 바우처 이용금액 등)"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원)등록금"
+    },
+    {
+      "code": "TAX",
+      "label": "국세·지방세"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "공공요금(공과금)"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권·기프트카드·선불카드 구매 및 충전금액"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "교통카드(모바일 포함) 구매 및 충전금액"
+    },
+    {
+      "code": "BUS",
+      "label": "고속버스(차내 단말기 및 고속버스 APP 결제)"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트 관리비(임대료)"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자"
+    }
+  ],
+  "non_monetary": [
+    "해외원화결제차단 서비스 제공"
+  ],
+  "schema_gaps": [
+    "KREAM 이용금액 청구할인 서비스와 국내외 가맹점 청구할인 서비스는 중복 적용 불가하며 KREAM 할인이 우선 적용됨",
+    "간편결제(pay)로 결제 시 가맹점명이 간편결제 명칭으로 승인된 경우 KREAM 할인 대신 국내외 가맹점 청구할인(0.2%)이 적용됨",
+    "백화점, 마트, 아울렛, 복합 쇼핑몰, 면세점 등 일부 입점된 KREAM 매장의 경우 국내외 가맹점 청구할인(0.2%) 적용"
+  ],
+  "source_url": "https://m.wooricard.com/dcmw/pdfviewer/jsp/pfileRead.jsp?pdfPath=%2Fupload%2FcardClause%2F2024%2F3%2F18%2F148e507d-2f91-4f22-bd68-b64a1bf52e4b.pdf&pdfKubun=05&pdfName=KREAM+%EC%B2%B4%ED%81%AC%EC%B9%B4%EB%93%9C.pdf",
+  "_extraction_check": {
+    "source_pdf": "103117.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].min_amount",
+        "first": 1000,
+        "second": 0
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 5000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

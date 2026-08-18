@@ -1,35 +1,26 @@
 /**
- * 리포트 &gt; 통장 비교 (FP-01·FP-02) — 아낀 돈의 보관처를 **정보성으로만** 비교한다.
+ * 리포트 &gt; 예적금 일반 비교 — 사용자 소비·목표와 연결하지 않고 공시 금리를 비교한다.
  *
  * 무판매목적·무제휴·가입편의 없음이면 중개업이 아니라는 유권해석(금융위·금감원 2022.6.15)에 따라
  * 실 금리를 그대로 보여주되, 앱 안에서 가입·중개·연결은 하지 않는다. 가입은 각 금융사에서.
  */
 import { AppBar, Scroll, Screen, ErrorBox, Loading, Empty, SectionTitle } from '../components/ui';
-import { useSession } from '../state/session';
-import { useGuardian } from '../state/guardian';
 import { useAsync } from '../state/useAsync';
 import { api } from '../lib/api';
-import { won } from '../lib/format';
+import { useSession } from '../state/session';
 
 export function ReportSavings() {
-  const { back, userId } = useSession();
-  const { home } = useGuardian();
-  // userId를 함께 보낸다 — 서버가 출생연도로 나이 자격까지 맞춰 거른다(미연동이면 서버가 알아서 건너뛴다).
-  const compare = useAsync(() => api.compareSavings(8, userId), [userId]);
+  const { back } = useSession();
+  const compare = useAsync(() => api.compareSavings(8), []);
 
   const accounts = compare.data?.accounts ?? [];
-  const secured = home?.challenge.securedSaving ?? 0;
 
   return (
-    <Screen title="통장 비교" hasTabBar>
-      <AppBar onBack={back} title="통장 비교" />
+    <Screen title="예적금 비교" hasTabBar>
+      <AppBar onBack={back} title="예적금 비교" />
       <Scroll><div className="pad" style={{ paddingTop: 12 }}>
-        <p className="h-title" style={{ marginTop: 0 }}>이 돈, 어디에 모을까요?</p>
-        <p className="h-sub">
-          {secured > 0
-            ? <>지금 지키고 있는 <b>{won(secured)}</b>을 어디에 둘지 금리만 비교해 볼게요.</>
-            : <>아낀 돈을 어디에 둘지 금리만 비교해 볼게요.</>}
-        </p>
+        <p className="h-title" style={{ marginTop: 0 }}>예금과 적금 금리를 비교해 보세요</p>
+        <p className="h-sub">개인 추천 없이 공시된 기본금리와 최고금리를 그대로 보여드려요.</p>
 
         <ErrorBox error={compare.error} onRetry={compare.reload} />
         {compare.loading && <Loading label="금리를 불러오는 중" rows={4} />}
@@ -57,7 +48,7 @@ export function ReportSavings() {
             </div>
             {compare.data?.totalConsidered ? (
               <p className="empty">
-                자격 제한 상품을 뺀 {compare.data.totalConsidered.toLocaleString('ko-KR')}개 중 금리순으로 보여드려요.
+                일반 비교 대상 {compare.data.totalConsidered.toLocaleString('ko-KR')}개 중 기본금리순으로 보여드려요.
                 {compare.data.note && <> {compare.data.note}</>}
               </p>
             ) : null}

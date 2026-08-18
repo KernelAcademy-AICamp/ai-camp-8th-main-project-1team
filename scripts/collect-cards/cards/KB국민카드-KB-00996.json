@@ -1,0 +1,180 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 국방멤버쉽카드",
+  "product_id": "KB-00996",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 3000,
+      "base": 3000,
+      "affiliate": 0
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "VISA/Master",
+      "total": 5000,
+      "base": 5000,
+      "affiliate": 0
+    },
+    {
+      "scope": "국내전용",
+      "brand": "KB(골드)",
+      "total": 5000,
+      "base": 5000,
+      "affiliate": 0
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "VISA/Master(골드)",
+      "total": 10000,
+      "base": 10000,
+      "affiliate": 0
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "VISA/Master(플래티늄)",
+      "total": 100000,
+      "base": 10000,
+      "affiliate": 90000
+    }
+  ],
+  "annual_fee_notes": [
+    "플래티늄카드 제휴연회비는 면제 대상 아님",
+    "차기년도 연회비는 KB국민 국방멤버쉽 카드로 연간 10만원 이상 사용 시 면제(결제원금 기준, 단기카드대출 포함)"
+  ],
+  "benefits": [
+    {
+      "group": "국군복지단 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "국군복지단",
+          "industries": [
+            "군휴양시설",
+            "체력단련장"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 20000
+      }
+    },
+    {
+      "group": "주유 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_conditional": "리터당 70원",
+      "targets": [
+        {
+          "category": "주유",
+          "brands": [
+            "GS칼텍스"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 17500
+      },
+      "conditions": [
+        "1일 10만원, 월 25만원 이용금액까지 할인 적용",
+        "휘발유, 경유, 등유 대상(LPG 제외)"
+      ]
+    },
+    {
+      "group": "무이자할부",
+      "kind": "무이자할부",
+      "targets": [
+        {
+          "category": "쇼핑",
+          "industries": [
+            "전국백화점",
+            "대형할인점",
+            "농수축협 직판매장",
+            "공무원연금매장"
+          ]
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    }
+  ],
+  "non_monetary": [
+    "K-CASH 전자화폐 기능 탑재",
+    "플래티늄카드 발급 시 국제브랜드사 Platinum 등급 서비스 제공"
+  ],
+  "schema_gaps": [
+    "주유 할인 한도는 월 25만원 이용 시 리터당 70원 할인 기준(약 17,500원)으로 계산됨",
+    "전월 실적 조건이 명시되어 있지 않음",
+    "K-CASH 기능에 대한 상세 혜택은 별도 전자화폐 약관을 따름"
+  ],
+  "posted_at": "2001-04-25",
+  "source_url": "https://img2.kbcard.com/obj/card/download/00996__prdctOpmn_20241128.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_00996__prdctOpmn_20241128.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": null,
+        "second": 70
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.0",
+        "first": 17500,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].kind",
+        "first": "무이자할부",
+        "second": "할인"
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": null,
+        "second": 10
+      },
+      {
+        "path": "$.benefits[2].kind",
+        "first": "할인",
+        "second": "무이자할부"
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.0",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].rate_percent",
+        "first": 10,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -10,7 +10,7 @@ import { useSession } from '../state/session';
 import { useAsync } from '../state/useAsync';
 import {
   api, catLabel,
-  type CategoryView, type GoalGain, type GoalRecommendation, type GoalView,
+  type CategoryView, type GoalGain, type GoalView,
   type LookupResult, type PointEventView, type PointSnapshot,
 } from '../lib/api';
 import { won, man, pctNum, shortDateTime } from '../lib/format';
@@ -31,7 +31,6 @@ export function MyGoals() {
   const { back, userId } = useSession();
   const snap = useAsync(() => api.points(userId), [userId]);
   const [cats, setCats] = useState<CategoryView[]>([]);
-  const [recs, setRecs] = useState<GoalRecommendation[]>([]);
   const [error, setError] = useState<unknown>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [actionKey, setActionKey] = useState(0);
@@ -64,8 +63,6 @@ export function MyGoals() {
   useEffect(() => {
     api.categories().then((c) => { setCats(c); if (c.length) setSpendCat((v) => v || c[0].code); }).catch(() => undefined);
   }, [userId]);
-  const refreshRecs = () => api.goalRecommendations(userId).then(setRecs).catch(() => undefined);
-  useEffect(() => { void refreshRecs(); }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function announce(s: PointSnapshot) {
     setActionKey((k) => k + 1);
@@ -111,7 +108,7 @@ export function MyGoals() {
   function togglePlanCut(g: GoalView, code: string) {
     const cur = new Set(g.planCutCategories);
     if (cur.has(code)) cur.delete(code); else cur.add(code);
-    void run(api.setGoalPlan(userId, g.id, [...cur])).then(() => refreshRecs());
+    void run(api.setGoalPlan(userId, g.id, [...cur]));
   }
 
   function fillFromLookup(r: LookupResult, source: 'URL' | 'IMAGE') {
@@ -232,7 +229,6 @@ export function MyGoals() {
             <SectionTitle aux="아낀 돈이 자동으로 쌓여요">내 목표</SectionTitle>
             {s.goals.length === 0 && <div className="card"><Empty>아직 목표가 없어요. 아래에서 하나 만들어 볼까요?</Empty></div>}
             {s.goals.map((g) => {
-              const rec = recs.find((r) => r.goalId === g.id);
               return (
                 <div className="goal-item" key={g.id}>
                   <div className="goal-head">
@@ -297,17 +293,11 @@ export function MyGoals() {
                     </button>
                   )}
 
-                  {/* 저축 계획 — 줄일 소비 → 개월수 → 추천 통장 */}
+                  {/* 저축 계획 — 줄일 소비 → 달성 개월수 */}
                   <div className="pv">
                     {g.planMonths > 0
                       ? <>🎯 이 소비를 줄이면 <b>월 {won(g.planMonthlySaving)}</b> → <b>{g.planMonths}개월</b>이면 달성</>
                       : <>줄일 소비를 고르면 며칠 만에 모을지 계산돼요</>}
-                    {rec?.productName && (
-                      <div style={{ marginTop: 6 }}>
-                        💳 추천 통장 <b>{rec.company} {rec.productName}</b> · 기본 {rec.baseRate.toFixed(2)}%
-                        <span className="muted small"> ({rec.periodMonths}개월)</span>
-                      </div>
-                    )}
                     {planGoal === g.id ? (
                       <div className="chips" style={{ marginTop: 10 }}>
                         {s.cutOptions.length === 0 && <span className="muted small">줄일 만한 습관 소비 기록이 아직 없어요</span>}

@@ -1,0 +1,439 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 청춘대로 매니아 티타늄카드",
+  "product_id": "KB-09195",
+  "status": "stopped",
+  "as_of": "2022-04-14",
+  "review_no": "여신금융협회 심의필 제2022-C1a-02678호",
+  "compliance_no": "241008-05039-PIF",
+  "posted_at": "2016-11-25",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(UPI)",
+      "total": 35000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 40000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "tiers": [
+      400000,
+      800000
+    ],
+    "excluded": [
+      {
+        "code": "BENEFIT_APPLIED",
+        "label": "적립 서비스 받은 이용 건 전체"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원) 등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      },
+      {
+        "code": "NON_APPROVAL",
+        "label": "무승인전표(교통요금, 자판기, 터널 통행료, 항공기 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "매니아 티타늄 Basic",
+      "kind": "적립",
+      "settle": "포인트리",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ],
+          "exclude_place": [
+            "시외버스",
+            "고속버스"
+          ]
+        },
+        {
+          "category": "택시"
+        },
+        {
+          "category": "이동통신",
+          "industries": [
+            "SKT",
+            "KT",
+            "Olleh",
+            "LG U+"
+          ],
+          "note": "자동납부 시 제공. 인터넷, IPTV 등 결합상품 및 알뜰폰 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 15000,
+        "800000": 25000
+      }
+    },
+    {
+      "group": "매니아 티타늄 Basic",
+      "kind": "적립",
+      "settle": "포인트리",
+      "rate_conditional": "리터당 100점",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "주유",
+          "brands": [
+            "SK",
+            "GS칼텍스"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 15000,
+        "800000": 25000
+      }
+    },
+    {
+      "group": "카페 매니아",
+      "kind": "적립",
+      "settle": "포인트리",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스",
+            "폴바셋",
+            "이디야"
+          ]
+        },
+        {
+          "category": "디저트",
+          "brands": [
+            "파리바게뜨",
+            "도레도레"
+          ]
+        },
+        {
+          "category": "식품배송몰",
+          "brands": [
+            "배달의 민족",
+            "마켓컬리"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "스타일 매니아",
+      "kind": "적립",
+      "settle": "포인트리",
+      "rate_percent": 20,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "SPA 패션",
+          "brands": [
+            "ZARA",
+            "유니클로",
+            "H&M"
+          ]
+        },
+        {
+          "category": "인테리어",
+          "brands": [
+            "IKEA",
+            "MUJI",
+            "까사미아",
+            "ZARA HOME"
+          ]
+        },
+        {
+          "category": "생활용품",
+          "brands": [
+            "올리브영",
+            "다이소"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "컬처 매니아",
+      "kind": "적립",
+      "settle": "포인트리",
+      "rate_percent": 20,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "미술관",
+          "brands": [
+            "대림미술관",
+            "예술의 전당",
+            "한남동 디뮤지엄"
+          ]
+        },
+        {
+          "category": "음원사이트",
+          "brands": [
+            "멜론",
+            "Genie"
+          ]
+        },
+        {
+          "category": "티켓예매사이트",
+          "brands": [
+            "인터파크",
+            "티켓링크"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "쇼핑 매니아",
+      "kind": "적립",
+      "settle": "포인트리",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "소셜커머스",
+          "brands": [
+            "쿠팡",
+            "티몬",
+            "위메프"
+          ]
+        },
+        {
+          "category": "인터넷면세점",
+          "brands": [
+            "롯데",
+            "신라"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "영화/놀이동산",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "CGV",
+            "메가박스"
+          ],
+          "note": "온라인 예매 시 건당 3,500원 할인"
+        },
+        {
+          "category": "놀이동산",
+          "brands": [
+            "롯데월드",
+            "에버랜드",
+            "캐리비안베이"
+          ],
+          "note": "현장할인"
+        }
+      ]
+    },
+    {
+      "group": "해외",
+      "kind": "할인",
+      "settle": "캐시백",
+      "rate_percent": 3,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "해외 이용금액"
+        }
+      ]
+    },
+    {
+      "group": "플러스 O2O",
+      "kind": "적립",
+      "settle": "포인트리",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "KB국민카드 앱 O2O 서비스"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "Mastercard 티타늄 등급 국제브랜드 서비스 제공",
+    "카드 디자인 선택 서비스(5종)"
+  ],
+  "schema_gaps": [
+    "매니아 티타늄 Special 서비스의 각 영역별 월간 적립한도가 1구간/2구간으로 나뉘어 있으나, 통합 한도 표기가 아닌 개별 영역별 한도로 명시됨",
+    "영화/놀이동산 서비스의 연간/월간 횟수 제한 존재",
+    "해외 이용금액 할인 캐시백은 월 50만원 이용금액까지 제공",
+    "최초 카드 사용등록일로부터 다음 달 말일까지는 실적 유예(40만원 구간 서비스 제공)"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09195__prdctOpmn_20241128.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09195__prdctOpmn_20241128.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 9,
+        "second": 8
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.400000",
+        "first": null,
+        "second": 15000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.800000",
+        "first": null,
+        "second": 25000
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": 20,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.400000",
+        "first": null,
+        "second": 20000
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.800000",
+        "first": null,
+        "second": 35000
+      },
+      {
+        "path": "$.benefits[3].rate_percent",
+        "first": 20,
+        "second": null
+      },
+      {
+        "path": "$.benefits[4].monthly_cap_by_tier.400000",
+        "first": 15000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[4].monthly_cap_by_tier.800000",
+        "first": 25000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[5].monthly_cap_by_tier.400000",
+        "first": null,
+        "second": 15000
+      },
+      {
+        "path": "$.benefits[5].monthly_cap_by_tier.800000",
+        "first": null,
+        "second": 25000
+      },
+      {
+        "path": "$.benefits[5].rate_percent",
+        "first": 5,
+        "second": 10
+      },
+      {
+        "path": "$.benefits[6].monthly_cap_by_tier.400000",
+        "first": null,
+        "second": 15000
+      },
+      {
+        "path": "$.benefits[6].monthly_cap_by_tier.800000",
+        "first": null,
+        "second": 25000
+      },
+      {
+        "path": "$.benefits[6].rate_percent",
+        "first": 10,
+        "second": null
+      },
+      {
+        "path": "$.benefits[7].kind",
+        "first": "적립",
+        "second": "할인"
+      },
+      {
+        "path": "$.benefits[7].rate_percent",
+        "first": 10,
+        "second": 3
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 50000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,196 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 스맨파 체크카드",
+  "product_id": "KB-04910",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "compliance_no": "kkgc20052@kbfg.com",
+  "posted_at": "2022-08-22",
+  "card_type": "CHECK",
+  "benefit_style": "DISCOUNT_POINT",
+  "policy_card": false,
+  "has_transit": true,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      300000,
+      600000
+    ],
+    "excluded": [
+      {
+        "code": "TRANSIT",
+        "label": "후불교통요금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "무승인 결제(자판기, 터널통행료, 유료도로, 기타/고속버스 좌석 반환수수료 등)"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "정부지원금 이용금액(보육료, 유치원보조비, 바우처 이용금액 등)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "포인트리 충전금액, 대학(원)등록금, 상품권 및 선불카드 구입·충전 금액"
+      },
+      {
+        "code": "FEE",
+        "label": "연체료, 지방세(지방세, 상하수도, 세외수입), 취소금액, 각종 수수료 및 이자"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "편의점",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25 편의점"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 2000,
+        "600000": 4000
+      }
+    },
+    {
+      "group": "여행/통신",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "여행/통신",
+          "brands": [
+            "쏘카",
+            "야놀자",
+            "Liiv M 이동통신"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 2000,
+        "600000": 4000
+      }
+    },
+    {
+      "group": "식음료",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "식음료",
+          "brands": [
+            "스타벅스",
+            "파리바게뜨"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 2000,
+        "600000": 4000
+      }
+    },
+    {
+      "group": "정기구독",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "정기구독",
+          "brands": [
+            "멜론",
+            "지니",
+            "넷플릭스",
+            "웨이브 월정액"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 2000,
+        "600000": 4000
+      }
+    },
+    {
+      "group": "교육",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "교육",
+          "brands": [
+            "교보문고",
+            "어학시험 응시료"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 2000,
+        "600000": 4000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단포함) 구입·충전 제외"
+    }
+  ],
+  "non_monetary": [
+    "후불교통기능 탑재"
+  ],
+  "schema_gaps": [
+    "KB국민 스맨파 체크카드와 KB국민 새로이 체크카드의 전월 이용실적 및 할인한도가 합산됨",
+    "최초 사용등록일로부터 다음달 말일까지 1구간 혜택 제공",
+    "어학시험 응시료는 온라인 접수 시에만 할인 적용"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04910__prdctOpmn_20230630.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04910__prdctOpmn_20230630.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 20000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

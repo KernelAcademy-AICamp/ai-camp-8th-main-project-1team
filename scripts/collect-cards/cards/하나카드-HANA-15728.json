@@ -1,0 +1,195 @@
+{
+  "issuer": "하나카드",
+  "name": "MOVING카드 LIFE",
+  "product_id": "HANA-15728",
+  "status": "active",
+  "as_of": "2026-06-19",
+  "review_no": "여신금융협회 심의필 제 2026-C1a-09124호",
+  "compliance_no": "준법심의 L-26-2049(2026.06.08)",
+  "posted_at": "2026-06-08",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내외겸용",
+      "brand": "Mastercard",
+      "total": 20000,
+      "base": 10000,
+      "affiliate": 10000
+    },
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 20000,
+      "base": 10000,
+      "affiliate": 10000
+    }
+  ],
+  "benefits": [
+    {
+      "group": "ALLDAY 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "온라인 쇼핑",
+          "brands": [
+            "쿠팡",
+            "네이버플러스스토어"
+          ],
+          "channel": [
+            "공식 홈페이지(온라인/모바일앱)"
+          ]
+        },
+        {
+          "category": "온라인 식품",
+          "brands": [
+            "SSG.COM",
+            "컬리",
+            "오아시스마켓"
+          ],
+          "channel": [
+            "공식 홈페이지(온라인/모바일앱)"
+          ]
+        },
+        {
+          "category": "장보기 마트",
+          "brands": [
+            "이마트",
+            "트레이더스 홀세일 클럽",
+            "롯데마트",
+            "농협 하나로마트"
+          ],
+          "note": "오프라인 결제 건 한정"
+        },
+        {
+          "category": "슈퍼마켓",
+          "brands": [
+            "GS THE Fresh",
+            "롯데슈퍼",
+            "이마트에브리데이",
+            "노브랜드"
+          ],
+          "note": "오프라인 결제 건 한정"
+        },
+        {
+          "category": "백화점",
+          "brands": [
+            "신세계백화점",
+            "현대백화점",
+            "롯데백화점"
+          ],
+          "note": "오프라인 결제 건 한정"
+        },
+        {
+          "category": "딜리버리",
+          "brands": [
+            "쿠팡이츠",
+            "배달의민족",
+            "요기요"
+          ],
+          "channel": [
+            "공식 홈페이지(온라인/모바일 앱)"
+          ]
+        },
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ]
+        },
+        {
+          "category": "택시",
+          "brands": [
+            "카카오T",
+            "UT"
+          ],
+          "industries": [
+            "택시업종"
+          ]
+        }
+      ]
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "ALLDAY 적립",
+      "members": [
+        "온라인 쇼핑",
+        "온라인 식품",
+        "장보기 마트",
+        "슈퍼마켓",
+        "백화점",
+        "딜리버리"
+      ],
+      "cap_by_tier": {
+        "0": 50000
+      },
+      "note": "통합 하나머니 5만 한도"
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "PUBLIC_DUES",
+      "label": "국세, 지방세, 수도/전기요금, 그외 공과금, 도시가스 요금, 아파트관리비, 국민연금/고용보험료/산재보험료/건강보험료 납부 금액"
+    },
+    {
+      "code": "TUITION",
+      "label": "스쿨뱅킹, 초·중·고 학교 납입금, 대학교 납입금, 대학원 납입금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 기프트카드 구매, 선불카드 및 선불전자지급수단 충전 금액"
+    },
+    {
+      "code": "HOUSING",
+      "label": "부동산임대료"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 및 부분무이자할부 이용금액 전체"
+    }
+  ],
+  "non_monetary": [
+    "Mastercard PLATINUM 등급 서비스 제공",
+    "트래블로그 스위치 서비스 제공"
+  ],
+  "schema_gaps": [
+    "3일 쓰면 2배 적립 서비스는 연속 3일 이용 시 적용되며, 일 실적 1원 이상 조건이 있음",
+    "모드(Mode)별로 혜택이 상이하며, 하나페이 앱에서 월 1회 변경 가능",
+    "ALLDAY/ONLINE/GLOBAL 모드는 전월 실적 조건이 없으나, ONLINE/PLAY/LIFE 모드는 50만원 이상 실적 조건이 있음",
+    "LIFE 모드 설정 시 전기요금, 도시가스요금, 아파트관리비는 서비스 제공 대상에 포함됨",
+    "트래블로그 스위치 서비스는 신용 결제와 외화 하나머니 결제(체크)를 스위칭하는 기능으로, 하이브리드 성격이 있음"
+  ],
+  "source_url": "https://m.hanacard.co.kr/leaflet/15/15728_20260608.pdf",
+  "_extraction_check": {
+    "source_pdf": "15728.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 1,
+        "second": 2
+      },
+      {
+        "path": "$.tiers.length",
+        "first": 0,
+        "second": 1
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

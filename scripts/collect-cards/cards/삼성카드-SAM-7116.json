@@ -1,0 +1,232 @@
+{
+  "issuer": "삼성카드",
+  "name": "모니모페이카드",
+  "product_id": "SAM-7116",
+  "status": "active",
+  "as_of": "2026-07-02",
+  "review_no": "여신금융협회 심의필 제 2026-C1a-10002호",
+  "posted_at": "2026-08-03",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "삼성",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 결제",
+        "무승인 결제(대중교통, 이동통신 등 정기결제)"
+      ]
+    },
+    "includes": [
+      "일시불",
+      "할부"
+    ],
+    "tiers": [
+      300000,
+      600000,
+      1000000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자(할부수수료, 카드대출 이자 등)"
+      },
+      {
+        "code": "PENALTY",
+        "label": "연체료"
+      },
+      {
+        "code": "ANNUAL_FEE",
+        "label": "연회비"
+      },
+      {
+        "code": "BENEFIT_APPLIED",
+        "label": "모니모페이 간편결제 15%/10% 할인, 디지털콘텐츠/멤버십 50% 할인 혜택이 제공된 전체 이용금액"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "건강보험/국민연금/고용보험/산재보험 및 장애인 고용부담금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세/지방세/공과금 납부건"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트 관리비, 부동산 임대료 납부건"
+      },
+      {
+        "code": "TUITION",
+        "label": "유치원 납입금, 초/중/고등학교 학교납입금, 대학 등록금 납부건"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "기프트/선불카드(포인트, 사이버머니 등 전자지급수단 포함) 구매 및 충전, 상품권 구매건"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "모니모페이 간편결제",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "간편결제",
+          "note": "모니모페이 간편결제 이용 시 국내 온오프라인 가맹점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 10000,
+        "600000": 20000,
+        "1000000": 30000
+      },
+      "conditions": [
+        "전월 모니모 앱 로그인 인정 일수 100% 달성 시 15% 할인, 미달성 시 10% 할인"
+      ]
+    },
+    {
+      "group": "디지털콘텐츠/멤버십",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 50,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "디지털콘텐츠",
+          "brands": [
+            "넷플릭스",
+            "디즈니+",
+            "유튜브",
+            "티빙",
+            "FLO"
+          ],
+          "note": "유튜브는 프리미엄 결제건 한정, 구글플레이/앱스토어 인앱결제 제외"
+        },
+        {
+          "category": "멤버십",
+          "brands": [
+            "쿠팡 와우 멤버십",
+            "네이버플러스 멤버십"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000,
+        "600000": 7000,
+        "1000000": 10000
+      }
+    },
+    {
+      "group": "무이자할부",
+      "kind": "무이자할부",
+      "min_amount": 50000,
+      "targets": [
+        {
+          "category": "국내 온라인 가맹점"
+        }
+      ],
+      "conditions": [
+        "2~3개월 무이자할부"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "OTHER_PROMO",
+      "label": "삼성카드의 다른 행사 혜택이 적용된 일시불 및 할부 이용금액"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "건강보험/국민연금/고용보험/산재보험 및 장애인 고용부담금"
+    },
+    {
+      "code": "TAX",
+      "label": "국세/지방세/공과금 납부건"
+    },
+    {
+      "code": "HOUSING",
+      "label": "부동산 임대료 납부건"
+    },
+    {
+      "code": "TUITION",
+      "label": "유치원 납입금, 초/중/고등학교 학교납입금, 대학 등록금 납부건"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "대중교통, 택시, 고속버스, 고속도로 통행요금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "기프트/선불카드 구매 및 충전, 상품권 구매건"
+    },
+    {
+      "code": "SERVICE_FEE",
+      "label": "문자알림서비스, 스마트오토서비스 이용금액"
+    },
+    {
+      "code": "CASHBACK_CONTRACT",
+      "label": "삼성카드와 구매캐시백 포인트 제공 계약을 체결한 일부 가맹점 의약품/유류 구매한도 대금결제건"
+    }
+  ],
+  "non_monetary": [
+    "후불교통기능 탑재",
+    "해외겸용카드 컨택리스 결제 지원"
+  ],
+  "schema_gaps": [
+    "전월 모니모 앱 로그인 인정 일수(100% 달성 여부)에 따른 할인율 차등 적용 조건",
+    "발급월+1개월까지의 실적 유예 및 혜택 제공 기준",
+    "가맹점 업종 분류 기준에 따른 간편결제 가맹점 제외 조건"
+  ],
+  "source_url": "https://www.samsungcard.com/filedownload.do?grpNo=1zPVy1PuFbwGC7xZyM4qtiGVlvTyR%2Ft44FpuBsvjWyo%3D&sn=1",
+  "_extraction_check": {
+    "source_pdf": "7116.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 40000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

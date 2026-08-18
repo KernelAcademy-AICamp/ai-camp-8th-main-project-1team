@@ -1,0 +1,186 @@
+{
+  "issuer": "KB국민카드",
+  "name": "SK에너지 러브유 KB국민카드",
+  "product_id": "KB-02245",
+  "status": "active",
+  "as_of": "2024-11-25",
+  "review_no": "여신금융협회 심의필 제 2024-C1a-14706호",
+  "compliance_no": "KB국민카드 준법감시인 심의필 제 241119-05864-TRM",
+  "posted_at": "2012-04-12",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 7000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Visa/Master/JCB",
+      "total": 12000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      300000
+    ],
+    "excluded": [
+      {
+        "code": "FUEL_DISCOUNT",
+        "label": "SK주유할인 받은 이용금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인 이용전표(대중교통 이용 등)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료"
+      },
+      {
+        "code": "CANCEL",
+        "label": "취소금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "SK주유소 주유 할인",
+      "kind": "할인",
+      "settle": "현장 할인",
+      "amount_krw": 100,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "주유",
+          "brands": [
+            "SK주유소"
+          ],
+          "note": "휘발유, 경유, 등유(LPG 제외)"
+        }
+      ],
+      "conditions": [
+        "1일 30만원, 월 30만원 이용금액까지 할인",
+        "최초 사용등록일로부터 60일간은 전월 실적 관계없이 100원 할인"
+      ]
+    },
+    {
+      "group": "스피드메이트 엔진오일 무료 교환",
+      "kind": "할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "정비",
+          "brands": [
+            "스피드메이트"
+          ]
+        }
+      ],
+      "conditions": [
+        "연 1회",
+        "ZIC-X7 기준, 5인 이하 가솔린 승용차(엔진오일 4L 이하) 기준"
+      ]
+    },
+    {
+      "group": "스피드메이트 자동차 정비 할인",
+      "kind": "할인",
+      "settle": "현장 할인",
+      "amount_krw": 20000,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "정비",
+          "brands": [
+            "스피드메이트"
+          ]
+        }
+      ],
+      "conditions": [
+        "월 1건, 연간 최대 3건",
+        "엔진세정, 브레이크패드교환, 에어컨 가스 완충, 에어컨 살균, 엔진오일 교환, 항균필터교환, 부동액교환"
+      ]
+    },
+    {
+      "group": "대중교통 할인",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "교통",
+          "industries": [
+            "시내버스",
+            "지하철",
+            "고속버스",
+            "시외버스"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 4000
+      },
+      "conditions": [
+        "월 4만원 이용분까지 할인",
+        "최초 사용등록일로부터 90일간은 전월 실적 관계없이 10% 할인"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "러브油 캠핑지원 캐시백(추첨, 연 80명, 인당 70만원)",
+    "타이어펑크 수리, 안전점검(연 1회)",
+    "워셔액 보충, 공임 10% 할인"
+  ],
+  "schema_gaps": [
+    "연회비 면제 조건: 연간 300만원 이상 이용 시 차기년도 면제",
+    "주유 할인 시 SK에너지 고시 휘발유가 기준 적용"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/_02245__prdctOpmn_20241129.pdf",
+  "_extraction_check": {
+    "source_pdf": "01__02245__prdctOpmn_20241129.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.300000",
+        "first": 4000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 4000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

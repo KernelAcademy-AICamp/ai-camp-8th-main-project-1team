@@ -1,0 +1,228 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 The Easy카드",
+  "product_id": "KB-09250",
+  "status": "active",
+  "as_of": "2020-10-08",
+  "review_no": "여신금융협회 심의필 제2020-C1a-09131호",
+  "compliance_no": "준법감시인 심의필 : 200915-03066-PIF",
+  "posted_at": "2018-10-01",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(JCB타입)",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외이용금액"
+      ]
+    },
+    "tiers": [
+      500000,
+      1000000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "전기·수도"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고등(국·공립)학교 납입금, 대학(대학원) 등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통요금"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인전표(자판기, 터널통행료, 항공기내 이용 등)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 서비스",
+      "kind": "적립",
+      "rate_percent": 0.7,
+      "targets": [
+        {
+          "category": "국내외 전 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "기본 서비스",
+      "kind": "할인",
+      "rate_percent": 0.7,
+      "targets": [
+        {
+          "category": "국내외 전 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "추가 서비스",
+      "kind": "적립",
+      "rate_percent": 3.0,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "7대 영역",
+          "industries": [
+            "마트",
+            "편의점",
+            "커피",
+            "주유",
+            "학원",
+            "미용",
+            "생활"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 10000,
+        "1000000": 20000
+      }
+    },
+    {
+      "group": "추가 서비스",
+      "kind": "할인",
+      "rate_percent": 5.0,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "7대 영역",
+          "industries": [
+            "마트",
+            "편의점",
+            "커피",
+            "주유",
+            "학원",
+            "미용",
+            "생활"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 10000,
+        "1000000": 20000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "각종 세금 및 공과금"
+    },
+    {
+      "code": "UTILITY",
+      "label": "전기·수도"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "TUITION",
+      "label": "초·중·고등(국·공립)학교 납입금, 대학(대학원) 등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "적립형/할인형 선택형 서비스 (중복 불가)",
+    "K-WORLD(JCB타입) 해외 우대 서비스"
+  ],
+  "schema_gaps": [
+    "적립형과 할인형 중 하나를 선택해야 하는 선택형 카드임",
+    "추가 적립/할인 서비스는 월간 이용횟수(적립) 또는 건당 이용금액(할인)이 높은 상위 2개 영역에 대해 제공됨",
+    "간편결제(Pay) 이용금액은 추가 적립/할인에서 제외됨",
+    "모바일 단독카드 발급 가능(연회비 상이)"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09250__prdctOpmn_20250321.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09250__prdctOpmn_20250321.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 40000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

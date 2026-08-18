@@ -1,0 +1,182 @@
+{
+  "issuer": "하나카드",
+  "name": "카카오페이 MUZI 체크카드",
+  "product_id": "HANA-04652",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "2026-01-28",
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "VISA",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      250000,
+      400000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "KAKAO_PAY",
+        "label": "카카오페이"
+      },
+      {
+        "code": "KAKAO_FRIENDS",
+        "label": "카카오프렌즈샵"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "국세/지방세/공과금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "선불카드 충전, 상품권 구매"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "아이행복카드 정부지원금"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "카카오페이 결제",
+      "kind": "할인",
+      "settle": "캐쉬백",
+      "rate_percent": 7,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "카카오페이 결제"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "250000": 7000,
+        "400000": 10000
+      },
+      "conditions": [
+        "일 1회, 월 4회 제공"
+      ]
+    },
+    {
+      "group": "통신요금",
+      "kind": "할인",
+      "settle": "캐쉬백",
+      "amount_krw": 3000,
+      "min_amount": 50000,
+      "targets": [
+        {
+          "category": "통신",
+          "industries": [
+            "SKT",
+            "KT",
+            "U+ 휴대폰요금 자동이체"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "250000": 3000,
+        "400000": 3000
+      },
+      "conditions": [
+        "월 1회 제공"
+      ]
+    },
+    {
+      "group": "커피",
+      "kind": "할인",
+      "settle": "캐쉬백",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스",
+            "카페베네",
+            "파스쿠치"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "250000": 7000,
+        "400000": 10000
+      }
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "캐쉬백",
+      "rate_percent": 5,
+      "min_amount": 50000,
+      "targets": [
+        {
+          "category": "교통",
+          "industries": [
+            "시내버스",
+            "마을버스",
+            "광역버스",
+            "공항버스",
+            "지하철",
+            "공항철도"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "250000": 7000,
+        "400000": 10000
+      }
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "통합 캐쉬백 한도",
+      "members": [
+        "카카오페이 결제",
+        "커피",
+        "대중교통"
+      ],
+      "cap_by_tier": {
+        "250000": 7000,
+        "400000": 10000
+      }
+    }
+  ],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "후불교통 기능 선택 가능",
+    "하이브리드 서비스(소액신용거래) 제공"
+  ],
+  "schema_gaps": [
+    "통합 캐쉬백 한도 내에서 통신요금 혜택이 별도로 존재하는지, 통합 한도에 포함되는지 명확하지 않음",
+    "하이브리드 서비스는 체크카드 잔액 부족 시 신용거래로 결제되는 기능으로, 주 결제 방식은 체크카드임"
+  ],
+  "source_url": "https://m.hanacard.co.kr/leaflet/04/04652_20260128.pdf",
+  "_extraction_check": {
+    "source_pdf": "04652.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 33000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

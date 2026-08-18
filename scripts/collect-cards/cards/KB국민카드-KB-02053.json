@@ -1,0 +1,224 @@
+{
+  "issuer": "KB국민카드",
+  "name": "S-OIL LPG KB국민카드",
+  "product_id": "KB-02053",
+  "status": "active",
+  "as_of": "2021-07-16",
+  "review_no": "여신금융협회 심의필 제 2021-C1a-06310호",
+  "compliance_no": "준법감시인 심의필 제260406-01115-PIF (2026.04.06)",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "실버",
+      "total": 3000
+    },
+    {
+      "scope": "국내전용",
+      "brand": "골드",
+      "total": 5000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "실버",
+      "total": 5000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "골드",
+      "total": 10000
+    }
+  ],
+  "annual_fee_notes": [
+    "제휴연회비 없음",
+    "초회년도 연회비는 면제되지 않으며, S-OIL LPG KB국민카드로 연간 100만원[단기카드대출(현금서비스) 포함]이상 이용하시면 차기년도 기본연회비를 전액 면제"
+  ],
+  "performance": {
+    "period": "이용일 직전 3개월",
+    "basis": "결제금액 회수 기준",
+    "tiers": [
+      300000
+    ],
+    "excluded": [
+      {
+        "code": "FEE",
+        "label": "연회비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "INTEREST",
+        "label": "이자"
+      },
+      {
+        "code": "PENALTY",
+        "label": "연체료"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "LPG 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 1800,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "S-OIL 충전소",
+          "note": "건당 3만원 이상 결제 시"
+        }
+      ],
+      "conditions": [
+        "월 5회 제공",
+        "최초 카드 사용등록일로부터 120일간은 조건 없이 제공"
+      ]
+    },
+    {
+      "group": "차량정비 서비스",
+      "kind": "할인",
+      "targets": [
+        {
+          "category": "SK스피드메이트",
+          "note": "엔진오일 무료교환(연 1회), 차량 안전점검 및 정비 서비스"
+        }
+      ],
+      "conditions": [
+        "이용일 전월 말 기준 직전 3개월간 월 평균 30만원 이상 결제 시 제공",
+        "최초 카드 사용등록일로부터 120일간은 조건 없이 제공"
+      ]
+    },
+    {
+      "group": "영화할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 3500,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "영화관",
+          "brands": [
+            "메가박스",
+            "CGV"
+          ],
+          "channel": [
+            "온라인 예매"
+          ]
+        }
+      ],
+      "conditions": [
+        "1일 2회, 월 4회, 연 10회 이내",
+        "최초 카드 사용등록일로부터 120일간은 조건 없이 제공"
+      ]
+    },
+    {
+      "group": "외식할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "패밀리레스토랑",
+          "brands": [
+            "아웃백스테이크하우스",
+            "VIPS",
+            "생어거스틴"
+          ]
+        }
+      ],
+      "conditions": [
+        "1일 1회, 월 2회, 건당 20만원 이내 사용 분",
+        "최초 카드 사용등록일로부터 120일간은 조건 없이 제공"
+      ]
+    },
+    {
+      "group": "무이자 할부",
+      "kind": "무이자할부",
+      "targets": [
+        {
+          "category": "백화점 및 할인점, 자동차 정비업종, 손해보험업종"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "HOTEL",
+      "label": "호텔"
+    },
+    {
+      "code": "DEPARTMENT_STORE",
+      "label": "백화점"
+    },
+    {
+      "code": "MART",
+      "label": "대형마트"
+    },
+    {
+      "code": "STATION",
+      "label": "철도역사"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 구매"
+    }
+  ],
+  "non_monetary": [
+    "기본포인트리 적립 불가 (단, 스타샵 가맹점은 적립 가능)"
+  ],
+  "schema_gaps": [
+    "실적 산정 기준이 '결제금액 회수'로 일반적인 승인/매입 기준과 다름",
+    "최초 카드 사용등록일로부터 120일간 실적 유예 조건 존재"
+  ],
+  "posted_at": "2008-07-21",
+  "source_url": "https://img2.kbcard.com/obj/card/download/02053__prdctOpmn_20260626.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_02053__prdctOpmn_20260626.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.annual_fee.length",
+        "first": 4,
+        "second": 2
+      },
+      {
+        "path": "$.annual_fee[0].total",
+        "first": 5000,
+        "second": 3000
+      },
+      {
+        "path": "$.annual_fee[1].total",
+        "first": 10000,
+        "second": 5000
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": null,
+        "second": 300000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

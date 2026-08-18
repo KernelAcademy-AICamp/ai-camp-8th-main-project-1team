@@ -1,0 +1,247 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 매직카 올림카드",
+  "product_id": "KB-04430",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(UPI)",
+      "total": 15000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 20000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      300000
+    ],
+    "excluded": [
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "(부분)무이자 할부 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원) 등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입(충전)금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통 이용"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "항공기 내 이용 등 무승인전표"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "rate_percent": 0.8,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "전 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "생활/레저 추가 적립",
+      "kind": "적립",
+      "rate_percent": 0.5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "주유",
+          "industries": [
+            "주유소",
+            "충전소"
+          ]
+        },
+        {
+          "category": "대형마트",
+          "brands": [
+            "이마트",
+            "롯데마트",
+            "홈플러스"
+          ],
+          "exclude_place": [
+            "온라인쇼핑몰",
+            "상품권구매",
+            "건물내 임대매장",
+            "SSM(롯데슈퍼, 이마트에브리데이, 홈플러스익스프레스)"
+          ]
+        },
+        {
+          "category": "이동통신",
+          "industries": [
+            "SKT",
+            "KT Olleh",
+            "LG U+"
+          ],
+          "note": "자동납부 등록 시 제공"
+        },
+        {
+          "category": "골프",
+          "industries": [
+            "골프장",
+            "골프연습장",
+            "스크린골프"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "KB손해보험 감사포인트리",
+      "kind": "적립",
+      "amount_krw": 5000,
+      "targets": [
+        {
+          "category": "KB손해보험 보험료",
+          "note": "건별 30만원 이상 이용 시 연 1회 제공"
+        }
+      ]
+    },
+    {
+      "group": "KB손해보험 연간 리워드",
+      "kind": "적립",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "KB손해보험",
+          "note": "연간결제납부실적 500만원/800만원 이상 시 10% 리워드(연간 3만/6만점 한도)"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSURANCE",
+      "label": "KB손해보험 이용금액"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "(부분)무이자할부이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "지방세"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원)등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입 및 충전금액"
+    }
+  ],
+  "non_monetary": [
+    "포인트리 자동화기기 인출",
+    "포인트리 결제통장 자동 캐시백"
+  ],
+  "schema_gaps": [
+    "KB손해보험 연간 리워드 적립은 연간 결제납부실적 기준이며, 초회연도 결제납부실적이 5백만원 미만인 경우 비율 적용하여 산정하는 조건이 있음",
+    "포인트리 소멸 조건(60개월 경과 시 선입선출) 존재",
+    "KB손해보험 감사포인트리 적립 시점은 익월 27일로 일반 적립과 상이함"
+  ],
+  "posted_at": "2016-04-28",
+  "source_url": "https://img2.kbcard.com/obj/card/download/04430__prdctOpmn_20210707.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04430__prdctOpmn_20210707.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": null,
+        "second": 5000
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": 10,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].amount_krw",
+        "first": 5000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": null,
+        "second": 10
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

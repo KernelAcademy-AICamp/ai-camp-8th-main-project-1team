@@ -1,0 +1,178 @@
+{
+  "issuer": "KB국민카드",
+  "name": "HERITAGE Exclusive",
+  "product_id": "KB-09129",
+  "status": "active",
+  "as_of": "2026-02-12",
+  "review_no": "여신금융협회 심의필 제 2026-C1a-02006호",
+  "compliance_no": "준법감시인 심의필 260209-00340-PIF (2026.02.09)",
+  "posted_at": "2023-06-08",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 2000000,
+      "base": 7000,
+      "affiliate": 1993000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Visa",
+      "total": 2000000,
+      "base": 7000,
+      "affiliate": 1993000
+    }
+  ],
+  "annual_fee_notes": [
+    "가족카드 연회비 500,000원(제휴연회비 500,000원)",
+    "연회비는 카드발급 시점을 기준으로 1년 단위로 청구",
+    "초기/차기년도 연회비 면제조건 없음"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      500000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "국세, 지방세, 각종 공과금(전기/수도 등)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "TUITION",
+        "label": "초ㆍ중ㆍ고 학교 납입금 전체, 대학(대학원) 등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입ㆍ충전 금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(교통요금/자판기/터널통행료/항공기내 이용 등)"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처이용금액 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "국내 가맹점 적립",
+      "kind": "적립",
+      "rate_percent": 1,
+      "targets": [
+        {
+          "category": "국내 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "특화 영역 추가 적립",
+      "kind": "적립",
+      "rate_percent": 1,
+      "targets": [
+        {
+          "category": "특화영역",
+          "industries": [
+            "항공",
+            "면세점",
+            "골프장",
+            "호텔"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "해외 가맹점 적립",
+      "kind": "적립",
+      "rate_percent": 3,
+      "targets": [
+        {
+          "category": "해외 가맹점"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입ㆍ충전금액"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    }
+  ],
+  "non_monetary": [
+    "골프백 딜리버리 서비스",
+    "의료 동행 서비스",
+    "밀리의 서재 12개월 정기구독",
+    "THE LOUNGE 서비스(해외공항 라운지)",
+    "롯데호텔 우대 서비스",
+    "금융 서비스(수수료 면제 등)"
+  ],
+  "schema_gaps": [
+    "연 1회 제공되는 쿠폰 서비스(골프, 호텔, 항공 등)는 스키마에 포함되지 않음",
+    "골프백 딜리버리, 의료 동행, 밀리의 서재 등 특별 서비스의 청구할인 조건은 스키마에 포함되지 않음",
+    "전월 실적 산정 시 연간 이용실적 제외 대상 목록이 별도로 존재함",
+    "포인트리 적립 시 가맹점 분류에 따른 제외 조건이 상세히 명시됨"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/_09129__prdctOpmn_20260430.pdf",
+  "_extraction_check": {
+    "source_pdf": "01__09129__prdctOpmn_20260430.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "issuer": "우리카드",
+  "name": "KT Plus 우리카드",
+  "product_id": "WOO-103750",
+  "status": "active",
+  "as_of": "2025-06-16",
+  "review_no": "여신금융협회 심의필 제 2025-C1a-08152호",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 25000,
+      "base": 7000,
+      "affiliate": 18000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA/Mastercard",
+      "total": 25000,
+      "base": 7000,
+      "affiliate": 18000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 결제",
+        "무승인 결제(대중교통, 통신요금 자동납부 등)"
+      ]
+    },
+    "includes_family_card": true,
+    "tiers": [
+      400000,
+      800000,
+      1200000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부금액"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료, 유치원보조비, 바우처 이용금액 등)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트 관리비, LH/SH/전북개발공사 등 공공임대료, 부동산임대료"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세, 관세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공공요금(4대보험, 전기요금, 우편요금, 도시가스요금, 상하수도요금, 과태료·범칙금·벌금, 여권발급비용, 국가·공공기관·공공단체 가맹점 이용금액)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권/선불카드/기프트카드 구매 및 충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통카드(모바일 포함) 구매 및 충전 금액, 고속버스"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연회비"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "KT 통신요금 청구할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "통신",
+          "industries": [
+            "KT 통신요금 자동납부",
+            "KT 단말기 장기할부"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 10000,
+        "800000": 15000,
+        "1200000": 20000
+      },
+      "conditions": [
+        "1~24개월 적용",
+        "전월 실적 40만원 이상 시 25개월 이후 5,000원 할인"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "KT 단말기 장기할부 서비스 (24/36개월)"
+  ],
+  "schema_gaps": [
+    "25개월 이후 할인 한도 별도 적용",
+    "가족카드는 KT 통신요금 할인 및 단말기 장기할부 서비스 제외",
+    "신규 발급 시 다음달 말일까지 최저 실적 구간 서비스 제공"
+  ],
+  "posted_at": null,
+  "source_url": "https://m.wooricard.com/dcmw/pdfviewer/jsp/pfileRead.jsp?pdfPath=%2Fupload%2FcardClause%2F2025%2F8%2F21%2Fa6ca39ba-e5a9-44b4-8c3c-95b5762620bb.pdf&pdfKubun=05&pdfName=2.+%EC%83%81%ED%92%88%EC%95%88%EB%82%B4%EC%9E%A5_KT+Plus+%EC%9A%B0%EB%A6%AC%EC%B9%B4%EB%93%9C.pdf",
+  "_extraction_check": {
+    "source_pdf": "103750.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 20000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

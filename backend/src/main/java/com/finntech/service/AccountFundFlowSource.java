@@ -313,15 +313,38 @@ public class AccountFundFlowSource implements FundFlowSource {
      *
      * <p><b>급여이체</b>는 계좌에 급여가 잡히는지로 본다. 카드가 한 장도 없으면 실적은 미충족으로 나가는데,
      * 카드가 없으면 실제로도 카드 실적을 채울 수 없으므로 사실과 어긋나지 않는다.
+     *
+     * <p><b>금융사별로도 쪼개서 함께 낸다</b>(2026-08-11). 실측상 우대조건의 28%가 당행 한정이라, 위의
+     * "가장 큰 값 하나"만으로 판정하면 <b>다른 카드사에서 채운 실적으로 이 은행 상품의 우대를 받았다고
+     * 말하게 된다.</b> 어느 카드사에서 채웠는지·급여가 어느 은행으로 들어오는지를 함께 넘겨,
+     * 당행 한정 조건은 M6이 그 금융사 것으로 좁혀 보게 한다(§4.5 M6 ④).
+     *
+     * <p>실적 임계는 <b>카드사별로 각각</b> 적용한다 — 합산하지 않는 것은 실제 우대조건이 보통
+     * 한 카드사 기준이기 때문이고, 그 이유가 여기서도 그대로 성립한다.
      */
     static FundFlowInputs.Preferential preferential(MyDataResponses.AccountView account, List<UserCard> cards,
                                                     int cardPerformanceThreshold) {
         if (account == null) return null;
         int bestPerformance = cards == null ? 0
                 : cards.stream().mapToInt(UserCard::getPrevPerformance).max().orElse(0);
+
+        Set<String> metCompanies = cards == null ? Set.of() : cards.stream()
+                .filter(c -> c.getPrevPerformance() >= cardPerformanceThreshold)
+                .map(UserCard::getCompanyName)
+                .filter(Objects::nonNull)
+                .filter(n -> !n.isBlank())
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+
+        // 급여 계좌는 지금 한 계좌만 본다(B안이 대표 계좌 하나를 읽는다). 여러 계좌가 오면 그때 넓힌다.
+        Set<String> salaryBanks = account.salary() > 0 && account.bank() != null && !account.bank().isBlank()
+                ? Set.of(account.bank())
+                : Set.of();
+
         return new FundFlowInputs.Preferential(
                 bestPerformance >= cardPerformanceThreshold,
-                account.salary() > 0);
+                account.salary() > 0,
+                metCompanies,
+                salaryBanks);
     }
 
     /**

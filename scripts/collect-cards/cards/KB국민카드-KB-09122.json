@@ -1,0 +1,294 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB ALL 카드",
+  "product_id": "KB-09122",
+  "status": "active",
+  "as_of": "2025-12-04",
+  "review_no": "여신금융협회 심의필 제2025-C1a-17515호",
+  "compliance_no": "준법감시인 심의필번호 제251124-05504-PIF",
+  "posted_at": "2022-12-26",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    }
+  ],
+  "annual_fee_notes": [
+    "모바일 단독카드 연회비 14,000원 (기본 1,000원, 제휴 13,000원)",
+    "연회비는 보유 카드별로 청구"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      400000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전 금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고 학교 납입금, 대학(원) 등록금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도 등)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연회비"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(교통요금/자판기/터널통행료/항공기내 이용 등)"
+      },
+      {
+        "code": "CANCEL",
+        "label": "취소금액"
+      },
+      {
+        "code": "DISCOUNTED",
+        "label": "할인 적용 받은 전체 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 1,
+      "targets": [
+        {
+          "category": "국내 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "해외 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 2,
+      "targets": [
+        {
+          "category": "해외 가맹점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 40000
+      }
+    },
+    {
+      "group": "쇼핑 멤버십",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 50,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "쇼핑 멤버십",
+          "brands": [
+            "네이버 플러스 멤버십",
+            "쿠팡 로켓와우 멤버십"
+          ],
+          "channel": [
+            "자동납부"
+          ]
+        }
+      ],
+      "combined_cap_group": "통합할인",
+      "conditions": [
+        "공식 홈페이지를 통한 정기 결제 건에 한함(간편결제 및 인앱결제 제외)"
+      ]
+    },
+    {
+      "group": "OTT",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "OTT",
+          "brands": [
+            "넷플릭스",
+            "유튜브 프리미엄",
+            "웨이브",
+            "티빙",
+            "디즈니플러스"
+          ],
+          "channel": [
+            "자동납부"
+          ]
+        }
+      ],
+      "combined_cap_group": "통합할인"
+    },
+    {
+      "group": "이동통신",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "이동통신",
+          "brands": [
+            "SKT",
+            "KT",
+            "LG U+",
+            "Liiv M"
+          ],
+          "channel": [
+            "자동납부"
+          ]
+        }
+      ],
+      "combined_cap_group": "통합할인",
+      "conditions": [
+        "인터넷, IPTV 등 결합상품 할인 제외"
+      ]
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "통합할인",
+      "members": [
+        "쇼핑 멤버십",
+        "OTT",
+        "이동통신"
+      ],
+      "cap_by_tier": {
+        "400000": 3000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전 금액"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "TUITION",
+      "label": "초·중·고 학교 납입금, 대학(원) 등록금"
+    },
+    {
+      "code": "TAX",
+      "label": "국세, 지방세"
+    },
+    {
+      "code": "UTILITY",
+      "label": "공과금(전기/수도 등)"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "4대 사회보험료(건강/연금/고용/산재)"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연회비"
+    },
+    {
+      "code": "CANCEL",
+      "label": "취소금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "통합 할인 한도 3,000원은 전월 실적 40만원 이상 시 제공",
+    "최초 발급 시 카드 사용 등록일로부터 다음달 말일까지는 실적 40만원 미만이어도 할인 제공"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09122__prdctOpmn_20260415.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09122__prdctOpmn_20260415.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.0",
+        "first": 40000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

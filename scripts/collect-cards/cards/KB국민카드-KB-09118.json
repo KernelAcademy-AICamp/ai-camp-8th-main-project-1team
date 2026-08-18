@@ -1,0 +1,216 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 Green Wave 1.5℃카드",
+  "product_id": "KB-09118",
+  "status": "active",
+  "as_of": "2023-01-04",
+  "review_no": "여신금융협회 심의필 제 2023-C1a-00084호",
+  "compliance_no": "준법감시인 심의필 제221222-04109-PIF",
+  "posted_at": "2021-05-26",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 15000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master",
+      "total": 15000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      400000,
+      800000,
+      1200000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고등학교 납입금, 대학(대학원)등록금"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통요금"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "Green Mobility",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "전기/수소차 충전",
+          "industries": [
+            "전기차 충전기",
+            "수소차 충전소"
+          ]
+        },
+        {
+          "category": "공유 모빌리티",
+          "brands": [
+            "킥고잉",
+            "씽씽",
+            "따릉이",
+            "카카오T 바이크"
+          ],
+          "channel": [
+            "공식 홈페이지",
+            "모바일앱"
+          ]
+        },
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철",
+            "철도"
+          ],
+          "note": "시외버스, 고속버스, 공항버스 제외"
+        }
+      ]
+    },
+    {
+      "group": "Green Shopping",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "친환경 마켓",
+          "brands": [
+            "올가홀푸드",
+            "바이올가",
+            "초록마을"
+          ]
+        },
+        {
+          "category": "업사이클링 제품",
+          "brands": [
+            "플리츠마마",
+            "파타고니아"
+          ],
+          "channel": [
+            "공식 홈페이지",
+            "모바일앱"
+          ]
+        },
+        {
+          "category": "반려식물",
+          "brands": [
+            "트리플래닛"
+          ],
+          "channel": [
+            "공식 홈페이지",
+            "모바일앱"
+          ]
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "기부포인트 적립 서비스(환경재단)",
+    "모바일 단독카드 발급 시 포인트리 적립"
+  ],
+  "schema_gaps": [
+    "기부포인트 적립 서비스: 전월 실적 120만원 초과 이용금액의 0.3% 적립",
+    "최초 발급 시 기부포인트 2천점 적립",
+    "모바일 단독카드 이용 시 포인트리 1천점 적립(월 1회, 실적 조건 없음)",
+    "영상/음원 정기결제 시 포인트리 1천점 적립(월 1회)",
+    "굿윌스토어 이용 시 포인트리 1천점 적립(월 2회)",
+    "서비스 실적 유예기간: 최초 카드 사용등록일로부터 다음달 말일까지 40만원 이상 80만원 미만 구간 서비스 제공"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09118__prdctOpmn_20240104.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09118__prdctOpmn_20240104.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.annual_fee[0].total",
+        "first": 15000,
+        "second": 12000
+      },
+      {
+        "path": "$.benefits.length",
+        "first": 2,
+        "second": 8
+      },
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": null,
+        "second": 1000
+      },
+      {
+        "path": "$.benefits[1].amount_krw",
+        "first": null,
+        "second": 1000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

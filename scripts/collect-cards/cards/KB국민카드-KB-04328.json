@@ -1,0 +1,166 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 쿠쿠렌탈 티타늄카드",
+  "product_id": "KB-04328",
+  "status": "active",
+  "as_of": "2019-06-20",
+  "review_no": "여신금융협회 심의필 제 2019-C1a-05210호",
+  "compliance_no": "190610-01847-PIF",
+  "posted_at": "2019-08-01",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-World(UPI)",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "tiers": [
+      500000,
+      1000000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기·장기카드대출"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원) 등록금"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 보험"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "FEE",
+        "label": "연체료, 연회비, 각종 수수료 및 이자"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION_SCHOOL",
+        "label": "초·중·고등학교 학교 납입금 전체(수업료/교육비/현장학습비/급식비)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권/선불카드 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "후불교통요금"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인전표(자판기,터널통행료,항공기 내 이용)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "쿠쿠렌탈 자동이체 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "렌탈",
+          "brands": [
+            "쿠쿠렌탈"
+          ],
+          "note": "자동이체 등록 시 제공"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 10000,
+        "1000000": 15000
+      }
+    },
+    {
+      "group": "쿠쿠렌탈 티타늄 서비스",
+      "kind": "할인",
+      "targets": [
+        {
+          "category": "공항/호텔 발레파킹, 공항 라운지"
+        }
+      ],
+      "conditions": [
+        "전월 실적 30만원 이상 시 제공",
+        "실적유예기간 미적용"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권/선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "Master 브랜드 발급 시 티타늄 서비스(공항라운지, F&B, 국내면세점 할인 등) 추가 제공"
+  ],
+  "schema_gaps": [
+    "티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적유예기간이 없음",
+    "최초 카드 사용 등록일로부터 다음달 말일까지는 실적 없어도 1구간(1만원) 할인 적용(티타늄 서비스 제외)"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04328__prdctOpmn_20220617.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04328__prdctOpmn_20220617.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 15000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

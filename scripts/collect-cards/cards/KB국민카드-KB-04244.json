@@ -1,0 +1,150 @@
+{
+  "issuer": "KB국민카드",
+  "name": "kt Super 할부 KB국민카드",
+  "product_id": "KB-04244",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(JCB타입)",
+      "total": 12000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 17000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "대중교통 등 무승인 전표",
+        "해외이용금액"
+      ]
+    },
+    "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      300000,
+      700000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자 연체료"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "CANCEL",
+        "label": "취소금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "kt 라이트할부 통합 청구할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "통신요금",
+          "note": "kt 라이트할부 이용 시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 10000,
+        "700000": 15000
+      }
+    },
+    {
+      "group": "kt 라이트할부 미이용 통합 청구할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "통신요금",
+          "note": "kt 라이트할부 미이용 시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000,
+        "700000": 5000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자 연체료"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "CANCEL",
+      "label": "취소금액"
+    }
+  ],
+  "non_monetary": [
+    "kt 라이트할부 서비스 (24개월/36개월 할부)"
+  ],
+  "schema_gaps": [
+    "라이트할부 이용 여부는 전월 말일 기준 라이트할부 잔액 유무로 판단",
+    "최초 카드발급 후 사용등록일로부터 익월 말까지는 전월 실적 조건 미달 시에도 5만원 이상 사용 시 30만원 구간 할인 제공",
+    "통신단말 라이트할부 이용 건수 제한 (월 2건, 연 5건)"
+  ],
+  "posted_at": "2016-04-01",
+  "source_url": "https://img2.kbcard.com/obj/card/download/04244__prdctOpmn_20220831.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04244__prdctOpmn_20220831.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 20000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,252 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB 스타B 카드",
+  "product_id": "KB-04462",
+  "status": "active",
+  "as_of": "2020-10-20",
+  "review_no": "여신금융협회 심의필 제2020-C1a-09379호",
+  "compliance_no": "준법감시인심의필 제200915-03066-PIF (2020.09.15)",
+  "posted_at": "2018-09-28",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내외겸용",
+      "brand": "K-World(UPI)/Master",
+      "total": 100000,
+      "base": 7000,
+      "affiliate": 93000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비 면제조건 없음",
+    "기본연회비는 최초 신용카드 발급월, 제휴연회비는 제휴카드 발급월을 기준으로 매년 청구",
+    "가족카드는 별도의 연회비를 부과하지 않음"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      400000,
+      800000
+    ],
+    "excluded": [
+      {
+        "code": "DISCOUNTED_AMOUNT",
+        "label": "KB Star B카드로 할인 받은 이용금액(해당 매출 전체, 단 해외캐시백 제외)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인전표 (대중교통, 자판기, 터널이용료, 항공기 내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "선택서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "커피전문점",
+          "industries": [
+            "커피전문점 업종"
+          ]
+        },
+        {
+          "category": "간편페이",
+          "industries": [
+            "삼성페이, 네이버페이, 카카오페이, KB Pay 등"
+          ]
+        },
+        {
+          "category": "서점/학원",
+          "industries": [
+            "문리계/외국어/예체능/기술학원, 서점 업종"
+          ]
+        },
+        {
+          "category": "항공/숙박/여행",
+          "industries": [
+            "항공사, 기타관광호텔, 기타숙박업, 일반관광호텔, 특급관광호텔, 펜션/민박, 관광여행사 업종"
+          ]
+        },
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스, 지하철"
+          ]
+        },
+        {
+          "category": "편의점",
+          "industries": [
+            "편의점 업종"
+          ]
+        },
+        {
+          "category": "6대 온라인쇼핑몰",
+          "brands": [
+            "G마켓",
+            "옥션",
+            "인터파크",
+            "11번가",
+            "롯데ON",
+            "신세계몰"
+          ]
+        },
+        {
+          "category": "이동통신요금",
+          "industries": [
+            "SKT, KT olleh, LG U+ 이동통신요금 자동납부"
+          ]
+        },
+        {
+          "category": "대형마트",
+          "industries": [
+            "대형마트 업종"
+          ]
+        },
+        {
+          "category": "3대 소셜커머스",
+          "brands": [
+            "위메프",
+            "쿠팡",
+            "티몬"
+          ]
+        },
+        {
+          "category": "제과/아이스크림/패스트푸드",
+          "industries": [
+            "제과, 아이스크림, 패스트푸드 업종"
+          ]
+        },
+        {
+          "category": "병원/약국",
+          "industries": [
+            "종합병원, 일반병원(한의원), 동물병원, 약국 업종"
+          ]
+        },
+        {
+          "category": "골프장/골프연습장",
+          "industries": [
+            "골프장, 골프연습장 업종"
+          ]
+        },
+        {
+          "category": "백화점/면세점",
+          "industries": [
+            "백화점, 면세점 업종"
+          ]
+        },
+        {
+          "category": "음식점",
+          "industries": [
+            "일반음식점, 휴게음식점, 일반주점 업종"
+          ]
+        },
+        {
+          "category": "미용실/화장품/피부미용",
+          "industries": [
+            "미용실, 화장품, 피부미용업종"
+          ]
+        },
+        {
+          "category": "4대 홈쇼핑",
+          "brands": [
+            "CJ홈쇼핑",
+            "GS홈쇼핑",
+            "현대홈쇼핑",
+            "롯데홈쇼핑"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "해외 이용금액 할인 캐시백",
+      "kind": "할인",
+      "settle": "결제계좌 입금",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "해외 이용금액"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "KB금융그룹 임직원 전용상품",
+    "국제브랜드 서비스(K-World UPI Diamond / Master World)"
+  ],
+  "schema_gaps": [
+    "선택서비스는 17개 중 6개를 선택하여 구성하는 구조임",
+    "선택서비스는 월 1회 변경 가능하며 다음달부터 적용됨",
+    "최초 카드 사용등록일로부터 다음 달 말일까지는 실적과 관계없이 40만원 이상 구간 혜택 제공",
+    "선택서비스 간 중복 적용 가능하며 할인한도는 각각 차감됨",
+    "해외 이용금액 캐시백은 다음달 둘째주에 결제계좌로 입금됨"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04462__prdctOpmn_20210923.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04462__prdctOpmn_20210923.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

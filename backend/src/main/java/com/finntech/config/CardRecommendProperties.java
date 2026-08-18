@@ -2,23 +2,21 @@ package com.finntech.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * 카드 추천에 쓸 <b>더미 카드</b> 목록 (개편안 {@code s-compare}).
+ * 카드 추천 화면의 <b>모양 설정</b> — 카드 자체는 여기 없다.
  *
- * <p><b>왜 DB가 아니라 설정인가.</b> 이 카드들은 사용자 데이터가 아니라 앱의 상수다. DB에 두면
- * "시드를 돌렸는가"에 화면이 달라지고, 실제로 {@code financial_product} 가 비어 있어 추천 화면이
- * 빈 채로 있었다. 설정에 두면 어느 환경에서 켜도 같은 카드가 나온다.
+ * <p><b>카드가 왜 빠졌나.</b> 예전에는 이 클래스가 {@code [더미]} 5장을 통째로 들고 있었고,
+ * 그때의 논거는 "카드는 사용자 데이터가 아니라 앱의 상수라 DB 에 두면 시드를 돌렸는지에 화면이
+ * 달라진다"였다. <b>그 논거는 지금도 옳다.</b> 다만 카드를 실제 상품으로 바꾸면서
+ * (마스터 원칙 5 재개정 2026-08-10) 한 장이 {@code (요율, 카테고리)} 로 안 접히게 됐다 —
+ * 실적 구간이 2~4단이고, 한도가 구간마다 다르고, 그 위에 통합한도가 또 있고, 실적 제외
+ * 목록이 카드마다 다르다.
  *
- * <p><b>카테고리 이름이 여기 있어도 원칙 4를 어기지 않는다.</b> 원칙은 "카테고리 이름을
- * <i>코드에</i> 박지 않는다"이고, 임계치·이름은 설정에 두는 것이 그 원칙이 지시하는 자리다.
- * 코드는 이름을 모르고, 설정이 준 이름과 집계의 키를 맞춰볼 뿐이다.
+ * <p>그래서 카드는 표 아홉({@code V36})으로 옮기되, <b>"어느 환경에서 켜도 같은 카드가
+ * 나온다"는 성질은 잃지 않았다</b> — {@code card-catalog.json} 을 리소스로 함께 배포하고
+ * 기동할 때 싣는다({@code CardCatalogLoader}). 시드 API 와 무관하다.
  *
- * <p><b>전부 더미다</b>(마스터 §4 원칙 5 — 금소법). 실재하는 카드를 넣는 순간 이 화면은 추천이
- * 아니라 중개가 된다. 이름 앞에 {@code [더미]} 를 붙이는 것도 그래서다.
+ * <p>여기 남은 둘은 <b>화면이 몇 줄을 보여줄지</b>일 뿐이라 임계치의 자리(원칙 4)가 맞다.
  */
 @ConfigurationProperties(prefix = "finntech.card-recommend")
 public class CardRecommendProperties {
@@ -29,72 +27,27 @@ public class CardRecommendProperties {
     /** 추천으로 보일 카드 수. */
     private int maxCards = 3;
 
-    private List<Card> cards = new ArrayList<>();
+    /**
+     * 겹침을 셀 창(개월). 09 §2.1 — <b>반복은 여러 달에 걸쳐야 보인다.</b> 한 달만 보면
+     * 습관인지 어쩌다인지 구조적으로 못 가른다.
+     */
+    private int spendMonths = 3;
+
+    /**
+     * 창 안에서 몇 번 이상 가야 "자주 가는 곳"인가.
+     *
+     * <p>1 이면 한 번 들른 곳도 겹침 1 이 되어 순위가 뒤집힌다 — 실측(2026-08-14, 3개월
+     * 153건)에서 겹침 16 으로 1위였던 카드가 대부분 한 번씩만 간 곳이었고, 2회 기준을
+     * 걸자 순위 밖으로 밀렸다. 3개월에 2회는 느슨한 편이라 데이터가 쌓이면 다시 본다.
+     */
+    private int minVisits = 2;
 
     public int getSummaryTop() { return summaryTop; }
     public void setSummaryTop(int v) { this.summaryTop = v; }
     public int getMaxCards() { return maxCards; }
     public void setMaxCards(int v) { this.maxCards = v; }
-    public List<Card> getCards() { return cards; }
-    public void setCards(List<Card> v) { this.cards = v; }
-
-    public static class Card {
-        /** 화면에 그대로 나가는 이름. {@code [더미]} 로 시작하게 둔다. */
-        private String name;
-        /** 카드 성격 한 줄 — "배달과 카페에 강한 카드". */
-        private String tagline;
-        /** 카드 그림 색 갈래. 화면이 아는 값(blue/gold/navy)만 쓴다. */
-        private String tint = "blue";
-        /** 카드 그림에 크게 박히는 글자 한 자. */
-        private String mark = "C";
-        /** 카드 그림 아래에 작게 박히는 영문. */
-        private String footer = "dummy card";
-        /** 연회비(원). 0이면 '없음'으로 보인다. */
-        private BigDecimal annualFee = BigDecimal.ZERO;
-        /** 전 가맹점 기본 적립률(%). */
-        private BigDecimal baseRate = BigDecimal.ZERO;
-        /** 연간 혜택 한도(원). 0이면 한도 없음. */
-        private BigDecimal yearlyCap = BigDecimal.ZERO;
-        /** 전월 실적 조건(원). 0이면 '없음'. */
-        private BigDecimal monthlyRequirement = BigDecimal.ZERO;
-        private List<Benefit> benefits = new ArrayList<>();
-
-        public String getName() { return name; }
-        public void setName(String v) { this.name = v; }
-        public String getTagline() { return tagline; }
-        public void setTagline(String v) { this.tagline = v; }
-        public String getTint() { return tint; }
-        public void setTint(String v) { this.tint = v; }
-        public String getMark() { return mark; }
-        public void setMark(String v) { this.mark = v; }
-        public String getFooter() { return footer; }
-        public void setFooter(String v) { this.footer = v; }
-        public BigDecimal getAnnualFee() { return annualFee; }
-        public void setAnnualFee(BigDecimal v) { this.annualFee = v; }
-        public BigDecimal getBaseRate() { return baseRate; }
-        public void setBaseRate(BigDecimal v) { this.baseRate = v; }
-        public BigDecimal getYearlyCap() { return yearlyCap; }
-        public void setYearlyCap(BigDecimal v) { this.yearlyCap = v; }
-        public BigDecimal getMonthlyRequirement() { return monthlyRequirement; }
-        public void setMonthlyRequirement(BigDecimal v) { this.monthlyRequirement = v; }
-        public List<Benefit> getBenefits() { return benefits; }
-        public void setBenefits(List<Benefit> v) { this.benefits = v; }
-    }
-
-    /** 카테고리 하나에 붙는 혜택 — "카페/간식 10% 캐시백". */
-    public static class Benefit {
-        /** 카테고리 코드. 집계의 키와 같은 문자열이어야 맞물린다. */
-        private String category;
-        /** 적립·할인율(%). */
-        private BigDecimal rate = BigDecimal.ZERO;
-        /** 혜택 방식 표시어 — 캐시백/적립/할인. */
-        private String kind = "캐시백";
-
-        public String getCategory() { return category; }
-        public void setCategory(String v) { this.category = v; }
-        public BigDecimal getRate() { return rate; }
-        public void setRate(BigDecimal v) { this.rate = v; }
-        public String getKind() { return kind; }
-        public void setKind(String v) { this.kind = v; }
-    }
+    public int getSpendMonths() { return spendMonths; }
+    public void setSpendMonths(int v) { this.spendMonths = v; }
+    public int getMinVisits() { return minVisits; }
+    public void setMinVisits(int v) { this.minVisits = v; }
 }

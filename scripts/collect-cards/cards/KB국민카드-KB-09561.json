@@ -1,0 +1,234 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 WE:SH Travel 카드",
+  "product_id": "KB-09561",
+  "status": "active",
+  "as_of": "2024-09-23",
+  "review_no": "여신금융협회 심의필 제2024-C1a-11690호",
+  "compliance_no": "준법감시인 심의필번호 제240822-04180-PIF(2024.08.22)",
+  "posted_at": "2024-04-08",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 25000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 25000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      300000
+    ],
+    "excluded": [
+      {
+        "code": "DISCOUNTED",
+        "label": "할인 받은 이용 건(여행자보험 할인 건 제외)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "유치원/초·중·고 학교 납입금 전체, 대학(원) 등록금"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처이용금액 등)"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "각종 공과금(전기/수도 등)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "NO_APPROVAL",
+        "label": "무승인전표(자판기/터널이용료/항공기내 이용 등)"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "일상 할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "온라인 쇼핑",
+          "channel": [
+            "KB Pay"
+          ],
+          "note": "상품권, 여행, 티켓, 도서, 별도 팝업사이트 제외"
+        },
+        {
+          "category": "온라인 패션",
+          "channel": [
+            "KB Pay"
+          ],
+          "note": "공식 홈페이지/앱 결제 건에 한함"
+        },
+        {
+          "category": "커피",
+          "channel": [
+            "KB Pay"
+          ],
+          "note": "오프라인 매장은 커피전문점 업종 한정, 백화점/마트 입점 매장 제외, 앱 주문은 공식 앱 일반 결제 건 한함"
+        },
+        {
+          "category": "편의점",
+          "channel": [
+            "KB Pay"
+          ],
+          "note": "오프라인 매장 일반 결제 건 한함, 백화점/마트 입점 매장 제외"
+        },
+        {
+          "category": "영화관",
+          "channel": [
+            "KB Pay"
+          ],
+          "note": "매점, 관람권 구입, 예매대행사이트 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000
+      }
+    },
+    {
+      "group": "여행 할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "온라인 항공",
+          "brands": [
+            "대한항공",
+            "아시아나"
+          ],
+          "channel": [
+            "KB Pay"
+          ],
+          "note": "공식 홈페이지/앱 결제 시에만 할인"
+        },
+        {
+          "category": "온라인 면세점",
+          "brands": [
+            "롯데면세점",
+            "신라면세점",
+            "신세계면세점",
+            "현대백화점면세점"
+          ],
+          "channel": [
+            "KB Pay"
+          ],
+          "note": "공식 홈페이지/앱 결제 시에만 할인"
+        }
+      ]
+    },
+    {
+      "group": "여행 할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "여행자보험",
+          "brands": [
+            "KB손해보험"
+          ],
+          "channel": [
+            "KB Pay"
+          ],
+          "note": "공식 홈페이지/앱 결제 시에만 할인"
+        },
+        {
+          "category": "철도·고속버스",
+          "industries": [
+            "철도(일반/KTX/SRT)",
+            "고속·시외버스"
+          ]
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "해외 이용 수수료 면제(국제브랜드 1%, 해외서비스 0.25%)",
+    "해외 이용 환율 우대 100%(USD 기준)",
+    "전 세계 공항 라운지 무료 이용(연 2회, 더 라운지 멤버스)"
+  ],
+  "schema_gaps": [
+    "최초 발급 시 사용등록일로부터 다음달 말일까지는 전월 실적 30만원 미만 시에도 일상 할인 월 5천원 한도 제공 및 라운지 무료 이용 제공",
+    "여행 할인 서비스는 전월 실적 30만원 미만 시에도 월 할인한도의 50%까지 제공",
+    "해외 이용 수수료 면제 및 환율 우대는 전월 실적 조건 및 한도 없음"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09561__prdctOpmn_20260330.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09561__prdctOpmn_20260330.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 5000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

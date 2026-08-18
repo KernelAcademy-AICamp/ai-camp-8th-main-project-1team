@@ -1,0 +1,211 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 톡톡 Pay카드",
+  "product_id": "KB-09231",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(JCB타입)",
+      "total": 20000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master",
+      "total": 20000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비 면제조건 없음",
+    "모바일 단독카드 연회비 1만4천원",
+    "모바일 단독카드와 기타 일반 KB국민카드 동시 보유 시 해당 일반카드 연회비가 청구됩니다."
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      400000,
+      800000
+    ],
+    "excluded": [
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함)구입·충전금액"
+      },
+      {
+        "code": "DISCOUNTED_TRANS",
+        "label": "KB국민 톡톡 Pay카드로 ‘할인서비스’ 받은 이용건 (해당 이용금액 전체)"
+      },
+      {
+        "code": "SCHOOL_FEE",
+        "label": "초/중/고등학교(국·공립) 학교납입금"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인전표(교통요금, 자판기, 터널통행료, 항공기 내 이용 등)"
+      },
+      {
+        "code": "CANCEL",
+        "label": "취소금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "간편결제",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 20,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "간편결제",
+          "note": "KB Pay, 삼성페이, 네이버페이, 카카오페이, SSG페이 등 온/오프라인 간편결제. 일반결제(ISP) 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 7000,
+        "800000": 15000
+      }
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ],
+          "note": "택시, 시외버스, 고속버스 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 7000,
+        "800000": 7000
+      }
+    },
+    {
+      "group": "편의점",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25",
+            "CU"
+          ],
+          "exclude_place": [
+            "백화점",
+            "대형쇼핑몰",
+            "역사 내 입점 가맹점"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 5000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "각종 세금 및 공과금"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원)등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함)구입·충전금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "간편결제 1일 할인 한도 5천원 존재",
+    "최초 카드 사용등록일로부터 다음 달 말일까지 실적 유예기간(1구간 혜택 제공)"
+  ],
+  "posted_at": "2017-12-21",
+  "source_url": "https://img2.kbcard.com/obj/card/download/09231__prdctOpmn_20231226.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09231__prdctOpmn_20231226.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 27000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

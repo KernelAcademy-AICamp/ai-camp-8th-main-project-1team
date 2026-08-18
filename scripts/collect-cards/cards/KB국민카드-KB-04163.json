@@ -1,0 +1,431 @@
+{
+  "issuer": "KB국민카드",
+  "name": "경기과학기술대 KB노리체크카드",
+  "product_id": "KB-04163",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Maestro",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      200000,
+      300000,
+      500000,
+      1000000
+    ],
+    "excluded": [
+      {
+        "code": "TRANSIT",
+        "label": "후불교통 이용금액"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인 이용금액"
+      },
+      {
+        "code": "OVERSEAS",
+        "label": "해외 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "영화",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 35,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "CGV",
+          "channel": [
+            "현장구매",
+            "직영 홈페이지",
+            "스마트폰 앱"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000,
+        "500000": 30000,
+        "1000000": 50000
+      },
+      "combined_cap_group": "통합할인한도"
+    },
+    {
+      "group": "놀이공원",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 50,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "롯데월드",
+            "에버랜드"
+          ],
+          "channel": [
+            "현장 예매"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000,
+        "500000": 30000,
+        "1000000": 50000
+      },
+      "combined_cap_group": "통합할인한도"
+    },
+    {
+      "group": "커피전문점",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 20,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000,
+        "500000": 30000,
+        "1000000": 50000
+      },
+      "combined_cap_group": "통합할인한도"
+    },
+    {
+      "group": "패밀리레스토랑",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 20,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "패밀리레스토랑",
+          "brands": [
+            "VIPS",
+            "아웃백"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000,
+        "500000": 30000,
+        "1000000": 50000
+      },
+      "combined_cap_group": "통합할인한도"
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 20000,
+        "500000": 20000,
+        "1000000": 20000
+      },
+      "combined_cap_group": "통합할인한도"
+    },
+    {
+      "group": "이동통신",
+      "kind": "할인",
+      "settle": "환급할인",
+      "amount_krw": 2500,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "통신",
+          "brands": [
+            "SKT",
+            "KT",
+            "LG U+"
+          ],
+          "channel": [
+            "자동이체"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 2500,
+        "500000": 2500,
+        "1000000": 2500
+      },
+      "combined_cap_group": "통합할인한도"
+    },
+    {
+      "group": "편의점",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000,
+        "500000": 30000,
+        "1000000": 50000
+      },
+      "combined_cap_group": "통합할인한도"
+    },
+    {
+      "group": "서점",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 5,
+      "min_amount": 20000,
+      "targets": [
+        {
+          "category": "서점",
+          "brands": [
+            "교보문고"
+          ],
+          "channel": [
+            "현장구매",
+            "직영 홈페이지",
+            "스마트폰 앱"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000,
+        "500000": 30000,
+        "1000000": 50000
+      },
+      "combined_cap_group": "통합할인한도"
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "통합할인한도",
+      "members": [
+        "영화",
+        "놀이공원",
+        "커피전문점",
+        "패밀리레스토랑",
+        "대중교통",
+        "이동통신",
+        "편의점",
+        "서점"
+      ],
+      "cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000,
+        "500000": 30000,
+        "1000000": 50000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 구매 및 스타벅스 카드 충전"
+    },
+    {
+      "code": "DEPT_STORE",
+      "label": "백화점 및 대형할인점 입점 점포"
+    }
+  ],
+  "non_monetary": [
+    "금융수수료 면제 서비스 (전월 실적 70만원 이상 시)"
+  ],
+  "schema_gaps": [
+    "금융수수료 면제 서비스는 전월 실적 70만원 이상 시 제공되는 별도 혜택으로, 통합 할인한도와 별개로 운영됨",
+    "대중교통 할인 조건: 월 2만원까지 할인",
+    "이동통신 할인 조건: 자동이체금액 5만원 이상 시 제공"
+  ],
+  "posted_at": "2013-02-26",
+  "source_url": "https://img2.kbcard.com/obj/card/download/04163__prdctOpmn_20260716.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04163__prdctOpmn_20260716.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.1000000",
+        "first": 50000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.200000",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.300000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.500000",
+        "first": 30000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.1000000",
+        "first": 2500,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.300000",
+        "first": 2500,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.500000",
+        "first": 2500,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.1000000",
+        "first": 50000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.200000",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.300000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.500000",
+        "first": 30000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[4].monthly_cap_by_tier.1000000",
+        "first": 50000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[4].monthly_cap_by_tier.200000",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[4].monthly_cap_by_tier.300000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[4].monthly_cap_by_tier.500000",
+        "first": 30000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[5].monthly_cap_by_tier.1000000",
+        "first": 50000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[5].monthly_cap_by_tier.200000",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[5].monthly_cap_by_tier.300000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[5].monthly_cap_by_tier.500000",
+        "first": 30000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[6].monthly_cap_by_tier.1000000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[6].monthly_cap_by_tier.300000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[6].monthly_cap_by_tier.500000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[7].monthly_cap_by_tier.1000000",
+        "first": 50000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[7].monthly_cap_by_tier.200000",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[7].monthly_cap_by_tier.300000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[7].monthly_cap_by_tier.500000",
+        "first": 30000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 50000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

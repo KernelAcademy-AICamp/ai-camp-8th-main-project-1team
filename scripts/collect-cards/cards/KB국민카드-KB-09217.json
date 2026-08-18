@@ -1,0 +1,277 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 탄탄대로 온리유카드",
+  "product_id": "KB-09217",
+  "status": "stopped",
+  "as_of": "2022-04-13",
+  "review_no": "여신금융협회 심의필 제2022-C1a-02627호",
+  "compliance_no": "230720-02735-PIF",
+  "posted_at": "2017-06-15",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(JCB타입)",
+      "total": 15000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master",
+      "total": 15000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비 면제 조건 없음",
+    "모바일 단독카드 연회비 9천원",
+    "모바일 단독카드와 기타 실물 KB국민카드 동시 보유 시 해당 실물카드 연회비가 청구됩니다."
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외이용금액"
+      ]
+    },
+    "tiers": [
+      400000,
+      800000,
+      1500000
+    ],
+    "excluded": [
+      {
+        "code": "FUEL",
+        "label": "주유 서비스 받은 이용건(해당 매출 전체)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자"
+      },
+      {
+        "code": "PENALTY",
+        "label": "연체료"
+      },
+      {
+        "code": "ANNUAL_FEE",
+        "label": "연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함)구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(교통요금,자판기,터널통행료,항공기 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "주유",
+      "kind": "적립",
+      "settle": "포인트리 적립",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "주유",
+          "industries": [
+            "전 주유소(충전소 포함)"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000
+      }
+    },
+    {
+      "group": "통신",
+      "kind": "적립",
+      "settle": "포인트리 적립",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "통신",
+          "industries": [
+            "SKT",
+            "KT Olleh",
+            "LG U+"
+          ],
+          "note": "인터넷, IPTV 등 결합상품 및 알뜰폰 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000
+      }
+    },
+    {
+      "group": "놀이공원",
+      "kind": "할인",
+      "settle": "현장할인",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "롯데월드",
+            "에버랜드",
+            "캐리비안베이"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "자동차보험",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 10000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "자동차보험",
+          "brands": [
+            "삼성화재",
+            "DB손해보험",
+            "현대해상",
+            "AXA",
+            "메리츠화재",
+            "하나손해보험"
+          ],
+          "note": "10만원 이상 결제 시 연 1회"
+        }
+      ]
+    },
+    {
+      "group": "플러스O2O",
+      "kind": "적립",
+      "settle": "포인트리 적립",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "플러스O2O",
+          "note": "KB국민카드 앱 내 플러스O2O 메뉴 이용 시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 3000
+      }
+    },
+    {
+      "group": "영화",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 3500,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "메가박스",
+            "CGV"
+          ],
+          "channel": [
+            "온라인 예매"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "차량정비",
+      "kind": "적립",
+      "settle": "포인트리 적립",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "차량정비",
+          "industries": [
+            "차량정비",
+            "부품",
+            "인테리어",
+            "주차장",
+            "세차장"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함)구입·충전금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "주유 서비스 적립률은 전월 실적 구간별로 110점/L, 130점/L, 150점/L로 차등 적용됨",
+    "놀이공원 할인 조건이 복잡하여(일/월/연간 횟수 제한) 상세 내용은 본문 참조",
+    "포인트리 적립 시점은 신용공여기간에 따른 결제일 익영업일임",
+    "해외 이용 시 국제브랜드 수수료 및 해외서비스 수수료가 부과됨"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09217__prdctOpmn_20231201.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09217__prdctOpmn_20231201.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$",
+        "first": "valid",
+        "second": "second extraction failed"
+      }
+    ],
+    "second_run_error": "Gemini 호출/응답 검증 실패(HTTPError, 3회)",
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 14000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

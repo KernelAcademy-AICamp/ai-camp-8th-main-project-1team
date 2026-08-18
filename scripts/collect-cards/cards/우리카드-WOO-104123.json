@@ -1,0 +1,151 @@
+{
+  "issuer": "우리카드",
+  "name": "삼성AI구독 우리카드",
+  "product_id": "WOO-104123",
+  "status": "active",
+  "as_of": "2025-07-02",
+  "review_no": "여신금융협회 심의필 제 2025 - C1a - 09289호",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 가맹점",
+        "교통카드 이용금액",
+        "통신료 자동납부 금액"
+      ]
+    },
+    "includes_family_card": true,
+    "tiers": [
+      300000,
+      700000,
+      1500000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "DISCOUNTED_AMOUNT",
+        "label": "삼성AI구독 우리카드로 할인받은 구독요금 자동납부 금액(해당 이용금액 전체)"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부금액"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료, 유치원보조비, 바우처 이용금액 등)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트 관리비"
+      },
+      {
+        "code": "PUBLIC_RENT",
+        "label": "LH/SH/전북개발공사 등 공공임대료, 부동산임대료"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공공요금(공과금)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대보험(건강보험/국민연금/고용보험/산재보험)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권(모바일상품권 포함)/선불카드/기프트카드 구매 및 충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통카드(모바일 포함) 구매 및 충전금액, 고속버스"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연회비"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "삼성AI구독 요금 청구할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "삼성AI구독 요금 자동납부",
+          "note": "자동납부 필수"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 10000,
+        "700000": 15000,
+        "1500000": 25000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "실물카드에 컨택리스(비접촉 결제) 칩 탑재"
+  ],
+  "schema_gaps": [
+    "가족카드는 청구할인 서비스가 적용되지 않음",
+    "할인받을 금액보다 구독요금 자동납부 승인금액이 적을 경우 승인금액만큼만 할인 적용"
+  ],
+  "posted_at": null,
+  "source_url": "https://m.wooricard.com/dcmw/pdfviewer/jsp/pfileRead.jsp?pdfPath=%2Fupload%2FcardClause%2F2025%2F8%2F18%2Fd7c3fd05-e050-4f00-971b-fcf37816e836.pdf&pdfKubun=05&pdfName=%5B%EC%83%81%ED%92%88%EC%95%88%EB%82%B4%EC%9E%A5%5D+%EC%82%BC%EC%84%B1AI%EA%B5%AC%EB%8F%85+%EC%9A%B0%EB%A6%AC%EC%B9%B4%EB%93%9C_%EC%B5%9C%EC%A2%85.pdf",
+  "_extraction_check": {
+    "source_pdf": "104123.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 25000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -5,7 +5,6 @@ import com.finntech.domain.Category;
 import com.finntech.domain.Consumption;
 import com.finntech.domain.Coupon;
 import com.finntech.domain.Enums;
-import com.finntech.domain.FinancialProduct;
 import com.finntech.domain.GoalMilestone;
 import com.finntech.domain.PointEvent;
 import com.finntech.domain.SavingsGoal;
@@ -14,7 +13,6 @@ import com.finntech.engine.AnalysisEngine;
 import com.finntech.repository.CategoryRepository;
 import com.finntech.repository.ConsumptionRepository;
 import com.finntech.repository.CouponRepository;
-import com.finntech.repository.FinancialProductRepository;
 import com.finntech.repository.GoalMilestoneRepository;
 import com.finntech.repository.PointEventRepository;
 import com.finntech.repository.SavingsGoalRepository;
@@ -61,7 +59,6 @@ public class PointService {
 
     private final ConsumptionRepository consumptionRepository;
     private final PointEventRepository pointEventRepository;
-    private final FinancialProductRepository productRepository;
     private final SavingsGoalRepository goalRepository;
     private final CategoryRepository categoryRepository;
     private final CouponRepository couponRepository;
@@ -69,22 +66,18 @@ public class PointService {
     private final GoalMilestoneRepository milestoneRepository;
     private final AnalysisEngine analysisEngine;
     private final ScoreService scoreService;
-    private final SavingsCompareService savingsCompareService;
 
     public PointService(ConsumptionRepository consumptionRepository,
                         PointEventRepository pointEventRepository,
-                        FinancialProductRepository productRepository,
                         SavingsGoalRepository goalRepository,
                         CategoryRepository categoryRepository,
                         CouponRepository couponRepository,
                         WishlistItemRepository wishlistRepository,
                         GoalMilestoneRepository milestoneRepository,
                         AnalysisEngine analysisEngine,
-                        ScoreService scoreService,
-                        SavingsCompareService savingsCompareService) {
+                        ScoreService scoreService) {
         this.consumptionRepository = consumptionRepository;
         this.pointEventRepository = pointEventRepository;
-        this.productRepository = productRepository;
         this.goalRepository = goalRepository;
         this.categoryRepository = categoryRepository;
         this.couponRepository = couponRepository;
@@ -92,7 +85,6 @@ public class PointService {
         this.milestoneRepository = milestoneRepository;
         this.analysisEngine = analysisEngine;
         this.scoreService = scoreService;
-        this.savingsCompareService = savingsCompareService;
     }
 
     // ======================================================================
@@ -124,10 +116,6 @@ public class PointService {
         BigDecimal monthlyBudget = user.getMonthlyIncome();
         BigDecimal pointsRemaining = monthlyBudget.subtract(spentThisMonth).subtract(depositedThisMonth);
 
-        FinancialProduct product = bestSavingsProduct();
-        double rate = product == null ? 0.0 : product.getExpectedRate().doubleValue();
-        int goalMonths = user.getGoalMonths() == null ? 12 : user.getGoalMonths();
-
         // 습관(미계획) 소비의 카테고리별 월평균 — 저축 계획에서 '줄일 소비'의 절약액 기준.
         List<CutOption> cutOptions = cutOptions(userId);
         Map<String, BigDecimal> monthlyByCat = new TreeMap<>();
@@ -138,7 +126,6 @@ public class PointService {
         BigDecimal totalTarget = BigDecimal.ZERO;
         for (SavingsGoal g : goalRepository.findByUserIdOrderBySortOrderAscIdAsc(userId)) {
             BigDecimal balance = goalBalance(userId, g.getId());
-            BigDecimal projected = lumpFutureValue(balance, rate, goalMonths);
             double progress = g.getTargetAmount().signum() <= 0 ? 0.0
                     : balance.divide(g.getTargetAmount(), 6, RoundingMode.HALF_UP).doubleValue();
             // '가는 날 N일 단축' = 잔액이 커버한 기한일수 (잔액/목표 × 기한일)
@@ -149,7 +136,7 @@ public class PointService {
             BigDecimal monthlySaving = cutsMonthlySaving(cuts, monthlyByCat);
             int planMonths = monthsToGoal(g.getTargetAmount(), monthlySaving);
             goals.add(new GoalView(g.getId(), g.getName(), g.getEmoji(), scale(g.getTargetAmount()),
-                    scale(balance), scale(projected), progress, g.isPriority(),
+                    scale(balance), progress, g.isPriority(),
                     milestoneViews(g.getId(), balance), g.getDeadlineDays(), fundedDays,
                     cuts, scale(monthlySaving), planMonths,
                     g.getAccountBank(), g.getAccountProduct(), g.getAccountNumber()));
@@ -188,7 +175,6 @@ public class PointService {
                 scale(monthlyBudget), scale(spentThisMonth), scale(depositedThisMonth), scale(pointsRemaining),
                 scale(totalSavings), scale(totalTarget), giftFill,
                 lastAction, scale(lastAmount), forced, coupon,
-                product == null ? null : product.getName(), rate, goalMonths,
                 goals, suggestions(userId), recentEvents(userId),
                 wishlist, scale(savedByNotBuying),
                 sc.score(), sc.grade(), streak, behaviorAlerts, gain, cutOptions);
@@ -353,7 +339,7 @@ public class PointService {
     }
 
     // ======================================================================
-    //  저축 계획 · 목표별 통장 추천
+    //  저축 계획
     // ======================================================================
 
     /** 목표에 '줄일 습관 소비' 카테고리(CSV)를 저장한다. 월 절약액·달성 개월수는 스냅샷이 파생 계산. */
@@ -364,39 +350,6 @@ public class PointService {
                 ? null : String.join(",", cutCategories));
         goalRepository.save(g);
         return build(user, now, null, BigDecimal.ZERO, null);
-    }
-
-    /**
-     * 목표 1·2·3에 각각 <b>계획 기간에 맞는 실 적금</b>을 추천한다 — 목표마다 다른 통장(중복 금지).
-     * 개월수는 계획(줄일 소비→월 절약액→⌈목표/절약⌉)에서 나오며, 계획이 없으면 목표 기한(deadlineDays)으로 대체한다.
-     */
-    @Transactional
-    public List<GoalRecommendationView> recommendForGoals(AppUser user, LocalDateTime now) {
-        Long userId = user.getId();
-        ensureGoals(userId);
-        Map<String, BigDecimal> monthlyByCat = new TreeMap<>();
-        for (CutOption o : cutOptions(userId)) monthlyByCat.put(o.categoryCode(), o.monthlyAmount());
-
-        List<GoalRecommendationView> out = new ArrayList<>();
-        Set<String> used = new HashSet<>();   // 이미 배정된 통장(중복 금지)
-        for (SavingsGoal g : goalRepository.findByUserIdOrderBySortOrderAscIdAsc(userId)) {
-            BigDecimal monthlySaving = cutsMonthlySaving(parseCsv(g.getPlanCutCategories()), monthlyByCat);
-            int planMonths = monthsToGoal(g.getTargetAmount(), monthlySaving);
-            int period = planMonths > 0 ? planMonths : Math.max(1, g.getDeadlineDays() / 30);
-            int bucket = SavingsCompareService.nearestPeriodBucket(period);
-            boolean[] live = {false};
-            List<SavingsCompareService.Account> ranked = savingsCompareService.rankedForPeriod(bucket, live);
-            SavingsCompareService.Account pick = null;
-            for (SavingsCompareService.Account a : ranked) {
-                if (used.add(a.company() + " " + a.name())) { pick = a; break; }
-            }
-            out.add(new GoalRecommendationView(g.getId(), g.getName(), g.getEmoji(),
-                    bucket, scale(monthlySaving), planMonths,
-                    pick == null ? null : pick.company(),
-                    pick == null ? null : pick.name(),
-                    pick == null ? 0.0 : pick.baseRate(), live[0]));
-        }
-        return out;
     }
 
     /** 습관(미계획) 소비의 카테고리별 월평균 금액 — 계획에서 '줄일 소비'의 절약액 근거. */
@@ -460,13 +413,6 @@ public class PointService {
         BigDecimal over = spentThisMonth.subtract(budget);
         if (over.signum() <= 0) return BigDecimal.ZERO;
         return over.min(thisAmount);
-    }
-
-    /** 원금을 연이율로 개월수만큼 예치했을 때의 미래가치(월복리 근사). */
-    static BigDecimal lumpFutureValue(BigDecimal principal, double annualRatePct, int months) {
-        double r = annualRatePct / 100.0 / 12.0;
-        double fv = principal.doubleValue() * Math.pow(1 + r, months);
-        return BigDecimal.valueOf(fv).setScale(0, RoundingMode.HALF_UP);
     }
 
     /** 참은 저축 누적액이 몇 번째 쿠폰 임계치를 넘겼는가(floor). */
@@ -592,15 +538,6 @@ public class PointService {
         return total.signum() > 0 ? new ForcedWithdrawal(primaryGoal, scale(total)) : null;
     }
 
-    private FinancialProduct bestSavingsProduct() {
-        return productRepository.findAllByOrderByIdAsc().stream()
-                .filter(p -> p.getProductType() == Enums.ProductType.SAVINGS
-                        || p.getProductType() == Enums.ProductType.DEPOSIT)
-                .max(Comparator.comparing(FinancialProduct::getExpectedRate)
-                        .thenComparing(FinancialProduct::getId))
-                .orElse(null);
-    }
-
     /** 목표가 하나도 없으면 예시 3개 + 각 마일스톤을 만들어 준다(사용자가 수정·삭제 가능). */
     private void ensureGoals(Long userId) {
         if (goalRepository.countByUserId(userId) > 0) return;
@@ -705,7 +642,7 @@ public class PointService {
     // ======================================================================
 
     public record GoalView(Long id, String name, String emoji, BigDecimal targetAmount,
-                           BigDecimal balance, BigDecimal projected, double progress, boolean priority,
+                           BigDecimal balance, double progress, boolean priority,
                            List<MilestoneView> milestones, int deadlineDays, int fundedDays,
                            /** 저축 계획 — 줄이기로 한 습관 소비 카테고리 코드 */
                            List<String> planCutCategories,
@@ -718,11 +655,6 @@ public class PointService {
 
     /** 계획에서 '줄일 수 있는' 습관 소비 후보 — 카테고리별 월평균. */
     public record CutOption(String categoryCode, String displayName, BigDecimal monthlyAmount) {}
-
-    /** 목표별 추천 통장 (실 적금, 중복 없이). productName이 null이면 조회 실패/후보 소진. */
-    public record GoalRecommendationView(Long goalId, String goalName, String emoji,
-            int periodMonths, BigDecimal monthlyAmount, int planMonths,
-            String company, String productName, double baseRate, boolean live) {}
 
     public record MilestoneView(Long id, String name, String emoji, BigDecimal cost,
                                 boolean acquired, double progress, BigDecimal remaining) {}
@@ -765,9 +697,6 @@ public class PointService {
             ForcedWithdrawal forcedWithdrawal,
             /** 대기 중인 치팅데이 쿠폰 (없으면 null) */
             CouponView coupon,
-            String productName,
-            double productRate,
-            int goalMonths,
             List<GoalView> goals,
             List<Suggestion> suggestions,
             List<EventView> recentEvents,

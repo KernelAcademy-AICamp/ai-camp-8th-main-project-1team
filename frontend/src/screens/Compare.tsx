@@ -5,11 +5,20 @@
  * 화면 맨 위는 카드가 아니라 <b>최근 소비 요약</b>이다 — 무엇을 근거로 골랐는지 같은 화면에서
  * 대조할 수 있어야 추천이 검증 가능해진다. 순서를 화면이 다시 매기지 않는 것도 같은 이유다.
  *
- * <p><b>카드는 전부 더미다</b>(마스터 §4 원칙 5 — 금소법). 이름 앞의 <code>[더미]</code>를
- * 떼지 않고 그대로 내보내며, '빠른 신청'은 실제로 아무 데도 보내지 않고 그 사실을 말한다.
- * 실제 금리를 보고 싶으면 통장 비교(무판매·무제휴라 예외)로 간다.
+ * <p><b>카드는 실제 상품이다</b>(마스터 §4 원칙 5 재개정 2026-08-10 — 카드만 예외이고
+ * 예적금·펀드는 그대로 더미다). 그래서 <b>"더미라서 영업이 아니다"라는 방패가 이 화면에는
+ * 없고</b>, 금융위·금감원 유권해석(2022.6.15)의 네 요건으로 선다 — 단순 정보제공 · 판매 목적
+ * 아님 · 제휴/광고 계약 없음 · <b>가입 편의 미제공</b>.
+ *
+ * <p><b>그래서 신청 버튼을 두지 않는다.</b> 예전에는 '빠른 신청'·'더 알아보기' 두 개가 있었고
+ * 더미였을 때는 눌러도 "데모라서 진행되지 않아요"로 끝났다. 실제 카드에서는 그 버튼이 있다는
+ * 것만으로 <b>가입 편의 제공</b>이 되어 중개업 등록 대상이 된다(금소법 제67조). 여기는
+ * <b>혜택 비교까지</b>다.
+ *
+ * <p><b>그리고 기준일을 반드시 병기한다.</b> 혜택 개정 추적은 스코프 밖이라 카드 정보는
+ * 수집 시점 스냅샷이고, 기준일이 그 낡음에 대한 유일한 방어다. 신청 버튼을 없앤 것이 이
+ * 방어의 전제다 — 버튼이 있으면 "낡은 정보로 가입을 유도한 것"이 되어 둘이 함께 무너진다.
  */
-import { useEffect, useRef, useState } from 'react';
 import { AppBar, Scroll, Screen, ErrorBox, Loading, Empty } from '../components/ui';
 import { CardArt } from '../components/CardArt';
 import { useSession } from '../state/session';
@@ -37,16 +46,9 @@ const Crown = () => (
 export function Compare() {
   const { back, userId } = useSession();
   const { data, loading, error, reload } = useAsync(() => api.recommendCards(userId), [userId]);
-  const [toast, setToast] = useState<string | null>(null);
-  const timer = useRef<number | undefined>(undefined);
 
-  // 화면을 떠날 때 타이머를 거둔다 — 안 그러면 사라진 화면에 setState 를 건다.
-  useEffect(() => () => window.clearTimeout(timer.current), []);
-  function say(msg: string) {
-    setToast(msg);
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setToast(null), 2000);
-  }
+  // 토스트가 있었는데 없앴다 — 유일한 쓰임이 '빠른 신청' 버튼의 "데모라서 진행되지 않아요"
+  // 였고, 그 버튼이 사라졌다(위 머리말).
 
   const summary = data?.summary ?? [];
   const offers = data?.offers ?? [];
@@ -86,53 +88,53 @@ export function Compare() {
             )}
 
             {/* ── 카드 ── */}
-            {offers.map((o, i) => <Offer key={o.name} offer={o} uid={String(i)} onApply={say} />)}
+            {offers.map((o, i) => <Offer key={o.name} offer={o} uid={String(i)} />)}
 
             <div className="pv" style={{ textAlign: 'center' }}>
-              추천 순서는 광고비가 아니라 <b>최근 {data.months || 3}개월 소비에 그 카드를 썼다면
-              연 얼마가 남는지</b>로 정해요. 그래서 가장 많이 쓴 곳과 1위 카드가 다를 수 있어요.<br />
-              여기 카드는 <b>전부 더미</b>라 실제로 가입할 수 없어요.
+              추천 순서는 광고비가 아니라 <b>{data.spendWindow} 동안 자주 가신 곳이
+              그 카드 혜택 대상과 몇 곳이나 겹치는지</b>로 정해요. 금액은 말하지 않아요.<br />
+              카드사와 제휴하지 않고 <b>혜택 비교만</b> 해요 — 가입은 각 카드사에서 하세요.
             </div>
             <div className="spacer" style={{ height: 32 }} />
           </>
         )}
       </div></Scroll>
-      {toast && <div className="mini-toast show" role="status">{toast}</div>}
     </Screen>
   );
 }
 
-function Offer({ offer, uid, onApply }: {
-  offer: CardOffer; uid: string; onApply: (msg: string) => void;
-}) {
+function Offer({ offer, uid }: { offer: CardOffer; uid: string }) {
   return (
     <div className="cr-offer">
       <div className="cap">{offer.tagline}</div>
       <div className="nm">{offer.name}</div>
       <CardArt tint={offer.tint} mark={offer.mark} footer={offer.footer} uid={uid} />
+      {/*
+        금액을 말하지 않는다(2026-08-13 결정). 예전에는 "연 180,000원 아껴요"를 냈는데
+        개인화 절감액은 규제상 가장 약한 고리이고, 전월 실적도 카드 한 장 기준이 아니라
+        우리가 셀 수 있는 값이 아니었다. 대신 **겹침**만 말한다 — 마이데이터가 있어야
+        할 수 있는 말이고, 금액 환산이 없어 틀릴 여지도 없다.
+      */}
       <div className="save">
         <SaveMark />
-        {offer.yearlySaving > 0
-          ? <>연 {won(offer.yearlySaving)} 아껴요</>
-          : <>이 소비에는 아낄 게 거의 없어요</>}
+        {offer.matchCount > 0
+          ? <>자주 가는 곳 {offer.matchCount}곳이 대상이에요</>
+          : <>회원님 소비와 겹치는 곳은 없어요</>}
       </div>
-      {/* 한도에 걸렸으면 숨기지 않는다 — 숨기면 "더 쓰면 더 아낀다"로 잘못 읽힌다. */}
-      {offer.cappedAt !== null && (
-        <div className="pv" style={{ marginTop: 8 }}>
-          연간 혜택 한도 {won(offer.cappedAt)}까지예요
-        </div>
-      )}
       <div className="rows">
         {offer.rows.map((r) => (
           <div className="cr-brow" key={r.label}><span>{r.label}</span><b>{r.value}</b></div>
         ))}
       </div>
-      <div className="cr-btns">
-        <button type="button" className="ghost"
-          onClick={() => onApply('더미 카드라 상세 페이지가 없어요')}>더 알아보기</button>
-        <button type="button" className="dark"
-          onClick={() => onApply('데모라서 신청은 진행되지 않아요')}>빠른 신청</button>
-      </div>
+      {/*
+        기준일 병기 — 혜택 개정 추적이 스코프 밖이라 이 한 줄이 낡음에 대한 유일한 방어다.
+        신청 버튼이 없어야 이 방어가 성립한다(위 파일 머리말).
+      */}
+      {offer.asOf && (
+        <div className="pv" style={{ marginTop: 8 }}>
+          {offer.asOf.replace(/-/g, '.')} 공시 기준이에요
+        </div>
+      )}
     </div>
   );
 }

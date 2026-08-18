@@ -1,0 +1,204 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 스타트럭 플러스 HD현대오일뱅크카드",
+  "product_id": "KB-04092",
+  "status": "active",
+  "as_of": "2023-09-11",
+  "review_no": "여신금융협회 심의필 제 2023-C1a-10303호",
+  "compliance_no": "230821-03176-TRM (2023.08.21)",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(JCB)",
+      "total": 0
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Mastercard",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      300000,
+      700000,
+      1000000,
+      1500000
+    ],
+    "excluded": [
+      {
+        "code": "FUEL",
+        "label": "주유소 및 충전소업종 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원) 등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(대중교통, 자판기, 터널이용료, 항공기내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "HD현대오일뱅크 주유할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "주유",
+          "brands": [
+            "HD현대오일뱅크 화물차 우대주유소"
+          ],
+          "industries": [
+            "경유"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 25000,
+        "300000": 100000,
+        "700000": 150000,
+        "1000000": 200000,
+        "1500000": 350000
+      }
+    },
+    {
+      "group": "생활 편의 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "대형마트",
+          "brands": [
+            "이마트",
+            "롯데마트",
+            "홈플러스"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000,
+        "700000": 10000,
+        "1000000": 15000,
+        "1500000": 20000
+      }
+    },
+    {
+      "group": "생활 편의 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 25,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "커피전문점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000,
+        "1500000": 10000
+      }
+    },
+    {
+      "group": "생활 편의 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 2,
+      "requires_tier": 700000,
+      "targets": [
+        {
+          "category": "자동차 정비"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "700000": 5000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불식 충전카드 이용금액"
+    },
+    {
+      "code": "SSM",
+      "label": "SSM(이마트에브리데이, 홈플러스 익스프레스, 롯데슈퍼 등)"
+    }
+  ],
+  "non_monetary": [
+    "화물운전자 유가보조금 지원",
+    "부가세 환급신고 편의서비스"
+  ],
+  "schema_gaps": [
+    "주유 할인액은 전월 실적 구간별로 리터당 20~85원 차등 적용되며, 청구할인 한도와 별개로 현장할인(리터당 15원)이 존재함",
+    "커피전문점 할인 한도는 30만원 이상 5천원, 150만원 이상 1만원으로 구간이 비대칭적임",
+    "자동차 정비 할인은 70만원 이상 구간부터 5천원 한도 제공",
+    "정유사 포인트 적립은 전월 실적 70만원 이상 시 리터당 15포인트 제공"
+  ],
+  "posted_at": "2017-07-03",
+  "source_url": "https://img2.kbcard.com/obj/card/download/04092__prdctOpmn_20230912.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04092__prdctOpmn_20230912.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": 300000,
+        "second": 0
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 380000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

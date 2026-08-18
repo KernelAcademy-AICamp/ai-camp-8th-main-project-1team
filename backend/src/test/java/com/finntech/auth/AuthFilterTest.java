@@ -22,7 +22,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  * (없는 사용자로 불러도 401 이 아니라 404 — 인증을 안 따진다는 뜻이었다).
  * 그 상태로 실제 사람 750건이 올라가 있었다.
  */
-@SpringBootTest
+// **이 시험만 인증을 되켠다.** `application-test.yml` 이 `finntech.auth.enabled: false` 로
+// 꺼 두는데(MockMvc 시험들이 토큰을 만들 자리가 없어서), 이 클래스는 필터를 새로 만들지 않고
+// **빈을 주입받는다** — 그 스위치가 그대로 먹어 검증 대상이 통째로 꺼진다. 실제로 그렇게 됐고
+// 401·403 을 단언하는 6건이 조용히 깨졌다(2026-08-14). `properties` 는 프로필 yml 을 이기므로
+// 여기서만 되켜면 된다. 필터를 끄고 켜는 스위치가 있는 한, 그 스위치를 검증하는 시험은
+// 스위치보다 위에 있어야 한다.
+@SpringBootTest(properties = "finntech.auth.enabled=true")
 @ActiveProfiles("test")
 class AuthFilterTest {
 

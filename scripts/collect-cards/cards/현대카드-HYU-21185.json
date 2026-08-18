@@ -1,0 +1,233 @@
+{
+  "issuer": "현대카드",
+  "name": "현대카드 M3 BOOST",
+  "product_id": "HYU-21185",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "compliance_no": "준법감시심의필 제 240628-006호(2024.06.28)",
+  "posted_at": "2020-09-04",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "현대",
+      "total": 90000,
+      "base": 15000,
+      "affiliate": 75000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "VISA",
+      "total": 90000,
+      "base": 15000,
+      "affiliate": 75000
+    }
+  ],
+  "annual_fee_notes": [
+    "가족카드 연회비 20,000원",
+    "연회비는 카드 발급 시 선청구",
+    "연회비는 보유 카드별로 청구"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      500000,
+      1000000,
+      2000000
+    ],
+    "excluded": [
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 제수수료, 이자"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금 납부액(국세, 관세, 지방세, 지방세외수입, 상하수도요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급수수료 등)"
+      },
+      {
+        "code": "UTILITY",
+        "label": "전기요금, 도시가스요금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고교 학교납입금, 대학·대학원 등록금 납부 결제건"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 등 현금성 유가증권 구매 및 선불카드 구매·충전금액"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "건강보험, 국민연금, 고용보험, 산재보험 및 장애인 고용부담금"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "고속도로 통행요금, 고속버스"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "커피/영화",
+          "brands": [
+            "스타벅스",
+            "폴바셋",
+            "이디야",
+            "CGV",
+            "롯데시네마",
+            "메가박스"
+          ]
+        },
+        {
+          "category": "베이커리/대중교통",
+          "brands": [
+            "파리바게뜨",
+            "뚜레쥬르",
+            "파리크라상"
+          ],
+          "industries": [
+            "시내버스",
+            "지하철",
+            "택시"
+          ]
+        },
+        {
+          "category": "편의점/학원",
+          "industries": [
+            "편의점",
+            "학원"
+          ]
+        },
+        {
+          "category": "외식/통신",
+          "industries": [
+            "외식",
+            "통신"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "간편결제/해외",
+      "kind": "적립",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "온라인 간편결제",
+          "channel": [
+            "Apple Pay",
+            "삼성페이",
+            "네이버페이",
+            "카카오페이",
+            "스마일페이",
+            "SSG페이",
+            "쿠페이",
+            "11pay"
+          ]
+        },
+        {
+          "category": "해외",
+          "scope": "해외 온·오프라인 가맹점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 20000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비, 제수수료, 이자"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    }
+  ],
+  "non_monetary": [
+    "커피 전문점 할인(스타벅스, 폴바셋, 이디야 건당 1,000원)",
+    "주말 무료 주차 서비스"
+  ],
+  "schema_gaps": [
+    "업종별 적립률이 당월 이용금액 구간(50만, 100만, 200만)에 따라 0.5%~6%로 차등 적용됨",
+    "신규 발급 시 발급월 포함 2회차 결제일자까지는 50만원 미만 실적이어도 적립률 제공",
+    "보너스 리워드: 당월 100만원 이상 이용 시 1만 M포인트 적립",
+    "플래티넘 서비스(커피 할인, 주차)는 당월 50만원 이상 시 제공",
+    "간편결제/해외 적립 한도는 월 2만 M포인트 통합 한도"
+  ],
+  "source_url": "https://www.hyundaicard.com/upload/card/M3_BOOST_%EA%B0%80%EC%9D%B4%EB%93%9C%EB%B6%81.pdf",
+  "_extraction_check": {
+    "source_pdf": "05_20240715_M3_BOOST_가이드북.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 2,
+        "second": 4
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.500000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": 5,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": null,
+        "second": 5
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 20000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

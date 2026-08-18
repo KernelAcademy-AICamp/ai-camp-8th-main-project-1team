@@ -1,0 +1,125 @@
+{
+  "issuer": "KB국민카드",
+  "name": "아시아나 KB 국민카드",
+  "product_id": "KB-00905",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "1998-04-22",
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Master/VISA/JCB",
+      "total": 3000,
+      "base": 3000,
+      "affiliate": 0
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Master/VISA/JCB",
+      "total": 5000,
+      "base": 5000,
+      "affiliate": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "마일리지 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "아시아나항공 마일리지",
+          "note": "이용금액 1천원당 1마일 적립"
+        }
+      ],
+      "conditions": [
+        "전월 실적 조건 없음",
+        "월간/연간 적립 제한 없음",
+        "매출건별 완제금액 원금 기준",
+        "소수점 첫째자리 반올림"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자 할부(부분무이자할부포함) 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "지방세"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원)등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "KB국민카드 스타샵 가맹점 포인트리 적립 가능"
+  ],
+  "schema_gaps": [
+    "연회비는 실버/골드/플래티늄S/플래티늄 등급별로 상이하며, 본 데이터는 실버 등급 기준 예시임",
+    "국내전용 발급 불가(갱신만 가능)",
+    "가족카드 발급 가능"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/00905__prdctOpmn_20240625.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_00905__prdctOpmn_20240625.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.annual_fee.length",
+        "first": 2,
+        "second": 1
+      },
+      {
+        "path": "$.annual_fee[0].affiliate",
+        "first": 0,
+        "second": 10000
+      },
+      {
+        "path": "$.annual_fee[0].total",
+        "first": 5000,
+        "second": 15000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

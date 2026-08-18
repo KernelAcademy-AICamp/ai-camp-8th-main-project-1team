@@ -23,6 +23,29 @@ public interface SpendingLedgerRepository extends JpaRepository<SpendingLedger, 
     List<SpendingLedger> findByPaymentIdIn(List<String> paymentIds);
 
     /**
+     * 한 사용자의 기간 — <b>카드 추천이 겹침을 세는 창</b>.
+     *
+     * <p>달 단위({@link #findByUserIdAndMonthKeyOrderByPaidAtAscPaymentIdAsc})로는 안 된다.
+     * 추천이 보는 창은 "최근 3개월"이라 달 경계와 맞지 않고, 달마다 따로 부르면 같은 질문을
+     * 세 번 하는 셈이다.
+     *
+     * <p><b>카드 추천이 {@code user_payment} 대신 이 표를 읽는 이유</b>는 ① 이 이미 알아낸
+     * 것을 다시 캐지 않기 위해서다(마스터 §4 원칙 2 · 09 §2.2). 가맹점명에서 브랜드를 뽑고
+     * 결제대행사를 가려내는 일은 ① 이 분류·낭비판정 과정에서 이미 했고, 그 답이 여기 있다 —
+     * {@code brand} · {@code paymentAgency} · {@code ntsIndustryCode} · {@code stance}.
+     *
+     * <p>시작은 포함, 끝은 미포함. 정렬 고정(원칙 3).
+     */
+    @Query("""
+            select l from SpendingLedger l
+            where l.userId = :userId and l.paidAt >= :from and l.paidAt < :until
+            order by l.paidAt asc, l.paymentId asc
+            """)
+    List<SpendingLedger> findInPeriod(@Param("userId") Long userId,
+                                      @Param("from") LocalDateTime from,
+                                      @Param("until") LocalDateTime until);
+
+    /**
      * 그 사용자의 결제 식별자만 — <b>엔티티를 세우지 않는다.</b>
      *
      * <p>정합 맞추기(표에는 있는데 원장에는 없는 줄 찾기)에만 쓰므로 칸이 마흔 개인 엔티티를

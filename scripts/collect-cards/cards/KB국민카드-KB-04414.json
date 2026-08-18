@@ -1,0 +1,279 @@
+{
+  "issuer": "KB국민카드",
+  "name": "SK인텔릭스 KB국민카드",
+  "product_id": "KB-04414",
+  "status": "stopped",
+  "as_of": "2025-09-29",
+  "review_no": "여신금융협회 심의필 제2025–C1a–14506호",
+  "compliance_no": "KB국민카드 준법감시인 심의필 제260406-01115-PIF (2026.04.06)",
+  "posted_at": "2016-06-10",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(UPI)",
+      "total": 10000,
+      "base": 7000,
+      "affiliate": 3000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Visa",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "includes_family_card": true,
+    "includes": [
+      "일시불",
+      "할부"
+    ],
+    "tiers": [
+      300000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "DISCOUNTED",
+        "label": "할인 받은 이용금액(해당 이용금액 전체)"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "(부분)무이자 할부 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통 이용 등 무승인전표"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "SK인텔릭스",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "amount_krw": 10000,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "구독료",
+          "note": "자동이체 시"
+        }
+      ]
+    },
+    {
+      "group": "패밀리 레스토랑",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "rate_percent": 20,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "외식",
+          "brands": [
+            "VIPS",
+            "아웃백스테이크하우스",
+            "생어거스틴"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "영화 할인",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "amount_krw": 3500,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "메가박스",
+            "CGV"
+          ],
+          "channel": [
+            "온라인 예매"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "놀이공원",
+      "kind": "할인",
+      "settle": "현장 할인",
+      "rate_percent": 50,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "롯데월드 어드벤처"
+          ],
+          "note": "종합이용권"
+        },
+        {
+          "category": "놀이공원",
+          "brands": [
+            "에버랜드"
+          ],
+          "note": "페스티벌월드 자유이용권"
+        }
+      ]
+    },
+    {
+      "group": "놀이공원",
+      "kind": "할인",
+      "settle": "현장 할인",
+      "rate_percent": 30,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "캐리비안베이"
+          ],
+          "note": "입장권"
+        }
+      ]
+    },
+    {
+      "group": "KB Pay앱·여행",
+      "kind": "할인",
+      "settle": "현장 할인",
+      "rate_percent": 3,
+      "requires_tier": null,
+      "targets": [
+        {
+          "category": "여행",
+          "brands": [
+            "하나투어",
+            "모두투어"
+          ],
+          "channel": [
+            "KB Pay앱",
+            "여행 지정 신청처"
+          ]
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "(부분)무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입ㆍ충전금액"
+    }
+  ],
+  "non_monetary": [
+    "KB국민카드 스타샵 가맹점 포인트리 적립"
+  ],
+  "schema_gaps": [
+    "놀이공원 할인서비스의 회원별 통합할인한도 조건 존재",
+    "영화 할인: 1일 2회, 월 4회, 연 10회 이내",
+    "놀이공원(롯데월드): 회원별 일 1매, 월 2매, 연간 5매",
+    "놀이공원(에버랜드): 회원별 연간 10매",
+    "놀이공원(캐리비안베이): 일 1매"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04414__prdctOpmn_20260629.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04414__prdctOpmn_20260629.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 6,
+        "second": 7
+      },
+      {
+        "path": "$.benefits[2].amount_krw",
+        "first": null,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[2].rate_percent",
+        "first": 20,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].amount_krw",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].rate_percent",
+        "first": null,
+        "second": 20
+      },
+      {
+        "path": "$.benefits[5].rate_percent",
+        "first": 30,
+        "second": 50
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

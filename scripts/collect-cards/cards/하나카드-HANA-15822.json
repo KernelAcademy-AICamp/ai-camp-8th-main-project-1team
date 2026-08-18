@@ -1,0 +1,291 @@
+{
+  "issuer": "하나카드",
+  "name": "MG+ 트래블로그 하나카드",
+  "product_id": "HANA-15822",
+  "status": "active",
+  "as_of": "2026-07-16",
+  "review_no": "여신금융협회 심의필 제 2026-C1a-10698호",
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "하나",
+      "total": 20000,
+      "base": 20000,
+      "affiliate": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 20000,
+      "base": 20000,
+      "affiliate": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      500000,
+      1000000
+    ],
+    "excluded": [
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "수도/전기요금, 도시가스 요금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "그 외 공과금(우편요금, 과태료, 범칙금, 벌금, 국가/공공기관/공공단체가 부과하는 부담금)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비, 부동산임대료"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "국민연금/고용보험료/산재보험료/건강보험료 납부 금액"
+      },
+      {
+        "code": "TUITION",
+        "label": "스쿨뱅킹, 초·중·고 학교 납입금, 대학교납입금, 대학원납입금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 기프트카드 구매, 선불카드 및 선불전자지급수단(예시: 하나머니 등) 충전 금액"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 및 부분무이자할부 이용금액"
+      },
+      {
+        "code": "DISCOUNTED",
+        "label": "할인받은 매출 전체"
+      },
+      {
+        "code": "FOREIGN_MONEY",
+        "label": "외화 하나머니 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "생활요금",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "생활요금",
+          "industries": [
+            "아파트관리비",
+            "전기요금",
+            "가스요금"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 5000,
+        "1000000": 10000
+      },
+      "combined_cap_group": "통합할인"
+    },
+    {
+      "group": "영상 스트리밍",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "영상 스트리밍",
+          "brands": [
+            "넷플릭스",
+            "디즈니플러스",
+            "Wavve",
+            "티빙",
+            "유튜브프리미엄"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 5000,
+        "1000000": 10000
+      },
+      "combined_cap_group": "통합할인"
+    },
+    {
+      "group": "디지털 멤버십",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "디지털 멤버십",
+          "brands": [
+            "쿠팡와우멤버십",
+            "네이버플러스멤버십",
+            "컬리멤버스",
+            "배민클럽",
+            "요기패스"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 5000,
+        "1000000": 10000
+      },
+      "combined_cap_group": "통합할인"
+    },
+    {
+      "group": "뮤직",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "뮤직",
+          "brands": [
+            "멜론",
+            "지니",
+            "FLO",
+            "스포티파이"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 5000,
+        "1000000": 10000
+      },
+      "combined_cap_group": "통합할인"
+    },
+    {
+      "group": "웹툰/도서",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "웹툰/도서",
+          "brands": [
+            "네이버웹툰",
+            "카카오페이지",
+            "밀리의서재"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 5000,
+        "1000000": 10000
+      },
+      "combined_cap_group": "통합할인"
+    },
+    {
+      "group": "렌탈",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "렌탈",
+          "brands": [
+            "삼성전자",
+            "LG전자",
+            "코웨이",
+            "쿠쿠",
+            "바디프렌드",
+            "교원웰스",
+            "세라젬"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 5000,
+        "1000000": 10000
+      },
+      "combined_cap_group": "통합할인"
+    },
+    {
+      "group": "홈케어",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "홈케어",
+          "brands": [
+            "청소연구소",
+            "세탁특공대"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 5000,
+        "1000000": 10000
+      },
+      "combined_cap_group": "통합할인"
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "통합할인",
+      "members": [
+        "생활요금",
+        "영상 스트리밍",
+        "디지털 멤버십",
+        "뮤직",
+        "웹툰/도서",
+        "렌탈",
+        "홈케어"
+      ],
+      "cap_by_tier": {
+        "500000": 20000,
+        "1000000": 40000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자 할부 및 부분무이자할부 이용건"
+    },
+    {
+      "code": "PG_PAY",
+      "label": "결제대행업체(PG) 또는 간편결제 전용 가맹점"
+    }
+  ],
+  "non_monetary": [
+    "해외 가맹점 이용 시 해외서비스 수수료 및 국제브랜드 수수료 면제",
+    "해외 ATM 인출 시 해외서비스 수수료 및 국제브랜드 수수료 면제",
+    "외화 하나머니 결제 기능 탑재"
+  ],
+  "schema_gaps": [
+    "하이브리드 카드(신용결제와 외화 하나머니 선불결제 혼용)로, 주 결제 방식은 체크카드이나 신용결제 기능이 포함됨",
+    "신규 발급 시 최초 카드 사용등록일로부터 다음달 말일까지는 전월 실적 50만원 미만이어도 50만원 이상 100만원 미만 구간의 혜택 제공",
+    "결제 계좌는 새마을금고 계좌로 한정됨"
+  ],
+  "posted_at": "2026-07-01",
+  "source_url": "https://m.hanacard.co.kr/leaflet/15/15822_20260701.pdf",
+  "_extraction_check": {
+    "source_pdf": "15822.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 40000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

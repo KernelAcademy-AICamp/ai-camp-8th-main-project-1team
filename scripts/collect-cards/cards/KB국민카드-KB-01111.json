@@ -1,0 +1,123 @@
+{
+  "issuer": "KB국민카드",
+  "name": "교보문고 KB국민카드",
+  "product_id": "KB-01111",
+  "status": "stopped",
+  "as_of": "2019-04-25",
+  "review_no": "여신금융협회 심의필 제2019-C1a-03425호",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 3000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "VISA/Master",
+      "total": 5000
+    },
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 5000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "VISA/Master",
+      "total": 10000
+    }
+  ],
+  "benefits": [
+    {
+      "group": "도서 할인",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "도서",
+          "note": "월간 20만원, 연간 100만원 이용금액까지"
+        }
+      ]
+    },
+    {
+      "group": "무이자할부",
+      "kind": "무이자할부",
+      "targets": [
+        {
+          "category": "도서",
+          "note": "5만원 이상 2~3개월, 30만원 이상 2~6개월"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "PG",
+      "label": "PG(인터넷)업체를 통한 결제"
+    },
+    {
+      "code": "DEPARTMENT_STORE",
+      "label": "백화점 입점 가맹점"
+    },
+    {
+      "code": "MART",
+      "label": "대형마트 입점 가맹점"
+    },
+    {
+      "code": "STATION",
+      "label": "철도역사 입점 가맹점"
+    },
+    {
+      "code": "HOTEL",
+      "label": "호텔 입점 가맹점"
+    }
+  ],
+  "non_monetary": [
+    "교보북클럽 서비스 제공(외국도서 10% 할인, 통합포인트 적립, 주차장 무료)"
+  ],
+  "schema_gaps": [
+    "연회비 구분(실버/골드)에 따른 상세 금액이 표기되어 있으나 스키마상 통합 표기함",
+    "교보북클럽 등급별 포인트 적립률 차등 적용",
+    "기본연회비 면제 기준 존재(연간 30만원 이상 사용 시 차기년도 면제)"
+  ],
+  "posted_at": "2002-10-11",
+  "source_url": "https://img2.kbcard.com/obj/card/download/01111__prdctOpmn_20241129.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_01111__prdctOpmn_20241129.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.annual_fee.length",
+        "first": 4,
+        "second": 2
+      },
+      {
+        "path": "$.annual_fee[0].base",
+        "first": null,
+        "second": 3000
+      },
+      {
+        "path": "$.annual_fee[1].base",
+        "first": null,
+        "second": 5000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

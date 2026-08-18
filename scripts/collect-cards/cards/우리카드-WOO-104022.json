@@ -1,0 +1,182 @@
+{
+  "issuer": "우리카드",
+  "name": "우리 기후동행카드(신용)",
+  "product_id": "WOO-104022",
+  "status": "active",
+  "as_of": "2025-02-07",
+  "review_no": "여신금융협회 심의필 제 2025 - C1a - 01315호",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 12000,
+      "base": 7000,
+      "affiliate": 5000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "교통카드 이용금액",
+        "통신료 자동납부 금액"
+      ]
+    },
+    "tiers": [
+      200000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부금액"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료, 유치원보조비, 바우처 이용금액 등)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비, LH/SH/전북개발공사 등 공공임대료, 부동산임대료"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세, 관세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공공요금(공과금)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권(카카오톡 선물하기 등 모바일 상품권 포함)/선불카드(포인트, 사이버머니, 게임머니 등 전자지급 수단 포함)/기프트카드 구매 및 충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통카드(모바일 포함) 구매 및 충전금액, 고속버스(차내단말기 및 고속버스 APP결제)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연회비"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "국내 가맹점 할인",
+      "kind": "할인",
+      "rate_percent": 0.8,
+      "requires_tier": 200000,
+      "targets": [
+        {
+          "category": "국내 가맹점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 20000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "TRANSIT",
+      "label": "후불교통카드 이용금액(기후동행카드 이용요금 포함) 전체"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부금액"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금(보육료, 유치원보조비, 바우처 이용금액 등)"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비, LH/SH/전북개발공사 등 공공임대료, 부동산임대료"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원)등록금"
+    },
+    {
+      "code": "TAX",
+      "label": "국세, 지방세, 관세"
+    },
+    {
+      "code": "UTILITY",
+      "label": "공공요금(공과금)"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권(카카오톡 선물하기 등 모바일 상품권 포함)/선불카드(포인트, 사이버머니, 게임머니 등 전자지급 수단 포함)/기프트카드 구매 및 충전금액"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "교통카드(모바일 포함) 구매 및 충전금액, 고속버스(차내단말기 및 고속버스 APP결제)"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연회비"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "EVENT",
+      "label": "당사에서 제공하는 각종 이벤트의 혜택을 적용받은 매출"
+    }
+  ],
+  "non_monetary": [
+    "후불 기후동행카드 서비스(서울시 대중교통, 따릉이 이용)",
+    "후불교통카드 발급 필수",
+    "가족카드 발급 불가"
+  ],
+  "schema_gaps": [
+    "기후동행카드 서비스는 티머니 홈페이지에 별도 등록이 필요하며, 미등록 시 혜택 미적용",
+    "기후동행카드 서비스는 실물 카드로만 이용 가능(모바일 교통서비스 등록 불가)",
+    "기후동행카드 이용요금 청구 방식: 월 부담한도 미만 사용 시 실 사용금액 청구, 이상 사용 시 월 부담한도금액 청구",
+    "카드 수령(사용)등록일과 사용개시일 중 빠른 날을 기준으로 다음달 말일까지는 전월실적 조건 미충족 시에도 20만원 실적 구간 서비스 제공"
+  ],
+  "posted_at": null,
+  "source_url": "https://m.wooricard.com/dcmw/pdfviewer/jsp/pfileRead.jsp?pdfPath=%2Fupload%2FcardClause%2F2025%2F2%2F11%2Fa1ba2de5-065c-4728-8b45-2b50f4802b3d.pdf&pdfKubun=05&pdfName=%5B%EC%83%81%ED%92%88%EC%95%88%EB%82%B4%EC%9E%A5%5D+%EC%9A%B0%EB%A6%AC+%EA%B8%B0%ED%9B%84%EB%8F%99%ED%96%89%EC%B9%B4%EB%93%9C%28%EC%8B%A0%EC%9A%A9%29%282025.02%29.pdf",
+  "_extraction_check": {
+    "source_pdf": "104022.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 20000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

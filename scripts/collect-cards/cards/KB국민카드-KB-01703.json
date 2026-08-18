@@ -1,0 +1,274 @@
+{
+  "issuer": "KB국민카드",
+  "name": "중국공상은행 KB국민 비트윈 체크카드",
+  "product_id": "KB-01703",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      200000,
+      300000
+    ],
+    "excluded": [
+      {
+        "code": "TRANSIT",
+        "label": "교통이용금액"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인결제"
+      },
+      {
+        "code": "OVERSEAS",
+        "label": "해외이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "영화",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 20,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "CGV",
+            "메가박스"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000
+      }
+    },
+    {
+      "group": "패밀리레스토랑",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_conditional": "주중 10%, 주말 15%",
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "패밀리레스토랑",
+          "brands": [
+            "아웃백",
+            "VIPS",
+            "생어거스틴",
+            "세븐스프링스"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000
+      }
+    },
+    {
+      "group": "커피",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_conditional": "주중 5%, 주말 10%",
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "커피빈"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000
+      }
+    },
+    {
+      "group": "놀이공원",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 30,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "에버랜드",
+            "롯데월드",
+            "서울랜드"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000
+      }
+    },
+    {
+      "group": "제주항공",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 10,
+      "min_amount": 50000,
+      "targets": [
+        {
+          "category": "항공",
+          "brands": [
+            "제주항공"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000
+      }
+    },
+    {
+      "group": "뷰티",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 10,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "뷰티",
+          "brands": [
+            "올리브영",
+            "박승철 헤어 스투디오"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000
+      }
+    },
+    {
+      "group": "편의점",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000
+      }
+    },
+    {
+      "group": "교보문고",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 3,
+      "min_amount": 20000,
+      "targets": [
+        {
+          "category": "서점",
+          "brands": [
+            "교보문고"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000
+      }
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000
+      }
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "월간 통합 할인한도",
+      "members": [
+        "영화",
+        "패밀리레스토랑",
+        "커피",
+        "놀이공원",
+        "제주항공",
+        "뷰티",
+        "편의점",
+        "교보문고",
+        "대중교통"
+      ],
+      "cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 구매"
+    }
+  ],
+  "non_monetary": [
+    "금융수수료 면제서비스 (인터넷/모바일/폰뱅킹 타행이체수수료 면제, KB국민은행 자동화기기 수수료 면제)"
+  ],
+  "schema_gaps": [
+    "최초 발급 후 사용 등록일부터 60일까지는 전월 실적 없어도 월간 통합 할인한도 1만원 제공",
+    "금융수수료 면제서비스는 전월 실적 70만원 이상 시 제공",
+    "동일계열 체크카드 이용실적 통합 적용"
+  ],
+  "posted_at": "2012-06-08",
+  "source_url": "https://img2.kbcard.com/obj/card/download/01703__prdctOpmn_20250929.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_01703__prdctOpmn_20250929.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 180000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

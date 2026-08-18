@@ -1,0 +1,252 @@
+{
+  "issuer": "BC카드",
+  "name": "BC 바로 기후동행카드",
+  "product_id": "103992",
+  "status": "active",
+  "as_of": "2024-11-13",
+  "review_no": "여신금융협회 심의필 제 2024 - C1a - 14095호",
+  "posted_at": "2024-11-13",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 7000,
+      "base": 7000,
+      "affiliate": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "대중교통",
+        "통신요금",
+        "자동납부"
+      ]
+    },
+    "tiers": [
+      300000,
+      700000,
+      1000000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "TRANSIT",
+        "label": "대중교통"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액(변형무이자 포함)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 연체료, 각종 수수료/이자(할부수수료, SMS이용수수료, 카드대출이자 등)"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "제세공과금(건강보험, 국민연금, 고용보험,산재보험, 장애인고용부담금,국세/지방세/관세, 전기요금, 우편요금, 상하수도/전기/도시가스 요금, 여권발급비용, 과태료, 범칙금, 벌과금, 국가/공공기관/공공단체에서 개설한 가맹점 이용금액)"
+      },
+      {
+        "code": "TUITION",
+        "label": "초/중/고교납입금, 대학등록금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "기프트/선불카드(포인트, 사이버머니 등 전자지급수단포함) 구매 및 충전, 상품권 구매금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 15,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "지하철",
+            "시내버스"
+          ]
+        }
+      ],
+      "combined_cap_group": "대중교통 할인한도"
+    },
+    {
+      "group": "OTT/스트리밍",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "OTT/스트리밍",
+          "brands": [
+            "넷플릭스",
+            "유튜브 프리미엄",
+            "티빙",
+            "웨이브",
+            "왓챠",
+            "디즈니플러스",
+            "멜론",
+            "지니뮤직"
+          ]
+        }
+      ],
+      "combined_cap_group": "통합 할인한도"
+    },
+    {
+      "group": "온라인쇼핑 멤버십",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "온라인쇼핑 멤버십",
+          "brands": [
+            "쿠팡 와우 멤버십",
+            "네이버플러스 멤버십"
+          ]
+        }
+      ],
+      "combined_cap_group": "통합 할인한도"
+    },
+    {
+      "group": "이동통신요금",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "이동통신요금",
+          "industries": [
+            "KT",
+            "SKT",
+            "LGU+"
+          ],
+          "note": "건당 결제금액 2만원 이상인 경우 할인 적용"
+        }
+      ],
+      "combined_cap_group": "통합 할인한도"
+    },
+    {
+      "group": "편의점",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "CU",
+            "GS25",
+            "세븐일레븐",
+            "이마트24"
+          ],
+          "note": "건당 결제금액 5천원 이상인 경우 할인 적용"
+        }
+      ],
+      "combined_cap_group": "통합 할인한도"
+    },
+    {
+      "group": "카페",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "카페",
+          "brands": [
+            "스타벅스",
+            "투썸플레이스",
+            "커피빈",
+            "이디야커피",
+            "메가MGC커피",
+            "매머드커피"
+          ],
+          "note": "건당 결제금액 5천원 이상인 경우 할인 적용"
+        }
+      ],
+      "combined_cap_group": "통합 할인한도"
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "통합 할인한도",
+      "members": [
+        "OTT/스트리밍",
+        "온라인쇼핑 멤버십",
+        "이동통신요금",
+        "편의점",
+        "카페"
+      ],
+      "cap_by_tier": {
+        "300000": 10000,
+        "700000": 20000,
+        "1000000": 30000
+      }
+    },
+    {
+      "group": "대중교통 할인한도",
+      "members": [
+        "대중교통"
+      ],
+      "cap_by_tier": {
+        "300000": 7000,
+        "700000": 12000,
+        "1000000": 15000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "기프트/선불카드(포인트, 사이버머니 등 전자지급수단 포함) 구매 및 충전, 상품권 구매금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "최초 카드사용등록일 또는 모바일 사용 등록일 중 빠른 날짜로부터 다음 달 말일까지는 카드 이용금액과 관계없이 최소 실적 구간의 서비스를 제공함"
+  ],
+  "source_url": "https://www.bccard.com/down/individual/customer/103992.pdf",
+  "_extraction_check": {
+    "source_pdf": "20241113_BC 바로 기후동행카드__103992.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "MISMATCH",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": 30000,
+      "source_url": "https://card-lounge.toss.im/card/10501",
+      "note": "100만원 구간 통합 할인한도 30,000원이 외부·공식 공시에 명시됐으나 내부 추출은 한도를 누락함"
+    }
+  }
+}

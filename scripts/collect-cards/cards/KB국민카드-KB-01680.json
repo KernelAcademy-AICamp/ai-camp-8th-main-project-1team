@@ -1,0 +1,305 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 비트윈 체크카드",
+  "product_id": "KB-01680",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "compliance_no": "준법감시인 심의필 250702-03451-PIF (2025.07.02)",
+  "posted_at": "2012-06-15",
+  "card_type": "CHECK",
+  "benefit_style": "DISCOUNT_POINT",
+  "policy_card": false,
+  "has_transit": true,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA/Master",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      200000,
+      300000
+    ],
+    "excluded": [
+      {
+        "code": "TRANSIT",
+        "label": "후불교통"
+      },
+      {
+        "code": "OVERSEAS",
+        "label": "해외이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "영화",
+      "kind": "할인",
+      "settle": "환급할인",
+      "amount_krw": 20,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "영화관",
+          "brands": [
+            "CGV",
+            "메가박스"
+          ],
+          "note": "건당 최대 2만원까지 할인"
+        }
+      ]
+    },
+    {
+      "group": "도서",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 3,
+      "min_amount": 20000,
+      "targets": [
+        {
+          "category": "서점",
+          "brands": [
+            "교보문고"
+          ],
+          "note": "건당 최대 5만원까지 할인. 핫트랙스, 교보문고장 제외"
+        }
+      ]
+    },
+    {
+      "group": "항공",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 10,
+      "min_amount": 50000,
+      "targets": [
+        {
+          "category": "항공",
+          "brands": [
+            "제주항공"
+          ],
+          "note": "건당 최대 10만원까지 할인. 항공권 구매분만"
+        }
+      ]
+    },
+    {
+      "group": "외식",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 10,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "패밀리레스토랑",
+          "brands": [
+            "아웃백",
+            "VIPS",
+            "생어거스틴",
+            "세븐스프링스"
+          ],
+          "note": "주중 10%, 주말 15%. 건당 최대 5만원까지 할인"
+        }
+      ]
+    },
+    {
+      "group": "커피",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "커피전문점",
+          "brands": [
+            "커피빈"
+          ],
+          "note": "주중 5%, 주말 10%. 건당 최대 2만원까지 할인"
+        }
+      ]
+    },
+    {
+      "group": "뷰티",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 10,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "뷰티/미용",
+          "brands": [
+            "올리브영",
+            "박승철 헤어스투디오"
+          ],
+          "note": "건당 최대 5만원까지 할인"
+        }
+      ]
+    },
+    {
+      "group": "편의점",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25"
+          ],
+          "note": "건당 최대 2만원까지 할인"
+        }
+      ]
+    },
+    {
+      "group": "놀이공원",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 30,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "에버랜드",
+            "롯데월드",
+            "서울랜드"
+          ],
+          "note": "현장구매 시. 건당 최대 5만원까지 할인"
+        }
+      ]
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "시내버스",
+            "지하철",
+            "고속버스",
+            "시외버스"
+          ],
+          "note": "교통 이용실적 월 5만원 한도, 최대 할인금액 1,500원"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "월간통합할인한도",
+      "members": [
+        "영화",
+        "도서",
+        "항공",
+        "외식",
+        "커피",
+        "뷰티",
+        "편의점",
+        "놀이공원"
+      ],
+      "cap_by_tier": {
+        "200000": 10000,
+        "300000": 20000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 구매"
+    },
+    {
+      "code": "DEPARTMENT_STORE",
+      "label": "백화점 및 대형할인점 입점 점포"
+    }
+  ],
+  "non_monetary": [
+    "금융수수료 면제서비스(인터넷/모바일/폰뱅킹 이체수수료, KB국민은행 ATM 이용수수료)"
+  ],
+  "schema_gaps": [
+    "소액신용결제서비스(최대 30만원) 제공",
+    "최초 사용등록일 포함 60일간 전월 실적 없이 1만원 한도 제공(대중교통/금융수수료 제외)",
+    "금융수수료 면제는 전월 실적 70만원 이상 시 제공",
+    "동일계열 카드 이용실적 통합 적용"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/01680__prdctOpmn_20250929.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_01680__prdctOpmn_20250929.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 9,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": 5,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].min_amount",
+        "first": 30000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": 10,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].min_amount",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].rate_percent",
+        "first": 5,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].min_amount",
+        "first": 50000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].rate_percent",
+        "first": 10,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 스타트럭플러스 S-OIL 체크카드",
+  "product_id": "KB-04089",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "S-OIL 주유할인",
+      "kind": "할인",
+      "settle": "결제일 환급",
+      "amount_krw": 35,
+      "targets": [
+        {
+          "category": "주유",
+          "brands": [
+            "S-OIL"
+          ],
+          "note": "화물차 우대 주유소 경유 결제 시 리터당 35원 현장할인(환급할인)"
+        }
+      ],
+      "conditions": [
+        "전월 실적 기준 없음",
+        "할인 한도 없음",
+        "LPG 충전소 제외",
+        "외상 거래 및 사전 약정 단가 거래 제외"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "화물차 유가보조금 지원",
+    "부가세 환급신고 편의서비스",
+    "체크카드 소액신용결제서비스"
+  ],
+  "schema_gaps": [
+    "심의필 날짜(as_of)가 문서에 명시되어 있지 않아 null로 처리함",
+    "카드 타입은 체크카드이나 소액신용결제서비스가 탑재되어 있음",
+    "유가보조금 환급할인 방식은 일반적인 카드 혜택과 구조가 달라 별도 기재함"
+  ],
+  "posted_at": "2016-09-23",
+  "source_url": "https://img2.kbcard.com/obj/card/download/04089__prdctOpmn_20230912.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04089__prdctOpmn_20230912.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

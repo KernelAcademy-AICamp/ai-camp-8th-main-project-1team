@@ -1,0 +1,58 @@
+{
+  "issuer": "BC카드",
+  "name": "우체국 하이브리드 하이패스카드",
+  "product_id": "61_hybridhipasscard",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "compliance_no": "준법감시인 2021-1074호 (2021.08.03)",
+  "posted_at": "2016-11-23",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "하이패스",
+      "kind": "할인",
+      "targets": [
+        {
+          "category": "고속도로 통행료",
+          "note": "체크카드 잔액 부족 시 신용카드로 거래되는 하이브리드 서비스"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "하이브리드 서비스(체크카드 잔액 부족 시 신용카드 거래 전환)"
+  ],
+  "schema_gaps": [
+    "신용한도 최고 30만원",
+    "연체 이자율 규정 존재"
+  ],
+  "source_url": "https://www.bccard.com/down/individual/customer/61_hybridhipasscard.pdf",
+  "_extraction_check": {
+    "source_pdf": "20161123_우체국 하이브리드 하이패스카드__61_hybridhipasscard.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

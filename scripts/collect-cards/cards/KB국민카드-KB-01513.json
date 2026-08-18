@@ -1,0 +1,142 @@
+{
+  "issuer": "KB국민카드",
+  "name": "스카이패스 KB국민 개인카드",
+  "product_id": "KB-01513",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Master/VISA/JCB",
+      "total": 3000,
+      "base": 3000,
+      "affiliate": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master/VISA/JCB",
+      "total": 5000,
+      "base": 5000,
+      "affiliate": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "기본 마일리지",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "일시불 및 할부 이용금액",
+          "note": "1,500원당 1마일 적립"
+        }
+      ]
+    },
+    {
+      "group": "플래티늄(S) 추가 마일리지",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "대한항공 항공권",
+          "note": "대한항공 홈페이지 인터넷 구매 및 국내 직판점(공항/지점) 한함, 1,500원당 1.5마일"
+        },
+        {
+          "category": "주유",
+          "brands": [
+            "GS칼텍스"
+          ],
+          "note": "LPG 제외, 1,500원당 1.5마일"
+        },
+        {
+          "category": "해외 이용",
+          "note": "1,500원당 0.5마일"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자 할부(부분무이자할부포함) 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "각종 세금 및 공과금"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원) 등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "가족카드 발급 가능",
+    "KB국민카드 스타샵 가맹점 포인트리 적립 가능"
+  ],
+  "schema_gaps": [
+    "전월 실적 조건 없음",
+    "월간/연간 마일리지 적립 제한 없음",
+    "이용건별 결제납부 완료된 금액을 기준으로 적립",
+    "소수점 첫번째에서 반올림하여 마일리지 적립",
+    "연회비 반환 기준 존재"
+  ],
+  "posted_at": "1995-06-26",
+  "source_url": "https://img2.kbcard.com/obj/card/download/01513__prdctOpmn_20240625.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_01513__prdctOpmn_20240625.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.annual_fee[0].affiliate",
+        "first": 0,
+        "second": 10000
+      },
+      {
+        "path": "$.annual_fee[0].total",
+        "first": 3000,
+        "second": 13000
+      },
+      {
+        "path": "$.annual_fee[1].affiliate",
+        "first": 0,
+        "second": 10000
+      },
+      {
+        "path": "$.annual_fee[1].total",
+        "first": 5000,
+        "second": 15000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "issuer": "KB국민카드",
+  "name": "H.Point KB국민 체크카드",
+  "product_id": "KB-04906",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master",
+      "total": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "H.Point 기본적립",
+      "kind": "적립",
+      "rate_percent": 0.2,
+      "targets": [
+        {
+          "category": "국내 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "H.Point 추가적립",
+      "kind": "적립",
+      "rate_percent": 0.5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "현대백화점그룹"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 30000
+      }
+    },
+    {
+      "group": "생활할인",
+      "kind": "할인",
+      "settle": "환급할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "파리바게뜨",
+          "note": "건당 5천원 이상 시"
+        },
+        {
+          "category": "스타벅스",
+          "note": "건당 5천원 이상 시"
+        },
+        {
+          "category": "CGV",
+          "brands": [
+            "CGV"
+          ],
+          "note": "건당 1만원 이상 시"
+        },
+        {
+          "category": "올리브영",
+          "note": "건당 1만원 이상 시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 1000,
+        "500000": 3000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "LIFESTYLE_DISCOUNT",
+      "label": "생활할인 서비스로 할인 받은 이용건"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원)등록금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입(충전)금액"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트 관리비"
+    },
+    {
+      "code": "TAX",
+      "label": "지방세"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료"
+    }
+  ],
+  "non_monetary": [
+    "후불교통기능 탑재",
+    "체크카드 소액신용결제서비스"
+  ],
+  "schema_gaps": [
+    "H.Point 추가적립은 월간 최대 3만점 한도",
+    "생활할인 서비스는 전월 실적 30만원 미만 시 제공되지 않음",
+    "체크카드 소액신용결제서비스는 최고 30만원 이내 부여",
+    "card_type은 체크카드이나 소액신용결제서비스가 포함되어 있음"
+  ],
+  "posted_at": "2017-08-10",
+  "source_url": "https://img2.kbcard.com/obj/card/download/04906__prdctOpmn_20260623.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04906__prdctOpmn_20260623.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": null,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.300000",
+        "first": 30000,
+        "second": null
+      },
+      {
+        "path": "$.tiers.length",
+        "first": 0,
+        "second": 2
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

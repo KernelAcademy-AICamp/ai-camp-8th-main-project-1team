@@ -1,0 +1,300 @@
+{
+  "issuer": "BC카드",
+  "name": "BC 바로 ZONE",
+  "product_id": "104520",
+  "status": "active",
+  "as_of": "2025-11-07",
+  "review_no": "여신금융협회 심의필 제 2025-C1a-16209호",
+  "posted_at": "2025-11-27",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 19000,
+      "base": 10000,
+      "affiliate": 9000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 19000,
+      "base": 10000,
+      "affiliate": 9000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비(기본연회비+제휴연회비)는 보유 카드별로 청구",
+    "가족카드 발급시 카드당 기본연회비 1만원이 청구",
+    "BC 바로 ZONE 카드를 연 5회 초과하여 재발급하는 경우 건 당 1만원의 비용이 청구"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 결제",
+        "무승인결제(대중교통, 통신요금, 자동납부, 기내판매 등)"
+      ]
+    },
+    "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "해외 일시불",
+      "할부"
+    ],
+    "tiers": [
+      300000,
+      600000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 연체료, 각종 수수료/이자(국제브랜드 수수료, 해외서비스 수수료, 할부수수료, SMS이용수수료, 카드 대출이자 등)"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금납부액(국세/관세/지방세,지방세외수입,우편요금,여권발급비용,범칙금,벌과금,과태료,인지세, 송달료, 민원 발급 수수료 등 국가 또는 공공기관/공공단체가 부과하는 부담금)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "건강보험, 국민연금, 고용보험, 산재보험 및 장애인 고용 부담금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공공요금 (상하수도/전기/도시가스) 및 TV수신료"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비, 부동산 임대료(월세), 자동납부서비스 이용 수수료"
+      },
+      {
+        "code": "TUITION",
+        "label": "유치원/초/중/고교 납입금, 대학(원) 등록금 납부 결제건"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통(시내버스, 지하철), 고속버스, 고속도로 통행요금, 후불하이패스"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 등 현금성 유가증권 구매 및 기프트/선불카드(포인트, 사이버머니 등 전자 지급수단 포함) 구매 및 충전금액"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자 할부 이용 금액 (부분/변형 무이자 포함)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "EAT-ZONE",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 7,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스",
+            "투썸플레이스",
+            "이디야커피",
+            "메가MGC커피",
+            "컴포즈커피"
+          ]
+        },
+        {
+          "category": "간식",
+          "brands": [
+            "맥도날드",
+            "버거킹",
+            "롯데리아",
+            "맘스터치",
+            "써브웨이"
+          ]
+        },
+        {
+          "category": "배달",
+          "brands": [
+            "배달의민족",
+            "쿠팡이츠"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000,
+        "600000": 10000
+      }
+    },
+    {
+      "group": "LIFE-ZONE",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 7,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "온라인몰",
+          "brands": [
+            "쿠팡",
+            "무신사",
+            "지그재그",
+            "오늘의집",
+            "크림"
+          ]
+        },
+        {
+          "category": "오프라인샵",
+          "brands": [
+            "다이소",
+            "올리브영"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000,
+        "600000": 10000
+      }
+    },
+    {
+      "group": "PLAY-ZONE",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 7,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "디지털구독",
+          "brands": [
+            "넷플릭스",
+            "유튜브"
+          ]
+        },
+        {
+          "category": "쇼핑멤버십",
+          "brands": [
+            "네이버플러스 멤버십",
+            "쿠팡 와우 멤버십"
+          ]
+        },
+        {
+          "category": "선물하기",
+          "brands": [
+            "카카오톡 선물하기"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000,
+        "600000": 10000
+      }
+    },
+    {
+      "group": "&-ZONE",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 7,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "전통시장",
+          "note": "온누리상품권 이용 가능한 가맹점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000,
+        "600000": 10000
+      }
+    },
+    {
+      "group": "해외 ZONE",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 1,
+      "targets": [
+        {
+          "category": "해외",
+          "note": "해외 가맹점 및 해외 직접 구매 이용 건"
+        }
+      ]
+    },
+    {
+      "group": "무이자할부",
+      "kind": "무이자할부",
+      "targets": [
+        {
+          "category": "국내 가맹점",
+          "note": "2~3개월 상시 무이자할부"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비, 연체료, 각종 수수료/이자"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자 할부 이용 금액 (부분/변형 무이자 포함)"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "기프트/선불카드(포인트, 사이버머니 등 전자 지급수단 포함) 구매 및 충전금액, 상품권 구매금액"
+    },
+    {
+      "code": "PG_PAY",
+      "label": "키오스크, 간편결제(Pay)로 결제 시 가맹점명이 해당 가맹점/브랜드가 아닌 PG업체명, 간편결제명인 경우"
+    },
+    {
+      "code": "DISCOUNTED_TXN",
+      "label": "BC카드의 모든 할인(이벤트 포함) 및 무이자 할부 서비스 적용된 결제 건의 전체 이용 금액"
+    }
+  ],
+  "non_monetary": [
+    "해외겸용 카드의 경우 Mastercard Platinum 등급 기본 서비스만 제공"
+  ],
+  "schema_gaps": [
+    "신규 발급 회원에 대한 실적 유예 조건(최초 등록일로부터 다음달 말일까지 30만원 이상 60만원 미만 구간 서비스 적용, 60만원 이상 시 해당 구간 적용)",
+    "할인 한도 차감 순서(할인대상 매출이 정상 처리되는 순서대로 차감)"
+  ],
+  "source_url": "https://www.bccard.com/down/individual/customer/104520.pdf",
+  "_extraction_check": {
+    "source_pdf": "20251127_BC 바로 ZONE__104520.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "MATCH",
+      "internal_krw": 40000,
+      "internal_complete": false,
+      "external_krw": 40000,
+      "source_url": "https://www.card-gorilla.com/contents/detail/4172",
+      "note": "60만원 구간 국내 한도형 할인 40,000원 일치. 한도 없는 해외 1% 할인은 별도"
+    }
+  }
+}

@@ -1,0 +1,240 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 노리2 체크카드(KB Pay, Global)",
+  "product_id": "KB-07964",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master, Visa",
+      "total": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "일상혜택",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스"
+          ],
+          "note": "사이렌오더 포함"
+        },
+        {
+          "category": "디지털콘텐츠",
+          "brands": [
+            "구글플레이스토어",
+            "앱스토어"
+          ]
+        },
+        {
+          "category": "문화",
+          "brands": [
+            "인터파크티켓"
+          ]
+        },
+        {
+          "category": "뷰티",
+          "brands": [
+            "올리브영"
+          ],
+          "note": "미용실 업종 포함"
+        },
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25",
+            "CU"
+          ]
+        },
+        {
+          "category": "구독",
+          "brands": [
+            "넷플릭스",
+            "유튜브프리미엄"
+          ]
+        },
+        {
+          "category": "배달",
+          "brands": [
+            "배달의민족",
+            "요기요"
+          ]
+        },
+        {
+          "category": "통신",
+          "industries": [
+            "SKT",
+            "KT",
+            "LGU+"
+          ]
+        },
+        {
+          "category": "영화",
+          "brands": [
+            "CGV"
+          ]
+        },
+        {
+          "category": "놀이공원",
+          "brands": [
+            "에버랜드",
+            "롯데월드"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "KB Pay 혜택",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 2,
+      "targets": [
+        {
+          "category": "오프라인",
+          "channel": [
+            "KB Pay"
+          ]
+        },
+        {
+          "category": "온라인",
+          "channel": [
+            "KB Pay"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Global 혜택",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 2,
+      "targets": [
+        {
+          "category": "해외",
+          "scope": "해외가맹점"
+        }
+      ]
+    },
+    {
+      "group": "공항라운지",
+      "kind": "할인",
+      "targets": [
+        {
+          "category": "공항라운지",
+          "note": "전 세계 공항라운지 연 1회 무료 제공(본인만)"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "월간 통합할인한도",
+      "members": [
+        "일상혜택",
+        "KB Pay 혜택",
+        "Global 혜택"
+      ],
+      "cap_by_tier": {
+        "200000": 20000,
+        "400000": 30000,
+        "600000": 40000,
+        "800000": 50000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "PUBLIC_DUES",
+      "label": "정부지원금"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "후불교통요금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "포인트리 충전금액, 상품권 및 선불카드(선불전자지급수단 포함) 구입(충전)금액"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(원) 등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자"
+    }
+  ],
+  "non_monetary": [
+    "Mastercard/Visa 플래티늄 서비스 제공"
+  ],
+  "schema_gaps": [
+    "일상혜택 내 개별 항목별 월 이용금액 한도 및 할인한도가 상이함",
+    "KB Pay 혜택 및 Global 혜택은 전월 실적 30만원 이상 시 제공",
+    "일상혜택은 전월 실적 20만원 이상 시 제공",
+    "공항라운지 서비스는 전월 실적 30만원 이상 시 제공"
+  ],
+  "posted_at": "2022-11-07",
+  "source_url": "https://img2.kbcard.com/obj/card/download/07964__prdctOpmn_20260716.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_07964__prdctOpmn_20260716.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 4,
+        "second": 3
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": null,
+        "second": 200000
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": null,
+        "second": 2
+      },
+      {
+        "path": "$.benefits[1].requires_tier",
+        "first": null,
+        "second": 200000
+      },
+      {
+        "path": "$.benefits[2].requires_tier",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.tiers.length",
+        "first": 0,
+        "second": 4
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

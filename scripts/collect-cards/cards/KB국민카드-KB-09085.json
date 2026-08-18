@@ -1,0 +1,58 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 보탬e전용체크카드",
+  "product_id": "KB-09085",
+  "status": "active",
+  "as_of": null,
+  "review_no": "여신금융협회 심의필 제260522-01722-PIF",
+  "compliance_no": "준법감시인 260522-01722-PIF",
+  "posted_at": "2023-06-30",
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "로컬",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "MASTER, VISA, UPI",
+      "total": 0
+    }
+  ],
+  "benefits": [],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "지방보조금 통합관리시스템(보탬e) 전용 카드",
+    "카드사용알림서비스(SMS) 수수료 면제",
+    "클린카드 기능(제한업종 사용불가)"
+  ],
+  "schema_gaps": [
+    "본 카드는 지방보조금 결제 전용 카드로, 일반적인 포인트 적립이나 할인 혜택이 없는 상품임",
+    "교통기능 미탑재",
+    "일시불 거래만 가능(할부, 단기카드대출, 장기카드대출, 리볼빙 불가)",
+    "심의필 문구에 날짜가 명시되어 있지 않아 as_of는 null로 처리함"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09085__prdctOpmn_20260629.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09085__prdctOpmn_20260629.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

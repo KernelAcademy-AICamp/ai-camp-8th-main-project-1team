@@ -1,0 +1,271 @@
+{
+  "issuer": "하나카드",
+  "name": "Young Hana+ 체크카드",
+  "product_id": "HANA-13327",
+  "status": "active",
+  "as_of": "2021-06-24",
+  "review_no": "여신금융협회심의필 제 2021-C1a-05426호",
+  "posted_at": "2025-12-24",
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "없음",
+      "total": 0
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "VISA, Mastercard",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      100000,
+      300000,
+      600000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금(인터넷/모바일 앱을 통한 공과금 납부 금액 포함)"
+      },
+      {
+        "code": "UTILITY",
+        "label": "수도/전기요금, 도시가스"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "국민연금/고용보험료/산재보험료/건강보험료 납부 금액"
+      },
+      {
+        "code": "TUITION",
+        "label": "스쿨뱅킹, 초.중.고 학교 납입금, 대학등록금, 대학원등록금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 기프트카드 구매, 선불카드 및 선불전자지급수단(하나머니 등) 충전 금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "부동산 임대료"
+      },
+      {
+        "code": "ATM",
+        "label": "국내외 ATM 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "페이결제",
+      "kind": "할인",
+      "settle": "캐시백",
+      "rate_percent": 0.5,
+      "targets": [
+        {
+          "category": "간편결제",
+          "brands": [
+            "하나페이",
+            "삼성페이",
+            "네이버페이",
+            "쿠페이",
+            "11Pay",
+            "L페이",
+            "카카오페이",
+            "SSG페이",
+            "페이코"
+          ]
+        }
+      ],
+      "combined_cap_group": "통합 캐시백 한도"
+    },
+    {
+      "group": "편의점",
+      "kind": "할인",
+      "settle": "캐시백",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25",
+            "CU",
+            "이마트24",
+            "세븐일레븐"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "100000": 1000,
+        "300000": 2000,
+        "600000": 4000
+      },
+      "combined_cap_group": "통합 캐시백 한도"
+    },
+    {
+      "group": "딜리버리",
+      "kind": "할인",
+      "settle": "캐시백",
+      "rate_percent": 5,
+      "min_amount": 20000,
+      "targets": [
+        {
+          "category": "배달",
+          "brands": [
+            "배달의민족",
+            "요기요"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "100000": 1000,
+        "300000": 2000,
+        "600000": 4000
+      },
+      "combined_cap_group": "통합 캐시백 한도"
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "캐시백",
+      "rate_percent": 10,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "100000": 1000,
+        "300000": 2000,
+        "600000": 4000
+      },
+      "combined_cap_group": "통합 캐시백 한도"
+    },
+    {
+      "group": "커피",
+      "kind": "할인",
+      "settle": "캐시백",
+      "rate_percent": 20,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스",
+            "투썸플레이스"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "100000": 1000,
+        "300000": 2000,
+        "600000": 4000
+      },
+      "combined_cap_group": "통합 캐시백 한도"
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "통합 캐시백 한도",
+      "members": [
+        "편의점",
+        "딜리버리",
+        "대중교통",
+        "커피"
+      ],
+      "cap_by_tier": {
+        "100000": 3000,
+        "300000": 10000,
+        "600000": 20000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "TAX",
+      "label": "국세, 지방세"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "공과금"
+    },
+    {
+      "code": "UTILITY",
+      "label": "수도/전기요금, 도시가스"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "국민연금/고용보험료/산재보험료/건강보험료"
+    },
+    {
+      "code": "TUITION",
+      "label": "스쿨뱅킹, 초.중.고 학교 납입금, 대학등록금, 대학원등록금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 기프트카드 구매, 선불카드 및 선불전자지급수단 충전 금액"
+    },
+    {
+      "code": "HOUSING",
+      "label": "부동산 임대료"
+    },
+    {
+      "code": "ATM",
+      "label": "국내외 ATM 이용금액"
+    }
+  ],
+  "non_monetary": [
+    "멀티서비스(하나페이 앱을 통한 모바일카드 결제)",
+    "클리어 옵션 서비스(카드번호/CVV 미표기)"
+  ],
+  "schema_gaps": [
+    "하이브리드 서비스 지원(상세내용 별도 약관 참조)",
+    "대중교통 캐시백은 월 이용 합계금액 3만원 이상 시 제공",
+    "캐시백은 매달 1일부터 말일까지 건당 이용금액 기준(승인기준)으로 산정",
+    "캐시백률이 높은 서비스가 우선 적용되며 매출 건당 하나의 서비스만 적용",
+    "소수점 이하 금액은 절사"
+  ],
+  "source_url": "https://m.hanacard.co.kr/leaflet/13/13327_20251224.pdf",
+  "_extraction_check": {
+    "source_pdf": "13327.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 16000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

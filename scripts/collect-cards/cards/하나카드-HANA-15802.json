@@ -1,0 +1,221 @@
+{
+  "issuer": "하나카드",
+  "name": "런데이 하나카드",
+  "product_id": "HANA-15802",
+  "status": "active",
+  "as_of": "2026-07-15",
+  "review_no": "여신금융협회 심의필 제 2026-C1a-10637호",
+  "compliance_no": "준법심의 L-26-2067(2026.06.26)",
+  "posted_at": "2026-06-26",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "하나",
+      "total": 20000,
+      "base": 20000,
+      "affiliate": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 20000,
+      "base": 20000,
+      "affiliate": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      400000,
+      800000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "수도/전기요금, 도시가스 요금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금(우편요금, 과태료, 범칙금, 벌금, 국가/공공기관/공공단체가 부과하는 부담금)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "국민연금/고용보험료/산재보험료/건강보험료 납부 금액"
+      },
+      {
+        "code": "TUITION",
+        "label": "스쿨뱅킹, 초·중·고 학교 납입금, 대학교 납입금, 대학원 납입금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 기프트카드 구매, 선불카드 및 선불전자지급수단(하나머니 등) 충전 금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "부동산임대료"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자 할부 및 부분 무이자할부 이용금액 전체"
+      },
+      {
+        "code": "FEE",
+        "label": "하나머니 적립받은 전체 매출"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "러닝(달리기) 적립서비스",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "달리기",
+          "note": "런데이 앱을 통해 기록된 월 누적 달리기 거리 1km당 200 하나머니"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    },
+    {
+      "group": "구독",
+      "kind": "적립",
+      "rate_percent": 40,
+      "targets": [
+        {
+          "category": "구독",
+          "brands": [
+            "넷플릭스",
+            "디즈니플러스",
+            "Wavve",
+            "유튜브 프리미엄",
+            "멜론",
+            "벅스",
+            "FLO",
+            "스포티파이"
+          ],
+          "note": "월 자동납부 건만 서비스 제공"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    },
+    {
+      "group": "커피/베이커리",
+      "kind": "적립",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "커피/베이커리",
+          "brands": [
+            "투썸 플레이스",
+            "폴바셋",
+            "이디야",
+            "커피빈",
+            "스타벅스",
+            "파리바게트",
+            "뚜레쥬르",
+            "파리크라상"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    },
+    {
+      "group": "편의점",
+      "kind": "적립",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "CU",
+            "GS25",
+            "세븐일레븐",
+            "이마트24"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    },
+    {
+      "group": "생활/뷰티",
+      "kind": "적립",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "생활/뷰티",
+          "brands": [
+            "올리브영",
+            "다이소"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 및 부분 무이자할부 이용 건"
+    },
+    {
+      "code": "PG",
+      "label": "결제대행업체(PG) 또는 간편결제 전용 가맹점"
+    }
+  ],
+  "non_monetary": [
+    "하나머니 1하나머니=1원",
+    "러닝 거리 km 미만 소수점 반올림"
+  ],
+  "schema_gaps": [
+    "러닝 적립 서비스는 월 누적 달리기 거리 기반으로, km당 200 하나머니를 적립하며 실적 구간별 월 한도가 적용됨",
+    "생활영역 적립 서비스는 이용 건별 적립률(40% 또는 10%)이 적용되며 실적 구간별 월 한도가 적용됨",
+    "최초 카드 사용등록일부터 다음 달 말일까지는 실적 40만원 미만이어도 40만원 이상 80만원 미만 구간의 서비스 제공"
+  ],
+  "source_url": "https://m.hanacard.co.kr/leaflet/15/15802_20260626.pdf",
+  "_extraction_check": {
+    "source_pdf": "15802.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 50000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

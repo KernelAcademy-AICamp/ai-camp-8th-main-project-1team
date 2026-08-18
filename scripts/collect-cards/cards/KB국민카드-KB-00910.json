@@ -1,0 +1,141 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민서울대총동창회카드",
+  "product_id": "KB-00910",
+  "status": "active",
+  "as_of": "2020-11-13",
+  "review_no": "여신금융협회 심의필 제2020-C1a-10119호",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 3000
+    },
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 5000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 5000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 10000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 100000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비 면제 조건 없음",
+    "연간 10만원 이상(단기카드대출 이용금액 포함) 이용 시 차기년도 기본연회비 면제"
+  ],
+  "benefits": [
+    {
+      "group": "주유할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 70,
+      "targets": [
+        {
+          "category": "주유",
+          "brands": [
+            "GS칼텍스"
+          ],
+          "note": "휘발유, 경유(LPG제외)"
+        }
+      ],
+      "conditions": [
+        "일 10만원, 월 25만원까지 할인",
+        "이용실적과 관계없이 할인 가능"
+      ]
+    },
+    {
+      "group": "무이자 할부",
+      "kind": "무이자할부",
+      "targets": [
+        {
+          "category": "쇼핑",
+          "industries": [
+            "백화점",
+            "할인점",
+            "농축협직판장",
+            "공무원연금매장"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "발전기금 제공",
+      "kind": "적립",
+      "rate_percent": 0.2,
+      "targets": [
+        {
+          "category": "전체 이용금액",
+          "note": "일시불 및 할부 이용금액에 한함(단기카드대출 제외)"
+        }
+      ]
+    },
+    {
+      "group": "마일리지 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "아시아나항공",
+          "note": "1,000원당 1마일 제공"
+        },
+        {
+          "category": "주유",
+          "brands": [
+            "SK주유소"
+          ],
+          "note": "추가 1마일 제공"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    }
+  ],
+  "non_monetary": [
+    "동문회비 3만원 면제 (연간 일시불 및 할부 이용금액 1천만원 이상 시)",
+    "플래티늄 회원 공통 서비스 제공"
+  ],
+  "schema_gaps": [
+    "연회비가 회원 등급(실버, 골드, 플래티늄)에 따라 다르게 책정됨",
+    "동문회비 면제 조건은 연간 이용실적 기준임"
+  ],
+  "posted_at": "2000-03-06",
+  "source_url": "https://img2.kbcard.com/obj/card/download/00910__prdctOpmn_20241204.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_00910__prdctOpmn_20241204.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

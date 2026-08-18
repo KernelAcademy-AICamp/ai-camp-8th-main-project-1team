@@ -1,0 +1,208 @@
+{
+  "issuer": "KB국민카드",
+  "name": "해피포인트 해피리워드 KB국민 체크카드",
+  "product_id": "KB-09636",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "compliance_no": null,
+  "posted_at": "2021-09-15",
+  "card_type": "CHECK",
+  "benefit_style": "DISCOUNT_POINT",
+  "policy_card": false,
+  "has_transit": true,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 0
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비 없음"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외이용금액"
+      ]
+    },
+    "includes_family_card": null,
+    "includes": [
+      "국내 일시불",
+      "해외 일시불"
+    ],
+    "tiers": [
+      100000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "TRANSIT",
+        "label": "후불교통요금"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인금액(자판기, 터널통행료, 유료도로, 기차/고속버스 취소 반환수수료 등)"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금 이용금액(보육료, 유치원보조비, 바우처 이용금액 등)"
+      },
+      {
+        "code": "POINT_CHARGE",
+        "label": "포인트리 충전금액"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입(충전)금액"
+      },
+      {
+        "code": "FEE",
+        "label": "연체료, 각종 수수료 및 이자"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "지방세(지방세, 상하수도, 세외수입)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "Happy Reward On",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "amount_krw": 1000,
+      "min_amount": 10000,
+      "requires_tier": 100000,
+      "targets": [
+        {
+          "category": "해피오더",
+          "channel": [
+            "해피오더 앱"
+          ]
+        },
+        {
+          "category": "해피마켓",
+          "channel": [
+            "해피포인트 앱 내 해피마켓"
+          ]
+        },
+        {
+          "category": "해피페이",
+          "channel": [
+            "해피오더 앱",
+            "해피포인트 앱 내 해피마켓"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "100000": 5000
+      },
+      "combined_cap_group": "온라인 통합한도"
+    },
+    {
+      "group": "Happy Reward OFF",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "amount_krw": 1000,
+      "min_amount": 10000,
+      "requires_tier": 100000,
+      "targets": [
+        {
+          "category": "오프라인 가맹점",
+          "brands": [
+            "파리바게뜨",
+            "던킨도너츠",
+            "배스킨라빈스",
+            "파스쿠찌"
+          ],
+          "exclude_place": [
+            "백화점",
+            "마트",
+            "역사 등 입점 매장"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "100000": 5000
+      },
+      "combined_cap_group": "오프라인 통합한도"
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "온라인 통합한도",
+      "members": [
+        "해피오더",
+        "해피마켓",
+        "해피페이"
+      ],
+      "cap_by_tier": {
+        "100000": 5000
+      }
+    },
+    {
+      "group": "오프라인 통합한도",
+      "members": [
+        "파리바게뜨",
+        "던킨도너츠",
+        "배스킨라빈스",
+        "파스쿠찌"
+      ],
+      "cap_by_tier": {
+        "100000": 5000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권·선불카드 구매/충전"
+    },
+    {
+      "code": "IN_STORE",
+      "label": "백화점, 마트, 역사 등 입점 매장"
+    }
+  ],
+  "non_monetary": [
+    "해피포인트 멤버십 현장 적립"
+  ],
+  "schema_gaps": [
+    "실적 유예기간: 최초 사용등록일로부터 다음달 말일까지 해피오더 서비스 제공",
+    "월간 통합할인한도: 체크카드별(동일계열 카드 포함)로 월간 할인 받을 수 있는 최대 금액으로 잔여한도는 이월되지 않음"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09636__prdctOpmn_20260623.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09636__prdctOpmn_20260623.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 10000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

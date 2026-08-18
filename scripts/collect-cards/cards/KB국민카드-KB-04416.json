@@ -1,0 +1,199 @@
+{
+  "issuer": "KB국민카드",
+  "name": "청호나이스 KB국민카드",
+  "product_id": "KB-04416",
+  "status": "stopped",
+  "as_of": "2020-03-23",
+  "review_no": "여신금융협회 심의필 제 2020-C1a-02385호",
+  "compliance_no": "191120-03855-TRM",
+  "posted_at": "2016-09-01",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(UPI타입)",
+      "total": 12000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master",
+      "total": 17000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입완료일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "tiers": [
+      300000,
+      700000,
+      1000000
+    ],
+    "excluded": [
+      {
+        "code": "DISCOUNTED_AMOUNT",
+        "label": "할인 받은 이용금액(해당 이용금액 전체)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통 이용 등 무승인전표"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "렌탈료 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "렌탈료",
+          "brands": [
+            "청호나이스"
+          ],
+          "note": "자동이체 시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 11000,
+        "700000": 15000,
+        "1000000": 20000
+      }
+    },
+    {
+      "group": "영화 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 3500,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "메가박스",
+            "CGV"
+          ],
+          "channel": [
+            "온라인 예매"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "놀이공원 할인",
+      "kind": "할인",
+      "settle": "현장할인",
+      "rate_percent": 50,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "롯데월드 어드벤처",
+            "에버랜드"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "워터파크 할인",
+      "kind": "할인",
+      "settle": "현장할인",
+      "rate_percent": 30,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "워터파크",
+          "brands": [
+            "캐리비안베이"
+          ]
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "(부분)무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "K-WORLD(UPI타입) 해외우대서비스"
+  ],
+  "schema_gaps": [
+    "영화 할인: 1일 2회, 월 4회, 연간 10회 제한",
+    "놀이공원 할인: 회원별 일 1매, 월 2매, 연간 5매(에버랜드 연간 10매) 제한",
+    "워터파크 할인: 일 1매 제한",
+    "신규 발급 시 최초 카드 사용등록일로부터 다음 달 말일까지 실적 유예 제공"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04416__prdctOpmn_20251201.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04416__prdctOpmn_20251201.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": 300000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 20000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

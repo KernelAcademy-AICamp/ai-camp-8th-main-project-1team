@@ -1,0 +1,146 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 플렉스페이카드",
+  "product_id": "KB-04481",
+  "status": "stopped",
+  "as_of": "2021-02-18",
+  "review_no": "여신금융협회 심의필 제2021-C1a-01288호",
+  "compliance_no": "KB국민카드 준법감시인 심의필 210208-00344-PIF (2021.02.08)",
+  "posted_at": "2017-12-22",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-World(JCB타입)",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외이용금액"
+      ]
+    },
+    "tiers": [
+      300000,
+      700000
+    ],
+    "excluded": [
+      {
+        "code": "DISCOUNTED_AMOUNT",
+        "label": "할인 받은 이용금액(해당이용금액 전체)"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(대중교통, 자판기, 터널이용료, 항공기내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "플렉스페이 렌탈료 자동납부 할인",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "렌탈료",
+          "note": "플렉스페이 렌탈료 자동납부 등록 시 제공"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 12000,
+        "700000": 17000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "KB국민카드 스타샵 가맹점 포인트리 적립"
+  ],
+  "schema_gaps": [
+    "최초 카드 사용 등록일로부터 다음달 말일까지는 전월 실적 없이 1구간 할인 적용",
+    "할인금액보다 자동납부 승인금액이 작을 경우 승인금액만큼 할인",
+    "렌탈료 자동납부 승인 건이 여러 건인 경우 합산하여 월 할인금액 내에서 할인"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04481__prdctOpmn_20220614.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04481__prdctOpmn_20220614.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 17000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

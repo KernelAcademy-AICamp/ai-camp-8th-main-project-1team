@@ -1,0 +1,90 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 약사님카드",
+  "product_id": "KB-02248",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "골드",
+      "total": 5000,
+      "base": 5000,
+      "affiliate": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "제약/의료기기 혜택",
+      "kind": "적립",
+      "rate_percent": 1.0,
+      "targets": [
+        {
+          "category": "제약/의료기기",
+          "industries": [
+            "제약회사",
+            "의료품도매",
+            "의료기기 및 용품"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "제약/의료기기 혜택",
+      "kind": "무이자할부",
+      "targets": [
+        {
+          "category": "제약/의료기기",
+          "industries": [
+            "제약회사",
+            "의료품도매",
+            "의료기기 및 용품"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "기타",
+      "kind": "적립",
+      "rate_percent": 0.1,
+      "targets": [
+        {
+          "category": "기타 가맹점"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "스타샵 가맹점 이용 시 스타샵 포인트리 추가 제공"
+  ],
+  "schema_gaps": [
+    "연회비 면제 조건(연간 100만원 이상 이용)은 전표매입기준이며 포인트리 결제분, 각종 수수료, 연회비는 제외됨",
+    "포인트리 적립률은 특별포인트리 0.9%와 기본포인트리 0.1%의 합산임",
+    "무이자할부 및 포인트리 적립 대상 가맹점은 당사 가맹점 업종 분류 기준에 따름"
+  ],
+  "posted_at": "2013-06-14",
+  "source_url": "https://img2.kbcard.com/obj/card/download/02248__prdctOpmn_20231201.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_02248__prdctOpmn_20231201.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

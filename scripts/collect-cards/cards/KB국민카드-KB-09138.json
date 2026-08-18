@@ -1,0 +1,277 @@
+{
+  "issuer": "KB국민카드",
+  "name": "HERITAGE Classic(할인형)",
+  "product_id": "KB-09138",
+  "status": "active",
+  "as_of": "2024-11-19",
+  "review_no": "여신금융협회 심의필 제2024-C1a-14404호",
+  "compliance_no": "241101-05507-PIF",
+  "posted_at": "2024-11-28",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내외겸용",
+      "brand": "Mastercard",
+      "total": 127000,
+      "base": 7000,
+      "affiliate": 120000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "K-World(JCB)",
+      "total": 127000,
+      "base": 7000,
+      "affiliate": 120000
+    },
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 127000,
+      "base": 7000,
+      "affiliate": 120000
+    }
+  ],
+  "annual_fee_notes": [
+    "가족카드 연회비 30,000원(제휴연회비 30,000원)",
+    "가족카드는 유효카드 기준 1매만 발급 가능",
+    "연회비는 카드발급 시점을 기준으로 1년 단위로 청구"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "tiers": [
+      500000
+    ],
+    "excluded": [
+      {
+        "code": "COUPON",
+        "label": "쿠폰 서비스 적용 매출"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "유치원/초·중·고 학교 납입금, 대학(원) 등록금"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도 등)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "NEW_CAR",
+        "label": "신차구매 청구(환급) 할인 전표"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "RF후불교통요금"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 1.0,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "국내외 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "생활밀착 4개 영역",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 1.2,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "쇼핑",
+          "industries": [
+            "온라인몰",
+            "백화점",
+            "대형마트",
+            "슈퍼마켓"
+          ]
+        },
+        {
+          "category": "생활",
+          "industries": [
+            "음식",
+            "커피",
+            "편의점",
+            "택시"
+          ]
+        },
+        {
+          "category": "교육",
+          "industries": [
+            "학원",
+            "학습지",
+            "독서실"
+          ]
+        },
+        {
+          "category": "건강",
+          "industries": [
+            "병원",
+            "건강검진"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Flex 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 10000,
+      "min_amount": 200000,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "온라인항공",
+          "brands": [
+            "대한항공",
+            "아시아나항공"
+          ]
+        },
+        {
+          "category": "호텔"
+        },
+        {
+          "category": "온라인면세",
+          "brands": [
+            "롯데면세점",
+            "신라면세점",
+            "신세계면세점"
+          ]
+        },
+        {
+          "category": "스포츠"
+        },
+        {
+          "category": "미용실"
+        }
+      ]
+    },
+    {
+      "group": "카(Car) 라이프 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10.0,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "주차"
+        },
+        {
+          "category": "세차"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "COUPON",
+      "label": "쿠폰 서비스 적용 매출"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    },
+    {
+      "code": "CANCEL",
+      "label": "취소금액"
+    }
+  ],
+  "non_monetary": [
+    "쿠폰 서비스(연 1회, 3종 중 택 1)",
+    "공항 라운지 서비스(THE LOUNGE, 연 2회)",
+    "KB국민은행 수수료 감면/면제",
+    "문자알림(SMS) 서비스 무료"
+  ],
+  "schema_gaps": [
+    "쿠폰 서비스는 연 1회 제공되며, 발급 첫해는 연회비 납부 후, 다음해부터는 연간 이용실적 600만원 이상 시 제공됨",
+    "Flex 서비스는 분기당 영역 통합 1회 제공",
+    "카 라이프 서비스는 월 1만원 한도",
+    "최초 발급 시 사용등록일부터 다음달 말일까지 실적 유예기간 적용",
+    "공항 라운지 서비스는 Local(국내전용) 카드 발급 시 미제공"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09138__prdctOpmn_20241128.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09138__prdctOpmn_20241128.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

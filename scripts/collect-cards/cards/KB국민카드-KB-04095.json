@@ -1,0 +1,83 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 스타트럭 II GS칼텍스카드",
+  "product_id": "KB-04095",
+  "status": "active",
+  "as_of": "2023-09-11",
+  "review_no": "여신금융협회 심의필 제 2023-C1a-10301 호",
+  "compliance_no": "230821-03176-TRM",
+  "posted_at": "2018-06-11",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(JCB)",
+      "total": 0
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "MASTER",
+      "total": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "GS칼텍스 화물특화 주유소 주유 할인",
+      "kind": "할인",
+      "settle": "현장할인 및 청구할인",
+      "targets": [
+        {
+          "category": "주유",
+          "brands": [
+            "GS칼텍스"
+          ],
+          "industries": [
+            "화물특화 주유소"
+          ],
+          "note": "경유 주유 시 리터당 40원 또는 80원 할인(전월 기준리터 충족 여부에 따라 차등)"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "LPG",
+      "label": "LPG 충전소 결제 건"
+    },
+    {
+      "code": "CONTRACT_PRICE",
+      "label": "기존 외상 고객과 주유소가 사전에 약정된 단가로 거래하는 경우"
+    }
+  ],
+  "non_monetary": [
+    "부가세 환급신고 편의서비스 제공"
+  ],
+  "schema_gaps": [
+    "주유 할인 혜택이 리터당 금액으로 제공되며, 전월 기준리터 충족 여부 및 차량 톤수에 따라 할인액이 결정되는 구조임",
+    "현장할인(리터당 15원)과 청구할인(리터당 25원 또는 65원)이 결합된 형태임",
+    "기준리터 산정 방식이 복잡하며, 차량 톤수별로 국토부 유가보조금 지급한도량과 연동됨",
+    "카드 2개 이상 소지 시 가장 작은 톤수의 기준리터를 적용하는 등 특수 계산 로직 존재"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04095__prdctOpmn_20230912.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04095__prdctOpmn_20230912.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

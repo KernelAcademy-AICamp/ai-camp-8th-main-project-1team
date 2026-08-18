@@ -1,0 +1,245 @@
+{
+  "issuer": "KB국민카드",
+  "name": "위메프페이 신용카드",
+  "product_id": "KB-04327",
+  "status": "stopped",
+  "as_of": "2026-03-12",
+  "review_no": "여신금융협회심의필 제 2026-C1a-03285호",
+  "compliance_no": "260305-00589-PIF",
+  "posted_at": "2021-04-15",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "K-World(JCB)/Master",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "tiers": [
+      500000,
+      1000000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초/중/고학교납입금전체, 대학(원)등록금"
+      },
+      {
+        "code": "TAX",
+        "label": "각종세금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단포함) 구입/충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(대중교통, 공항버스, 자판기, 터널이용료, 항공기내이용 등)"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "11번가/위메프오",
+      "kind": "적립",
+      "rate_percent": 2,
+      "targets": [
+        {
+          "category": "11번가"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 50000
+      }
+    },
+    {
+      "group": "11번가/위메프오",
+      "kind": "적립",
+      "rate_percent": 1,
+      "targets": [
+        {
+          "category": "위메프오"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 10000
+      }
+    },
+    {
+      "group": "생활영역",
+      "kind": "적립",
+      "rate_percent": 5,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "생활영역",
+          "industries": [
+            "커피",
+            "편의점",
+            "미용실",
+            "골프/골프연습장",
+            "패스트푸드",
+            "패밀리레스토랑"
+          ],
+          "note": "건당 1만원 이상 이용 시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 10000,
+        "1000000": 20000
+      }
+    },
+    {
+      "group": "구독 서비스",
+      "kind": "적립",
+      "rate_percent": 5,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "구독 서비스",
+          "brands": [
+            "넷플릭스",
+            "웨이브"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 10000,
+        "1000000": 10000
+      }
+    },
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "rate_percent": 0.2,
+      "targets": [
+        {
+          "category": "기타"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "장/단기카드대출"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "TUITION",
+      "label": "초/중/고학교납입금전체, 대학(원)등록금"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "TAX",
+      "label": "각종 세금"
+    },
+    {
+      "code": "UTILITY",
+      "label": "공과금(전기/수도)"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "4대 사회보험료"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입/충전금액"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "무승인전표(대중교통, 공항버스, 자판기, 터널이용료, 항공기내이용 등)"
+    }
+  ],
+  "non_monetary": [
+    "2025-01-31부터 위메프포인트가 KB국민카드 포인트리로 대체적립"
+  ],
+  "schema_gaps": [
+    "전월 실적 유예 기준: 최초 사용등록 후 다음달 말일까지 50만원 미만 시에도 50만원 이상 구간 서비스 제공",
+    "적립 제외 대상 이외 이용금액의 0.2% 기본 적립은 전월 실적 조건 및 적립 한도 없음"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04327__prdctOpmn_20260330.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04327__prdctOpmn_20260330.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 30000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

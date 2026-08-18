@@ -1,0 +1,205 @@
+{
+  "issuer": "현대카드",
+  "name": "현대카드 하이브리드(포인트형)",
+  "product_id": "HYU-177711",
+  "status": "active",
+  "as_of": "2026-04-01",
+  "review_no": "여신금융협회 심의필 제 2026-C1a-04505호",
+  "posted_at": "2026-04-28",
+  "card_type": "CHECK",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "현대",
+      "total": 5000,
+      "base": 5000,
+      "affiliate": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Visa",
+      "total": 5000,
+      "base": 5000,
+      "affiliate": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "대중교통",
+        "정기결제",
+        "해외 이용 금액"
+      ]
+    },
+    "tiers": [
+      300000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 제수수료, 이자"
+      },
+      {
+        "code": "FEE",
+        "label": "국제브랜드 수수료 및 해외서비스 수수료"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금 납부액(국세, 관세, 지방세, 지방세외수입, 상하수도 요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급 수수료 등)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 등 현금성 유가증권 구매 및 선불 카드 구매·충전 금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 혜택",
+      "kind": "적립",
+      "rate_percent": 0.5,
+      "targets": [
+        {
+          "category": "국내외 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "추가 혜택",
+      "kind": "적립",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "일반음식점"
+        },
+        {
+          "category": "배달 앱",
+          "brands": [
+            "배달의민족",
+            "쿠팡이츠",
+            "요기요"
+          ]
+        },
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25",
+            "CU",
+            "세븐일레븐",
+            "이마트24"
+          ]
+        },
+        {
+          "category": "대중교통",
+          "industries": [
+            "시내버스",
+            "지하철"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비, 제수수료, 이자"
+    },
+    {
+      "code": "FEE",
+      "label": "국제브랜드 수수료 및 해외서비스 수수료"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "공과금 납부액(국세, 관세, 지방세, 지방세외수입, 상하수도 요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급 수수료 등)"
+    },
+    {
+      "code": "UTILITY",
+      "label": "전기 요금, TV 수신료, 도시가스 요금, 아파트 관리비, 부동산 임대료(월세), 자동납부 서비스 이용 수수료"
+    },
+    {
+      "code": "TUITION",
+      "label": "사립유치원 교육비 납입금, 초·중·고교 학교 납입금, 대학·대학원 등록금 납부 결제 건"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 등 현금성 유가증권 구매 및 선불 카드 구매·충전 금액"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "건강보험, 국민연금, 고용보험, 산재보험 및 장애인 고용 부담금"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "고속도로 통행 요금, 후불하이패스카드 이용 금액, 고속버스"
+    }
+  ],
+  "non_monetary": [
+    "하이브리드 서비스: 계좌 잔액 부족 시 신용결제 자동 전환",
+    "체크카드 현금 인출 기능 제공"
+  ],
+  "schema_gaps": [
+    "하이브리드 카드로, 체크카드 결제 계좌 잔액 부족 시 신용결제로 자동 전환되는 구조임",
+    "신규 발급 시 카드 수령 등록월 다음 달 이용 건까지 전월 실적 30만원 미만도 추가 혜택 제공",
+    "M포인트 적립 시 매출 건별 소수점 이하 반올림 적용",
+    "M포인트 유효기간 60개월(5년)",
+    "가족카드 발급 불가"
+  ],
+  "source_url": "https://www.hyundaicard.com/upload/card/20260428_%ED%95%98%EC%9D%B4%EB%B8%8C%EB%A6%AC%EB%93%9C%20%ED%8F%AC%EC%9D%B8%ED%8A%B8%ED%98%95.pdf",
+  "_extraction_check": {
+    "source_pdf": "177711.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].min_amount",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": 300000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 5000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB매직카 KB국민카드",
+  "product_id": "KB-04251",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(UPI)",
+      "total": 8000,
+      "base": 8000,
+      "affiliate": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 13000,
+      "base": 13000,
+      "affiliate": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "KB손해보험 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "min_amount": 100000,
+      "targets": [
+        {
+          "category": "보험",
+          "brands": [
+            "KB손해보험"
+          ]
+        }
+      ],
+      "conditions": [
+        "보험료 승인 직전 3개월 평균 이용실적 30만원 이상 시 제공",
+        "최초 카드 사용등록일로부터 1년간 3개월 평균 이용실적 조건 없이 할인 제공"
+      ],
+      "is_headline": true
+    },
+    {
+      "group": "주유 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 60,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "주유",
+          "industries": [
+            "휘발유",
+            "경유",
+            "등유"
+          ],
+          "exclude_place": [
+            "LPG"
+          ]
+        }
+      ],
+      "conditions": [
+        "1일 20만원, 월 30만원 이용금액까지 할인 적용",
+        "최초 카드 사용등록일로부터 다음달 말일까지 이용실적 없는 경우에도 서비스 제공"
+      ],
+      "is_headline": true
+    },
+    {
+      "group": "외식 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 20,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "패밀리레스토랑",
+          "brands": [
+            "VIPS",
+            "아웃백스테이크하우스",
+            "생어거스틴"
+          ]
+        }
+      ],
+      "conditions": [
+        "1일 1회, 월 2회, 월 20만원 이용금액까지 할인 적용",
+        "최초 카드 사용등록일로부터 다음달 말일까지 이용실적 없는 경우에도 서비스 제공"
+      ],
+      "is_headline": true
+    },
+    {
+      "group": "이동통신 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 3000,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "통신",
+          "brands": [
+            "SKT",
+            "KT",
+            "LG U+"
+          ],
+          "note": "건당 1만원 이상 자동납부 시 할인"
+        }
+      ],
+      "conditions": [
+        "월 1회 제공",
+        "유무선 통합청구방식 제외",
+        "최초 카드 사용등록일로부터 다음달 말일까지 이용실적 없는 경우에도 서비스 제공"
+      ],
+      "is_headline": true
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "(부분)무이자 할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    },
+    {
+      "code": "TAX",
+      "label": "각종 세금 및 공과금"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원) 등록금"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "대중교통 이용"
+    }
+  ],
+  "non_monetary": [
+    "KB국민카드 스타샵 가맹점 포인트리 적립"
+  ],
+  "schema_gaps": [
+    "보험료 할인 실적 기준이 '직전 3개월 평균 30만원'으로 일반적인 전월 실적과 다름",
+    "최초 카드 사용등록일로부터 다음달 말일까지 실적 유예 조건 존재",
+    "보험료 할인 연간 3만원 한도 존재"
+  ],
+  "posted_at": "2015-06-15",
+  "source_url": "https://img2.kbcard.com/obj/card/download/04251__prdctOpmn_20260812.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04251__prdctOpmn_20260812.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": 3000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].min_amount",
+        "first": null,
+        "second": 100000
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": null,
+        "second": 10
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].amount_krw",
+        "first": null,
+        "second": 3000
+      },
+      {
+        "path": "$.benefits[1].min_amount",
+        "first": 100000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": 10,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].requires_tier",
+        "first": null,
+        "second": 300000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

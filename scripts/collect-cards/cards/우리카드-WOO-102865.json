@@ -1,0 +1,179 @@
+{
+  "issuer": "우리카드",
+  "name": "K-패스 우리카드(체크)",
+  "product_id": "WOO-102865",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "통신료 자동납부"
+      ]
+    },
+    "tiers": [
+      300000,
+      600000
+    ],
+    "excluded": [
+      {
+        "code": "TRANSIT",
+        "label": "후불교통카드(모바일 포함) 이용금액 전체"
+      },
+      {
+        "code": "BENEFIT_APPLIED",
+        "label": "생활 혜택 적용된 이용금액 전체"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료, 유치원 보조비, 바우처 이용금액 등)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트 관리비, 부동산 임대료"
+      },
+      {
+        "code": "PUBLIC_RENT",
+        "label": "LH/SH/전북개발공사 등 공공임대료"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세, 관세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공공요금(4대보험, 전기요금, 우편요금, 도시가스요금, 상하수도요금)"
+      },
+      {
+        "code": "PENALTY",
+        "label": "과태료·범칙금·벌금, 여권발급비용"
+      },
+      {
+        "code": "PUBLIC_MERCHANT",
+        "label": "국가/공공기관/공공단체(지방자치단체 등)로 개설된 가맹점 이용금액"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권/선불카드/기프트카드 구매 및 충전금액"
+      },
+      {
+        "code": "TRANSIT_PURCHASE",
+        "label": "교통카드(모바일 포함) 구매 및 충전 금액"
+      },
+      {
+        "code": "BUS",
+        "label": "고속버스(차내단말기 및 고속버스 APP결제)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "생활 혜택",
+      "kind": "할인",
+      "settle": "캐시백",
+      "rate_percent": 10,
+      "min_amount": 10000,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스",
+            "폴바셋"
+          ],
+          "note": "공식 앱 사이렌오더/크라운오더 포함. 상품권/선불카드 충전 제외. 백화점/대형마트/면세점/공항/미군부대/리조트 입점 매장 제외"
+        },
+        {
+          "category": "편의점",
+          "brands": [
+            "CU",
+            "GS25"
+          ],
+          "note": "오프라인 매장 한정. 백화점/대형마트/면세점/공항/미군부대/리조트 입점 매장 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 2000,
+        "600000": 5000
+      }
+    },
+    {
+      "group": "대중교통 혜택",
+      "kind": "할인",
+      "settle": "캐시백",
+      "rate_percent": 10,
+      "min_amount": 50000,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ],
+          "note": "후불교통기능 이용 매출. 모바일 교통카드(티머니/이즐) 포함. 고속버스, 시외버스, 공항버스, 공항철도 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 3000,
+        "600000": 5000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "PG_PAY",
+      "label": "별도 전용 가맹점번호로 승인처리 되는 PG(결제대행)업체 또는 간편결제(Pay) 이용 시"
+    }
+  ],
+  "non_monetary": [
+    "후불교통카드 발급 필수",
+    "하이브리드 서비스(소액신용한도) 제공"
+  ],
+  "schema_gaps": [
+    "하이브리드 서비스는 체크카드 점검시간이나 잔액 부족 시 신용결제로 처리되는 기능임",
+    "신규 발급 시 카드 수령 등록일로부터 다음달 말일까지는 전월 실적 30만원 구간 혜택 제공",
+    "대중교통 혜택은 버스/지하철 합산 이용금액 5만원 이상 시 제공되는 조건이 있음"
+  ],
+  "posted_at": null,
+  "source_url": "https://m.wooricard.com/dcmw/pdfviewer/jsp/pfileRead.jsp?pdfPath=%2Fupload%2FcardClause%2F2024%2F12%2F23%2F8d856cff-d0a2-4aa9-bab8-b592e6059dc1.pdf&pdfKubun=05&pdfName=%5B%EC%83%81%ED%92%88%EC%95%88%EB%82%B4%EC%9E%A5%5D+K-%ED%8C%A8%EC%8A%A4+%EC%9A%B0%EB%A6%AC%EC%B9%B4%EB%93%9C%28%EC%B2%B4%ED%81%AC%29%282024.12%29.pdf",
+  "_extraction_check": {
+    "source_pdf": "102865.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 10000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

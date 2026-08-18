@@ -1,0 +1,47 @@
+{
+  "issuer": "BC카드",
+  "name": "하이브리드카드",
+  "product_id": "60_pdf_card_lef71",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "2016-09-20",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 0
+    }
+  ],
+  "benefits": [],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "체크카드 잔액 부족 시 한도 내에서 신용카드로 거래되는 하이브리드 서비스 제공",
+    "신용한도 최고 30만원"
+  ],
+  "schema_gaps": [
+    "심의필 번호 및 심의필 날짜 정보가 문서 내에 존재하지 않음",
+    "별도의 포인트 적립이나 할인 혜택이 없는 하이브리드 결제 전용 상품임"
+  ],
+  "source_url": "https://www.bccard.com/down/individual/customer/60_pdf_card_lef71.pdf",
+  "_extraction_check": {
+    "source_pdf": "20160920_하이브리드카드__60_pdf_card_lef71.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}
