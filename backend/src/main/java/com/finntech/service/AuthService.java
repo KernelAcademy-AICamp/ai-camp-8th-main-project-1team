@@ -93,8 +93,11 @@ public class AuthService {
         // 같은 대체 문구를 쓰게 된다 — 방금 이름을 대고 인증한 사람에게 할 말이 아니다.
         // 이름은 이미 통신사 대조를 통과한 값이라 새로 믿을 것도 없다.
         target.setNickname(name);
-        // 금융상품의 나이 자격 판정에 쓸 출생연도만 남긴다. 월·일과 성별세대코드는 여기서 버려진다.
+        // 주민번호 앞 7자리에서 출생연도와 성별을 남긴다. **월·일은 여기서 버려진다.**
+        // 둘 다 정본이 수집항목으로 적은 것이고(`legal/privacy-policy.md` 33조),
+        // 쓰는 곳이 다르다 — 연도는 금융상품 나이 자격, 성별은 admin 의 행태 통계뿐이다.
         target.setBirthYear(birthYearOf(social7));
+        target.setGender(genderOf(social7));
         target = userRepository.save(target);
         return new VerifyResult(ci, true, true, Reason.OK.name(), actual.label(), target.getId());
     }
@@ -146,7 +149,7 @@ public class AuthService {
     /**
      * 주민번호 앞 7자리(YYMMDD + 성별세대코드)에서 <b>출생연도만</b> 뽑는다. 형식이 어긋나면 null.
      * 성별세대코드가 세기를 정한다 — 1·2·5·6=1900년대, 3·4·7·8=2000년대, 9·0=1800년대.
-     * 성별은 쓰지 않으므로 버린다. 순수 함수라 단위 테스트로 검증한다.
+     * 순수 함수라 단위 테스트로 검증한다. (성별은 {@link #genderOf} 가 같은 글자에서 뽑는다.)
      */
     static Integer birthYearOf(String social7) {
         if (social7 == null) return null;
@@ -160,6 +163,23 @@ public class AuthService {
         };
         if (century < 0) return null;
         return century + Integer.parseInt(s.substring(0, 2));
+    }
+
+    /**
+     * 같은 성별세대코드에서 <b>성별</b>을 뽑는다 — 홀수면 남, 짝수면 여. 형식이 어긋나면 null.
+     *
+     * <p>{@link #birthYearOf} 와 한 글자를 나눠 쓴다. 그쪽은 세기를, 이쪽은 성별을 본다.
+     * <b>내외국인 구분은 뽑지 않는다</b>(1·2 내국인 / 5·6 외국인 …) — 쓸 데가 없고, 담는 순간
+     * 사람을 좁히는 축이 하나 더 는다.
+     *
+     * <p>돌려주는 값은 {@code "MALE"} · {@code "FEMALE"} 문자열이다. 열거형을 쓰지 않는 것은
+     * {@code app_user.gender} 가 VARCHAR 이기 때문이다(V36 머리말 참조).
+     */
+    static String genderOf(String social7) {
+        if (social7 == null) return null;
+        String s = social7.trim();
+        if (s.length() != 7 || !s.chars().allMatch(Character::isDigit)) return null;
+        return (s.charAt(6) - '0') % 2 == 1 ? "MALE" : "FEMALE";
     }
 
     /**
