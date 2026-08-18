@@ -1,0 +1,47 @@
+# 되돌릴 수 없는 데이터를 하루 한 번 뜬다.
+#
+# ## 왜 필요한가
+#
+# 2026-08-18 확인 기준 **자동 백업이 하나도 없었다.** cron 에는 certbot·e2scrub·dpkg 뿐이고,
+# 서버에 남아 있던 큰 덤프 넷은 전부 7월에 손으로 뜬 **더미 DB** 것이었다.
+# 실사용자 데이터(51 MB)의 백업이 세상에 없는 상태로 운영되고 있었다.
+#
+# 무엇을 뜨고 무엇을 안 뜨는지는 `scripts/backup-daily.sh` 머리말에 있다 —
+# 요지는 **되돌릴 수 없는 것만** 뜬다는 것이다(생성 데이터 1,092만 건은 다시 만들 수 있다).
+#
+# ## 설치
+#
+#   sudo cp deploy/finntech-backup.service deploy/finntech-backup.timer /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now finntech-backup.timer
+#
+#   systemctl list-timers finntech-backup.timer     # 다음 실행 시각 확인
+#   sudo systemctl start finntech-backup.service    # 지금 한 번 돌려 보기
+#   journalctl -u finntech-backup.service -n 50     # 결과 보기
+#
+# ## S3 를 붙일 때
+#
+# 인스턴스 역할에 `s3:PutObject` 를 준 뒤, 이 파일에 한 줄을 더하고 daemon-reload 한다.
+#
+#   Environment=BACKUP_S3_BUCKET=<버킷이름>
+#
+# 붙이기 전까지 백업은 로컬 사본뿐이라 **디스크가 통째로 날아가는 경우를 못 막는다.**
+
+[Unit]
+Description=finntech: 되돌릴 수 없는 데이터를 하루 한 번 뜬다
+# DB 컨테이너가 있어야 뜰 수 있다. 없으면 스크립트가 실패로 끝나고 타이머가 내일 다시 시도한다.
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/finntech/app/scripts/backup-daily.sh
+# 덤프가 오래 걸릴 이유는 없지만(실측 수 초), 걸리면 매달려 있지 말고 끊는다.
+TimeoutStartSec=20min
+# 실패를 조용히 넘기지 않는다 — journal 에 남고 `systemctl status` 가 빨간불이 된다.
+# 백업이 안 도는 것을 모르는 것이 백업이 없는 것보다 나쁘다.
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
