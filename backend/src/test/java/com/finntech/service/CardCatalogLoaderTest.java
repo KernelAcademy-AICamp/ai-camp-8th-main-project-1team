@@ -2,6 +2,7 @@ package com.finntech.service;
 
 import com.finntech.domain.CardBenefit;
 import com.finntech.domain.CardBenefitTarget;
+import com.finntech.domain.CardAnnualFee;
 import com.finntech.domain.CardExclusion;
 import com.finntech.domain.CardProduct;
 import com.finntech.repository.CardProductRepository;
@@ -12,7 +13,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,6 +36,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 class CardCatalogLoaderTest {
+
+    private static final Path MIGRATION =
+            Path.of("src/main/resources/db/migration/V36__card_product.sql");
 
     @Autowired
     private CardProductRepository cards;
@@ -69,6 +79,54 @@ class CardCatalogLoaderTest {
 
         // 셀 수 없는 혜택도 버리지 않는다 — 표시는 하고 계산에서만 뺀다.
         assertThat(zone.getBenefits()).anyMatch(b -> !b.isCountable());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("같은 소제목의 여러 혜택을 보존하고 순번으로 구분한다")
+    void preservesBenefitsWithTheSameGroupName() throws IOException {
+        CardProduct coupang = cards.findAll().stream()
+                .filter(c -> c.getName().equals("쿠팡 패밀리 하나카드"))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("쿠팡 패밀리 하나카드가 안 실렸다"));
+
+        List<CardBenefit> lifeServices = coupang.getBenefits().stream()
+                .filter(b -> b.getGroupName().equals("생활 서비스"))
+                .toList();
+
+        assertThat(lifeServices).as("group_name 은 식별자가 아니라 공시의 소제목이다")
+                .hasSize(3);
+        assertThat(lifeServices).extracting(CardBenefit::getSortNo)
+                .as("같은 소제목 아래 혜택 줄은 sort_no 로 구분한다")
+                .containsExactly(2, 3, 4)
+                .doesNotHaveDuplicates();
+
+        // 시험 프로파일은 H2가 엔티티로 표를 만들고 Flyway를 끈다. 실제 운영 제약도 직접 읽어
+        // 확인하지 않으면 잘못된 UNIQUE가 돌아와도 위 적재 시험만 통과한다.
+        String sql = Files.readString(MIGRATION, StandardCharsets.UTF_8);
+        assertThat(sql)
+                .contains("UNIQUE KEY uk_card_benefit_sort (card_id, sort_no)")
+                .contains("KEY idx_card_benefit_group (card_id, group_name)")
+                .doesNotContain("UNIQUE KEY uk_card_benefit_group");
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("같은 브랜드의 여러 연회비를 금액별로 보존한다")
+    void preservesAnnualFeesWithDifferentTotals() throws IOException {
+        List<CardProduct> all = cards.findAll();
+        for (CardProduct card : all) {
+            Set<String> keys = new HashSet<>();
+            for (CardAnnualFee fee : card.getAnnualFees()) {
+                String key = fee.getScope() + "|" + fee.getBrand() + "|" + fee.getTotal();
+                assertThat(keys.add(key))
+                        .as("%s의 연회비 유일 키가 중복된다", card.getName())
+                        .isTrue();
+            }
+        }
+
+        String sql = Files.readString(MIGRATION, StandardCharsets.UTF_8);
+        assertThat(sql).contains("UNIQUE KEY uk_card_annual_fee (card_id, scope, brand, total)");
     }
 
     /**
