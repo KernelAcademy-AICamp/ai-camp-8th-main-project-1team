@@ -177,7 +177,8 @@ CREATE TABLE card_annual_fee (
     base      INT         NULL,
     affiliate INT         NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_card_annual_fee (card_id, scope, brand),
+    -- 같은 브랜드·범위에도 상품 등급별로 총연회비가 여러 개일 수 있다.
+    UNIQUE KEY uk_card_annual_fee (card_id, scope, brand, total),
     CONSTRAINT fk_card_annual_fee_card FOREIGN KEY (card_id)
         REFERENCES card_product (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -320,7 +321,10 @@ CREATE TABLE card_benefit (
     -- 화면·계산 순서를 고정한다(원칙 3 — 조회 정렬 고정).
     sort_no            INT          NOT NULL DEFAULT 0,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_card_benefit_group (card_id, group_name),
+    -- group_name 은 공시의 소제목이라 한 소제목 아래 혜택이 여러 줄일 수 있다.
+    -- 카드 안에서 한 줄을 구분하는 값은 수집 단계가 부여한 sort_no 다.
+    UNIQUE KEY uk_card_benefit_sort (card_id, sort_no),
+    KEY idx_card_benefit_group (card_id, group_name),
     CONSTRAINT fk_card_benefit_card FOREIGN KEY (card_id)
         REFERENCES card_product (id) ON DELETE CASCADE,
     -- 없는 구간을 가리키는 혜택이 못 들어온다.

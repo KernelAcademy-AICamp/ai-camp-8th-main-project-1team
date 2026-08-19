@@ -352,6 +352,26 @@ class GuardianFlowTest {
     }
 
     @Test
+    @Order(104)
+    @DisplayName("환불 한 건이 그 뒤의 소비 전부를 막지 않는다")
+    void refundDoesNotHaltTheWholeSync() {
+        GuardianChallenge ch = challengeRepository.findById(challengeId).orElseThrow();
+        Category cafe = categoryRepository.findByCode("GTEST_CAFE").orElseThrow();
+
+        // 환불을 **먼저** 넣는다. 고치기 전에는 여기서 IllegalArgumentException 이 나면서
+        // 뒤의 정상 소비까지 통째로 안 들어왔다 — 운영에서 실제로 그랬다(KTX 취소 건).
+        consumptionRepository.save(new Consumption(userId, cafe, new BigDecimal("-50500"),
+                ch.getStartDate().atTime(9, 0), false, Enums.DataSource.DUMMY_SEED));
+        consumptionRepository.save(new Consumption(userId, cafe, new BigDecimal("7000"),
+                ch.getStartDate().atTime(10, 0), false, Enums.DataSource.DUMMY_SEED));
+
+        int added = assertDoesNotThrow(() -> guardianService.syncFromMyData(userId),
+                "환불이 섞여 있어도 동기화가 멈추면 안 된다");
+
+        assertEquals(1, added, "환불은 건너뛰고 정상 소비 한 건만 담는다");
+    }
+
+    @Test
     @Order(12)
     @DisplayName("알림 피드백 — 별점이 아니라 사유 태그를 남긴다")
     void feedbackRecordsReason() {
