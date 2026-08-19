@@ -51,9 +51,14 @@ cmp_both() {
 # 운영이 로컬보다 **적지 않은가**. 규모 검사는 이쪽을 쓴다.
 #
 # 예전에는 규모도 `cmp_both`(같은가)로 봤는데, 그건 **시드를 막 올린 그 순간에만 참**이었다.
-# 운영에는 실사용자의 명세서가 계속 얹히므로 로컬(생성분만)과 같을 수가 없다 — 실제로
-# 결제 10,927,508 대 10,927,800 으로 어긋나 **늘 빨간불**이었고, 늘 실패하는 검사는
-# 아무도 안 본다. 물어야 할 것은 "생성분이 온전히 올라갔는가"이지 "똑같은가"가 아니다.
+# 운영에는 명세서가 계속 얹히므로 로컬과 같을 수가 없다 — 실제로 결제 10,927,508 대
+# 10,927,800 으로 어긋나 **늘 빨간불**이었고, 늘 실패하는 검사는 아무도 안 본다.
+# 물어야 할 것은 "로컬에서 검증한 것이 운영에 온전히 있는가"이지 "똑같은가"가 아니다.
+#
+# **차이를 "실사용자"라고 부르지 않는다.** 이 검사가 아는 것은 <b>로컬에 없고 운영에만 있는
+# 몫</b>이 얼마인가까지다. 그것이 실사람 명세서인지, 로컬이 그냥 뒤처진 것인지는 여기서
+# 알 수 없다 — 실제로 차이(292)와 실사람 행(`real-` 접두 1,042)이 서로 다르다.
+# 실사람 몫은 아래 "실사람 명세서" 항목이 따로 센다.
 cmp_atleast() {
   local name="$1" q="$2" want got
   want=$(lsql "$q" | tr -d '[:space:]')
@@ -61,7 +66,7 @@ cmp_atleast() {
   if [ -z "$want" ] || [ -z "$got" ]; then bad "$name" "로컬 ${want:-?} · 운영 ${got:-?}"; return; fi
   if [ "$got" -ge "$want" ] 2>/dev/null; then
     local extra=$((got - want))
-    [ "$extra" -eq 0 ] && ok "$name" "$got" || ok "$name" "$got (생성 $want + 실사용자 $extra)"
+    [ "$extra" -eq 0 ] && ok "$name" "$got" || ok "$name" "$got (로컬 $want + $extra)"
   else
     bad "$name" "운영이 로컬보다 적다 — 로컬 $want > 운영 $got"
   fi
@@ -72,6 +77,15 @@ cmp_atleast "결제 건수"   "SELECT COUNT(*) FROM finntech_mydata.mydata_payme
 cmp_atleast "통장거래"    "SELECT COUNT(*) FROM finntech_mydata.mydata_account_txn;"
 cmp_atleast "사용자"      "SELECT COUNT(*) FROM finntech_mydata.mydata_user;"
 cmp_atleast "가맹점"      "SELECT COUNT(*) FROM finntech_mydata.mydata_merchant;"
+
+echo
+echo "=== 실사람 명세서가 운영에 있는가 ==="
+# 열 이름을 틀리기 쉽다 — 접두는 `mydata_payment_id` 에 붙는다(사용자·카드가 아니다).
+# 백업 스크립트의 `--where` 와 **같은 조건**이라야 "백업이 뜨는 것"과 "여기서 세는 것"이 같다.
+r=$(psql "SELECT COUNT(*) FROM finntech_mydata.mydata_payment WHERE mydata_payment_id LIKE 'real-%';" | tr -d '[:space:]')
+[ "${r:-0}" -gt 0 ] 2>/dev/null && ok "실사람 명세서" "${r}건" || bad "실사람 명세서" "${r:-조회실패}건 — 백업이 뜰 것이 없다"
+u=$(psql "SELECT COUNT(*) FROM finntech.app_user WHERE real_person=1;" | tr -d '[:space:]')
+[ "${u:-0}" -gt 0 ] 2>/dev/null && ok "실사용자 계정" "${u}명" || bad "실사용자 계정" "${u:-조회실패}명"
 
 echo
 echo "=== 계약이 운영에서도 온전한가 ==="
