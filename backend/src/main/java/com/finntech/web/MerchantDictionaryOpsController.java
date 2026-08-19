@@ -23,7 +23,16 @@ import org.springframework.web.bind.annotation.RestController;
  * 새 대조표를 반영한 뒤여야 한다 — 안 그러면 옛 표로 재계산한다, 오류 없이.
  */
 @RestController
-@RequestMapping("/api/ops")
+/*
+ * **`/api/ops` 에서 옮겨 왔다(2026-08-19).** 그 자리는 운영에서 기본으로 켜져 있고
+ * (`FINNTECH_OPS_ENABLED:true`) `AuthFilter` 가 <b>사용자 토큰</b>만 요구한다 — 경로에
+ * 사용자 번호가 없어 소유 확인도 안 걸리므로 <b>로그인한 아무나</b> 부를 수 있었다.
+ *
+ * 여기서 하는 일은 <b>실사용자 전원의 분류를 다시 계산하는 쓰기</b>다. 관측용 문과 같은
+ * 자리에 둘 것이 아니다. 소비 원장의 ops 문을 admin 뒤로 옮긴 것과 같은 이유·같은 처리다
+ * (PR #202). `/api/admin/` 접두라야 admin 쿠키를 요구한다.
+ */
+@RequestMapping("/api/admin")
 @ConditionalOnProperty(name = "finntech.ops.enabled", havingValue = "true")
 public class MerchantDictionaryOpsController {
 

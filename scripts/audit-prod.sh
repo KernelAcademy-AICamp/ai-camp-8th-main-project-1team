@@ -48,22 +48,62 @@ cmp_both() {
   else bad "$name" "로컬 ${want:-?} ≠ 운영 ${got:-?}"; fi
 }
 
+# 운영이 로컬보다 **적지 않은가**. 규모 검사는 이쪽을 쓴다.
+#
+# 예전에는 규모도 `cmp_both`(같은가)로 봤는데, 그건 **시드를 막 올린 그 순간에만 참**이었다.
+# 운영에는 명세서가 계속 얹히므로 로컬과 같을 수가 없다 — 실제로 결제 10,927,508 대
+# 10,927,800 으로 어긋나 **늘 빨간불**이었고, 늘 실패하는 검사는 아무도 안 본다.
+# 물어야 할 것은 "로컬에서 검증한 것이 운영에 온전히 있는가"이지 "똑같은가"가 아니다.
+#
+# **차이를 "실사용자"라고 부르지 않는다.** 이 검사가 아는 것은 <b>로컬에 없고 운영에만 있는
+# 몫</b>이 얼마인가까지다. 그것이 실사람 명세서인지, 로컬이 그냥 뒤처진 것인지는 여기서
+# 알 수 없다 — 실제로 차이(292)와 실사람 행(`real-` 접두 1,042)이 서로 다르다.
+# 실사람 몫은 아래 "실사람 명세서" 항목이 따로 센다.
+cmp_atleast() {
+  local name="$1" q="$2" want got
+  want=$(lsql "$q" | tr -d '[:space:]')
+  got=$(psql "$q" | tr -d '[:space:]')
+  if [ -z "$want" ] || [ -z "$got" ]; then bad "$name" "로컬 ${want:-?} · 운영 ${got:-?}"; return; fi
+  if [ "$got" -ge "$want" ] 2>/dev/null; then
+    local extra=$((got - want))
+    [ "$extra" -eq 0 ] && ok "$name" "$got" || ok "$name" "$got (로컬 $want + $extra)"
+  else
+    bad "$name" "운영이 로컬보다 적다 — 로컬 $want > 운영 $got"
+  fi
+}
+
 echo "=== 규모가 로컬과 같은가 ==="
-cmp_both "결제 건수"   "SELECT COUNT(*) FROM finntech_mydata.mydata_payment;"
-cmp_both "통장거래"    "SELECT COUNT(*) FROM finntech_mydata.mydata_account_txn;"
-cmp_both "사용자"      "SELECT COUNT(*) FROM finntech_mydata.mydata_user;"
-cmp_both "가맹점"      "SELECT COUNT(*) FROM finntech_mydata.mydata_merchant;"
+cmp_atleast "결제 건수"   "SELECT COUNT(*) FROM finntech_mydata.mydata_payment;"
+cmp_atleast "통장거래"    "SELECT COUNT(*) FROM finntech_mydata.mydata_account_txn;"
+cmp_atleast "사용자"      "SELECT COUNT(*) FROM finntech_mydata.mydata_user;"
+cmp_atleast "가맹점"      "SELECT COUNT(*) FROM finntech_mydata.mydata_merchant;"
+
+echo
+echo "=== 실사람 명세서가 운영에 있는가 ==="
+# 열 이름을 틀리기 쉽다 — 접두는 `mydata_payment_id` 에 붙는다(사용자·카드가 아니다).
+# 백업 스크립트의 `--where` 와 **같은 조건**이라야 "백업이 뜨는 것"과 "여기서 세는 것"이 같다.
+r=$(psql "SELECT COUNT(*) FROM finntech_mydata.mydata_payment WHERE mydata_payment_id LIKE 'real-%';" | tr -d '[:space:]')
+[ "${r:-0}" -gt 0 ] 2>/dev/null && ok "실사람 명세서" "${r}건" || bad "실사람 명세서" "${r:-조회실패}건 — 백업이 뜰 것이 없다"
+u=$(psql "SELECT COUNT(*) FROM finntech.app_user WHERE real_person=1;" | tr -d '[:space:]')
+[ "${u:-0}" -gt 0 ] 2>/dev/null && ok "실사용자 계정" "${u}명" || bad "실사용자 계정" "${u:-조회실패}명"
 
 echo
 echo "=== 계약이 운영에서도 온전한가 ==="
-cmp_both "구독 서비스 종수" "SELECT COUNT(DISTINCT mydata_payment_merchant_name) FROM finntech_mydata.mydata_payment WHERE mydata_payment_category2='스트리밍';"
+cmp_atleast "구독 서비스 종수" "SELECT COUNT(DISTINCT mydata_payment_merchant_name) FROM finntech_mydata.mydata_payment WHERE mydata_payment_category2='스트리밍';"
 n=$(psql "SELECT COUNT(*) FROM (SELECT c.mydata_user_id u FROM finntech_mydata.mydata_card c JOIN finntech_mydata.mydata_payment p ON p.mydata_card_id=c.mydata_card_id WHERE p.mydata_payment_category2='스트리밍' GROUP BY 1 HAVING COUNT(DISTINCT p.mydata_payment_merchant_name) > 10) t;" | tr -d '[:space:]')
 [ "${n:-x}" = "0" ] && ok "구독 11곳 이상인 사용자" "0명" || bad "구독 11곳 이상인 사용자" "${n:-조회실패}명"
 
 echo
 echo "=== 스키마가 새 코드와 맞는가 ==="
+# **기대값을 저장소에서 읽는다.** 예전에는 `15` 를 박아 뒀는데 그 사이 마이그레이션이
+# 22개 늘어 늘 빨간불이었다. 상수로 두면 반드시 낡는다.
+want_v=$(ls backend/src/main/resources/db/migration/V*__*.sql 2>/dev/null \
+         | sed 's#.*/V##; s#__.*##' | sort -n | tail -1)
 v=$(psql "SELECT MAX(CAST(version AS UNSIGNED)) FROM finntech.flyway_schema_history WHERE success=1;" | tr -d '[:space:]')
-[ "${v:-0}" = "15" ] && ok "Flyway 최신 버전" "v$v" || bad "Flyway 최신 버전" "v${v:-?} (15이어야 한다)"
+if [ -n "$want_v" ] && [ "${v:-0}" = "$want_v" ]; then ok "Flyway 최신 버전" "v$v (저장소와 같다)"
+else bad "Flyway 최신 버전" "운영 v${v:-?} · 저장소 v${want_v:-?}"; fi
+f=$(psql "SELECT COUNT(*) FROM finntech.flyway_schema_history WHERE success=0;" | tr -d '[:space:]')
+[ "${f:-x}" = "0" ] && ok "실패한 마이그레이션" "0건" || bad "실패한 마이그레이션" "${f:-?}건"
 c=$(psql "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='finntech' AND TABLE_NAME='user_payment' AND COLUMN_NAME IN ('category2_llm','category2_source');" | tr -d '[:space:]')
 [ "${c:-0}" = "2" ] && ok "user_payment 새 칸 2개" || bad "user_payment 새 칸" "${c:-?}개"
 
