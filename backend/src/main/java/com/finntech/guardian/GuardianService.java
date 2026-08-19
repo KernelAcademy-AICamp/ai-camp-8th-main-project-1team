@@ -589,6 +589,21 @@ public class GuardianService {
         int added = 0;
         for (Consumption c : consumptionRepository.findInRange(userId, from, to)) {
             if (txRepository.existsByUserIdAndSourceConsumptionId(userId, c.getId())) continue;
+            /* **환불·취소는 건너뛴다.** 지킴이 원장은 지출을 담는 곳이고
+               {@code GuardianTransaction} 은 생성자에서 {@code amount <= 0} 을 거부한다.
+
+               그냥 두면 그 예외가 이 반복문을 뚫고 나가 <b>그 사용자의 동기화가 통째로
+               멈춘다</b> — 뒤에 남은 소비도 영영 안 들어온다. 실제로 그렇게 됐다:
+               실사용자 두 명 모두 명세서에 KTX 취소 건(-50,500원 등)이 있었고,
+               5분마다 같은 자리에서 넘어져 지킴이가 19시간 넘게 죽어 있었다
+               (2026-08-19 운영 실측 — 24번은 원장 19건에서 멈췄고 30번은 0건이었다).
+               생성 데이터에는 환불이 없어 실제 사람의 명세서가 들어오고서야 드러났다.
+
+               <b>건너뛰는 것이 완전한 답은 아니다.</b> 환불이 지출에서 차감되지 않으므로
+               예산 소진율이 실제보다 높게 나온다. 음수 거래를 원장에 제대로 담는 일은
+               지킴이 규칙·집계 전반을 건드리므로 따로 정한다 — 지금은 <b>한 건 때문에
+               전부가 멈추는 것</b>부터 막는다. */
+            if (c.getAmount().signum() <= 0) continue;
             Category cat = c.getCategory();
             /* 가맹점을 되찾는다. 예전에는 가맹점명 자리에 <b>카테고리 이름</b>을 넣었다 —
                화면에 "식비"가 가게 이름으로 떴고, 사업자번호가 없어 사용자의 "이 결제는
