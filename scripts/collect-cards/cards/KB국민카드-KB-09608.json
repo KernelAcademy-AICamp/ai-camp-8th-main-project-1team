@@ -1,0 +1,155 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB 스타틴즈카드",
+  "product_id": "KB-09608",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "2022-07-27",
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "Yummy",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "min_amount": 5000,
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25",
+            "CU"
+          ]
+        },
+        {
+          "category": "커피/음료 전문점",
+          "note": "일반음식점 또는 패밀리레스토랑 업종으로 등록된 가맹점 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 1000
+      },
+      "combined_cap_group": "통합할인한도"
+    },
+    {
+      "group": "Enjoy",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "min_amount": 5000,
+      "targets": [
+        {
+          "category": "쇼핑",
+          "brands": [
+            "올리브영",
+            "다이소"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 1000
+      },
+      "combined_cap_group": "통합할인한도"
+    },
+    {
+      "group": "Play",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "min_amount": 5000,
+      "targets": [
+        {
+          "category": "디지털콘텐츠",
+          "brands": [
+            "구글 플레이스토어",
+            "앱스토어"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 1000
+      },
+      "combined_cap_group": "통합할인한도"
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "통합할인한도",
+      "members": [
+        "Yummy",
+        "Enjoy",
+        "Play"
+      ],
+      "cap_by_tier": {
+        "0": 1000
+      },
+      "note": "월간 통합 할인한도 1천원"
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "POP_CARD",
+      "label": "POP카드 결제"
+    },
+    {
+      "code": "PG_PAY",
+      "label": "결제대행업체(PG) 또는 간편결제 전용 가맹점"
+    },
+    {
+      "code": "DEPARTMENT_STORE",
+      "label": "호텔, 백화점, 대형마트, 철도역사 내 입점 가맹점"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 충전카드 구매"
+    }
+  ],
+  "non_monetary": [
+    "티머니 충전 및 대중교통 결제 기능 제공",
+    "해피포인트 멤버십 적립"
+  ],
+  "schema_gaps": [
+    "하이브리드 카드: KB스타틴즈 포켓(선불전자지급수단) 연동형 체크카드",
+    "전월 실적 없음",
+    "할인 방식: 결제 후 포켓으로 환급(충전)되는 방식",
+    "할인 한도: 월 통합 1천원, 잔여 한도 이월 불가",
+    "할부 거래 불가",
+    "포인트리 적립 불가",
+    "후불 교통서비스 미제공"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09608__prdctOpmn_20260626.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09608__prdctOpmn_20260626.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[1].min_amount",
+        "first": 5000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,209 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민U축구사랑카드",
+  "product_id": "KB-01160",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "2006-07-31",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 5000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 10000
+    }
+  ],
+  "annual_fee_notes": [
+    "초회년도 연회비는 면제되지 않음",
+    "연간 100만원(단기카드대출 포함) 이상 이용 시 차기년도 기본연회비 전액 면제"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "결제회수실적",
+    "tiers": [
+      300000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료/이자"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금, 국세/관세/지방세"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "선불카드 구입/충전, 각종 상품권 매출"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학/대학원 등록금"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "축구경기장 현장할인",
+      "kind": "할인",
+      "settle": "현장할인",
+      "rate_percent": 50,
+      "targets": [
+        {
+          "category": "축구경기장",
+          "note": "울산문수축구경기장 홈경기 입장권 50% 현장할인(1일 1회, 본인 1매)"
+        }
+      ]
+    },
+    {
+      "group": "SK주유소 주유 청구할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 70,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "주유",
+          "brands": [
+            "SK주유소"
+          ],
+          "note": "휘발유, 경유, 등유(LPG 제외). 일 20만원/월 30만원 이용금액 한도"
+        }
+      ]
+    },
+    {
+      "group": "무이자할부",
+      "kind": "무이자할부",
+      "min_amount": 50000,
+      "targets": [
+        {
+          "category": "쇼핑/가전",
+          "industries": [
+            "백화점",
+            "할인점",
+            "가전제품점"
+          ],
+          "note": "2~3개월 무이자할부"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료/이자"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "공과금, 국세/관세/지방세"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "선불카드 구입/충전, 각종 상품권 매출"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학/대학원 등록금"
+    }
+  ],
+  "non_monetary": [
+    "울산현대축구단 멤버십카드"
+  ],
+  "schema_gaps": [
+    "실적유예기간: 최초 카드 사용등록일로부터 60일 동안 전월 실적 조건 미달 시에도 주유할인 제공",
+    "주유할인 제외 대상: 주유할인 받은 이용건 전체는 실적에서 제외"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/01160__prdctOpmn_20241129.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_01160__prdctOpmn_20241129.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": 50,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].kind",
+        "first": "무이자할부",
+        "second": "할인"
+      },
+      {
+        "path": "$.benefits[1].min_amount",
+        "first": 50000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].requires_tier",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[2].amount_krw",
+        "first": 70,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].kind",
+        "first": "할인",
+        "second": "무이자할부"
+      },
+      {
+        "path": "$.benefits[2].min_amount",
+        "first": null,
+        "second": 50000
+      },
+      {
+        "path": "$.benefits[2].requires_tier",
+        "first": 300000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,230 @@
+{
+  "issuer": "현대카드",
+  "name": "대한항공카드 300",
+  "product_id": "HYU-147801",
+  "status": "active",
+  "as_of": "2025-01-23",
+  "review_no": "여신금융협회 심의필 제 2025-C1a-00930호",
+  "posted_at": "2024-04-26",
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Visa",
+      "total": 300000,
+      "base": 100000,
+      "affiliate": 200000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Visa",
+      "total": 300000,
+      "base": 100000,
+      "affiliate": 200000
+    }
+  ],
+  "annual_fee_notes": [
+    "가족 카드 연회비 100,000원 (기본 0원 + 제휴 100,000원)",
+    "연회비는 카드 발급 시 선청구되며 보유 카드별로 청구"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "대중교통",
+        "정기결제",
+        "해외 이용 금액"
+      ]
+    },
+    "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "국내 할부",
+      "해외 일시불",
+      "해외 할부"
+    ],
+    "tiers": [
+      500000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 제수수료, 이자"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금 납부액(국세, 관세, 지방세, 지방세외수입, 상하수도 요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급 수수료 등)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 등 현금성 유가증권 구매 및 선불 카드 구매·충전 금액"
+      },
+      {
+        "code": "UTILITY",
+        "label": "전기 요금, 도시가스 요금, 아파트 관리비, 부동산 임대료(월세), 자동납부 서비스 이용 수수료"
+      },
+      {
+        "code": "TUITION",
+        "label": "사립유치원 교육비 납입금, 초·중·고교 학교 납입금, 대학·대학원 등록금 납부 결제건"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "건강보험, 국민연금, 고용보험, 산재보험 및 장애인 고용 부담금"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "고속도로 통행 요금, 후불하이패스 카드 이용 금액, 고속버스"
+      },
+      {
+        "code": "DISCOUNT_APPLIED",
+        "label": "현대카드의 모든 할인 및 무이자 할부 서비스 적용된 결제 건의 전체 이용 금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "rate_conditional": "1천원당 1 마일리지",
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "국내 가맹점",
+          "note": "추가 혜택 대상점 외 국내 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "추가 적립",
+      "kind": "적립",
+      "rate_conditional": "1천원당 3 마일리지",
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "대한항공 직판 항공권",
+          "note": "대한항공 홈페이지, 앱, 서비스 센터 또는 한국 소재 시내 및 공항 지점 원화 결제"
+        },
+        {
+          "category": "해외 가맹점",
+          "note": "해외 가맹점(온라인몰 포함)에서 외화로 결제 시"
+        },
+        {
+          "category": "특급호텔/백화점/골프장",
+          "industries": [
+            "국내 특급호텔",
+            "백화점",
+            "골프장"
+          ],
+          "note": "국내 가맹점에서 원화 결제 시"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "추가 적립 한도",
+      "members": [
+        "대한항공 직판 항공권",
+        "해외 가맹점",
+        "특급호텔/백화점/골프장"
+      ],
+      "cap_by_tier": {
+        "500000": 6000
+      },
+      "note": "월 6천 마일리지 한도(초과 시 1 마일리지 적립), 연간 3만 마일리지 한도"
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비, 제수수료, 이자"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "공과금 납부액"
+    },
+    {
+      "code": "UTILITY",
+      "label": "전기/도시가스 요금, 아파트 관리비, 부동산 임대료, 자동납부 수수료"
+    },
+    {
+      "code": "TUITION",
+      "label": "교육비 및 등록금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구매/충전"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "4대 보험 및 장애인 고용 부담금"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "고속도로 통행료, 후불하이패스, 고속버스"
+    },
+    {
+      "code": "DISCOUNT_APPLIED",
+      "label": "할인 및 무이자 할부 적용 결제 건"
+    }
+  ],
+  "non_monetary": [
+    "연간 보너스 1만 마일리지(연 1회)",
+    "대한항공 직판 국제선 항공권 5만원 할인 쿠폰(연 2장)",
+    "전 세계 공항 라운지 무료 이용(연 10회)",
+    "인천국제공항 및 국내 특급호텔 발레파킹 서비스(월 10회)",
+    "메탈 플레이트 제공(발급 수수료 10만원 별도)"
+  ],
+  "schema_gaps": [
+    "연간 보너스: 발급 첫해 누적 100만원 이상, 2차년도 이후 연간 2,400만원 이상 이용 시 제공",
+    "항공권 할인 쿠폰: 연 2장 제공, 유효기간 12개월",
+    "라운지/발레파킹: 연간 한도 기준은 카드 최초 발급 확정월 포함 12개월 단위",
+    "신규 발급 시 혜택 유예: 카드 수령 등록월 다음 달까지 전월 실적 50만원 미만도 혜택 제공"
+  ],
+  "source_url": "https://www.hyundaicard.com/upload/card/T_AZW-20260320-1106-30_%EA%B0%80%EC%9D%B4%EB%93%9C%EB%B6%81_%EB%8C%80%ED%95%9C%ED%95%AD%EA%B3%B5_Ed2_300_V1.pdf",
+  "_extraction_check": {
+    "source_pdf": "147801.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.500000",
+        "first": null,
+        "second": 6000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 보탬e전용카드",
+  "product_id": "KB-09084",
+  "status": "active",
+  "as_of": "2023-06-29",
+  "review_no": "여신금융협회 심의필 제2023-C1a-07072호",
+  "compliance_no": "230619-02195-PIF",
+  "posted_at": "2023-06-30",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "로컬",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "MASTER, VISA, JCB, K-WORLD(UPI)",
+      "total": 0
+    }
+  ],
+  "benefits": [],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "카드사용알림서비스(SMS) 수수료 면제",
+    "보탬e 시스템에서 지정하는 제한업종 사용불가(유흥업종, 위생업종, 레저업종, 사행업종, 기타업종)"
+  ],
+  "schema_gaps": [
+    "보조금 전용 카드로 별도의 포인트 적립이나 할인 혜택이 없음",
+    "일시불 거래만 가능하며 할부, 단기카드대출(현금서비스), 장기카드대출(카드론), 리볼빙 거래 불가"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09084__prdctOpmn_20230630.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09084__prdctOpmn_20230630.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

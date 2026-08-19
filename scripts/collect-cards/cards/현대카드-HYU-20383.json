@@ -1,0 +1,183 @@
+{
+  "issuer": "현대카드",
+  "name": "kt M mobile-현대카드M Edition3",
+  "product_id": "HYU-20383",
+  "status": "stopped",
+  "as_of": "2020-01-31",
+  "review_no": "여신금융협회심의필 제2020-C1a-00693호",
+  "compliance_no": "준법감시심의필 240422-001호 (2024-04-22)",
+  "posted_at": "2020-10-08",
+  "card_type": "CREDIT",
+  "benefit_style": "POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "현대",
+      "total": 30000,
+      "base": 10000,
+      "affiliate": 20000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA/MasterCard",
+      "total": 30000,
+      "base": 10000,
+      "affiliate": 20000
+    }
+  ],
+  "annual_fee_notes": [
+    "가족카드 10,000원",
+    "연회비는 카드 발급 시 선청구됩니다.",
+    "카드 연회비(기본연회비+제휴연회비)는 보유 카드별로 청구됩니다."
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "사후 승인 가맹점"
+      ]
+    },
+    "includes": [
+      "국내 일시불",
+      "해외 일시불",
+      "할부"
+    ],
+    "tiers": [
+      300000,
+      700000,
+      1000000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 제수수료, 이자"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금 납부액(국세, 관세, 지방세, 지방세외수입, 상하수도요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급수수료 등)"
+      },
+      {
+        "code": "UTILITY",
+        "label": "전기요금, 도시가스요금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고교 학교납입금, 대학·대학원 등록금 납부 결제건"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 등 현금성 유가증권 구매 및 선불카드 구매·충전금액"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "건강보험, 국민연금, 고용보험, 산재보험 및 장애인 고용부담금"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "고속도로 통행요금, 고속버스, 후불하이패스 이용금액"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "통신요금 청구 할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "targets": [
+        {
+          "category": "통신",
+          "industries": [
+            "kt M mobile 통신요금 자동이체"
+          ]
+        }
+      ],
+      "conditions": [
+        "1~24개월 차: 30만원 이상 1.3만, 70만원 이상 1.8만, 100만원 이상 2만",
+        "25개월 차부터: 30만원 이상 6천원",
+        "신규 발급 시 발급월 포함 2개월간 전월 실적 무관 1.3만 할인(70만 이상 1.8만, 100만 이상 2만)"
+      ]
+    },
+    {
+      "group": "M포인트 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "기본 적립",
+          "note": "업종별 0.5~3% 적립, 당월 100만원 이상 시 1.5배"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "COMMUNICATION",
+      "label": "청구 할인 통신요금"
+    }
+  ],
+  "non_monetary": [
+    "현대카드 M포인트 서비스"
+  ],
+  "schema_gaps": [
+    "통신 할인 혜택이 1~24개월 차와 25개월 차 이후로 구분됨",
+    "M포인트 적립률이 당월 이용금액(50만원 미만/이상, 100만원 이상)에 따라 차등 적용됨",
+    "신규 발급 시 2회차 결제일까지 실적 유예 조건 존재",
+    "제휴통합 상품으로 kt M mobile, U+유모바일, SK 7mobile 3종이 동일한 구조로 가이드북에 포함됨"
+  ],
+  "source_url": "https://www.hyundaicard.com/upload/card/T_AOB-20240425-0953-34_%EA%B0%80%EC%9D%B4%EB%93%9C%EB%B6%81_%ED%86%B5%EC%8B%A0%EC%95%8C%EB%9C%B0%ED%8F%B0%203%EC%A2%85_%ED%98%84%EB%8C%80%EC%B9%B4%EB%93%9CM%20Ed3_V2.pdf",
+  "_extraction_check": {
+    "source_pdf": "06_20240425_T_AOB-20240425-0953-34_가이드북_통신알뜰폰 3종_현대카드M Ed3_V2.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.1000000",
+        "first": null,
+        "second": 20000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 13000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.700000",
+        "first": null,
+        "second": 18000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,251 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 민 체크카드",
+  "product_id": "KB-01560",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "2013-12-17",
+  "card_type": "CHECK",
+  "benefit_style": "DISCOUNT_POINT",
+  "policy_card": false,
+  "has_transit": true,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "로컬",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA/Master",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      300000,
+      500000
+    ],
+    "excluded": [
+      {
+        "code": "TRANSIT",
+        "label": "후불교통 이용금액"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인 이용금액"
+      },
+      {
+        "code": "OVERSEAS",
+        "label": "해외 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "생활밀착서비스",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "3대 대형마트",
+          "brands": [
+            "이마트",
+            "롯데마트",
+            "홈플러스"
+          ],
+          "note": "건당 3만원 이상 결제 시"
+        },
+        {
+          "category": "패스트푸드",
+          "industries": [
+            "패스트푸드업종"
+          ],
+          "note": "건당 1만원 이상 결제 시"
+        },
+        {
+          "category": "주유",
+          "brands": [
+            "SK에너지"
+          ],
+          "note": "리터당 60원 할인, 건당 10만원까지"
+        },
+        {
+          "category": "대중교통",
+          "industries": [
+            "시내버스",
+            "지하철"
+          ]
+        },
+        {
+          "category": "이동통신요금",
+          "industries": [
+            "SKT",
+            "KT olleh",
+            "LG U+"
+          ],
+          "note": "자동이체 금액 5만원 이상 시 2,500원 할인"
+        }
+      ]
+    },
+    {
+      "group": "스피드메이트",
+      "kind": "할인",
+      "settle": "현장할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "자동차정비",
+          "brands": [
+            "스피드메이트"
+          ],
+          "note": "엔진오일 2만원 정액 할인(연1회)"
+        }
+      ]
+    },
+    {
+      "group": "CU포인트",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "CU"
+          ],
+          "note": "구매금액의 3% 적립"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "월간통합할인한도",
+      "members": [
+        "3대 대형마트",
+        "패스트푸드",
+        "주유",
+        "대중교통",
+        "이동통신요금"
+      ],
+      "cap_by_tier": {
+        "300000": 10000,
+        "500000": 20000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "DEPARTMENT_STORE",
+      "label": "백화점 입점 점포"
+    },
+    {
+      "code": "DISCOUNT_STORE",
+      "label": "대형할인점 입점 점포"
+    }
+  ],
+  "non_monetary": [
+    "체크카드 소액신용결제서비스(최고 30만원)"
+  ],
+  "schema_gaps": [
+    "심의필 문구에 날짜가 명시되어 있지 않아 as_of는 null 처리함",
+    "하이브리드 카드(소액신용결제) 기능이 있으나 주 결제 방식이 체크카드이므로 card_type을 CHECK로 설정함",
+    "스피드메이트 서비스는 월간통합할인한도 적용 제외됨",
+    "최초 발급 후 30일간 전월 실적 없이 5천원 한도 내 할인 제공 조건 존재"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/01560__prdctOpmn_20241129.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_01560__prdctOpmn_20241129.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 3,
+        "second": 7
+      },
+      {
+        "path": "$.benefits[0].kind",
+        "first": "할인",
+        "second": "적립"
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": null,
+        "second": 3
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": 300000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].amount_krw",
+        "first": null,
+        "second": 2500
+      },
+      {
+        "path": "$.benefits[1].min_amount",
+        "first": null,
+        "second": 50000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 50000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.500000",
+        "first": null,
+        "second": 50000
+      },
+      {
+        "path": "$.benefits[2].amount_krw",
+        "first": null,
+        "second": 60
+      },
+      {
+        "path": "$.benefits[2].kind",
+        "first": "적립",
+        "second": "할인"
+      },
+      {
+        "path": "$.benefits[2].min_amount",
+        "first": null,
+        "second": 100000
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.500000",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[2].requires_tier",
+        "first": null,
+        "second": 300000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

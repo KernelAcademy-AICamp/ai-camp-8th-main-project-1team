@@ -1,0 +1,162 @@
+{
+  "issuer": "현대카드",
+  "name": "the Purple osée",
+  "product_id": "HYU-21783",
+  "status": "stopped",
+  "as_of": "2021-03-05",
+  "review_no": "여신금융협회심의필 제2021-C1a-01754호",
+  "card_type": "CREDIT",
+  "benefit_style": "PREMIUM",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "현대",
+      "total": 800000,
+      "base": 200000,
+      "affiliate": 600000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "MasterCard/VISA",
+      "total": 800000,
+      "base": 200000,
+      "affiliate": 600000
+    }
+  ],
+  "annual_fee_notes": [
+    "가족카드 연회비 200,000원 (기본 0원 + 제휴 200,000원)",
+    "연회비는 카드 발급 시 선청구",
+    "보유 카드별로 청구"
+  ],
+  "benefits": [
+    {
+      "group": "항공마일리지형",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "대한항공",
+          "note": "1천원당 1마일리지 적립"
+        },
+        {
+          "category": "아시아나항공",
+          "note": "1천원당 1마일리지 적립"
+        }
+      ]
+    },
+    {
+      "group": "M포인트형",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내외 가맹점",
+          "note": "당월 이용금액 50만원 이상 시 1%, 100만원 이상 시 1.5%, 200만원 이상 시 2% 적립"
+        },
+        {
+          "category": "현대자동차·기아 신차 구매",
+          "note": "2% M포인트 적립"
+        },
+        {
+          "category": "GS칼텍스 주유",
+          "note": "리터당 60 M포인트 적립"
+        }
+      ]
+    },
+    {
+      "group": "바우처",
+      "kind": "할인",
+      "targets": [
+        {
+          "category": "트래블/호텔/쇼핑",
+          "note": "영역별 최대 4매, 총 60만원까지 연 1회 선택 가능"
+        }
+      ]
+    },
+    {
+      "group": "공항 라운지",
+      "kind": "무이자할부",
+      "targets": [
+        {
+          "category": "전 세계 공항 라운지",
+          "note": "Priority Pass 제공, 횟수 제한 없음"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비, 제수수료, 이자"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "국세, 관세, 지방세, 지방세외수입, 상하수도요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급수수료 등"
+    },
+    {
+      "code": "UTILITY",
+      "label": "도시가스요금, 전기요금"
+    },
+    {
+      "code": "TUITION",
+      "label": "초·중·고교 학교납입금, 대학·대학원 등록금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 등 현금성 유가증권 구매 및 선불카드 구매·충전금액"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "건강보험, 국민연금, 고용보험, 산재보험 및 장애인 고용부담금"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "고속도로 통행요금, 고속버스"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    }
+  ],
+  "non_monetary": [
+    "Priority Pass 카드 제공",
+    "무료 발레파킹 서비스",
+    "특수 소재 카드 플레이트 제공",
+    "현대카드 슈퍼콘서트 선예매 혜택"
+  ],
+  "schema_gaps": [
+    "항공마일리지형/M포인트형 중 선택하여 리워드 적립하는 구조",
+    "연간 이용실적에 따른 로열티 보너스(연 1회) 제공",
+    "바우처 및 라운지 이용을 위한 전년도 이용실적 조건(1,600만원 등) 존재",
+    "발급 초년도 이용실적에 따른 혜택 제공 조건 존재"
+  ],
+  "posted_at": "2021-02-04",
+  "source_url": "https://www.hyundaicard.com/upload/card/the%20Purple%20osee%20%EA%B8%88%EC%86%8C%EB%B2%95%20%EC%83%81%ED%92%88%EC%84%A4%EB%AA%85%EC%84%9C.pdf",
+  "_extraction_check": {
+    "source_pdf": "10_20210924_the Purple osee 금소법 상품설명서.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

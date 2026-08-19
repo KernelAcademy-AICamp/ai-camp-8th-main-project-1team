@@ -1,0 +1,184 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 코웨이II 카드",
+  "product_id": "KB-04423",
+  "status": "active",
+  "as_of": "2018-06-20",
+  "review_no": "여신금융협회 심의필 제 2018-C1a-07367호",
+  "compliance_no": "180831-02747-TRM",
+  "posted_at": "2018-06-29",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(JCB)",
+      "total": 30000,
+      "base": 7000,
+      "affiliate": 23000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 30000,
+      "base": 7000,
+      "affiliate": 23000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "includes": [
+      "국내 일시불",
+      "국내 할부",
+      "해외 일시불",
+      "해외 할부"
+    ],
+    "tiers": [
+      400000,
+      800000
+    ],
+    "excluded": [
+      {
+        "code": "DISCOUNTED_AMOUNT",
+        "label": "렌탈료 청구할인 받은 이용건(해당 이용금액 전체)"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고등학교(국·공립) 학교납입금, 대학(원)등록금"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인전표(대중교통, 자판기, 터널이용료, 항공기내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "코웨이 렌탈료 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "코웨이 렌탈료",
+          "note": "자동이체 시 제공"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 15000,
+        "800000": 20000
+      }
+    },
+    {
+      "group": "코웨이 연간리워드",
+      "kind": "적립",
+      "settle": "포인트리",
+      "targets": [
+        {
+          "category": "코웨이 연간 결제금액",
+          "note": "전년도 1~12월 결제실적 기준"
+        }
+      ]
+    },
+    {
+      "group": "놀이공원",
+      "kind": "할인",
+      "settle": "현장할인",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "롯데월드",
+            "에버랜드",
+            "캐리비안베이"
+          ]
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입/충전금액"
+    }
+  ],
+  "non_monetary": [
+    "K-WORLD(JCB) 브랜드 해외 이용 시 국제브랜드 수수료 1.0% (2019.12.31까지 0.5% 할인)",
+    "Mastercard 브랜드 해외 이용 시 국제브랜드 수수료 1.0%"
+  ],
+  "schema_gaps": [
+    "코웨이 연간리워드 적립률(5~10%) 및 한도(5~10만점)는 연간 결제실적 구간에 따라 상이함",
+    "놀이공원 할인 횟수 제한(일/월/연) 존재",
+    "최초 카드 사용등록일로부터 다음달 말일까지는 전월 실적 미달 시에도 렌탈료 할인 및 놀이공원 할인 제공"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04423__prdctOpmn_20220617.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04423__prdctOpmn_20220617.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 20000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

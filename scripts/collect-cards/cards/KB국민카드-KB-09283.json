@@ -1,0 +1,231 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 스마트 지킴이카드",
+  "product_id": "KB-09283",
+  "status": "active",
+  "as_of": "2021-10-01",
+  "review_no": "여신금융협회 심의필 제 2021-C1a-08778호",
+  "compliance_no": "준법감시인 심의필 제210913-03176-TRM(2021.10.01)",
+  "posted_at": "2021-10-27",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(UPI)",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA/Master",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "모바일단독",
+      "brand": "K-WORLD/VISA/Master",
+      "total": 9000,
+      "base": 1000,
+      "affiliate": 8000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비는 카드발급 시점을 기준으로 1년 단위로 청구",
+    "초회/차기년도 연회비 면제 조건 없음"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      500000,
+      1000000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고등학고 납입금, 대학(대학원)등록금"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통요금"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자 할부 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "SKT Smart 지킴이2 단말기 할부",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 5000,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "단말기 할부",
+          "note": "24개월 할부 약정 시 월 5천원(50만원 이상) 또는 1만원(100만원 이상) 할인"
+        }
+      ]
+    },
+    {
+      "group": "통신요금",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "통신",
+          "industries": [
+            "SKT",
+            "KB Liiv M"
+          ],
+          "note": "자동납부 시 할인"
+        }
+      ]
+    },
+    {
+      "group": "생활 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "병원/약국",
+          "industries": [
+            "종합병원",
+            "병/의원",
+            "약국"
+          ]
+        },
+        {
+          "category": "배달앱",
+          "brands": [
+            "배달의민족",
+            "요기요",
+            "쿠팡이츠"
+          ]
+        },
+        {
+          "category": "대형마트",
+          "brands": [
+            "이마트",
+            "롯데마트",
+            "홈플러스"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "교통 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "택시/UT",
+          "industries": [
+            "택시"
+          ],
+          "channel": [
+            "UT 자동결제"
+          ]
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자 할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전 금액"
+    }
+  ],
+  "non_monetary": [
+    "모바일 단독카드 발급 가능"
+  ],
+  "schema_gaps": [
+    "실적유예기간: 최초 카드 사용 등록일로부터 다음달 말일까지 50만원 이상 구간 서비스 제공",
+    "단말기 할부 할인액이 50만원/100만원 구간에 따라 5천원/1만원으로 차등 적용됨"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09283__prdctOpmn_20240104.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09283__prdctOpmn_20240104.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": 5000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.1000000",
+        "first": null,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.500000",
+        "first": null,
+        "second": 5000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

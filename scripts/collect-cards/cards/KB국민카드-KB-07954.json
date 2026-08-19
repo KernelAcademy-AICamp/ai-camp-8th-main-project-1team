@@ -1,0 +1,81 @@
+{
+  "issuer": "KB국민카드",
+  "name": "패밀리포인트 체크카드 삐아",
+  "product_id": "KB-07954",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 0
+    }
+  ],
+  "performance": null,
+  "benefits": [
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "rate_percent": 0.2,
+      "targets": [
+        {
+          "category": "국내 신용카드 가맹점"
+        }
+      ],
+      "conditions": [
+        "이용금액 1,000원 미만 시 미적립"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "TAX",
+      "label": "지방세업종"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권업종"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학등록금업종"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트 관리비업종"
+    }
+  ],
+  "non_monetary": [
+    "연말정산 소득공제 혜택"
+  ],
+  "schema_gaps": [
+    "심의필 번호 및 심의필 날짜가 문서에 명시되어 있지 않음",
+    "전월 실적 조건이 없음",
+    "해외 이용 및 교통 이용 불가"
+  ],
+  "posted_at": "2023-10-04",
+  "source_url": "https://img2.kbcard.com/obj/card/download/07954__prdctOpmn_20240405.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_07954__prdctOpmn_20240405.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

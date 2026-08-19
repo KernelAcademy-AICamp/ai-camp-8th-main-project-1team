@@ -12,8 +12,12 @@ public interface MyDataUserRepository extends JpaRepository<MyDataUser, String> 
     // existsById(ci) 로 /bank/mydata/ci/{ci} 존재확인 처리.
 
     /**
-     * 전화번호로 명의자를 찾는다 — 본인인증이 <b>어느 항목이 틀렸는지</b> 가려내는 데 쓴다.
-     * 저장 형식이 `010-1234-5678`이라 하이픈 있는 값으로 찾는다.
+     * <b>평문 칸</b>으로 명의자를 찾는다 — 본인인증 경로에서는 더 이상 쓰지 않는다.
+     *
+     * <p>V14 가 평문을 비운 뒤로 이 조회는 <b>비어 있어야 정상</b>이다. 남겨 둔 이유는
+     * 시험이 그 사실을 확인하는 데 쓰기 때문이다({@code UserIdentityEncryptionTest} ·
+     * {@code RealPersonImportServiceTest} — "평문 칸에는 더 이상 안 쌓인다").
+     * 실제 조회는 {@link #findByPhoneBlindIndex} 가 맡는다.
      */
     Optional<MyDataUser> findByPhoneNumber(String phoneNumber);
 

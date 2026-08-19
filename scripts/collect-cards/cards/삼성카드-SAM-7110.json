@@ -1,0 +1,262 @@
+{
+  "issuer": "삼성카드",
+  "name": "PORSCHE 삼성카드",
+  "product_id": "SAM-7110",
+  "status": "active",
+  "as_of": "2026-05-21",
+  "review_no": "여신금융협회 심의필 제 2026 - C1a - 07504호",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 300000,
+      "base": 30000,
+      "affiliate": 270000
+    }
+  ],
+  "benefits": [
+    {
+      "group": "프리미엄 영역 기프트",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "amount_krw": 100000,
+      "min_amount": 100000,
+      "targets": [
+        {
+          "category": "포르쉐 공식 서비스 센터",
+          "note": "수리 및 보증, 서비스 상품, 라이프스타일(PLX) 제품"
+        },
+        {
+          "category": "백화점",
+          "brands": [
+            "신세계백화점",
+            "롯데백화점",
+            "현대백화점",
+            "갤러리아백화점"
+          ]
+        },
+        {
+          "category": "항공",
+          "brands": [
+            "대한항공",
+            "제주항공",
+            "진에어",
+            "티웨이항공"
+          ],
+          "channel": [
+            "공식 홈페이지",
+            "공식 앱"
+          ]
+        },
+        {
+          "category": "호텔/리조트"
+        },
+        {
+          "category": "골프",
+          "industries": [
+            "골프장",
+            "골프연습장"
+          ]
+        }
+      ],
+      "conditions": [
+        "통합 연 2회 제공",
+        "카드 발급 첫 해: 일시불 및 할부 누적 50만원 이상 시 제공",
+        "발급 2차년도 이후: 전년도 일시불 및 할부 600만원 이상 시 제공"
+      ]
+    },
+    {
+      "group": "포르쉐 공식 서비스 센터 적립",
+      "kind": "적립",
+      "rate_percent": 4,
+      "targets": [
+        {
+          "category": "포르쉐 공식 서비스 센터",
+          "note": "수리 및 보증, 서비스 상품, 라이프스타일(PLX) 제품"
+        }
+      ],
+      "conditions": [
+        "통합 연 적립한도 30만 포인트",
+        "카드 발급 첫 해: 일시불 및 할부 누적 50만원 이상 시 제공",
+        "발급 2차년도 이후: 전년도 일시불 및 할부 600만원 이상 시 제공"
+      ]
+    },
+    {
+      "group": "국내외 가맹점 적립",
+      "kind": "적립",
+      "rate_percent": 1,
+      "targets": [
+        {
+          "category": "그 외 가맹점"
+        }
+      ],
+      "conditions": [
+        "전월 이용금액 50만원 이상 시 제공",
+        "발급월+1개월까지는 실적 무관 제공"
+      ]
+    },
+    {
+      "group": "주유/전기차 충전 적립",
+      "kind": "적립",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "주유",
+          "industries": [
+            "주유소"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 30000
+      },
+      "conditions": [
+        "통합 월 적립한도 30,000 포인트",
+        "전월 이용금액 50만원 이상 시 제공"
+      ]
+    },
+    {
+      "group": "전기차 충전 적립",
+      "kind": "적립",
+      "rate_percent": 20,
+      "targets": [
+        {
+          "category": "전기차 충전요금"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "0": 30000
+      },
+      "conditions": [
+        "통합 월 적립한도 30,000 포인트",
+        "전월 이용금액 50만원 이상 시 제공"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "기프트/선불카드 구매 및 충전, 상품권 구매건"
+    }
+  ],
+  "non_monetary": [
+    "공항 라운지 서비스(The Lounge) 본인 무료 이용 (통합 일 1회, 연 6회)",
+    "Mastercard WORLD 등급 서비스 제공"
+  ],
+  "schema_gaps": [
+    "기프트 서비스는 발급월 기준 12개월 단위로 제공되며, 미사용 시 자동 소멸 및 이월 불가",
+    "특수 소재 카드 발급 시 7만원 수수료 발생",
+    "포인트 적립 한도 초과 시 국내 가맹점 1% 적립 혜택도 제공되지 않음"
+  ],
+  "posted_at": "2026-07-29",
+  "source_url": "https://www.samsungcard.com/filedownload.do?grpNo=1zPVy1PuFbwGC7xZyM4qtp6yCq%2B1jLC9UwbG5HJoAp0%3D&sn=2",
+  "_extraction_check": {
+    "source_pdf": "7110.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": 100000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].kind",
+        "first": "할인",
+        "second": "적립"
+      },
+      {
+        "path": "$.benefits[0].min_amount",
+        "first": 100000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": null,
+        "second": 1
+      },
+      {
+        "path": "$.benefits[1].amount_krw",
+        "first": null,
+        "second": 100000
+      },
+      {
+        "path": "$.benefits[1].kind",
+        "first": "적립",
+        "second": "할인"
+      },
+      {
+        "path": "$.benefits[1].min_amount",
+        "first": null,
+        "second": 100000
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": 4,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].rate_percent",
+        "first": 1,
+        "second": 4
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.0",
+        "first": 30000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].monthly_cap_by_tier.500000",
+        "first": null,
+        "second": 30000
+      },
+      {
+        "path": "$.benefits[4].monthly_cap_by_tier.0",
+        "first": 30000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[4].monthly_cap_by_tier.500000",
+        "first": null,
+        "second": 30000
+      },
+      {
+        "path": "$.tiers.length",
+        "first": 0,
+        "second": 1
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

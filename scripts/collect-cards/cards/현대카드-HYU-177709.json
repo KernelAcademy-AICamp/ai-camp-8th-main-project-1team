@@ -1,0 +1,213 @@
+{
+  "issuer": "현대카드",
+  "name": "현대카드 체크(캐시백형)",
+  "product_id": "HYU-177709",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "2026-04-28",
+  "card_type": "CHECK",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "현대",
+      "total": 5000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Visa",
+      "total": 5000
+    }
+  ],
+  "annual_fee_notes": [
+    "기본연회비 5,000원 + 제휴연회비 0원",
+    "가족카드 발급 불가"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "대중교통",
+        "정기결제",
+        "해외 이용 금액"
+      ]
+    },
+    "tiers": [
+      300000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 제수수료, 이자"
+      },
+      {
+        "code": "FEE",
+        "label": "국제브랜드 수수료 및 해외서비스 수수료"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금 납부액(국세, 관세, 지방세, 지방세외수입, 상하수도 요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급 수수료 등)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 등 현금성 유가증권 구매 및 선불 카드 구매·충전 금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 혜택",
+      "kind": "할인",
+      "settle": "캐시백",
+      "rate_percent": 0.3,
+      "targets": [
+        {
+          "category": "국내외 가맹점"
+        }
+      ],
+      "targets_complete": true
+    },
+    {
+      "group": "추가 혜택",
+      "kind": "할인",
+      "settle": "캐시백",
+      "rate_percent": 3,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "일반음식점"
+        },
+        {
+          "category": "배달 앱",
+          "brands": [
+            "배달의민족",
+            "쿠팡이츠",
+            "요기요"
+          ]
+        },
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25",
+            "CU",
+            "세븐일레븐",
+            "이마트24"
+          ]
+        },
+        {
+          "category": "대중교통",
+          "industries": [
+            "시내버스",
+            "지하철"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000
+      },
+      "combined_cap_group": "추가혜택통합"
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "추가혜택통합",
+      "members": [
+        "일반음식점",
+        "배달 앱",
+        "편의점",
+        "대중교통"
+      ],
+      "cap_by_tier": {
+        "300000": 5000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비, 제수수료, 이자"
+    },
+    {
+      "code": "FEE",
+      "label": "국제브랜드 수수료 및 해외서비스 수수료"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "공과금 납부액(국세, 관세, 지방세, 지방세외수입, 상하수도 요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급 수수료 등)"
+    },
+    {
+      "code": "UTILITY",
+      "label": "전기 요금, TV 수신료, 도시가스 요금"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트 관리비, 부동산 임대료(월세), 자동납부 서비스 이용 수수료"
+    },
+    {
+      "code": "TUITION",
+      "label": "사립유치원 교육비 납입금, 초·중·고교 학교 납입금, 대학·대학원 등록금 납부 결제 건"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 등 현금성 유가증권 구매 및 선불 카드 구매·충전 금액"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "건강보험, 국민연금, 고용보험, 산재보험 및 장애인 고용 부담금"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "고속도로 통행 요금, 후불하이패스카드 이용 금액, 고속버스"
+    }
+  ],
+  "non_monetary": [
+    "현금 인출 기능(현금카드)",
+    "후불교통카드 기능"
+  ],
+  "schema_gaps": [
+    "캐시백은 매출 건별 소수점 이하 반올림 적용",
+    "신규 발급 시 카드 수령 등록월 다음 달 이용 건까지 전월 실적 30만원 미만도 추가 혜택 제공",
+    "캐시백 한도 초과 시 기본 혜택 캐시백율(0.3%) 적용"
+  ],
+  "source_url": "https://www.hyundaicard.com/upload/card/20260801_%EC%B2%B4%ED%81%AC_%EC%BA%90%EC%8B%9C%EB%B0%B1%ED%98%95.pdf",
+  "_extraction_check": {
+    "source_pdf": "177709.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 5000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

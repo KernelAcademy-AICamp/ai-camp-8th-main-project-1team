@@ -1,0 +1,162 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 기후동행체크카드",
+  "product_id": "KB-04919",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CHECK",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "tiers": [
+      200000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "TRANSIT",
+        "label": "후불교통요금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공공요금(상하수도/전기/도시가스) 및 TV수신료"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(원) 등록금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입(충전)금액"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 각종 수수료"
+      },
+      {
+        "code": "TAX",
+        "label": "지방세, 세외수입"
+      },
+      {
+        "code": "ETC",
+        "label": "무승인 금액(자판기, 터널통행료, 유료도로, 기차/고속버스), 취소 반환수수료, 정부지원금 이용금액(보육료, 유치원 보조비, 바우처 이용금액 등), 포인트리 충전금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "생활",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 2,
+      "min_amount": 10000,
+      "requires_tier": 200000,
+      "targets": [
+        {
+          "category": "커피·음료전문점/편의점/약국/패스트푸드점 업종"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 4000
+      }
+    },
+    {
+      "group": "쇼핑",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "requires_tier": 200000,
+      "targets": [
+        {
+          "category": "KB Pay 쇼핑, 올리브영"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 4000
+      }
+    },
+    {
+      "group": "여가",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "requires_tier": 200000,
+      "targets": [
+        {
+          "category": "영화(CGV, 롯데시네마)"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 4000
+      }
+    },
+    {
+      "group": "여가",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 2,
+      "min_amount": 10000,
+      "requires_tier": 200000,
+      "targets": [
+        {
+          "category": "스포츠 업종"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 4000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전 금액"
+    }
+  ],
+  "non_monetary": [
+    "후불 기후동행카드 서비스 제공"
+  ],
+  "schema_gaps": [
+    "최초 발급 시 사용등록일로부터 다음달 말일까지 전월 실적 20만원 미만 시에도 생활/쇼핑/여가 각 서비스 영역별 월 2,000원까지 할인 제공"
+  ],
+  "posted_at": "2024-11-25",
+  "source_url": "https://img2.kbcard.com/obj/card/download/_04919__prdctOpmn_20241125.pdf",
+  "_extraction_check": {
+    "source_pdf": "01__04919__prdctOpmn_20241125.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 16000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,253 @@
+{
+  "issuer": "하나카드",
+  "name": "MOVING카드 ONLINE",
+  "product_id": "HANA-15726",
+  "status": "active",
+  "as_of": "2026-06-19",
+  "review_no": "여신금융협회 심의필 제 2026-C1a-09124호",
+  "compliance_no": "준법심의 L-26-2049(2026.06.08)",
+  "posted_at": "2026-06-08",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내외겸용",
+      "brand": "Mastercard",
+      "total": 20000,
+      "base": 10000,
+      "affiliate": 10000
+    },
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 20000,
+      "base": 10000,
+      "affiliate": 10000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      500000
+    ],
+    "excluded": [
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "수도/전기요금, 도시가스 요금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "그외 공과금(우편요금, 과태료, 범칙금, 벌금, 국가/공공기관/공공단체가 부과하는 부담금)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "국민연금/고용보험료/산재보험료/건강보험료 납부 금액"
+      },
+      {
+        "code": "TUITION",
+        "label": "스쿨뱅킹, 초·중·고 학교 납입금, 대학교 납입금, 대학원 납입금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 기프트카드 구매, 선불카드 및 선불전자지급수단(예시: 하나머니) 충전 금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "부동산임대료"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 및 부분무이자할부 이용금액 전체"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "3일 쓰면 2배 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내외 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "ALLDAY 모드",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "온라인 간편결제"
+        }
+      ]
+    },
+    {
+      "group": "ONLINE 모드",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "AI 구독"
+        },
+        {
+          "category": "디지털 구독"
+        },
+        {
+          "category": "택시"
+        },
+        {
+          "category": "푸드"
+        }
+      ]
+    },
+    {
+      "group": "PLAY 모드",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "커피"
+        },
+        {
+          "category": "편의점"
+        },
+        {
+          "category": "온라인쇼핑"
+        },
+        {
+          "category": "딜리버리"
+        },
+        {
+          "category": "트렌디패션"
+        },
+        {
+          "category": "디지털 구독"
+        }
+      ]
+    },
+    {
+      "group": "LIFE 모드",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "온라인 쇼핑"
+        },
+        {
+          "category": "오프라인 쇼핑"
+        },
+        {
+          "category": "의료"
+        },
+        {
+          "category": "학원"
+        },
+        {
+          "category": "생활요금"
+        },
+        {
+          "category": "주유/EV충전"
+        },
+        {
+          "category": "디지털 구독"
+        }
+      ]
+    },
+    {
+      "group": "GLOBAL 모드",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "해외"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "TAX",
+      "label": "국세, 지방세"
+    },
+    {
+      "code": "UTILITY",
+      "label": "수도/전기요금, 도시가스 요금"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "그외 공과금(우편요금, 과태료, 범칙금, 벌금, 국가/공공기관/공공단체가 부과하는 부담금)"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "국민연금/고용보험료/산재보험료/건강보험료 납부 금액"
+    },
+    {
+      "code": "TUITION",
+      "label": "스쿨뱅킹, 초·중·고 학교 납입금, 대학교 납입금, 대학원 납입금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 기프트카드 구매, 선불카드 및 선불전자지급수단(예시: 하나머니) 충전 금액"
+    },
+    {
+      "code": "HOUSING",
+      "label": "부동산임대료"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 및 부분무이자할부 이용금액 전체"
+    }
+  ],
+  "non_monetary": [
+    "Mastercard PLATINUM 등급 서비스 제공",
+    "트래블로그 스위치 서비스(외화 하나머니 결제)",
+    "해외이용수수료 면제(GLOBAL 모드 설정 시)"
+  ],
+  "schema_gaps": [
+    "5가지 모드(Mode) 선택형 서비스로, 각 모드별 적립률과 한도가 상이함",
+    "3일 쓰면 2배 적립은 연속 3일 이용 시 기본 적립률의 2배를 제공하는 조건부 혜택",
+    "일부 모드(PLAY, LIFE, ONLINE)는 전월 실적 50만원 이상 시 혜택 제공",
+    "트래블로그 스위치 서비스는 외화 하나머니 결제 시 제공되며, 신용 결제와는 별도의 구조임",
+    "가족카드 발급 가능하며 본인카드와 실적/한도 합산됨"
+  ],
+  "source_url": "https://m.hanacard.co.kr/leaflet/15/15726_20260608.pdf",
+  "_extraction_check": {
+    "source_pdf": "15726.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 6,
+        "second": 2
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.0",
+        "first": null,
+        "second": 20000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

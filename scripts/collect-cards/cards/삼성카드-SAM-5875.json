@@ -1,0 +1,198 @@
+{
+  "issuer": "삼성카드",
+  "name": "신세계 더 마일리지 삼성카드(스카이패스)",
+  "product_id": "SAM-5875",
+  "status": "active",
+  "as_of": "2022-07-08",
+  "review_no": "여신금융협회 심의필 제 2022-C1a-05560호",
+  "posted_at": "2022-07-01",
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "has_transit": true,
+  "annual_fee": [
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 45000,
+      "base": 7000,
+      "affiliate": 38000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비는 카드 발급일(발급 첫 해에는 카드 사용등록일)을 기준으로 매년 청구",
+    "카드 중도 해지 시, 연회비 반환 금액은 회원이 카드사와 계약을 해지한 날부터 일 단위로 나누어 계산하여 반환",
+    "카드 발행, 배송 등 카드 발급에 소요된 비용(신규 가입연도에 해당)은 반환 금액에서 제외"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 결제",
+        "무승인 결제(대중교통, 이동통신 등 정기결제건)"
+      ]
+    },
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      500000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자(할부수수료, 카드대출 이자 등)"
+      },
+      {
+        "code": "PENALTY",
+        "label": "연체료"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "건강보험/국민연금/고용보험/산재보험 및 장애인 고용부담금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세/지방세/공과금 납부건"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트 관리비, 부동산 임대료 납부건"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고등학교 학교납입금, 대학 등록금 납부건"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통, 택시 이용금액"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "기프트/선불카드(포인트, 사이버머니 등 전자지급수단 포함) 구매 및 충전, 상품권 구매건"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "국내외 가맹점 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내외 가맹점",
+          "note": "1,500원당 스카이패스 1 마일리지 적립"
+        }
+      ],
+      "conditions": [
+        "전월 이용금액 50만원 이상 시 제공",
+        "발급월+1개월까지는 전월 이용금액 50만원 미만 시에도 제공",
+        "적립한도 없음"
+      ]
+    },
+    {
+      "group": "신세계백화점·면세점 추가 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "신세계백화점",
+          "note": "오프라인 결제건에 한함, 상품권/주차장/임대매장 제외"
+        },
+        {
+          "category": "신세계면세점",
+          "note": "온오프라인 결제 시 적용, 내수통관상품 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 500
+      },
+      "conditions": [
+        "1,500원당 스카이패스 1 마일리지 추가 적립",
+        "전월 이용금액 50만원 이상 시 제공",
+        "발급월+1개월까지는 전월 이용금액 50만원 미만 시에도 제공"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "DISCOUNT_APPLIED",
+      "label": "삼성카드 할인이 적용된 일시불 및 할부 이용금액"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "건강보험/국민연금/고용보험/산재보험 및 장애인 고용부담금"
+    },
+    {
+      "code": "TAX",
+      "label": "국세/지방세/공과금 납부건"
+    },
+    {
+      "code": "HOUSING",
+      "label": "부동산 임대료 납부건"
+    },
+    {
+      "code": "TUITION",
+      "label": "초·중·고등학교 학교납입금, 대학 등록금 납부건"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "대중교통, 택시, 고속버스, 고속도로 통행요금 납부건"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "기프트/선불카드 구매 및 충전, 상품권 구매건"
+    },
+    {
+      "code": "SMS_AUTO",
+      "label": "문자알림서비스, 스마트오토서비스 이용금액"
+    },
+    {
+      "code": "CASHBACK_PARTNER",
+      "label": "삼성카드와 구매캐시백 포인트 제공 계약을 체결한 일부 가맹점 의약품/유류 구매한도 대금결제건"
+    }
+  ],
+  "non_monetary": [
+    "신세계백화점 제휴 서비스",
+    "신세계면세점 멤버십 우대 서비스",
+    "Mastercard PLATINUM 등급 서비스"
+  ],
+  "schema_gaps": [
+    "결제건당 1,500원 미만 금액에 대한 반올림 적립 로직",
+    "기본 적립과 추가 적립이 각각 반올림되어 적용되는 방식"
+  ],
+  "source_url": "https://www.samsungcard.com/filedownload.do?grpNo=1zPVy1PuFbwGC7xZyM4qtvJBoFUKdXdgvP07KwovABM%3D&sn=2",
+  "_extraction_check": {
+    "source_pdf": "5875.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 500,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,262 @@
+{
+  "issuer": "KB국민카드",
+  "name": "HERITAGE Classic(스카이패스형)",
+  "product_id": "KB-09139",
+  "status": "active",
+  "as_of": "2025-01-15",
+  "review_no": "여신금융협회 심의필 제2025-C1a-00553호",
+  "compliance_no": "260406-01115-PIF",
+  "posted_at": "2024-11-28",
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "annual_fee": [
+    {
+      "scope": "국내외겸용",
+      "brand": "Mastercard/Visa",
+      "total": 157000,
+      "base": 7000,
+      "affiliate": 150000
+    },
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 157000,
+      "base": 7000,
+      "affiliate": 150000
+    }
+  ],
+  "annual_fee_notes": [
+    "가족카드 연회비 30,000원(제휴연회비 30,000원)",
+    "연회비는 카드발급 시점을 기준으로 1년 단위로 청구",
+    "최초/2차년도 연회비 면제조건 없음"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      500000
+    ],
+    "excluded": [
+      {
+        "code": "COUPON",
+        "label": "쿠폰 서비스 적용 매출"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "유치원/초·중·고 학교 납입금"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION_UNI",
+        "label": "대학(원) 등록금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도 등)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "RF후불교통요금"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내외 가맹점"
+        }
+      ],
+      "conditions": [
+        "1,500원당 1마일리지 적립",
+        "전월 실적 50만원 이상 시 제공",
+        "적립한도 없음"
+      ]
+    },
+    {
+      "group": "생활밀착 특별 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "쇼핑",
+          "industries": [
+            "온라인몰",
+            "백화점",
+            "대형마트",
+            "슈퍼마켓"
+          ]
+        },
+        {
+          "category": "생활",
+          "industries": [
+            "음식",
+            "커피",
+            "편의점",
+            "택시"
+          ]
+        },
+        {
+          "category": "교육",
+          "industries": [
+            "학원",
+            "학습지",
+            "독서실"
+          ]
+        },
+        {
+          "category": "건강",
+          "industries": [
+            "병원",
+            "건강검진"
+          ]
+        }
+      ],
+      "conditions": [
+        "1,500원당 2마일리지 적립(기본 1 + 추가 1)",
+        "전월 실적 50만원 이상 시 제공"
+      ],
+      "is_headline": true
+    },
+    {
+      "group": "Flex 서비스",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "Flex",
+          "industries": [
+            "온라인항공",
+            "호텔",
+            "온라인면세",
+            "스포츠",
+            "미용실"
+          ]
+        }
+      ],
+      "conditions": [
+        "1,500원당 2마일리지 적립(기본 1 + 추가 1)",
+        "전월 실적 50만원 이상 시 제공"
+      ]
+    },
+    {
+      "group": "카 라이프 서비스",
+      "kind": "할인",
+      "targets": [
+        {
+          "category": "주차/세차",
+          "industries": [
+            "주차장",
+            "세차장"
+          ]
+        }
+      ],
+      "conditions": [
+        "10% 청구할인",
+        "월 1만원 한도",
+        "전월 실적 50만원 이상 시 제공"
+      ]
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "통합 적립한도",
+      "members": [
+        "생활밀착 4개 영역",
+        "Flex 서비스"
+      ],
+      "cap_by_tier": {
+        "500000": 1000
+      },
+      "note": "월 1천 마일리지 한도(추가 1마일리지 적립분)"
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "쿠폰 서비스(연 1회 선택)",
+    "공항 라운지 서비스(연 3회)",
+    "KB국민은행 수수료 감면/면제",
+    "문자알림(SMS) 서비스 무료"
+  ],
+  "schema_gaps": [
+    "쿠폰 서비스: 연 1회 제공, 전년도 이용실적 600만원 이상 시 제공(발급 첫해 제외)",
+    "실적 유예: 최초 발급 시 사용등록일부터 다음달 말일까지 실적 50만원 미만 시에도 혜택 제공",
+    "마일리지 적립: 1,500원 단위 미만 금액은 반올림 처리",
+    "공항 라운지: 연 3회(1~12월 기준), 동반 1인 포함(본인+동반 시 2회 차감)"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09139__prdctOpmn_20260626.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09139__prdctOpmn_20260626.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

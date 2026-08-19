@@ -1,0 +1,205 @@
+{
+  "issuer": "현대카드",
+  "name": "the Red Edition5",
+  "product_id": "HYU-24583",
+  "status": "stopped",
+  "as_of": null,
+  "review_no": null,
+  "compliance_no": "준법감시심의필 제 260311-012호 (2026. 03. 11)",
+  "posted_at": "2021-09-30",
+  "card_type": "CREDIT",
+  "benefit_style": "PREMIUM",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "현대",
+      "total": 300000,
+      "base": 100000,
+      "affiliate": 200000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA Signature",
+      "total": 300000,
+      "base": 100000,
+      "affiliate": 200000
+    }
+  ],
+  "annual_fee_notes": [
+    "가족카드 연회비 100,000원(기본 0원 + 제휴 100,000원)",
+    "연회비는 카드 발급 시 선청구",
+    "중도 해지 시 일할 계산하여 반환(부가서비스 비용 등 제외)"
+  ],
+  "performance": {
+    "period": "결제일자 기준",
+    "basis": "승인일",
+    "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "해외 일시불",
+      "할부"
+    ],
+    "tiers": [
+      500000,
+      1000000,
+      2000000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비·제수수료·이자"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금(국세, 관세, 지방세, 지방세외수입, 상하수도요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급수수료 등)"
+      },
+      {
+        "code": "UTILITY",
+        "label": "전기요금, 도시가스요금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고교 학교납입금, 대학·대학원 등록금"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "건강보험, 국민연금, 고용보험, 산재보험 및 장애인 고용부담금"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "고속도로 통행요금, 고속버스"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 등 현금성 유가증권 구매 및 선불카드 구매·충전금액"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "당사의 모든 할인서비스 및 무이자할부 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "항공마일리지",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "대한항공",
+          "note": "1천원당 1마일리지 적립"
+        }
+      ]
+    },
+    {
+      "group": "M포인트",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "기본적립",
+          "note": "당월 50만원 이상 시 1%, 100만원 이상 시 1.5%, 200만원 이상 시 2%"
+        },
+        {
+          "category": "현대자동차·기아 신차 구매",
+          "note": "2% 적립"
+        },
+        {
+          "category": "GS칼텍스 주유",
+          "note": "리터당 60 M포인트 적립(일 2회, 1회 10만원 한도)"
+        }
+      ]
+    },
+    {
+      "group": "바우처",
+      "kind": "할인",
+      "targets": [
+        {
+          "category": "Travel, Shopping, Gourmet, Lifestyle, Leisure",
+          "note": "연 1회 10만원권 최대 2매(총 20만원) 제공"
+        }
+      ]
+    },
+    {
+      "group": "공항라운지",
+      "kind": "무이자할부",
+      "targets": [
+        {
+          "category": "The Lounge",
+          "note": "월 2회, 연 10회 무료"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비·제수수료·이자"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    }
+  ],
+  "non_monetary": [
+    "메탈 플레이트 제공(발급수수료 10만원)",
+    "무료 발레파킹 서비스(공항/호텔 월 5회)"
+  ],
+  "schema_gaps": [
+    "항공마일리지형과 M포인트형 중 선택하여 가입하는 구조",
+    "바우처 제공 조건이 발급 초년도와 2차년도 이후로 상이함",
+    "로열티 보너스(연간 2천만원 이상 이용 시 10만 M포인트 또는 연회비 감면) 조건 존재",
+    "M포인트 적립 시 1,000원 미만 절사, 항공마일리지 적립 시 소수점 이하 절상 등 상세 계산 로직 존재"
+  ],
+  "source_url": "https://www.hyundaicard.com/upload/card/260513_%EA%B0%80%EC%9D%B4%EB%93%9C%EB%B6%81_the%20Red%20ed5.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_20260513_260513_가이드북_the Red ed5.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 4,
+        "second": 3
+      },
+      {
+        "path": "$.benefits[2].kind",
+        "first": "무이자할부",
+        "second": "적립"
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

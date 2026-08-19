@@ -1,0 +1,270 @@
+{
+  "issuer": "KB국민카드",
+  "name": "하나투어 KB국민카드",
+  "product_id": "KB-01234",
+  "status": "active",
+  "as_of": "2020-03-26",
+  "review_no": "여신금융협회 심의필 제2020-C1a-02568호",
+  "compliance_no": "준법감시인 심의필 241008-05039-PIF (2024.10.08)",
+  "posted_at": "2007-10-30",
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "실버",
+      "total": 5000,
+      "base": 5000,
+      "affiliate": 0
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "실버",
+      "total": 5000,
+      "base": 5000,
+      "affiliate": 0
+    },
+    {
+      "scope": "국내전용",
+      "brand": "골드",
+      "total": 10000,
+      "base": 10000,
+      "affiliate": 0
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "골드",
+      "total": 10000,
+      "base": 10000,
+      "affiliate": 0
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "플래티늄S",
+      "total": 40000,
+      "base": 10000,
+      "affiliate": 30000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "플래티늄",
+      "total": 10000,
+      "base": 10000,
+      "affiliate": 90000
+    }
+  ],
+  "annual_fee_notes": [
+    "이퀸즈 제휴연회비 별도 표기",
+    "연회비 반환 기준: 해지 시 잔여기간 일할 계산하여 10영업일 이내 입금"
+  ],
+  "benefits": [
+    {
+      "group": "하나투어 마일리지 적립",
+      "kind": "적립",
+      "rate_percent": 2,
+      "targets": [
+        {
+          "category": "면세점업종"
+        }
+      ]
+    },
+    {
+      "group": "하나투어 마일리지 적립",
+      "kind": "적립",
+      "rate_percent": 3,
+      "targets": [
+        {
+          "category": "하나투어 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "하나투어 마일리지 적립",
+      "kind": "적립",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "패밀리 레스토랑"
+        }
+      ]
+    },
+    {
+      "group": "하나투어 마일리지 적립",
+      "kind": "적립",
+      "rate_percent": 10,
+      "targets": [
+        {
+          "category": "커피전문점"
+        }
+      ]
+    },
+    {
+      "group": "하나투어 마일리지 적립",
+      "kind": "적립",
+      "rate_percent": 1,
+      "targets": [
+        {
+          "category": "일반가맹점"
+        }
+      ]
+    },
+    {
+      "group": "영화할인 서비스",
+      "kind": "할인",
+      "amount_krw": 3500,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "메가박스",
+            "CGV"
+          ],
+          "channel": [
+            "온라인"
+          ]
+        }
+      ],
+      "conditions": [
+        "직전월 3개월간 결제회수금액 월평균 30만원 이상 시 제공",
+        "최초 카드 사용등록일로부터 120일간 조건 없이 제공"
+      ]
+    },
+    {
+      "group": "무이자할부 서비스",
+      "kind": "무이자할부",
+      "targets": [
+        {
+          "category": "여행/쇼핑",
+          "industries": [
+            "하나투어",
+            "국내 면세점"
+          ]
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부(부분무이자 포함) 이용건"
+    }
+  ],
+  "non_monetary": [
+    "환전우대 서비스: 매매마진율의 30% 우대",
+    "포인트연계할부서비스(굿세이브)",
+    "하나투어 마일리지 클럽 서비스"
+  ],
+  "schema_gaps": [
+    "영화할인 서비스: 1일 2회, 월 4회, 연 10회 제한 조건 존재",
+    "포인트연계할부서비스: 50만원 이상 결제 시 30~70만원 한도 내 이용 가능",
+    "연회비: 이퀸즈 제휴연회비가 포함된 합계 금액을 별도 표기함"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/01234__prdctOpmn_20241204.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_01234__prdctOpmn_20241204.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.annual_fee[0].affiliate",
+        "first": 0,
+        "second": null
+      },
+      {
+        "path": "$.annual_fee[0].base",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.annual_fee[1].affiliate",
+        "first": 0,
+        "second": null
+      },
+      {
+        "path": "$.annual_fee[1].base",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.annual_fee[2].affiliate",
+        "first": 0,
+        "second": null
+      },
+      {
+        "path": "$.annual_fee[2].base",
+        "first": 5000,
+        "second": null
+      },
+      {
+        "path": "$.annual_fee[3].affiliate",
+        "first": 90000,
+        "second": null
+      },
+      {
+        "path": "$.annual_fee[3].base",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.annual_fee[3].total",
+        "first": 10000,
+        "second": 100000
+      },
+      {
+        "path": "$.annual_fee[4].affiliate",
+        "first": 30000,
+        "second": null
+      },
+      {
+        "path": "$.annual_fee[4].base",
+        "first": 10000,
+        "second": null
+      },
+      {
+        "path": "$.annual_fee[5].affiliate",
+        "first": 0,
+        "second": null
+      },
+      {
+        "path": "$.annual_fee[5].base",
+        "first": 5000,
+        "second": null
+      },
+      {
+        "path": "$.benefits.length",
+        "first": 7,
+        "second": 3
+      },
+      {
+        "path": "$.benefits[1].kind",
+        "first": "적립",
+        "second": "무이자할부"
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": 3,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].kind",
+        "first": "무이자할부",
+        "second": "적립"
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

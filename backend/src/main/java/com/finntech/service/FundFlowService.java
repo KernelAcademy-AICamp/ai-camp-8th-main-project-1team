@@ -7,6 +7,8 @@ import com.finntech.service.FundFlowInputs.LargeExpense;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
+
 /**
  * 자금 흐름 축(L1~L5) 분석 (③ 취향·추천) — `07_취향분석및추천_Agent_설계.md` §4.1.
  *
@@ -113,7 +115,8 @@ public class FundFlowService {
     /** L5 우대조건 충족 재료 — 재료가 없으면 known=false. */
     static Preferential preferential(FundFlowInputs.Preferential p) {
         if (p == null) return new Preferential(false, false, false);
-        return new Preferential(p.cardPerformanceMet(), p.salaryTransferMet(), true);
+        return new Preferential(p.cardPerformanceMet(), p.salaryTransferMet(), true,
+                p.cardPerformanceCompanies(), p.salaryBanks());
     }
 
     // ── 산출 타입 ────────────────────────────────────────────────────────────
@@ -129,8 +132,30 @@ public class FundFlowService {
     /** L4 산출 — cycleMonths=큰 1회성 지출 주기(없거나 재료 없으면 null), level=구간. */
     public record Liquidity(Integer cycleMonths, LiquidityNeed level) {}
 
-    /** L5 산출 — 충족 플래그 + known(재료 수신 여부). known=false면 두 플래그는 의미 없음. */
-    public record Preferential(boolean cardPerformanceMet, boolean salaryTransferMet, boolean known) {}
+    /**
+     * L5 산출 — 충족 플래그 + known(재료 수신 여부). known=false면 나머지 값은 의미 없음.
+     *
+     * <p><b>뒤의 두 집합은 당행 한정 조건용이다</b>(2026-08-11). 상품이 `우리은행 입출식 계좌에서…`처럼
+     * 금융사를 지정하면 M6이 그 금융사 것으로 좁혀 판정한다(§4.5 M6 ④). 집합이 비어 있으면 좁힐 재료가
+     * 없다는 뜻이라 당행 한정 조건은 <b>판정 불가</b>가 된다 — 앞의 두 불리언으로 대신 답하지 않는다.
+     *
+     * @param cardPerformanceCompanies 전월 실적 임계를 넘긴 카드사명.
+     * @param salaryBanks              급여가 들어오는 은행명.
+     */
+    public record Preferential(boolean cardPerformanceMet, boolean salaryTransferMet, boolean known,
+                               Set<String> cardPerformanceCompanies, Set<String> salaryBanks) {
+
+        public Preferential {
+            cardPerformanceCompanies = cardPerformanceCompanies == null
+                    ? Set.of() : Set.copyOf(cardPerformanceCompanies);
+            salaryBanks = salaryBanks == null ? Set.of() : Set.copyOf(salaryBanks);
+        }
+
+        /** 금융사별 재료 없이 만드는 형태 — 당행 한정 조건은 판정 불가로 떨어진다. */
+        public Preferential(boolean cardPerformanceMet, boolean salaryTransferMet, boolean known) {
+            this(cardPerformanceMet, salaryTransferMet, known, Set.of(), Set.of());
+        }
+    }
 
     /** 자금 흐름 프로필 — 5축 분류 결과. FP-01(M1~M9) 매칭의 입력이 된다. */
     public record FundFlowProfile(

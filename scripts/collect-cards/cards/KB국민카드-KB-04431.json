@@ -1,0 +1,268 @@
+{
+  "issuer": "KB국민카드",
+  "name": "GS SHOP KB국민카드",
+  "product_id": "KB-04431",
+  "status": "active",
+  "as_of": "2020-12-15",
+  "review_no": "여신금융협회 심의필 제 2020-C1a-11093호",
+  "compliance_no": "201215-04150-PIF호",
+  "posted_at": "2020-12-16",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 25000,
+      "base": 7000,
+      "affiliate": 18000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 25000,
+      "base": 7000,
+      "affiliate": 18000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "K-World(UPI)",
+      "total": 25000,
+      "base": 7000,
+      "affiliate": 18000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      400000,
+      800000,
+      1500000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "DISCOUNTED_AMOUNT",
+        "label": "할인 받은 이용건 전체"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "초/중/고 학교납입금 전체"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(원)등록금"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입/충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "무승인전표(대중교통, 공항버스, 자판기, 터널이용료, 항공기내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "GS SHOP",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 12,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "GS SHOP"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 20000,
+        "800000": 30000,
+        "1500000": 50000
+      }
+    },
+    {
+      "group": "대형마트",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "min_amount": 30000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "대형마트",
+          "brands": [
+            "롯데마트",
+            "이마트",
+            "홈플러스"
+          ],
+          "channel": [
+            "오프라인 매장"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000
+      }
+    },
+    {
+      "group": "이동통신",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "이동통신",
+          "industries": [
+            "SKT",
+            "KT",
+            "LG U+",
+            "Liiv M"
+          ],
+          "note": "자동납부 요금"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000
+      }
+    },
+    {
+      "group": "커피/편의점/택시",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "커피/편의점/택시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000
+      }
+    },
+    {
+      "group": "미용실/화장품/문화센터/스포츠",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "미용실/화장품/문화센터/스포츠",
+          "industries": [
+            "미용실",
+            "화장품",
+            "문화센터",
+            "종합스포츠센터",
+            "골프장",
+            "골프연습장",
+            "테니스장",
+            "수영장",
+            "요가",
+            "볼링장"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 10000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입/충전금액"
+    }
+  ],
+  "non_monetary": [],
+  "schema_gaps": [
+    "실적 유예기간: 최초 카드 사용등록일로부터 다음달 말일까지 실적 없이 서비스 제공(단, GS SHOP 12% 할인은 월 2만원 한도 내 제공)",
+    "해외 이용 시 국제브랜드 수수료 및 해외서비스 수수료 부과 방식 명시"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04431__prdctOpmn_20220617.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04431__prdctOpmn_20220617.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 5,
+        "second": 4
+      },
+      {
+        "path": "$.benefits[1].min_amount",
+        "first": null,
+        "second": 30000
+      },
+      {
+        "path": "$.benefits[3].min_amount",
+        "first": 30000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[3].rate_percent",
+        "first": 5,
+        "second": 10
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 50000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

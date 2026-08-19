@@ -1,0 +1,182 @@
+{
+  "issuer": "삼성카드",
+  "name": "K-패스 삼성카드",
+  "product_id": "SAM-6389",
+  "status": "active",
+  "as_of": "2024-04-12",
+  "review_no": "여신금융협회 심의필 제 2024-C1a-04005호",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "삼성",
+      "total": 10000,
+      "base": 7000,
+      "affiliate": 3000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 10000,
+      "base": 7000,
+      "affiliate": 3000
+    }
+  ],
+  "benefits": [
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 10,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ],
+          "note": "오프라인 결제건에 한하며, 시외/고속버스는 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      }
+    },
+    {
+      "group": "디지털콘텐츠/멤버십",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 20,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "디지털콘텐츠",
+          "brands": [
+            "넷플릭스",
+            "디즈니+",
+            "웨이브",
+            "유튜브프리미엄",
+            "티빙",
+            "멜론"
+          ],
+          "note": "구글플레이, 앱스토어 등을 통한 결제건(인앱 결제) 제외"
+        },
+        {
+          "category": "멤버십",
+          "brands": [
+            "쿠팡 와우 멤버십",
+            "네이버플러스 멤버십"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 4000,
+        "800000": 8000
+      }
+    },
+    {
+      "group": "온라인쇼핑",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 3,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "온라인쇼핑몰",
+          "brands": [
+            "쿠팡",
+            "SSG.COM",
+            "G마켓",
+            "옥션",
+            "11번가",
+            "삼성카드 쇼핑"
+          ]
+        },
+        {
+          "category": "온라인패션몰",
+          "brands": [
+            "무신사",
+            "W컨셉"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 4000,
+        "800000": 8000
+      }
+    },
+    {
+      "group": "커피전문점",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 20,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "커피전문점",
+          "brands": [
+            "스타벅스",
+            "이디야커피",
+            "투썸플레이스",
+            "커피빈",
+            "블루보틀"
+          ],
+          "note": "오프라인 결제건에 한하며, 백화점, 할인점, 쇼핑몰 등의 임대매장은 제외(단, 스타벅스의 경우, 사이렌오더 결제건도 혜택 제공)"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 4000,
+        "800000": 8000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "DISCOUNTED_PAYMENT",
+      "label": "삼성카드 할인이 적용된 일시불 및 할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "기프트/선불카드(포인트, 사이버머니 등 전자지급수단 포함) 구매 및 충전, 상품권 구매건"
+    }
+  ],
+  "non_monetary": [
+    "후불교통기능 탑재",
+    "해외겸용카드 컨택리스 결제 지원",
+    "특수 소재 카드 신청 가능(발급수수료 5,000원)"
+  ],
+  "schema_gaps": [
+    "발급월+1개월까지는 전월 이용금액 40만원 미만 시에도 40만원 이상~80만원 미만 실적구간 혜택 제공",
+    "삼성카드의 다른 결제일할인 혜택과 중복 적용되지 않으며, 할인 혜택이 큰 금액만 적용",
+    "자체 가맹점번호로 승인 처리되는 일부 결제건(간편결제, 키오스크 등)은 할인 대상에서 제외"
+  ],
+  "posted_at": "2024-04-24",
+  "source_url": "https://www.samsungcard.com/filedownload.do?grpNo=1zPVy1PuFbwGC7xZyM4qtm6gfSJg2Zrshv3zEpt3zsI%3D&sn=1",
+  "_extraction_check": {
+    "source_pdf": "6389.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

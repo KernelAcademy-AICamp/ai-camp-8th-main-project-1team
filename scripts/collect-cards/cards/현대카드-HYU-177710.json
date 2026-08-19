@@ -1,0 +1,156 @@
+{
+  "issuer": "현대카드",
+  "name": "현대카드 체크(Apple Pay Rewards)",
+  "product_id": "HYU-177710",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "posted_at": "2026-04-28",
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "현대",
+      "total": 5000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Visa Platinum",
+      "total": 5000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매출일자",
+      "applies_to": [
+        "대중교통",
+        "정기결제",
+        "해외 이용 금액"
+      ]
+    },
+    "tiers": [
+      300000,
+      600000
+    ],
+    "excluded": [
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 제수수료, 이자"
+      },
+      {
+        "code": "FEE",
+        "label": "국제브랜드 수수료 및 해외서비스 수수료"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금 납부액(국세, 관세, 지방세, 지방세외수입, 상하수도 요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급 수수료 등)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 등 현금성 유가증권 구매 및 선불 카드 구매·충전 금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "Apple Pay 캐시백",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "Apple Pay 이용 가맹점",
+          "note": "국내외 가맹점 Apple Pay 이용 금액"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000,
+        "600000": 10000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비, 제수수료, 이자"
+    },
+    {
+      "code": "FEE",
+      "label": "국제브랜드 수수료 및 해외서비스 수수료"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "공과금 납부액(국세, 관세, 지방세, 지방세외수입, 상하수도 요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급 수수료 등)"
+    },
+    {
+      "code": "UTILITY",
+      "label": "전기 요금, TV 수신료, 도시가스 요금, 아파트 관리비, 부동산 임대료(월세), 자동납부 서비스 이용 수수료"
+    },
+    {
+      "code": "TUITION",
+      "label": "사립유치원 교육비 납입금, 초·중·고교 학교 납입금, 대학·대학원 등록금 납부 결제 건"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 등 현금성 유가증권 구매 및 선불 카드 구매·충전 금액"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "건강보험, 국민연금, 고용보험, 산재보험 및 장애인 고용 부담금"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "고속도로 통행 요금, 후불하이패스카드 이용 금액, 고속버스"
+    }
+  ],
+  "non_monetary": [
+    "현금카드 기능 제공"
+  ],
+  "schema_gaps": [
+    "신규 발급 시 카드 수령 등록월 다음 달 이용 건까지 전월 실적 30만원 미만도 혜택 제공(30~60만원 구간 한도 적용, 단 60만원 이상 이용 시 60만원 구간 한도 적용)",
+    "캐시백은 매출 건별 소수점 이하 반올림 적용",
+    "캐시백 제공 시점 카드 정상 상태 유지 필수",
+    "체크카드 일 600만원, 월 2,000만원 이용 한도(만 13세 이하 일 3만원, 월 30만원)"
+  ],
+  "source_url": "https://www.hyundaicard.com/upload/card/20260801_%EC%B2%B4%ED%81%AC%20Apple%20Pay%20Rewards.pdf",
+  "_extraction_check": {
+    "source_pdf": "177710.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 10000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

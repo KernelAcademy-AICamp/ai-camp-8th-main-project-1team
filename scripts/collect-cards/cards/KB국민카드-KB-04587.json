@@ -1,0 +1,55 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 알파원카드",
+  "product_id": "KB-04587",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 0
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "K-world/Master/Visa",
+      "total": 0
+    }
+  ],
+  "benefits": [],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "KB Good Touch (터치 로그인 및 맞춤정보 확인)",
+    "스마트 OTP (온라인 뱅킹서비스)"
+  ],
+  "schema_gaps": [
+    "본 카드는 자체적인 할인/적립 혜택이 없는 '원카드' 서비스 전용 카드임",
+    "결제 시 KB Pay에 설정된 다른 카드(결제카드)의 혜택이 적용됨",
+    "2020년 1월 1일 이후 발급분부터 스마트 기능(Good Touch, 스마트 OTP) 미제공",
+    "연회비는 본 카드 자체가 아닌, 알파원 결제카드로 설정된 각 카드별 기준에 따라 청구됨"
+  ],
+  "posted_at": "2016-02-25",
+  "source_url": "https://img2.kbcard.com/obj/card/download/04587__prdctOpmn_20210923.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04587__prdctOpmn_20210923.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

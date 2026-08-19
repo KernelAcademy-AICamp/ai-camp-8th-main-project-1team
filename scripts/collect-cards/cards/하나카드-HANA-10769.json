@@ -1,0 +1,368 @@
+{
+  "issuer": "하나카드",
+  "name": "Young Hana 체크카드_OK캐쉬백(GREEN, 비교통)",
+  "product_id": "HANA-10769",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "없음",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "교통요금 등 무승인 매입"
+      ]
+    },
+    "includes_family_card": true,
+    "tiers": [
+      200000,
+      400000,
+      600000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "POINT_CHARGE",
+        "label": "하나머니 적립 이용금액"
+      },
+      {
+        "code": "OKCASHBAG_CHARGE",
+        "label": "OK캐쉬백 플러스 충전금액"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "국세/지방세"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권/기프트카드 구매금액"
+      },
+      {
+        "code": "PREPAID_CHARGE",
+        "label": "선불카드 충전금액"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "아이행복 정부지원금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "도시가스 이용금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비 자동이체 금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "커피",
+      "kind": "적립",
+      "rate_percent": 20,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "커피",
+          "brands": [
+            "스타벅스"
+          ]
+        }
+      ],
+      "conditions": [
+        "월 1회, 연 6회 적립 한도"
+      ]
+    },
+    {
+      "group": "편의점",
+      "kind": "적립",
+      "rate_percent": 10,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25"
+          ]
+        }
+      ],
+      "conditions": [
+        "월 2회 적립 한도"
+      ]
+    },
+    {
+      "group": "대중교통",
+      "kind": "적립",
+      "amount_krw": 1000,
+      "targets": [
+        {
+          "category": "대중교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ]
+        }
+      ],
+      "conditions": [
+        "월 5만원 이상 이용 시"
+      ]
+    },
+    {
+      "group": "외식",
+      "kind": "적립",
+      "rate_percent": 5,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "외식",
+          "brands": [
+            "아웃백",
+            "온더보더",
+            "VIPS"
+          ]
+        }
+      ],
+      "conditions": [
+        "월 1회, 연 6회 적립 한도"
+      ]
+    },
+    {
+      "group": "영화",
+      "kind": "적립",
+      "rate_percent": 10,
+      "min_amount": 10000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "CGV",
+            "롯데시네마",
+            "메가박스"
+          ]
+        }
+      ],
+      "conditions": [
+        "월 1회, 연 6회 적립 한도"
+      ]
+    },
+    {
+      "group": "쇼핑",
+      "kind": "적립",
+      "rate_percent": 5,
+      "min_amount": 50000,
+      "targets": [
+        {
+          "category": "쇼핑",
+          "brands": [
+            "11번가",
+            "쿠팡",
+            "티몬",
+            "SSG.COM"
+          ]
+        }
+      ],
+      "conditions": [
+        "월 1회, 연 6회 적립 한도"
+      ]
+    },
+    {
+      "group": "어학시험 / 어학원",
+      "kind": "적립",
+      "rate_percent": 5,
+      "min_amount": 30000,
+      "targets": [
+        {
+          "category": "어학시험 / 어학원",
+          "industries": [
+            "어학시험(TOEIC, OPIC, JPT, HSK)",
+            "외국어학원 업종"
+          ]
+        }
+      ],
+      "conditions": [
+        "월 1회, 연 6회 적립 한도"
+      ]
+    },
+    {
+      "group": "통신",
+      "kind": "적립",
+      "amount_krw": 1000,
+      "min_amount": 50000,
+      "targets": [
+        {
+          "category": "통신",
+          "industries": [
+            "SKT/KT/LGU+ 자동이체"
+          ]
+        }
+      ],
+      "conditions": [
+        "월 1회, 연 6회 적립 한도"
+      ]
+    },
+    {
+      "group": "OK캐쉬백 서비스",
+      "kind": "적립",
+      "rate_percent": 30,
+      "targets": [
+        {
+          "category": "OK캐쉬백 가맹점",
+          "note": "OK캐쉬백 사용금액의 30% 하나머니 적립"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "하나머니 적립 통합한도",
+      "members": [
+        "커피",
+        "편의점",
+        "대중교통",
+        "외식",
+        "영화",
+        "쇼핑",
+        "어학시험 / 어학원",
+        "통신"
+      ],
+      "cap_by_tier": {
+        "200000": 3000,
+        "400000": 5000,
+        "600000": 10000
+      }
+    }
+  ],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "해외 ATM 현금인출 수수료 우대 (이용원금의 1.0% 수수료 부과, 해외 인출 이용 수수료 3.0$ 면제)",
+    "놀이공원 할인 (롯데월드, 에버랜드 자유이용권 50% 할인, 월 1회/연 6회, 전월 20만원 이상 시)",
+    "하이브리드 서비스 (월 최대 30만원 한도 신용거래)"
+  ],
+  "schema_gaps": [
+    "하이브리드 서비스는 체크카드 잔액 부족 시 신용거래로 결제되는 서비스로, 주 결제 방식은 체크카드이나 신용거래 기능이 포함됨",
+    "OK캐쉬백 플러스 적립 서비스(충전 시 1% 추가 적립)는 전월 실적 조건 없음",
+    "놀이공원 할인은 발급한 달에는 제공되지 않음"
+  ],
+  "posted_at": "2026-06-05",
+  "source_url": "https://m.hanacard.co.kr/leaflet/10/10769_20260605.pdf",
+  "_extraction_check": {
+    "source_pdf": "10769.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 9,
+        "second": 8
+      },
+      {
+        "path": "$.benefits[1].min_amount",
+        "first": null,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": 30,
+        "second": 10
+      },
+      {
+        "path": "$.benefits[3].min_amount",
+        "first": 10000,
+        "second": 30000
+      },
+      {
+        "path": "$.benefits[3].rate_percent",
+        "first": 10,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[4].amount_krw",
+        "first": null,
+        "second": 1000
+      },
+      {
+        "path": "$.benefits[4].min_amount",
+        "first": 30000,
+        "second": 50000
+      },
+      {
+        "path": "$.benefits[4].rate_percent",
+        "first": 5,
+        "second": null
+      },
+      {
+        "path": "$.benefits[5].amount_krw",
+        "first": 1000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[5].min_amount",
+        "first": 50000,
+        "second": 30000
+      },
+      {
+        "path": "$.benefits[5].rate_percent",
+        "first": null,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[6].amount_krw",
+        "first": null,
+        "second": 1000
+      },
+      {
+        "path": "$.benefits[6].min_amount",
+        "first": 30000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[6].rate_percent",
+        "first": 5,
+        "second": null
+      },
+      {
+        "path": "$.benefits[7].amount_krw",
+        "first": 1000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[7].min_amount",
+        "first": null,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[7].rate_percent",
+        "first": null,
+        "second": 20
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

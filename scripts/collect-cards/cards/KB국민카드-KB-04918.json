@@ -1,0 +1,148 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 기후동행카드",
+  "product_id": "KB-04918",
+  "status": "active",
+  "as_of": "2024-11-12",
+  "review_no": "여신금융협회 심의필 제2024-C1a-14024호",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 10000,
+      "base": 7000,
+      "affiliate": 3000
+    }
+  ],
+  "benefits": [
+    {
+      "group": "생활",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "커피·음료전문점/편의점/약국/패스트푸드점 업종"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 7000
+      }
+    },
+    {
+      "group": "쇼핑",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "min_amount": 10000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "쇼핑",
+          "brands": [
+            "KB Pay 쇼핑",
+            "올리브영"
+          ],
+          "note": "KB Pay 앱 쇼핑 결제 건에 한하며, 상품권·여행·티켓·도서 및 제휴몰 등 별도 팝업 사이트 제외. 올리브영은 오프라인 매장 및 공식 홈페이지/모바일 앱 결제 건에 한하며, 백화점/대형마트 등 일부 입점 매장 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 7000
+      }
+    },
+    {
+      "group": "여가",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "min_amount": 10000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "CGV",
+            "롯데시네마"
+          ],
+          "note": "매점·관람권·상품권 및 예매대행사이트 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 7000
+      }
+    },
+    {
+      "group": "여가",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "min_amount": 10000,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "스포츠 업종",
+          "note": "골프장·골프연습장·테니스장·수영장·요가·볼링장·종합스포츠센터·스포츠용품점·레저용품점 업종"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 7000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함)구입/충전금액"
+    },
+    {
+      "code": "FEE",
+      "label": "연체료"
+    },
+    {
+      "code": "CANCEL",
+      "label": "취소금액"
+    }
+  ],
+  "non_monetary": [
+    "가족카드 발급 불가"
+  ],
+  "schema_gaps": [
+    "실적 유예: 최초 발급 시 사용등록일로부터 다음달 말일까지 실적 40만원 미만 시에도 각 서비스 영역별 월 3,500원까지 할인 제공",
+    "후불 기후동행카드 기능은 별도 정책에 따름"
+  ],
+  "posted_at": "2024-11-25",
+  "source_url": "https://img2.kbcard.com/obj/card/download/_04918__prdctOpmn_20241125.pdf",
+  "_extraction_check": {
+    "source_pdf": "01__04918__prdctOpmn_20241125.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.tiers.length",
+        "first": 0,
+        "second": 1
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

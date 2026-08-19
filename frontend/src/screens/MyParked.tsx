@@ -33,7 +33,7 @@ const FROM_REPORT: Item[] = [
   { id: 'r-cards', emoji: '💳', bg: 'var(--c-taxi)', title: '내 카드', desc: '카드별 실적과 받은 혜택' },
   { id: 'r-account', emoji: '🏧', bg: 'var(--c-cvs)', title: '내 통장', desc: '잔액·월급·이자 · 입출금 내역' },
   { id: 'r-waste', emoji: '⚠️', bg: 'var(--c-shop)', title: '이상 소비', desc: 'AI가 짚은 낭비/필수 판정' },
-  { id: 'r-savings', emoji: '🏦', bg: 'var(--green-weak)', title: '통장 비교', desc: '아낀 돈을 어디에 모을까 · 정보성' },
+  { id: 'r-savings', emoji: '🏦', bg: 'var(--green-weak)', title: '예적금 비교', desc: '공시 기본금리와 최고금리 비교 · 정보성' },
 ];
 
 /** 마이 탭에 있던 것들 — 개편안 `s-my` 가 설정 세 줄만 그렸다. */
@@ -49,7 +49,6 @@ const FROM_MY: Item[] = [
 
 /** 마이에도 리포트에도 진입점이 없어진 것. */
 const OTHERS: Item[] = [
-  { id: 'm-products', emoji: '📊', bg: 'var(--blue-weak)', title: '맞춤 상품 비교', desc: '예·적금·펀드 매칭 Top 3 · 전부 더미' },
   { id: 'm-demo', emoji: '🧪', bg: 'var(--bg)', title: '데모 도구', desc: '사용자 전환 · 시간 이동 · 배치 실행' },
 ];
 

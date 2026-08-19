@@ -1,0 +1,213 @@
+{
+  "issuer": "KB국민카드",
+  "name": "스카이패스 IoT 티타늄카드",
+  "product_id": "KB-04343",
+  "status": "active",
+  "as_of": "2024-02-22",
+  "review_no": "여신금융협회 심의필 제 2024-C1a-01874호",
+  "compliance_no": "231220-05094-PIF",
+  "posted_at": "2024-03-28",
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "annual_fee": [
+    {
+      "scope": "국내외겸용",
+      "brand": "AMEX",
+      "total": 35000,
+      "base": 7000,
+      "affiliate": 28000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비는 카드발급 시점을 기준으로 1년 단위로 청구",
+    "초회/차기년도 연회비 면제조건 없음",
+    "발급비 35,000원 별도 청구 (신규 및 재발급 시마다)"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      300000
+    ],
+    "excluded": [
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "(부분)무이자할부"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "전기·수도"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "초중고등(국·공립)학교 납입금, 대학(대학원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통요금"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인전표(자판기, 터널통행료, 항공기내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "대한항공 마일리지 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내외 가맹점",
+          "note": "1,500원당 1마일 적립"
+        }
+      ],
+      "conditions": [
+        "전월 이용실적 조건 없음",
+        "월 3,000마일 한도",
+        "결제(회수)금액 기준"
+      ]
+    },
+    {
+      "group": "티타늄 서비스",
+      "kind": "할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "인천공항 발레파킹",
+          "note": "월 3회, 연 12회"
+        },
+        {
+          "category": "국내호텔 발레파킹",
+          "note": "월 3회, 연 12회"
+        },
+        {
+          "category": "국내공항 라운지",
+          "note": "일 1회, 연 2회"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "(부분)무이자할부"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "각종 세금 및 공과금"
+    },
+    {
+      "code": "UTILITY",
+      "label": "전기·수도"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "TUITION",
+      "label": "초중고등(국·공립)학교 납입금, 대학(대학원)등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "4대 사회보험(건강/연금/고용/산재)"
+    }
+  ],
+  "non_monetary": [
+    "BLE 기반 IoT 위치확인 서비스",
+    "SmartThings 연동 기기 제어",
+    "무선 충전 지원"
+  ],
+  "schema_gaps": [
+    "IoT카드는 가족카드 및 모바일 단독카드 발급 불가",
+    "티타늄 서비스는 최초 사용등록 후 다음달 말일까지 실적 30만원 미만 시 서비스 미제공",
+    "발급비 35,000원 별도 청구"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04343__prdctOpmn_20240626.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04343__prdctOpmn_20240626.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].kind",
+        "first": "적립",
+        "second": "할인"
+      },
+      {
+        "path": "$.benefits[1].kind",
+        "first": "할인",
+        "second": "적립"
+      },
+      {
+        "path": "$.benefits[1].requires_tier",
+        "first": 300000,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

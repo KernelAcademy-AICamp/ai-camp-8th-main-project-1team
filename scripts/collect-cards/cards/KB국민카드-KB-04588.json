@@ -1,0 +1,195 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 모바일101카드",
+  "product_id": "KB-04588",
+  "status": "stopped",
+  "as_of": "2020-10-05",
+  "review_no": "여신금융협회 심의필 제2020-C1a-08972호",
+  "compliance_no": "준법감시인 심의필241008-05039-PIF(2024.10.08)",
+  "posted_at": "2016-01-19",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(UPI)",
+      "total": 1000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master/Visa",
+      "total": 2000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외이용금액"
+      ]
+    },
+    "tiers": [
+      200000,
+      500000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "DISCOUNTED_AMOUNT",
+        "label": "청구할인 받은 이용금액 전체"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "(부분)무이자 할부 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원) 등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전 금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통 이용 등 무승인전표"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "오프라인 모바일결제",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "삼성페이 / KB Pay",
+          "channel": [
+            "오프라인"
+          ],
+          "note": "대상 결제가 가능한 오프라인 전 가맹점"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 3000,
+        "500000": 5000
+      }
+    },
+    {
+      "group": "소셜커머스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "소셜커머스",
+          "brands": [
+            "위메프",
+            "쿠팡",
+            "티몬"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 3000,
+        "500000": 5000
+      }
+    },
+    {
+      "group": "이동통신",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_conditional": "자동이체 결제금액 1만원 이상 시",
+      "targets": [
+        {
+          "category": "이동통신",
+          "brands": [
+            "SKT",
+            "KT",
+            "LG U+"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 2000,
+        "500000": 3000
+      },
+      "conditions": [
+        "월 1회"
+      ]
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "환급할인",
+      "rate_percent": 5,
+      "targets": [
+        {
+          "category": "티머니 후불교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "200000": 2000,
+        "500000": 3000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "모바일 전용카드",
+    "가족카드 발급 불가"
+  ],
+  "schema_gaps": [
+    "최초 발급 후 사용등록일로부터 다음달 말일까지 이용실적이 없는 경우에도 1구간 할인 제공",
+    "대중교통 할인은 익월 10일 경 캐시백"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04588__prdctOpmn_20241129.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04588__prdctOpmn_20241129.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 16000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

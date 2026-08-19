@@ -1,0 +1,152 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB 소상공인 특례 햇살론카드",
+  "product_id": "KB-09286",
+  "status": "active",
+  "as_of": "2025-09-24",
+  "review_no": "여신금융협회 심의필 제2025-C1a-14248호",
+  "compliance_no": "준법감시인 심의필 250910-04783-PIF (2025.09.10)",
+  "posted_at": "2026-02-27",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 10000,
+      "base": 7000,
+      "affiliate": 3000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      300000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전"
+      },
+      {
+        "code": "TUITION",
+        "label": "유치원/초/중/고교 납입금, 대학(원) 등록금"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등), 국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공공요금(전기/수도 등)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "RF후불교통요금"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무승인전표(무이자할부 이용금액 등)"
+      },
+      {
+        "code": "ETC",
+        "label": "아파트관리비, 자판기/터널이용료/항공기내 이용 등"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 할인 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 0.5,
+      "targets": [
+        {
+          "category": "국내 가맹점"
+        }
+      ],
+      "conditions": [
+        "전월 이용실적 조건 없음"
+      ]
+    },
+    {
+      "group": "추가 할인 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 0.5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "생활편의업종",
+          "industries": [
+            "슈퍼마켓",
+            "대형마트",
+            "농·수·축협 직판장",
+            "편의점"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 20000
+      },
+      "combined_cap_group": "통합"
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "통합",
+      "members": [
+        "기본 할인 서비스",
+        "추가 할인 서비스"
+      ],
+      "cap_by_tier": {
+        "300000": 20000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "REFUND",
+      "label": "취소금액"
+    }
+  ],
+  "non_monetary": [
+    "일부 업종 이용 제한",
+    "6개월 초과 할부 이용 불가"
+  ],
+  "schema_gaps": [
+    "기본 할인 서비스와 추가 할인 서비스의 통합 월 한도가 2만원으로 명시됨",
+    "신규 발급 시 등록월로부터 다음달 말일까지 전월 실적 30만원 미만 시에도 추가 할인 서비스 제공"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09286__prdctOpmn_20260227.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09286__prdctOpmn_20260227.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 20000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

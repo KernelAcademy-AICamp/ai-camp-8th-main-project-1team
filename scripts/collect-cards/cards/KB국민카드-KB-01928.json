@@ -1,0 +1,179 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 정 체크카드",
+  "product_id": "KB-01928",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "없음",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master/Visa",
+      "total": 0
+    }
+  ],
+  "benefits": [
+    {
+      "group": "백화점",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 7,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "백화점",
+          "brands": [
+            "롯데백화점",
+            "현대백화점",
+            "신세계백화점"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000,
+        "500000": 10000
+      },
+      "conditions": [
+        "건당 10만원까지 할인",
+        "1일 1회 할인 적용"
+      ]
+    },
+    {
+      "group": "해외 이용",
+      "kind": "할인",
+      "settle": "캐시백",
+      "rate_percent": 5,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "해외",
+          "note": "해외 직구 및 해외 이용"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 5000
+      },
+      "conditions": [
+        "건당 3만원 이상 시"
+      ]
+    },
+    {
+      "group": "뷰티",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "뷰티",
+          "industries": [
+            "미용실",
+            "화장품",
+            "피부미용"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 10000
+      }
+    },
+    {
+      "group": "홈쇼핑/인터넷 쇼핑몰",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "쇼핑",
+          "brands": [
+            "GS홈쇼핑",
+            "CJ홈쇼핑",
+            "G마켓",
+            "옥션"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 5000,
+        "500000": 10000
+      },
+      "conditions": [
+        "건당 3만원 이상 시",
+        "건당 5만원까지 할인",
+        "1일 한도 2,500원 할인 적용"
+      ]
+    },
+    {
+      "group": "대중교통",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 5,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "교통",
+          "industries": [
+            "버스",
+            "지하철"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 1500
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "TRANSIT",
+      "label": "후불교통 이용금액"
+    },
+    {
+      "code": "ETC",
+      "label": "무승인, 해외 이용금액"
+    }
+  ],
+  "non_monetary": [
+    "소액신용 결제 서비스 제공"
+  ],
+  "schema_gaps": [
+    "카드 타입이 체크카드이나 소액신용 결제 서비스(최대 30만원)가 탑재되어 신용카드 거래로 처리될 수 있음",
+    "최초 발급 후 사용등록일로부터 다음달 말일까지는 실적 없어도 1구간 서비스 제공(뷰티, 대중교통, 해외 이용 제외)"
+  ],
+  "posted_at": "2014-05-28",
+  "source_url": "https://img2.kbcard.com/obj/card/download/01928__prdctOpmn_20241129.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_01928__prdctOpmn_20241129.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.tiers.length",
+        "first": 0,
+        "second": 2
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "issuer": "KB국민카드",
+  "name": "TANTUM Ultra 아멕스 카드(아시아나)",
+  "product_id": "KB-09072",
+  "status": "stopped",
+  "as_of": "2024-03-28",
+  "review_no": "여신금융협회 심의필 제2024-C1a-03437호",
+  "compliance_no": "준법감시인 240314-01036-PIF",
+  "posted_at": "2013-04-23",
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "annual_fee": [
+    {
+      "scope": "본인회원",
+      "brand": "American Express",
+      "total": 2000000
+    },
+    {
+      "scope": "가족회원",
+      "brand": "American Express",
+      "total": 500000
+    }
+  ],
+  "benefits": [
+    {
+      "group": "마일리지 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내 이용",
+          "note": "1,000원당 1마일"
+        },
+        {
+          "category": "해외 이용",
+          "note": "1,000원당 3마일"
+        }
+      ]
+    },
+    {
+      "group": "무이자할부",
+      "kind": "무이자할부",
+      "targets": [
+        {
+          "category": "전국 모든 가맹점",
+          "note": "2~3개월 무이자할부"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자 할부 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "각종 세금 및 공과금"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학교)등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "연회비, 상품권 및 선불카드 구입/충전금액"
+    }
+  ],
+  "non_monetary": [
+    "Luxury 여행 전용상품 할인(연 1회)",
+    "렌터카 및 전세계 주요 도시 리무진 할인",
+    "콘도 할인 서비스",
+    "제휴 여행 상품 우대",
+    "전세계 주요 공항 라운지 무료 이용",
+    "롯데호텔 우대서비스",
+    "해외 특급호텔 서비스",
+    "국내 VVIP 이벤트 초대",
+    "해외/국내여행 관련 보장 보험",
+    "휴일 교통 및 골프/골프용품 손해 보험",
+    "해외 유명 병원 Second Opinion",
+    "해외 응급 의료 지원",
+    "연중 24시간 비서 서비스",
+    "가족 장례 시 조화 발송",
+    "TANTUM 전용 룸 이용",
+    "KB Gold & Wise 서비스",
+    "은행 수수료 감면 및 면제"
+  ],
+  "schema_gaps": [
+    "매년 1회 아시아나항공 7만 마일리지 적립 혜택 존재",
+    "카드 발급 첫 해 연회비 납부 및 300만원 이상 이용 시 마일리지 적립",
+    "2차년도부터는 연회비 납부 시 마일리지 적립",
+    "Luxury 여행 전용상품 할인(연 1회)은 전년도 5천만원 이상 이용 시 제공",
+    "Priority Pass 월간 10회 무료 이용 제한",
+    "롯데호텔 객실 할인율은 성수기/비수기 및 지점별로 상이함",
+    "회원 자격심의위원회 심사를 통해 발급되는 VVIP 카드"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/___09072__prdctOpmn_20240403.pdf",
+  "_extraction_check": {
+    "source_pdf": "01____09072__prdctOpmn_20240403.pdf",
+    "source_mode": "attached_pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 2,
+        "second": 3
+      },
+      {
+        "path": "$.benefits[1].kind",
+        "first": "무이자할부",
+        "second": "할인"
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

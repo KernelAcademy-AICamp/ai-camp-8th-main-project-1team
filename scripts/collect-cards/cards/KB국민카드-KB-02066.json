@@ -1,0 +1,177 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민행복체크카드",
+  "product_id": "KB-02066",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      300000,
+      400000,
+      500000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "TUITION",
+        "label": "대학(대학원) 등록금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고등학교 학교 납입금 전체(수업료/교육비/현장학습비/급식비)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통요금"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인전표(자판기, 터널통행료, 항공기내 이용 등)"
+      },
+      {
+        "code": "FEE",
+        "label": "연체료, 연회비, 각종 수수료 및 이자"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "병원",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "병원",
+          "industries": [
+            "종합병원",
+            "일반/치과/한방병원",
+            "일반/치과/한의원"
+          ]
+        },
+        {
+          "category": "키즈카페",
+          "industries": [
+            "유아전문 교육기관/놀이기관"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 1000,
+        "400000": 3000,
+        "500000": 5000
+      }
+    },
+    {
+      "group": "교육",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "문화센터",
+          "industries": [
+            "문화센터"
+          ]
+        },
+        {
+          "category": "학습지",
+          "industries": [
+            "학습지"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 1000,
+        "400000": 3000,
+        "500000": 5000
+      }
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "통합할인한도",
+      "members": [
+        "병원",
+        "교육"
+      ],
+      "cap_by_tier": {
+        "300000": 1000,
+        "400000": 3000,
+        "500000": 5000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "KB손해보험 단체보험 무료가입 및 사고 보장"
+  ],
+  "schema_gaps": [
+    "하이브리드 카드(소액신용결제 서비스) 지원: 계좌 잔액 부족 시 신용결제로 전환되며, 해당 금액은 신용카드 거래로 처리됨",
+    "실적 유예기간: 최초 카드 사용등록일로부터 다음달 말일까지 30만원 미만 시에도 30만원 구간 할인 제공",
+    "포인트리 적립 제외(스타샵 가맹점 제외)"
+  ],
+  "posted_at": "2021-02-01",
+  "source_url": "https://img2.kbcard.com/obj/card/download/_02066__prdctOpmn_20260629.pdf",
+  "_extraction_check": {
+    "source_pdf": "01__02066__prdctOpmn_20260629.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 10000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

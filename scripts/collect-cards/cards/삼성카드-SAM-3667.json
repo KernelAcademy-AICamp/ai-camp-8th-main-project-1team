@@ -1,0 +1,131 @@
+{
+  "issuer": "삼성카드",
+  "name": "SC제일은행 삼성카드 스페셜마일리지 (스카이패스)",
+  "product_id": "SAM-3667",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "삼성",
+      "total": 97000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Amex",
+      "total": 99000
+    }
+  ],
+  "benefits": [
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "모든 가맹점"
+        }
+      ],
+      "conditions": [
+        "1,000원당 스카이패스 1 마일리지 적립",
+        "전월 이용금액 관계없이 적립한도 없음"
+      ]
+    },
+    {
+      "group": "특별 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "해외형",
+          "note": "해외 가맹점 및 해외 직접구매"
+        },
+        {
+          "category": "국내형",
+          "industries": [
+            "할인점",
+            "주유",
+            "커피"
+          ]
+        }
+      ],
+      "conditions": [
+        "1,000원당 스카이패스 2 마일리지 적립",
+        "해외형/국내형 중 택1",
+        "통합 월 적립한도 해외형 2,000 마일리지, 국내형 1,000 마일리지"
+      ]
+    },
+    {
+      "group": "아웃백스테이크하우스 할인",
+      "kind": "할인",
+      "amount_krw": 30000,
+      "min_amount": 60000,
+      "targets": [
+        {
+          "category": "아웃백스테이크하우스"
+        }
+      ],
+      "conditions": [
+        "전월 일시불 및 할부 이용금액 50만원 이상 시 월 1회, 연 2회 제공"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "국세/지방세/공과금"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "고용/산재보험 및 장애인 고용부담금"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학 등록금"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "대중교통, 택시, 고속버스, 고속도로 통행요금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "선불카드 충전"
+    }
+  ],
+  "non_monetary": [
+    "아멕스 PLATINUM 등급 국제브랜드 서비스 제공"
+  ],
+  "schema_gaps": [
+    "특별 적립 옵션은 홈페이지/앱을 통해 매월 변경 가능",
+    "아웃백 할인 혜택은 다른 결제일 할인과 중복 불가",
+    "할인이 적용된 이용금액은 마일리지 적립 제외"
+  ],
+  "posted_at": "2016-06-20",
+  "source_url": "https://www.samsungcard.com/filedownload.do?grpNo=1zPVy1PuFbwGC7xZyM4qtvGwfHJLt4ueZ3wk1VzkiKg%3D&sn=2",
+  "_extraction_check": {
+    "source_pdf": "3667.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

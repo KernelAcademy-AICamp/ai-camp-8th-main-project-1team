@@ -1,0 +1,259 @@
+{
+  "issuer": "KB국민카드",
+  "name": "HERITAGE Smart 대한항공 마일리지형",
+  "product_id": "KB-09126",
+  "status": "active",
+  "as_of": "2023-06-13",
+  "review_no": "여신금융협회 심의필 제 2023-C1a-06247호",
+  "compliance_no": "230518-01722-TRM (2023.05.18)",
+  "posted_at": "2023-01-03",
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 200000,
+      "base": 7000,
+      "affiliate": 193000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 200000,
+      "base": 7000,
+      "affiliate": 193000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비는 카드발급 시점을 기준으로 1년 단위로 청구",
+    "초기/차기년도 연회비 면제조건 없음",
+    "가족카드 발급 시 본인카드와 동일 브랜드로 1매만 발급 가능(가족카드 연회비 없음)"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "includes": [
+      "일시불",
+      "할부"
+    ],
+    "tiers": [
+      500000,
+      6000000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "각종 공과금(전기/수도 등)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처이용금액 등)"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고 학교 납입금 전체, 대학(대학원) 등록금"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전 금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통요금"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인전표(교통요금/자판기/터널통행/항공기내 이용 등)"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부 이용금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "국내 가맹점 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내 가맹점",
+          "note": "건별 결제금액 1천원당 1마일리지"
+        }
+      ]
+    },
+    {
+      "group": "해외 가맹점 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "해외 가맹점",
+          "note": "건별 결제금액 1천원당 2마일리지"
+        }
+      ]
+    },
+    {
+      "group": "KB Pay 적립",
+      "kind": "적립",
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "KB Pay",
+          "note": "국내 온/오프라인 가맹점 2천원당 1마일리지 추가 적립"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 2000
+      }
+    },
+    {
+      "group": "쿠폰 서비스",
+      "kind": "할인",
+      "targets": [
+        {
+          "category": "특급호텔/항공권/공연전시",
+          "note": "연 1회 15만원 할인 쿠폰 제공"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "국세, 지방세"
+    },
+    {
+      "code": "UTILITY",
+      "label": "각종 공과금(전기/수도 등)"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "TUITION",
+      "label": "학교 납입금 및 등록금"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "4대 사회보험료"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전 금액"
+    }
+  ],
+  "non_monetary": [
+    "특급호텔/항공권/공연전시 할인 쿠폰 제공",
+    "KB국민은행 수수료 면제 및 외환 수수료 감면",
+    "문자알림(SMS) 서비스 무료 제공"
+  ],
+  "schema_gaps": [
+    "쿠폰 서비스는 발급 첫해 50만원 이상, 다음해 이후 전년도 600만원 이상 이용 시 제공",
+    "KB Pay 적립은 최초 발급 시 사용등록일로부터 다음달 말일까지 실적 유예 적용",
+    "마일리지 적립은 소수점 첫째 자리에서 반올림하여 적립"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09126__prdctOpmn_20231101.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09126__prdctOpmn_20231101.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 4,
+        "second": 3
+      },
+      {
+        "path": "$.benefits[0].kind",
+        "first": "할인",
+        "second": "적립"
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.500000",
+        "first": null,
+        "second": 2000
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": null,
+        "second": 500000
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.500000",
+        "first": 2000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].requires_tier",
+        "first": 500000,
+        "second": null
+      },
+      {
+        "path": "$.tiers[1]",
+        "first": 6000000,
+        "second": 600000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 2000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

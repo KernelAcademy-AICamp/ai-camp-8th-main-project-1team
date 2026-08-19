@@ -1,6 +1,6 @@
 /**
  * 마이데이터 연결 가능 기관 — 업권별 카탈로그(자산연결 화면용).
- * 목업(frontend-moa/lib/institutions.ts)에서 그대로 가져왔다. 실 로고 대신 색 배지+약칭.
+ * 초기 목업 앱(2026-07 폐기)의 lib/institutions.ts 에서 그대로 가져왔다. 실 로고 대신 색 배지+약칭.
  *
  * <b>id 주의</b>: 이 카탈로그의 id는 화면용이다. 실제 연결(`/api/mydata/link`)에 쓰는 id는
  * 더미 마이데이터 제공자가 내려주는 카드사 id(`api.mydataCompanies()`)뿐이므로,

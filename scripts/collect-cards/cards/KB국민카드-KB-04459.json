@@ -1,0 +1,232 @@
+{
+  "issuer": "KB국민카드",
+  "name": "E1 LPG KB국민카드",
+  "product_id": "KB-04459",
+  "status": "active",
+  "as_of": "2024-11-25",
+  "review_no": "여신금융협회 심의필 제 2024-C1a-14745호",
+  "compliance_no": "KB국민카드 준법감시인 심의필 제260406-01115-PIF(2026.04.06)",
+  "posted_at": "2016-08-31",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "policy_card": false,
+  "has_transit": true,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(JCB)",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비는 카드발급 시점을 기준으로 1년 단위로 청구",
+    "초회/차기년도 연회비 면제 조건 없음"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 이용금액"
+      ]
+    },
+    "includes_family_card": true,
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      500000,
+      1000000,
+      2000000
+    ],
+    "excluded": [
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "(부분)무이자 할부 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통 이용 등 무승인전표"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "E1 LPG 충전소",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "rate_conditional": "리터당 100원",
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "LPG 충전소",
+          "note": "㈜E1 지정고시 LPG 가격 기준"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 10000,
+        "1000000": 20000,
+        "2000000": 50000
+      }
+    },
+    {
+      "group": "My Life 서비스",
+      "kind": "할인",
+      "settle": "청구 할인",
+      "rate_percent": 10,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "골프",
+          "industries": [
+            "골프장",
+            "골프연습장"
+          ]
+        },
+        {
+          "category": "쇼핑",
+          "brands": [
+            "G마켓",
+            "옥션",
+            "11번가",
+            "인터파크",
+            "롯데닷컴",
+            "신세계몰",
+            "쿠팡",
+            "티몬",
+            "위메프"
+          ]
+        },
+        {
+          "category": "외식",
+          "brands": [
+            "VIPS",
+            "아웃백스테이크하우스",
+            "생어거스틴"
+          ]
+        },
+        {
+          "category": "영화",
+          "brands": [
+            "CGV"
+          ],
+          "channel": [
+            "현장예매",
+            "공식 홈페이지",
+            "스마트폰 어플리케이션"
+          ]
+        },
+        {
+          "category": "대중교통",
+          "industries": [
+            "시내버스",
+            "지하철",
+            "고속버스",
+            "시외버스"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 10000,
+        "1000000": 20000,
+        "2000000": 50000
+      },
+      "combined_cap_group": "My Life 통합한도"
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "My Life 통합한도",
+      "members": [
+        "골프",
+        "쇼핑",
+        "외식",
+        "영화",
+        "대중교통"
+      ],
+      "cap_by_tier": {
+        "500000": 10000,
+        "1000000": 20000,
+        "2000000": 50000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "(부분)무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "E1 오렌지 멤버십 자동 가입",
+    "KB손해보험 자동차보험료 견적 산출 시 LPG 모바일 충전 5천원권 증정"
+  ],
+  "schema_gaps": [
+    "최초 카드 사용등록일로부터 다음 달 말일까지 이용실적 유예 조건(월 1만원 한도 제공)",
+    "E1 오렌지 포인트 적립 혜택(월 70만원 이용금액까지 1천원당 4~7P 적립)"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04459__prdctOpmn_20260626.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04459__prdctOpmn_20260626.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 100000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -73,6 +73,24 @@ public interface UserPaymentRepository extends JpaRepository<UserPayment, String
             """)
     boolean existsRealPersonPaymentByUserId(@Param("userId") Long userId);
 
+    /**
+     * 한 달치 승인내역 — <b>카드 추천의 전월실적·혜택 분배가 읽는 구간</b>이다.
+     *
+     * <p>전 기간을 읽어 걸러도 되지만, 카드 추천은 <b>전달 한 달</b>만 본다(전월실적이 그렇게
+     * 정의돼 있다). 사용자 한 명의 전 기간은 수천 건이 될 수 있어 구간을 DB 에서 좁힌다.
+     *
+     * <p>{@code to} 는 <b>미포함</b>이다 — 말일 23:59:59 를 경계로 쓰면 그날 마지막 초의 결제가
+     * 조용히 빠진다.
+     */
+    @Query("""
+            select p from UserPayment p
+            where p.userId = :userId and p.paymentDate >= :from and p.paymentDate < :to
+            order by p.paymentDate
+            """)
+    List<UserPayment> findInPeriod(@Param("userId") Long userId,
+                                   @Param("from") java.time.LocalDateTime from,
+                                   @Param("to") java.time.LocalDateTime to);
+
     /** 벌크 삭제(즉시 DML) — 재연동 delete→insert 순서 역전 방지. */
     @Modifying
     @Transactional

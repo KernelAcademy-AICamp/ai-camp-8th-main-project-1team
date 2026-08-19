@@ -1,0 +1,102 @@
+{
+  "issuer": "하나카드",
+  "name": "트래블로그 SKYPASS 신용카드(후불교통)",
+  "product_id": "HANA-15041",
+  "status": "active",
+  "as_of": "2026-01-22",
+  "review_no": "여신금융협회 심의필 제 2026-C1a-00878호",
+  "compliance_no": "준법심의 L-25-0561(2025.12.29)",
+  "posted_at": "2025-12-29",
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "하나",
+      "total": 48000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 48000
+    }
+  ],
+  "benefits": [
+    {
+      "group": "대한항공 마일리지 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내외 가맹점",
+          "note": "1,500원 당 1마일리지 적립"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "PUBLIC_DUES",
+      "label": "국세, 지방세, 수도/전기요금, 그외 공과금(우편요금, 과태료, 범칙금, 벌금, 국가/공공기관/공공단체가 부과하는 부담금)"
+    },
+    {
+      "code": "UTILITY",
+      "label": "도시가스 요금"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "국민연금/고용보험료/산재보험료/건강보험료 납부 금액"
+    },
+    {
+      "code": "TUITION",
+      "label": "스쿨뱅킹, 초.중.고 학교납입금, 대학등록금, 대학원등록금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 기프트카드 구매, 선불카드 및 선불전자지급수단(하나머니 등) 충전 금액"
+    },
+    {
+      "code": "HOUSING",
+      "label": "부동산 임대료"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    }
+  ],
+  "non_monetary": [
+    "해외 가맹점 이용 시 해외서비스 수수료 면제",
+    "해외 ATM 인출 시 해외서비스 수수료 면제",
+    "외화 하나머니 결제 기능 제공"
+  ],
+  "schema_gaps": [
+    "본 카드는 하이브리드(신용결제+외화 하나머니 결제) 카드임. 해외결제 설정에 따라 외화 하나머니 결제 또는 신용결제가 가능하며, 국내 이용은 신용카드로 결제됨.",
+    "마일리지 적립은 월 결제금액 기준이며, 전월 실적 조건은 없음.",
+    "해외결제 설정 변경 시 즉시 적용됨."
+  ],
+  "source_url": "https://m.hanacard.co.kr/leaflet/15/15041_20251229.pdf",
+  "_extraction_check": {
+    "source_pdf": "15041.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

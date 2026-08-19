@@ -1,0 +1,298 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 올라운드카드",
+  "product_id": "KB-09270",
+  "status": "active",
+  "as_of": "2020-10-20",
+  "review_no": "여신금융협회 심의필 제2020-C1a-09396호",
+  "compliance_no": "200915-03066-PIF",
+  "posted_at": "2018-10-30",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "K-WORLD(JCB타입)",
+      "brand": "JCB",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "국내외겸용(Master)",
+      "brand": "Mastercard",
+      "total": 15000,
+      "base": 7000,
+      "affiliate": 8000
+    },
+    {
+      "scope": "모바일단독카드",
+      "brand": "KB",
+      "total": 9000,
+      "base": 1000,
+      "affiliate": 8000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외이용금액"
+      ]
+    },
+    "tiers": [
+      400000,
+      800000,
+      1200000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "전기·수도"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금, 초·중·고등학교(국·공립)납입금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입/충전금액"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통요금"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "UNAUTHORIZED",
+        "label": "무승인전표(자판기, 터널 통행료, 항공기내 이용 등)"
+      },
+      {
+        "code": "DISCOUNT_EXCLUDED",
+        "label": "선택 할인서비스를 받은 이용 건(해당 매출 전체)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "rate_percent": 0.8,
+      "targets": [
+        {
+          "category": "국내 및 해외 전 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "주유 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_conditional": "리터당 100원",
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "주유소 및 충전소",
+          "industries": [
+            "주유소",
+            "충전소"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 10000,
+        "800000": 30000,
+        "1200000": 50000
+      }
+    },
+    {
+      "group": "스토어 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "대형마트",
+          "brands": [
+            "이마트",
+            "롯데마트",
+            "홈플러스"
+          ]
+        },
+        {
+          "category": "편의점",
+          "brands": [
+            "GS25",
+            "CU"
+          ]
+        },
+        {
+          "category": "커피전문점",
+          "industries": [
+            "커피/음료전문점"
+          ]
+        },
+        {
+          "category": "약국",
+          "industries": [
+            "약국"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 10000,
+        "800000": 30000,
+        "1200000": 50000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "TAX",
+      "label": "각종 세금 및 공과금"
+    },
+    {
+      "code": "UTILITY",
+      "label": "전기·수도"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원)등록금, 초·중·고등학교(국·공립)납입금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입/충전금액"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    }
+  ],
+  "non_monetary": [
+    "포인트리 자동화기기 현금인출",
+    "포인트리 결제통장 자동 캐시백"
+  ],
+  "schema_gaps": [
+    "할인 서비스는 주유 할인과 스토어 할인 중 택1하여 신청해야 함",
+    "실적 유예기간(최초 카드 사용 등록일로부터 다음달 말일)에는 실적 없이 40만원 이상 구간 서비스 제공",
+    "할인 서비스 변경은 신청일 기준 다음달 1일부터 적용됨",
+    "할인 받은 매출 전체가 전월 실적에서 제외되는 구조로 인해 실제 필요 실적이 명시된 구간보다 높을 수 있음"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/_09270__prdctOpmn_20240222.pdf",
+  "_extraction_check": {
+    "source_pdf": "01__09270__prdctOpmn_20240222.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.annual_fee.length",
+        "first": 3,
+        "second": 4
+      },
+      {
+        "path": "$.annual_fee[0].base",
+        "first": 7000,
+        "second": 1000
+      },
+      {
+        "path": "$.annual_fee[0].total",
+        "first": 15000,
+        "second": 9000
+      },
+      {
+        "path": "$.annual_fee[1].base",
+        "first": 1000,
+        "second": 7000
+      },
+      {
+        "path": "$.annual_fee[1].total",
+        "first": 9000,
+        "second": 15000
+      },
+      {
+        "path": "$.annual_fee[2].base",
+        "first": 7000,
+        "second": 1000
+      },
+      {
+        "path": "$.annual_fee[2].total",
+        "first": 15000,
+        "second": 9000
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": 5,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": 0.8,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 100000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,264 @@
+{
+  "issuer": "KB국민카드",
+  "name": "롯데마트 KB국민카드",
+  "product_id": "KB-09180",
+  "status": "active",
+  "as_of": "2020-03-26",
+  "review_no": "여신금융협회필 심의필 제 2020-C1a-02558호",
+  "compliance_no": "241008-05039-PIF",
+  "posted_at": "2015-09-16",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(JCB)",
+      "total": 10000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "AMEX",
+      "total": 15000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 일시불"
+      ]
+    },
+    "tiers": [
+      300000,
+      500000,
+      700000,
+      900000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "DISCOUNTED_TRANSACTIONS",
+        "label": "롯데마트 KB국민카드로 할인받은 이용건(해당 매출 전체)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 각종 수수료 및 이자, 연체료"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금/공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트 관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부 지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학/대학원 등록금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "선불카드 구입 및 충전금액, 각종 상품권 구입금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통 이용"
+      },
+      {
+        "code": "AIR_ONBOARD",
+        "label": "항공기 내 이용"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "롯데마트 할인",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 10,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "롯데마트",
+          "note": "평일은 인터넷몰, 주말은 매장 할인"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 20000,
+        "500000": 30000,
+        "700000": 40000,
+        "900000": 50000
+      }
+    },
+    {
+      "group": "커피",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "커피전문점"
+        }
+      ]
+    },
+    {
+      "group": "택시",
+      "kind": "할인",
+      "settle": "청구할인",
+      "rate_percent": 5,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "택시"
+        }
+      ]
+    },
+    {
+      "group": "놀이공원",
+      "kind": "할인",
+      "settle": "현장할인",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "놀이공원",
+          "brands": [
+            "롯데월드",
+            "에버랜드",
+            "캐리비안베이"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "영화",
+      "kind": "할인",
+      "settle": "청구할인",
+      "amount_krw": 3500,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "영화",
+          "brands": [
+            "메가박스",
+            "CGV"
+          ],
+          "channel": [
+            "온라인 예매"
+          ]
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "GIFT_CARD",
+      "label": "선불카드 구입 및 충전금액, 각종 상품권 구입 금액"
+    }
+  ],
+  "non_monetary": [
+    "KB국민 스타샵 가맹점 포인트리 적립"
+  ],
+  "schema_gaps": [
+    "롯데마트 할인 서비스는 주중(평일)과 주말(토,일) 적용처가 구분됨",
+    "커피 및 택시 할인은 월 20만원 이용금액까지 적용",
+    "놀이공원 할인 횟수 제한(일/월/연 단위) 존재",
+    "영화 할인은 1일 2회, 월 4회, 연 10회 제한 존재"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09180__prdctOpmn_20241129.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09180__prdctOpmn_20241129.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": 3500,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 20000
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.500000",
+        "first": null,
+        "second": 30000
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.700000",
+        "first": null,
+        "second": 40000
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.900000",
+        "first": null,
+        "second": 50000
+      },
+      {
+        "path": "$.benefits[0].rate_percent",
+        "first": null,
+        "second": 10
+      },
+      {
+        "path": "$.benefits[1].amount_krw",
+        "first": null,
+        "second": 3500
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.300000",
+        "first": 20000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.500000",
+        "first": 30000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.700000",
+        "first": 40000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.900000",
+        "first": 50000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[2].rate_percent",
+        "first": 10,
+        "second": null
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 50000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,243 @@
+{
+  "issuer": "KB국민카드",
+  "name": "골프존 KB국민카드(마일리지 아시아나)",
+  "product_id": "KB-04584",
+  "status": "stopped",
+  "as_of": "2022-03-16",
+  "review_no": "여신금융협회 심의필번호 제2022-C1a-01744호",
+  "compliance_no": "준법감시인심의필 250702-03451-PIF (2025.07.02)",
+  "posted_at": "2015-12-15",
+  "card_type": "CREDIT",
+  "benefit_style": "MILEAGE",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 25000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master",
+      "total": 30000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      300000
+    ],
+    "excluded": [
+      {
+        "code": "DISCOUNTED_AMOUNT",
+        "label": "골프존 KB국민카드로 할인 받은 이용 금액(해당 이용금액 전체)"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "(부분)무이자 할부이용 금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입(충전)금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통 이용 등 무승인전표"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "골프존 트리플마일",
+      "kind": "적립",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "골프존",
+          "note": "골프존 스크린골프/골프존 카운티(골프장)/골핑(온라인몰)/골프존 마켓(오프라인매장)/골프존 조이마루(테마파크)/골프존 아카데미 등 골프존 제품 설치 매장 및 직영사업 매장"
+        }
+      ],
+      "conditions": [
+        "1,000원당 3마일 적립",
+        "월 20만원 이용금액까지 적용",
+        "월 20만원 초과 이용금액부터는 싱글마일 서비스 적용"
+      ]
+    },
+    {
+      "group": "해외 더블마일",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "해외",
+          "scope": "해외 이용금액"
+        }
+      ],
+      "conditions": [
+        "1,000원당 2마일 적립"
+      ]
+    },
+    {
+      "group": "국내 싱글마일",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "국내",
+          "scope": "국내 이용금액"
+        }
+      ],
+      "conditions": [
+        "1,000원당 1마일 적립"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "(부분)무이자 할부 이용 금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "지방세"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부 지원금"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원) 등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입(충전)금액"
+    }
+  ],
+  "non_monetary": [
+    "골프존 자동 로그인 (2022.05.01 이후 발급 카드 미제공)",
+    "KB Good Touch (2020.01.01 이후 발급 카드 미제공)"
+  ],
+  "schema_gaps": [
+    "마일리지 적립은 1,000원 단위로 계산되며 반올림 적용",
+    "Basic Type과 Mileage Type이 혼재된 상품설명서이나, 요청된 메타데이터에 따라 Mileage Type 위주로 추출함"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/_04584__prdctOpmn_20251014.pdf",
+  "_extraction_check": {
+    "source_pdf": "01__04584__prdctOpmn_20251014.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.annual_fee[0].total",
+        "first": 25000,
+        "second": 12000
+      },
+      {
+        "path": "$.annual_fee[1].total",
+        "first": 30000,
+        "second": 17000
+      },
+      {
+        "path": "$.benefits.length",
+        "first": 3,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[0].amount_krw",
+        "first": null,
+        "second": 3000
+      },
+      {
+        "path": "$.benefits[0].kind",
+        "first": "적립",
+        "second": "할인"
+      },
+      {
+        "path": "$.benefits[1].amount_krw",
+        "first": null,
+        "second": 60
+      },
+      {
+        "path": "$.benefits[1].kind",
+        "first": "적립",
+        "second": "할인"
+      },
+      {
+        "path": "$.benefits[1].requires_tier",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.benefits[2].kind",
+        "first": "적립",
+        "second": "할인"
+      },
+      {
+        "path": "$.benefits[2].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 40000
+      },
+      {
+        "path": "$.benefits[2].rate_percent",
+        "first": null,
+        "second": 20
+      },
+      {
+        "path": "$.benefits[2].requires_tier",
+        "first": null,
+        "second": 300000
+      },
+      {
+        "path": "$.tiers.length",
+        "first": 1,
+        "second": 0
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

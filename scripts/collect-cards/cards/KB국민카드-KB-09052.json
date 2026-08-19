@@ -1,0 +1,52 @@
+{
+  "issuer": "KB국민카드",
+  "name": "토스페이 플러스 KB카드",
+  "product_id": "KB-09052",
+  "status": "active",
+  "as_of": "2023-09-05",
+  "review_no": "여신금융협회심의필 제 2023-C1a-10137호",
+  "compliance_no": "250314-01230-PIF",
+  "posted_at": "2023-09-06",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 1000,
+      "base": 1000,
+      "affiliate": 0
+    }
+  ],
+  "benefits": [],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [
+    "모바일 단독카드(실물 없음)",
+    "토스페이 및 KB Pay 등록 전용"
+  ],
+  "schema_gaps": [
+    "해당 카드는 부가서비스가 없는 토스 제휴 신용카드임",
+    "가족카드 발급 불가"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09052__prdctOpmn_20250425.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09052__prdctOpmn_20250425.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

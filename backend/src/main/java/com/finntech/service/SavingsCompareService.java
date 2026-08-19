@@ -1,6 +1,5 @@
 package com.finntech.service;
 
-import com.finntech.guardian.GuardianSettlementService;
 import com.finntech.util.HttpClients;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -14,18 +13,18 @@ import tools.jackson.databind.json.JsonMapper;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 통장 비교/추천 (정보성) — 실 적금 금리를 불러와 <b>가입 자격이 제한된 상품을 제외</b>하고 금리순으로 준다.
+ * 예적금 일반 비교(정보성) — 실 예·적금 금리를 불러와 가입 자격이 제한된 상품을 제외하고
+ * <b>공시 기본금리순</b>으로 준다. 사용자 마이데이터, 우대조건 충족 여부, 실수령 금리는 입력이나
+ * 출력에 포함하지 않는다.
  *
  * <p><b>규제(마스터 §5-5, 원칙 5 개정).</b> 금융위·금감원 유권해석(2022.6.15)상 <b>단순 정보제공·판매목적 아님·
  * 무제휴·가입 편의 없음</b>이면 금소법 '중개업'이 아니다. 그래서 가입 버튼·제휴 링크 없이 정보만 표시한다.
@@ -45,9 +44,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * 상품명 없음)로 나뉜다. {@code (fin_co_no, fin_prdt_cd)}로 짝지어야 화면에 쓸 한 줄이 된다.
  * 상품 1개에 금리 줄이 여러 개(기간 1·3·6·12·24·36개월 × 정액/자유적립)라 <b>1:N</b>이다.
  *
- * <p><b>자유적립식만 쓰는 이유.</b> MOA의 '지킨 돈'은 예산 초과분만큼 깎여 <b>매달 금액이 달라진다</b>.
- * 매달 같은 금액을 넣어야 하는 정액적립식은 구조가 맞지 않는다. 실측상 손해도 없다(2026-07 은행 적금 기준
- * 기본금리 평균 자유 2.60% vs 정액 2.67%, 우대 포함은 자유 3.81% vs 정액 3.48%로 오히려 높고 상품 수도 2.6배).
+ * <p><b>상품 범위.</b> 개인별 납입 계획과 연결하지 않고 예금·적금을 함께 조회한다. 적금은 자유적립식과
+ * 정액적립식을 모두 포함하며, 기본 12개월 상품을 같은 기준으로 비교한다.
  *
  * <p><b>필터·정렬.</b> {@code exclude-keywords}(간부·청년·장병·미소·청약)가 상품명에 있거나 {@code join_deny=3}
  * (일부 제한)이면 뺀 뒤 <b>기본금리 내림차순</b>(→최고금리→이름)으로 정렬한다. 결정론적이라 재현 가능(§4).
@@ -79,7 +77,7 @@ public class SavingsCompareService {
     /** 가입제한 코드 3 = 일부 제한. 일반 사용자가 담기 어려우므로 뺀다. (1=제한없음) */
     static final String JOIN_DENY_RESTRICTED = "3";
 
-    /** 금감원이 적금 옵션에 싣는 적립방식 값. 이 둘로 FP-01의 자유·정액 그룹이 갈린다. */
+    /** 금감원이 적금 옵션에 싣는 적립방식 값. 일반 비교에서는 두 방식을 모두 포함한다. */
     static final String RESERVE_FLEXIBLE = "자유적립식";
     static final String RESERVE_FIXED = "정액적립식";
 
@@ -112,11 +110,6 @@ public class SavingsCompareService {
     private final RestClient client;
     private final Clock clock;
     private final EligibilityLabelService eligibilityLabelService;
-    private final FundFlowService fundFlowService;
-    private final SavingsMatchService savingsMatchService;
-    private final ParkingAccountSource parkingAccountSource;
-    /** ②의 확정 지킨 돈 이력 — 금액은 규칙을 가진 쪽이 계산해 넘긴다(R10). */
-    private final GuardianSettlementService guardianSettlementService;
 
     // (상품군·기간) 별 성공 조회를 TTL 동안 재사용한다. 적금과 예금은 서비스명이 달라 캐시도 나뉜다.
     private final Map<String, List<Account>> cacheByKey = new ConcurrentHashMap<>();
@@ -138,16 +131,8 @@ public class SavingsCompareService {
             @Value("${finntech.savings-compare.cache-ttl-minutes:30}") long cacheTtlMinutes,
             @Value("${finntech.savings-compare.exclude-keywords:간부,청년,장병,미소,청약}") List<String> excludeKeywords,
             EligibilityLabelService eligibilityLabelService,
-            FundFlowService fundFlowService,
-            SavingsMatchService savingsMatchService,
-            ParkingAccountSource parkingAccountSource,
-            GuardianSettlementService guardianSettlementService,
             Clock clock) {
-        this.guardianSettlementService = guardianSettlementService;
         this.eligibilityLabelService = eligibilityLabelService;
-        this.fundFlowService = fundFlowService;
-        this.savingsMatchService = savingsMatchService;
-        this.parkingAccountSource = parkingAccountSource;
         this.enabled = enabled;
         this.auth = auth == null ? "" : auth.trim();
         this.path = path;
@@ -170,51 +155,23 @@ public class SavingsCompareService {
     //  공개 API
     // ======================================================================
 
-    /** 통장 비교 섹션용 — 기본 기간에서 자격 제한 제외 후 금리순 상위 {@code limit}개. 실패 시 더미. */
+    /** 일반 비교 화면용 — 기본 기간에서 자격 제한 제외 후 기본금리순 상위 {@code limit}개. 실패 시 더미. */
     public CompareResult compare(Integer limit) {
-        return compare(limit, null);
-    }
-
-    /**
-     * 나이 자격까지 맞춰 거른 통장 비교.
-     *
-     * @param birthYear 사용자 출생연도. null이면(마이데이터 미연동) 나이 조건은 따지지 않고
-     *                  특수 신분 조건만 걸러 정보로 보여준다 — 판매가 아니라 비교이므로 감추지 않는다.
-     */
-    public CompareResult compare(Integer limit, Integer birthYear) {
-        return compare(limit, birthYear, null);
-    }
-
-    /**
-     * 나이 자격으로 거른 비교 + <b>FP-01 매칭</b>(§10 3단계).
-     *
-     * @param userId 있으면 자금흐름 5축으로 M1~M9를 돌려 {@code match}에 그룹별 추천을 싣는다.
-     *               없으면 {@code match=null}이고 {@code accounts}만 내려간다.
-     */
-    public CompareResult compare(Integer limit, Integer birthYear, Long userId) {
         int lim = (limit == null || limit <= 0) ? defaultLimit : limit;
         boolean[] live = {false};
-        List<Account> ranked = eligibleOnly(rankedForPeriod(defaultPeriod, live), birthYear);
-        List<Account> top = ranked.size() > lim ? new ArrayList<>(ranked.subList(0, lim)) : ranked;
+        List<Account> ranked = eligibleOnly(rankedForPeriod(defaultPeriod, live));
+        List<Account> topAccounts = ranked.size() > lim ? new ArrayList<>(ranked.subList(0, lim)) : ranked;
+        List<AccountView> top = topAccounts.stream().map(AccountView::from).toList();
         String note = live[0] ? null
                 : "실시간 조회가 어려워 예시 데이터를 보여드려요. 실제 금리·가입은 각 금융사에서 확인하세요.";
-        // 매칭 실패가 비교 화면까지 죽이지 않게 막는다 — 목록은 매칭 없이도 성립한다.
-        SavingsMatchService.MatchResult match = null;
-        if (userId != null) {
-            try {
-                match = matchFor(userId, ranked);
-            } catch (RuntimeException e) {
-                log.warn("저축 매칭 실패 userId={} — 비교 목록만 내려보낸다: {}", userId, e.toString());
-            }
-        }
-        return new CompareResult(top, live[0], ranked.size(), note, match);
+        return new CompareResult(top, live[0], ranked.size(), note);
     }
 
     /**
      * 가입 자격에 맞는 상품만 남긴다. 자격 문구가 없는 항목(더미 폴백)은 판정할 근거가 없으므로 통과시킨다
      * — 여기서 거르면 외부 조회 실패 시 화면이 통째로 비어버린다.
      */
-    private List<Account> eligibleOnly(List<Account> accounts, Integer birthYear) {
+    private List<Account> eligibleOnly(List<Account> accounts) {
         Map<String, String> byKey = new LinkedHashMap<>();
         for (Account a : accounts) {
             if (!a.prdtKey().isBlank() && !a.joinMember().isBlank()) byKey.put(a.prdtKey(), a.joinMember());
@@ -222,31 +179,20 @@ public class SavingsCompareService {
         if (byKey.isEmpty()) return accounts;
 
         Map<String, EligibilityLabelService.Eligibility> labels = eligibilityLabelService.labelAll(byKey);
-        Integer age = ageOf(birthYear);
         return accounts.stream()
                 .filter(a -> !byKey.containsKey(a.prdtKey())
-                        || EligibilityLabelService.eligible(labels.get(a.prdtKey()), age,
+                        || EligibilityLabelService.eligible(labels.get(a.prdtKey()), null,
                                 JOIN_DENY_RESTRICTED.equals(a.joinDeny())))
                 .toList();
     }
 
     /**
-     * 출생연도 → 만 나이 근사. 생일 경과 여부는 월·일을 저장하지 않아 알 수 없으므로 <b>연도 차</b>로
-     * 계산한다(실제 만 나이보다 최대 1살 많게 나올 수 있다). {@code now()}를 직접 읽지 않고 주입된
-     * Clock을 쓴다(§4 원칙 3 재현성).
-     */
-    private Integer ageOf(Integer birthYear) {
-        if (birthYear == null || birthYear <= 0) return null;
-        return LocalDate.now(clock).getYear() - birthYear;
-    }
-
-    /**
-     * 특정 개월수(가까운 버킷으로 매핑)로 자격 제한 제외 후 금리순 전체를 준다. 추천(목표별)에서 쓴다.
+     * 특정 개월수(가까운 버킷으로 매핑)의 예금·적금을 모아 금리순으로 정렬한다.
      *
      * <p><b>적금과 예금을 모두 모은다.</b> 한쪽만 살아 있어도 live로 본다 — 예금 조회만 실패했다고
      * 적금까지 더미로 바꾸면 있는 실데이터를 버리는 셈이다.
      */
-    public List<Account> rankedForPeriod(int periodMonths, boolean[] liveOut) {
+    private List<Account> rankedForPeriod(int periodMonths, boolean[] liveOut) {
         int bucket = nearestPeriodBucket(periodMonths);
         List<Account> raw = new ArrayList<>();
         for (ProductKind kind : ProductKind.values()) {
@@ -256,84 +202,6 @@ public class SavingsCompareService {
         boolean live = !raw.isEmpty();
         if (liveOut != null && liveOut.length > 0) liveOut[0] = live;
         return filterAndRank(live ? raw : dummy(), excludeKeywords);
-    }
-
-    // ======================================================================
-    //  FP-01 매칭 연결 (§10 3단계)
-    // ======================================================================
-
-    /**
-     * 금감원 응답이 {@link SavingsMatchService}에 요구하는 우대조건. <b>상품별로 다르지만 알 수 없다.</b>
-     *
-     * <p>출처가 우대조건을 자연어 {@code spclCnd}로만 줘서 어떤 상품이 무엇을 요구하는지 구조화할 수 없다(D2).
-     * 그래서 §4.1 L5가 "실제 적금 우대조건에서 가장 흔하고 가산폭도 큰 두 가지"로 꼽은 <b>카드 실적·급여이체</b>를
-     * 대표값으로 넣는다. M6의 이분(전부 충족=최고 / 미충족=기본)이 성립하려면 비교할 조건 집합이 있어야 한다.
-     *
-     * <p><b>알고 쓰는 한계.</b> 실제 우대조건이 `첫거래`뿐인 상품이라면, 카드 실적을 못 채운 사용자에게
-     * 기본금리로 낮춰 보여주게 된다 — <b>덜 준다고 말하는 방향</b>이라 사용자가 손해 보지는 않는다. 반대로
-     * 두 조건을 모두 채운 사용자에게는 최고금리를 보여주는데, 그 상품이 다른 조건을 요구했다면 과대 표시다.
-     * {@code spclCnd} 파싱이 붙으면 <b>이 상수 하나만</b> 상품별 파싱 결과로 바꾸면 된다(§8 · §8.1).
-     */
-    private static final Set<SavingsMatchInputs.PreferentialCondition> ASSUMED_CONDITIONS = Set.of(
-            SavingsMatchInputs.PreferentialCondition.CARD_PERFORMANCE,
-            SavingsMatchInputs.PreferentialCondition.SALARY_TRANSFER);
-
-    /** 금감원 응답 한 줄 → 매칭 계약. 출처 모양과 규칙을 잇는 유일한 자리다. */
-    static SavingsMatchInputs.ProductCandidate toCandidate(Account a) {
-        return new SavingsMatchInputs.ProductCandidate(
-                a.prdtKey(), a.company(), a.name(), accrualTypeOf(a),
-                a.baseRate(), a.primeRate(), a.saveTrm(),
-                // 금감원은 최소 가입금액을 주지 않는다 → M5 규모 필터는 이 상품을 통과시킨다.
-                null,
-                ASSUMED_CONDITIONS);
-    }
-
-    /**
-     * 적립 방식 판정 — 예금은 그 자체로 한 그룹이고, 적금은 {@code rsrv_type_nm}으로 자유·정액이 갈린다.
-     * 파킹통장은 금감원에 없어 여기서 나올 수 없다.
-     */
-    static SavingsMatchInputs.AccrualType accrualTypeOf(Account a) {
-        if (a.kind() == ProductKind.DEPOSIT) return SavingsMatchInputs.AccrualType.DEPOSIT;
-        return RESERVE_FIXED.equals(a.reserveType())
-                ? SavingsMatchInputs.AccrualType.FIXED
-                : SavingsMatchInputs.AccrualType.FLEXIBLE;
-    }
-
-    /**
-     * 자금흐름 프로필로 M1~M9를 돌린다.
-     *
-     * <p>매칭 후보는 <b>상위 N개가 아니라 자격을 통과한 전체</b>다. 그룹마다 따로 줄을 세우므로(M7),
-     * 전체 금리순 상위만 넘기면 파킹·정액 그룹이 통째로 비어버린다.
-     *
-     * <p>{@code keptMean}은 아직 {@code null}이다 — ②의 확정 지킨 돈 이력
-     * (`GET /api/guardian/challenges/history`)이 없어 M5 규모 필터를 걸 수 없다(§11).
-     */
-    private SavingsMatchService.MatchResult matchFor(Long userId, List<Account> eligible) {
-        List<SavingsMatchInputs.ProductCandidate> candidates = new ArrayList<>(
-                eligible.stream().map(SavingsCompareService::toCandidate).toList());
-        // 파킹통장은 금감원에 없어 별도 출처에서 온다. 막히면 빈 목록이라 파킹 그룹만 비고
-        // 적금·예금 추천은 그대로 산다(ParkingAccountSource 참조).
-        candidates.addAll(parkingAccountSource.candidates());
-        return savingsMatchService.match(fundFlowService.analyze(userId),
-                new SavingsMatchInputs(List.copyOf(candidates), keptMean(userId)));
-    }
-
-    /**
-     * M5 규모 필터의 기준 — <b>확정 지킨 돈의 월평균</b>(`kept_mean`, §4.5 입력값).
-     *
-     * <p>금액은 ②가 계산해서 넘긴 것을 그대로 평균만 낸다. ③이 거래를 다시 훑어 세지 않는다(R10) —
-     * 식이 갈라지면 결산 화면과 추천이 다른 숫자를 말한다.
-     *
-     * <p><b>이력이 없으면 {@code null}</b>이라 M5를 건너뛴다. 첫 챌린지를 아직 끝내지 않은 사용자를
-     * "규모가 0원인 사람"으로 읽으면 최소 가입금액이 있는 상품이 통째로 사라진다 — 콜드스타트는
-     * 재료 없음이지 금액 0이 아니다(§8 · §14).
-     */
-    private Long keptMean(Long userId) {
-        List<GuardianSettlementService.SettledChallenge> history = guardianSettlementService.history(userId);
-        if (history.isEmpty()) return null;
-        return Math.round(history.stream()
-                .mapToLong(GuardianSettlementService.SettledChallenge::securedSaving)
-                .average().orElse(0));
     }
 
     // ======================================================================
@@ -438,7 +306,9 @@ public class SavingsCompareService {
                         parseRate(o.get("intr_rate")), parseRate(o.get("intr_rate2")),
                         bucket, rsrv,
                         str(b.get("join_deny")), str(b.get("join_member")),
-                        str(b.get("spcl_cnd")), productKey(b), kind));
+                        str(b.get("spcl_cnd")), productKey(b), kind,
+                        // M5 재료 — 예전에는 읽지 않아 규모 필터가 전건을 통과시켰다(2026-08-11).
+                        str(b.get("max_limit")), oneLine(b.get("etc_note"))));
             }
 
             if (page >= intOf(result.get("max_page_no"), 1)) break;
@@ -528,21 +398,31 @@ public class SavingsCompareService {
      */
     public record Account(String company, String name, double baseRate, double primeRate,
                           int saveTrm, String reserveType, String joinDeny, String joinMember,
-                          String spclCnd, String prdtKey, ProductKind kind) {
+                          String spclCnd, String prdtKey, ProductKind kind,
+                          String maxLimit, String etcNote) {
 
         /** 더미·테스트용 간편 생성자 — 금감원 전용 필드는 비운다. 더미는 적금이다. */
         public Account(String company, String name, double baseRate, double primeRate) {
-            this(company, name, baseRate, primeRate, 0, RESERVE_FLEXIBLE, "", "", "", "", ProductKind.SAVING);
+            this(company, name, baseRate, primeRate, 0, RESERVE_FLEXIBLE, "", "", "", "",
+                    ProductKind.SAVING, null, null);
+        }
+
+        /** 금액 두 칸(M5)이 붙기 전의 형태 — 기존 호출부·테스트를 위해 남긴다. */
+        public Account(String company, String name, double baseRate, double primeRate,
+                       int saveTrm, String reserveType, String joinDeny, String joinMember,
+                       String spclCnd, String prdtKey, ProductKind kind) {
+            this(company, name, baseRate, primeRate, saveTrm, reserveType, joinDeny, joinMember,
+                    spclCnd, prdtKey, kind, null, null);
         }
     }
 
-    /**
-     * live=false면 더미 폴백(note에 안내). totalConsidered=제외 후 남은 전체 수.
-     *
-     * @param accounts <b>레거시</b> — 그룹 구분 없는 금리순 상위 목록. 기존 프론트 두 곳이 이 필드를 읽고
-     *                 있어 모양을 유지한다. 새 화면은 {@code match}를 쓴다.
-     * @param match    FP-01 매칭 결과(그룹별). {@code userId} 없이 부르면 null이다.
-     */
-    public record CompareResult(List<Account> accounts, boolean live, int totalConsidered, String note,
-                                SavingsMatchService.MatchResult match) {}
+    /** 비교 화면에 공개하는 최소 상품 정보. 원문 우대조건·가입대상은 응답으로 노출하지 않는다. */
+    public record AccountView(String company, String name, double baseRate, double primeRate) {
+        private static AccountView from(Account account) {
+            return new AccountView(account.company(), account.name(), account.baseRate(), account.primeRate());
+        }
+    }
+
+    /** live=false면 더미 폴백(note에 안내). totalConsidered=제외 후 남은 전체 수. */
+    public record CompareResult(List<AccountView> accounts, boolean live, int totalConsidered, String note) {}
 }

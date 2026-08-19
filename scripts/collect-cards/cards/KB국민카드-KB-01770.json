@@ -1,0 +1,262 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 골든대로 체크카드",
+  "product_id": "KB-01770",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "card_type": "CHECK",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 0
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      300000,
+      500000
+    ],
+    "excluded": [
+      {
+        "code": "TRANSIT",
+        "label": "후불교통요금"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인 금액 (자판기, 터널통행료, 유료도로, 기차/고속버스 취소 반환수수료 등)"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금 이용금액 (보육료, 유치원보조비, 바우처 이용금액 등)"
+      },
+      {
+        "code": "POINT_CHARGE",
+        "label": "포인트리 충전금액"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드 구입(충전)금액"
+      },
+      {
+        "code": "FEE",
+        "label": "연체료, 각종 수수료 및 이자"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "지방세(지방세, 상하수도, 세외수입)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "병원/약국",
+      "kind": "적립",
+      "settle": "포인트리 적립",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "병원/약국",
+          "note": "이용금액 건당 5천원 이상 시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 2000,
+        "500000": 4000
+      }
+    },
+    {
+      "group": "대형마트/홈쇼핑",
+      "kind": "적립",
+      "settle": "포인트리 적립",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "대형마트",
+          "brands": [
+            "이마트",
+            "롯데마트",
+            "홈플러스"
+          ],
+          "note": "이용금액 건당 3만원 이상 시. 인터넷 쇼핑몰, 상품권 구매, 건물내 임대매장, SSM 제외"
+        },
+        {
+          "category": "홈쇼핑",
+          "brands": [
+            "GS홈쇼핑",
+            "CJ홈쇼핑"
+          ],
+          "note": "이용금액 건당 3만원 이상 시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 2000,
+        "500000": 4000
+      }
+    },
+    {
+      "group": "SK주유소",
+      "kind": "적립",
+      "settle": "포인트리 적립",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "주유",
+          "brands": [
+            "SK주유소"
+          ],
+          "note": "이용금액 건당 3만원 이상 시. 충전소 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 2000,
+        "500000": 4000
+      }
+    },
+    {
+      "group": "여가",
+      "kind": "적립",
+      "settle": "포인트리 적립",
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "골프",
+          "industries": [
+            "골프연습장"
+          ],
+          "note": "이용금액 건당 2만원 이상 시"
+        },
+        {
+          "category": "사우나",
+          "industries": [
+            "목욕탕",
+            "찜질방"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 3000,
+        "500000": 6000
+      }
+    },
+    {
+      "group": "보험료",
+      "kind": "적립",
+      "settle": "포인트리 적립",
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "보험",
+          "industries": [
+            "생명보험",
+            "손해보험",
+            "기타보험"
+          ],
+          "note": "이용금액 건당 10만원 이상 시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 2000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CANCEL",
+      "label": "취소금액"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원)등록금"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드 구입(충전)금액"
+    },
+    {
+      "code": "POINT_CHARGE",
+      "label": "포인트리 충전금액"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금"
+    },
+    {
+      "code": "PENALTY",
+      "label": "연체료"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "지방세(지방세, 상하수도, 세외수입)"
+    }
+  ],
+  "non_monetary": [
+    "후불교통기능 탑재",
+    "소액신용결제서비스(최고 30만원)"
+  ],
+  "schema_gaps": [
+    "실적조건 유예기간: 최초 사용등록일로부터 다음달 말일까지 1구간 서비스 제공(보험료 적립 제외)",
+    "포인트 적립 시 소수점 이하 절사",
+    "체크카드 소액신용결제서비스는 신용카드 거래로 처리되며 리볼빙 불가"
+  ],
+  "posted_at": "2019-06-21",
+  "source_url": "https://img2.kbcard.com/obj/card/download/01770__prdctOpmn_20230630.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_01770__prdctOpmn_20230630.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": null,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[2].rate_percent",
+        "first": null,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[3].rate_percent",
+        "first": null,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[4].rate_percent",
+        "first": null,
+        "second": 5
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 20000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

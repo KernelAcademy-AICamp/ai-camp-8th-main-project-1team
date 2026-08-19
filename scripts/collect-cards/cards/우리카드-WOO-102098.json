@@ -1,0 +1,199 @@
+{
+  "issuer": "우리카드",
+  "name": "KREAM 우리카드",
+  "product_id": "WOO-102098",
+  "status": "active",
+  "as_of": "2024-01-02",
+  "review_no": "여신금융협회 심의필 제 2024 - C1a - 00015호",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "VISA",
+      "total": 20000,
+      "base": 7000,
+      "affiliate": 13000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 가맹점",
+        "교통카드 이용금액",
+        "통신료 자동납부 금액"
+      ]
+    },
+    "includes_family_card": true,
+    "tiers": [
+      300000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "KREAM_PAY",
+        "label": "KREAM 이용금액"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트 관리비(임대료)"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료, 유치원보조비, 바우처 이용금액 등)"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원)등록금"
+      },
+      {
+        "code": "TAX",
+        "label": "국세·지방세"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공공요금(4대보험, 전기요금, 우편요금, 도시가스요금, 상하수도요금, 과태료·범칙금·벌금, 여권발급비용, 국가·공공기관·공공단체 가맹점)"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권·기프트카드·선불카드 구매 및 충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "교통카드(모바일 포함) 구매 및 충전금액, 고속버스(차내 단말기 및 고속버스 APP 결제)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연회비"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "KREAM 이용금액 2% 청구할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 2,
+      "requires_tier": 300000,
+      "targets": [
+        {
+          "category": "KREAM"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 30000
+      },
+      "exclusive_with": [
+        "국내외 가맹점 이용금액 0.5% 청구할인"
+      ]
+    },
+    {
+      "group": "국내외 가맹점 이용금액 0.5% 청구할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "rate_percent": 0.5,
+      "targets": [
+        {
+          "category": "국내외 가맹점"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부금액"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금(보육료, 유치원보조비, 바우처 이용금액 등)"
+    },
+    {
+      "code": "TUITION",
+      "label": "대학(대학원)등록금"
+    },
+    {
+      "code": "TAX",
+      "label": "국세·지방세"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "공공요금(4대보험, 전기요금, 우편요금, 도시가스요금, 상하수도요금, 과태료·범칙금·벌금, 여권발급비용, 국가·공공기관·공공단체 가맹점)"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권·기프트카드·선불카드 구매 및 충전금액"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "교통카드(모바일 포함) 구매 및 충전금액, 고속버스(차내 단말기 및 고속버스 APP 결제)"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트 관리비(임대료)"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연회비"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    }
+  ],
+  "non_monetary": [
+    "가족카드 연회비 면제"
+  ],
+  "schema_gaps": [
+    "신규 발급 시 카드 수령(사용) 등록일과 사용개시일 중 빠른 날로부터 다음달 말일까지는 전월실적 조건 미충족 시에도 30만원 실적 구간 서비스 제공",
+    "KREAM 이용금액 할인 우선 적용(중복할인 불가)",
+    "한도 초과 이용금액은 국내외 가맹점 청구할인(0.5%) 적용"
+  ],
+  "posted_at": null,
+  "source_url": "https://m.wooricard.com/dcmw/pdfviewer/jsp/pfileRead.jsp?pdfPath=%2Fupload%2FcardClause%2F2024%2F3%2F18%2F92b0e632-d2e5-4443-b469-6c748bb1b2a3.pdf&pdfKubun=05&pdfName=KREAM+%EC%9A%B0%EB%A6%AC%EC%B9%B4%EB%93%9C.pdf",
+  "_extraction_check": {
+    "source_pdf": "102098.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 30000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

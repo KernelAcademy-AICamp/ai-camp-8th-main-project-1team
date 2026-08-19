@@ -1,0 +1,235 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 스타트럭플러스 S-OIL카드",
+  "product_id": "KB-04088",
+  "status": "active",
+  "as_of": "2017-12-29",
+  "review_no": "여신금융협회 심의필 제 2017-C1a-14194 호",
+  "compliance_no": "KB국민카드 준법감시인 심의필제 241008-05039-PIF(2024.10.08)",
+  "posted_at": "2016-09-13",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "K-WORLD(UPI)",
+      "total": 0
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Master",
+      "total": 0
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      300000,
+      600000,
+      900000,
+      1500000
+    ],
+    "excluded": [
+      {
+        "code": "FUEL",
+        "label": "주유소 및 충전소업종 이용금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "각종 세금 및 공과금"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금"
+      },
+      {
+        "code": "TUITION",
+        "label": "대학(대학원) 등록금"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권/선불카드 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통 등 무승인전표"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "S-OIL 주유할인",
+      "kind": "할인",
+      "settle": "현장할인 및 청구할인",
+      "targets": [
+        {
+          "category": "주유",
+          "brands": [
+            "S-OIL"
+          ],
+          "industries": [
+            "화물차 우대 주유소"
+          ],
+          "note": "경유 대상"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "300000": 50000,
+        "600000": 100000,
+        "900000": 150000,
+        "1500000": 325000
+      }
+    },
+    {
+      "group": "생활 편의 서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "targets": [
+        {
+          "category": "대형마트",
+          "industries": [
+            "3대 대형마트"
+          ],
+          "exclude_place": [
+            "온라인 쇼핑몰",
+            "상품권 구매",
+            "건물내 임대매장",
+            "SSM"
+          ]
+        },
+        {
+          "category": "커피",
+          "industries": [
+            "커피전문점"
+          ],
+          "exclude_place": [
+            "온라인 쇼핑몰",
+            "상품권 구매",
+            "건물내 임대매장"
+          ]
+        },
+        {
+          "category": "자동차 정비",
+          "industries": [
+            "자동차 정비 업종"
+          ],
+          "exclude_place": [
+            "온라인 쇼핑몰",
+            "상품권 구매",
+            "건물내 임대매장"
+          ]
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "FUEL",
+      "label": "LPG 충전소 결제 건"
+    }
+  ],
+  "non_monetary": [
+    "화물차 유가보조금 지원",
+    "부가세 환급신고 편의서비스"
+  ],
+  "schema_gaps": [
+    "S-OIL 주유할인 중 현장할인(리터당 35원)은 전월 실적 무관하게 제공됨",
+    "생활 편의 서비스의 월간 청구할인 한도는 구간별로 마트/커피/정비 합산 적용됨",
+    "유가보조금 지원은 정부 정책에 따라 변경될 수 있음"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/04088__prdctOpmn_20241129.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_04088__prdctOpmn_20241129.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 2,
+        "second": 4
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.1500000",
+        "first": null,
+        "second": 325000
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.300000",
+        "first": null,
+        "second": 50000
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.600000",
+        "first": null,
+        "second": 100000
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.900000",
+        "first": null,
+        "second": 150000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.1500000",
+        "first": 325000,
+        "second": 20000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.300000",
+        "first": 50000,
+        "second": 5000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.600000",
+        "first": 100000,
+        "second": 10000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.900000",
+        "first": 150000,
+        "second": 15000
+      },
+      {
+        "path": "$.benefits[1].rate_percent",
+        "first": null,
+        "second": 5
+      },
+      {
+        "path": "$.benefits[1].requires_tier",
+        "first": null,
+        "second": 300000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 325000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

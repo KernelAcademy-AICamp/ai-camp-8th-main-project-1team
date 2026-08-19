@@ -1,0 +1,44 @@
+{
+  "issuer": "BC카드",
+  "name": "LPG주유전용 하이패스카드",
+  "product_id": "52_lpghipass_211111",
+  "status": "active",
+  "as_of": null,
+  "review_no": null,
+  "compliance_no": "준법감시인 2021-1725호 (2021.11.05)",
+  "posted_at": "2012-07-19",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 10000
+    }
+  ],
+  "benefits": [],
+  "combined_caps": [],
+  "benefit_excluded": [],
+  "non_monetary": [],
+  "schema_gaps": [
+    "해당 상품설명서에는 구체적인 카드 혜택(할인/적립) 내용이 명시되어 있지 않으며, 법인용 공통 서비스 카드로 안내되어 있음"
+  ],
+  "source_url": "https://www.bccard.com/down/individual/customer/52_lpghipass_211111.pdf",
+  "_extraction_check": {
+    "source_pdf": "20120719_LPG주유전용 하이패스카드__52_lpghipass_211111.pdf",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": null,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,272 @@
+{
+  "issuer": "BC카드",
+  "name": "페이북카드",
+  "product_id": "105052",
+  "status": "active",
+  "as_of": "2026-05-18",
+  "review_no": "여신금융협회 심의필 제 2026 - C1a - 07218호",
+  "compliance_no": "준법감시인 2026-1062호 (2026.05.18)",
+  "posted_at": "2026-05-19",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "BC",
+      "total": 15000,
+      "base": 10000,
+      "affiliate": 5000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Mastercard",
+      "total": 15000,
+      "base": 10000,
+      "affiliate": 5000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비(기본연회비+제휴연회비)는 보유 카드별로 청구됩니다.",
+    "페이북 카드를 연 5회 초과하여 재발급하는 경우 건 당 1만원의 비용이 청구됩니다.",
+    "본 상품은 가족카드 발급이 불가합니다."
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외 가맹점",
+        "무승인결제(대중교통, 통신요금, 자동납부, 기내판매)"
+      ]
+    },
+    "includes_family_card": false,
+    "includes": [
+      "국내 일시불",
+      "해외 일시불",
+      "할부"
+    ],
+    "tiers": [
+      400000,
+      800000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 연체료, 각종 수수료/이자(국제브랜드 수수료, 해외서비스 수수료, 할부수수료, SMS이용수수료, 카드 대출이자 등)"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금납부액(국세/관세/지방세,지방세외수입,우편요금,여권발급비용,범칙금,벌과금,과태료,인지세,송달료,민원 발급 수수료 등 국가 또는 공공기관/공공단체가 부과하는 부담금)"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "건강보험, 국민연금, 고용보험, 산재보험 및 장애인 고용 부담금"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공공요금(상하수도/전기/도시가스) 및 TV수신료"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비, 부동산 임대료(월세), 자동납부 서비스 이용수수료"
+      },
+      {
+        "code": "TUITION",
+        "label": "유치원/초/중/고교 납입금, 대학(원) 등록금 납부 결제건"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "대중교통(시내버스,지하철), 고속버스, 고속도로 통행 요금, 후불하이패스 카드 이용 금액"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 등 현금성 유가증권 구매 및 기프트/선불카드 구매 및 충전금액"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자 할부 이용 금액 (부분/변형 무이자 포함)"
+      }
+    ]
+  },
+  "benefit_unit": {},
+  "benefits": [
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "rate_percent": 1,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "국내 가맹점",
+          "channel": [
+            "페이북 결제(온라인)",
+            "페이북 QR 결제(오프라인)"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "종합몰",
+      "kind": "적립",
+      "rate_percent": 4,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "종합몰",
+          "brands": [
+            "네이버쇼핑",
+            "쿠팡",
+            "G마켓",
+            "옥션",
+            "11번가",
+            "이마트인터넷쇼핑몰(이마트몰, SSG.com, 신세계몰)",
+            "롯데온"
+          ],
+          "channel": [
+            "온라인"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      },
+      "combined_cap_group": "특별적립"
+    },
+    {
+      "group": "패션몰",
+      "kind": "적립",
+      "rate_percent": 4,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "패션몰",
+          "brands": [
+            "무신사",
+            "지그재그",
+            "W컨셉",
+            "크림",
+            "오늘의집"
+          ],
+          "channel": [
+            "온라인"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      },
+      "combined_cap_group": "특별적립"
+    },
+    {
+      "group": "생활몰",
+      "kind": "적립",
+      "rate_percent": 4,
+      "requires_tier": 400000,
+      "targets": [
+        {
+          "category": "생활몰",
+          "brands": [
+            "컬리",
+            "오아시스",
+            "교보문고",
+            "영풍문고",
+            "예스24"
+          ],
+          "channel": [
+            "온라인"
+          ],
+          "note": "오프라인 도서 매장 결제 건은 특별 적립 제외"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "400000": 5000,
+        "800000": 10000
+      },
+      "combined_cap_group": "특별적립"
+    },
+    {
+      "group": "해외 적립",
+      "kind": "적립",
+      "rate_percent": 2,
+      "targets": [
+        {
+          "category": "해외",
+          "scope": "해외 가맹점 및 해외 직접 구매"
+        }
+      ]
+    },
+    {
+      "group": "무이자할부",
+      "kind": "무이자할부",
+      "targets": [
+        {
+          "category": "국내 대상 가맹점"
+        }
+      ],
+      "conditions": [
+        "2~3개월 상시 무이자할부",
+        "5만원 이상 결제 시"
+      ]
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "특별적립",
+      "members": [
+        "종합몰",
+        "패션몰",
+        "생활몰"
+      ],
+      "cap_by_tier": {
+        "400000": 13000,
+        "800000": 26000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "PAY_CHANNEL_EXCLUSION",
+      "label": "키오스크, 간편결제(Pay)로 결제 시 가맹점명이 해당 가맹점/브랜드가 아닌 PG업체명, 간편결제명인 경우"
+    }
+  ],
+  "non_monetary": [
+    "해외겸용 카드의 경우 Mastercard Platinum 등급 기본 서비스만 제공"
+  ],
+  "schema_gaps": [
+    "최초 신규 발급 회원에 대한 실적 유예 조건: 최초 카드 사용 등록일 또는 모바일 사용 등록일 중 빠른 날짜로부터 다음달 말일까지 전월실적 40만원 이상 구간 혜택 제공. 단, 해당 기간 80만원 이상 이용 시 다음달부터 80만원 구간 혜택 적용.",
+    "페이북 머니 적립 기준: 소수점 첫째자리에서 반올림하여 당월 15일에 적립."
+  ],
+  "source_url": "https://www.bccard.com/down/individual/customer/105052.pdf",
+  "_extraction_check": {
+    "source_pdf": "20260519_페이북카드__105052.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 26000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

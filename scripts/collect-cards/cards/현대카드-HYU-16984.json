@@ -1,0 +1,229 @@
+{
+  "issuer": "현대카드",
+  "name": "하이마트Mobile-현대카드M Edition3(통신할인형)",
+  "product_id": "HYU-16984",
+  "status": "stopped",
+  "as_of": "2019-08-02",
+  "review_no": "여신금융협회심의필 제2019-C1a-06968호",
+  "compliance_no": "준법감시심의필 제210729-030호 (2021.07.29)",
+  "posted_at": "2019-08-23",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "현대",
+      "total": 30000,
+      "base": 10000,
+      "affiliate": 20000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "MasterCard/VISA",
+      "total": 30000,
+      "base": 10000,
+      "affiliate": 20000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비는 카드 발급 시 선청구됩니다.",
+    "카드 연회비(기본연회비+제휴연회비)는 보유 카드별로 청구됩니다.",
+    "가족카드 연회비 10,000원"
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "대중교통",
+        "하이패스",
+        "도시가스"
+      ]
+    },
+    "includes": [
+      "국내 일시불",
+      "해외 일시불",
+      "할부"
+    ],
+    "tiers": [
+      500000,
+      1000000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비·제수수료·이자 납부액"
+      },
+      {
+        "code": "CANCEL",
+        "label": "결제취소금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "하이마트Mobile 통신요금 청구 할인",
+      "kind": "할인",
+      "settle": "결제일 할인",
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "통신",
+          "brands": [
+            "하이마트Mobile"
+          ],
+          "note": "자동이체 시 적용"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 13000,
+        "1000000": 30000
+      },
+      "conditions": [
+        "1~24개월 차 적용",
+        "25개월 차부터 50만원 이상 시 6,000원 할인",
+        "신규 발급 시 발급월 포함 2개월간 전월 실적 무관 13,000원 할인(100만원 이상 시 30,000원)"
+      ]
+    },
+    {
+      "group": "기본 적립",
+      "kind": "적립",
+      "targets": [
+        {
+          "category": "전 업종"
+        }
+      ],
+      "conditions": [
+        "당월 이용금액 50만원 미만 시 적립 제외",
+        "100만원 이상 시 1.5배 적립"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "FEE",
+      "label": "연회비·제수수료·이자"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "공과금(국세, 관세, 지방세, 지방세외수입, 상하수도요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급수수료 등)"
+    },
+    {
+      "code": "UTILITY",
+      "label": "전기요금, 도시가스요금"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "TUITION",
+      "label": "초·중·고교 학교납입금, 대학·대학원 등록금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 등 현금성 유가증권 구매 및 선불카드 구매·충전금액"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "건강보험, 국민연금, 고용보험, 산재보험 및 장애인 고용부담금"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "고속도로 통행요금, 고속버스"
+    },
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    }
+  ],
+  "non_monetary": [
+    "MasterCard/VISA 브랜드 서비스 제공"
+  ],
+  "schema_gaps": [
+    "통신요금 할인 혜택이 1~24개월 차와 25개월 차 이후로 구분됨",
+    "M포인트 적립률이 이용금액 구간(50만원 미만, 50~100만원, 100만원 이상) 및 업종별로 세분화됨",
+    "신규 발급 시 2회차 결제일까지 실적 유예 조건 존재"
+  ],
+  "source_url": "https://www.hyundaicard.com/upload/card/A_AOB-20210930-1030-64_%EC%83%81%ED%92%88%EC%84%A4%EB%AA%85%EC%84%9C_%ED%95%98%EC%9D%B4%EB%A7%88%ED%8A%B8_%EC%98%A8%EB%9D%BC%EC%9D%B8%EC%9A%A9_v2.pdf",
+  "_extraction_check": {
+    "source_pdf": "12_20211122_A_AOB-20210930-1030-64_상품설명서_하이마트_온라인용_v2.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.benefits.length",
+        "first": 2,
+        "second": 3
+      },
+      {
+        "path": "$.benefits[0].kind",
+        "first": "할인",
+        "second": "적립"
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.1000000",
+        "first": 30000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].monthly_cap_by_tier.500000",
+        "first": 13000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[0].requires_tier",
+        "first": 500000,
+        "second": null
+      },
+      {
+        "path": "$.benefits[1].kind",
+        "first": "적립",
+        "second": "할인"
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.1000000",
+        "first": null,
+        "second": 30000
+      },
+      {
+        "path": "$.benefits[1].monthly_cap_by_tier.500000",
+        "first": null,
+        "second": 13000
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 30000,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -1,0 +1,171 @@
+{
+  "issuer": "현대카드",
+  "name": "GOLD FOR LOTTE DEPARTMENT STORE",
+  "product_id": "HYU-149297",
+  "status": "active",
+  "as_of": "2024-06-24",
+  "review_no": "여신금융협회 심의필 제2024-C1a-07348호",
+  "card_type": "CREDIT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Visa Signature",
+      "total": 150000,
+      "base": 50000,
+      "affiliate": 100000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Visa Signature",
+      "total": 150000,
+      "base": 50000,
+      "affiliate": 100000
+    }
+  ],
+  "annual_fee_notes": [
+    "가족 카드 50,000원(기본연회비 0원 + 제휴연회비 50,000원)",
+    "연회비는 카드 발급 시 선청구됩니다.",
+    "연회비는 보유 카드별로 청구됩니다."
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "대중교통",
+        "정기결제",
+        "해외 이용 금액"
+      ]
+    },
+    "includes": [
+      "국내 일시불",
+      "해외 일시불",
+      "할부"
+    ],
+    "tiers": [
+      500000
+    ],
+    "excluded": [
+      {
+        "code": "LOTTE_DEPT",
+        "label": "롯데백화점, 롯데아울렛, 롯데몰, 롯데백화점몰(온라인) 이용 금액"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "FEE",
+        "label": "연회비, 제수수료, 이자"
+      },
+      {
+        "code": "FEE_OVERSEAS",
+        "label": "국제브랜드 수수료 및 해외서비스 수수료"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금 납부액(국세, 관세, 지방세, 지방세외수입, 상하수도 요금, 벌과금, 과태료, 인지세, 송달료, 민원 발급 수수료 등)"
+      },
+      {
+        "code": "UTILITY",
+        "label": "전기 요금, 도시가스 요금, 아파트 관리비, 부동산 임대료(월세), 자동납부 서비스 이용 수수료"
+      },
+      {
+        "code": "TUITION",
+        "label": "사립유치원 교육비 납입금, 초·중·고교 학교 납입금, 대학·대학원 등록금 납부 결제건"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 등 현금성 유가증권 구매 및 선불 카드 구매·충전 금액"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "건강보험, 국민연금, 고용보험, 산재보험 및 장애인 고용 부담금"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "고속도로 통행 요금, 후불하이패스카드 이용 금액, 고속버스"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "기본 혜택",
+      "kind": "적립",
+      "rate_percent": 1,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "국내외 가맹점"
+        }
+      ]
+    },
+    {
+      "group": "추가 혜택",
+      "kind": "적립",
+      "rate_percent": 10,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "롯데백화점/아울렛/몰",
+          "brands": [
+            "롯데백화점",
+            "롯데아울렛",
+            "롯데몰",
+            "롯데백화점몰"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 40000
+      }
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자 할부 서비스 적용된 결제 건"
+    }
+  ],
+  "non_monetary": [
+    "THE LOUNGE 공항 라운지 무료 이용 (연 10회)",
+    "공항 및 특급호텔 발레파킹 무료 이용 (월 5회)",
+    "롯데백화점 6개월 무이자 할부",
+    "롯데백화점 전용 쿠폰 제공",
+    "메탈 플레이트 제공 (발급 수수료 별도)"
+  ],
+  "schema_gaps": [
+    "연간 보너스: 연간 이용 금액 1,200만원 이상 시 10만 M포인트 적립",
+    "신규 발급 시 카드 수령 등록월 다음 달 이용 건까지는 전월 이용 금액 50만원 미만도 혜택 제공",
+    "M 긴급적립(선지급 포인트 서비스) 제공",
+    "L.POINT 서비스 제공"
+  ],
+  "posted_at": "2024-06-12",
+  "source_url": "https://www.hyundaicard.com/upload/card/T_AOB-20260311-0906-92_%EA%B0%80%EC%9D%B4%EB%93%9C%EB%B6%81_%EB%A1%AF%EB%8D%B0%EB%B0%B1%ED%99%94%EC%A0%90_GOLD_V2_%EA%B3%B5%EC%8B%9C%EC%8B%A4%EC%9A%A9.pdf",
+  "_extraction_check": {
+    "source_pdf": "149297.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 40000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

@@ -127,6 +127,77 @@ python3 scripts/collect-cards/extract.py
 - `manual_pdf/` 폴더에 사람이 직접 내려받은 PDF도 자동으로 파싱 대상에 포함된다.
 - `mapped_categories`는 미검수 상태 의미로 항상 빈 배열로 유지한다.
 
+### 카드사별 전용 PDF 수집기
+
+사용자가 확인한 공식 공시 API와 필터를 카드사별 모듈로 보존했다. 공통적으로
+기존 정상 PDF를 재사용하고, 가능한 수집기는 PDF 헤더·EOF·SHA-256과 원자 저장을
+적용한다. 기본 출력은 모두 Git에서 제외되는 `out/<카드사>/`다.
+
+| 카드사 | 파일 | 현행 상품 필터 |
+|---|---|---|
+| 삼성카드 | `samsungcard_downloader.py` | 제목에 `중단`이 있는 상품 제외 |
+| 현대카드 | `hyundaicard_downloader.py` | 상품 페이지의 전체 현행 상품 |
+| 롯데카드 | `lottecard_downloader.py` | `ISU_E_YN=Y` 제외 |
+| 하나카드 | `hanacard_downloader.py` | 저장된 MHT에서 확정한 353개 항목 |
+| KB국민카드 | `kbcard_downloader.py` | 개인 신용·체크 중 발급중단일 없는 상품 |
+| 우리카드 | `wooricard_downloader.py` | 기본값 개인카드, `issuAt=N` 제외 |
+| NH농협카드 | `nhcard_downloader.py` | 개인 신용·체크 상품설명서 |
+
+```bash
+python3 scripts/collect-cards/hyundaicard_downloader.py --metadata-only
+python3 scripts/collect-cards/lottecard_downloader.py --metadata-only
+python3 scripts/collect-cards/kbcard_downloader.py --metadata-only
+python3 scripts/collect-cards/wooricard_downloader.py --metadata-only
+python3 scripts/collect-cards/nhcard_downloader.py --metadata-only
+python3 scripts/collect-cards/samsungcard_downloader.py --metadata-only
+python3 scripts/collect-cards/hanacard_downloader.py
+```
+
+실행 직전에 `collector_policy.py`가 각 호스트의 `robots.txt`를 다시 읽는다.
+2026-08-12 확인 결과 현대·하나·KB국민·NH농협은 허용됐고, 삼성은 전체 경로가
+불허됐다. 우리카드는 PC 목록 조회는 가능하지만 모바일 PDF 뷰어가 불허되어
+`--metadata-only`만 가능하다. 롯데는 확인 당시 `robots.txt`가 시간 초과되어
+안전하게 중단했다. 우회 옵션은 두지 않는다.
+
+### 2030 우선 추출 후보 선정
+
+카드사의 전체 공시를 곧바로 LLM에 보내지 않는다. `select_youth_cards.py`가
+현행 상품 메타데이터를 공통 형식으로 모아 법인·제한발급·특수결제 카드를
+제외하고, 온라인·간편결제·교통·생활소비·통신/구독·여행 등의 키워드로
+LLM 추출 우선순위를 정한다.
+
+```bash
+python3 scripts/collect-cards/select_youth_cards.py
+python3 scripts/collect-cards/select_youth_cards.py --no-pdf-text
+python3 scripts/collect-cards/select_youth_cards.py \
+  --per-issuer 25 --check-min 5 --group-cap 6 --total 175
+
+# 선정된 후보 PDF만 다운로드(robots.txt 불허 카드사는 자동 보류)
+python3 scripts/collect-cards/download_youth_cards.py
+
+# 사용자가 직접 받은 KB국민·우리카드 후보 PDF 반입
+python3 scripts/collect-cards/import_manual_card_pdfs.py \
+  --src /path/to/card-pdfs
+
+# 다운로드된 후보를 Gemini로 이중 추출
+GEMINI_API_KEY=... python3 scripts/collect-cards/extract_llm.py \
+  --src scripts/collect-cards/out/youth-pdf \
+  --manifest scripts/collect-cards/out/youth-pdf/metadata.json \
+  --out scripts/collect-cards/cards
+```
+
+- 출력: `out/youth-card-candidates.json`, `out/youth-card-candidates.md`
+- 카드사별 최대 25장, 그중 체크카드 최소 목표 5장을 우선 확보한다.
+- 온라인·교통·여행 등 동일 혜택군은 카드사별 기본 6장으로 제한해 편중을 막는다.
+- 발급 상태가 명시적으로 확인되지 않은 공시 문서는 기본적으로 제외한다.
+  점검용으로만 볼 때 `--include-unverified-status`를 쓸 수 있다.
+- 점수는 비싼 LLM 이중 추출의 순서를 정할 뿐, 사용자 추천 순위에는 쓰지 않는다.
+  최종 추천은 기존처럼 개인의 실제 소비로 계산한 예상 절감액 순이다.
+- 후보 다운로더는 카드사 전수 대신 선정된 PDF만 받고, 정상 파일은 재사용한다. 카드사별
+  원본 상품번호는 서로 겹칠 수 있어 LLM 결과의 `product_id`에는 카드사 접두사를 붙인다.
+- 수동 반입기는 후보 목록의 카드사별 가나다순 번호와 파일명을 대조하고, 정상 PDF만
+  `out/youth-pdf/`에 원자적으로 복사한다. 원본 폴더는 수정하지 않는다.
+
 ## 검증 결과 요약 (2026-08-04)
 
 - 수집 확인: BC카드 PDF 5건을 수집했고, KB 카드 샘플 PDF 2건을 `manual_pdf/`로 추가해 파싱 검증에 포함했다.

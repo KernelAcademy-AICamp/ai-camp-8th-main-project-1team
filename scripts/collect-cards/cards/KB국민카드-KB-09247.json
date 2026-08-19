@@ -1,0 +1,250 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 마이핏카드(적립형)",
+  "product_id": "KB-09247",
+  "status": "active",
+  "as_of": "2024-02-26",
+  "review_no": "여신금융협회 심의필 제2024-C1a-01979호",
+  "compliance_no": "준법감시인 240205-00408-PIF(2024.02.05)",
+  "posted_at": "2020-06-01",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "policy_card": false,
+  "has_transit": false,
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "KB",
+      "total": 30000,
+      "base": 1000,
+      "affiliate": 29000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Master",
+      "total": 30000,
+      "base": 1000,
+      "affiliate": 29000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외이용금액"
+      ]
+    },
+    "includes": [
+      "국내 일시불",
+      "할부"
+    ],
+    "tiers": [
+      500000,
+      1000000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
+        "code": "TUITION",
+        "label": "초·중·고등학교 납입금 전체, 대학(대학원)등록금"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "후불교통요금"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인전표(자판기/터널통행료/항공기내 이용 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "간편결제",
+      "kind": "적립",
+      "rate_percent": 1.5,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "간편결제",
+          "brands": [
+            "삼성페이",
+            "LG페이",
+            "KB Pay"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 30000
+      },
+      "conditions": [
+        "건당 2만원 이상 이용 시",
+        "일 적립한도 1만점"
+      ]
+    },
+    {
+      "group": "편의점/택시",
+      "kind": "적립",
+      "amount_krw": 1000,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "편의점"
+        },
+        {
+          "category": "택시"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 3000,
+        "1000000": 5000
+      },
+      "conditions": [
+        "건당 1만원 이상 이용 시"
+      ]
+    },
+    {
+      "group": "쇼핑/배달",
+      "kind": "적립",
+      "rate_percent": 5,
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "쇼핑",
+          "brands": [
+            "쿠팡",
+            "G마켓"
+          ]
+        },
+        {
+          "category": "배달",
+          "brands": [
+            "배달의민족"
+          ]
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "500000": 3000,
+        "1000000": 5000
+      },
+      "conditions": [
+        "건당 1만원 이상 이용 시"
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "TAX",
+      "label": "국세, 지방세"
+    },
+    {
+      "code": "UTILITY",
+      "label": "공과금(전기/수도)"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+    },
+    {
+      "code": "TUITION",
+      "label": "초·중·고등학교 납입금 전체, 대학(대학원)등록금"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "4대 사회보험료(건강/연금/고용/산재)"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "모바일 단독카드(실물 발급 불가)",
+    "알파원카드 연동 가능"
+  ],
+  "schema_gaps": [
+    "최초 카드 사용등록일로부터 다음달 말일까지 실적 유예기간 제공",
+    "포인트리 적립 시점 기준 60개월 경과 시 소멸",
+    "가족카드 발급 불가"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09247__prdctOpmn_20240228.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09247__prdctOpmn_20240228.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 36000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

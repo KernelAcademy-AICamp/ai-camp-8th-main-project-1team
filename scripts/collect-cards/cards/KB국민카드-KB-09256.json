@@ -1,0 +1,183 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 Easy all 티타늄카드",
+  "product_id": "KB-09256",
+  "status": "active",
+  "as_of": "2020-12-09",
+  "review_no": "여신금융협회 심의필 제2020-C1a-10877호",
+  "compliance_no": "201126-04007-TRM",
+  "posted_at": "2020-06-18",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 30000,
+      "base": 7000,
+      "affiliate": 23000
+    },
+    {
+      "scope": "국내외겸용",
+      "brand": "Visa/K-WORLD(UPI)",
+      "total": 30000,
+      "base": 7000,
+      "affiliate": 23000
+    }
+  ],
+  "performance": {
+    "period": "전월 1일~말일",
+    "basis": "승인일",
+    "basis_exceptions": {
+      "basis": "매입일",
+      "applies_to": [
+        "해외이용금액"
+      ]
+    },
+    "tiers": [
+      500000,
+      1000000,
+      1500000
+    ],
+    "new_member_grace": {},
+    "excluded": [
+      {
+        "code": "CANCEL",
+        "label": "취소금액"
+      },
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "UTILITY",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
+        "code": "TUITION",
+        "label": "초/중/고등학교 납입금 전체(수업료/교육비/현장학습비/급식비), 대학(대학원)등록금"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함)구입·충전금액"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "Easy all 선택서비스",
+      "kind": "할인",
+      "settle": "청구할인",
+      "requires_tier": 500000,
+      "targets": [
+        {
+          "category": "선택 영역",
+          "note": "Auto 모드(그룹별 상위 이용금액) 또는 DIY 모드(사용자 설정)에 따라 할인 제공"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [
+    {
+      "group": "Easy all 선택서비스",
+      "members": [
+        "선택 영역"
+      ],
+      "cap_by_tier": {
+        "500000": 16000,
+        "1000000": 32000,
+        "1500000": 48000
+      }
+    }
+  ],
+  "benefit_excluded": [
+    {
+      "code": "INSTALLMENT_FREE",
+      "label": "무이자할부 이용금액"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입·충전금액"
+    }
+  ],
+  "non_monetary": [
+    "티타늄 서비스(공항/호텔 발레파킹, 공항 라운지)",
+    "Visa 브랜드 발급 시 Visa 제공 서비스(호텔, F&B, 라운지)"
+  ],
+  "schema_gaps": [
+    "Auto 모드와 DIY 모드라는 복합적인 할인 구조를 가지고 있어, 개별 영역별 할인율과 한도가 사용자 설정에 따라 가변적임",
+    "티타늄 서비스는 전월 실적 30만원 이상 시 제공되며 실적 유예기간이 없음",
+    "모바일 단독카드 발급 시 연회비 차등 적용"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09256__prdctOpmn_20240403.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09256__prdctOpmn_20240403.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": false,
+    "mismatches": [
+      {
+        "path": "$.annual_fee[0].affiliate",
+        "first": 23000,
+        "second": null
+      },
+      {
+        "path": "$.annual_fee[0].base",
+        "first": 7000,
+        "second": null
+      },
+      {
+        "path": "$.annual_fee[1].affiliate",
+        "first": 23000,
+        "second": null
+      },
+      {
+        "path": "$.annual_fee[1].base",
+        "first": 7000,
+        "second": null
+      },
+      {
+        "path": "$.combined_caps.length",
+        "first": 1,
+        "second": 0
+      }
+    ],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 0,
+      "internal_complete": true,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

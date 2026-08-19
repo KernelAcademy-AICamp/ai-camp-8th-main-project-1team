@@ -1,0 +1,223 @@
+{
+  "issuer": "KB국민카드",
+  "name": "KB국민 KB Pay 챌린지플러스카드",
+  "product_id": "KB-09114",
+  "status": "active",
+  "as_of": "2021-05-18",
+  "review_no": "여신금융협회 심의필 제2021-C1a-04124",
+  "compliance_no": "준법감시인 심의필 210427-01378-PIF",
+  "posted_at": "2021-05-18",
+  "card_type": "CREDIT",
+  "benefit_style": "DISCOUNT_POINT",
+  "annual_fee": [
+    {
+      "scope": "국내전용",
+      "brand": "Local",
+      "total": 30000,
+      "base": 7000,
+      "affiliate": 23000
+    },
+    {
+      "scope": "해외겸용",
+      "brand": "Master, K-WORLD(UPI)",
+      "total": 30000,
+      "base": 7000,
+      "affiliate": 23000
+    },
+    {
+      "scope": "모바일단독카드",
+      "brand": "Local/Master/K-WORLD",
+      "total": 24000,
+      "base": 1000,
+      "affiliate": 23000
+    }
+  ],
+  "annual_fee_notes": [
+    "연회비는 카드발급 시점을 기준으로 1년 단위로 청구",
+    "모바일 단독카드는 실물 없이 스마트폰 앱에 등록하여 이용",
+    "모바일 단독카드와 일반카드 동시 보유 시 기본연회비는 일반카드 기준 청구"
+  ],
+  "performance": {
+    "period": "당월 1일~말일",
+    "basis": "승인일",
+    "tiers": [
+      800000
+    ],
+    "excluded": [
+      {
+        "code": "CASH_ADVANCE",
+        "label": "단기카드대출(현금서비스)"
+      },
+      {
+        "code": "CARD_LOAN",
+        "label": "장기카드대출(카드론)"
+      },
+      {
+        "code": "PUBLIC_DUES",
+        "label": "공과금(전기/수도)"
+      },
+      {
+        "code": "TAX",
+        "label": "국세, 지방세"
+      },
+      {
+        "code": "HOUSING",
+        "label": "아파트관리비"
+      },
+      {
+        "code": "SOCIAL_INS",
+        "label": "4대 사회보험료(건강/연금/고용/산재)"
+      },
+      {
+        "code": "TUITION",
+        "label": "초∙중∙고등학교 납입금 전체, 대학(대학원) 등록금"
+      },
+      {
+        "code": "GIFT_CARD",
+        "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입∙충전금액, 기프트카드 구매∙충전금액"
+      },
+      {
+        "code": "INSTALLMENT_FREE",
+        "label": "무이자할부이용금액"
+      },
+      {
+        "code": "TRANSIT",
+        "label": "후불 대중교통/하이패스 이용금액"
+      },
+      {
+        "code": "FEE",
+        "label": "각종 수수료 및 이자, 연체료, 연회비"
+      },
+      {
+        "code": "GOV_SUPPORT",
+        "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+      },
+      {
+        "code": "NON_AUTH",
+        "label": "무승인거래(항공기내 면세, 도로통행료 결제 등)"
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "group": "스탬프서비스",
+      "kind": "적립",
+      "settle": "포인트리",
+      "amount_krw": 1000,
+      "targets": [
+        {
+          "category": "KB Pay 이용",
+          "note": "KB Pay 3회 이용 시 1천점 적립, 이용 건당 1만원 이상, 동일가맹점 1일 1회 제한"
+        }
+      ],
+      "monthly_cap_by_tier": {
+        "800000": 50000
+      }
+    },
+    {
+      "group": "출석체크서비스",
+      "kind": "적립",
+      "settle": "포인트리",
+      "amount_krw": 1000,
+      "targets": [
+        {
+          "category": "KB Pay 출석",
+          "note": "매주 일~토 매일 1회 이상 KB Pay 이용 시 주 단위 1천점 적립, 건당 1만원 이상"
+        }
+      ]
+    },
+    {
+      "group": "이용 리워드",
+      "kind": "적립",
+      "settle": "포인트리",
+      "amount_krw": 4000,
+      "requires_tier": 800000,
+      "targets": [
+        {
+          "category": "전월 실적 달성 리워드"
+        }
+      ]
+    }
+  ],
+  "combined_caps": [],
+  "benefit_excluded": [
+    {
+      "code": "CASH_ADVANCE",
+      "label": "단기카드대출(현금서비스)"
+    },
+    {
+      "code": "CARD_LOAN",
+      "label": "장기카드대출(카드론)"
+    },
+    {
+      "code": "PUBLIC_DUES",
+      "label": "공과금(전기/수도)"
+    },
+    {
+      "code": "TAX",
+      "label": "국세, 지방세"
+    },
+    {
+      "code": "HOUSING",
+      "label": "아파트관리비"
+    },
+    {
+      "code": "SOCIAL_INS",
+      "label": "4대 사회보험료(건강/연금/고용/산재)"
+    },
+    {
+      "code": "TUITION",
+      "label": "초∙중∙고등학교 납입금 전체, 대학(대학원) 등록금"
+    },
+    {
+      "code": "GIFT_CARD",
+      "label": "상품권 및 선불카드(선불전자지급수단 포함) 구입∙충전금액, 기프트카드 구매∙충전금액"
+    },
+    {
+      "code": "TRANSIT",
+      "label": "후불 대중교통/하이패스 이용금액"
+    },
+    {
+      "code": "FEE",
+      "label": "각종 수수료 및 이자, 연체료, 연회비"
+    },
+    {
+      "code": "GOV_SUPPORT",
+      "label": "정부지원금(보육료/유치원보조비/바우처 이용금액 등)"
+    },
+    {
+      "code": "NON_AUTH",
+      "label": "무승인거래(항공기내 면세, 도로통행료 결제 등)"
+    }
+  ],
+  "non_monetary": [
+    "가족카드 발급 불가",
+    "모든 서비스는 KB Pay 결제 건에 한하여 제공"
+  ],
+  "schema_gaps": [
+    "스탬프 서비스의 월간 적립 한도 적용 기간이 매월 말일이 아닌 '전월 마지막 토요일의 다음날~당월 마지막 토요일'로 산정됨",
+    "출석체크 서비스는 주 단위 적립이며, 취소 시 이용 횟수 차감 및 적립 제외 조건이 있음",
+    "이용 리워드는 당월 실적 기준 다음달 25일 적립됨"
+  ],
+  "source_url": "https://img2.kbcard.com/obj/card/download/09114__prdctOpmn_20210923.pdf",
+  "_extraction_check": {
+    "source_pdf": "01_09114__prdctOpmn_20210923.pdf",
+    "source_mode": "extracted_text",
+    "runs": 2,
+    "temperatures": [
+      0.0,
+      0.2
+    ],
+    "numeric_consensus": true,
+    "mismatches": [],
+    "second_run_error": null,
+    "external_max_benefit": {
+      "status": "UNAVAILABLE",
+      "internal_krw": 50000,
+      "internal_complete": false,
+      "external_krw": null,
+      "source_url": null,
+      "note": "공개된 동일 기준 외부 값을 아직 확인하지 못함"
+    }
+  }
+}

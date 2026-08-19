@@ -1,5 +1,7 @@
 package com.finntech.service;
 
+import java.util.Set;
+
 /**
  * 자금 흐름 축(L1~L5)의 입력 재료 — ①의 (B) 스키마와 1:1로 대응하는 <b>계약</b>이다
  * (`07_취향분석및추천_Agent_설계.md` §4.1).
@@ -38,9 +40,31 @@ public record FundFlowInputs(
 
     /**
      * L5. 우대조건 충족 재료 — 카드 실적·급여이체 둘만 본다(자동이체는 더미에 거래가 없어 제외, R7).
-     * 실제 상품별 우대조건과의 대조(M1~M9)는 FP-01 매칭에서 (D)와 함께 판정한다.
+     * 실제 상품별 우대조건과의 대조(M1~M10)는 FP-01 매칭에서 (D)와 함께 판정한다.
+     *
+     * <p><b>금융사별로 쪼개서 함께 준다</b>(2026-08-11 신설). 실측상 우대조건의 28%가
+     * `우리은행 입출식 계좌에서…`처럼 <b>당행 한정</b>이라, 앞의 두 불리언(어느 금융사든 하나라도 충족)만으로
+     * 판정하면 과대 표시가 된다. 뒤의 두 집합이 있으면 M6이 그 금융사 것으로 좁혀 볼 수 있다(§4.5 M6 ④).
+     *
+     * @param cardPerformanceMet 아무 카드사에서든 전월 실적 임계를 넘겼는가(당행 한정이 아닌 조건용).
+     * @param salaryTransferMet  아무 계좌로든 급여가 들어오는가.
+     * @param cardPerformanceCompanies 전월 실적 임계를 넘긴 <b>카드사명</b>. 당행 한정 조건은 이걸로 본다.
+     * @param salaryBanks              급여가 실제로 들어오는 <b>은행명</b>.
      */
-    public record Preferential(boolean cardPerformanceMet, boolean salaryTransferMet) {}
+    public record Preferential(boolean cardPerformanceMet, boolean salaryTransferMet,
+                               Set<String> cardPerformanceCompanies, Set<String> salaryBanks) {
+
+        public Preferential {
+            cardPerformanceCompanies = cardPerformanceCompanies == null
+                    ? Set.of() : Set.copyOf(cardPerformanceCompanies);
+            salaryBanks = salaryBanks == null ? Set.of() : Set.copyOf(salaryBanks);
+        }
+
+        /** 금융사별 재료가 없던 시절의 형태. 당행 한정 조건은 판정 불가로 떨어진다. */
+        public Preferential(boolean cardPerformanceMet, boolean salaryTransferMet) {
+            this(cardPerformanceMet, salaryTransferMet, Set.of(), Set.of());
+        }
+    }
 
     /** 소스 미연결(또는 재료 없음) — 모든 축이 UNKNOWN으로 나오게 하는 빈 입력. */
     public static FundFlowInputs empty() {
