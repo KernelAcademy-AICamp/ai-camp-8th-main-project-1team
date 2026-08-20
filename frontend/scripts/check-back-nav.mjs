@@ -113,12 +113,19 @@ const ONBOARDING_TRAIL = ['boot', 'walk', 'auth', 'connect', 'loading',
 // ── 2. 자동 이동은 이력을 쌓지 않는다 ──────────────────────────────────
 /* 사람이 안 누른 이동이 이력을 쌓으면, 뒤로가서 그 화면에 도착하는 순간 같은 이동이 또 일어나
    앞으로 되밀린다. 셋 다 `ref` 로 이중 실행을 막고 있지만 **뒤로가기는 재마운트라 ref 가 리셋된다.** */
+/*
+ * 프로토타입_0818 로 두 가지가 바뀌었다 —
+ *   · 온보딩 네 화면(ob1~ob4)이 **한 화면**(`ob`)으로 합쳐졌다
+ *   · 완료 화면의 **자동 이동이 사라졌다**(사람이 '홈으로 가기'를 누른다)
+ * 그래서 목록에서 `done → home` 이 빠진다. 자동 이동이 없어졌으니 "자동 이동이 이력을
+ * 쌓는가"라는 물음 자체가 성립하지 않는다 — 대신 그 화면의 **버튼**이 이력을 안 쌓는지를
+ * 아래 3번(사용자 이동)과 같은 방식으로 따로 본다.
+ */
 const AUTO_MOVES = [
   { name: 'boot → walk', from: 'boot', to: '#/walk', wait: 3400, linked: false },
-  { name: 'loading → ob1', from: 'loading', to: '#/ob1', wait: 6000, linked: true,
+  { name: 'loading → ob', from: 'loading', to: '#/ob', wait: 6000, linked: true,
     api: { '/api/analysis': { totalSpent: 0, categories: [], days: 90 },
            '/unclassified': { categories: [], aiEnabled: false, items: [] } } },
-  { name: 'done → home', from: 'done', to: '#/home', wait: 7000, linked: true },
 ];
 for (const m of AUTO_MOVES) {
   const ctx = await browser.newContext({ viewport: { width: 375, height: 812 } });
@@ -171,6 +178,35 @@ for (const m of AUTO_MOVES) {
     } else {
       ok('3. 사용자 이동은 이력에 남고 뒤로가면 돌아온다', `이력 ${before} → ${after}, 뒤로 → ${backTo}`);
     }
+  }
+  await ctx.close();
+}
+
+// ── 3-b. 완료 화면의 '홈으로 가기'는 이력을 쌓지 않는다 ────────────────
+/* 0818 이 자동 이동을 없애면서 이 화면은 **버튼으로만** 나간다. 그 버튼이 이력을 쌓으면
+   홈에서 뒤로 누른 사람이 이미 끝난 축하로 되돌아온다 — 자동 이동이던 시절과 같은 사고다. */
+{
+  const ctx = await browser.newContext({ viewport: { width: 375, height: 812 } });
+  await ctx.addInitScript(SEED_LINKED);
+  await stubApi(ctx);
+  const page = await ctx.newPage();
+  page.on('pageerror', () => {});
+  await page.goto(`${BASE}/#/done`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(700);
+  const before = await page.evaluate(() => window.history.length);
+  const btn = page.getByRole('button', { name: '홈으로 가기' });
+  if (await btn.count() === 0) {
+    no('3-b. 완료 화면의 홈 버튼', '버튼을 못 찾았다 — 검사 전제가 깨졌다');
+  } else {
+    await btn.first().click();
+    await page.waitForTimeout(500);
+    const after = await page.evaluate(() => window.history.length);
+    const at = hashOf(page);
+    if (at !== '#/home') no('3-b. 완료 화면에서 홈으로 못 갔다', `눌렀더니 ${at}`);
+    else if (after > before) {
+      no('3-b. 완료 화면의 홈 버튼이 이력을 쌓는다',
+        `이력 ${before} → ${after}. 홈에서 뒤로 누르면 끝난 축하로 되돌아온다`);
+    } else ok('3-b. 완료 화면의 홈 버튼이 이력을 안 쌓는다', `이력 ${before} 그대로`);
   }
   await ctx.close();
 }

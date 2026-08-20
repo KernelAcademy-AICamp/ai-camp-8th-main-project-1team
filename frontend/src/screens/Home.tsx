@@ -7,7 +7,9 @@
  * 목업의 '카테고리별 소진 진행바' 자리에는 서버가 주는 단위(챌린지 전체)로 두 줄을 놓았다 —
  * 지킴이 원장은 카테고리 묶음 하나를 예산으로 관리하고 카테고리별 소진율을 따로 내려주지 않는다.
  */
+import { useEffect, useState } from 'react';
 import { Icon } from '../components/Icons';
+import { MonthEndModal } from '../components/MonthEndModal';
 import { Orb, Scroll, Screen, ErrorBox, Loading, SectionTitle } from '../components/ui';
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
@@ -27,6 +29,13 @@ export function Home() {
   const payments = useAsync(() => api.allPayments(userId, 6).catch(() => []), [userId]);
   /** 전월 대비를 세려고 월별 지출을 받는다 — 실패해도 그 줄만 빠지고 화면은 산다. */
   const report = useAsync(() => api.report(userId).catch(() => null), [userId]);
+  /**
+   * 한 달 완료 축하 모달(0818 `#monthModal`).
+   *
+   * <b>회차마다 한 번만 저절로 뜬다.</b> 열 때마다 폭죽이 터지면 축하가 아니라 방해다 —
+   * 본 회차를 브라우저에 적어 두고, 그 뒤로는 위의 '결산 보기' 줄을 눌러야 열린다.
+   */
+  const [celebrate, setCelebrate] = useState(false);
 
   const recent = [...(payments.data ?? [])].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
 
@@ -84,6 +93,8 @@ export function Home() {
   }
 
   const { challenge: ch, strip } = home;
+  /** "7월" — 챌린지 시작 달로 부른다(끝난 달이 아니라 그 회차의 이름이다). */
+  const monthLabel = `${Number(ch.startDate.slice(5, 7))}월`;
   const defense = pctNum(ch.achievementRate);
   const spent = Math.min(1, ch.spentRatio);
   const barColor = spent >= 1 ? 'var(--red)' : spent >= 0.8 ? 'var(--amber)' : 'var(--green)';
@@ -129,6 +140,10 @@ export function Home() {
 
   return (
     <Screen id="home" title="홈" hasTabBar>
+      <AutoCelebrate state={ch.state} id={ch.id} onOpen={() => setCelebrate(true)} />
+      <MonthEndModal open={celebrate} label={monthLabel} secured={ch.securedSaving}
+        onNext={() => { setCelebrate(false); go('settle'); }}
+        onClose={() => setCelebrate(false)} />
       <Scroll>
         <div className="pad" style={{ paddingTop: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -142,11 +157,10 @@ export function Home() {
             </button>
           </div>
 
-          {/* 챌린지가 끝났으면 월말 사이클로 가는 문을 연다(개편안 s-monthend → s-settle → s-renew).
-              강제로 밀어내지 않는 이유는 이 파일 위쪽에 적어 둔 그대로다 — 눌러서 들어가는 편이
-              빠져나오기도 쉽다. 다만 이 카드는 지나치기 어렵게 맨 위에 둔다. */}
+          {/* 챌린지가 끝났으면 월말 사이클로 가는 문을 연다(0818: 축하는 모달이 맡고 이 줄은
+              다시 열 수 있는 문으로 남는다 — 모달을 닫은 사람이 돌아올 자리가 있어야 한다). */}
           {SETTLED_STATES.has(ch.state) && (
-            <button type="button" className="strip" onClick={() => go('monthend')}
+            <button type="button" className="strip" onClick={() => setCelebrate(true)}
               style={{ background: 'linear-gradient(180deg,#FFFFFF 0%,#E7F4DC 100%)' }}>
               <Icon id="i-gift" className="hic" />
               <b>이번 챌린지가 끝났어요 — 결산 보기</b>
@@ -325,4 +339,26 @@ export function Home() {
 
     </Screen>
   );
+}
+
+/**
+ * 회차가 끝났으면 축하 모달을 <b>한 번만</b> 연다.
+ *
+ * <p>브라우저에 본 회차 id 를 적어 둔다 — 홈을 열 때마다 폭죽이 터지면 축하가 아니라 방해다.
+ * 서버에 남기지 않는 이유: '봤다'는 그 기기의 사정이고, 다른 기기에서 다시 보는 것이
+ * 안 보는 것보다 낫다(축하는 놓치면 아쉽고 두 번 보면 그만이다).
+ */
+function AutoCelebrate({ state, id, onOpen }: {
+  state: string; id: number; onOpen: () => void;
+}) {
+  useEffect(() => {
+    if (!SETTLED_STATES.has(state)) return;
+    const key = 'monthend_seen';
+    let seen: string | null = null;
+    try { seen = localStorage.getItem(key); } catch { /* 사파리 프라이빗 등 */ }
+    if (seen === String(id)) return;
+    try { localStorage.setItem(key, String(id)); } catch { /* noop */ }
+    onOpen();
+  }, [state, id, onOpen]);
+  return null;
 }

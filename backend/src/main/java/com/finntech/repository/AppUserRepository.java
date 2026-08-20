@@ -29,4 +29,20 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
      * 실제로 겪었다(2026-07-31 — app_user 1이 이승진에서 원소희로 바뀌고 앞사람의 챌린지가 남았다).
      */
     Optional<AppUser> findByCi(String ci);
+
+    /**
+     * 같은 나이대의 <b>다른</b> 사람들. 리포트의 '또래 비교'가 견줄 모집단이다.
+     *
+     * <p>나이대를 ±N년으로 잡는 이유: 출생연도가 같은 사람만 세면 표본이 한 자리로 떨어져
+     * 한 사람의 큰 결제가 중앙값을 흔든다. 넓히면 흔들림은 줄지만 '또래'가 아니게 되므로,
+     * 폭은 부르는 쪽이 정한다.
+     *
+     * <p>자기 자신은 뺀다 — 내 소비가 또래 값에 섞이면 비교가 자기 자신과의 비교가 된다.
+     */
+    @org.springframework.data.jpa.repository.Query(
+            "select u.id from AppUser u where u.birthYear is not null "
+            + "and u.birthYear between :from and :to and u.id <> :exclude")
+    java.util.List<Long> findPeerIds(@org.springframework.data.repository.query.Param("from") int from,
+                                     @org.springframework.data.repository.query.Param("to") int to,
+                                     @org.springframework.data.repository.query.Param("exclude") Long exclude);
 }

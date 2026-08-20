@@ -1,31 +1,59 @@
 /**
- * 리포트 탭 (프로토타입_0806 `s-report`) — "이 주를 어떻게 지켰는가"에 답한다.
+ * 리포트 탭 (프로토타입_0818 `s-report`) — "이 기간을 어떻게 지켰는가"에 답한다.
  *
- * <b>개편안의 다섯 절을 그대로 얹었다.</b> 주차 이동 → 지킨 금액과 차트 → 많이 쓴 곳 →
- * 지킴이가 본 이번 주 → 지난 챌린지 달성률 → 카드 추천.
+ * <h2>0818 개편에서 통째로 바뀐 화면이다</h2>
  *
- * <b>개편안에 없는 절은 뺐다.</b> 소비 건강 점수·절약 리포트·소비 성격 분석·주간 미션 정산과
- * 자세히 보기 메뉴는 디자이너가 다시 그리지 않았다. 지우지는 않고 **마이 > 임시 보관함**으로
- * 옮겼다(`m-parked`) — 이 화면은 개편안이 그린 것만 담고, 갈 곳은 나중에 정한다.
+ * <p>예전에는 <b>주간 하나</b>였고 위에 ‹ 7월 4주차 › 가 있었다. 지금은 맨 위가
+ * <b>주간·월간 두 갈래</b>이고, 갈래마다 보여주는 것이 다르다 —
  *
- * <b>계산은 서버가 한다.</b> 방어율·요일별 금액·달성률은 `/api/guardian/report/weekly` 가
- * 완성해 내려준다(마스터 §4 원칙 2). 여기서 하는 것은 그리기와 문장 조립뿐이다.
+ * <pre>
+ *   공통   기간 고르기 · 진행 히어로 · 도넛과 순위 · 또래 비교 · 카드 추천
+ *   주간   요일별/주별 차트 · 지킴이가 본 이번 주 · 미션 다리
+ *   월간   최근 3개월 선 그래프 · 가장 많이 간 곳 캐러셀 · 1년 뒤 지킨 돈
+ * </pre>
+ *
+ * <p><b>왜 갈래를 나눴나.</b> 주간은 "이번 주를 지켰는가"를 묻고 월간은 "어떤 사람인가"를
+ * 묻는다. 물음이 다르면 보여줄 것도 다른데, 한 화면에 다 얹으면 스크롤만 길어지고 어느 것도
+ * 안 읽힌다.
+ *
+ * <h2>또래 비교는 서버가 만든다</h2>
+ *
+ * <p>같은 나이대의 <b>중앙값</b>과 견준다({@code /api/report/peer}). 견줄 수 없으면 서버가
+ * 204 를 주고 이 절은 <b>통째로 사라진다</b> — 표본이 얇을 때 억지로 숫자를 만들면 없는
+ * 비교를 사실처럼 보여주게 된다. 왜 평균이 아니라 중앙값인지는 `PeerCompareService` 에 있다.
+ *
+ * <h2>계산은 서버가 한다</h2>
+ *
+ * <p>방어율·요일별 금액·달성률은 `/api/guardian/report/weekly` 가 완성해 내려준다
+ * (마스터 §4 원칙 2). 여기서 하는 것은 그리기와 문장 조립뿐이다.
  */
-import { useState } from 'react';
-import { Scroll, Screen } from '../components/ui';
+import { useMemo, useState } from 'react';
+import { Scroll, Screen, Loading } from '../components/ui';
+import { Icon } from '../components/Icons';
 import { WeekChart } from '../components/WeekChart';
 import { WeekPicker, weekOfMonth, mondayOf, type WeekSel } from '../components/WeekPicker';
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
 import { useAsync } from '../state/useAsync';
 import { api } from '../lib/api';
-import { won, wonNum, shortDate } from '../lib/format';
+import { won, wonNum, shortDate, iconOf } from '../lib/format';
 
 /** "7.20 ~ 7.26" */
 const fmtRange = (a: string, b: string) =>
   `${Number(a.slice(5, 7))}.${Number(a.slice(8, 10))} ~ ${Number(b.slice(5, 7))}.${Number(b.slice(8, 10))}`;
 
-/** 미션 배너의 동전 그림 — 개편안 원본 SVG. */
+/** 도넛 색 — 온보딩 막대와 <b>같은 팔레트</b>. 거기서 배운 색이 여기서 이어져야 한다. */
+const DONUT = ['#F08812', '#E85D9F', '#8B5CF6', '#3671E9', '#34C38F'];
+const DONUT_ETC = '#D9DDE1';
+
+/** 1년 뒤 카드가 2초마다 돌리는 그림과 문구(프로토타입 `FUT_ITEMS`). */
+const FUTURE_ITEMS = [
+  { img: '/report/fut-1.svg', text: '일본 여행 왕복 항공권 구매할 수 있어요' },
+  { img: '/report/fut-2.svg', text: '치킨 25마리 구매할 수 있어요' },
+  { img: '/report/fut-3.png', text: '에어팟 맥스 구매할 수 있어요' },
+];
+
+/** 미션 배너의 동전 그림 — 프로토타입 원본 SVG. */
 const CoinArt = () => (
   <svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true">
     <circle cx="34" cy="24" r="15" fill="#F5B73C" />
@@ -36,25 +64,76 @@ const CoinArt = () => (
   </svg>
 );
 
-/** 카드 추천 배너의 카드 그림 — 개편안 원본 SVG. */
+/** 카드 추천 배너의 카드 그림 — 프로토타입 원본 SVG. */
 const CardArt = () => (
   <svg width="56" height="48" viewBox="0 0 56 48" aria-hidden="true">
     <rect x="18" y="6" width="30" height="40" rx="5" fill="#00B173" />
-    <rect x="14" y="10" width="30" height="40" rx="5" fill="#33C475" />
+    <rect x="14" y="10" width="30" height="40" rx="5" fill="#00B173" />
     <rect x="22" y="18" width="10" height="10" rx="2.5" fill="#fff" />
     <path d="M7 8l1.4 3L11.4 12.4l-3 1.4L7 16.8l-1.4-3-3-1.4 3-1.4z" fill="#FFC53D" />
     <path d="M13 1l.9 1.9 1.9.9-1.9.9L13 6.6l-.9-1.9-1.9-.9 1.9-.9z" fill="#FFC53D" />
   </svg>
 );
 
+/** 도넛 한 조각의 경로 — 반지름 100 기준, 12시부터 시계방향. */
+function arc(from: number, to: number, r = 78, w = 30) {
+  const p = (deg: number, rad: number) => {
+    const a = ((deg - 90) * Math.PI) / 180;
+    return [100 + rad * Math.cos(a), 100 + rad * Math.sin(a)];
+  };
+  const big = to - from > 180 ? 1 : 0;
+  const [x1, y1] = p(from, r + w / 2);
+  const [x2, y2] = p(to, r + w / 2);
+  const [x3, y3] = p(to, r - w / 2);
+  const [x4, y4] = p(from, r - w / 2);
+  return `M${x1} ${y1} A${r + w / 2} ${r + w / 2} 0 ${big} 1 ${x2} ${y2} `
+    + `L${x3} ${y3} A${r - w / 2} ${r - w / 2} 0 ${big} 0 ${x4} ${y4} Z`;
+}
+
+/** 최근 3개월 선 그래프 — 세 점을 부드럽게 잇는다(프로토타입 `buildMoChart`). */
+function MonthLine({ points }: { points: { label: string; amount: number }[] }) {
+  const W = 287;
+  const H = 176;
+  if (points.length === 0) return null;
+  const max = Math.max(...points.map((p) => p.amount), 1);
+  const step = points.length > 1 ? (W - 40) / (points.length - 1) : 0;
+  const xy = points.map((p, i) => [20 + i * step, H - 36 - (p.amount / max) * (H - 76)] as const);
+  const path = xy.map(([x, y], i) => (i === 0 ? `M${x} ${y}` : `L${x} ${y}`)).join(' ');
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }}
+      role="img" aria-label="최근 3개월 소비 추이">
+      <path d={`${path} L${xy[xy.length - 1][0]} ${H - 36} L${xy[0][0]} ${H - 36} Z`}
+        fill="var(--brand-weak)" opacity="0.6" />
+      <path d={path} fill="none" stroke="var(--blue)" strokeWidth="2.5"
+        strokeLinecap="round" strokeLinejoin="round" />
+      {xy.map(([x, y], i) => (
+        <g key={points[i].label}>
+          <circle cx={x} cy={y} r={i === xy.length - 1 ? 5 : 3.5} fill="#fff"
+            stroke="var(--blue)" strokeWidth="2.5" />
+          <text x={x} y={H - 14} textAnchor="middle" fontSize="12" fill="var(--t3)"
+            fontWeight="500">{points[i].label}</text>
+          <text x={x} y={y - 12} textAnchor="middle" fontSize="12" fill="var(--t1)"
+            fontWeight="700">{wonNum(points[i].amount)}</text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 export function Report() {
   const { go, userId } = useSession();
   const { home } = useGuardian();
+  /** 주간이냐 월간이냐 — 0818 이 나눈 두 갈래. */
+  const [period, setPeriod] = useState<'week' | 'month'>('week');
   const [weeksAgo, setWeeksAgo] = useState(0);
   const [mode, setMode] = useState<0 | 1>(0);
-  /** 주차 고르기 시트 — 열려 있는가, 그 안에서 굴리고 있는 값은 무엇인가. */
   const [pickOpen, setPickOpen] = useState(false);
   const [pick, setPick] = useState<WeekSel | null>(null);
+  /** 1년 뒤 카드가 지금 보여주는 항목. 탭하면 다음으로 — 2초 자동 순환은 아래 effect. */
+  const [futIdx, setFutIdx] = useState(0);
+  /** 준비 중인 기능을 눌렀을 때의 짧은 알림(프로토타입 `.mini-toast`). */
+  const [toast, setToast] = useState<string | null>(null);
+
   /** '오늘'은 서버가 정한다 — 데모 시계를 켜면 실제 오늘과 다르다(원칙 3). */
   const today = home?.asOf ? new Date(`${home.asOf.slice(0, 10)}T00:00:00`) : new Date();
   // 챌린지가 없으면 404다 — 리포트 나머지는 멀쩡히 보여야 하므로 조용히 비운다.
@@ -62,17 +141,105 @@ export function Report() {
     () => api.guardian.weeklyReport(userId, weeksAgo).catch(() => null),
     [userId, weeksAgo],
   );
+  const report = useAsync(() => api.report(userId).catch(() => null), [userId]);
+  /** 또래 비교 — 204 면 `null` 이고 그 절은 안 그린다. */
+  const peer = useAsync(() => api.peerCompare(userId, period === 'week' ? 7 : 30)
+    .catch(() => null), [userId, period]);
+  /** 월간 캐러셀이 쓸 결제 — 가맹점 빈도·최대액·연속 주를 여기서 센다. */
+  const payments = useAsync(() => (period === 'month'
+    ? api.allPayments(userId, 3).catch(() => []) : Promise.resolve([])), [userId, period]);
 
   const w = weekly.data;
   const ch = home?.challenge;
   const isCur = weeksAgo === 0;
-  /** 판정이 하나도 없는 주 — 개편안의 `#rpEmpty`. */
+  /** 지킴이가 아직 안 왔을 뿐인데 "챌린지를 시작하세요"를 띄우면 <b>있는 챌린지를 없다고
+      말하는 것</b>이다. 홈이 같은 이유로 같은 가드를 갖고 있다. */
+  const waiting = !home && !weekly.error;
+
+  /* ── 기간 표시 ─────────────────────────────────────────────────────── */
+  const rangeText = period === 'week'
+    ? (w ? fmtRange(w.weekStart, w.weekEnd) : '이번 주')
+    : `${today.getFullYear()}. ${today.getMonth() + 1}월`;
+
+  /* ── ① 히어로 ──────────────────────────────────────────────────────── */
+  const goal = ch?.targetSaving ?? 0;
+  const used = ch ? Math.max(0, ch.baselineAmount - ch.securedSaving - (ch.challengeCap - ch.remainingCap)) : 0;
+  /** 진행바는 <b>예산을 얼마나 썼는가</b>다 — 지킨 돈이 아니라 쓴 돈이 차오른다. */
+  const usedAmount = ch ? ch.challengeCap - ch.remainingCap : 0;
+  const usedRatio = ch && ch.challengeCap > 0 ? Math.min(1, usedAmount / ch.challengeCap) : 0;
+  void used;
+
+  /* ── ③ 도넛 ───────────────────────────────────────────────────────── */
+  const cats = useMemo(() => {
+    const rows = (ch?.categorySpend ?? []).filter((c) => c.spent > 0)
+      .slice().sort((a, b) => b.spent - a.spent);
+    const total = rows.reduce((s, c) => s + c.spent, 0);
+    if (total === 0) return { rows: [], total: 0, slices: [] as { d: string; fill: string }[] };
+    const head = rows.slice(0, 5);
+    const tail = rows.slice(5);
+    const shown = tail.length
+      ? [...head, { code: '기타', label: '기타', spent: tail.reduce((s, c) => s + c.spent, 0), share: 0, cap: 0 }]
+      : head;
+    let acc = 0;
+    const slices = shown.map((c, i) => {
+      const from = (acc / total) * 360;
+      acc += c.spent;
+      return { d: arc(from, (acc / total) * 360), fill: i < DONUT.length ? DONUT[i] : DONUT_ETC };
+    });
+    return { rows: shown, total, slices };
+  }, [ch?.categorySpend]);
+
+  /* ── ③-2 월간 캐러셀 ────────────────────────────────────────────────── */
+  const places = useMemo(() => {
+    const rows = payments.data ?? [];
+    if (rows.length === 0) return [];
+    const byName = new Map<string, { count: number; sum: number; weeks: Set<string> }>();
+    for (const p of rows) {
+      const name = p.merchantName?.trim();
+      if (!name) continue;
+      const cur = byName.get(name) ?? { count: 0, sum: 0, weeks: new Set<string>() };
+      cur.count += 1;
+      cur.sum += p.amount;
+      cur.weeks.add(p.date.slice(0, 10).slice(0, 7) + '-' + Math.ceil(Number(p.date.slice(8, 10)) / 7));
+      byName.set(name, cur);
+    }
+    const list = [...byName.entries()];
+    if (list.length === 0) return [];
+    const most = list.slice().sort((a, b) => b[1].count - a[1].count)[0];
+    const biggest = list.slice().sort((a, b) => b[1].sum - a[1].sum)[0];
+    const steady = list.slice().sort((a, b) => b[1].weeks.size - a[1].weeks.size)[0];
+    const out = [
+      { cap: '가장 많이 간 곳은', name: most[0], val: `${most[1].count}회`, img: '/report/mo-most.svg' },
+      { cap: '가장 큰 소비는', name: biggest[0], val: won(biggest[1].sum), img: '/report/mo-biggest.svg' },
+    ];
+    if (steady[1].weeks.size >= 2) {
+      out.push({ cap: '매주 빠지지 않고 쓴 곳은', name: steady[0],
+        val: `${steady[1].weeks.size}주 연속`, img: '/report/mo-weekly.svg' });
+    }
+    return out;
+  }, [payments.data]);
+
+  /* ── ⑤-2 1년 뒤 ────────────────────────────────────────────────────── */
+  const yearAhead = (ch?.securedSaving ?? 0) * 12;
+  /** "63만 2천원" — 만 단위로 끊어 읽는다(프로토타입 표기). */
+  const manText = (v: number) => {
+    const man = Math.floor(v / 10000);
+    const chun = Math.floor((v % 10000) / 1000);
+    if (man === 0) return `${v.toLocaleString('ko-KR')}원`;
+    return chun > 0 ? `${man}만 ${chun}천원` : `${man}만원`;
+  };
+
+  /* ── ② 월간 선 그래프 ──────────────────────────────────────────────── */
+  const monthPoints = useMemo(() => {
+    const map = report.data?.monthlySpend ?? {};
+    return Object.keys(map).sort().slice(-3)
+      .map((k) => ({ label: `${Number(k.slice(5, 7))}월`, amount: map[k] }));
+  }, [report.data]);
 
   /** 차트 위 한 줄 요약. 모드마다 무엇을 견주는지가 다르다. */
   const lead = mode === 0
     ? (() => {
       // 오늘은 `judged=false` 라 빠진다 — 쓴 돈이 있으면 오늘도 평균에 넣는다.
-      // 안 그러면 오늘 하루만 쓴 주가 "하루 평균 0원"으로 나온다.
       const shown = w?.days.filter((d) => d.judged || d.amount > 0) ?? [];
       const avg = shown.length ? Math.round(shown.reduce((a, d) => a + d.amount, 0) / shown.length) : 0;
       return { label: '하루 평균', value: <><b>{won(avg)}</b> 썼어요</> };
@@ -88,35 +255,60 @@ export function Report() {
       };
     })();
 
+  /** 끝난 챌린지가 있으면 결산으로 가는 다리를 맨 위에 놓는다(0818 `.exp-bn`). */
+  const settled = (w?.pastChallenges ?? [])[0];
+
+  /**
+   * 프로토타입의 `#rpEmpty` — <b>기록이 아예 없는 지난 주</b>에만 뜬다.
+   *
+   * <p>이번 주에까지 쓰면 안 된다. 챌린지를 오늘 시작한 사람은 판정된 날이 하루도 없는데,
+   * 그때 "분석할 소비가 없어요"를 띄우면 <b>지킨 돈이 있는데 없다고 말하는 셈</b>이다
+   * (실측으로 그렇게 나왔다). 이번 주는 늘 본문을 세우고, 빈 절은 각자 자리에서 말한다.
+   */
+  const showEmpty = period === 'week' && weeksAgo > 0 && w != null
+    && w.days.every((d) => d.amount === 0);
+
   return (
     <Screen id="report" title="리포트" hasTabBar>
       <Scroll>
-        {/* ── 주차 이동 ─────────────────────────────────────────────── */}
-        <div className="rp-sec" style={{ paddingTop: 20 }}>
-          <div className="wk-nav">
-            <button type="button" aria-label="지난주" onClick={() => setWeeksAgo((x) => x + 1)}>‹</button>
-            {/* 가운데를 누르면 휠로 아무 주나 고른다 — ‹ › 만으로는 석 달 전에 가려고
-                열두 번을 눌러야 해서, 지난 기록을 훑는 화면에서 사실상 못 가는 것과 같다. */}
-            <button type="button" className="wk-txt" aria-label="다른 주 고르기"
-              onClick={() => { setPick(selOf(today, weeksAgo)); setPickOpen(true); }}>
-              <b>{w?.weekLabel ?? '이번 주'}</b>
-              <span>{w ? fmtRange(w.weekStart, w.weekEnd) : ''}</span>
-            </button>
-            <button type="button" aria-label="다음주" disabled={isCur}
-              onClick={() => setWeeksAgo((x) => Math.max(0, x - 1))}>›</button>
-          </div>
+        {/* ── 주간 · 월간 ─────────────────────────────────────────────── */}
+        <div className="rp-seg" role="tablist">
+          <button type="button" role="tab" aria-selected={period === 'week'}
+            className={period === 'week' ? 'on' : undefined}
+            onClick={() => setPeriod('week')}>주간</button>
+          <button type="button" role="tab" aria-selected={period === 'month'}
+            className={period === 'month' ? 'on' : undefined}
+            onClick={() => setPeriod('month')}>월간</button>
         </div>
-        <div className="rp-line" />
+        <div className="rp-line" style={{ margin: '0 0 4px' }} />
 
-        {/* **소비가 없다고 화면을 통째로 감추지 않는다.**
-            예전에는 그 주에 판정된 소비가 하나도 없으면 다섯 절을 다 지웠는데, 그러면
-            "이번 주는 아직 조용하다"와 "리포트 기능이 고장났다"가 화면에서 구별되지 않았다.
-            빈 차트라도 서 있어야 무엇을 보는 화면인지 알고, 다음 주에 채워질 자리도 보인다.
-            절마다 자기 자리에서 "아직 없어요"를 말한다.
+        {/* 끝난 챌린지가 있으면 결산으로 가는 다리 */}
+        {settled && (
+          <div className="rp-sec">
+            <button type="button" className="exp-bn" onClick={() => go('settle')}>
+              <img src="/report/settle-banner.svg" alt="" aria-hidden="true" />
+              <span className="tx">
+                <b>{settled.label} 챌린지가 끝났어요</b>
+                <span>한 달 결산을 확인해 보세요</span>
+              </span>
+              <span className="go" aria-hidden="true">›</span>
+            </button>
+          </div>
+        )}
 
-            챌린지가 아예 없을 때만 다르다 — 그때는 어느 주로 옮겨도 영영 안 나오므로,
-            헤매게 두지 않고 시작하는 길을 준다. */}
-        {!ch ? (
+        {/* 기간 고르기 — 주간만 고를 수 있다(월간은 이번 달 하나다). */}
+        <div className="rp-sec">
+          <button type="button" className="rp-date" disabled={period === 'month'}
+            aria-label="기간 선택"
+            onClick={() => { setPick(selOf(today, weeksAgo)); setPickOpen(true); }}>
+            <b>{rangeText}</b>
+            {period === 'week' && <span className="car" aria-hidden="true">▾</span>}
+          </button>
+        </div>
+
+        {waiting ? (
+          <div className="rp-sec"><Loading label="리포트를 불러오는 중" rows={6} /></div>
+        ) : !ch ? (
           <div className="rp-sec">
             <div className="rp-emp">
               <b>아직 보여드릴 리포트가 없어요</b>
@@ -125,120 +317,218 @@ export function Report() {
                 style={{ marginTop: 16 }} onClick={() => go('ob')}>챌린지 시작하기</button>
             </div>
           </div>
+        ) : showEmpty ? (
+          <div className="rp-sec">
+            <div className="rp-emp">
+              <b>이 주에는 분석할 소비가 없어요</b>
+              <p>기록이 있는 주로 이동하면 리포트를 보여드릴게요</p>
+            </div>
+          </div>
         ) : (
           <>
-            {/* ── ① 지킨 금액 + 차트 ──────────────────────────────── */}
+            {/* ── ① 진행 히어로 ─────────────────────────────────────── */}
             <div className="rp-sec">
-              <div className="t-cap">{isCur ? '이번 주' : '이 주'} 동안 지킨 금액</div>
-              <div className="rp-keep">{wonNum(ch?.securedSaving ?? 0)}<em>원</em></div>
+              <div className="rph1">
+                {period === 'week' ? '이번 주' : '이번 달'} 지킨 돈은<br />
+                <em>{wonNum(ch.securedSaving)}원</em>이에요
+              </div>
+              <div className="rp-prog">
+                <i style={{ width: `${Math.round(usedRatio * 100)}%` }} />
+              </div>
+              <div className="rp-leg">
+                <span><i style={{ background: 'var(--t4)' }} />지킬 돈<b>{won(goal)}</b></span>
+                <span><i style={{ background: 'var(--blue)' }} />사용한 돈<b>{won(usedAmount)}</b></span>
+              </div>
               {/* **챌린지 시작 전 소비는 여기 안 들어온다.** 소비 내역에는 잔뜩 보이는데
-                  리포트는 0이면 사용자는 화면이 고장난 줄 안다 — 그 사정을 그 자리에서 말한다.
-                  시작 전까지 세면 시작하자마자 실패한 상태가 되므로, 안 세는 것이 맞다. */}
-              {w && ch && w.days.some((d) => !d.judged) && w.weekStart < ch.startDate && (
-                <p className="pv" style={{ margin: '0 0 12px' }}>
+                  리포트는 0이면 사용자는 화면이 고장난 줄 안다 — 그 사정을 그 자리에서 말한다. */}
+              {w && w.days.some((d) => !d.judged) && w.weekStart < ch.startDate && (
+                <p className="pv" style={{ margin: '12px 0 0' }}>
                   이 주는 <b>{shortDate(ch.startDate)}에 챌린지를 시작</b>해서, 그전 소비는 세지 않아요.
-                  전체 결제는 <b>소비 내역</b>에서 볼 수 있어요.
                 </p>
               )}
-              <WeekChart mode={mode} onMode={setMode} days={w?.days ?? []}
-                trend={w?.trend ?? []} lead={lead} />
             </div>
             <div className="rp-band" />
 
-            {/* ── ② 많이 쓴 곳 ───────────────────────────────────── */}
+            {/* ── ② 차트 ────────────────────────────────────────────── */}
             <div className="rp-sec">
-              <div className="t-sec row">많이 쓴 곳
-                <button type="button" className="sec-more" onClick={() => go('transactions')}>
-                  전체보기<span className="chev" aria-hidden="true">›</span>
-                </button>
-              </div>
-              {ch?.categorySpend?.length
-                ? ch.categorySpend.filter((c) => c.spent > 0).slice(0, 5).map((c) => (
-                  <div className="crow" key={c.code}>
-                    <span className="cn">{c.label}</span>
-                    <span className="cv">{won(c.spent)}</span>
-                    <div className="bar"><i style={{ width: `${Math.round(c.share * 100)}%`, background: 'var(--blue)' }} /></div>
-                  </div>
-                ))
-                : <p className="empty">이 주에 집계된 소비가 없어요.</p>}
+              {period === 'month' ? (
+                <>
+                  <div className="rph3" style={{ margin: '4px 0 32px' }}>최근 3개월 소비</div>
+                  {monthPoints.length > 0
+                    ? <MonthLine points={monthPoints} />
+                    : <p className="empty">아직 견줄 달이 없어요.</p>}
+                  <button type="button" className="rp-more" onClick={() => go('transactions')}>
+                    전체 내역 보기<span className="chev" aria-hidden="true">›</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <WeekChart mode={mode} onMode={setMode} days={w?.days ?? []}
+                    trend={w?.trend ?? []} lead={lead} />
+                  <button type="button" className="rp-more" onClick={() => go('transactions')}>
+                    전체 내역 보기<span className="chev" aria-hidden="true">›</span>
+                  </button>
+                </>
+              )}
             </div>
             <div className="rp-band" />
 
-            {/* ── ③ 지킴이가 본 이번 주 + 미션 다리 ────────────────── */}
-            <>
+            {/* ── ③ 가장 많이 쓴 곳 ─────────────────────────────────── */}
+            <div className="rp-sec">
+              <div className="rph2">
+                {cats.rows.length > 0
+                  ? <>가장 많이 쓴 곳은<br /><b>{cats.rows[0].label}</b>이에요</>
+                  : <>아직 집계된 소비가 없어요</>}
+              </div>
+              {cats.rows.length > 0 && (
+                <>
+                  <div className="dn-wrap">
+                    <svg viewBox="0 0 200 200" role="img"
+                      aria-label={`카테고리별 소비 비중, 1위 ${cats.rows[0].label}`}>
+                      {cats.slices.map((s, i) => <path key={i} d={s.d} fill={s.fill} />)}
+                    </svg>
+                    <div className="dn-badge">
+                      <span>1위</span>
+                      <b>{Math.round((cats.rows[0].spent / cats.total) * 100)}%</b>
+                    </div>
+                  </div>
+                  <div>
+                    {cats.rows.map((c, i) => {
+                      const { icon, bg } = iconOf(c.label);
+                      return (
+                        <div className="dnrow" key={c.code}>
+                          <span className="ic" style={{ background: bg }}><Icon id={icon} /></span>
+                          <span className="dl">
+                            <b>{c.label}</b>
+                            <i>{Math.round((c.spent / cats.total) * 100)}%</i>
+                          </span>
+                          <span className="dr">
+                            <b>{won(c.spent)}</b>
+                            <i>{i + 1}위</i>
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button type="button" className="rp-more" onClick={() => go('r-rank')}>
+                    전체 순위 보기<span className="chev" aria-hidden="true">›</span>
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* ── ③-2 월간: 가장 많이 간 곳 ──────────────────────────── */}
+            {period === 'month' && places.length > 0 && (
+              <>
+                <div className="rp-band" />
+                <div className="mo-car">
+                  {places.map((p) => (
+                    <div className="mo-card" key={p.cap}>
+                      <div className="mct"><span>{p.cap}</span><b>{p.name}</b><em>{p.val}</em></div>
+                      <img className="mci" src={p.img} alt="" aria-hidden="true" />
+                    </div>
+                  ))}
+                </div>
+                <div className="mo-dots" aria-hidden="true">
+                  {places.map((p, i) => <i key={p.cap} className={i === 0 ? 'on' : undefined} />)}
+                </div>
+              </>
+            )}
+            <div className="rp-band" />
+
+            {/* ── ④ 또래 비교 — 견줄 수 없으면 절이 통째로 사라진다 ──── */}
+            {peer.data && (
+              <>
+                <div className="rp-sec">
+                  <div className="rph2">
+                    또래보다 <b>{peer.data.mine <= peer.data.peer ? '적게' : '많이'}</b> 썼어요
+                  </div>
+                  <div className="peer">
+                    <div className="pcol">
+                      <div className="pbar gray" style={{ height: barH(peer.data.peer, peer.data) }} />
+                      <b className="gray">{wonNum(peer.data.peer)}</b>
+                      <span>또래</span>
+                    </div>
+                    <div className="pcol">
+                      <div className="pbar green" style={{ height: barH(peer.data.mine, peer.data) }} />
+                      <b className="green">{wonNum(peer.data.mine)}</b>
+                      <span>나</span>
+                    </div>
+                  </div>
+                  <p className="pv" style={{ textAlign: 'center', margin: '8px 0 0' }}>
+                    {peer.data.ageFrom}~{peer.data.ageTo}년생 {peer.data.sampleSize}명의 <b>중앙값</b>이에요
+                    · 최근 {peer.data.days}일
+                  </p>
+                </div>
+                <div className="rp-band" />
+              </>
+            )}
+
+            {/* ── ⑤ 지킴이가 본 이번 주 (주간) ───────────────────────── */}
+            {period === 'week' && (
               <div className="rp-sec">
-                <div className="t-sec">지킴이가 본 이번 주</div>
+                <div className="rph3">지킴이가 본 이번 주</div>
                 <div className="ins">
                   {w?.coaching.good && (
-                    <div className="ig"><span className="itag good">잘한 점</span><p>{w.coaching.good}</p></div>
+                    <div className="ig"><span className="tag-good">잘한 점</span><p>{w.coaching.good}</p></div>
                   )}
                   {w?.coaching.watch && (
-                    <div className="ig"><span className="itag warn">살펴볼 점</span><p>{w.coaching.watch}</p></div>
+                    <div className="ig"><span className="tag-warn">살펴볼 점</span><p>{w.coaching.watch}</p></div>
                   )}
-                  {/* 견줄 지난주가 없으면 두 문장 모두 비어 온다 — 그때도 절은 남긴다. */}
                   {!w?.coaching.good && !w?.coaching.watch && (
                     <p className="empty" style={{ margin: 0 }}>
-                      견줄 지난주가 아직 없어요. 한 주가 더 쌓이면 무엇이 달라졌는지 말해드릴게요.
+                      견줄 지난주가 아직 없어요. 한 주가 더 쌓이면 말씀드릴게요.
                     </p>
                   )}
                 </div>
-                {/* **미션이 없을 때 더 필요한 문이다.** 예전에는 미션이 있을 때만 배너를 띄웠는데,
-                    미션을 고르러 가는 문이 미션이 없으면 사라지는 셈이었다. 개편안도 두 경우의
-                    문구를 각각 적어 두고 배너는 늘 보인다. */}
+                {/* 주간 분석이 만든 미션으로 건너가는 다리 */}
                 <button type="button" className="bn msn" onClick={() => go('myroom')}>
                   <div className="bnt">
-                    {(w?.missions.length ?? 0) > 0 ? (
-                      <>
-                        <b>이번 주 미션 {w!.missions.length}개<br />진행 중이에요</b>
-                        <span>마이룸에서 확인해 보세요<i className="chev" aria-hidden="true">›</i></span>
-                      </>
-                    ) : (
-                      <>
-                        <b>이번 주 소비를 보고<br />다음 주 미션을 준비했어요</b>
-                        <span>마이룸에서 골라 보세요<i className="chev" aria-hidden="true">›</i></span>
-                      </>
-                    )}
+                    <b>이번 주 소비를 보고<br />다음 주 미션을 준비했어요</b>
+                    <span>마이룸에서 확인해 보세요<i className="chev" aria-hidden="true">›</i></span>
                   </div>
                   <CoinArt />
                 </button>
               </div>
-              <div className="rp-band" />
-            </>
+            )}
 
-            {/* ── ④ 지난 챌린지 달성률 ────────────────────────────── */}
-            <>
-              <div className="rp-sec">
-                <div className="t-sec">지난 챌린지 달성률</div>
-                {(w?.pastChallenges.length ?? 0) > 0 ? w!.pastChallenges.map((p) => (
-                  <div className="ch" key={p.challengeId}>
-                    <div className="chh"><b>{p.label}</b><span>{Math.round(p.rate * 100)}%</span></div>
-                    <div className="cbar"><i style={{ width: `${Math.round(p.rate * 100)}%` }} /></div>
-                    <div className="chs">{p.period} / {p.keptDays}일 지킴</div>
+            {/* ── ⑤-2 월간: 1년 뒤 지킨 돈 ───────────────────────────── */}
+            {period === 'month' && (
+              <>
+                <div className="rp-sec">
+                  <div className="rph2">
+                    이 페이스대로 유지하면<br /><em>1년 뒤 지킨 돈</em>이 이만큼이에요
                   </div>
-                )) : (
-                  /* 진행 중인 회차는 여기 안 온다 — 확정되지 않은 성적을 최종처럼 보이면 안 된다.
-                     그래서 첫 챌린지를 끝내기 전까지는 비어 있는 것이 정상이고, 그 사실을 적는다. */
-                  <p className="empty" style={{ margin: 0 }}>
-                    아직 끝난 챌린지가 없어요. 이번 회차가 끝나면 여기에 달성률이 남아요.
-                  </p>
-                )}
-              </div>
-              <div className="rp-band" />
-            </>
+                  <button type="button" className="fut-card"
+                    onClick={() => setFutIdx((i) => (i + 1) % FUTURE_ITEMS.length)}>
+                    <span className="fcap">1년 뒤 지킨 돈</span>
+                    <b>{manText(yearAhead)}</b>
+                    <div className="fut-sw" key={futIdx}>
+                      <img src={FUTURE_ITEMS[futIdx].img} alt="" aria-hidden="true" />
+                      <span className="fsub">{FUTURE_ITEMS[futIdx].text}</span>
+                    </div>
+                  </button>
+                  <button type="button" className="fut-btn"
+                    onClick={() => setToast('적금 추천은 준비 중이에요')}>적금 추천 보기</button>
+                </div>
+                <div className="rp-band" />
+              </>
+            )}
 
-            {/* ── ⑤ 카드 추천 ────────────────────────────────────── */}
+            {/* ── ⑥ 카드 추천 ───────────────────────────────────────── */}
             <div className="rp-sec">
               <button type="button" className="bn cardbn" onClick={() => go('r-compare')}>
-                <b>내 소비에 딱 맞는<br />카드를 추천해드릴게요</b>
+                <b>내 절약을 도와줄<br />카드를 추천해드릴게요</b>
                 <CardArt />
               </button>
             </div>
-            <div className="rp-band" />
           </>
         )}
-
-        <div className="spacer" />
+        <div className="spacer" style={{ height: 24 }} />
       </Scroll>
+
+      {toast && <div className="mini-toast show" role="status">{toast}</div>}
+
       {pick && (
         <WeekPicker open={pickOpen} sel={pick} today={today}
           onChange={setPick} onClose={() => setPickOpen(false)}
@@ -249,6 +539,12 @@ export function Report() {
       )}
     </Screen>
   );
+}
+
+/** 또래 막대 높이 — 큰 쪽을 120px 로 두고 비례로 줄인다. 0이어도 8px 는 남긴다. */
+function barH(v: number, p: { mine: number; peer: number }) {
+  const max = Math.max(p.mine, p.peer, 1);
+  return `${Math.max(8, Math.round((v / max) * 120))}px`;
 }
 
 /** 지금 보고 있는 주(= N주 전)를 휠의 (연,월,주)로. */

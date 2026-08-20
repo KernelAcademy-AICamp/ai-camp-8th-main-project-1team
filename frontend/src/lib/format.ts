@@ -163,7 +163,14 @@ export function inkOn(bg: string | null | undefined): string {
   const [r, g, b] = rgb.map((v) => lin(v / 255));
   const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   // 흰 글자의 대비 = 1.05/(L+0.05), 검은 글자 = (L+0.05)/0.05. 둘 중 나은 쪽.
-  return 1.05 / (L + 0.05) >= (L + 0.05) / 0.05 ? '#fff' : '#1A1A18';
+  const onWhite = 1.05 / (L + 0.05);
+  const onBlack = (L + 0.05) / 0.05;
+  if (Math.max(onWhite, onBlack) >= TEXT_RATIO) return onWhite >= onBlack ? '#fff' : '#1A1A18';
+  /* **둘 다 모자란 중간 밝기**가 있다(하나카드 #008485 는 흰 3.86 · 검정 5.44 로 검정이 낫지만
+     카드 얼굴에 검은 글자를 쓰면 브랜드가 뒤집힌다). 그럴 때는 흰 글자를 지키고 <b>바닥을
+     어둡게</b> 하는 것이 맞는데, 그 판단은 색을 칠하는 쪽이 해야 한다 — 여기서는 더 나은
+     쪽을 돌려주고, 카드 얼굴은 아래 `deepen` 으로 바닥을 눌러 흰 글자를 살린다. */
+  return onWhite >= onBlack ? '#fff' : '#1A1A18';
 }
 
 /** `#RGB`·`#RRGGBB` → [r,g,b]. 모르는 형식이면 null. */
@@ -181,15 +188,40 @@ function hexToRgb(hex: string | null | undefined): [number, number, number] | nu
  * 테두리·점 같은 장식에는 원색을 그대로 쓰지만(대비 규정 대상이 아니다), 같은 색을 글자에
  * 쓰면 흰 바탕에서 읽히지 않는다. 색상(hue)은 지키고 밝기만 낮춘다 — 여전히 그 카드사 색이다.
  */
+/** 반올림에 먹히지 않도록 4.5 보다 조금 위를 겨눈다. */
+const TEXT_RATIO = 4.7;
+
+/**
+ * <b>흰 글자를 받도록 바닥을 눌러 준다</b> — 카드 얼굴처럼 브랜드색을 면으로 깔 때.
+ *
+ * <p>중간 밝기 브랜드색(하나카드 청록 #008485 등)은 흰 글자도 검은 글자도 4.5:1 에 못 미친다.
+ * 카드 얼굴에 검은 글자를 쓰면 그 카드사가 아닌 것처럼 보이므로, 글자를 바꾸는 대신
+ * <b>바닥의 명도만</b> 내린다. 색상(hue)은 그대로라 여전히 그 카드사 색이다.
+ */
+export function deepen(hex: string | null | undefined, fallback = 'var(--blue-dark)'): string {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return fallback;
+  const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+  const [r, g, b] = rgb.map((v) => lin(v / 255));
+  const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  if (1.05 / (L + 0.05) >= TEXT_RATIO) return hex!;   // 이미 흰 글자가 읽힌다
+  const target = 1.05 / TEXT_RATIO - 0.05;
+  const k = Math.sqrt(Math.max(0, target) / Math.max(L, 1e-6));
+  const out = rgb.map((v) => Math.max(0, Math.min(255, Math.round(v * k))));
+  return `#${out.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
 export function inkColor(hex: string | null | undefined, fallback = 'var(--t3)'): string {
   const rgb = hexToRgb(hex);
   if (!rgb) return fallback;
   const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
   const [r, g, b] = rgb.map((v) => lin(v / 255));
   const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  if ((L + 0.05) / 0.05 >= 4.5) return hex!;      // 이미 흰 바탕에서 읽힌다
-  // 4.5:1 이 되는 상대휘도까지 눌러 내린다. 채널 비율을 유지해 색상은 그대로 둔다.
-  const target = 1.05 / 4.5 - 0.05;
+  if ((L + 0.05) / 0.05 >= TEXT_RATIO) return hex!;   // 이미 흰 바탕에서 읽힌다
+  /* 목표를 4.5 가 아니라 조금 위로 잡는다. 채널을 0~255 정수로 반올림하는 순간 휘도가
+     아주 조금 올라가, 정확히 4.5 를 겨누면 실측이 4.48·4.45 로 <b>턱걸이에 걸린다</b>
+     (2026-08-20 브라우저 실측). 색상은 그대로고 사람 눈에 차이도 안 난다. */
+  const target = 1.05 / TEXT_RATIO - 0.05;
   const k = Math.sqrt(Math.max(0, target) / Math.max(L, 1e-6));
   const out = rgb.map((v) => Math.max(0, Math.min(255, Math.round(v * k))));
   return `#${out.map((v) => v.toString(16).padStart(2, '0')).join('')}`;

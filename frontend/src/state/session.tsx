@@ -26,9 +26,14 @@ export type ScreenId =
   // 마이룸 하위 — 도감·포인트샵 (개편안 s-collection·s-shop)
   | 'collection' | 'shop'
   // 월말 사이클 — 완료 축하 → 결산 → 다음 달 갱신 (개편안 s-monthend·s-settle·s-renew)
-  | 'monthend' | 'settle' | 'renew'
+  // 0818: 한 달 완료 축하는 화면이 아니라 **홈 위의 모달**이 됐다(`MonthEndModal`).
+  | 'settle' | 'renew'
+  // 0818 신설 예외 화면 셋 — 저금통 초과 · 주간 정산 · 기록이 짧을 때
+  | 'over' | 'weekly' | 'nodata'
   // 리포트 하위 — r-compare 는 개편안 s-compare(맞춤 상품 Top3)
   | 'r-compare' | 'r-analysis' | 'r-spending' | 'r-cards' | 'r-account' | 'r-waste' | 'r-savings'
+  // 0818 신설 — 리포트의 '전체 순위 보기'
+  | 'r-rank'
   // 마이 하위
   | 'm-impulse' | 'm-goals' | 'm-connections' | 'm-record' | 'm-policy' | 'm-survey' | 'm-demo'
   | 'm-stances' | 'm-unclassified'
@@ -51,8 +56,8 @@ export const isTab = (s: ScreenId): s is TabId => (TAB_SCREENS as readonly strin
 const ALL_SCREENS = [
   'boot', 'walk', 'auth', 'connect', 'loading', 'ob', 'done',
   'home', 'report', 'my', 'myroom', 'notifications', 'transactions',
-  'collection', 'shop', 'monthend', 'settle', 'renew',
-  'r-compare', 'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings',
+  'collection', 'shop', 'settle', 'renew', 'over', 'weekly', 'nodata',
+  'r-compare', 'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings', 'r-rank',
   'm-impulse', 'm-goals', 'm-connections', 'm-record', 'm-policy', 'm-survey', 'm-demo',
   'm-stances', 'm-unclassified', 'm-parked', 'm-products', 'm-sanctuary', 'm-voice',
   'm-challenge', 'm-challenge-new',

@@ -44,6 +44,7 @@ public class ApiController {
     private final com.finntech.service.NarrativeCacheService narratives;
     private final CategoryRepository categoryRepository;
     private final ConsumptionRepository consumptionRepository;
+    private final com.finntech.service.PeerCompareService peerCompare;
     private final AlertRepository alertRepository;
     private final Clock clock;
 
@@ -54,7 +55,9 @@ public class ApiController {
                          CategoryRepository categoryRepository,
                          ConsumptionRepository consumptionRepository,
                          AlertRepository alertRepository, CardRecommendService cardRecommendService,
-                         Clock clock) {
+                         Clock clock,
+                         com.finntech.service.PeerCompareService peerCompare) {
+        this.peerCompare = peerCompare;
         this.engine = engine;
         this.cardRecommendService = cardRecommendService;
         this.reportService = reportService;
@@ -108,6 +111,23 @@ public class ApiController {
      * 캐시 키는 조회 시점의 달이라 본문 기간과 다르며, 그래서 무효화는 사용자 단위로 한다
      * ({@link ReportService#invalidateAll}).
      */
+    /**
+     * 또래 비교 — <b>같은 나이대의 중앙값</b>과 견준다(프로토타입_0818 리포트 `.peer`).
+     *
+     * <p>견줄 수 없으면 {@code 204} 다. 출생연도를 모르거나(본인인증 전) 또래 표본이 얇을
+     * 때인데, 그때 억지로 숫자를 만들면 <b>없는 비교를 사실처럼</b> 보여주게 된다.
+     * 화면은 204 를 받으면 그 절을 통째로 감춘다.
+     */
+    @GetMapping("/report/peer")
+    public org.springframework.http.ResponseEntity<com.finntech.service.PeerCompareService.PeerCompare>
+            peer(@RequestParam Long userId,
+                 @RequestParam(defaultValue = "30") int days) {
+        user(userId);
+        var body = peerCompare.compare(userId, Math.max(1, Math.min(365, days)));
+        return body == null ? org.springframework.http.ResponseEntity.noContent().build()
+                : org.springframework.http.ResponseEntity.ok(body);
+    }
+
     @GetMapping("/report/monthly")
     public Map<String, Object> report(@RequestParam Long userId) {
         user(userId);

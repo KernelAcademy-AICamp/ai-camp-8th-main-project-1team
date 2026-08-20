@@ -2259,7 +2259,9 @@ textarea.inp{ min-height: 92px; resize: vertical; line-height: 1.5; }
 
 @keyframes bootin{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
 /* 브랜드 면 전체를 덮으므로 화면 자체에 배경을 준다. 흰 글자가 올라간다. */
-.boot{ background: var(--blue); align-items: center; justify-content: center; padding: 0;
+/* 스플래시는 화면 전체가 브랜드 면이고 그 위에 흰 글자가 온다. `--blue` 를 그대로 깔면
+   2.79:1 이라 검사항목 5.4.3 에 걸린다 — 흰 글자를 받는 면 토큰을 쓴다(tokens.css). */
+.boot{ background: var(--blue-surface); align-items: center; justify-content: center; padding: 0;
   transition: opacity .45s ease; }
 .boot.out{ opacity: 0; }
 .boot-wrap{
@@ -3770,7 +3772,10 @@ button.list-item:active{ opacity: .6; }
 #s-report .exp-bn .go{color:var(--blue);font-weight:700;font-size:16px;}
 .screen.active{display:flex;}
 /* 스플래시 (피그마 94-119): 로고만 잠깐, 자동 전환 */
-#s-boot{background:var(--blue);align-items:center;justify-content:center;padding:0;
+/* 프로토타입은 `--blue` 를 그대로 깔지만, 그 위의 흰 글자가 2.79:1 이라 검사항목 5.4.3 에
+   걸린다(브라우저 실측). 색상은 같고 명도만 내린 면 토큰으로 바꾼다 — 위의 `.boot` 와
+   같은 값이어야 한다. id 규칙이 뒤에 와서 클래스 쪽 수정만으로는 안 먹었다. */
+#s-boot{background:var(--blue-surface);align-items:center;justify-content:center;padding:0;
   transition:opacity .45s ease;}
 #s-boot.out{opacity:0;}
 /* 2/3 푸시알림 목업 — 피그마 489:2389 그룹 재실측 (좌표는 그룹 좌상단 기준, 카드폭 320 기준 중앙정렬)
@@ -3991,7 +3996,11 @@ button.list-item:active{ opacity: .6; }
   color:var(--t3);height:52px;padding:0;cursor:pointer;position:relative;text-align:center;}
 #s-report .rp-seg button.on{color:var(--t1);}
 #s-report .rp-seg button.on::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--t1);}
-#s-report .rp-date{display:inline-flex;align-items:center;gap:4px;padding:16px 0 0;cursor:pointer;}
+/* 프로토타입은 `div` 였다. 우리는 <b>누르는 것이니 button</b> 으로 그리는데, 그러면
+   브라우저 기본 테두리·배경이 붙어 회색 상자가 된다 — 여기서 벗긴다. */
+#s-report .rp-date{display:inline-flex;align-items:center;gap:4px;padding:16px 0 0;cursor:pointer;
+  border:none;background:none;font-family:inherit;color:inherit;}
+#s-report .rp-date:disabled{cursor:default;}
 #s-report .rp-date b{font-size:15px;font-weight:700;letter-spacing:0;}
 #s-report .rp-date .car{font-size:11px;color:var(--t3);}
 #s-report .rph1{font-size:20px;font-weight:500;line-height:1.4;margin:16px 0;}
@@ -4364,3 +4373,70 @@ button.list-item:active{ opacity: .6; }
   position:absolute;left:24px;right:24px;bottom:calc(32px + var(--cta-h) + 12px);
   z-index:2;text-align:center;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   0818 팔레트가 데려온 접근성 어긋남을 되돌린다.
+
+   브랜드가 #00B14F → #00B173 으로 옮겨가고 회색이 네 단계(t1~t4)로 늘면서, **디자인이
+   그래픽용으로 고른 색이 글자에 그대로 쓰인 자리**가 열두 곳 생겼다. 브라우저 실측으로
+   잡은 것이고(`scripts/audit-rendered.mjs`), CSS 원문만 읽는 검사로는 안 보인다.
+
+   고치는 방식은 tokens.css 의 규율 그대로다 — **색상(Hue)은 두고 명도만 내린다.**
+   아이콘·그래프는 안 건드린다(비텍스트는 이 검사항목 대상이 아니다).
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* 온보딩 막대 범례 — `--t4`(#B0B8C1)는 흰 배경에서 2.01:1 이다. */
+#s-ob .slg .lhd .am, #s-ob .slg .lhd .cv,
+#s-ob .slg.cuts .lgr .am{color:var(--t3);}
+
+/* 리포트 요일 라벨의 '오늘' 표시 — 브랜드 그린 글자는 흰 배경에서 2.64:1. */
+#s-report .xlab span.sel{color:var(--blue-t);}
+
+/* 마이 포인트샵 링크 — 같은 이유. */
+#s-my .pt-card .pt-go{color:var(--blue-t);}
+
+/* 목록 오른쪽 꺾쇠(›). 장식처럼 보이지만 **글자 노드**라 대비 검사가 센다.
+   `--t4` 는 1.75:1 이라 한 단계 어둡게 둔다. */
+.arrow, .list-item .arrow, #s-rank .rk-row .chev, #s-report .rp-more .chev{color:var(--t3);}
+
+/* 달력 머리의 '이전 달/다음 달' 화살표 — 글자(‹ ›)라 대비 검사가 센다. */
+.cal-head button{color:var(--t3);min-width:44px;min-height:44px;}
+
+/* ── 터치 타깃 44px (KWCAG 6.1.3) ──────────────────────────────────────
+   보이는 크기는 디자인 그대로 두고 **누를 수 있는 넓이만** 키운다. */
+.cal-search{min-width:44px;min-height:44px;}
+/* 칩은 리포트 말고 상점·꾸미기에도 쓴다 — 한 곳에서 올린다. */
+.fchip button{min-height:44px;}
+#s-report .rp-date{min-height:44px;padding:12px 0 4px;}
+#s-report .rp-more{min-height:44px;}
+/* 슬라이더는 손잡이가 작아도 **막대 전체가 조작 영역**이다 — 세로만 키운다. */
+#s-ob .gcard input[type="range"], .goal-card .slider, input.slider{
+  min-height:44px;
+  /* 배경은 그대로 두고 여백만 준다 — 막대가 굵어 보이면 안 된다. */
+  padding:14px 0;
+  background-clip:content-box;
+}
+
+/* 카드 얼굴의 보조 글자 — 흰 글자를 반투명으로 깔면 대비가 그만큼 떨어진다.
+   하나카드(청록) 같은 중간 밝기 위에서 3.86:1 이 됐다(실측). 크기·굵기로 층을 만들고
+   투명도는 걷어낸다 — 위계는 남고 읽히기는 살아난다. */
+.mc-face .co{opacity:1;}
+.mc-face .sn{opacity:1;}
+
+/* 스테퍼의 +/− — <b>보이는 원은 32px 이 정본</b>(디자인)이고 <b>누를 넓이는 44px</b>여야
+   한다(KWCAG 6.1.3). 둘을 같이 만족시키려면 버튼 자체를 44px 로 키우고 테두리를
+   가짜 원(::before)으로 그린다 — 겉보기는 그대로고 손가락만 넓게 받는다.
+   `::after` 로 넓히려 했더니 실측은 버튼의 실제 상자를 재므로 안 잡혔다(2026-08-20). */
+#s-ob .stepper{width:auto;gap:2px;}
+#s-ob .stepper button{position:relative;width:44px;height:44px;border:none;background:none;
+  display:flex;align-items:center;justify-content:center;}
+#s-ob .stepper button::before{content:'';position:absolute;inset:6px;border-radius:12px;
+  border:1.5px solid var(--line);background:#fff;}
+#s-ob .stepper button > *{position:relative;}
+#s-ob .stepper button:active::before{background:var(--blue-weak);border-color:var(--blue);}
+#s-ob .stepper button:disabled::before{opacity:.45;}
+
+/* 마이 바닥글의 '도움말·이용약관' — 프로토타입은 글자였지만 우리는 <b>누르는 것</b>이라
+   버튼으로 그린다. 그러면 44px 규정을 받으므로 세로 여백으로 넓힌다(글자 크기는 그대로). */
+.my-foot button{border:none;background:none;font-family:inherit;font-size:inherit;color:inherit;
+  cursor:pointer;min-height:44px;padding:0 8px;}

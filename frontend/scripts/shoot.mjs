@@ -50,7 +50,20 @@ async function shoot(route, index, linked) {
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push(`${route} :: ${e.message}`));
   await page.goto(`${BASE}/?s=${index}#/${route}`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(1400);
+  /* 지킴이 홈은 동기화를 한 번 돌고 오므로 1.4초로는 모자랄 때가 있다 —
+     스켈레톤을 찍어 놓고 "화면이 비었다"고 오판하지 않게 넉넉히 준다. */
+  await page.waitForTimeout(Number(process.env.SETTLE ?? 3000));
+  /* 이 앱의 스크롤 주체는 문서가 아니라 `.scroll` 컨테이너다. 그대로 찍으면 첫 화면만
+     남아 <b>아래 절들이 없는 것처럼</b> 보인다 — 찍는 동안만 컨테이너를 펼쳐 전부 담는다. */
+  await page.evaluate(() => {
+    for (const el of document.querySelectorAll('.scroll')) {
+      el.style.height = 'auto';
+      el.style.maxHeight = 'none';
+      el.style.overflow = 'visible';
+    }
+    document.querySelectorAll('.screen').forEach((el) => { el.style.height = 'auto'; });
+  });
+  await page.waitForTimeout(250);
   await page.screenshot({ path: `${OUT}/${route}.png`, fullPage: true });
   const at = await page.evaluate(() => location.hash.replace(/^#\/?/, ''));
   const overflow = await page.evaluate(() =>
@@ -61,6 +74,8 @@ async function shoot(route, index, linked) {
       /* `.sr-only` 는 **일부러** 1×1 로 잘라 둔 것이다 — 보조기술에만 읽히는 글이라
          잘렸다고 세면 모든 화면이 빨개져 진짜 잘림이 묻힌다. */
       if (el.closest('.sr-only')) return false;
+      /* 스스로 굴릴 수 있는 칸 안의 내용은 잘린 것이 아니다 — 손가락으로 내려 보면 다 있다. */
+      if (el.querySelector(':scope > [style*="overflow"], :scope > .goal, :scope > .cards')) return false;
       const s = getComputedStyle(el);
       if (s.overflow === 'visible') return false;
       /* `text-overflow: ellipsis` 는 **일부러 줄인 것**이다 — 말줄임표가 보이면 잘림이 아니라
@@ -80,7 +95,8 @@ async function shoot(route, index, linked) {
     .map((el) => `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 24)}`));
   await ctx.close();
   const flags = [
-    at !== route ? `튕김→${at}` : '',
+    /* 스플래시는 2.45초 뒤 스스로 다음 장으로 간다(디자인) — 튕긴 것이 아니다. */
+    at !== route && !(route === 'boot' && at === 'walk') ? `튕김→${at}` : '',
     overflow > 1 ? `가로넘침 ${overflow}px` : '',
     clipped.length ? `세로잘림 ${clipped.join(' ')}` : '',
   ].filter(Boolean).join('  ');
