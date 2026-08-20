@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * <b>실제 사람 한 명을 제공자에 넣는다</b> — 카드사마다 다른 표기를 견디고,
@@ -274,10 +275,10 @@ class RealPersonImportServiceTest {
         // **조회는 이제 지문으로 한다**(2026-08-13 신원 암호화). 번호가 암호문으로 저장되면
         // 정확일치 조회가 그대로는 안 되기 때문이다. 지문은 저장 표기와 **같은 규칙**으로
         // 정규화한 값에서 나오므로, 갈리면 여기서 걸린다 — 그것이 이 시험의 목적이다.
-        assertThat(userRepository.findByPhoneBlindIndex(identityIndex.ofPhone(PHONE)))
-                .as("하이픈 표기로 찾힌다").isPresent();
-        assertThat(userRepository.findByPhoneBlindIndex(identityIndex.ofPhone("01044445555")))
-                .as("숫자만 넣어도 같은 사람을 찾는다 — 정규화가 한 벌이다").isPresent();
+        assertThat(userRepository.findAllByPhoneBlindIndex(identityIndex.ofPhone(PHONE)))
+                .as("하이픈 표기로 찾힌다").isNotEmpty();
+        assertThat(userRepository.findAllByPhoneBlindIndex(identityIndex.ofPhone("01044445555")))
+                .as("숫자만 넣어도 같은 사람을 찾는다 — 정규화가 한 벌이다").isNotEmpty();
         assertThat(userRepository.findByPhoneNumber(PHONE))
                 .as("평문 칸에는 더 이상 안 쌓인다").isEmpty();
     }
@@ -293,5 +294,64 @@ class RealPersonImportServiceTest {
         service.ensurePerson(NAME, SOCIAL7, PHONE, null);  // 다시 부르면
         assertThat(userRepository.findById(Ci.of(NAME, SOCIAL7, PHONE)).orElseThrow()
                 .getPhoneNumber()).isEqualTo(PHONE);       // 고쳐진다
+    }
+
+
+    // ── 한 번호에 두 사람을 안 만든다 ───────────────────────────────────────
+    //
+    // 신청자가 자기 번호를 **다른 실사용자의 번호로** 잘못 적자 한 번호에 두 사람이 붙었고,
+    // 조회가 "결과가 둘"로 터져 그 번호를 쓰는 **두 사람 모두** 본인인증이 500 이 됐다
+    // (2026-08-20 운영). 터지는 것은 조회를 목록으로 바꿔 고쳤고, 여기서 잠그는 것은
+    // **애초에 그런 데이터가 안 들어오는 것**이다.
+
+    @Test
+    @DisplayName("남의 번호로는 새 신원을 못 만든다")
+    void 남의_번호로는_등록이_안_된다() {
+        String phone = "010-2222-3333";
+        service.importCsv(NAME, SOCIAL7, phone, null, "2026-07-01,가게A,10000\n");
+
+        assertThatThrownBy(() -> service.importCsv("다른사람", "8505051", phone, null,
+                "2026-07-02,가게B,20000\n"))
+                .isInstanceOf(RealPersonImportService.PhoneAlreadyTakenException.class)
+                .hasMessageContaining("이미 다른 분 명의");
+    }
+
+    @Test
+    @DisplayName("막힌 뒤에도 원장은 깨끗하다 — 반쯤 들어간 신원이 안 남는다")
+    void 막힌_뒤에도_원장이_깨끗하다() {
+        String phone = "010-2222-3333";
+        service.importCsv(NAME, SOCIAL7, phone, null, "2026-07-01,가게A,10000\n");
+        String rejected = com.finntech.mydata.util.Ci.of("다른사람", "8505051", phone);
+
+        assertThatThrownBy(() -> service.importCsv("다른사람", "8505051", phone, null,
+                "2026-07-02,가게B,20000\n"))
+                .isInstanceOf(RealPersonImportService.PhoneAlreadyTakenException.class);
+
+        assertThat(userRepository.findById(rejected)).as("거절된 신원은 안 남는다").isEmpty();
+        assertThat(userRepository.findAllByPhoneBlindIndex(identityIndex.ofPhone(phone)))
+                .as("그 번호에는 여전히 한 사람뿐이다").hasSize(1);
+    }
+
+    @Test
+    @DisplayName("본인의 재신청은 막지 않는다 — 두 번째 카드사 명세서를 낼 수 있어야 한다")
+    void 본인_재신청은_통과한다() {
+        String phone = "010-2222-3333";
+        service.importCsv(NAME, SOCIAL7, phone, null, "2026-07-01,가게A,10000\n");
+
+        var again = service.importCsv(NAME, SOCIAL7, phone, null, "2026-07-02,가게B,20000\n");
+
+        assertThat(again.accepted()).as("본인은 계속 넣을 수 있다").isEqualTo(1);
+        assertThat(userRepository.findAllByPhoneBlindIndex(identityIndex.ofPhone(phone))).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("번호가 다르면 같은 이름이라도 통과한다 — 동명이인을 막지 않는다")
+    void 동명이인은_안_막는다() {
+        service.importCsv(NAME, SOCIAL7, "010-2222-3333", null, "2026-07-01,가게A,10000\n");
+
+        var other = service.importCsv(NAME, "8505051", "010-4444-5555", null,
+                "2026-07-02,가게B,20000\n");
+
+        assertThat(other.accepted()).isEqualTo(1);
     }
 }

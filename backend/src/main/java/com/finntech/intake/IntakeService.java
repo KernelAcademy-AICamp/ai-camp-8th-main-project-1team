@@ -94,6 +94,7 @@ public class IntakeService {
     public SubmitResult submit(Submission submission, HttpServletRequest request) {
         requireConsent(submission);
         requireIdentity(submission);
+        requirePhoneIsYours(submission);
         String ip = com.finntech.auth.AuthTokenService.clientIp(request);
         requireQuota(ip);
 
@@ -208,7 +209,19 @@ public class IntakeService {
         approved.put("rows", intake.getRowCount());
         audit.append("INTAKE_APPROVED", approved, now);
 
-        Map<String, Object> result = myDataClient.selfImport(name, social7, phone, bodies);
+        Map<String, Object> result;
+        try {
+            result = myDataClient.selfImport(name, social7, phone, bodies);
+        } catch (org.springframework.web.client.HttpClientErrorException.Conflict e) {
+            /* 제공자가 **판정으로** 막았다 — 대개 "그 번호는 이미 다른 분 명의"다.
+               사유를 그대로 관리자에게 보인다. 500 으로 뭉뚱그리면 무엇을 반려해야 하는지
+               알 수가 없고, 승인 버튼만 계속 눌리게 된다.
+               트랜잭션이 되감기므로 위에 적은 INTAKE_APPROVED 도 함께 사라진다 —
+               승인되지 않은 일이 승인으로 남지 않는다. */
+            log.warn("신청 반영 거절 — ticket={} 사유={}", intake.getTicket(), e.getResponseBodyAsString());
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "제공자가 이 신청을 받지 않았어요 — " + reasonOf(e));
+        }
 
         Map<String, Object> imported = new LinkedHashMap<>(approved);
         imported.put("accepted", result.get("accepted"));
@@ -292,6 +305,52 @@ public class IntakeService {
         }
         if (submission.cards() == null || submission.cards().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "명세서를 한 장 이상 올려 주세요.");
+        }
+    }
+
+    /** 제공자가 보낸 우리말 사유를 꺼낸다. 못 꺼내면 본문을 그대로 보인다 — 감추지 않는다. */
+    private String reasonOf(org.springframework.web.client.HttpClientErrorException e) {
+        String body = e.getResponseBodyAsString();
+        try {
+            Map<?, ?> parsed = mapper.readValue(body, Map.class);
+            Object message = parsed.get("message");
+            if (message != null) return String.valueOf(message);
+        } catch (RuntimeException ignored) {
+            // JSON 이 아니면 아래로
+        }
+        return body == null || body.isBlank() ? e.getStatusText() : body;
+    }
+
+    /**
+     * <b>남의 번호로는 신청할 수 없다.</b>
+     *
+     * <p>번호는 사람을 특정하는 열쇠다 — 본인인증이 그것으로 명의자를 찾는다. 신청자가 자기
+     * 번호를 <b>다른 실사용자의 번호로</b> 잘못 적어 한 번호에 두 사람이 붙은 적이 있고,
+     * 그때 그 번호를 쓰는 <b>두 사람 모두</b> 본인인증이 막혔다(2026-08-20 운영).
+     * 승인까지 가서야 걸리면 신청자는 며칠 뒤 "반려"만 듣고 무엇이 틀렸는지 모른다.
+     * 여기서 물으면 <b>그 자리에서 고칠 수 있다.</b>
+     *
+     * <p><b>이름·주민번호까지 맞으면 통과시킨다.</b> 이미 등록된 본인이 카드를 더 올리는
+     * 재신청이고, 그것까지 막으면 두 번째 카드사 명세서를 영영 못 낸다.
+     *
+     * <p><b>제공자가 안 뜨면 통과시킨다(fail open).</b> 여기는 친절이지 관문이 아니다 —
+     * 진짜 관문은 적재 직전의 {@code ensurePerson} 이고 그쪽은 막힌 채로 죽는다.
+     * 제공자 장애 때문에 정상 신청자를 돌려보낼 이유가 없다.
+     */
+    private void requirePhoneIsYours(Submission submission) {
+        MyDataClient.IdentityMatch match;
+        try {
+            match = myDataClient.matchIdentity(submission.name().trim(),
+                    submission.social7().replaceAll("\\D", ""), submission.phone());
+        } catch (RuntimeException e) {
+            log.warn("신청 단계 번호 확인을 건너뛴다 — 제공자 조회 실패: {}", e.toString());
+            return;
+        }
+        if (match == null) return;
+        boolean mine = match.phoneNameOk() && match.phoneSocialOk();
+        if (match.phoneTaken() && !mine) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "이 휴대폰 번호는 이미 다른 분 명의로 등록돼 있어요. 번호를 다시 확인해 주세요.");
         }
     }
 

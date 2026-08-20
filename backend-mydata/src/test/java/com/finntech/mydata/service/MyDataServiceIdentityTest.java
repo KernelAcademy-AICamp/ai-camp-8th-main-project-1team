@@ -120,4 +120,60 @@ class MyDataServiceIdentityTest {
         assertThat(m.phoneSocialOk()).isFalse();
         assertThat(m.exists()).isFalse();
     }
+
+    // ── 한 번호에 두 사람 ───────────────────────────────────────────────────
+    //
+    // V13 이 지문 칸에 UNIQUE 를 **일부러 안 걸었다**("생성 데이터에 같은 번호가 섞여 있으면
+    // 백필이 통째로 실패한다"). 그런데 읽는 쪽만 `Optional` 이라 유일하다고 믿고 있었다 —
+    // 스키마는 허용하는데 질의가 못 견디는 어긋남이다.
+    //
+    // 실제로 실사용자 두 명이 같은 번호로 등록되자 `NonUniqueResultException` 이 나
+    // 제공자가 500 을 냈고, 본인인증이 **그 번호를 쓰는 두 사람 모두** 막혔다
+    // (2026-08-20 운영 — 전화번호 입력 직후 "Internal Server Error").
+    private void 다른_사람도_같은_번호로_둔다(String storedPhone) {
+        userRepository.save(identityIndex.newUser(
+                "ci-겹침-" + storedPhone, "동거인", "8505051******", storedPhone));
+    }
+
+    @Test
+    @DisplayName("한 번호에 두 사람이 있어도 터지지 않는다 — 이름·주민번호가 가른다")
+    void 번호가_겹쳐도_본인은_통과한다() {
+        명의자를_둔다("01044445555");
+        다른_사람도_같은_번호로_둔다("01044445555");
+
+        var m = service.matchIdentity(NAME, SOCIAL7, "01044445555");
+
+        assertThat(m.exists()).as("본인은 그대로 통과한다").isTrue();
+        assertThat(m.phoneTaken()).isTrue();
+        assertThat(m.phoneNameOk()).isTrue();
+        assertThat(m.phoneSocialOk()).isTrue();
+    }
+
+    @Test
+    @DisplayName("번호가 겹쳐도 남은 통과하지 못한다 — 느슨해진 것이 아니다")
+    void 번호가_겹쳐도_남은_막힌다() {
+        명의자를_둔다("01044445555");
+        다른_사람도_같은_번호로_둔다("01044445555");
+
+        var m = service.matchIdentity("제3자", "7003031", "01044445555");
+
+        assertThat(m.exists()).as("이름도 주민번호도 다른 사람은 못 들어온다").isFalse();
+        assertThat(m.phoneTaken()).as("번호 자체는 등록돼 있다고 말할 수 있어야 한다").isTrue();
+        assertThat(m.phoneNameOk()).isFalse();
+        assertThat(m.phoneSocialOk()).isFalse();
+    }
+
+    @Test
+    @DisplayName("겹친 번호에서 이름만 맞는 사람도 통과하지 못한다")
+    void 번호가_겹쳐도_이름만_맞으면_막힌다() {
+        명의자를_둔다("01044445555");
+        다른_사람도_같은_번호로_둔다("01044445555");
+
+        // 이름은 명의자와 같고 주민번호는 동거인과 같다 — 어느 쪽과도 **한 사람으로** 맞지 않는다.
+        var m = service.matchIdentity(NAME, "8505051", "01044445555");
+
+        assertThat(m.exists()).as("항목별로는 맞아도 한 사람으로 맞아야 통과한다").isFalse();
+        assertThat(m.phoneNameOk()).as("그 번호를 쓰는 사람 중 이름이 맞는 사람은 있다").isTrue();
+        assertThat(m.phoneSocialOk()).as("주민번호가 맞는 사람도 있다").isTrue();
+    }
 }
