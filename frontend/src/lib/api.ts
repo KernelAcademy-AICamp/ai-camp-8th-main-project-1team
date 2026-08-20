@@ -1008,25 +1008,66 @@ export const clearAuthToken = () => {
   try { localStorage.removeItem(TOKEN_KEY); } catch { /* noop */ }
 };
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+/**
+ * 응답을 기다리는 상한.
+ *
+ * <b>왜 있어야 하나.</b> 예전에는 `fetch` 에 `signal` 이 없었다. 서버가 응답을 <b>영영 안 주면</b>
+ * 프라미스가 영원히 안 풀려 <b>오류 분기에 도달조차 못 한다</b> — 화면은 "다시 시도 / 그냥 진행"을
+ * 잘 만들어 뒀는데 거기 갈 수가 없고, 진행 바가 100%인 채로 멈춰 있는다. 실제 상한은
+ * nginx 기본값 60초였고, 그 선에서 잘린 사고가 이미 있었다(`FollowUpExecutorConfig`, 실측 57초).
+ * 다른 앱에서 "로딩이 1분"으로 보이는 것이 대개 이 모양이다.
+ *
+ * 백엔드는 바깥을 부를 때마다 타임아웃을 꼼꼼히 걸어 뒀다(`util/HttpClients`). 프론트에만
+ * 그 방어가 없었다.
+ *
+ * 15초는 실측(`/api/privacy/policy` 8ms · DB 질의 0.1~1.9ms)의 1,800배다. 정상 요청을 끊을
+ * 여지는 없고, 끊겨도 사용자에게는 "다시 시도"가 남는다.
+ */
+const TIMEOUT_MS = 15_000;
+/**
+ * 바깥(LLM·마이데이터 제공자)을 기다리는 무거운 진입로. 60초는 nginx 기본 상한과 같은 값이라
+ * <b>어느 쪽이 먼저 끊든 사용자에게는 같은 문장이 간다</b> — 프론트가 먼저 끊으면 우리 문장으로,
+ * 늦게 끊으면 nginx 의 504 로. 둘을 어긋나게 두면 같은 사고가 두 얼굴로 보인다.
+ */
+const SLOW_TIMEOUT_MS = 60_000;
+
+/** `AbortSignal.timeout` 이 없는 낡은 웹뷰에서는 상한 없이 간다 — 없는 것보다 낫다. */
+const timeoutSignal = (ms: number): AbortSignal | undefined =>
+  typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+    ? AbortSignal.timeout(ms) : undefined;
+
+async function request<T>(method: string, path: string, body?: unknown,
+                          timeoutMs: number = TIMEOUT_MS): Promise<T> {
   const headers: Record<string, string> = {};
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   const token = readToken();
   if (token) headers['X-Auth-Token'] = token;
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    method,
-    headers: Object.keys(headers).length > 0 ? headers : undefined,
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      method,
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: timeoutSignal(timeoutMs),
+    });
+  } catch (e) {
+    // 끊긴 이유를 사용자 말로 옮긴다. `AbortError`·`TimeoutError` 를 그대로 던지면
+    // 화면에 "signal is aborted without reason" 같은 문장이 뜬다.
+    if (e instanceof DOMException && (e.name === 'TimeoutError' || e.name === 'AbortError')) {
+      throw new ApiError(408, `응답이 너무 늦어요(${Math.round(timeoutMs / 1000)}초). 잠시 뒤 다시 시도해 주세요.`);
+    }
+    throw e;
+  }
   if (!res.ok) return fail(res, path);
   if (res.status === 204) return undefined as T;
   const text = await res.text();
   return (text ? JSON.parse(text) : null) as T;
 }
 
-const get = <T,>(path: string) => request<T>('GET', path);
-const post = <T,>(path: string, body?: unknown) => request<T>('POST', path, body);
+const get = <T,>(path: string, timeoutMs?: number) => request<T>('GET', path, undefined, timeoutMs);
+const post = <T,>(path: string, body?: unknown, timeoutMs?: number) =>
+  request<T>('POST', path, body, timeoutMs);
 const put = <T,>(path: string, body?: unknown) => request<T>('PUT', path, body);
 const del = <T,>(path: string) => request<T>('DELETE', path);
 
@@ -1085,8 +1126,9 @@ export const api = {
    * 아직 분류되지 않은 결제와 **AI 추정**을 함께 받는다.
    * 추정은 표시 전용이라 판정에 쓰이지 않는다 — 사람이 확정해야 반영된다.
    */
+  // 미분류를 채우는 동안 무료 모델을 부를 수 있어 느리다 — 넉넉한 상한을 준다.
   unclassified: (userId: number) =>
-    get<UnclassifiedResponse>(`/api/merchant-category/unclassified?userId=${userId}`),
+    get<UnclassifiedResponse>(`/api/merchant-category/unclassified?userId=${userId}`, SLOW_TIMEOUT_MS),
   /** 사람이 분류를 확정한다. 실제 사람의 결제면 확정 분류 사전에도 쌓인다. */
   confirmCategory: (userId: number, paymentId: string, category2: string) =>
     post<ConfirmCategoryResult>(
@@ -1225,7 +1267,9 @@ export const api = {
   myBanks: (userId: number) => get<MyLinkedBank[]>(`/api/mydata/my-banks?userId=${userId}`),
   /** 카드사와 은행을 함께 연동한다. 은행은 계좌가 있는 곳만 실제로 붙는다. */
   mydataLink: (userId: number, companyIds: number[], bankIds: number[] = []) =>
-    post<MyDataLinkResult>('/api/mydata/link', { userId, companyIds, bankIds }),
+    // 제공자에서 전 이력을 끌어오는 자리 — 실측 57초로 nginx 기본 60초에 닿은 적이 있다
+    // (`FollowUpExecutorConfig` 가 그 사고의 기록이다).
+    post<MyDataLinkResult>('/api/mydata/link', { userId, companyIds, bankIds }, SLOW_TIMEOUT_MS),
   myCards: (userId: number) => get<MyCard[]>(`/api/mydata/cards?userId=${userId}`),
   cardPayments: (userId: number, serial: string) =>
     get<MyPayment[]>(`/api/mydata/cards/${encodeURIComponent(serial)}/payments?userId=${userId}`),
@@ -1237,7 +1281,7 @@ export const api = {
   merchant: (businessNumber: string) =>
     get<MyMerchant | null>(`/api/mydata/merchant/${encodeURIComponent(businessNumber)}`),
   syncMyData: (userId: number) =>
-    post<{ newPayments: number }>(`/api/mydata/sync?userId=${userId}`),
+    post<{ newPayments: number }>(`/api/mydata/sync?userId=${userId}`, SLOW_TIMEOUT_MS),
 
   /** 결제별 ML 낭비/필수 판정 + '왜' (§W8). */
   mlWaste: (userId: number) => get<WasteJudgment[]>(`/api/ml/waste/${userId}`),
@@ -1335,7 +1379,8 @@ export const api = {
       post<{ challenge: GuardianChallenge; snapshot: GuardianSnapshot }>(
         `/api/guardian/challenges?userId=${userId}`, input),
     /** 마이데이터 투영에서 아직 원장에 없는 결제를 끌어온다. */
-    sync: (userId: number) => post<{ added: number }>(`/api/guardian/sync?userId=${userId}`),
+    // 새 결제를 훑어 판정까지 하는 자리라 건수에 비례해 늘어난다.
+    sync: (userId: number) => post<{ added: number }>(`/api/guardian/sync?userId=${userId}`, SLOW_TIMEOUT_MS),
     notifications: (userId: number) =>
       get<{ notifications: GuardianNotification[] }>(`/api/guardian/notifications?userId=${userId}`),
     feedback: (userId: number, id: number, feedback: Feedback, reason?: FeedbackReason) =>

@@ -53,11 +53,8 @@ public class ReportService {
     @Transactional
     public ReportBody buildCached(Long userId, String period, AnalysisResult analysis,
                                   LocalDateTime at) {
-        // 부정 카테고리 판정 소스: 마이데이터 연동 시 ML 낭비(과반) 카테고리, 아니면 규칙 overspending(W8 다운스트림).
-        java.util.Set<String> mlWaste = wasteScoringService.summarize(userId)
-                .map(WasteScoringService.MlSummary::wasteCategories).orElse(null);
         if (!analysis.isConfirmed()) {
-            return build(analysis, mlWaste);
+            return build(analysis, mlWasteCategories(userId));
         }
         Optional<Report> cached = reportRepository.findByUserIdAndPeriod(userId, period);
         if (cached.isPresent()) {
@@ -69,7 +66,7 @@ public class ReportService {
                 reportRepository.delete(cached.get());
             }
         }
-        ReportBody body = build(analysis, mlWaste);
+        ReportBody body = build(analysis, mlWasteCategories(userId));
 
         String json;
         try {
@@ -89,6 +86,20 @@ public class ReportService {
             log.debug("리포트 캐시 저장 생략(경쟁): userId={} period={}", userId, period);
         }
         return body;
+    }
+
+    /**
+     * 부정 카테고리 판정 소스 — 마이데이터 연동 시 ML 낭비(과반) 카테고리, 아니면
+     * 규칙 overspending(W8 다운스트림).
+     *
+     * <p><b>캐시 조회보다 뒤에서 부른다.</b> 예전에는 메서드 첫 줄에 있었다 — 캐시가 맞아
+     * 저장된 본문을 그대로 돌려주는 경우에도 <b>전 이력 ML 추론이 매번 돌았다.</b> 그러면
+     * "재조회 시 재계산 방지"(문서 §5)가 절반만 지켜진 셈이고, 리포트 화면의 지연이
+     * 캐시와 무관하게 남는다. 값이 실제로 필요한 두 자리에서만 부른다.
+     */
+    private java.util.Set<String> mlWasteCategories(Long userId) {
+        return wasteScoringService.summarize(userId)
+                .map(WasteScoringService.MlSummary::wasteCategories).orElse(null);
     }
 
     /** 캐시 무효화 — 특정 기간. */

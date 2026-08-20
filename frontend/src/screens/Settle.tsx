@@ -18,7 +18,7 @@ import { iconFor, won } from '../lib/format';
 const FULL = 0.9;
 
 export function Settle() {
-  const { go, userId } = useSession();
+  const { go, back, userId } = useSession();
   const { data, loading, error, reload } = useAsync(() => api.guardian.settlement(userId), [userId]);
 
   if (loading) return <Loading label="결산을 셈하는 중" />;
@@ -30,7 +30,7 @@ export function Settle() {
 
   return (
     <Screen title="월간 결산">
-      <AppBar title={`${month}월 챌린지 결산`} onBack={() => go('monthend')} steps={range} />
+      <AppBar title={`${month}월 챌린지 결산`} onBack={back} steps={range} />
       <Scroll>
         <div className="pad">
           <div className="h-title">한 달, 수고했어요</div>

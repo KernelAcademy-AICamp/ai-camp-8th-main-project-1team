@@ -15,25 +15,30 @@ import { won } from '../lib/format';
 const AUTO_SECONDS = 5;
 
 export function Done() {
-  const { go } = useSession();
+  const { replace } = useSession();
   const { home } = useGuardian();
   const [left, setLeft] = useState(AUTO_SECONDS);
   const [paused, setPaused] = useState(false);
   const moved = useRef(false);
 
-  const goHome = () => { moved.current = true; go('home'); };
+  /**
+   * 홈으로. **이력에 남기지 않는다**(`replace`) — 온보딩 완료 화면은 되돌아올 자리가 아니고,
+   * 남겨 두면 홈에서 뒤로 누른 사람이 여기 도착했다가 5초 뒤 다시 홈으로 밀린다
+   * (`moved` ref 는 재마운트에 리셋된다).
+   */
+  const goHome = () => { moved.current = true; replace('home'); };
 
   // 이동은 effect에서 한다 — setState 갱신 함수 안에서 화면을 옮기면
   // StrictMode가 갱신 함수를 두 번 부를 때 이동도 두 번 일어난다.
   useEffect(() => {
     if (paused) return;
     if (left <= 0) {
-      if (!moved.current) { moved.current = true; go('home'); }
+      if (!moved.current) { moved.current = true; replace('home'); }
       return;
     }
     const t = window.setTimeout(() => setLeft((n) => n - 1), 1000);
     return () => window.clearTimeout(t);
-  }, [paused, left, go]);
+  }, [paused, left, replace]);
 
   const target = home?.challenge.targetSaving ?? 0;
   const days = home?.challenge.daysTotal ?? 30;

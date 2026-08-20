@@ -19,7 +19,7 @@ import { api, type GuardianShop } from '../lib/api';
 type Tab = 'FURNITURE' | 'BACKGROUND';
 
 export function Shop() {
-  const { go, userId } = useSession();
+  const { back, userId } = useSession();
   const state = useAsync(() => api.guardian.shop(userId), [userId]);
   const [data, setData] = useState<GuardianShop | null>(null);
   const [tab, setTab] = useState<Tab>('FURNITURE');
@@ -57,7 +57,7 @@ export function Shop() {
     <Screen title="포인트샵">
       <AppBar
         title="포인트샵"
-        onBack={() => go('myroom')}
+        onBack={back}
         action={
           <span className="steps" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <Icon id="i-coin" size={16} />
