@@ -135,7 +135,6 @@ export function Connect() {
         <>
           <Scroll><div className="pad">
             <p className="h-title">쓰시는 카드와 계좌를<br />MOA가 찾아드릴게요</p>
-            <p className="h-sub">인증 한 번이면 돼요. 어디를 쓰는지 직접 떠올리지 않아도 괜찮아요.</p>
             <ErrorBox error={error} />
 
             <div className="card" style={{ padding: '8px 20px' }}>
@@ -158,7 +157,6 @@ export function Connect() {
           <Cta>
             <button type="button" className="btn btn-primary" disabled={!allAgreed}
               onClick={() => setCertOpen(true)}>인증하고 찾아보기</button>
-            <div className="safe-note">MOA는 조회 권한만 받아요. 결제나 송금은 할 수 없어요.</div>
           </Cta>
         </>
       )}

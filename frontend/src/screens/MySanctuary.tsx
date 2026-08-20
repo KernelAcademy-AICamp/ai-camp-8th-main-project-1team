@@ -20,7 +20,7 @@ import { iconOf } from '../lib/format';
 
 export function MySanctuary() {
   const { back, userId } = useSession();
-  const { home, reload } = useGuardian();
+  const { home, loading, reload } = useGuardian();
   const ch = home?.challenge;
   const cats = useAsync(() => api.categories().catch(() => []), [userId]);
 
@@ -32,7 +32,13 @@ export function MySanctuary() {
   // 서버가 준 값으로 시작한다 — 화면에서 만든 값을 기준으로 삼으면 새로고침마다 달라진다.
   useEffect(() => { if (ch) setPicked(ch.sanctuaryCategories); }, [ch]);
 
-  if (!home) return <Loading label="불러오는 중" />;
+  /**
+   * <b>기다리는 것과 없는 것을 가른다.</b> 예전에는 `!home` 하나로 판단해서, 진행 중인
+   * 챌린지가 없으면(서버가 404) 화면이 <b>영원히 "불러오는 중"</b>이었다. 성역은 챌린지에
+   * 딸린 약속이라 챌린지가 없으면 고를 것도 없다 — 아래의 `!ch` 빈 상태가 그 말을 한다.
+   * (렌더링 감사의 '화면이 그려지지 않는다'가 잡았다, 2026-08-20)
+   */
+  if (loading) return <Loading label="불러오는 중" />;
 
   const cutting = new Set(ch?.categories ?? []);
   const dirty = ch != null
