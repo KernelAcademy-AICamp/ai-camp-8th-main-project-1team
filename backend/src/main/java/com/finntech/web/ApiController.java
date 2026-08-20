@@ -35,6 +35,7 @@ public class ApiController {
     private final AnalysisEngine engine;
     private final CardRecommendService cardRecommendService;
     private final ReportService reportService;
+    private final com.finntech.service.PeriodSpendService periodSpend;
     private final AlertService alertService;
     private final ScoreService scoreService;
     private final NarrativeService narrativeService;
@@ -56,8 +57,10 @@ public class ApiController {
                          ConsumptionRepository consumptionRepository,
                          AlertRepository alertRepository, CardRecommendService cardRecommendService,
                          Clock clock,
-                         com.finntech.service.PeerCompareService peerCompare) {
+                         com.finntech.service.PeerCompareService peerCompare,
+                         com.finntech.service.PeriodSpendService periodSpend) {
         this.peerCompare = peerCompare;
+        this.periodSpend = periodSpend;
         this.engine = engine;
         this.cardRecommendService = cardRecommendService;
         this.reportService = reportService;
@@ -126,6 +129,25 @@ public class ApiController {
         var body = peerCompare.compare(userId, Math.max(1, Math.min(365, days)));
         return body == null ? org.springframework.http.ResponseEntity.noContent().build()
                 : org.springframework.http.ResponseEntity.ok(body);
+    }
+
+    /**
+     * <b>그 기간에 얼마를 썼는가</b> — 챌린지가 없어도 답한다.
+     *
+     * <p>리포트의 일별 계열은 지금까지 지킴이 주간 리포트에서만 나왔는데, 그것은 챌린지에
+     * 딸린 것이라 없으면 404 이고 있어도 시작일 전은 안 센다. 그래서 소비 내역에는 결제가
+     * 쌓여 있는데 리포트만 비는 일이 있었다(사용자 보고 2026-08-20). 이 진입로는 소비만
+     * 보므로 <b>챌린지 유무와 무관하게</b> 같은 답을 준다.
+     */
+    @GetMapping("/report/period")
+    public com.finntech.service.PeriodSpendService.PeriodSpend periodSpend(
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "week") String period,
+            @RequestParam(defaultValue = "0") int offset) {
+        user(userId);
+        // 과거로 너무 멀리 가면 빈 구간만 훑는다 — 2년으로 끊는다(주 104 · 달 24).
+        int capped = Math.max(0, Math.min("month".equalsIgnoreCase(period) ? 24 : 104, offset));
+        return periodSpend.of(userId, period, capped);
     }
 
     @GetMapping("/report/monthly")

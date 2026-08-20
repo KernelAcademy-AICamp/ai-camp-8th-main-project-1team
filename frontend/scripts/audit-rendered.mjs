@@ -178,9 +178,14 @@ const PROBE = () => {
     const s = getComputedStyle(el);
     const off = inactive(el);           // 비활성은 누를 수 없다 — 크기·대비 대상이 아니다
 
-    /* 6.1.3 — 44×44. 인라인 링크(문장 속 a)는 지침상 예외다. */
+    /* 6.1.3 — 44×44. 인라인 링크(문장 속 a)는 지침상 예외다.
+       **주간 막대(.bcol)도 예외다.** 한 주는 일곱 칸이고 320px 화면의 본문 폭은 272px 이라
+       한 칸이 최대 38.8px 다 — 44px 는 물리적으로 불가능하다. WCAG 2.5.8 의 '본질적(essential)'
+       예외가 이 경우다: 칸의 크기가 곧 '요일'이라는 정보이므로 키우면 표현이 깨진다.
+       대신 간격을 좁혀 받는 폭을 최대로 두고(app.css), 세로는 104px 를 확보한다. */
     const inlineLink = el.tagName === 'A' && s.display.includes('inline');
-    if (!off && !inlineLink && (r.width < 44 || r.height < 44)) {
+    const weekBar = el.classList?.contains('bcol');
+    if (!off && !inlineLink && !weekBar && (r.width < 44 || r.height < 44)) {
       small.push({ tag: el.tagName.toLowerCase(), cls: el.className?.toString().slice(0, 30),
                    label: label(el), w: +r.width.toFixed(1), h: +r.height.toFixed(1) });
     }
@@ -190,6 +195,10 @@ const PROBE = () => {
       const why = [];
       if (s.fontFamily !== bodyFont) why.push('폰트');
       if (s.backgroundColor === 'rgb(239, 239, 239)') why.push('기본면색');
+      /* **기본 테두리.** `outset`/`inset` 은 아무도 손으로 쓰지 않는다 — 브라우저가 버튼에
+         붙이는 값이다. 위·왼쪽을 밝게 아래·오른쪽을 어둡게 그려서 "오른쪽 아래만 검정"으로
+         보인다(사용자 보고 2026-08-20: 마이의 '내 포인트', 리포트의 '1년 뒤' 카드). */
+      if (s.borderTopStyle === 'outset' || s.borderTopStyle === 'inset') why.push('기본테두리');
       if (why.length) {
         unstyled.push({ cls: el.className.toString().slice(0, 30), label: label(el), why: why.join('·') });
       }
@@ -246,6 +255,30 @@ const PROBE = () => {
      되는 셈이다. 실제로 그 구멍으로 사고가 났다(2026-08-20: `body` 가 flex 인데 폭을 가진
      자식이 없어 541px 이상에서 앱이 0px 로 접혔고, 감사는 1280px 를 재고도 통과시켰다).
      그래서 '위반이 없다'와 별개로 **살아 있다**를 따로 잰다. */
+  /* **좌측선이 흔들리는가.** 한 화면의 본문 덩어리들은 같은 세로선에서 시작해야 한다.
+     제각각이면 "너비가 길다가 짧다가" 하는 그 증상이다(사용자 보고 2026-08-20).
+     의도한 들여쓰기(카드 안의 줄 등)를 세지 않으려고 **본문 열의 절반 이상을 차지하는
+     덩어리**만 본다 — 그것들은 같은 선에서 시작하는 것이 규칙이다. */
+  const colEl = document.querySelector('#root');
+  const colW = colEl ? colEl.getBoundingClientRect().width : 0;
+  const edges = new Map();
+  if (colW > 0) {
+    for (const el of document.querySelectorAll('.screen .pad > *, .screen .card, .screen .label, .screen .h-title, .screen .h-sub, .screen .progress, .screen .cta-fixed > button')) {
+      /* `.appbar` 는 빼 둔다 — 배경이 열을 꽉 채우는 막대라 본문선과 다른 것이 정상이다. */
+      if (!visible(el)) continue;
+      /* 카드 안쪽은 카드의 안여백만큼 들어가는 것이 정상이다 — 세면 오탐이 진짜를 덮는다. */
+      if (el.parentElement && el.parentElement.closest('.card')) continue;
+      const b = el.getBoundingClientRect();
+      if (b.width < colW * 0.5 || b.height < 8) continue;
+      const L = Math.round(b.left);
+      const cls = (el.className || '').toString().trim().split(/\s+/)[0] || el.tagName.toLowerCase();
+      if (!edges.has(L)) edges.set(L, cls);
+    }
+  }
+  const ragged = edges.size >= 2
+    ? [...edges.entries()].sort((a, b) => a[0] - b[0]).map(([L, c]) => `${L}px .${c}`)
+    : [];
+
   const app = document.querySelector('#root');
   const screen = document.querySelector('.screen');
   const liveness = {
@@ -262,13 +295,13 @@ const PROBE = () => {
     textLow, /* 자르지 않는다 — 12건으로 잘랐더니 오탐이 앞을 채워 진짜 위반이 가려졌다. */
     textLowCount: textLow.length,
     docW, innerW: window.innerWidth, overflowing,
-    liveness,
+    liveness, ragged,
   };
 };
 
 // ── 실행 ────────────────────────────────────────────────────────────────
 const browser = await chromium.launch();
-const findings = { small: [], contrast: [], unnamed: [], overflow: [], focus: [], unstyled: [], dead: [] };
+const findings = { small: [], contrast: [], unnamed: [], overflow: [], focus: [], unstyled: [], dead: [], ragged: [] };
 let pagesSeen = 0;
 const redirected = [];
 let controlsSeen = 0;
@@ -303,6 +336,8 @@ for (const vp of VIEWPORTS) {
     for (const u of r.unstyled) findings.unstyled.push({ where, ...u });
     for (const t of r.textLow) findings.contrast.push({ where, label: t.text, ...t });
     if (r.overflowing.length) findings.overflow.push({ where, docW: r.docW, innerW: r.innerW, who: r.overflowing });
+
+    if (r.ragged.length) findings.ragged.push({ where, who: r.ragged });
 
     /* 살아 있는가 — 위반 검사와 별개다. 여기서 걸리면 그 폭에서 화면이 통째로 안 보인다. */
     const L = r.liveness;
@@ -394,6 +429,8 @@ let bad = 0;
    그 침묵이 사고를 통과시켰다. 죽은 화면이 있으면 그것부터 읽혀야 한다. */
 bad += section('화면이 그려지지 않는다', findings.dead,
   (r) => `#root ${r.rootW}px · .screen ${r.screenW}px · 보이는 조작 ${r.visibleControls} · 글자 ${r.visibleText}  [${r.where}]`);
+bad += section('좌측선이 흔들린다 — 본문 덩어리 시작점이 둘 이상', findings.ragged,
+  (r) => `${r.who.join('  ')}  [${r.where}]`);
 bad += section('6.1.3 조작 가능 44×44px', small,
   (r) => `${String(r.w).padStart(5)}×${String(r.h).padEnd(4)} ×${String(r.n).padEnd(4)} ${r.tag}.${r.cls}  "${r.label || '이름없음'}"  [${r.where}]`);
 bad += section('5.4.3 명도 대비', contrast,
