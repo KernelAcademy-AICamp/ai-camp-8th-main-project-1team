@@ -44,24 +44,57 @@ export function Loading() {
     // `analysis` 를 불렀다 — 앞 결과를 쓰지도 않는데 **가장 느린 문을 맨 앞에 세운 직렬**이었다.
     // `unclassified` 는 켜져 있으면 미분류 한 곳당 무료 6~10초를 쓴다(`MerchantAskService`).
     // 그 시간이 분석 시간에 그대로 더해졌다. 나란히 부르면 둘 중 느린 쪽만큼만 걸린다.
-    Promise.all([
-      api.unclassified(userId).catch(() => null),
-      api.analysis(userId),
-    ])
-      .then(([, a]) => { if (alive) { setAnalysis(a); setReady(true); } })
+    // **기다리지 않는다.** 위 설명대로 이 화면이 미분류를 한 번 채우는 것은 맞지만,
+    // 그 결과를 여기서 쓰지는 않는다(`then` 의 첫 값을 버리고 있었다). 그런데 `Promise.all`
+    // 이라 **가장 느린 쪽을 기다렸다** — 실 명세서에는 업종코드가 없어 새 사용자는 미분류가
+    // 수십~수백 곳이고, 운영 실측으로 그 한 번이 **39초**였다(2026-08-20 userId=33).
+    // `NarrativeCacheService` 규율대로 올려만 두고 화면은 분석만 기다린다. 채워진 분류는
+    // 다음 화면 진입에서 보인다.
+    void api.unclassified(userId).catch(() => null);
+    api.analysis(userId)
+      .then((a) => { if (alive) { setAnalysis(a); setReady(true); } })
       .catch((e) => { if (alive) setError(e); });
     return () => { alive = false; };
   }, [userId, setAnalysis, tick]);
 
-  // 진행 연출
+  /**
+   * <b>진행 바는 실제 진행을 따라간다.</b>
+   *
+   * <p>예전에는 `900ms × 단계` 로 그냥 흘러갔다. 분석이 40초 걸려도 바는 3.6초 만에 끝까지
+   * 가서, 사용자는 <b>다 됐는데 안 넘어가는 화면</b>을 30초 넘게 봤다(사용자 보고 2026-08-20).
+   * 진행 바가 실제와 무관하면 그것은 정보가 아니라 거짓말이다.
+   *
+   * <p>그렇다고 분석의 진짜 퍼센트를 알 수는 없다(서버가 안 알려 준다). 대신 <b>마지막 칸을
+   * 비워 둔다</b> — 응답이 오기 전에는 아무리 오래 걸려도 마지막 단계로 넘어가지 않고,
+   * 오면 곧바로 채운다. "거의 다 됐어요"가 실제로 거의 다 된 것을 뜻하게 된다.
+   */
   useEffect(() => {
+    const last = STEPS.length - 1;
     const timers: number[] = [];
-    STEPS.forEach((_, idx) => {
-      if (idx > 0) timers.push(window.setTimeout(() => setI(idx), idx * 900));
-    });
-    timers.push(window.setTimeout(() => setPlayed(true), STEPS.length * 900));
+    for (let idx = 1; idx < last; idx++) {
+      timers.push(window.setTimeout(() => setI(idx), idx * 900));
+    }
     return () => timers.forEach(clearTimeout);
-  }, []);
+  }, [tick]);
+
+  /** 응답이 오면 마지막 칸을 채우고, 짧게 보여 준 뒤 넘어간다. */
+  useEffect(() => {
+    if (!ready) return;
+    setI(STEPS.length - 1);
+    const t = window.setTimeout(() => setPlayed(true), 600);
+    return () => clearTimeout(t);
+  }, [ready]);
+
+  /**
+   * <b>오래 걸리면 그렇다고 말한다.</b> 진행 바가 마지막 앞에서 멈춰 있는 동안 아무 말이
+   * 없으면 사용자는 멈춘 줄 안다. 12초가 넘으면 한 줄을 더한다.
+   */
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    setSlow(false);
+    const t = window.setTimeout(() => setSlow(true), 12_000);
+    return () => clearTimeout(t);
+  }, [tick]);
 
   /**
    * 분석과 연출이 모두 끝나면 넘어간다. **이력에 남기지 않는다**(`replace`) — 로딩은 지나가는
@@ -101,6 +134,11 @@ export function Loading() {
               <i style={{ width: `${progress * 100}%` }} />
             </div>
             <p className="load-step">{STEPS[i][1]}</p>
+            {slow && !ready && (
+              <p className="load-step" style={{ marginTop: 8, opacity: .75 }}>
+                결제가 많으면 조금 더 걸려요. 그대로 두시면 돼요.
+              </p>
+            )}
           </>
         )}
       </div>
