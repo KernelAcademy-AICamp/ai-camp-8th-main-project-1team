@@ -3,6 +3,8 @@ package com.finntech.mydata.service;
 import com.finntech.mydata.domain.*;
 import com.finntech.mydata.dto.MyDataDtos.*;
 import com.finntech.mydata.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,8 @@ import java.util.List;
  */
 @Service
 public class MyDataService {
+
+    private static final Logger log = LoggerFactory.getLogger(MyDataService.class);
 
     private final MyDataUserRepository userRepository;
     private final MyDataCardRepository cardRepository;
@@ -121,6 +125,60 @@ public class MyDataService {
         return userRepository.existsById(ci);
     }
 
+    /** 무엇을 몇 건 지웠는가 — 관리자 화면이 그대로 보인다. */
+    public record PurgeResult(boolean found, long payments, long accountTxns,
+                              int cards, int accounts, int users) {}
+
+    /**
+     * <b>그 사람의 것을 제공자에서 전부 지운다</b> — 관리자 강제 삭제(CI 완전일치).
+     *
+     * <p><b>왜 CI 하나만 받나.</b> 이름·주민번호·전화로 찾게 하면 관리자가 그 값들을 손에 쥐어야
+     * 한다 — 지우는 일 때문에 개인식별정보를 보게 되는 것은 앞뒤가 바뀐 것이다. CI 는 되돌릴 수
+     * 없는 해시라 그 자체로는 누구인지 말해 주지 않고, 목록 조회가 없으니 <b>이미 아는 사람만</b>
+     * 지울 수 있다. 부분일치·검색을 두지 않는 이유도 같다.
+     *
+     * <p><b>없으면 없다고 답한다.</b> 예외로 던지지 않는다 — 본체와 제공자 어느 한쪽에만 남은
+     * 사람이 실제로 있었고(신청은 됐는데 앱은 안 쓴 사람), 그때 한쪽이 예외를 던지면
+     * 나머지 한쪽도 못 지운다.
+     *
+     * <p>순서는 매달린 것부터다 — 결제·입출금 → 카드·계좌 → 사람. 뒤집으면 외래키가 막는다.
+     */
+    @Transactional
+    public PurgeResult purgeUser(String ci) {
+        MyDataUser user = userRepository.findById(ci).orElse(null);
+        if (user == null) return new PurgeResult(false, 0, 0, 0, 0, 0);
+
+        List<MyDataCard> cards = cardRepository.findByUser(ci);
+        List<String> cardIds = cards.stream().map(MyDataCard::getId).toList();
+        long payments = 0;
+        if (!cardIds.isEmpty()) {
+            for (String cardId : cardIds) {
+                payments += paymentRepository.findByCardUpTo(
+                        cardId, LocalDateTime.of(2999, 12, 31, 23, 59)).size();
+            }
+            paymentRepository.deleteByCard_IdIn(cardIds);
+        }
+
+        long accountTxns = 0;
+        int accounts = 0;
+        MyDataAccount account = accountRepository.findByUser_Id(ci).orElse(null);
+        if (account != null) {
+            accountTxns = accountTxnRepository.findByAccountBetween(
+                    account.getAccountNumber(),
+                    LocalDateTime.of(1970, 1, 1, 0, 0),
+                    LocalDateTime.of(2999, 12, 31, 23, 59)).size();
+            accountTxnRepository.deleteByAccount_AccountNumber(account.getAccountNumber());
+            accountRepository.delete(account);
+            accounts = 1;
+        }
+
+        cardRepository.deleteAll(cards);
+        userRepository.delete(user);
+        log.info("제공자 강제 파기 — 결제 {} · 입출금 {} · 카드 {} · 계좌 {}",
+                payments, accountTxns, cards.size(), accounts);
+        return new PurgeResult(true, payments, accountTxns, cards.size(), accounts, 1);
+    }
+
     /**
      * 신원 대조 — 본인인증이 <b>어느 항목이 틀렸는지</b> 가려내도록 조회 사실만 돌려준다.
      *
@@ -146,17 +204,32 @@ public class MyDataService {
         // 스프링 데이터의 파생 질의는 인자가 null 이면 `= ?` 가 아니라 **`IS NULL`** 로 번역한다.
         // 그대로 넘기면 "지문이 아직 없는 행"이 전부 걸린다 — 백필이 안 끝난 사람들이고,
         // V14 로 평문을 비운 뒤에는 빈 입력 하나로 그들이 잡히게 된다. 시험이 이걸 잡았다.
-        var byPhone = lookup(identityIndex.ofPhone(normalized), userRepository::findByPhoneBlindIndex);
-        var byPerson = lookup(identityIndex.ofPerson(name, social7),
-                userRepository::findByPersonBlindIndex);
-        boolean phoneNameOk = byPhone.map(u -> u.getName().equals(name)).orElse(false);
-        boolean phoneSocialOk = byPhone
-                .map(u -> u.getSocialNumber().length() >= 7
-                        && u.getSocialNumber().substring(0, 7).equals(social7))
-                .orElse(false);
-        boolean exists = byPhone.isPresent() && phoneNameOk && phoneSocialOk;
-        return new IdentityMatchView(exists, byPhone.isPresent(), phoneNameOk, phoneSocialOk,
-                byPerson.isPresent());
+        //
+        // **한 번호에 여러 명이 붙어 있을 수 있다.** 지문 칸에는 UNIQUE 가 없고(V13, 의도적),
+        // 실제로 실사용자 두 명이 같은 번호로 등록됐다. 예전에는 이 조회가 `Optional` 이라
+        // 그 순간 `NonUniqueResultException` 이 나 제공자가 500 을 냈고, 본인인증이
+        // **그 번호를 쓰는 두 사람 모두** 막혔다(2026-08-20 운영).
+        //
+        // 여럿이면 **이름·주민번호가 가른다** — 셋이 다 맞는 사람이 있으면 그 사람이다.
+        // 항목별 판정(`phoneNameOk`·`phoneSocialOk`)은 "그 번호를 쓰는 사람 중 하나라도
+        // 맞는가"로 본다. 사용자가 받는 안내는 "번호는 맞는데 이름이 다르다" 쪽이라,
+        // 여럿 중 누구와 비교했는지가 아니라 **맞는 사람이 있었는가**가 답이어야 한다.
+        List<MyDataUser> byPhone = lookupAll(identityIndex.ofPhone(normalized),
+                userRepository::findAllByPhoneBlindIndex);
+        List<MyDataUser> byPerson = lookupAll(identityIndex.ofPerson(name, social7),
+                userRepository::findAllByPersonBlindIndex);
+        boolean phoneNameOk = byPhone.stream().anyMatch(u -> u.getName().equals(name));
+        boolean phoneSocialOk = byPhone.stream().anyMatch(u -> social7Of(u).equals(social7));
+        boolean exists = byPhone.stream()
+                .anyMatch(u -> u.getName().equals(name) && social7Of(u).equals(social7));
+        return new IdentityMatchView(exists, !byPhone.isEmpty(), phoneNameOk, phoneSocialOk,
+                !byPerson.isEmpty());
+    }
+
+    /** 저장된 주민번호의 앞 7자리 — 뒤는 가려져 있어 여기까지만 비교한다. */
+    private static String social7Of(MyDataUser u) {
+        String s = u.getSocialNumber();
+        return s != null && s.length() >= 7 ? s.substring(0, 7) : "";
     }
 
     /**
@@ -165,12 +238,10 @@ public class MyDataService {
      * <p>{@code null} 을 파생 질의에 그대로 넘기면 {@code IS NULL} 이 되어 <b>지문이 없는 행이
      * 전부 걸린다.</b> 조회가 아니라 사고다.
      */
-    private java.util.Optional<com.finntech.mydata.domain.MyDataUser> lookup(
+    private static List<MyDataUser> lookupAll(
             String blindIndex,
-            java.util.function.Function<String, java.util.Optional<com.finntech.mydata.domain.MyDataUser>> find) {
-        return blindIndex == null || blindIndex.isBlank()
-                ? java.util.Optional.empty()
-                : find.apply(blindIndex);
+            java.util.function.Function<String, List<MyDataUser>> find) {
+        return blindIndex == null || blindIndex.isBlank() ? List.of() : find.apply(blindIndex);
     }
 
     /** 저장 형식은 `010-1234-5678`이다. 입력이 하이픈 없이 와도 같은 사람을 찾게 맞춘다. */

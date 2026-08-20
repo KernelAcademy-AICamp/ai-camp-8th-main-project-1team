@@ -79,6 +79,20 @@ public class MyDataController {
         return ApiResponse.ok(myDataService.findAccountsByBanks(userId, bankIds));
     }
 
+    /**
+     * <b>그 사람의 것을 전부 지운다</b> — 관리자 강제 삭제(본체가 부른다).
+     *
+     * <p>열쇠가 CI 하나뿐인 것이 요점이다. 이름·주민번호·전화로 찾게 하면 <b>지우는 일 때문에
+     * 관리자가 개인식별정보를 손에 쥐게 된다.</b> CI 는 되돌릴 수 없는 해시라 그 자체로는 누구인지
+     * 말해 주지 않고, 목록 조회가 없으니 이미 아는 사람만 지울 수 있다.
+     *
+     * <p>{@code /bank/**} 아래라 공유 시크릿 필터가 걸린다 — 본체 말고는 못 부른다.
+     */
+    @DeleteMapping("/user/{userCi}")
+    public ApiResponse<MyDataService.PurgeResult> purgeUser(@PathVariable String userCi) {
+        return ApiResponse.ok(myDataService.purgeUser(userCi));
+    }
+
     /** 가맹점 조회(번호→주소) — 사용자가 결제의 사업자번호로 가맹점명·지번주소를 조회. 없으면 data=null. */
     @GetMapping("/merchant/{businessNumber}")
     public ApiResponse<MerchantView> getMerchant(@PathVariable String businessNumber) {

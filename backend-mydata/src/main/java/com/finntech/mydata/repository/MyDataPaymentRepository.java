@@ -30,4 +30,12 @@ public interface MyDataPaymentRepository extends JpaRepository<MyDataPayment, St
     // 통장 계산용 쿼리 4개(sumByUserUpTo · sumByUserPerMonth · findByUserBetween · findByUserUpTo)를
     // 지웠다. 통장 거래가 mydata_account_txn 에 적재되면서 조회가 결제 테이블을 거치지 않는다
     // (§10-G). 죽은 쿼리를 남기면 "통장은 이걸로 계산하나" 하고 헷갈린다.
+
+    /**
+     * 그 카드들의 결제 전량 파기 — 관리자 강제 삭제가 부른다.
+     *
+     * <p>카드 단위로 하나씩 부르지 않는 이유는 카드가 여러 장일 때 왕복이 늘기 때문이고,
+     * 무엇보다 <b>한 번에 끝나야</b> 반쯤 지워진 상태가 안 남는다.
+     */
+    void deleteByCard_IdIn(java.util.List<String> cardIds);
 }

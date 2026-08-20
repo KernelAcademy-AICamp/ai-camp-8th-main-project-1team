@@ -10,7 +10,7 @@
 import { useEffect, type ComponentType } from 'react';
 import { IconSprite } from './components/Icons';
 import { BottomTab } from './components/BottomTab';
-import { SessionProvider, useSession, tabOf, type ScreenId } from './state/session';
+import { SessionProvider, useSession, tabOf, historyDepth, type ScreenId } from './state/session';
 import { GuardianProvider } from './state/guardian';
 
 import { Boot } from './screens/Boot';
@@ -88,20 +88,34 @@ const SCREENS: Record<ScreenId, ComponentType> = {
 };
 
 function ScreenHost() {
-  const { screen, linked, go } = useSession();
+  const { screen, linked, replace } = useSession();
 
   /**
    * 강제 이동은 딱 하나뿐이다 — 마이데이터 연결 전에는 연결 흐름 밖으로 못 나가고, 연결 뒤에는 홈으로 온다.
    * 챌린지가 없을 때 온보딩으로 **밀어내지 않는** 이유: 지킴이 API가 없거나 실패해도 리포트·마이는 멀쩡히
    * 동작해야 하고, 챌린지 정하기는 홈의 시작 카드에서 사용자가 눌러서 들어가는 편이 빠져나오기도 쉽다.
+   *
+   * **`go`가 아니라 `replace`다.** 사용자가 누른 이동이 아니므로 이력에 새 칸을 만들면 안 된다.
+   * 온보딩을 마친 사람의 이력에는 `connect` 같은 연결 흐름 화면이 그대로 남아 있어서, 뒤로
+   * 누르면 여기로 pop 해 오고 이 effect 가 즉시 `#/home`을 **밀어 넣어** 방금 밟고 온 칸을
+   * 파괴했다. 그때부터 뒤로를 아무리 눌러도 두 칸을 오갈 뿐 못 빠져나갔다 —
+   * 앱에서는 강제종료 말고 방법이 없는 상태다(2026-08-20 재현, `scripts/check-back-nav.mjs`).
+   * `replace`면 도착한 칸을 덮어쓰기만 하므로 뒤로 한 번에 한 칸씩 줄어 결국 앱을 벗어난다.
+   *
+   * **연결 뒤에는 아예 한 칸 더 물러난다.** 덮어쓰기만 하면 갇히지는 않지만, 연결 흐름 칸이
+   * 셋(walk·auth·connect) 남아 있어 <b>뒤로를 세 번 누르는 동안 홈이 그대로</b>다 —
+   * 사용자 눈에는 여전히 안 먹는 버튼이다. 이 칸들은 연결을 마친 사람에게 갈 곳이 없으므로
+   * 지나쳐 준다. 칸마다 깊이가 줄어들고 맨 아래 칸(깊이 0, 주소로 바로 들어온 자리)은
+   * 홈으로 덮어쓰므로 **반드시 멈춘다** — 무한 루프가 아니다.
    */
   useEffect(() => {
     if (!linked) {
-      if (!LINK_FLOW.includes(screen)) go('boot');
+      if (!LINK_FLOW.includes(screen)) replace('boot');
     } else if (LINK_FLOW.includes(screen)) {
-      go('home');
+      if (historyDepth() > 0) window.history.back();
+      else replace('home');
     }
-  }, [linked, screen, go]);
+  }, [linked, screen, replace]);
 
   const Current = SCREENS[screen] ?? Home;
   const tab = tabOf(screen);

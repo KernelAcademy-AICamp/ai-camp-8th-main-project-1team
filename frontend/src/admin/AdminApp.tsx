@@ -356,7 +356,7 @@ function Setup({ me, onDone }: { me: Me; onDone: (notice?: string) => void }) {
  * 열었을 때 보이는 것이 처리할 일이라야 한다.
  */
 function Queue({ me, onLogout }: { me: Me; onLogout: () => void }) {
-  const [tab, setTab] = useState<'intake' | 'usage'>('intake');
+  const [tab, setTab] = useState<'intake' | 'usage' | 'purge'>('intake');
   const [items, setItems] = useState<Intake[]>([]);
   const [reasons, setReasons] = useState<{ code: string; label: string }[]>([]);
   const [message, setMessage] = useState<string | null>(null);
@@ -397,7 +397,8 @@ function Queue({ me, onLogout }: { me: Me; onLogout: () => void }) {
   return (
     <main>
       <header className="bar">
-        <b>{tab === 'intake' ? `대기 중 ${items.length}건` : '이용 통계'}</b>
+        <b>{tab === 'intake' ? `대기 중 ${items.length}건`
+          : tab === 'usage' ? '이용 통계' : '이용자 파기'}</b>
         <span>
           {me.username}
           <button type="button" className="link" onClick={async () => {
@@ -411,9 +412,12 @@ function Queue({ me, onLogout }: { me: Me; onLogout: () => void }) {
           onClick={() => setTab('intake')}>신청 대기</button>
         <button type="button" aria-current={tab === 'usage' ? 'page' : undefined}
           onClick={() => setTab('usage')}>이용 통계</button>
+        <button type="button" aria-current={tab === 'purge' ? 'page' : undefined}
+          onClick={() => setTab('purge')}>이용자 파기</button>
       </nav>
 
       {tab === 'usage' && <UsageStats call={call} />}
+      {tab === 'purge' && <Purge />}
 
       {tab === 'intake' && <>
       {message && <p className="notice ok" role="status">{message}</p>}
@@ -455,5 +459,120 @@ function Queue({ me, onLogout }: { me: Me; onLogout: () => void }) {
       ))}
       </>}
     </main>
+  );
+}
+
+/**
+ * 이용자 파기 — <b>CI 64자를 통째로 넣어야만</b> 그 한 사람을 지운다.
+ *
+ * <p><b>왜 검색창이 없나.</b> 이름·전화로 찾게 하면 지우는 일 때문에 관리자가 개인식별정보를
+ * 보게 된다 — 앞뒤가 바뀐 것이다. CI 는 되돌릴 수 없는 해시라 그 자체로는 누구인지 말해 주지
+ * 않고, 목록도 부분일치도 없으니 <b>이미 그 값을 아는 사람만</b> 지울 수 있다. 신청 목록이
+ * 이름을 {@code 홍○동} 으로 마스킹하는 것과 같은 태도다.
+ *
+ * <p>되돌릴 수 없는 일이라 확인 문구를 손으로 치게 한다. 붙여넣기로 지나가는 것을 조금이라도
+ * 늦추려는 것이다.
+ */
+function Purge() {
+  const [ci, setCi] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  // 화면에서도 형식을 본다. 서버가 다시 보지만(그쪽이 권위다), 64자가 아닌 것을
+  // 굳이 보내 놓고 오류를 받을 이유가 없다.
+  const normalized = ci.trim().toLowerCase();
+  const ciLooksRight = /^[0-9a-f]{64}$/.test(normalized);
+  const ready = ciLooksRight && confirm === CONFIRM_PHRASE;
+
+  async function submit() {
+    setBusy(true); setError(null); setResult(null);
+    try {
+      setResult(await call<Record<string, unknown>>('/users/purge', {
+        method: 'POST',
+        body: JSON.stringify({ ci: normalized, confirm }),
+      }));
+      setCi(''); setConfirm('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '파기하지 못했어요.');
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <>
+      <article className="card">
+        <h2>이용자 파기</h2>
+        <p className="muted small">
+          그 사람의 것을 <b>본체와 제공자 양쪽에서</b> 지웁니다 — 소비·리포트·지킴이·행태와
+          제공자의 신원·카드·결제까지. <b>되돌릴 수 없습니다.</b>
+        </p>
+
+        <label htmlFor="purge-ci">CI (64자)</label>
+        <input id="purge-ci" value={ci} onChange={(e) => setCi(e.target.value)}
+          spellCheck={false} autoComplete="off" placeholder="64자를 그대로 붙여 넣으세요"
+          aria-describedby="purge-ci-help" />
+        <p id="purge-ci-help" className="muted small">
+          {ci.trim() === '' ? `현재 ${normalized.length} / 64자`
+            : ciLooksRight ? '형식이 맞습니다.'
+            : `${normalized.length} / 64자 — 영문 소문자와 숫자만 들어갑니다.`}
+        </p>
+
+        <label htmlFor="purge-confirm">확인</label>
+        <input id="purge-confirm" value={confirm} onChange={(e) => setConfirm(e.target.value)}
+          autoComplete="off" placeholder={CONFIRM_PHRASE} />
+        <p className="muted small">확인란에 <b>{CONFIRM_PHRASE}</b> 라고 적어야 진행합니다.</p>
+
+        <div className="actions">
+          <button type="button" className="primary" disabled={!ready || busy}
+            onClick={() => void submit()}>
+            {busy ? '지우는 중…' : '파기'}
+          </button>
+        </div>
+      </article>
+
+      {error && <p className="notice error" role="alert">{error}</p>}
+      {result && <PurgeReport result={result} />}
+    </>
+  );
+}
+
+/** 서버가 정한 확인 문구. 바꾸려면 {@code AdminUserPurgeController.CONFIRM} 과 함께 바꾼다. */
+const CONFIRM_PHRASE = '파기합니다';
+
+/**
+ * 무엇이 몇 건 지워졌는지 그대로 보인다.
+ *
+ * <p><b>"완료"만 띄우지 않는다.</b> 0건이 지워진 것과 1,042건이 지워진 것이 화면에서 같아 보이면,
+ * 잘못된 CI 를 넣어 아무것도 안 지운 날에도 다 됐다고 믿게 된다.
+ */
+function PurgeReport({ result }: { result: Record<string, unknown> }) {
+  const provider = result.provider as Record<string, unknown> | string | undefined;
+  const found = result.found === true;
+  return (
+    <article className="card" role="status">
+      <h2>{found ? '파기했습니다' : '그 CI 로는 아무것도 없었습니다'}</h2>
+      <dl className="summary">
+        <div><dt>CI</dt><dd>{String(result.ci ?? '')}</dd></div>
+        <div><dt>본체 계정</dt><dd>{String(result.appUser ?? '없음')}</dd></div>
+        <div><dt>본체 소비</dt><dd>{Number(result.erasedConsumptions ?? 0).toLocaleString('ko-KR')}건</dd></div>
+        {typeof provider === 'object' && provider !== null ? (
+          <>
+            <div><dt>제공자 신원</dt><dd>{provider.found ? '지움' : '없음'}</dd></div>
+            <div><dt>제공자 결제</dt><dd>{Number(provider.payments ?? 0).toLocaleString('ko-KR')}건</dd></div>
+            <div><dt>제공자 카드</dt><dd>{Number(provider.cards ?? 0)}장</dd></div>
+            <div><dt>제공자 계좌</dt><dd>{Number(provider.accounts ?? 0)}개 · 입출금 {Number(provider.accountTxns ?? 0).toLocaleString('ko-KR')}건</dd></div>
+          </>
+        ) : (
+          <div><dt>제공자</dt><dd>{String(provider ?? '응답 없음')}</dd></div>
+        )}
+        <div><dt>처리자</dt><dd>{String(result.decidedBy ?? '')}</dd></div>
+      </dl>
+      {!found && (
+        <p className="muted small">
+          CI 를 다시 확인해 주세요 — 64자가 하나라도 다르면 다른 사람입니다.
+        </p>
+      )}
+    </article>
   );
 }

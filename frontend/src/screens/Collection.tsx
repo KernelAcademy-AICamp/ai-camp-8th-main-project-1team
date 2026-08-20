@@ -43,7 +43,7 @@ function reasonText(reason: string): string {
 }
 
 export function Collection() {
-  const { go, userId } = useSession();
+  const { back, userId } = useSession();
   const state = useAsync(() => api.guardian.collection(userId), [userId]);
   const [sel, setSel] = useState<string | null>(null);
   const [claiming, setClaiming] = useState(false);
@@ -77,7 +77,7 @@ export function Collection() {
 
   return (
     <Screen title="도감">
-      <AppBar title="도감" onBack={() => go('myroom')} steps={`${data.owned} / ${data.total} 수집`} />
+      <AppBar title="도감" onBack={back} steps={`${data.owned} / ${data.total} 수집`} />
       <Scroll>
         <div className="pad" style={{ paddingTop: 12 }}>
           <div className="card" style={{ padding: '16px 20px' }}>

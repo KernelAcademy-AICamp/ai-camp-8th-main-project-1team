@@ -19,7 +19,7 @@ const STEPS = [
 ];
 
 export function Loading() {
-  const { userId, go, setAnalysis } = useSession();
+  const { userId, replace, setAnalysis } = useSession();
   const [i, setI] = useState(0);
   const [error, setError] = useState<unknown>(null);
   const [ready, setReady] = useState(false);      // 분석 응답 도착
@@ -39,9 +39,16 @@ export function Loading() {
     //
     // **실패해도 온보딩을 막지 않는다.** AI 추정은 있으면 좋은 것이지 없으면 못 가는 것이
     // 아니다 — 확정 분류(사전)는 이미 붙어 있고, 추정이 없으면 미분류로 보일 뿐이다.
-    api.unclassified(userId).catch(() => null)
-      .then(() => api.analysis(userId))
-      .then((a) => { if (alive) { setAnalysis(a); setReady(true); } })
+    //
+    // **둘을 같이 출발시킨다.** 예전에는 `unclassified` 를 먼저 기다리고 그 결과를 버린 뒤
+    // `analysis` 를 불렀다 — 앞 결과를 쓰지도 않는데 **가장 느린 문을 맨 앞에 세운 직렬**이었다.
+    // `unclassified` 는 켜져 있으면 미분류 한 곳당 무료 6~10초를 쓴다(`MerchantAskService`).
+    // 그 시간이 분석 시간에 그대로 더해졌다. 나란히 부르면 둘 중 느린 쪽만큼만 걸린다.
+    Promise.all([
+      api.unclassified(userId).catch(() => null),
+      api.analysis(userId),
+    ])
+      .then(([, a]) => { if (alive) { setAnalysis(a); setReady(true); } })
       .catch((e) => { if (alive) setError(e); });
     return () => { alive = false; };
   }, [userId, setAnalysis, tick]);
@@ -56,9 +63,15 @@ export function Loading() {
     return () => timers.forEach(clearTimeout);
   }, []);
 
+  /**
+   * 분석과 연출이 모두 끝나면 넘어간다. **이력에 남기지 않는다**(`replace`) — 로딩은 지나가는
+   * 화면이라 되돌아올 자리가 아니고, 남겨 두면 ob1 에서 뒤로 누른 사람이 여기 도착해
+   * <b>분석 API 를 처음부터 다시 부르고</b> 몇 초 뒤 다시 ob1 으로 밀린다
+   * (`moved` ref 는 재마운트에 리셋된다).
+   */
   useEffect(() => {
-    if (ready && played && !moved.current) { moved.current = true; go('ob1'); }
-  }, [ready, played, go]);
+    if (ready && played && !moved.current) { moved.current = true; replace('ob1'); }
+  }, [ready, played, replace]);
 
   const progress = error ? 1 : ((i + 1) / STEPS.length);
 
@@ -75,7 +88,9 @@ export function Loading() {
               <button type="button" className="btn btn-primary" onClick={() => { setError(null); setTick((t) => t + 1); }}>
                 다시 시도
               </button>
-              <button type="button" className="btn btn-ghost" onClick={() => go('ob1')}>그냥 진행</button>
+              {/* 여기도 `replace` 다 — 분석에 실패한 화면으로 뒤로 돌아올 이유가 없고,
+                  돌아오면 실패한 요청을 다시 던지게 된다. */}
+              <button type="button" className="btn btn-ghost" onClick={() => replace('ob1')}>그냥 진행</button>
             </div>
           </div>
         ) : (

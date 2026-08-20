@@ -13,4 +13,12 @@ public interface GuardianChallengeCategoryRepository extends JpaRepository<Guard
     @Query("select c from GuardianChallengeCategory c where c.challengeId = :challengeId "
             + "order by c.category asc")
     List<GuardianChallengeCategory> findByChallenge(@Param("challengeId") Long challengeId);
+
+    /**
+     * 그 챌린지들의 카테고리를 지운다 — 파기가 <b>챌린지보다 먼저</b> 부르는 자리다.
+     *
+     * <p>이 표는 {@code challenge_id} 에 외래키로 매달려 있어(V13), 챌린지를 먼저 지우면
+     * 제약이 막는다. 사용자 열쇠가 없으므로 챌린지 id 로 받는다.
+     */
+    void deleteByChallengeIdIn(List<Long> challengeIds);
 }
