@@ -80,7 +80,7 @@ const MISSION_STATUS: Record<string, string> = {
 };
 
 export function Myroom() {
-  const { go, userId } = useSession();
+  const { go, back, userId } = useSession();
   const [editing, setEditing] = useState(false);
   /** 이동 중인 소품 코드 — 연타로 서버에 두 번 보내지 않게 잠근다. */
   const [moving, setMoving] = useState<string | null>(null);
@@ -101,10 +101,17 @@ export function Myroom() {
   const [catAct] = useState<CatAct>(() => CAT_ACTS[Math.floor(Math.random() * CAT_ACTS.length)]);
   const ceremony = home?.ceremony ?? null;
 
-  // 방이 그려진 뒤에 뜨도록 한 박자 늦춘다(개편안도 450ms 뒤에 연다).
+  /**
+   * 방이 그려진 뒤에 뜨도록 한 박자 늦춘다(개편안도 450ms 뒤에 연다).
+   *
+   * <b>본 날짜는 '닫을 때'가 아니라 '열 때' 적는다.</b> 예전에는 {@link closeCeremony} 에서만
+   * 적었는데, 세리머니를 <b>뒤로가기로 벗어나면</b> 그 함수가 안 불려 기록이 안 남았다 —
+   * 방에 다시 들어올 때마다 어제 받은 소품 연출이 처음인 양 또 떴다. 닫는 길이 하나가 아니라
+   * (닫기 버튼 · 바깥 누르기 · 뒤로가기 · 화면 이탈) 닫는 쪽에서 세는 것 자체가 틀렸다.
+   */
   useEffect(() => {
     if (!ceremony || readSeen() === ceremony.verdictDate) return;
-    const t = setTimeout(() => setCeremonyOpen(true), 450);
+    const t = setTimeout(() => { writeSeen(ceremony.verdictDate); setCeremonyOpen(true); }, 450);
     return () => clearTimeout(t);
   }, [ceremony]);
 
@@ -115,8 +122,8 @@ export function Myroom() {
     return () => clearTimeout(t);
   }, [pop]);
 
+  // 본 날짜는 여는 쪽이 이미 적었다(위) — 여기서는 닫기만 한다.
   function closeCeremony() {
-    if (ceremony) writeSeen(ceremony.verdictDate);
     setCeremonyOpen(false);
   }
 
@@ -227,8 +234,8 @@ export function Myroom() {
 
   if (loading && !home) {
     return (
-      <Screen title="마이룸" hasTabBar>
-        <AppBar onBack={() => go('home')} title="마이룸" />
+      <Screen id="myroom" title="마이룸" hasTabBar>
+        <AppBar onBack={back} title="마이룸" />
         <div className="pad"><Loading label="마이룸을 불러오는 중" rows={6} /></div>
       </Screen>
     );
@@ -236,8 +243,8 @@ export function Myroom() {
   // 챌린지가 없으면 방도 아직 비어 있다 — 오류가 아니라 시작 전 상태다.
   if (!home) {
     return (
-      <Screen title="마이룸" hasTabBar>
-        <AppBar onBack={() => go('home')} title="마이룸" />
+      <Screen id="myroom" title="마이룸" hasTabBar>
+        <AppBar onBack={back} title="마이룸" />
         <div className="pad">
           <ErrorBox error={error} onRetry={() => void reload()} />
           <div className="card" style={{ textAlign: 'center', padding: '28px 20px' }}>
@@ -278,9 +285,11 @@ export function Myroom() {
     : 0;
 
   return (
-    <Screen title="마이룸" hasTabBar>
+    <Screen id="myroom" title="마이룸" hasTabBar>
       {/* 개편안은 앱바 대신 씬 위에 뜨는 두 버튼을 쓴다 — 방을 가리지 않으려는 배치다. */}
-      <button type="button" className="mr-back" onClick={() => go('home')} aria-label="홈으로">‹</button>
+      {/* 뒤로 버튼은 **pop 이어야 한다**(`back`). `go('home')` 이면 마이룸↔상점을 오갈 때마다
+          이력이 한 칸씩 쌓여, 왕복 세 번 뒤엔 뒤로가기로 앞 화면에 닿는 데 여섯 번이 필요해진다. */}
+      <button type="button" className="mr-back" onClick={back} aria-label="홈으로">‹</button>
       <button type="button" className={`mr-edit${editing ? ' on' : ''}`} aria-pressed={editing}
               onClick={() => { setEditing((v) => !v); setTray(null); setPop(null); }} aria-label="꾸미기">
         <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor"

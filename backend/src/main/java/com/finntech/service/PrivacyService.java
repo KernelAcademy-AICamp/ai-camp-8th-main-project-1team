@@ -87,6 +87,24 @@ public class PrivacyService {
      */
     private final com.finntech.repository.UsageEventRepository usageEventRepository;
     private final com.finntech.repository.UsageSessionRepository usageSessionRepository;
+    /**
+     * 지킴이 표들 — <b>파기에서 통째로 빠져 있었다</b>(2026-08-20 발견). 아래 {@link #eraseUserData}
+     * 주석에 무엇이 남아 있었는지 적었다.
+     */
+    private final com.finntech.guardian.repository.GuardianChallengeRepository challengeRepository;
+    private final com.finntech.guardian.repository.GuardianChallengeCategoryRepository challengeCategoryRepository;
+    private final com.finntech.guardian.repository.GuardianTransactionRepository guardianTxRepository;
+    private final com.finntech.guardian.repository.GuardianNotificationRepository guardianNotificationRepository;
+    private final com.finntech.guardian.repository.GuardianPointEventRepository guardianPointRepository;
+    private final com.finntech.guardian.repository.DailyVerdictRepository dailyVerdictRepository;
+    private final com.finntech.guardian.repository.RoomObjectRepository roomObjectRepository;
+    private final com.finntech.guardian.repository.GuardianItemsRepository guardianItemsRepository;
+    private final com.finntech.guardian.repository.WeeklyMissionRepository weeklyMissionRepository;
+    private final com.finntech.guardian.repository.DemoClockRepository demoClockRepository;
+    /** 그 사람에 대해 모델이 쓴 문장. 집계에서 나왔어도 그 사람 것이다. */
+    private final com.finntech.repository.NarrativeCacheRepository narrativeCacheRepository;
+    /** 사전 투표 — <b>지우지 않고 사람만 뗀다</b>(V38). 아래 주석 참조. */
+    private final com.finntech.repository.MerchantCategoryVoteRepository voteRepository;
     private final AuditService auditService;
     private final int retentionDays;
 
@@ -111,6 +129,18 @@ public class PrivacyService {
                           com.finntech.repository.SpendingLedgerDirtyRepository spendingLedgerDirtyRepository,
                           com.finntech.repository.UsageEventRepository usageEventRepository,
                           com.finntech.repository.UsageSessionRepository usageSessionRepository,
+                          com.finntech.guardian.repository.GuardianChallengeRepository challengeRepository,
+                          com.finntech.guardian.repository.GuardianChallengeCategoryRepository challengeCategoryRepository,
+                          com.finntech.guardian.repository.GuardianTransactionRepository guardianTxRepository,
+                          com.finntech.guardian.repository.GuardianNotificationRepository guardianNotificationRepository,
+                          com.finntech.guardian.repository.GuardianPointEventRepository guardianPointRepository,
+                          com.finntech.guardian.repository.DailyVerdictRepository dailyVerdictRepository,
+                          com.finntech.guardian.repository.RoomObjectRepository roomObjectRepository,
+                          com.finntech.guardian.repository.GuardianItemsRepository guardianItemsRepository,
+                          com.finntech.guardian.repository.WeeklyMissionRepository weeklyMissionRepository,
+                          com.finntech.guardian.repository.DemoClockRepository demoClockRepository,
+                          com.finntech.repository.NarrativeCacheRepository narrativeCacheRepository,
+                          com.finntech.repository.MerchantCategoryVoteRepository voteRepository,
                           AuditService auditService,
                           @Value("${finntech.privacy.retention-days:90}") int retentionDays) {
         this.userRepository = userRepository;
@@ -134,6 +164,18 @@ public class PrivacyService {
         this.spendingLedgerDirtyRepository = spendingLedgerDirtyRepository;
         this.usageEventRepository = usageEventRepository;
         this.usageSessionRepository = usageSessionRepository;
+        this.challengeRepository = challengeRepository;
+        this.challengeCategoryRepository = challengeCategoryRepository;
+        this.guardianTxRepository = guardianTxRepository;
+        this.guardianNotificationRepository = guardianNotificationRepository;
+        this.guardianPointRepository = guardianPointRepository;
+        this.dailyVerdictRepository = dailyVerdictRepository;
+        this.roomObjectRepository = roomObjectRepository;
+        this.guardianItemsRepository = guardianItemsRepository;
+        this.weeklyMissionRepository = weeklyMissionRepository;
+        this.demoClockRepository = demoClockRepository;
+        this.narrativeCacheRepository = narrativeCacheRepository;
+        this.voteRepository = voteRepository;
         this.auditService = auditService;
         this.retentionDays = retentionDays;
     }
@@ -267,6 +309,17 @@ public class PrivacyService {
         // 어느 화면에 얼마나 머물렀는지는 그 사람이 무엇에 관심 있는지를 그대로 말한다.
         usageEventRepository.deleteByUserId(userId);
         usageSessionRepository.deleteByUserId(userId);
+        eraseGuardian(userId);
+        // 그 사람에 대해 모델이 쓴 문장. 집계에서 나온 문장이라도 "누구의 무엇"인지가 담겨 있다.
+        narrativeCacheRepository.deleteByUserId(userId);
+        /* 사전 투표는 **지우지 않고 사람만 뗀다**(V38).
+
+           한 표는 두 가지를 동시에 담는다 — "이 가맹점은 카페/간식이다"(사전을 정하는 우리
+           자산)와 "그 사람이 그 가맹점을 안다"(개인정보, `user_merchant_stance` 를 파기하는
+           것과 같은 이유). 행을 지우면 앞의 것까지 잃어 **남의 사전이 남의 탈퇴로 나빠지고**
+           (한 표가 빠져 다음 투표에서 다수가 뒤집힌다), 그대로 두면 뒤의 것이 남는다.
+           연결만 끊으면 집계는 그대로고 사람은 사라진다. */
+        voteRepository.detachUser(userId);
         userRepository.findById(userId).ifPresent(user -> {
             user.setCi(null);
             user.setBirthYear(null);   // 본인인증에서 파생한 출생연도도 개인정보다 — 함께 파기한다.
@@ -283,6 +336,32 @@ public class PrivacyService {
         auditService.append("SUBJECT_ERASURE", payload, at);
         auditService.sealBatch(at);
         return mine.size();
+    }
+
+    /**
+     * 지킴이가 쌓은 것 전부.
+     *
+     * <p><b>여기가 통째로 빠져 있었다</b>(2026-08-20 발견). 소비내역을 지워도
+     * {@code guardian_transaction} 에는 <b>가맹점명과 금액이 그대로</b> 남았고,
+     * {@code guardian_notification} 에는 그 소비를 두고 지킴이가 한 말이 남았다.
+     * {@code Alert}·{@code Report} 를 함께 지우는 이유("사본을 남기면 파기가 아니다")가
+     * 그대로 적용되는 자리인데 목록에서 누락돼 있었다.
+     *
+     * <p><b>순서가 있다.</b> 챌린지 카테고리는 챌린지에 외래키로 매달려 있어(V13) 먼저 지운다.
+     */
+    private void eraseGuardian(Long userId) {
+        List<Long> challengeIds = challengeRepository.findByUserIdOrderByIdDesc(userId).stream()
+                .map(com.finntech.guardian.domain.GuardianChallenge::getId).toList();
+        if (!challengeIds.isEmpty()) challengeCategoryRepository.deleteByChallengeIdIn(challengeIds);
+        challengeRepository.deleteByUserId(userId);
+        guardianTxRepository.deleteByUserId(userId);        // 가맹점명·금액이 여기 있다
+        guardianNotificationRepository.deleteByUserId(userId); // 그 소비를 두고 한 말
+        guardianPointRepository.deleteByUserId(userId);
+        dailyVerdictRepository.deleteByUserId(userId);
+        roomObjectRepository.deleteByUserId(userId);
+        guardianItemsRepository.deleteByUserId(userId);
+        weeklyMissionRepository.deleteByUserId(userId);
+        demoClockRepository.deleteByUserId(userId);
     }
 
     /**

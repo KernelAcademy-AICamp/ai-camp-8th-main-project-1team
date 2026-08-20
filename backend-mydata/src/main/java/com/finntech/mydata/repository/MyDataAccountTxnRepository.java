@@ -33,4 +33,7 @@ public interface MyDataAccountTxnRepository extends JpaRepository<MyDataAccountT
     @Query("select coalesce(sum(case when t.type = 'DEPOSIT' then t.amount else -t.amount end), 0) "
             + "from MyDataAccountTxn t where t.account.accountNumber = :account and t.date < :from")
     long netBefore(@Param("account") String account, @Param("from") LocalDateTime from);
+
+    /** 그 계좌의 입출금 내역 전량 파기 — 관리자 강제 삭제가 부른다. */
+    void deleteByAccount_AccountNumber(String accountNumber);
 }

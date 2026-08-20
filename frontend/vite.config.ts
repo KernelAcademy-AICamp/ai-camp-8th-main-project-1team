@@ -1,9 +1,15 @@
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'node:path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  /* 마이 바닥글의 '앱 버전' — package.json 을 단일 출처로 둔다(손으로 적으면 잊는다). */
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(
+      JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version),
+  },
   plugins: [react()],
   // **개발 서버에서만 쓰는 프록시.** 빌드 산출물에는 안 들어간다.
   //

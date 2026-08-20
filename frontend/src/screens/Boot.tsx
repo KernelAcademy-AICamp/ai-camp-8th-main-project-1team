@@ -16,7 +16,7 @@ const HOLD_MS = 2000;
 const FADE_MS = 450;
 
 export function Boot() {
-  const { go } = useSession();
+  const { replace } = useSession();
   const [leaving, setLeaving] = useState(false);
   /** 눌러서 넘어갔는데 타이머가 또 넘기는 것을 막는다. */
   const done = useRef(false);
@@ -27,17 +27,23 @@ export function Boot() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * 스플래시를 빠져나간다. **이력에 남기지 않는다**(`replace`) — 브랜드 화면은 사람이 돌아올
+   * 자리가 아니고, 남겨 두면 뒤로 눌러 여기 도착한 순간 위 타이머가 다시 돌아 2.45초 뒤
+   * 앞으로 되밀린다. `done` ref 가 그 이중 실행을 막지만 <b>뒤로가기는 재마운트라 ref 가
+   * 리셋된다</b> — 가드가 무력한 자리다.
+   */
   function leave() {
     if (done.current) return;
     done.current = true;
     setLeaving(true);
-    setTimeout(() => go('walk'), FADE_MS);
+    setTimeout(() => replace('walk'), FADE_MS);
   }
 
   return (
     // 브랜드 면이라 화면 전체가 초록이다. Screen 을 쓰지 않는 유일한 화면 —
     // 앱바도 탭바도 없고 배경이 본문 색과 다르다.
-    <section className={`screen boot${leaving ? ' out' : ''}`} onClick={leave}
+    <section id="s-boot" className={`screen boot${leaving ? ' out' : ''}`} onClick={leave}
       aria-label="MOA 시작 화면">
       <div className="boot-wrap">
         <div className="boot-cap">내 소비를 지켜주는</div>

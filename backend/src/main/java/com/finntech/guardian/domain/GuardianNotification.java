@@ -133,6 +133,26 @@ public class GuardianNotification {
         return n;
     }
 
+    /**
+     * <b>템플릿으로 나간 알림에 모델 문장을 나중에 얹는다.</b>
+     *
+     * <p>알림은 규칙이 정한 값으로 <b>먼저 저장</b>되고 화면에 즉시 뜬다. 모델 문장은 그 뒤에
+     * 배경에서 받아 이 메서드로 갈아 끼운다 — 화면이 LLM 을 기다리지 않게 하려는 것이다
+     * (`GuardianService.deliver` 주석). 이미 모델 문장이 들어간 알림은 건드리지 않는다.
+     *
+     * @return 실제로 갈아 끼웠으면 true
+     */
+    public boolean upgradeSentence(String newTitle, String newBody, List<String> newKeyPhrases) {
+        if (!fallback) return false;                       // 이미 모델 문장이다
+        if (newTitle == null || newBody == null) return false;
+        this.title = newTitle;
+        this.body = newBody;
+        this.keyPhrases = newKeyPhrases == null || newKeyPhrases.isEmpty()
+                ? null : String.join(",", newKeyPhrases);
+        this.fallback = false;
+        return true;
+    }
+
     public void recordFeedback(Feedback feedback, FeedbackReason reason, LocalDateTime at) {
         this.feedback = feedback;
         this.feedbackReason = reason;

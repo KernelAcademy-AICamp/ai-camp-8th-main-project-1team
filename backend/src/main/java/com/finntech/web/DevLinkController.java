@@ -40,7 +40,14 @@ public class DevLinkController {
         this.authTokens = authTokens;
     }
 
-    public record LinkSyntheticRequest(String ci, List<Long> companyIds, String nickname) {}
+    /**
+     * @param birthYear 출생연도(선택). <b>또래 비교를 보려면 필요하다</b> — 정상 경로는
+     *                  본인인증이 주민앞7에서 뽑아 채우는데(`AuthService`), 이 경로는 인증을
+     *                  건너뛰므로 아무도 안 채운다. 그러면 데모 계정은 리포트의 또래 절을
+     *                  영영 못 본다(서버가 204 를 준다).
+     */
+    public record LinkSyntheticRequest(String ci, List<Long> companyIds, String nickname,
+                                       Integer birthYear) {}
 
     /**
      * 생성 CI로 AppUser를 확보(가상 인증 우회, CI 직접 주입)하고 카드사를 연결해
@@ -64,6 +71,7 @@ public class DevLinkController {
                 () -> new AppUser(nickname, BigDecimal.valueOf(3_700_000), BigDecimal.valueOf(10_000_000), 12));
         user.setCi(req.ci());
         user.setConsentGiven(true);
+        if (req.birthYear() != null) user.setBirthYear(req.birthYear());
         user = userRepository.save(user);
 
         // companyIds 미지정이면 전 카드사 연동(생성 데이터는 카드가 7개 카드사로 분산돼 있음, §13-11).

@@ -12,6 +12,7 @@ import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
 import { useAsync } from '../state/useAsync';
 import { api } from '../lib/api';
+import { APP_VERSION } from '../lib/config';
 import { won, iconOf } from '../lib/format';
 
 /**
@@ -41,10 +42,13 @@ export function My() {
   const me = useAsync(() => api.getUser(userId).catch(() => null), [userId]);
   // 털색은 상점이 갖고 있다. 못 불러오면 기본 고양이로 — 프로필이 비는 것보다 낫다.
   const skins = useAsync(() => api.guardian.catSkins(userId).catch(() => []), [userId]);
+  /** 지난 챌린지 성적 — 주간 리포트가 함께 내려준다(끝난 회차만). */
+  const weekly = useAsync(() => api.guardian.weeklyReport(userId, 0).catch(() => null), [userId]);
+  const past = weekly.data?.pastChallenges ?? [];
   const catSkin = skins.data?.find((s) => s.selected)?.key ?? 'cat';
 
   return (
-    <Screen title="마이" hasTabBar>
+    <Screen id="my" title="마이" hasTabBar>
       <Scroll><div className="pad" style={{ paddingTop: 20 }}>
         <p style={{ fontSize: 22, fontWeight: 700, margin: '0 0 10px' }}>마이</p>
 
@@ -69,6 +73,17 @@ export function My() {
             </span>
           </div>
         </div>
+        {/* 포인트는 이 계정의 <b>핵심 자산</b>이다(0818 신설). 예전에는 마이룸에 들어가야만
+            보였는데, 마이는 "내 것이 얼마나 있나"를 보는 화면이라 여기 서는 것이 맞다. */}
+        <button type="button" className="card pt-card" onClick={() => go('shop')}>
+          <span className="ic" style={{ background: '#FFF6DE' }}><Icon id="i-coin" /></span>
+          <div className="tx">
+            <span>내 포인트</span>
+            <b>{(home?.strip.pointBalance ?? 0).toLocaleString('ko-KR')}P</b>
+          </div>
+          <span className="pt-go">포인트샵<i className="chev" aria-hidden="true">›</i></span>
+        </button>
+
         <div className="stat-row">
           <div className="stat">
             <div className="k">진행 중 챌린지</div>
@@ -103,18 +118,42 @@ export function My() {
             );
           })}
           {!ch && <p className="empty" style={{ margin: '8px 0' }}>아직 챌린지가 없어요.</p>}
-          <button type="button" className="list-item" onClick={() => go(ch ? 'm-challenge-new' : 'ob1')}>
+          <button type="button" className="list-item" onClick={() => go(ch ? 'm-challenge-new' : 'ob')}>
             <span className="ic" style={{ background: 'var(--blue-weak)', color: 'var(--blue-t)',
               fontSize: 20, fontWeight: 700 }} aria-hidden="true">＋</span>
             <div className="tx"><b style={{ color: 'var(--blue-t)' }}>새 챌린지 만들기</b></div>
           </button>
         </div>
 
+        {/* ── 지난 챌린지 ──
+            0818 에서 <b>리포트에서 마이로 옮겨 왔다</b>. 리포트는 "이번 주"를 보는 곳이고
+            지난 회차 성적은 "내 기록"이라 마이 쪽이 제자리다. 끝난 회차만 나온다 —
+            진행 중인 것을 최종 성적처럼 보이면 안 된다. */}
+        {past.length > 0 && (
+          <>
+            <SectionTitle>지난 챌린지</SectionTitle>
+            <div className="card" style={{ padding: 20 }}>
+              {past.map((c, i) => (
+                <div key={`${c.label}-${i}`}>
+                  {i > 0 && <div className="divider" style={{ margin: '16px 0' }} />}
+                  <div className="hist">
+                    <div className="hh"><b>{c.label}</b><span>{Math.round(c.rate * 100)}%</span></div>
+                    <div className="hbar">
+                      <i style={{ width: `${Math.min(100, Math.round(c.rate * 100))}%` }} />
+                    </div>
+                    <div className="hs">{c.period}, {c.keptDays}일 지킴</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
         {/* ── 설정 ── */}
         <SectionTitle>설정</SectionTitle>
         <div className="card menu" style={{ padding: '8px 20px' }}>
           <button type="button" className="list-item" onClick={() => go('m-voice')}>
-            <span className="ic" style={{ background: 'var(--bg)' }}><Icon id="i-bell" /></span>
+            <span className="ic" style={{ background: 'var(--track)' }}><Icon id="i-bell" /></span>
             <div className="tx">
               <b>지킴이 말수 설정</b>
               <span>얼마나 자주 말을 걸까요</span>
@@ -123,7 +162,7 @@ export function My() {
           </button>
           <div className="divider" />
           <button type="button" className="list-item" onClick={() => go('m-sanctuary')}>
-            <span className="ic" style={{ background: 'var(--bg)' }}><Icon id="i-shield" /></span>
+            <span className="ic" style={{ background: 'var(--track)' }}><Icon id="i-shield" /></span>
             <div className="tx">
               <b>성역 관리</b>
               <span>지킴이가 침묵하는 카테고리</span>
@@ -132,7 +171,7 @@ export function My() {
           </button>
           <div className="divider" />
           <button type="button" className="list-item" onClick={() => go('m-connections')}>
-            <span className="ic" style={{ background: 'var(--bg)' }}><Icon id="i-card" /></span>
+            <span className="ic" style={{ background: 'var(--track)' }}><Icon id="i-card" /></span>
             <div className="tx"><b>마이데이터 연결 관리</b></div>
             <span className="arrow" aria-hidden="true">›</span>
           </button>
@@ -140,13 +179,22 @@ export function My() {
           {/* 개편안이 자리를 정하지 않은 나머지는 **여기 한 줄**로 모은다.
               지우지 않는 이유는 `MyParked` 주석 그대로 — 기능은 살아 있고 자리만 미정이다. */}
           <button type="button" className="list-item" onClick={() => go('m-parked')}>
-            <span className="ic" style={{ background: 'var(--bg)' }}><Icon id="i-doc" /></span>
+            <span className="ic" style={{ background: 'var(--track)' }}><Icon id="i-doc" /></span>
             <div className="tx">
               <b>임시 보관함</b>
               <span>새 디자인이 아직 자리를 안 정한 화면들</span>
             </div>
             <span className="arrow" aria-hidden="true">›</span>
           </button>
+        </div>
+
+        {/* 바닥글 — 0818 신설. 도움말·약관·버전은 늘 있어야 하지만 목차에 낄 것은 아니다. */}
+        <div className="my-foot">
+          <button type="button" onClick={() => go('m-policy')}>도움말</button>
+          <i aria-hidden="true" />
+          <button type="button" onClick={() => go('m-policy')}>이용약관</button>
+          <i aria-hidden="true" />
+          <span>앱 버전 {APP_VERSION}</span>
         </div>
 
         <div className="spacer" />

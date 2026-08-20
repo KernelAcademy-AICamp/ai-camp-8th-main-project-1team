@@ -44,28 +44,46 @@ export const DAYPART_ORDER = ['아침', '점심', '저녁', '심야'];
 export const FACTOR_ORDER = ['낭비', '집중', '변동', '심야충동'];
 
 /** 아이콘 → 배경색 토큰(목업 팔레트 그대로). */
+/**
+ * 아이콘 뒤에 까는 색. <b>프로토타입_0818 의 `CATS15` 값 그대로</b> — 카테고리를 색으로
+ * 알아보게 하려는 것이라, 여기가 어긋나면 온보딩·리포트·마이룸에서 같은 카테고리가
+ * 다른 색으로 보인다.
+ */
 export const ICON_BG: Record<string, string> = {
-  'i-food': 'var(--c-food)', 'i-cafe': 'var(--c-cafe)', 'i-taxi': 'var(--c-taxi)',
-  'i-cvs': 'var(--c-cvs)', 'i-shop': 'var(--c-shop)', 'i-ott': 'var(--c-ott)',
-  'i-heart': '#FFE9EC', 'i-book': '#FFF7E6', 'i-gift': '#FFF1E8',
-  'i-paw': '#F3EEFF', 'i-med': '#FDECEE', 'i-plane': '#E8F6FE', 'i-game': '#EEF0FF',
-  'i-card': '#E8F1FF', 'i-coin': '#FFF7E6', 'i-doc': '#EAF0F6',
+  'i-food': 'var(--c-food)', 'i-cafe': 'var(--c-cafe)', 'i-taxi': '#E8F1FF',
+  'i-cvs': 'var(--c-cvs)', 'i-shop': '#FCE7F0', 'i-ott': 'var(--c-ott)',
+  'i-flame': '#FFEFE6', 'i-heart': '#FDECF3', 'i-house': '#E9F7EF',
+  'i-mega': '#E9F7EF', 'i-home': '#F1F3F5', 'i-game': '#EFEAFE',
+  'i-book': '#FFF7E6', 'i-gift': '#FFF3E0',
+  'i-paw': '#F3EEFF', 'i-med': '#FDEBEB', 'i-plane': '#E8F3FF',
+  'i-card': '#E9F7EF', 'i-coin': '#FFF7E6', 'i-doc': '#EAF0F6',
   'i-dots': '#EEF1F4',
 };
 
-/** 카테고리 표시명 → 아이콘 id. 코드가 아니라 이름으로 고른다(세그먼트 비의존). */
+/**
+ * 카테고리 표시명 → 아이콘 id. 코드가 아니라 이름으로 고른다(세그먼트 비의존).
+ *
+ * <p><b>짝은 프로토타입_0818 의 `CATS15` 가 정본이다.</b> 예전에는 미용이 선물 상자,
+ * 편의점/잡화가 쇼핑백, 건강/피트니스가 하트, 취미/여가가 알약으로 나왔다 — 이름은 맞는데
+ * 그림이 딴 것을 가리키면 아이콘이 오히려 방해가 된다(2026-08-20 화면 실측).
+ */
 export function iconFor(name: string): string {
   const n = (name ?? '').replace(/\s/g, '');
   if (/배달|외식|음식|식비|분식|한식|중식|일식|양식/.test(n)) return 'i-food';
   if (/카페|간식|커피|디저트|베이커리/.test(n)) return 'i-cafe';
   if (/택시|교통|대중교통|주유|주차/.test(n)) return 'i-taxi';
-  if (/편의점|마트|생활|슈퍼/.test(n)) return 'i-cvs';
-  if (/쇼핑|의류|패션|잡화|온라인/.test(n)) return 'i-shop';
-  if (/보험|금융/.test(n)) return 'i-doc';      // 금융/보험 — 통신보다 먼저 본다('보험'이 '통신'에 안 걸리도록)
+  // **'잡화'는 편의점 쪽이다**(프로토타입_0818 CATS15: 편의점/잡화 = i-cvs). 쇼핑 규칙에 두면
+  // '편의점/잡화'가 쇼핑 아이콘을 달았다 — 두 이름이 겹칠 때는 앞 낱말이 정한다.
+  if (/편의점|마트|슈퍼|잡화/.test(n)) return 'i-cvs';
+  if (/생활/.test(n)) return 'i-house';         // 생활 — 대형마트(i-gift)와 가르려고 따로 둔다
+  if (/대형마트/.test(n)) return 'i-gift';
+  if (/쇼핑|의류|패션|온라인/.test(n)) return 'i-shop';
+  if (/보험|금융/.test(n)) return 'i-card';     // 금융/보험 — 통신보다 먼저 본다('보험'이 '통신'에 안 걸리도록)
+  if (/주거|월세|관리비/.test(n)) return 'i-home';
   if (/구독|OTT|스트리밍|통신/.test(n)) return 'i-ott';
-  if (/건강|운동|헬스|스포츠|피트니스/.test(n)) return 'i-heart';
-  if (/미용|헤어|네일|뷰티|화장/.test(n)) return 'i-gift';
-  if (/술|유흥|주점|호프|포차/.test(n)) return 'i-food';
+  if (/건강|운동|헬스|스포츠|피트니스/.test(n)) return 'i-flame';
+  if (/미용|헤어|네일|뷰티|화장/.test(n)) return 'i-heart';
+  if (/술|유흥|주점|호프|포차/.test(n)) return 'i-mega';
   if (/책|공부|교육|학원|도서/.test(n)) return 'i-book';
   if (/선물|가족|경조/.test(n)) return 'i-gift';
   if (/반려|펫|동물/.test(n)) return 'i-paw';
@@ -145,7 +163,14 @@ export function inkOn(bg: string | null | undefined): string {
   const [r, g, b] = rgb.map((v) => lin(v / 255));
   const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   // 흰 글자의 대비 = 1.05/(L+0.05), 검은 글자 = (L+0.05)/0.05. 둘 중 나은 쪽.
-  return 1.05 / (L + 0.05) >= (L + 0.05) / 0.05 ? '#fff' : '#1A1A18';
+  const onWhite = 1.05 / (L + 0.05);
+  const onBlack = (L + 0.05) / 0.05;
+  if (Math.max(onWhite, onBlack) >= TEXT_RATIO) return onWhite >= onBlack ? '#fff' : '#1A1A18';
+  /* **둘 다 모자란 중간 밝기**가 있다(하나카드 #008485 는 흰 3.86 · 검정 5.44 로 검정이 낫지만
+     카드 얼굴에 검은 글자를 쓰면 브랜드가 뒤집힌다). 그럴 때는 흰 글자를 지키고 <b>바닥을
+     어둡게</b> 하는 것이 맞는데, 그 판단은 색을 칠하는 쪽이 해야 한다 — 여기서는 더 나은
+     쪽을 돌려주고, 카드 얼굴은 아래 `deepen` 으로 바닥을 눌러 흰 글자를 살린다. */
+  return onWhite >= onBlack ? '#fff' : '#1A1A18';
 }
 
 /** `#RGB`·`#RRGGBB` → [r,g,b]. 모르는 형식이면 null. */
@@ -163,15 +188,40 @@ function hexToRgb(hex: string | null | undefined): [number, number, number] | nu
  * 테두리·점 같은 장식에는 원색을 그대로 쓰지만(대비 규정 대상이 아니다), 같은 색을 글자에
  * 쓰면 흰 바탕에서 읽히지 않는다. 색상(hue)은 지키고 밝기만 낮춘다 — 여전히 그 카드사 색이다.
  */
+/** 반올림에 먹히지 않도록 4.5 보다 조금 위를 겨눈다. */
+const TEXT_RATIO = 4.7;
+
+/**
+ * <b>흰 글자를 받도록 바닥을 눌러 준다</b> — 카드 얼굴처럼 브랜드색을 면으로 깔 때.
+ *
+ * <p>중간 밝기 브랜드색(하나카드 청록 #008485 등)은 흰 글자도 검은 글자도 4.5:1 에 못 미친다.
+ * 카드 얼굴에 검은 글자를 쓰면 그 카드사가 아닌 것처럼 보이므로, 글자를 바꾸는 대신
+ * <b>바닥의 명도만</b> 내린다. 색상(hue)은 그대로라 여전히 그 카드사 색이다.
+ */
+export function deepen(hex: string | null | undefined, fallback = 'var(--blue-dark)'): string {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return fallback;
+  const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+  const [r, g, b] = rgb.map((v) => lin(v / 255));
+  const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  if (1.05 / (L + 0.05) >= TEXT_RATIO) return hex!;   // 이미 흰 글자가 읽힌다
+  const target = 1.05 / TEXT_RATIO - 0.05;
+  const k = Math.sqrt(Math.max(0, target) / Math.max(L, 1e-6));
+  const out = rgb.map((v) => Math.max(0, Math.min(255, Math.round(v * k))));
+  return `#${out.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
 export function inkColor(hex: string | null | undefined, fallback = 'var(--t3)'): string {
   const rgb = hexToRgb(hex);
   if (!rgb) return fallback;
   const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
   const [r, g, b] = rgb.map((v) => lin(v / 255));
   const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  if ((L + 0.05) / 0.05 >= 4.5) return hex!;      // 이미 흰 바탕에서 읽힌다
-  // 4.5:1 이 되는 상대휘도까지 눌러 내린다. 채널 비율을 유지해 색상은 그대로 둔다.
-  const target = 1.05 / 4.5 - 0.05;
+  if ((L + 0.05) / 0.05 >= TEXT_RATIO) return hex!;   // 이미 흰 바탕에서 읽힌다
+  /* 목표를 4.5 가 아니라 조금 위로 잡는다. 채널을 0~255 정수로 반올림하는 순간 휘도가
+     아주 조금 올라가, 정확히 4.5 를 겨누면 실측이 4.48·4.45 로 <b>턱걸이에 걸린다</b>
+     (2026-08-20 브라우저 실측). 색상은 그대로고 사람 눈에 차이도 안 난다. */
+  const target = 1.05 / TEXT_RATIO - 0.05;
   const k = Math.sqrt(Math.max(0, target) / Math.max(L, 1e-6));
   const out = rgb.map((v) => Math.max(0, Math.min(255, Math.round(v * k))));
   return `#${out.map((v) => v.toString(16).padStart(2, '0')).join('')}`;

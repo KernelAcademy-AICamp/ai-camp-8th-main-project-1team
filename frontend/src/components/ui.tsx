@@ -14,8 +14,22 @@ export function Orb({ size = 84, bob = false, style }: { size?: number; bob?: bo
  * 화면 한 장. 제목은 화면마다 h1으로 한 번 선언한다(KWCAG 2.4.2 제목 제공).
  * 시각적으로 큰 제목이 따로 있는 화면은 sr-only로 둔다.
  */
-export function Screen({ title, hasTabBar, background, className, children }: {
+export function Screen({ title, id, hasTabBar, background, className, children }: {
   title: string;
+  /**
+   * 프로토타입의 화면 id (`report` → `#s-report`).
+   *
+   * <b>왜 필요한가.</b> 프로토타입은 화면별 규칙을 <b>id 로 범위</b>를 준다 —
+   * {@code #s-report .hero}, {@code #s-ob .sbar} 처럼. 0818 개편에서만 310줄이 그렇게 쓰였고
+   * (리포트 122 · 온보딩 121 · 마이 24 · 순위 14 …), 이 id 가 없으면 그 규칙이 <b>하나도
+   * 안 걸린다.</b> 실제로 워크스루의 CTA 가 `#s-walk .walk-cta{position:absolute}` 를 못 받아
+   * 화면 맨 위에 붙었다.
+   *
+   * <b>클래스로 바꾸지 않는 이유:</b> id(0,1,0,0)와 클래스(0,0,1,0)는 우선순위가 다르다.
+   * 310줄을 클래스로 낮추면 어떤 규칙이 다른 규칙에 지는지가 조용히 바뀐다. 디자인이 정본이므로
+   * <b>선택자를 고치지 말고 우리가 id 를 그려 준다.</b>
+   */
+  id?: string;
   hasTabBar?: boolean;
   background?: string;
   /** 화면별 예외 스타일을 걸 자리(소비 내역의 흰 바탕 등). */
@@ -27,7 +41,9 @@ export function Screen({ title, hasTabBar, background, className, children }: {
   useEffect(() => { ref.current?.focus(); window.scrollTo({ top: 0 }); }, [title]);
   return (
     <main
-      id="main"
+      /* 디자인 규칙이 걸리는 자리다. 스킵 링크는 아래 제목(`#screen-title`)이 받는다 —
+         한 요소에 id 는 하나뿐이라 둘 중 하나를 골라야 하고, 고를 이유가 이쪽에 있다. */
+      id={id ? `s-${id}` : undefined}
       /* `tabscreen` 은 개편안이 **탭 뿌리 화면**에 붙이던 표시다. 아래 탭바가 있느냐와
          같은 뜻이라 `has-tabbar` 와 함께 붙인다 — 개편안의 선택자가 그대로 맞는다. */
       className={`screen${hasTabBar ? ' has-tabbar tabscreen' : ''}${className ? ` ${className}` : ''}`}
@@ -36,7 +52,9 @@ export function Screen({ title, hasTabBar, background, className, children }: {
       tabIndex={-1}
       aria-labelledby="screen-title"
     >
-      <h1 className="sr-only" id="screen-title">{title}</h1>
+      {/* 스킵 링크의 도착지. `main` 이 화면 id 를 쓸 수 있어야 하므로 <b>제목이 받는다</b> —
+          본문 첫머리라 "본문 바로가기"가 가리키는 자리로도 맞고, 화면마다 달라지지 않는다. */}
+      <h1 className="sr-only" id="screen-title" tabIndex={-1}>{title}</h1>
       {children}
     </main>
   );
@@ -71,8 +89,10 @@ export function ProgressBar({ value }: { value: number }) {
 }
 
 /** 하단 고정 CTA 영역. */
-export function Cta({ children }: { children: ReactNode }) {
-  return <div className="cta-fixed">{children}</div>;
+export function Cta({ className, children }: { className?: string; children: ReactNode }) {
+  /* `className` 은 등장 연출용이다 — 프로토타입_0818 의 온보딩은 CTA 를 `.cta-fixed.in` 으로
+     떠올린다. 걸음마다 버튼이 늦게 나타나는 것이 "아직 읽는 중"을 뜻한다. */
+  return <div className={`cta-fixed${className ? ` ${className}` : ''}`}>{children}</div>;
 }
 
 /** 스크롤 본문 래퍼(목업과 같은 이름을 유지해 화면 코드가 그대로 읽히게). */

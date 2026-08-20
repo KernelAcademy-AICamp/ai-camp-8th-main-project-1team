@@ -18,7 +18,7 @@ import { iconFor, won } from '../lib/format';
 const FULL = 0.9;
 
 export function Settle() {
-  const { go, userId } = useSession();
+  const { go, back, userId } = useSession();
   const { data, loading, error, reload } = useAsync(() => api.guardian.settlement(userId), [userId]);
 
   if (loading) return <Loading label="결산을 셈하는 중" />;
@@ -29,8 +29,8 @@ export function Settle() {
   const month = Number(data.endDate.slice(5, 7));
 
   return (
-    <Screen title="월간 결산">
-      <AppBar title={`${month}월 챌린지 결산`} onBack={() => go('monthend')} steps={range} />
+    <Screen id="settle" title="월간 결산">
+      <AppBar title={`${month}월 챌린지 결산`} onBack={back} steps={range} />
       <Scroll>
         <div className="pad">
           <div className="h-title">한 달, 수고했어요</div>
@@ -149,7 +149,9 @@ function CategoryRow({ row }: { row: SettlementCategory }) {
         <b>{row.category}</b>
         <span>목표 {won(row.cap)} 중 {won(row.kept)} 지킴</span>
       </div>
-      <span className={full ? 'tag-good' : 'tag-bad'}>
+      {/* 부분 달성은 **경고 톤**이다(프로토타입_0818: `tag-warn`). 예전에는 실패 톤(`tag-bad`)에
+          인라인으로 주황을 덧칠했는데, 그러면 색은 맞아도 뜻이 '실패'로 남는다. */}
+      <span className={full ? 'tag-good' : 'tag-warn'}>
         {pct}% {full ? '달성' : '부분 달성'}
       </span>
     </div>

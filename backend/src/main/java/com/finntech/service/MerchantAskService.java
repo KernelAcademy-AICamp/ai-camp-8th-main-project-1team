@@ -92,7 +92,9 @@ public class MerchantAskService {
                               CategoryRepository categories, MerchantCategoryService dictionary,
                               MerchantClassifierService classifier,
                               TempClassifierService temporary, Clock clock,
-                              org.springframework.beans.factory.ObjectProvider<MerchantAskService> selfProvider) {
+                              org.springframework.beans.factory.ObjectProvider<MerchantAskService> selfProvider,
+            @org.springframework.beans.factory.annotation.Value(
+                    "${finntech.temp-classifier.batch-size:8}") int tempBatchSize) {
         this.payments = payments;
         this.consumptions = consumptions;
         this.categories = categories;
@@ -101,7 +103,17 @@ public class MerchantAskService {
         this.temporary = temporary;
         this.clock = clock;
         this.selfProvider = selfProvider;
+        this.tempBatchSize = Math.max(1, tempBatchSize);
     }
+
+    /**
+     * 임시 분류를 <b>한 회차에 몇 곳까지</b> 물을지.
+     *
+     * <p>무료 통로라 돈은 안 들지만 가맹점당 6~10초다 — 상한이 없으면 미분류 50곳에서
+     * 한 번에 8분이 되고, 그 시간은 사용자가 로딩 화면으로 겪는다(프론트 상한 60초에
+     * 먼저 잘린다). 남은 것은 다음 회차가 잇는다.
+     */
+    private final int tempBatchSize;
 
     /** 한 번 물어본 결과 — 화면이 이어서 쓸 수 있게 추정과 종결을 함께 준다. */
     public record Asked(List<UserPayment> rows, Map<String, String> guesses, Set<String> settled) {
@@ -141,11 +153,23 @@ public class MerchantAskService {
     private Asked askOnce(MerchantAskService self, Long userId, int minMerchants) {
         Plan plan = self.plan(userId);
 
-        // ②-c **임시 분류 — 무료라 임계값 없이 지금 묻는다.**
-        // 유료 통로는 40곳이 쌓여야 부르는데, 그동안 새 결제는 '카테고리없음'으로 남는다.
-        // 무료 통로는 값이 0 이라 결제가 들어오는 대로 물어도 손해가 없다. 답은 **DB 에
-        // 남기지 않고** 화면 표시에만 쓴다 — 사전에는 유료 모델과 사람의 확정만 들어간다.
-        Map<String, TempClassifierService.Guess> temp = temporary.classify(plan.ask());
+        /* ②-c **임시 분류 — 무료라 임계값 없이 지금 묻는다.**
+         *
+         * 유료 통로는 40곳이 쌓여야 부르는데, 그동안 새 결제는 '카테고리없음'으로 남는다.
+         * 무료 통로는 값이 0 이라 결제가 들어오는 대로 물어도 손해가 없다. 답은 **DB 에
+         * 남기지 않고** 화면 표시에만 쓴다 — 사전에는 유료 모델과 사람의 확정만 들어간다.
+         *
+         * **다만 한 번에 묻는 수에는 상한이 있다.** 무료라도 <b>시간은 공짜가 아니다</b> —
+         * 가맹점당 6~10초라 미분류가 50곳이면 한 번에 8분이고, 그동안 화면은 로딩만 돈다
+         * (프론트 상한 60초에 먼저 잘린다). 남은 것은 다음 동기화가 잇는다 — 이 메서드는
+         * 화면을 열 때마다 다시 불리므로 <b>몇 번 나눠 부르면 결국 다 채워진다.</b> */
+        List<String> tempBatch = plan.ask().size() <= tempBatchSize
+                ? plan.ask() : plan.ask().subList(0, tempBatchSize);
+        if (tempBatch.size() < plan.ask().size()) {
+            log.info("임시 분류를 {}곳만 묻는다 — 남은 {}곳은 다음 회차가 잇는다",
+                    tempBatch.size(), plan.ask().size() - tempBatch.size());
+        }
+        Map<String, TempClassifierService.Guess> temp = temporary.classify(tempBatch);
 
         if (!plan.ask().isEmpty() || !temp.isEmpty()) {
             log.info("미분류 최신화 — userId={} 남은 가맹점 {}, 임시 분류 {}, 임계값 {}",

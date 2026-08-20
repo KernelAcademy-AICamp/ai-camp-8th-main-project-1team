@@ -85,6 +85,24 @@ public class MyDataClient {
                                 boolean phoneNameOk, boolean phoneSocialOk,
                                 boolean personFound) {}
 
+    /** 제공자가 지운 것 — 관리자 화면이 그대로 보인다. */
+    public record ProviderPurge(boolean found, long payments, long accountTxns,
+                                int cards, int accounts, int users) {}
+
+    /**
+     * <b>그 사람의 것을 제공자에서 전부 지운다</b> — 관리자 강제 삭제.
+     *
+     * <p>없으면 {@code found=false} 로 돌아온다. 본체와 제공자 어느 한쪽에만 남은 사람이
+     * 실제로 있어서(신청은 됐는데 앱은 안 쓴 사람) 한쪽이 없다고 다른 쪽을 못 지우면 안 된다.
+     */
+    public ProviderPurge purgeUser(String ci) {
+        Envelope<ProviderPurge> response = client.delete()
+                .uri("/bank/mydata/user/{ci}", ci)
+                .retrieve()
+                .body(new ParameterizedTypeReference<Envelope<ProviderPurge>>() {});
+        return response == null ? null : response.data();
+    }
+
     /** 카드사(연동 기관) 목록. */
     public List<CompanyView> findCompanies() {
         Envelope<List<CompanyView>> response = client.get()

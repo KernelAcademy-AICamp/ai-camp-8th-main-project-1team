@@ -17,7 +17,8 @@ export type ScreenId =
   // L0 최초 온보딩
   | 'boot' | 'walk' | 'auth' | 'connect' | 'loading'
   // 이번 챌린지 정하기 (최초 · 월초 재진입 공용)
-  | 'ob1' | 'ob2' | 'ob3' | 'ob4' | 'done'
+  // 0818 개편: 네 화면(ob1~ob4)이 **한 화면 다섯 걸음**으로 합쳐졌다.
+  | 'ob' | 'done'
   // 상시 탐색 3탭
   | 'home' | 'report' | 'my'
   // 홈 하위
@@ -25,9 +26,14 @@ export type ScreenId =
   // 마이룸 하위 — 도감·포인트샵 (개편안 s-collection·s-shop)
   | 'collection' | 'shop'
   // 월말 사이클 — 완료 축하 → 결산 → 다음 달 갱신 (개편안 s-monthend·s-settle·s-renew)
-  | 'monthend' | 'settle' | 'renew'
+  // 0818: 한 달 완료 축하는 화면이 아니라 **홈 위의 모달**이 됐다(`MonthEndModal`).
+  | 'settle' | 'renew'
+  // 0818 신설 예외 화면 셋 — 저금통 초과 · 주간 정산 · 기록이 짧을 때
+  | 'over' | 'weekly' | 'nodata'
   // 리포트 하위 — r-compare 는 개편안 s-compare(맞춤 상품 Top3)
   | 'r-compare' | 'r-analysis' | 'r-spending' | 'r-cards' | 'r-account' | 'r-waste' | 'r-savings'
+  // 0818 신설 — 리포트의 '전체 순위 보기'
+  | 'r-rank'
   // 마이 하위
   | 'm-impulse' | 'm-goals' | 'm-connections' | 'm-record' | 'm-policy' | 'm-survey' | 'm-demo'
   | 'm-stances' | 'm-unclassified'
@@ -48,10 +54,10 @@ export const isTab = (s: ScreenId): s is TabId => (TAB_SCREENS as readonly strin
  * 아래 위성 타입이 그 누락을 컴파일 단계에서 잡는다.
  */
 const ALL_SCREENS = [
-  'boot', 'walk', 'auth', 'connect', 'loading', 'ob1', 'ob2', 'ob3', 'ob4', 'done',
+  'boot', 'walk', 'auth', 'connect', 'loading', 'ob', 'done',
   'home', 'report', 'my', 'myroom', 'notifications', 'transactions',
-  'collection', 'shop', 'monthend', 'settle', 'renew',
-  'r-compare', 'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings',
+  'collection', 'shop', 'settle', 'renew', 'over', 'weekly', 'nodata',
+  'r-compare', 'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings', 'r-rank',
   'm-impulse', 'm-goals', 'm-connections', 'm-record', 'm-policy', 'm-survey', 'm-demo',
   'm-stances', 'm-unclassified', 'm-parked', 'm-products', 'm-sanctuary', 'm-voice',
   'm-challenge', 'm-challenge-new',
@@ -117,6 +123,15 @@ interface Session {
   setLinked: (v: boolean) => void;
   screen: ScreenId;
   go: (id: ScreenId) => void;
+  /**
+   * 이력을 쌓지 않고 지금 칸을 덮어쓰며 옮긴다 — <b>사람이 누르지 않은 이동</b> 전용.
+   *
+   * 자동 전환·강제 이동이 {@link go}를 쓰면 그 화면이 뒤로가기 목적지가 되고, 뒤로 눌러
+   * 도착하는 순간 같은 자동 전환이 다시 일어나 앞으로 되밀린다. 되밀 때 {@link go}가 또
+   * `pushState`를 하므로 방금 밟고 온 칸까지 파괴돼 <b>영원히 못 빠져나간다</b>.
+   * 사용자가 직접 누른 이동은 이력에 남아야 하므로 그쪽은 {@link go} 그대로다.
+   */
+  replace: (id: ScreenId) => void;
   back: () => void;
   /** 최초 온보딩부터 다시 — 연결 상태와 선택을 모두 비운다. */
   resetOnboarding: () => void;
@@ -156,6 +171,18 @@ const hashScreen = (): ScreenId | null => {
   const raw = window.location.hash.replace(/^#\/?/, '');
   return raw && isScreen(raw) ? raw : null;
 };
+
+/**
+ * 지금 이력 칸이 <b>우리 앱 안에서 몇 번째로 쌓인 것인가</b>. 직접 들어온 첫 칸은 0이다.
+ *
+ * 브라우저는 "이 칸을 누가 쌓았는지"를 알려주지 않는다 — `history.length`는 탭 전체를 세고,
+ * 앞 사이트의 칸과 우리 칸을 구분하지 못한다. 그래서 우리가 쌓을 때 표시를 남긴다.
+ */
+export const historyDepth = (): number => {
+  const s = window.history.state as { moaDepth?: number } | null;
+  return typeof s?.moaDepth === 'number' ? s.moaDepth : 0;
+};
+const depth = historyDepth;
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [userId, setUserIdState] = useState<number>(() => {
@@ -197,11 +224,24 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const go = useCallback((id: ScreenId) => {
     setScreen(id);
-    if (hashScreen() !== id) window.history.pushState(null, '', `#/${id}`);
+    if (hashScreen() !== id) window.history.pushState({ moaDepth: depth() + 1 }, '', `#/${id}`);
   }, []);
 
+  const replace = useCallback((id: ScreenId) => {
+    setScreen(id);
+    window.history.replaceState({ moaDepth: depth() }, '', `#/${id}`);
+  }, []);
+
+  /**
+   * 뒤로 — <b>우리가 쌓은 칸이 있을 때만</b> 브라우저에 맡긴다.
+   *
+   * 예전 판정은 `window.history.length > 1`이었는데, 그 값은 우리 앱이 아니라 <b>탭 전체
+   * 세션</b>을 센다. 다른 사이트를 보다 우리 앱에 들어오면 첫 화면에서도 이미 2 이상이라,
+   * 뒤로 버튼이 앱을 벗어나 앞 사이트로 나가 버렸다. 이제 {@link go}가 칸마다 깊이를 실어
+   * 두므로 <b>우리가 밟아 온 칸인지</b>를 직접 물어본다.
+   */
   const back = useCallback(() => {
-    if (window.history.length > 1) window.history.back();
+    if (depth() > 0) window.history.back();
     else go('home');
   }, [go]);
 
@@ -252,7 +292,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setDraft(emptyDraft);
     setAnalysis(null);
     setScreen('boot');
-    window.history.pushState(null, '', '#/boot');
+    // **밀어 넣지 않고 덮어쓴다.** `pushState` 면 로그아웃한 화면이 뒤로가기 목적지로 남아,
+    // 뒤로 누른 뒷사람이 앞사람이 보던 화면에 도착한다. 거기서 `!linked` 강제 이동이
+    // 다시 `#/boot`를 밀어 넣어 두 칸을 오가는 루프가 됐다. 깊이도 0으로 되돌린다 —
+    // 로그아웃은 '처음으로'이지 '한 칸 뒤로'가 아니다.
+    window.history.replaceState({ moaDepth: 0 }, '', '#/boot');
   }, []);
 
   /**
@@ -295,9 +339,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<Session>(() => ({
-    userId, setUserId, linked, setLinked, screen, go, back, resetOnboarding,
+    userId, setUserId, linked, setLinked, screen, go, replace, back, resetOnboarding,
     draft, patchDraft, analysis, setAnalysis, challengeCategory, openChallenge,
-  }), [userId, setUserId, linked, setLinked, screen, go, back, resetOnboarding,
+  }), [userId, setUserId, linked, setLinked, screen, go, replace, back, resetOnboarding,
        draft, patchDraft, analysis, challengeCategory, openChallenge]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

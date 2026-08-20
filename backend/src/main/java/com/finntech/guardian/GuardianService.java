@@ -45,6 +45,8 @@ public class GuardianService {
     private final DailyVerdictRepository verdictRepository;
     private final GuardianRewardService rewardService;
     private final GuardianNarrative narrative;
+    /** 문장은 뒤에서 채운다 — 화면이 LLM 을 기다리지 않게(`deliver` 주석). */
+    private final GuardianSentenceQueue sentences;
     private final GuardianClock clock;
     private final GuardianCatalog catalog;
     /** 사용자가 정한 말수 상한을 읽으려고 둔다 — 사람마다 다른 값은 설정 파일에 못 둔다. */
@@ -72,7 +74,9 @@ public class GuardianService {
                            com.finntech.repository.UserMerchantStanceRepository stanceRepository,
                            GuardianChallengeCategoryRepository challengeCategoryRepository,
                            GuardianCatalog catalog,
-                           com.finntech.repository.AppUserRepository userRepository) {
+                           com.finntech.repository.AppUserRepository userRepository,
+                           GuardianSentenceQueue sentences) {
+        this.sentences = sentences;
         this.catalog = catalog;
         this.userRepository = userRepository;
         this.challengeRepository = challengeRepository;
@@ -567,6 +571,37 @@ public class GuardianService {
         return new IngestResult(tx, snapshotOf(ch, today), ch.getState(), null);
     }
 
+    /**
+     * <b>진행 중인 챌린지를 중단한다</b> — "온보딩 다시 하기"가 부르는 자리.
+     *
+     * <h2>왜 필요한가</h2>
+     *
+     * <p>온보딩은 <b>진행 중인 챌린지가 없을 때만</b> 열린다(있으면 서버가 409 로 거절한다).
+     * 그래서 한 번 챌린지를 만든 사람은 목표를 통째로 다시 세우고 싶어도 갈 길이 없었다 —
+     * 로그아웃해도 서버의 챌린지는 그대로라 다시 인증하면 바로 홈이다.
+     *
+     * <h2>지우지 않고 닫는다</h2>
+     *
+     * <p>{@code ABANDONED} 는 "중단됨"이지 "없던 일"이 아니다. 원장·판정·알림은 그대로 남고
+     * 지난 챌린지 목록에도 그 회차가 보인다. <b>방·소품·포인트도 건드리지 않는다</b> —
+     * 그것들은 챌린지의 소유물이 아니라 그 사람이 지낸 시간의 결과다. 목표를 다시 세운다고
+     * 모아 온 것이 사라지면 아무도 다시 세우지 않는다.
+     *
+     * <p><b>정산은 하지 않는다.</b> 중간에 끊은 회차에 성적을 매기면 그것은 판정이 되고,
+     * 사용자가 스스로 고쳐 잡으려는 행동이 실패로 기록된다.
+     *
+     * @return 중단한 챌린지. 진행 중인 것이 없으면 empty — 오류가 아니다(이미 원하는 상태다).
+     */
+    @Transactional
+    public java.util.Optional<GuardianChallenge> abandonRunning(Long userId) {
+        return challengeRepository.findRunning(userId).map(ch -> {
+            ch.setState(ChallengeState.ABANDONED);
+            // 이 클래스에는 로거가 없다. 한 줄 때문에 들이지 않는다 — 무엇이 닫혔는지는
+            // 반환값과 챌린지 상태(ABANDONED)가 그대로 말한다.
+            return challengeRepository.save(ch);
+        });
+    }
+
     // ======================================================================
     //  4. 마이데이터 브리지
     // ======================================================================
@@ -685,16 +720,36 @@ public class GuardianService {
 
         Map<String, Object> numbers = numbersFor(ch, tx, snap, today);
         if (extras != null) numbers.putAll(extras);
-        GuardianNarrative.Message msg = narrative.compose(
-                decision.caseId(), decision.tone(), decision.phrasingMode(),
-                numbers, recentKeyPhrases(ch.getId(), now), false,
-                userRepository.existsByIdAndRealPersonTrue(ch.getUserId()));
+        List<String> recent = recentKeyPhrases(ch.getId(), now);
+        boolean allowAi = userRepository.existsByIdAndRealPersonTrue(ch.getUserId());
 
-        return notificationRepository.save(GuardianNotification.spoken(
+        /*
+         * **문장을 여기서 기다리지 않는다.**
+         *
+         * 예전에는 이 자리에서 Gemini 를 불러 응답이 온 뒤에야 알림을 저장했다. 그 호출은
+         * 건당 최대 11초이고(`GuardianNarrative`: 연결 3초 + 읽기 8초), `syncFromMyData` 가
+         * 새 결제마다 이 메서드를 부른다 — 발화 대상 다섯 건이면 **홈에 들어가는 데 55초**다.
+         * 게다가 이 메서드는 `@Transactional` 안이라 그동안 DB 커넥션까지 묶였다.
+         *
+         * 이제 규칙이 만든 **템플릿 문장으로 먼저 저장**하고(`GuardianCopy.fallback`),
+         * 모델 문장은 뒤에서 받아 그 알림을 갈아 끼운다(`GuardianSentenceQueue`).
+         * 같은 저장소의 `NarrativeCacheService` 가 화면 문장에 쓰던 규율과 같다 —
+         * 화면은 절대 LLM 을 안 기다리고, 못 받으면 템플릿이 그대로 남는다.
+         */
+        GuardianNarrative.Message template = narrative.template(decision.caseId(), numbers);
+        GuardianNotification saved = notificationRepository.save(GuardianNotification.spoken(
                 ch.getUserId(), ch.getId(), txId, decision.caseId(),
                 decision.tone(), decision.phrasingMode(), DeliveryKind.PUSH,
-                msg.title(), msg.body(), GuardianRules.stripFixedPhrases(msg.keyPhrases()),
-                msg.fallback(), GuardianCopy.PROMPT_VERSION, now));
+                template.title(), template.body(),
+                GuardianRules.stripFixedPhrases(template.keyPhrases()),
+                true, GuardianCopy.PROMPT_VERSION, now));
+
+        /* **커밋 뒤에 올린다.** 지금 올리면 일꾼이 아직 커밋 안 된 알림을 찾으러 가서 못 찾는다.
+           트랜잭션 밖에서 불렸으면(시험 등) 곧바로 올린다. */
+        sentences.submitAfterCommit(new GuardianSentenceQueue.Job(
+                saved.getId(), decision.caseId(), decision.tone(), decision.phrasingMode(),
+                numbers, recent, allowAi));
+        return saved;
     }
 
     /** 문장에 넣을 값 — 전부 이미 계산이 끝난 것이다. LLM은 여기 있는 것만 쓴다. */

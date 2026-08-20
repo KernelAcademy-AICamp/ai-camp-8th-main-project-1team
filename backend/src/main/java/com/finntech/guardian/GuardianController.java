@@ -91,6 +91,24 @@ public class GuardianController {
                 "snapshot", snapshotView(guardianService.snapshotOf(ch, clock.today(userId))));
     }
 
+    /**
+     * 진행 중인 챌린지를 중단한다 — 화면의 <b>"온보딩 다시 하기"</b>가 부른다.
+     *
+     * <p>온보딩은 진행 중인 챌린지가 있으면 열리지 않으므로, 목표를 통째로 다시 세우려면
+     * 먼저 이 문을 지나야 한다. 방·소품·포인트는 그대로 두고 챌린지만 닫는다
+     * ({@code GuardianService.abandonRunning}).
+     *
+     * <p>진행 중인 것이 없어도 <b>200</b> 이다 — 이미 원하는 상태이므로 오류가 아니다.
+     * 화면은 이 응답을 받고 곧바로 온보딩으로 간다.
+     */
+    @PostMapping("/challenges/abandon")
+    public Map<String, Object> abandonChallenge(@RequestParam Long userId) {
+        var ended = guardianService.abandonRunning(userId);
+        return Map.of("abandoned", ended.isPresent(),
+                "challengeId", ended.map(com.finntech.guardian.domain.GuardianChallenge::getId)
+                        .map(Object.class::cast).orElse(""));
+    }
+
     // ======================================================================
     //  거래 수신 (설계서 §API 1)
     // ======================================================================

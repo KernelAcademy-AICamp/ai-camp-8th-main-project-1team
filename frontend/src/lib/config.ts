@@ -28,3 +28,12 @@ export const DEFAULT_USER_ID = 1;
 
 /** 챌린지 기본 기간(일) — 지킴이 설계서 §1(30일 고정). */
 export const CHALLENGE_DAYS = 30;
+
+/**
+ * 화면 바닥에 적는 앱 판(0818 마이 바닥글).
+ *
+ * <b>손으로 적지 않는다</b> — 빌드가 `package.json` 의 판을 넣는다(`vite.config.ts` 의 define).
+ * 손으로 적으면 배포할 때마다 잊고, 잊은 채로 남은 숫자는 거짓말이 된다.
+ */
+export const APP_VERSION: string =
+  (import.meta.env.VITE_APP_VERSION as string | undefined) ?? '1.0';

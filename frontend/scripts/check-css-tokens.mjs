@@ -20,7 +20,17 @@ const css = readdirSync(DIR)
   // 주석은 뺀다 — 설명에 적어 둔 예시 변수명이 '사용'으로 잡히지 않게.
   .replace(/\/\*[\s\S]*?\*\//g, '');
 
-const used = new Set([...css.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1]));
+/*
+ * **대체값이 있는 `var()`는 세지 않는다.** `var(--dx, 0px)` 는 정의가 없어도 선언이 무효가
+ * 되지 않는다 — 이 검사가 잡으려는 사고("선언 하나가 조용히 사라진다")가 원리적으로 안 난다.
+ * 대체값까지 위반으로 세면, 값을 **JS 가 인라인으로 채우는 자리**(폭죽의 --dx·--dy·--rot,
+ * 막대의 --cw)를 CSS 에 억지로 선언하게 만들고 그러면 인라인 값이 무엇인지 흐려진다.
+ */
+const used = new Set(
+  [...css.matchAll(/var\(\s*(--[\w-]+)\s*([,)])/g)]
+    .filter((m) => m[2] === ')')
+    .map((m) => m[1]),
+);
 const defined = new Set([...css.matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]));
 const missing = [...used].filter((v) => !defined.has(v)).sort();
 

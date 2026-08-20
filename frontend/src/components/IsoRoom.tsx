@@ -85,7 +85,15 @@ function Asset({ k, src, dy = 0 }: { k: string; src?: string; dy?: number }) {
     preserveAspectRatio="xMidYMax meet" />;
 }
 
-/** 격자 좌표에 무언가를 놓는다. */
+/**
+ * 격자 좌표에 무언가를 놓는다.
+ *
+ * <p><b>버튼 역할을 붙이지 않는다.</b> 이 파일 머리말이 적어 둔 그대로다 —
+ * SVG {@code <g>} 는 키보드로 닿지 않으므로 역할만 붙이면 <b>가짜 버튼</b>이 된다.
+ * 보조기술은 "버튼이 있다"고 말하는데 눌러지지 않고, 이름도 없어 "이름없음"으로 읽힌다
+ * (2026-08-20 브라우저 실측에서 그렇게 잡혔다). 탭은 마우스 지름길로만 남기고,
+ * 진짜 조작 경로는 <b>꾸미기 시트</b>다.
+ */
 function At({ x, y, z = 0, onClick, className, style, children }: {
   x: number; y: number; z?: number; onClick?: () => void;
   className?: string; style?: React.CSSProperties; children: React.ReactNode;
@@ -93,7 +101,7 @@ function At({ x, y, z = 0, onClick, className, style, children }: {
   const [cx, cy] = iso(x, y, z);
   return (
     <g transform={`translate(${cx} ${cy})`} className={className} style={style}
-       onClick={onClick} role={onClick ? 'button' : undefined}>
+       onClick={onClick} aria-hidden="true">
       {children}
     </g>
   );

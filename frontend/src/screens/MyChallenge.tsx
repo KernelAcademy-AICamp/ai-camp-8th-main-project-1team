@@ -10,15 +10,21 @@
  *
  * <p><b>이미 쓴 돈 아래로는 못 내린다.</b> 그러면 저장하는 순간 예산 초과가 되어 사용자가
  * 한 적 없는 실패가 만들어진다. 슬라이더의 바닥이 곧 지금까지 쓴 돈이다.
+ *
+ * <p><b>'이건 낭비가 아니에요'가 여기로 왔다</b>(0818 개편). 예전에는 온보딩 마지막 화면에
+ * 있었는데, 프로토타입_0818 이 온보딩을 한 화면으로 합치면서 그 자리가 없어졌다. 기능까지
+ * 없앨 일은 아니다 — ML 판정은 완벽하지 않고(운영 실측 정밀도 0.689) 사용자가 빼는 절차가
+ * 있어야 숫자를 믿을 수 있다. 오히려 <b>지내면서 다듬는 일</b>이라 처음 한 번뿐인 온보딩보다
+ * 이 화면이 제자리다.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '../components/Icons';
 import { AppBar, Scroll, Screen, ErrorBox, Loading, Cta } from '../components/ui';
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
 import { useAsync } from '../state/useAsync';
 import { api, type ChallengeCategory } from '../lib/api';
-import { won, iconOf } from '../lib/format';
+import { won, iconOf, shortDateTime } from '../lib/format';
 
 /** 강도 눈금 — 기준 지출의 몇 %를 지킬까. 개편안 ob4 의 세 단계와 같은 값이다. */
 const TIERS = [
@@ -28,16 +34,42 @@ const TIERS = [
 ];
 
 export function MyChallenge() {
-  const { back, userId, challengeCategory } = useSession();
+  const { back, userId, challengeCategory, draft, patchDraft } = useSession();
   const { reload } = useGuardian();
   const rows = useAsync(() => api.guardian.challengeCategories(userId), [userId]);
   const [target, setTarget] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [saved, setSaved] = useState(false);
+  /** 결제 목록은 접어 둔다 — 화면이 길어지면 슬라이더가 밀린다. */
+  const [open, setOpen] = useState(false);
 
   const row: ChallengeCategory | undefined =
     rows.data?.find((r) => r.category === challengeCategory) ?? rows.data?.[0];
+
+  /**
+   * 그 카테고리에서 <b>낭비로 본 결제</b>. 온보딩이 담아 둔 창을 먼저 보고, 비어 있으면
+   * (새로고침·다른 기기) 서버에 다시 묻는다 — 담긴 값에만 기대면 그 사람은 이 목록을
+   * 영영 못 본다.
+   */
+  const win = useAsync(() => (draft.baseline[challengeCategory ?? ''] ? Promise.resolve(null)
+    : api.onboardingWindow(userId).catch(() => null)), [userId, challengeCategory]);
+  const picks = useMemo(() => {
+    const code = row?.category ?? '';
+    const fromDraft = draft.baseline[code]?.payments;
+    const fromApi = win.data?.categories.find((c) => c.categoryCode === code)?.payments;
+    return (fromDraft ?? fromApi ?? []).filter((p) => p.waste === true);
+  }, [row?.category, draft.baseline, win.data]);
+  const kept = new Set(draft.keptPaymentIds);
+  const keptCount = picks.filter((p) => kept.has(p.paymentId)).length;
+  const toggleKeep = (paymentId: string) => {
+    const on = kept.has(paymentId);
+    patchDraft({
+      keptPaymentIds: on
+        ? draft.keptPaymentIds.filter((k) => k !== paymentId)
+        : [...draft.keptPaymentIds, paymentId],
+    });
+  };
 
   useEffect(() => { if (row) setTarget(row.target); }, [row?.category, row?.target]);
 
@@ -132,6 +164,46 @@ export function MyChallenge() {
             {row.spent > 0 && <> 이미 {won(row.spent)}을 써서 그만큼은 뺀 값까지만 고를 수 있어요.</>}
           </p>
         </div>
+
+        {/* ── 이건 낭비가 아니에요 ──
+            왜 낭비로 봤는지 **확인할 수 있는 숫자로** 말한다. "평소보다 큰 금액"까지만 하면
+            동의도 반박도 할 수 없다. "평소 23,000원 → 78,000원(3.4배)"이라야 "그날은
+            회식이었다"고 답할 수 있고, 그 답이 곧 이 목록이 받으려는 신호다. */}
+        {picks.length > 0 && (
+          <>
+            <button type="button" className="pick-toggle" aria-expanded={open}
+              onClick={() => setOpen((v) => !v)}>
+              <span>줄일 수 있는 소비 {picks.length}건
+                {keptCount > 0 && <b> · {keptCount}건 뺐어요</b>}</span>
+              <span className="chev" aria-hidden="true">{open ? '⌃' : '⌄'}</span>
+            </button>
+            {open && (
+              <ul className="pick-list">
+                {picks.map((p) => {
+                  const off = kept.has(p.paymentId);
+                  return (
+                    <li key={p.paymentId}>
+                      <button type="button" className={off ? 'pick off' : 'pick'}
+                        aria-pressed={!off} onClick={() => toggleKeep(p.paymentId)}>
+                        <span className="box" aria-hidden="true">{off ? '' : '✓'}</span>
+                        <span className="d">{shortDateTime(p.date)}</span>
+                        <span className="m">{p.merchantName ?? '가맹점 미상'}</span>
+                        <span className="a">{won(p.amount)}</span>
+                      </button>
+                      {p.factors?.length > 0 && (
+                        <ul className="why">
+                          {p.factors.map((f, i) => (
+                            <li key={i}><b>{f.label}</b>{f.detail && <span>{f.detail}</span>}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </>
+        )}
 
         {saved && !dirty && (
           <p className="pv" role="status" style={{ color: 'var(--green-t)' }}>

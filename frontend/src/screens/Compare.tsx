@@ -29,7 +29,7 @@ import { won } from '../lib/format';
 /** 초록 P 뱃지 — 절감액 앞에 서는 표시. */
 const SaveMark = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
-    <circle cx="12" cy="12" r="9" fill="#00B14F" />
+    <circle cx="12" cy="12" r="9" fill="#00B173" />
     <text x="12" y="16.4" textAnchor="middle" fontSize="12" fontWeight="700"
       fill="#fff" fontFamily="inherit">P</text>
   </svg>
@@ -54,7 +54,7 @@ export function Compare() {
   const offers = data?.offers ?? [];
 
   return (
-    <Screen title="카드 추천">
+    <Screen id="compare" title="카드 추천">
       <AppBar onBack={back} title="카드 추천" />
       <Scroll><div className="pad">
         {loading && <Loading label="카드를 고르는 중" rows={4} />}

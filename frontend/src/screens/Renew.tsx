@@ -15,7 +15,7 @@ import { api, type RenewalLine } from '../lib/api';
 import { iconFor, won } from '../lib/format';
 
 export function Renew() {
-  const { go, userId } = useSession();
+  const { go, back, userId } = useSession();
   const { data, loading, error, reload } = useAsync(() => api.guardian.renewal(userId), [userId]);
 
   if (loading) return <Loading label="조정안을 만드는 중" />;
@@ -23,8 +23,8 @@ export function Renew() {
   if (!data) return null;
 
   return (
-    <Screen title="다음 달 목표">
-      <AppBar title="다음 달 목표" onBack={() => go('settle')} />
+    <Screen id="renew" title="다음 달 목표">
+      <AppBar title="다음 달 목표" onBack={back} />
       <Scroll>
         <div className="pad">
           <div className="h-title">다음 달,<br />어떻게 갈까요?</div>
@@ -59,8 +59,8 @@ export function Renew() {
       </Scroll>
       <div className="cta-fixed">
         {/* 추천대로 시작 — 챌린지 생성 화면으로 값을 들고 간다(ob3가 최종 확인을 맡는다). */}
-        <button className="btn btn-primary" onClick={() => go('ob3')}>추천대로 시작하기</button>
-        <button className="btn btn-ghost" style={{ marginTop: 8 }} onClick={() => go('ob1')}>
+        <button className="btn btn-primary" onClick={() => go('ob')}>추천대로 시작하기</button>
+        <button className="btn btn-ghost" style={{ marginTop: 8 }} onClick={() => go('ob')}>
           직접 조정하기
         </button>
       </div>

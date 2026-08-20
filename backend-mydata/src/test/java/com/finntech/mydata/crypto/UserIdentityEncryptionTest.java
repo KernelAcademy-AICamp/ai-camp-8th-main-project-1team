@@ -66,8 +66,10 @@ class UserIdentityEncryptionTest {
 
         assertThat(user.getPhoneBlindIndex()).isNotBlank();
         assertThat(user.getPersonBlindIndex()).isNotBlank();
-        assertThat(users.findByPhoneBlindIndex(index.ofPhone(phoneOf("B")))).isPresent();
-        assertThat(users.findByPersonBlindIndex(index.ofPerson(NAME + "B", SOCIAL))).isPresent();
+        assertThat(users.findAllByPhoneBlindIndex(index.ofPhone(phoneOf("B"))))
+.isNotEmpty();
+        assertThat(users.findAllByPersonBlindIndex(index.ofPerson(NAME + "B", SOCIAL)))
+.isNotEmpty();
     }
 
     @Test
@@ -79,8 +81,10 @@ class UserIdentityEncryptionTest {
 
         // 저장 표기와 조회 표기가 갈리면 "분명히 맞게 넣었는데 불일치"가 뜬다.
         // 이 저장소는 실제로 그 사고를 겪었다(2026-08-05).
-        assertThat(users.findByPhoneBlindIndex(index.ofPhone(digitsOnly))).isPresent();
-        assertThat(users.findByPhoneBlindIndex(index.ofPhone(hyphenated))).isPresent();
+        assertThat(users.findAllByPhoneBlindIndex(index.ofPhone(digitsOnly)))
+.isNotEmpty();
+        assertThat(users.findAllByPhoneBlindIndex(index.ofPhone(hyphenated)))
+.isNotEmpty();
     }
 
     @Test
@@ -102,8 +106,9 @@ class UserIdentityEncryptionTest {
         index.changePhone(user, moved);
         users.save(user);
 
-        assertThat(users.findByPhoneBlindIndex(index.ofPhone(moved))).isPresent();
-        assertThat(users.findByPhoneBlindIndex(index.ofPhone(phoneOf("D"))))
+        assertThat(users.findAllByPhoneBlindIndex(index.ofPhone(moved)))
+.isNotEmpty();
+        assertThat(users.findAllByPhoneBlindIndex(index.ofPhone(phoneOf("D"))))
                 .as("옛 번호로는 더 이상 안 찾힌다").isEmpty();
     }
 

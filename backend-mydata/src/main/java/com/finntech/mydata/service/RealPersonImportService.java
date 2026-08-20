@@ -51,6 +51,15 @@ import java.util.Optional;
 @Service
 public class RealPersonImportService {
 
+    /**
+     * <b>그 번호는 이미 남의 것이다.</b> 실패가 아니라 <b>판정</b>이라 따로 둔다 —
+     * 신청자에게 "번호를 다시 확인해 주세요"까지 말할 수 있어야 하고, 그 문장이 500 에
+     * 섞여 사라지면 안 된다.
+     */
+    public static class PhoneAlreadyTakenException extends RuntimeException {
+        public PhoneAlreadyTakenException(String message) { super(message); }
+    }
+
     /** 학습에서 빼는 칸. {@code ml/train.py} 가 이 값을 걸러낸다. */
     public static final String SPLIT = "SERVICE";
 
@@ -120,6 +129,29 @@ public class RealPersonImportService {
         // CI 는 숫자만 남겨 만드므로(Ci.of) 표기를 바꿔도 신원은 그대로다.
         String stored = Msisdn.format(phone);
         MyDataUser user = userRepository.findById(ci).orElseGet(() -> {
+            /* **한 번호에 두 사람을 만들지 않는다.**
+
+               번호는 사람을 특정하는 열쇠다 — 본인인증이 그것으로 명의자를 찾는다. 그런데
+               지문 칸에 UNIQUE 가 없어(V13, 의도적) 막는 것이 아무 데도 없었고, 신청자가 자기
+               번호를 **다른 실사용자의 번호로** 잘못 적자 한 번호에 두 사람이 붙었다.
+               조회가 "결과가 둘"로 터져 그 번호를 쓰는 <b>두 사람 모두</b> 본인인증이 500 이
+               됐다(2026-08-20 운영). 터지는 것 자체는 조회를 목록으로 바꿔 고쳤지만,
+               <b>애초에 그런 데이터가 들어오지 못하게</b> 하는 것이 여기다.
+
+               **막는 자리를 여기 하나로 둔다.** 실사람을 만드는 길이 셋인데(신청 승인 →
+               {@code importBatch} · 관리자 적재 → {@code importCsv} · 스크립트) 셋 다 이
+               메서드를 지난다. 신청 화면에서도 미리 물어 사용자가 바로 고칠 수 있게 하지만,
+               그쪽은 <b>친절이고 여기가 불변식</b>이다.
+
+               **이미 있는 사람은 안 막는다.** 이 검사는 새 신원을 만드는 이 자리에만 있다 —
+               재신청·표기 정정으로 다시 들어온 사람까지 막으면 옛 중복 하나가 멀쩡한 사람의
+               적재를 영영 막는다. */
+            List<MyDataUser> onThatNumber =
+                    userRepository.findAllByPhoneBlindIndex(identityIndex.ofPhone(stored));
+            if (!onThatNumber.isEmpty()) {
+                throw new PhoneAlreadyTakenException(
+                        "이 전화번호는 이미 다른 분 명의로 등록돼 있어요. 번호를 다시 확인해 주세요.");
+            }
             MyDataUser u = identityIndex.newUser(ci, name, social7, stored);
             // 페르소나는 비운다 — 실제 사람에게 생성용 꼬리표를 붙이지 않는다.
             u.setDataSplit(SPLIT);

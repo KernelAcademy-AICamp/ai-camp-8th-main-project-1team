@@ -82,6 +82,20 @@ export function IconSprite() {
           <path d="M12 3.6c-3.2 0-5 2.5-5 5.4v3.4L5.4 15.6a1 1 0 0 0 .8 1.6h11.6a1 1 0 0 0 .8-1.6L17 12.4V9c0-2.9-1.8-5.4-5-5.4z" fill="#F2B84B" />
           <path d="M10 18.6a2 2 0 0 0 4 0h-4z" fill="#D99A26" />
         </symbol>
+        {/* 지킴이 얼굴 — 프로토타입_0818 의 `.tip-card .cat` 을 그대로 옮겼다.
+            `currentColor` 가 아니라 고정색인 유일한 아이콘이다: 이건 기호가 아니라
+            캐릭터라 어디에 놓여도 같은 얼굴이어야 한다. */}
+        <symbol id="i-cat" viewBox="0 0 24 24">
+          <path d="M4.6 9.5 L6.2 2.8 L10.4 6.4 Z" fill="#F6E4C4" />
+          <path d="M19.4 9.5 L17.8 2.8 L13.6 6.4 Z" fill="#F6E4C4" />
+          <path d="M18.6 7.6 L17.9 4.7 L16.1 6.2 Z" fill="#EFD2A2" />
+          <ellipse cx="12" cy="14" rx="9.4" ry="8.2" fill="#F6E4C4" />
+          <ellipse cx="7.4" cy="9.4" rx="2.6" ry="1.8" fill="#EFD2A2" />
+          <circle cx="9" cy="13.6" r="1.15" fill="#4A4038" />
+          <circle cx="15" cy="13.6" r="1.15" fill="#4A4038" />
+          <path d="M10.9 16.6 q1.1 1 2.2 0" stroke="#4A4038" strokeWidth="1" fill="none"
+            strokeLinecap="round" />
+        </symbol>
         <symbol id="i-flame" viewBox="0 0 24 24">
           <path d="M12 2.8c.4 3.4-4.6 5.2-4.6 9.8a4.9 4.9 0 0 0 9.8 0c0-2.5-1.7-3.9-2.6-6-.5-1.1-.7-2.3-2.6-3.8z" fill="#F97316" transform="translate(0 1.6)" />
           <path d="M12 9.2c.2 1.9-2.2 2.7-2.2 5a2.6 2.6 0 0 0 5.2 0c0-1.9-1.6-2.7-3-5z" fill="#FDBA74" transform="translate(0 1.6)" />
@@ -137,11 +151,11 @@ export function IconSprite() {
           <ellipse cx="18" cy="54" rx="11" ry="17" fill="#F6B189" transform="rotate(-22 18 54)" />
           <path d="M22 88 V36 C22 16 30 7 38 7 C50 7 56 17 56 32 V88 Z" fill="#FFC9A3" />
           <path d="M31 10 V44 M40 8 V44 M49 14 V44" stroke="#F0A87E" strokeWidth="1.6" strokeLinecap="round" />
-          <rect x="18" y="82" width="42" height="14" rx="7" fill="#00B14F" />
+          <rect x="18" y="82" width="42" height="14" rx="7" fill="#00B173" />
         </symbol>
         <symbol id="i-house" viewBox="0 0 24 24">
           <path d="M11.1 3.2a1.4 1.4 0 0 1 1.8 0l8.4 6.9a1 1 0 0 1-.6 1.8H3.3a1 1 0 0 1-.6-1.8l8.4-6.9z" fill="#4CCB85" />
-          <rect x="4.8" y="10.4" width="14.4" height="10.4" rx="2.4" fill="#00B14F" />
+          <rect x="4.8" y="10.4" width="14.4" height="10.4" rx="2.4" fill="#00B173" />
           <rect x="9.9" y="14.4" width="4.2" height="6.4" rx="1.2" fill="#fff" />
         </symbol>
         <symbol id="i-ktx" viewBox="0 0 24 24">
@@ -151,7 +165,7 @@ export function IconSprite() {
           <rect x="8.5" y="20" width="7" height="1.6" rx=".8" fill="#94A3B8" />
         </symbol>
         <symbol id="i-mega" viewBox="0 0 24 24">
-          <path d="M20 4.4v15.2l-7.6-3.2H6a2.8 2.8 0 0 1-2.8-2.8v-2.8A2.8 2.8 0 0 1 6 8h6.4L20 4.4z" fill="#00B14F" />
+          <path d="M20 4.4v15.2l-7.6-3.2H6a2.8 2.8 0 0 1-2.8-2.8v-2.8A2.8 2.8 0 0 1 6 8h6.4L20 4.4z" fill="#00B173" />
           <path d="M6.8 17.2h2.9l.9 2.6a1.5 1.5 0 0 1-2.8 1l-1-3.6z" fill="#00804A" />
         </symbol>
 
