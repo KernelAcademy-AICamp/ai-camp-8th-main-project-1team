@@ -58,6 +58,9 @@
   --radius-sheet:24px;
   --title:22px;
   --cta-h:56px;
+  /* 데스크톱에서 앱이 차지하는 폭. 개편안의 폰 프레임이 375px 이고 화면들은 그 언저리로
+     그려져 있다 — 브라우저 창이 아무리 넓어도 그 이상으로 늘리지 않는다. */
+  --app-w:420px;
 }
 *{
   box-sizing:border-box;
@@ -85,6 +88,21 @@ body{
 }
 /* 폰 프레임·노치·상태바(.phone/.notch/.statusbar)는 프로토타입 크롬이라 옮기지 않는다.
    실제 서비스에서는 브라우저가 그 역할을 한다. */
+
+/* **폭은 여기서 나온다.** 위 `body` 의 flex 는 개편안에서 온 것이고, 개편안에서 폭을 갖고
+   있던 것은 그 안의 `.phone`(375px)이었다. 그 프레임을 안 옮겼으니 폭을 가진 자식이
+   하나도 없어, 앱이 flex 항목으로서 내용 폭인 **0px 로 접힌다** — 화면이 통째로 사라진다.
+   540px 이하에서는 아래 반응형이 `body` 를 block 으로 되돌려 가려져 있었다(운영 사고
+   2026-08-20). 프레임 대신 앱 자체에 폭을 준다. */
+#root{
+  width:100%;
+  max-width:var(--app-w);
+  height:100dvh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+#root > .app{ flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column; }
 
 /* ---- screens ---- */
 /* 화면은 문서 흐름을 탄다. 개편안은 폰 프레임 안을 `absolute;inset:0`으로 채우고 상태바 높이만큼
@@ -3703,6 +3721,10 @@ button.list-item:active{ opacity: .6; }
    모바일: 목업 프레임과 데모 바를 걷어내고 앱이 브라우저 전체를 채운다. */
 @media (max-width:540px), (max-height:700px) and (pointer:coarse){
   body{padding:0;gap:0;background:var(--bg);height:auto;min-height:100dvh;overflow:visible;display:block;}
+  /* 실기기에서는 앱이 브라우저를 꽉 채운다 — 데스크톱용 폭 제한을 걷어낸다.
+     `body` 가 block 이라 제한을 남기면 좁은 태블릿에서 420px 로 잘려 왼쪽에 붙는다. */
+  #root{max-width:none;height:auto;min-height:100dvh;overflow:visible;}
+  #root > .app{overflow:visible;}
   .brand-side{display:none;}
   .demo-dock{display:none;}
   .phone{width:100%;height:100dvh;transform:none;border-radius:0;box-shadow:none;margin:0;}
