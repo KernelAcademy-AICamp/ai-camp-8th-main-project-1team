@@ -158,9 +158,9 @@ footer { margin-top: 32px; padding-top: 16px; font-size: 12px; color: var(--text
   <h1>사용자 여정 및 핵심 가치 완결 구간 (CUJ)</h1>
   <p class="dek">문제를 인지한 순간부터 한 달의 절약 사이클을 마치고 다음 달로 이어지기까지의 7단계입니다. 파란 구간이 MOA의 핵심 가치가 완결되는 <strong>Critical User Journey</strong>이며, 그 앞뒤는 CUJ 진입과 반복을 좌우하는 맥락입니다.</p>
   <div class="meta">
-    <span>대상 · 감정·습관형 소비를 하는 20~30대 직장인</span>
+    <span>대상 · 무엇을 줄여야 할지 몰라 절약을 오래 잇지 못하는 20~30대 직장인</span>
     <span>범위 · 1개월 절약 사이클 전체</span>
-    <span>관점 · 사용자 발화 기준 재구성</span>
+    <span>관점 · 사용자 발화 기준 재구성 · <strong>감정선은 검증 전 경험 가설</strong></span>
   </div>
 </header>
 
@@ -177,7 +177,7 @@ footer { margin-top: 32px; padding-top: 16px; font-size: 12px; color: var(--text
 
 <div class="sec-h">
   <h2>이 여정에서 도출한 것</h2>
-  <p>CUJ 정의 2건과, CUJ 안에서 발견한 미해결 과제 3건입니다.</p>
+  <p>CUJ 정의 2건과, CUJ 안에서 드러나 결론이 난 설계 판단 3건입니다.</p>
 </div>
 
 <div class="notes">
@@ -194,30 +194,30 @@ footer { margin-top: 32px; padding-top: 16px; font-size: 12px; color: var(--text
     <p class="ask">CUJ 완료를 온보딩 완료로 대체하지 않는다.</p>
   </div>
 
-  <div class="note warn">
-    <span class="k">과제 ①</span>
-    <h3>성공한 순간에 제품이 침묵한다</h3>
-    <p>사용자가 절약을 실감하는 순간은 <strong>쓰지 않은 순간</strong>이다. 그러나 현재 설계는 한도를 넘긴 순간에만 반응한다. 잘 지킬수록 앱을 열 이유가 사라진다.</p>
-    <p class="ask">잔소리하지 않는 것과 아무 말도 하지 않는 것을 어떻게 구분할 것인가.</p>
+  <div class="note">
+    <span class="k">결론 ①</span>
+    <h3>성공은 사건이 아니다</h3>
+    <p>절약을 실감하는 순간은 <strong>쓰지 않은 순간</strong>인데, 쓰지 않음은 거래를 남기지 않는다. 그 순간에는 성공했는지 알 방법이 없어 <strong>실시간 격려가 원리상 불가능하다.</strong></p>
+    <p class="ask">→ 하루 마감 시점에 선택 카테고리의 지출 여부로 판정한다 (C5·C10 · 배치). 남는 물음은 격려가 순위에 밀려 실제로 <strong>도달하는가</strong>다.</p>
+  </div>
+
+  <div class="note">
+    <span class="k">결론 ②</span>
+    <h3>경계는 두고 노출을 늘린다</h3>
+    <p>사용자가 소비를 실감하는 날은 카드 결제일인데 결산은 달력 말일에 난다. 대표 지표인 월말 결과 확인율이 하필 앱을 열 이유가 가장 없는 날에 걸린다.</p>
+    <p class="ask">→ 결과는 말일에 확정하되, <strong>리포트 탭 상단에 결산 배너를 상주</strong>시킨다. 다음 챌린지 설정 전까지 유지 (RP-02A). 챌린지 경계는 옮기지 않는다.</p>
   </div>
 
   <div class="note warn">
-    <span class="k">과제 ②</span>
-    <h3>결산일과 사용자의 월말이 다르다</h3>
-    <p>사용자가 소비를 실감하는 날은 카드 결제일이다. 반면 제품은 달력 말일에 결과를 내민다. 대표 지표인 월말 결과 확인율이 걸린 지점이 하필 앱을 열 이유가 가장 없는 날이다.</p>
-    <p class="ask">챌린지 경계와 결산 노출 시점을 분리할 것인가.</p>
-  </div>
-
-  <div class="note warn">
-    <span class="k">과제 ③</span>
+    <span class="k">스코프 ③</span>
     <h3>지킨 돈이 실재하지 않는다</h3>
     <p>새로운 소비 목표를 만들지 않겠다는 원칙은 유지한다. 다만 지킨 금액이 화면 안 숫자로만 남으면 다음 달에 또 쓸 돈과 구분되지 않는다.</p>
-    <p class="ask">목표를 붙이지 않으면서 돈을 실재하게 만들 방법은 무엇인가.</p>
+    <p class="ask">→ 본래 해법은 지킨 돈을 실제 계좌로 <strong>옮기는 것</strong>이지만, 이번 프로젝트 범위를 넘어 구현하지 않는다. 대체 동기는 마이룸이다.</p>
   </div>
 </div>
 
 <div class="foot">
-  <strong>CUJ에 포함하지 않은 기능</strong> — 상세 소비 탐색, 마이룸 도감·포인트샵, 금융상품 비교, 설정 관리. 없어도 핵심 가치 전달은 완결되므로 보조 접점으로 분리해 관리한다. 다만 <strong>가치 완결에 도달하게 만드는</strong> 리포트류는 별도로 최우선 순위를 유지한다.
+  <strong>CUJ에 포함하지 않은 기능</strong> — 상세 소비 탐색, 마이룸 도감·포인트샵, 금융상품 비교, 설정 관리, 데모 패널·관리자 화면. 없어도 핵심 가치 전달은 완결되므로 보조 접점으로 분리해 관리한다. 다만 <strong>가치 완결에 도달하게 만드는</strong> 리포트류는 별도로 최우선 순위를 유지한다.
 </div>
 
 <footer>MOA · Critical User Journey Map</footer>
@@ -267,7 +267,7 @@ const S=[
  pain:["결산일과 카드 결제일이 어긋나 그날 앱을 열 이유가 없음","기대에 못 미친 결과를 실패로 받아들이면 이탈","지킨 금액이 화면 안 숫자로만 존재"],
  opp:["지킨 금액 중심으로 비난 없이 회고","쌓인 성장은 결과와 무관하게 유지"]},
 
-{n:"6",t:"반복 · 갱신",w:"다음 달 시작",cuj:"rep",emo:0,
+{n:"6",t:"반복 · 이탈",w:"다음 달 시작",cuj:"rep",emo:0,
  do:"지난달 결과를 바탕으로 다음 달 카테고리와 강도를 다시 정한다.",
  tp:["다음 달 목표 설정","새 챕터 시작","재진입 홈"],
  say:"한 달 해봤으니 됐나 싶기도 하고.",
@@ -299,7 +299,7 @@ S.forEach(s => { h += `<div class="cell r-tp">${s.tp.map(t => `<span>· ${t}</sp
 h += `<div class="lab">사용자 보이스</div>`;
 S.forEach(s => { h += `<div class="cell r-say"><p>${s.say}</p></div>`; });
 
-h += `<div class="lab">감정 곡선</div>`;
+h += `<div class="lab">감정 곡선<br><span style="font-weight:500;color:var(--text-muted)">(가설)</span></div>`;
 h += `<div class="emorow" id="emorow"></div>`;
 
 h += `<div class="lab">페인포인트 · 이탈 위험</div>`;
