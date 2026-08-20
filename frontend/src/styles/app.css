@@ -58,9 +58,6 @@
   --radius-sheet:24px;
   --title:22px;
   --cta-h:56px;
-  /* 데스크톱에서 앱이 차지하는 폭. 개편안의 폰 프레임이 375px 이고 화면들은 그 언저리로
-     그려져 있다 — 브라우저 창이 아무리 넓어도 그 이상으로 늘리지 않는다. */
-  --app-w:420px;
 }
 *{
   box-sizing:border-box;
@@ -93,16 +90,27 @@ body{
    있던 것은 그 안의 `.phone`(375px)이었다. 그 프레임을 안 옮겼으니 폭을 가진 자식이
    하나도 없어, 앱이 flex 항목으로서 내용 폭인 **0px 로 접힌다** — 화면이 통째로 사라진다.
    540px 이하에서는 아래 반응형이 `body` 를 block 으로 되돌려 가려져 있었다(운영 사고
-   2026-08-20). 프레임 대신 앱 자체에 폭을 준다. */
+   2026-08-20). 프레임 대신 앱 자체에 폭을 준다.
+
+   **열은 여기 한 곳에서만 정한다.** 예전에는 `.appbar`·`.progress`·`.pad`·`.cta-fixed` 가
+   저마다 `max-width:var(--col);margin:0 auto` 로 스스로 가운데 정렬을 했고, 그 사이에 낀
+   목록·차트는 아무 제한이 없었다. 그래서 한 화면 안에 **폭이 다섯 가지**가 생겨
+   "위는 가운데 좁게, 아래는 전체로 크게" 어긋났다(사용자 보고 2026-08-20).
+   조상이 하나 정하고 자손은 100% 로 따르면 어긋날 자리가 없어진다.
+
+   `position:relative` 도 필수다 — `.screen` 이 `position:absolute;inset:0` 인데 조상에
+   기준이 없으면 **뷰포트**를 잡아 열을 통째로 뚫고 나간다. */
 #root{
   width:100%;
-  max-width:var(--app-w);
+  max-width:var(--col);
+  margin:0 auto;
   height:100dvh;
   overflow:hidden;
+  position:relative;
   display:flex;
   flex-direction:column;
 }
-#root > .app{ flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column; }
+#root > .app{ flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column; position:relative; }
 
 /* ---- screens ---- */
 /* 화면은 문서 흐름을 탄다. 개편안은 폰 프레임 안을 `absolute;inset:0`으로 채우고 상태바 높이만큼
@@ -136,9 +144,6 @@ body{
   position:sticky;
   top:0;
   z-index:30;
-  width:100%;
-  max-width:var(--col);
-  margin:0 auto;
 }
 .appbar .back{
   width:44px;
@@ -168,11 +173,9 @@ body{
   height:8px;
   background:var(--track);
   flex:0 0 auto;
-  margin:0 auto;
+  margin:0 var(--pad-x) 4px;
   border-radius:999px;
   overflow:hidden;
-  width:100%;
-  max-width:var(--col);
 }
 .progress > i{
   display:block;
@@ -184,9 +187,6 @@ body{
 /* 본문 열 — 개편안의 좌우 24px 여백을 반응형 폭으로 감싼다(토큰의 --col 단계). */
 .pad{
   padding:12px var(--pad-x) 28px;
-  width:100%;
-  max-width:var(--col);
-  margin:0 auto;
 }
 .h-title{
   font-size:var(--title);
@@ -251,9 +251,6 @@ body{
   padding:16px var(--pad-x) calc(24px + env(safe-area-inset-bottom, 0px));
   background:linear-gradient(to top,var(--screen-bg,var(--bg)) 72%,transparent);
   z-index:25;
-  width:100%;
-  max-width:var(--col);
-  margin:0 auto;
 }
 .field{
   width:100%;
@@ -3721,10 +3718,10 @@ button.list-item:active{ opacity: .6; }
    모바일: 목업 프레임과 데모 바를 걷어내고 앱이 브라우저 전체를 채운다. */
 @media (max-width:540px), (max-height:700px) and (pointer:coarse){
   body{padding:0;gap:0;background:var(--bg);height:auto;min-height:100dvh;overflow:visible;display:block;}
-  /* 실기기에서는 앱이 브라우저를 꽉 채운다 — 데스크톱용 폭 제한을 걷어낸다.
-     `body` 가 block 이라 제한을 남기면 좁은 태블릿에서 420px 로 잘려 왼쪽에 붙는다. */
-  #root{max-width:none;height:auto;min-height:100dvh;overflow:visible;}
-  #root > .app{overflow:visible;}
+  /* 실기기에서는 앱이 브라우저를 꽉 채운다 — 폭 제한만 걷는다.
+     **높이는 건드리지 않는다** — `.screen` 이 `position:absolute;inset:0` 이라
+     조상이 높이를 잃으면 화면이 0px 이 된다. 스크롤은 `.scroll` 이 맡는다. */
+  #root{max-width:none;}
   .brand-side{display:none;}
   .demo-dock{display:none;}
   .phone{width:100%;height:100dvh;transform:none;border-radius:0;box-shadow:none;margin:0;}
@@ -4284,8 +4281,18 @@ button.list-item:active{ opacity: .6; }
   transition:width .4s var(--ease), opacity .4s var(--ease);}
 #s-ob .slg.cuts .lgr .cv{width:72px;opacity:1;}
 #s-ob /* ---- 3단계: 성역 타일 그리드 ---- */
-.choice-box{padding-bottom:92px;align-items:flex-start;padding-top:4px;}
-#s-ob .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 12px;width:316px;}
+/* **넘치면 스크롤한다.** 개편안은 375×812 안에서 타일 15개가 딱 맞았지만, 화면이 낮거나
+   항목이 늘면 아래 줄이 잘려 **누를 수가 없다**(사용자 보고 2026-08-20). 바닥의 여백은
+   그 위에 떠 있는 CTA(높이 104px)를 피해 마지막 줄까지 닿게 하는 자리다. */
+.choice-box{align-items:flex-start;padding:4px var(--pad-x) calc(var(--cta-h) + 56px);
+  overflow-y:auto;pointer-events:auto;
+  scrollbar-width:none;-ms-overflow-style:none;}
+#s-ob .choice-box::-webkit-scrollbar{display:none;}
+#s-ob .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 12px;
+  /* 개편안은 375px 프레임 기준 316px 고정이고, 그 폭은 좌우 24px 여백을 뺀 327px 을
+     거의 채운다. 즉 원래도 '꽉 찬 폭'이었다 — 고정값으로 옮기면 열이 넓어질 때
+     타일만 가운데로 모여 제목과 선이 어긋난다. 여백은 `.choice-box` 가 준다. */
+  width:100%;}
 #s-ob .tile{display:flex;flex-direction:column;align-items:center;gap:6px;
   background:none;border:none;padding:0;cursor:pointer;font-family:inherit;
   opacity:0;transform:translateY(14px);
@@ -4302,8 +4309,8 @@ button.list-item:active{ opacity: .6; }
 #s-ob .tile .nm{font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap;}
 #s-ob /* ---- 4단계: 줄일 항목 카드 (피그마 319:2122 GoalRow) ----
    카드 343 · px16 py16 · radius16 · border 1px var(--line) / 선택 1.5px #00B173 · 간격 12 */
-.list-box{align-items:flex-start;overflow:hidden;}
-#s-ob .cards{width:100%;height:100%;overflow-y:auto;padding:4px 16px 100px;
+.list-box{align-items:flex-start;overflow:hidden;min-height:0;}
+#s-ob .cards{width:100%;height:100%;overflow-y:auto;padding:4px 16px calc(var(--cta-h) + 56px);
   display:flex;flex-direction:column;gap:12px;
   scrollbar-width:none;-ms-overflow-style:none;}
 #s-ob .cards::-webkit-scrollbar{display:none;}
@@ -4328,8 +4335,10 @@ button.list-item:active{ opacity: .6; }
 #s-ob .ccard .amt{font-size:15px;font-weight:500;line-height:1.5;color:var(--t1);
   letter-spacing:0;white-space:nowrap;flex:0 0 auto;}
 #s-ob /* ---- 5단계: 목표 설정 (피그마 319:2005 스펙) ---- */
-.goal-box{align-items:flex-start;overflow:hidden;}
-#s-ob .goal{width:100%;height:100%;overflow-y:auto;padding:4px 16px 100px;
+/* `min-height:0` 이 없으면 flex 자식(`.goal`)이 내용 높이 아래로 줄지 못해
+   상자가 넘치고, 넘친 만큼은 `overflow:hidden` 이라 **잘린 채 스크롤도 안 된다**. */
+.goal-box{align-items:flex-start;overflow:hidden;min-height:0;}
+#s-ob .goal{width:100%;height:100%;overflow-y:auto;padding:4px 16px calc(var(--cta-h) + 56px);
   scrollbar-width:none;-ms-overflow-style:none;
   opacity:0;transform:translateY(14px);
   transition:opacity .35s var(--ease), transform .35s var(--ease);}
@@ -4455,10 +4464,16 @@ button.list-item:active{ opacity: .6; }
    `::after` 로 넓히려 했더니 실측은 버튼의 실제 상자를 재므로 안 잡혔다(2026-08-20). */
 #s-ob .stepper{width:auto;gap:2px;}
 #s-ob .stepper button{position:relative;width:44px;height:44px;border:none;background:none;
-  display:flex;align-items:center;justify-content:center;}
+  display:flex;align-items:center;justify-content:center;
+  /* 쌓임 맥락을 버튼이 연다 — 아래 `::before` 의 z-index:-1 이 페이지 배경까지
+     내려가지 않고 이 버튼 안에서만 뒤로 간다. */
+  z-index:0;}
+/* **`z-index:-1` 이 없으면 글자가 사라진다.** `−`·`+` 는 요소가 아니라 **텍스트 노드**라
+   위치를 줄 수가 없고, 위치를 가진 `::before` 가 그 위에 흰 배경으로 덮어 버려
+   빈 동그라미만 남는다(사용자 보고 2026-08-20). 예전의 `button > *` 규칙은 요소 자식만
+   올리므로 텍스트에는 닿지 않았다. */
 #s-ob .stepper button::before{content:'';position:absolute;inset:6px;border-radius:12px;
-  border:1.5px solid var(--line);background:#fff;}
-#s-ob .stepper button > *{position:relative;}
+  border:1.5px solid var(--line);background:#fff;z-index:-1;}
 #s-ob .stepper button:active::before{background:var(--blue-weak);border-color:var(--blue);}
 #s-ob .stepper button:disabled::before{opacity:.45;}
 
