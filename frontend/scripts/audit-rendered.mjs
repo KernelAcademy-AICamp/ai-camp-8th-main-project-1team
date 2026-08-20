@@ -241,18 +241,34 @@ const PROBE = () => {
         .map((el) => `${el.tagName.toLowerCase()}.${el.className?.toString().slice(0, 24)}`)
     : [];
 
+  /* **화면이 실제로 그려졌는가.** 이 감사는 '위반 건수'를 세는데, 아무것도 안 그려진
+     화면에는 잴 것이 없어 위반 0건으로 통과한다 — 빈 화면이 가장 접근성 좋은 화면이
+     되는 셈이다. 실제로 그 구멍으로 사고가 났다(2026-08-20: `body` 가 flex 인데 폭을 가진
+     자식이 없어 541px 이상에서 앱이 0px 로 접혔고, 감사는 1280px 를 재고도 통과시켰다).
+     그래서 '위반이 없다'와 별개로 **살아 있다**를 따로 잰다. */
+  const app = document.querySelector('#root');
+  const screen = document.querySelector('.screen');
+  const liveness = {
+    rootW: app ? Math.round(app.getBoundingClientRect().width) : 0,
+    screenW: screen ? Math.round(screen.getBoundingClientRect().width) : 0,
+    visibleControls: controls.length,
+    visibleText: [...document.querySelectorAll('body *')]
+      .filter((el) => visible(el) && el.children.length === 0 && el.textContent.trim()).length,
+  };
+
   return {
     controls: controls.length,
     small, lowContrast, unnamed, unstyled,
     textLow, /* 자르지 않는다 — 12건으로 잘랐더니 오탐이 앞을 채워 진짜 위반이 가려졌다. */
     textLowCount: textLow.length,
     docW, innerW: window.innerWidth, overflowing,
+    liveness,
   };
 };
 
 // ── 실행 ────────────────────────────────────────────────────────────────
 const browser = await chromium.launch();
-const findings = { small: [], contrast: [], unnamed: [], overflow: [], focus: [], unstyled: [] };
+const findings = { small: [], contrast: [], unnamed: [], overflow: [], focus: [], unstyled: [], dead: [] };
 let pagesSeen = 0;
 const redirected = [];
 let controlsSeen = 0;
@@ -287,6 +303,12 @@ for (const vp of VIEWPORTS) {
     for (const u of r.unstyled) findings.unstyled.push({ where, ...u });
     for (const t of r.textLow) findings.contrast.push({ where, label: t.text, ...t });
     if (r.overflowing.length) findings.overflow.push({ where, docW: r.docW, innerW: r.innerW, who: r.overflowing });
+
+    /* 살아 있는가 — 위반 검사와 별개다. 여기서 걸리면 그 폭에서 화면이 통째로 안 보인다. */
+    const L = r.liveness;
+    if (L.rootW < 200 || L.screenW < 200 || (L.visibleControls === 0 && L.visibleText < 3)) {
+      findings.dead.push({ where, ...L });
+    }
 
     /* 6.1.2 — 실제로 Tab 을 눌러 초점 표시가 그려지는지 */
     if (vp.width === 375) {
@@ -368,6 +390,10 @@ const section = (title, rows, fmt) => {
 };
 
 let bad = 0;
+/* **맨 앞에 둔다.** 화면이 안 그려졌으면 아래 검사들은 잴 것이 없어 조용히 통과한다 —
+   그 침묵이 사고를 통과시켰다. 죽은 화면이 있으면 그것부터 읽혀야 한다. */
+bad += section('화면이 그려지지 않는다', findings.dead,
+  (r) => `#root ${r.rootW}px · .screen ${r.screenW}px · 보이는 조작 ${r.visibleControls} · 글자 ${r.visibleText}  [${r.where}]`);
 bad += section('6.1.3 조작 가능 44×44px', small,
   (r) => `${String(r.w).padStart(5)}×${String(r.h).padEnd(4)} ×${String(r.n).padEnd(4)} ${r.tag}.${r.cls}  "${r.label || '이름없음'}"  [${r.where}]`);
 bad += section('5.4.3 명도 대비', contrast,
