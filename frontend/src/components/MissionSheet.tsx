@@ -67,7 +67,8 @@ export function MissionSheet({ open, candidates, picked, reward, onClose, onConf
         ))}
 
         <button type="button" className="btn btn-primary"
-          style={{ padding: 16, fontSize: 15, marginTop: 20 }}
+          /* 0818: 버튼 높이를 --cta-h 로 통일했다 — 인라인 padding·font-size 를 걷어낸다. */
+          style={{ marginTop: 20 }}
           disabled={sel === null || busy}
           onClick={async () => {
             if (sel === null) return;

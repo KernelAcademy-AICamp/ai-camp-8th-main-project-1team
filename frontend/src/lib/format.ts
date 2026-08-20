@@ -44,28 +44,46 @@ export const DAYPART_ORDER = ['아침', '점심', '저녁', '심야'];
 export const FACTOR_ORDER = ['낭비', '집중', '변동', '심야충동'];
 
 /** 아이콘 → 배경색 토큰(목업 팔레트 그대로). */
+/**
+ * 아이콘 뒤에 까는 색. <b>프로토타입_0818 의 `CATS15` 값 그대로</b> — 카테고리를 색으로
+ * 알아보게 하려는 것이라, 여기가 어긋나면 온보딩·리포트·마이룸에서 같은 카테고리가
+ * 다른 색으로 보인다.
+ */
 export const ICON_BG: Record<string, string> = {
-  'i-food': 'var(--c-food)', 'i-cafe': 'var(--c-cafe)', 'i-taxi': 'var(--c-taxi)',
-  'i-cvs': 'var(--c-cvs)', 'i-shop': 'var(--c-shop)', 'i-ott': 'var(--c-ott)',
-  'i-heart': '#FFE9EC', 'i-book': '#FFF7E6', 'i-gift': '#FFF1E8',
-  'i-paw': '#F3EEFF', 'i-med': '#FDECEE', 'i-plane': '#E8F6FE', 'i-game': '#EEF0FF',
-  'i-card': '#E8F1FF', 'i-coin': '#FFF7E6', 'i-doc': '#EAF0F6',
+  'i-food': 'var(--c-food)', 'i-cafe': 'var(--c-cafe)', 'i-taxi': '#E8F1FF',
+  'i-cvs': 'var(--c-cvs)', 'i-shop': '#FCE7F0', 'i-ott': 'var(--c-ott)',
+  'i-flame': '#FFEFE6', 'i-heart': '#FDECF3', 'i-house': '#E9F7EF',
+  'i-mega': '#E9F7EF', 'i-home': '#F1F3F5', 'i-game': '#EFEAFE',
+  'i-book': '#FFF7E6', 'i-gift': '#FFF3E0',
+  'i-paw': '#F3EEFF', 'i-med': '#FDEBEB', 'i-plane': '#E8F3FF',
+  'i-card': '#E9F7EF', 'i-coin': '#FFF7E6', 'i-doc': '#EAF0F6',
   'i-dots': '#EEF1F4',
 };
 
-/** 카테고리 표시명 → 아이콘 id. 코드가 아니라 이름으로 고른다(세그먼트 비의존). */
+/**
+ * 카테고리 표시명 → 아이콘 id. 코드가 아니라 이름으로 고른다(세그먼트 비의존).
+ *
+ * <p><b>짝은 프로토타입_0818 의 `CATS15` 가 정본이다.</b> 예전에는 미용이 선물 상자,
+ * 편의점/잡화가 쇼핑백, 건강/피트니스가 하트, 취미/여가가 알약으로 나왔다 — 이름은 맞는데
+ * 그림이 딴 것을 가리키면 아이콘이 오히려 방해가 된다(2026-08-20 화면 실측).
+ */
 export function iconFor(name: string): string {
   const n = (name ?? '').replace(/\s/g, '');
   if (/배달|외식|음식|식비|분식|한식|중식|일식|양식/.test(n)) return 'i-food';
   if (/카페|간식|커피|디저트|베이커리/.test(n)) return 'i-cafe';
   if (/택시|교통|대중교통|주유|주차/.test(n)) return 'i-taxi';
-  if (/편의점|마트|생활|슈퍼/.test(n)) return 'i-cvs';
-  if (/쇼핑|의류|패션|잡화|온라인/.test(n)) return 'i-shop';
-  if (/보험|금융/.test(n)) return 'i-doc';      // 금융/보험 — 통신보다 먼저 본다('보험'이 '통신'에 안 걸리도록)
+  // **'잡화'는 편의점 쪽이다**(프로토타입_0818 CATS15: 편의점/잡화 = i-cvs). 쇼핑 규칙에 두면
+  // '편의점/잡화'가 쇼핑 아이콘을 달았다 — 두 이름이 겹칠 때는 앞 낱말이 정한다.
+  if (/편의점|마트|슈퍼|잡화/.test(n)) return 'i-cvs';
+  if (/생활/.test(n)) return 'i-house';         // 생활 — 대형마트(i-gift)와 가르려고 따로 둔다
+  if (/대형마트/.test(n)) return 'i-gift';
+  if (/쇼핑|의류|패션|온라인/.test(n)) return 'i-shop';
+  if (/보험|금융/.test(n)) return 'i-card';     // 금융/보험 — 통신보다 먼저 본다('보험'이 '통신'에 안 걸리도록)
+  if (/주거|월세|관리비/.test(n)) return 'i-home';
   if (/구독|OTT|스트리밍|통신/.test(n)) return 'i-ott';
-  if (/건강|운동|헬스|스포츠|피트니스/.test(n)) return 'i-heart';
-  if (/미용|헤어|네일|뷰티|화장/.test(n)) return 'i-gift';
-  if (/술|유흥|주점|호프|포차/.test(n)) return 'i-food';
+  if (/건강|운동|헬스|스포츠|피트니스/.test(n)) return 'i-flame';
+  if (/미용|헤어|네일|뷰티|화장/.test(n)) return 'i-heart';
+  if (/술|유흥|주점|호프|포차/.test(n)) return 'i-mega';
   if (/책|공부|교육|학원|도서/.test(n)) return 'i-book';
   if (/선물|가족|경조/.test(n)) return 'i-gift';
   if (/반려|펫|동물/.test(n)) return 'i-paw';

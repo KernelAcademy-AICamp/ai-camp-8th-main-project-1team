@@ -76,7 +76,7 @@ export function Collection() {
   }
 
   return (
-    <Screen title="도감">
+    <Screen id="collection" title="도감">
       <AppBar title="도감" onBack={back} steps={`${data.owned} / ${data.total} 수집`} />
       <Scroll>
         <div className="pad" style={{ paddingTop: 12 }}>

@@ -39,7 +39,7 @@ const CoinArt = () => (
 /** 카드 추천 배너의 카드 그림 — 개편안 원본 SVG. */
 const CardArt = () => (
   <svg width="56" height="48" viewBox="0 0 56 48" aria-hidden="true">
-    <rect x="18" y="6" width="30" height="40" rx="5" fill="#00B14F" />
+    <rect x="18" y="6" width="30" height="40" rx="5" fill="#00B173" />
     <rect x="14" y="10" width="30" height="40" rx="5" fill="#33C475" />
     <rect x="22" y="18" width="10" height="10" rx="2.5" fill="#fff" />
     <path d="M7 8l1.4 3L11.4 12.4l-3 1.4L7 16.8l-1.4-3-3-1.4 3-1.4z" fill="#FFC53D" />
@@ -89,7 +89,7 @@ export function Report() {
     })();
 
   return (
-    <Screen title="리포트" hasTabBar>
+    <Screen id="report" title="리포트" hasTabBar>
       <Scroll>
         {/* ── 주차 이동 ─────────────────────────────────────────────── */}
         <div className="rp-sec" style={{ paddingTop: 20 }}>
@@ -122,7 +122,7 @@ export function Report() {
               <b>아직 보여드릴 리포트가 없어요</b>
               <p>챌린지를 시작하면 그 주부터 쌓여요</p>
               <button type="button" className="btn btn-primary"
-                style={{ marginTop: 16 }} onClick={() => go('ob1')}>챌린지 시작하기</button>
+                style={{ marginTop: 16 }} onClick={() => go('ob')}>챌린지 시작하기</button>
             </div>
           </div>
         ) : (

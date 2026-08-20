@@ -70,13 +70,13 @@ export function Loading() {
    * (`moved` ref 는 재마운트에 리셋된다).
    */
   useEffect(() => {
-    if (ready && played && !moved.current) { moved.current = true; replace('ob1'); }
+    if (ready && played && !moved.current) { moved.current = true; replace('ob'); }
   }, [ready, played, replace]);
 
   const progress = error ? 1 : ((i + 1) / STEPS.length);
 
   return (
-    <Screen title="소비 분석 중">
+    <Screen id="loading" title="소비 분석 중">
       <div className="loadwrap">
         {/* 오류일 때는 훑는 시늉을 멈춘다 — 안 읽고 있는데 읽는 그림을 보이면 거짓말이다. */}
         {!error && <DocLoad />}
@@ -90,7 +90,7 @@ export function Loading() {
               </button>
               {/* 여기도 `replace` 다 — 분석에 실패한 화면으로 뒤로 돌아올 이유가 없고,
                   돌아오면 실패한 요청을 다시 던지게 된다. */}
-              <button type="button" className="btn btn-ghost" onClick={() => replace('ob1')}>그냥 진행</button>
+              <button type="button" className="btn btn-ghost" onClick={() => replace('ob')}>그냥 진행</button>
             </div>
           </div>
         ) : (

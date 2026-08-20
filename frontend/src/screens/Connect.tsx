@@ -82,6 +82,10 @@ export function Connect() {
     const n = new Set(p); const k = key(kind, id); n.has(k) ? n.delete(k) : n.add(k); return n;
   });
   const total = found.cards.length + found.banks.length;
+  /** 이름으로 가른다 — 제공자는 은행과 페이를 한 목록으로 준다. */
+  const isPay = (name: string) => /페이|pay/i.test(name);
+  const banksOnly = found.banks.filter((b) => !isPay(b.name));
+  const paysOnly = found.banks.filter((b) => isPay(b.name));
   const onCount = found.cards.filter((c) => isOn('c', c.id)).length
     + found.banks.filter((b) => isOn('b', b.id)).length;
 
@@ -122,7 +126,7 @@ export function Connect() {
   }
 
   return (
-    <Screen title="자산 연결">
+    <Screen id="connect" title="자산 연결">
       <AppBar onBack={back} title="자산 연결" />
       <ProgressBar value={stage === 'result' ? 0.44 : 0.36} />
 
@@ -173,7 +177,7 @@ export function Connect() {
         <>
           <Scroll><div className="pad">
             <p className="h-title">{total}곳을 찾았어요</p>
-            <p className="h-sub">모두 연결할수록 분석이 정확해져요. 빼고 싶은 곳만 눌러서 해제하세요.</p>
+            <p className="h-sub">모두 연결할수록 분석이 정확해져요.</p>
             <ErrorBox error={error} />
 
             {found.cards.length > 0 && (
@@ -187,11 +191,25 @@ export function Connect() {
                 </div>
               </>
             )}
-            {found.banks.length > 0 && (
+            {/* **은행과 페이를 가른다**(프로토타입_0818). 한 묶음이던 것을 나눈 이유는 고르는
+                기준이 다르기 때문이다 — 은행은 '내 계좌가 어디 있나'이고 페이는 '무엇으로
+                결제하나'다. 제공자는 둘을 한 목록으로 주므로 이름으로 가른다. */}
+            {banksOnly.length > 0 && (
               <>
-                <div className="label" style={{ marginTop: 24 }}>은행, 페이</div>
+                <div className="label" style={{ marginTop: 24 }}>은행</div>
                 <div className="card" style={{ padding: '4px 20px' }}>
-                  {found.banks.map((b) => (
+                  {banksOnly.map((b) => (
+                    <FoundRow key={b.id} name={b.name} on={isOn('b', b.id)}
+                      onToggle={() => toggleFound('b', b.id)} />
+                  ))}
+                </div>
+              </>
+            )}
+            {paysOnly.length > 0 && (
+              <>
+                <div className="label" style={{ marginTop: 24 }}>페이</div>
+                <div className="card" style={{ padding: '4px 20px' }}>
+                  {paysOnly.map((b) => (
                     <FoundRow key={b.id} name={b.name} on={isOn('b', b.id)}
                       onToggle={() => toggleFound('b', b.id)} />
                   ))}

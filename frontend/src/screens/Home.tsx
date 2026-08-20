@@ -25,12 +25,14 @@ export function Home() {
   // 알림함을 여기서 더 부르지 않는다 — 한마디는 `/home`이 완성해 주고, 안 읽은 건수도
   // 거기 실려 온다. 홈이 알림 목록까지 받아 오던 것은 문구를 뽑으려던 것뿐이었다.
   const payments = useAsync(() => api.allPayments(userId, 6).catch(() => []), [userId]);
+  /** 전월 대비를 세려고 월별 지출을 받는다 — 실패해도 그 줄만 빠지고 화면은 산다. */
+  const report = useAsync(() => api.report(userId).catch(() => null), [userId]);
 
   const recent = [...(payments.data ?? [])].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
 
   if (loading && !home) {
     return (
-      <Screen title="홈" hasTabBar>
+      <Screen id="home" title="홈" hasTabBar>
         <div className="pad" style={{ paddingTop: 24 }}><Loading label="지킴이 상태를 불러오는 중" rows={6} /></div>
       </Screen>
     );
@@ -39,7 +41,7 @@ export function Home() {
   // 진행 중인 챌린지가 없다 — 오류가 아니라 "이번 달을 아직 안 정했다"는 정상 상태다(IA MO-01).
   if (!home) {
     return (
-      <Screen title="홈" hasTabBar>
+      <Screen id="home" title="홈" hasTabBar>
         <Scroll><div className="pad" style={{ paddingTop: 20 }}>
           <p style={{ fontSize: 21, fontWeight: 800, margin: '0 0 14px' }}>지킴이</p>
           <ErrorBox error={error} onRetry={() => void reload()} />
@@ -95,8 +97,38 @@ export function Home() {
   const message = home.oneline?.text
     ?? `${ch.categoryLabel} 결제를 지켜보고 있어요. 예산 안에서는 조용히 있을게요.`;
 
+  /**
+   * 전월 대비 — <b>같은 날짜까지로 견준다</b>(0818 신설 `.mom-row`).
+   *
+   * <p>이번 달은 아직 진행 중이라 지난 달 전체와 그냥 비교하면 <b>매달 초에 "많이 아꼈다"가
+   * 뜬다.</b> 지난 달을 오늘과 같은 날짜까지로 잘라 견준다 — 달마다 길이가 달라 일수 비율로
+   * 자른다.
+   *
+   * <p>부호의 뜻: 지난 달보다 <b>덜 썼으면</b> 그만큼 지킨 것이다(양수 = 늘었어요).
+   * 지난 달 자료가 없으면 이 줄은 안 나온다 — 없는 비교를 지어내지 않는다.
+   */
+  const momDiff = (() => {
+    const spendByMonth = report.data?.monthlySpend;
+    if (!spendByMonth) return null;
+    const now = new Date();
+    const key = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const thisSpend = spendByMonth[key(now)];
+    const prevSpend = spendByMonth[key(prev)];
+    if (prevSpend == null || thisSpend == null) return null;
+    const daysInPrev = new Date(prev.getFullYear(), prev.getMonth() + 1, 0).getDate();
+    const prorated = prevSpend * Math.min(1, now.getDate() / daysInPrev);
+    return Math.round(prorated - thisSpend);
+  })();
+
+  /**
+   * 지킴이 한마디 — 0818 에서 히어로 꼬리말이 아니라 독립 카드가 됐다.
+   * 서버가 준 한마디를 그대로 쓴다(같은 문장을 두 곳에서 만들지 않는다).
+   */
+  const tipLine = message;
+
   return (
-    <Screen title="홈" hasTabBar>
+    <Screen id="home" title="홈" hasTabBar>
       <Scroll>
         <div className="pad" style={{ paddingTop: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -123,63 +155,82 @@ export function Home() {
           )}
 
 
-          {/* 히어로 (개편안 `.hero-top`/`.hero-mid`) — 지킨 금액이 크게, 방어율은 반원 게이지로.
-              '달성률'이라 부르지 않는다. 이 값은 `확보 절약액 ÷ 지킬 돈`이라 시간 축이 없어
-              한 푼도 안 쓴 첫날에도 100%다 — 완주한 것처럼 읽히지 않게 '방어율'로 적고
-              며칠째인지를 D-day로 옆에 둔다.
+          {/* 히어로 (프로토타입_0818 `.hero-mid` + `.hring` + `.mom-row`) — 지킨 금액이 크게,
+              방어율은 <b>원형 링</b>으로.
 
-              게이지 길이는 개편안의 계산을 그대로 쓴다: 반원 호의 길이가 144.5라
-              `stroke-dashoffset = 144.5 × (1 − 비율)`이면 채운 만큼만 보인다. */}
+              <b>0818 에서 반원 게이지가 원형 링으로 바뀌었다.</b> 반원은 오른쪽 절반이 늘 비어
+              보여 "덜 찼다"는 인상을 주는데, 이 값은 첫날에도 100%가 될 수 있는 비율이라
+              그 인상이 사실과 어긋났다. 원은 채운 만큼만 말한다.
+
+              길이 계산은 반지름 37 원둘레 = 2π×37 ≈ 232.5. `strokeDashoffset = 232.5 × (1 − 비율)`
+              이면 채운 만큼만 보이고, `rotate(-90)` 로 12시부터 시계방향으로 찬다.
+
+              '달성률'이라 부르지 않는다 — `확보 절약액 ÷ 지킬 돈`이라 시간 축이 없어 한 푼도
+              안 쓴 첫날에도 100%다. 완주한 것처럼 읽히지 않게 '방어율'로 적고 며칠째인지를
+              D-day 로 옆에 둔다. */}
           <div className="hero">
             <div className="hero-top">
               <div className="cap">이번 달 지킨 돈</div>
               <div className="dday">{ch.daysLeft > 0 ? `D-${ch.daysLeft}` : '마지막 날'}</div>
             </div>
             <div className="hero-mid">
-              <div style={{ minWidth: 0 }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
                 <div className="keep">{won(ch.securedSaving).replace('원', '')}<em>원</em></div>
                 <div className="sub">목표 {won(ch.targetSaving)}</div>
               </div>
-              <div className="gauge">
-                <svg viewBox="0 0 105 60" aria-hidden="true">
-                  <path className="gtrack" d="M6.5 52.5 A46 46 0 0 1 98.5 52.5" />
-                  <path
-                    className="gfill"
-                    d="M6.5 52.5 A46 46 0 0 1 98.5 52.5"
-                    style={{ strokeDashoffset: (144.5 * (1 - Math.min(100, defense) / 100)).toFixed(1) }}
-                  />
+              <div className="hring">
+                <svg viewBox="0 0 88 88" aria-hidden="true">
+                  <circle cx="44" cy="44" r="37" fill="none" stroke="#EFF1F3" strokeWidth="9" />
+                  <circle cx="44" cy="44" r="37" fill="none" stroke="var(--blue)" strokeWidth="9"
+                    strokeLinecap="round" strokeDasharray="232.5"
+                    strokeDashoffset={(232.5 * (1 - Math.min(100, defense) / 100)).toFixed(1)}
+                    transform="rotate(-90 44 44)"
+                    style={{ transition: 'stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1)' }} />
                 </svg>
-                <div className="gval"><b>{defense}%</b><small>방어율</small></div>
+                <div className="hval"><b>{defense}%</b><small>방어율</small></div>
               </div>
             </div>
-            <div className="hero-tip">
-              {ch.daysElapsed}/{ch.daysTotal}일째 · {strip.remainingCapLabel}
+            {/* 같은 카드 안, 옅은 선 아래 한 줄 — <b>지난 달과의 차이</b>(0818 신설).
+                절대액만 보이면 "이게 잘한 건가"를 알 수 없다. 견줄 것이 있어야 뜻이 생긴다. */}
+            {momDiff !== null && <>
+            <div className="hero-div" />
+            <div className="mom-row">
+              {momDiff === 0 ? (
+                <span>지난 달과 비슷해요</span>
+              ) : (
+                <>
+                  <svg viewBox="0 0 10 8" className={momDiff > 0 ? 'up' : 'up down'} aria-hidden="true">
+                    <path d={momDiff > 0 ? 'M5 1 L9.2 7 L0.8 7 Z' : 'M5 7 L0.8 1 L9.2 1 Z'}
+                      fill={momDiff > 0 ? 'var(--blue)' : 'var(--t3)'} />
+                  </svg>
+                  <b>{won(Math.abs(momDiff))}</b>
+                  <span>지난 달보다 {momDiff > 0 ? '늘었어요' : '줄었어요'}</span>
+                </>
+              )}
             </div>
+            </>}
           </div>
 
-          {/* 마이룸 진입 카드 (개편안 `.strip` + `.mr-tx`/`.mr-art`).
-              예전에는 아이콘 한 줄짜리 스트립이었는데, 방을 꾸미는 곳인데도 무엇이 기다리는지
-              보이지 않아 그냥 지나가는 줄이 됐다. 개편안대로 방 그림을 얹는다. */}
+          {/* 지킴이 한마디 — 0818 에서 히어로 안의 꼬리말이 아니라 <b>독립 카드</b>가 됐다.
+              히어로는 숫자를 말하는 자리고 이건 사람에게 거는 말이라, 같은 상자에 있으면
+              둘 다 흐려진다. */}
+          <div className="tip-card">
+            <Icon id="i-cat" className="cat" size={20} />
+            <span>{tipLine}</span>
+          </div>
+
+          {/* 마이룸 진입 카드 (프로토타입_0818 `.strip` + `.mr-tx`/`.mr-art`).
+              <b>0818 에서 연속일·포인트 줄이 빠졌다.</b> 카드 높이가 100px 로 고정이고 글이 세로
+              가운데 오는 구성이라, 한 줄을 더 얹으면 제목이 잘린다(실측으로 그렇게 잘렸다).
+              그 숫자는 사라진 것이 아니라 <b>마이룸 안</b>에 있다 — 방에 들어가면 연속일과
+              꾸미기 포인트가 큰 글씨로 서 있다. */}
           <button type="button" className="strip mr" onClick={() => go('myroom')}>
             <div className="mr-tx">
               <b>마이룸</b>
               <p>포인트를 모아서 나만의<br />방을 꾸며보세요</p>
             </div>
             <img className="mr-art" alt="" aria-hidden="true" src="/room/myroom-preview.png" />
-            <span className="mr-meta">
-              <span className="fire"><Icon id="i-flame" className="" size={14} /> {strip.grassStreak}일</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <Icon id="i-coin" className="" size={14} /> {strip.pointBalance}P
-              </span>
-              {strip.unopenedCeremony && <span className="dot-new" aria-label="새 소식" />}
-            </span>
           </button>
-
-          {/* 지킴이 말풍선 */}
-          <div className="guardian">
-            <Orb size={34} />
-            <div className="msg"><b>지킴이</b><p>{message}</p></div>
-          </div>
 
           {/* 분류를 되물은 결제가 있으면 여기서 알린다(C7) */}
           {strip.pendingCount > 0 && (

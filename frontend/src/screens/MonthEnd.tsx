@@ -31,7 +31,7 @@ export function MonthEnd() {
   const days = home?.challenge?.daysTotal ?? null;
 
   return (
-    <Screen title="한 달 완료" background="linear-gradient(160deg,#E7F4DC,#FFFFFF)">
+    <Screen id="over" title="한 달 완료" background="linear-gradient(160deg,#E7F4DC,#FFFFFF)">
       {CONFETTI.map((s, i) => (
         <div className="confetti" key={i} style={s} />
       ))}

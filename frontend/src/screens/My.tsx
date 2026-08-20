@@ -44,7 +44,7 @@ export function My() {
   const catSkin = skins.data?.find((s) => s.selected)?.key ?? 'cat';
 
   return (
-    <Screen title="마이" hasTabBar>
+    <Screen id="my" title="마이" hasTabBar>
       <Scroll><div className="pad" style={{ paddingTop: 20 }}>
         <p style={{ fontSize: 22, fontWeight: 700, margin: '0 0 10px' }}>마이</p>
 
@@ -103,7 +103,7 @@ export function My() {
             );
           })}
           {!ch && <p className="empty" style={{ margin: '8px 0' }}>아직 챌린지가 없어요.</p>}
-          <button type="button" className="list-item" onClick={() => go(ch ? 'm-challenge-new' : 'ob1')}>
+          <button type="button" className="list-item" onClick={() => go(ch ? 'm-challenge-new' : 'ob')}>
             <span className="ic" style={{ background: 'var(--blue-weak)', color: 'var(--blue-t)',
               fontSize: 20, fontWeight: 700 }} aria-hidden="true">＋</span>
             <div className="tx"><b style={{ color: 'var(--blue-t)' }}>새 챌린지 만들기</b></div>

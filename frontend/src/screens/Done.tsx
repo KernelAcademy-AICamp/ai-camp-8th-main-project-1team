@@ -1,74 +1,55 @@
 /**
- * ON-03 온보딩 완료·첫 챕터. 서버가 만들어준 챌린지 값으로 응원 문구를 띄운다.
+ * 온보딩 완료 (프로토타입_0818 `s-obdone`).
  *
- * 자동으로 홈에 넘어가는 화면이므로 **시간 제한이 있는 콘텐츠**다. 그래서 세 가지를 함께 둔다
- * (KWCAG 2.2 검사항목 14 응답시간 조절 · KS X 3253 6.3):
- *   ① 남은 시간을 미리 알린다  ② 지금 넘어가는 버튼  ③ 자동 전환을 멈추는 버튼
- * 셋 중 하나라도 빠지면 화면을 다 읽기 전에 넘어가 버리는 사용자가 생긴다.
+ * <p><b>0818 개편으로 조용해졌다.</b> 예전에는 지킴이 오브·목표 금액·자동 이동 카운트다운이
+ * 함께 있었다. 지금은 <b>체크 하나와 두 줄</b>이다 — 방금 다섯 걸음을 밟고 온 사람에게
+ * 읽을 것을 더 주는 대신 "끝났다"만 분명히 말한다.
+ *
+ * <p><b>자동 이동을 없앴다</b>(디자인). 그래서 시간 제한 콘텐츠가 아니게 되었고,
+ * KWCAG 2.2 응답시간 조절의 대상에서도 벗어난다 — 예전에 남은 시간·멈춤 버튼을 함께 두던
+ * 이유가 자동 전환이었는데, 그 전환 자체가 사라졌다. 홈으로 가는 것은 사람이 정한다.
+ *
+ * <p>연출은 세 박자다: 원이 튀어 오르고(.5초, 살짝 넘겼다 돌아오는 곡선) → 체크가 그려지고
+ * (.35초) → 글이 차례로 떠오른다(.35초·.5초 지연). <b>순서가 곧 문장</b>이라 한꺼번에
+ * 띄우지 않는다.
  */
-import { useEffect, useRef, useState } from 'react';
-import { Orb, Screen } from '../components/ui';
+import { useEffect, useState } from 'react';
+import { Screen, Cta } from '../components/ui';
 import { useSession } from '../state/session';
-import { useGuardian } from '../state/guardian';
-import { won } from '../lib/format';
-
-const AUTO_SECONDS = 5;
 
 export function Done() {
   const { replace } = useSession();
-  const { home } = useGuardian();
-  const [left, setLeft] = useState(AUTO_SECONDS);
-  const [paused, setPaused] = useState(false);
-  const moved = useRef(false);
-
-  /**
-   * 홈으로. **이력에 남기지 않는다**(`replace`) — 온보딩 완료 화면은 되돌아올 자리가 아니고,
-   * 남겨 두면 홈에서 뒤로 누른 사람이 여기 도착했다가 5초 뒤 다시 홈으로 밀린다
-   * (`moved` ref 는 재마운트에 리셋된다).
-   */
-  const goHome = () => { moved.current = true; replace('home'); };
-
-  // 이동은 effect에서 한다 — setState 갱신 함수 안에서 화면을 옮기면
-  // StrictMode가 갱신 함수를 두 번 부를 때 이동도 두 번 일어난다.
+  /** 마운트 직후 한 박자 뒤에 연출을 켠다 — 첫 페인트에 이미 켜져 있으면 전환이 안 보인다. */
+  const [shown, setShown] = useState(false);
   useEffect(() => {
-    if (paused) return;
-    if (left <= 0) {
-      if (!moved.current) { moved.current = true; replace('home'); }
-      return;
-    }
-    const t = window.setTimeout(() => setLeft((n) => n - 1), 1000);
+    const t = window.setTimeout(() => setShown(true), 60);
     return () => window.clearTimeout(t);
-  }, [paused, left, replace]);
-
-  const target = home?.challenge.targetSaving ?? 0;
-  const days = home?.challenge.daysTotal ?? 30;
-  const label = home?.challenge.categoryLabel;
+  }, []);
 
   return (
-    <Screen title="챌린지 시작" background="linear-gradient(160deg,#EAF2FF,#F2F4F6)">
-      <div className="done-hero">
-        <Orb size={84} bob />
-        <p style={{ fontSize: 23, fontWeight: 800, margin: 0 }}>{days}일의 길이 시작됐어요</p>
-        <p style={{ fontSize: 15, color: 'var(--t2)', lineHeight: 1.6, margin: 0 }}>
-          {target > 0 ? (
-            <>이번 챌린지 <b style={{ color: 'var(--blue-t)' }}>{won(target)}</b>, 지킴이와 함께 지켜봐요.<br /></>
-          ) : null}
-          {label && <>{label}부터 같이 볼게요 · </>}무리 안 하게 옆에서 챙길게요 💪
-        </p>
+    <Screen id="obdone" title="첫 챌린지가 시작됐어요">
+      <div className="scroll" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className={`od-wrap${shown ? ' in' : ''}`}>
+          <div className="od-check" aria-hidden="true">
+            <svg viewBox="0 0 96 96">
+              <circle cx="48" cy="48" r="44" fill="var(--blue)" />
+              {/* 획 길이만큼 점선 간격을 주고 오프셋을 0으로 옮겨 '그려지는' 것처럼 보이게 한다. */}
+              <path className="tick" d="M30 49 L43 62 L67 37" stroke="#fff" strokeWidth="7"
+                fill="none" strokeLinecap="round" strokeLinejoin="round"
+                strokeDasharray="60" strokeDashoffset="60" />
+            </svg>
+          </div>
+          <h3>첫 챌린지가 시작됐어요</h3>
+          <p>지킴이와 하루씩 지켜가요</p>
+        </div>
       </div>
-
-      <div className="pad" style={{ paddingBottom: 40 }}>
-        <p className="empty" style={{ textAlign: 'center' }} role="status">
-          {paused ? '자동 이동을 멈췄어요. 준비되면 아래 버튼을 눌러주세요.' : `${left}초 뒤 홈으로 이동해요.`}
-        </p>
-        <button type="button" className="btn btn-primary" onClick={goHome}>홈으로</button>
-        {!paused && (
-          <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', marginTop: 8 }}
-            onClick={() => setPaused(true)}>
-            자동 이동 멈추기
-          </button>
-        )}
-      </div>
+      <Cta>
+        {/* `replace` 다 — 완료 화면은 되돌아올 자리가 아니다. 남겨 두면 홈에서 뒤로 눌렀을 때
+            이미 끝난 축하가 다시 뜬다(`state/session.tsx` 의 `replace` 주석). */}
+        <button type="button" className="btn btn-primary" onClick={() => replace('home')}>
+          홈으로 가기
+        </button>
+      </Cta>
     </Screen>
   );
 }

@@ -43,7 +43,7 @@ export function Boot() {
   return (
     // 브랜드 면이라 화면 전체가 초록이다. Screen 을 쓰지 않는 유일한 화면 —
     // 앱바도 탭바도 없고 배경이 본문 색과 다르다.
-    <section className={`screen boot${leaving ? ' out' : ''}`} onClick={leave}
+    <section id="s-boot" className={`screen boot${leaving ? ' out' : ''}`} onClick={leave}
       aria-label="MOA 시작 화면">
       <div className="boot-wrap">
         <div className="boot-cap">내 소비를 지켜주는</div>

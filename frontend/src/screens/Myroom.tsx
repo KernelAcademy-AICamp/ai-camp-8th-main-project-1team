@@ -234,7 +234,7 @@ export function Myroom() {
 
   if (loading && !home) {
     return (
-      <Screen title="마이룸" hasTabBar>
+      <Screen id="myroom" title="마이룸" hasTabBar>
         <AppBar onBack={back} title="마이룸" />
         <div className="pad"><Loading label="마이룸을 불러오는 중" rows={6} /></div>
       </Screen>
@@ -243,7 +243,7 @@ export function Myroom() {
   // 챌린지가 없으면 방도 아직 비어 있다 — 오류가 아니라 시작 전 상태다.
   if (!home) {
     return (
-      <Screen title="마이룸" hasTabBar>
+      <Screen id="myroom" title="마이룸" hasTabBar>
         <AppBar onBack={back} title="마이룸" />
         <div className="pad">
           <ErrorBox error={error} onRetry={() => void reload()} />
@@ -285,7 +285,7 @@ export function Myroom() {
     : 0;
 
   return (
-    <Screen title="마이룸" hasTabBar>
+    <Screen id="myroom" title="마이룸" hasTabBar>
       {/* 개편안은 앱바 대신 씬 위에 뜨는 두 버튼을 쓴다 — 방을 가리지 않으려는 배치다. */}
       {/* 뒤로 버튼은 **pop 이어야 한다**(`back`). `go('home')` 이면 마이룸↔상점을 오갈 때마다
           이력이 한 칸씩 쌓여, 왕복 세 번 뒤엔 뒤로가기로 앞 화면에 닿는 데 여섯 번이 필요해진다. */}
