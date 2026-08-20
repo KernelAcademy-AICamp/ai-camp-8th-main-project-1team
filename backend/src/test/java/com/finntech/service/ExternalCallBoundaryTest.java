@@ -170,7 +170,7 @@ class ExternalCallBoundaryTest {
         var service = new MerchantAskService(payments, mock(ConsumptionRepository.class),
                 mock(CategoryRepository.class), dictionary, classifier,
                 mock(TempClassifierService.class), java.time.Clock.systemDefaultZone(),
-                TestServices.selfOf(self));
+                TestServices.selfOf(self), 1000);
         self.set(service);
         return service;
     }
@@ -206,7 +206,7 @@ class ExternalCallBoundaryTest {
         var self = new java.util.concurrent.atomic.AtomicReference<MerchantAskService>();
         var service = new MerchantAskService(payments, mock(ConsumptionRepository.class),
                 mock(CategoryRepository.class), dictionary, classifier, temporary,
-                java.time.Clock.systemDefaultZone(), TestServices.selfOf(self));
+                java.time.Clock.systemDefaultZone(), TestServices.selfOf(self), 1000);
         self.set(service);
 
         Thread first = new Thread(() -> service.ask(24L, 1));

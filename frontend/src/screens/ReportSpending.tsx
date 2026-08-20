@@ -45,7 +45,7 @@ export function ReportSpending() {
   }, [report.data]);
 
   return (
-    <Screen title="카테고리별 소비" hasTabBar>
+    <Screen id="spend" title="카테고리별 소비" hasTabBar>
       <AppBar onBack={back} title="카테고리별 소비" />
       <Scroll><div className="pad" style={{ paddingTop: 12 }}>
         <ErrorBox error={report.error} onRetry={report.reload} />

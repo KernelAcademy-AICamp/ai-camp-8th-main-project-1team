@@ -163,7 +163,8 @@ export function WeekChart({ mode, onMode, days, trend, lead }: {
 
   return (
     <div className="cmp">
-      <div className="cmp-tabs" role="tablist">
+      {/* 0818: 붙은 세그먼트가 아니라 **떨어진 칩**(`fchip`) — 상점·꾸미기와 같은 모양이다. */}
+      <div className="fchip" role="tablist">
         {(['요일별', '주별'] as const).map((t, i) => (
           <button type="button" key={t} role="tab" aria-selected={mode === i}
             className={mode === i ? 'on' : undefined} onClick={() => onMode(i as 0 | 1)}>{t}</button>

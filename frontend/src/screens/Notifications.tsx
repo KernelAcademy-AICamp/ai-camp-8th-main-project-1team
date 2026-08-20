@@ -156,7 +156,7 @@ export function Notifications() {
   }
 
   return (
-    <Screen title="알림">
+    <Screen id="notify" title="알림">
       <AppBar title="알림" onBack={back} />
       <Scroll><div className="pad" style={{ paddingTop: 8 }}>
         {notes.loading && <Loading label="알림을 불러오는 중" rows={3} />}

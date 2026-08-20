@@ -7,7 +7,7 @@ import { AppBar, Scroll, Screen, ErrorBox, Loading, Empty } from '../components/
 import { useSession } from '../state/session';
 import { useAsync } from '../state/useAsync';
 import { api, catLabel, type MyPayment } from '../lib/api';
-import { won, man, shortDate, inkOn } from '../lib/format';
+import { won, man, shortDate, deepen } from '../lib/format';
 
 export function ReportCards() {
   const { back, userId, go } = useSession();
@@ -56,7 +56,9 @@ export function ReportCards() {
               return (
                 <div className="card" key={c.serialNumber} style={{ padding: 16 }}>
                   {/* 글자색은 카드 색의 밝기가 정한다 — 노란 카드에 흰 글자면 1.69:1 이다. */}
-                  <div className="mc-face" style={{ background: c.cardColor || 'var(--blue-dark)', color: inkOn(c.cardColor) }}>
+                  <div className="mc-face" /* 흰 글자를 얹으므로 바닥을 눌러 준다 — 중간 밝기 브랜드색(하나카드 청록)은
+                       흰 글자가 3.86:1 이었다(브라우저 실측). 색상은 그대로 두고 명도만 내린다. */
+                    style={{ background: deepen(c.cardColor), color: '#fff' }}>
                     <span className="co">{c.companyName}</span>
                     <span className="nm">{c.cardName}</span>
                     <span className="sn">{c.serialNumber}</span>

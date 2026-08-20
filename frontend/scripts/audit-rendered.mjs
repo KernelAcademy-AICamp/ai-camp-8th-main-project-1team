@@ -52,10 +52,15 @@ const ROUTES = (() => {
 /** 온보딩을 통과한 상태로 만든다 — 안 하면 잠긴 화면이 전부 홈으로 튕긴다.
     `addInitScript` 로 **앱 스크립트보다 먼저** 심어야 한다. 페이지를 연 뒤에 심었더니
     `linked` 가 첫 마운트에서 이미 false 로 굳어 33개 화면 중 30개가 스플래시만 보였다. */
-const SEED_SESSION = () => {
+const SEED_SESSION = ([uid, token]) => {
   localStorage.setItem('mydata_onboarded', 'true');
-  localStorage.setItem('demo_user_id', '1');
+  localStorage.setItem('demo_user_id', uid);
+  /* **토큰까지 심는다.** 없으면 모든 요청이 401 이라 화면이 전부 스플래시로 튕기고,
+     그러면 33개 화면 중 하나만 재고서 "위반 0건"이 나온다 — 검사기가 검사 대상을 잃는
+     가장 조용한 실패다(2026-08-20 실측: 168건이 튕겼다). */
+  if (token) localStorage.setItem('auth_token', token);
 };
+const SESSION = [process.env.USER_ID ?? '1', process.env.AUTH_TOKEN ?? ''];
 
 // ── 브라우저 안에서 도는 측정기 ────────────────────────────────────────────
 const PROBE = () => {
@@ -254,7 +259,7 @@ let controlsSeen = 0;
 
 for (const vp of VIEWPORTS) {
   const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
-  await ctx.addInitScript(SEED_SESSION);
+  await ctx.addInitScript(SEED_SESSION, SESSION);
   const page = await ctx.newPage();
   page.on('pageerror', () => {});
 

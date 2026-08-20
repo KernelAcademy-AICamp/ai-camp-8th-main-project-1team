@@ -569,6 +569,16 @@ export interface CutSelection {
 }
 export interface Narrative { text: string; source: string }
 
+/** 또래 비교 — 같은 나이대의 <b>중앙값</b>과 내 지출. 평균이 아닌 이유는 서버 쪽에 적었다. */
+export interface PeerCompare {
+  mine: number;
+  peer: number;
+  ageFrom: number;
+  ageTo: number;
+  sampleSize: number;
+  days: number;
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    지킴이 Agent (§/api/guardian) — 설계서 06_지킴이_Agent_설계.md
    ══════════════════════════════════════════════════════════════════════ */
@@ -1115,6 +1125,12 @@ export const api = {
   alerts: (userId: number) => get<AlertResponse>(`/api/alert/list?userId=${userId}`),
   rescan: (userId: number) => post<unknown>(`/api/alert/rescan?userId=${userId}`),
   report: (userId: number) => get<ReportResponse>(`/api/report/monthly?userId=${userId}`),
+  /**
+   * 또래 비교 — 견줄 수 없으면 서버가 <b>204</b> 를 준다(출생연도 미상·표본 부족).
+   * 그때는 `null` 이 되어 화면이 그 절을 통째로 감춘다 — 없는 비교를 지어내지 않는다.
+   */
+  peerCompare: (userId: number, days = 30) =>
+    get<PeerCompare | null>(`/api/report/peer?userId=${userId}&days=${days}`),
   /**
    * 온보딩이 보는 **하나의 창**(기본 최근 30일). 카테고리 금액·결제 목록·ML 낭비 판정이
    * 전부 같은 구간에서 나오므로, 화면 금액과 서버 기준 지출이 어긋나지 않는다.

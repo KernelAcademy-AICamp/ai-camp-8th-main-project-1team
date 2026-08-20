@@ -277,7 +277,7 @@ export function Transactions() {
 
        동기화 버튼은 두지 않는다 — 개편안에 없고, 진입할 때마다 조용히 당겨오고 있다
        (`autoSyncMyData`). 손으로 누를 자리를 두면 "눌러야 최신"으로 읽힌다. */
-    <Screen title="소비 내역" hasTabBar background="var(--card)" className="sp-white">
+    <Screen id="spend" title="소비 내역" hasTabBar background="var(--card)" className="sp-white">
       {query === null ? (
         <AppBar onBack={back} title="소비 내역" />
       ) : (

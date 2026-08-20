@@ -45,6 +45,8 @@ public class GuardianService {
     private final DailyVerdictRepository verdictRepository;
     private final GuardianRewardService rewardService;
     private final GuardianNarrative narrative;
+    /** 문장은 뒤에서 채운다 — 화면이 LLM 을 기다리지 않게(`deliver` 주석). */
+    private final GuardianSentenceQueue sentences;
     private final GuardianClock clock;
     private final GuardianCatalog catalog;
     /** 사용자가 정한 말수 상한을 읽으려고 둔다 — 사람마다 다른 값은 설정 파일에 못 둔다. */
@@ -72,7 +74,9 @@ public class GuardianService {
                            com.finntech.repository.UserMerchantStanceRepository stanceRepository,
                            GuardianChallengeCategoryRepository challengeCategoryRepository,
                            GuardianCatalog catalog,
-                           com.finntech.repository.AppUserRepository userRepository) {
+                           com.finntech.repository.AppUserRepository userRepository,
+                           GuardianSentenceQueue sentences) {
+        this.sentences = sentences;
         this.catalog = catalog;
         this.userRepository = userRepository;
         this.challengeRepository = challengeRepository;
@@ -685,16 +689,36 @@ public class GuardianService {
 
         Map<String, Object> numbers = numbersFor(ch, tx, snap, today);
         if (extras != null) numbers.putAll(extras);
-        GuardianNarrative.Message msg = narrative.compose(
-                decision.caseId(), decision.tone(), decision.phrasingMode(),
-                numbers, recentKeyPhrases(ch.getId(), now), false,
-                userRepository.existsByIdAndRealPersonTrue(ch.getUserId()));
+        List<String> recent = recentKeyPhrases(ch.getId(), now);
+        boolean allowAi = userRepository.existsByIdAndRealPersonTrue(ch.getUserId());
 
-        return notificationRepository.save(GuardianNotification.spoken(
+        /*
+         * **문장을 여기서 기다리지 않는다.**
+         *
+         * 예전에는 이 자리에서 Gemini 를 불러 응답이 온 뒤에야 알림을 저장했다. 그 호출은
+         * 건당 최대 11초이고(`GuardianNarrative`: 연결 3초 + 읽기 8초), `syncFromMyData` 가
+         * 새 결제마다 이 메서드를 부른다 — 발화 대상 다섯 건이면 **홈에 들어가는 데 55초**다.
+         * 게다가 이 메서드는 `@Transactional` 안이라 그동안 DB 커넥션까지 묶였다.
+         *
+         * 이제 규칙이 만든 **템플릿 문장으로 먼저 저장**하고(`GuardianCopy.fallback`),
+         * 모델 문장은 뒤에서 받아 그 알림을 갈아 끼운다(`GuardianSentenceQueue`).
+         * 같은 저장소의 `NarrativeCacheService` 가 화면 문장에 쓰던 규율과 같다 —
+         * 화면은 절대 LLM 을 안 기다리고, 못 받으면 템플릿이 그대로 남는다.
+         */
+        GuardianNarrative.Message template = narrative.template(decision.caseId(), numbers);
+        GuardianNotification saved = notificationRepository.save(GuardianNotification.spoken(
                 ch.getUserId(), ch.getId(), txId, decision.caseId(),
                 decision.tone(), decision.phrasingMode(), DeliveryKind.PUSH,
-                msg.title(), msg.body(), GuardianRules.stripFixedPhrases(msg.keyPhrases()),
-                msg.fallback(), GuardianCopy.PROMPT_VERSION, now));
+                template.title(), template.body(),
+                GuardianRules.stripFixedPhrases(template.keyPhrases()),
+                true, GuardianCopy.PROMPT_VERSION, now));
+
+        /* **커밋 뒤에 올린다.** 지금 올리면 일꾼이 아직 커밋 안 된 알림을 찾으러 가서 못 찾는다.
+           트랜잭션 밖에서 불렸으면(시험 등) 곧바로 올린다. */
+        sentences.submitAfterCommit(new GuardianSentenceQueue.Job(
+                saved.getId(), decision.caseId(), decision.tone(), decision.phrasingMode(),
+                numbers, recent, allowAi));
+        return saved;
     }
 
     /** 문장에 넣을 값 — 전부 이미 계산이 끝난 것이다. LLM은 여기 있는 것만 쓴다. */

@@ -57,7 +57,8 @@ export function DecoSheet({ open, tab, onTab, items, onPick, onClose }: {
         <button type="button" onClick={onClose} aria-label="꾸미기 닫기">✕</button>
       </div>
 
-      <div className="deco-seg" role="tablist">
+      {/* 0818: 세그먼트에 칩 모양을 겹쳐 쓴다(`deco-seg fchip`). */}
+      <div className="deco-seg fchip" role="tablist">
         {TABS.map((t) => (
           <button type="button" key={t.key} role="tab" aria-selected={tab === t.key}
             className={tab === t.key ? 'on' : undefined} onClick={() => onTab(t.key)}>{t.label}</button>

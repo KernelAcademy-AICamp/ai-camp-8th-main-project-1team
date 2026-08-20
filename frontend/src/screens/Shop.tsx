@@ -54,7 +54,7 @@ export function Shop() {
   const shown = data.items.filter((i) => i.category === tab);
 
   return (
-    <Screen title="포인트샵">
+    <Screen id="shop" title="포인트샵">
       <AppBar
         title="포인트샵"
         onBack={back}
@@ -67,7 +67,8 @@ export function Shop() {
       />
       <Scroll>
         <div className="pad" style={{ paddingTop: 12 }}>
-          <div className="seg" style={{ marginBottom: 14 }}>
+          {/* 0818: 붙은 세그먼트가 아니라 **떨어진 칩**이다. 항목이 늘어도 줄이 안 깨진다. */}
+          <div className="fchip" style={{ marginBottom: 16 }}>
             <button className={tab === 'FURNITURE' ? 'on' : ''} onClick={() => setTab('FURNITURE')}>가구</button>
             <button className={tab === 'BACKGROUND' ? 'on' : ''} onClick={() => setTab('BACKGROUND')}>배경</button>
           </div>

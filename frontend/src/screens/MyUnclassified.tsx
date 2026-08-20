@@ -167,8 +167,15 @@ const badge: React.CSSProperties = {
 const chips: React.CSSProperties = {
   display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12,
 };
+/**
+ * 분류 후보 칩.
+ *
+ * <b>44px 를 채운다</b>(KWCAG 6.1.3). 예전에는 42.8×28 이라 손끝으로 옆 칸을 눌렀다 —
+ * 카테고리를 잘못 확정하면 그 결제가 <b>사전에 잘못 쌓인다</b>(실제 사람의 결제는 확정
+ * 분류 사전으로 간다). 오답이 남는 자리라 특히 넉넉해야 한다.
+ */
 const chip: React.CSSProperties = {
-  fontSize: 12, padding: '6px 10px', borderRadius: 999,
+  fontSize: 12, padding: '6px 12px', borderRadius: 999, minHeight: 44, minWidth: 44,
   border: '1px solid var(--line)', background: 'transparent', color: 'var(--t2)',
 };
 const chipPrimary: React.CSSProperties = {

@@ -18,16 +18,15 @@ import { Walk } from './screens/Walk';
 import { Auth } from './screens/Auth';
 import { Connect } from './screens/Connect';
 import { Loading } from './screens/Loading';
-import { Onboarding1 } from './screens/Onboarding1';
-import { Onboarding2 } from './screens/Onboarding2';
-import { Onboarding3 } from './screens/Onboarding3';
-import { Onboarding4 } from './screens/Onboarding4';
+import { Onboarding } from './screens/Onboarding';
 import { Done } from './screens/Done';
 import { Home } from './screens/Home';
 import { Myroom } from './screens/Myroom';
 import { Collection } from './screens/Collection';
 import { Shop } from './screens/Shop';
-import { MonthEnd } from './screens/MonthEnd';
+import { BudgetOver } from './screens/BudgetOver';
+import { WeeklyWrap } from './screens/WeeklyWrap';
+import { NoData } from './screens/NoData';
 import { Settle } from './screens/Settle';
 import { Renew } from './screens/Renew';
 import { Notifications } from './screens/Notifications';
@@ -43,6 +42,7 @@ import { MySanctuary } from './screens/MySanctuary';
 import { MyChallenge } from './screens/MyChallenge';
 import { MyChallengeNew } from './screens/MyChallengeNew';
 import { MyVoice } from './screens/MyVoice';
+import { ReportRank } from './screens/ReportRank';
 import { ReportWaste } from './screens/ReportWaste';
 import { ReportSavings } from './screens/ReportSavings';
 import { My } from './screens/My';
@@ -60,17 +60,20 @@ import { MyParked } from './screens/MyParked';
 /** 최초 온보딩(마이데이터 연결 전)에만 열리는 화면. */
 const LINK_FLOW: ScreenId[] = ['boot', 'walk', 'auth', 'connect'];
 /** 이번 챌린지를 정하는 흐름 — 이 화면들에서는 하단 탭을 감춘다(중간에 빠져나가면 흐름이 끊긴다). */
-const SETUP_FLOW: ScreenId[] = ['loading', 'ob1', 'ob2', 'ob3', 'ob4', 'done',
+const SETUP_FLOW: ScreenId[] = ['loading', 'ob', 'done',
   // 월말 사이클도 같은 성격의 흐름이다 — 축하→결산→갱신을 중간에 끊으면 다음 달 목표가 안 정해진다.
-  'monthend', 'settle', 'renew'];
+  'settle', 'renew',
+  // 0818 예외 화면도 같은 성격이다 — 흐름 도중에 탭으로 새면 하던 일이 끊긴다.
+  'over', 'weekly', 'nodata'];
 
 const SCREENS: Record<ScreenId, ComponentType> = {
   boot: Boot, walk: Walk, auth: Auth, connect: Connect, loading: Loading,
-  ob1: Onboarding1, ob2: Onboarding2, ob3: Onboarding3, ob4: Onboarding4, done: Done,
+  ob: Onboarding, done: Done,
   home: Home, report: Report, my: My,
   myroom: Myroom, notifications: Notifications, transactions: Transactions,
   collection: Collection, shop: Shop,
-  monthend: MonthEnd, settle: Settle, renew: Renew,
+  settle: Settle, renew: Renew,
+  over: BudgetOver, weekly: WeeklyWrap, nodata: NoData,
   'r-spending': ReportSpending, 'r-analysis': ReportAnalysis, 'r-cards': ReportCards,
   'r-compare': Compare,
   'm-products': MyProducts,
@@ -79,6 +82,7 @@ const SCREENS: Record<ScreenId, ComponentType> = {
   'm-challenge-new': MyChallengeNew,
   'm-voice': MyVoice,
   'r-account': ReportAccount,
+  'r-rank': ReportRank,
   'r-waste': ReportWaste, 'r-savings': ReportSavings,
   'm-impulse': MyImpulse, 'm-goals': MyGoals, 'm-connections': MyConnections,
   'm-record': MyRecord, 'm-policy': MyPolicy, 'm-survey': MySurvey, 'm-demo': MyDemo,
@@ -134,7 +138,9 @@ export default function App() {
     <SessionProvider>
       <GuardianProvider>
         <IconSprite />
-        <a href="#main" className="skip-link">본문 바로가기</a>
+        {/* 도착지는 화면 제목이다. `main` 요소의 id 는 프로토타입의 화면 id(`#s-report` 등)가
+            쓰므로 — 그것이 없으면 디자인 규칙 310줄이 안 걸린다(`components/ui.tsx` Screen). */}
+        <a href="#screen-title" className="skip-link">본문 바로가기</a>
         <div className="app">
           <ScreenHost />
         </div>
