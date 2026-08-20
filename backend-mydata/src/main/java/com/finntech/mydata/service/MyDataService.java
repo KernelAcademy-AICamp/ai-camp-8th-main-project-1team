@@ -3,6 +3,8 @@ package com.finntech.mydata.service;
 import com.finntech.mydata.domain.*;
 import com.finntech.mydata.dto.MyDataDtos.*;
 import com.finntech.mydata.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,8 @@ import java.util.List;
  */
 @Service
 public class MyDataService {
+
+    private static final Logger log = LoggerFactory.getLogger(MyDataService.class);
 
     private final MyDataUserRepository userRepository;
     private final MyDataCardRepository cardRepository;
@@ -119,6 +123,60 @@ public class MyDataService {
     @Transactional(readOnly = true)
     public boolean userExists(String ci) {
         return userRepository.existsById(ci);
+    }
+
+    /** 무엇을 몇 건 지웠는가 — 관리자 화면이 그대로 보인다. */
+    public record PurgeResult(boolean found, long payments, long accountTxns,
+                              int cards, int accounts, int users) {}
+
+    /**
+     * <b>그 사람의 것을 제공자에서 전부 지운다</b> — 관리자 강제 삭제(CI 완전일치).
+     *
+     * <p><b>왜 CI 하나만 받나.</b> 이름·주민번호·전화로 찾게 하면 관리자가 그 값들을 손에 쥐어야
+     * 한다 — 지우는 일 때문에 개인식별정보를 보게 되는 것은 앞뒤가 바뀐 것이다. CI 는 되돌릴 수
+     * 없는 해시라 그 자체로는 누구인지 말해 주지 않고, 목록 조회가 없으니 <b>이미 아는 사람만</b>
+     * 지울 수 있다. 부분일치·검색을 두지 않는 이유도 같다.
+     *
+     * <p><b>없으면 없다고 답한다.</b> 예외로 던지지 않는다 — 본체와 제공자 어느 한쪽에만 남은
+     * 사람이 실제로 있었고(신청은 됐는데 앱은 안 쓴 사람), 그때 한쪽이 예외를 던지면
+     * 나머지 한쪽도 못 지운다.
+     *
+     * <p>순서는 매달린 것부터다 — 결제·입출금 → 카드·계좌 → 사람. 뒤집으면 외래키가 막는다.
+     */
+    @Transactional
+    public PurgeResult purgeUser(String ci) {
+        MyDataUser user = userRepository.findById(ci).orElse(null);
+        if (user == null) return new PurgeResult(false, 0, 0, 0, 0, 0);
+
+        List<MyDataCard> cards = cardRepository.findByUser(ci);
+        List<String> cardIds = cards.stream().map(MyDataCard::getId).toList();
+        long payments = 0;
+        if (!cardIds.isEmpty()) {
+            for (String cardId : cardIds) {
+                payments += paymentRepository.findByCardUpTo(
+                        cardId, LocalDateTime.of(2999, 12, 31, 23, 59)).size();
+            }
+            paymentRepository.deleteByCard_IdIn(cardIds);
+        }
+
+        long accountTxns = 0;
+        int accounts = 0;
+        MyDataAccount account = accountRepository.findByUser_Id(ci).orElse(null);
+        if (account != null) {
+            accountTxns = accountTxnRepository.findByAccountBetween(
+                    account.getAccountNumber(),
+                    LocalDateTime.of(1970, 1, 1, 0, 0),
+                    LocalDateTime.of(2999, 12, 31, 23, 59)).size();
+            accountTxnRepository.deleteByAccount_AccountNumber(account.getAccountNumber());
+            accountRepository.delete(account);
+            accounts = 1;
+        }
+
+        cardRepository.deleteAll(cards);
+        userRepository.delete(user);
+        log.info("제공자 강제 파기 — 결제 {} · 입출금 {} · 카드 {} · 계좌 {}",
+                payments, accountTxns, cards.size(), accounts);
+        return new PurgeResult(true, payments, accountTxns, cards.size(), accounts, 1);
     }
 
     /**

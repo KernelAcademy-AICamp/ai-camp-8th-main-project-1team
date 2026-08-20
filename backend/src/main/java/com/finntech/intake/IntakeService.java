@@ -315,8 +315,8 @@ public class IntakeService {
             Map<?, ?> parsed = mapper.readValue(body, Map.class);
             Object message = parsed.get("message");
             if (message != null) return String.valueOf(message);
-        } catch (RuntimeException ignored) {
-            // JSON 이 아니면 아래로
+        } catch (Exception ignored) {
+            // JSON 이 아니면 아래로 — 이 모듈의 매퍼는 Jackson 2 라 검사 예외를 던진다.
         }
         return body == null || body.isBlank() ? e.getStatusText() : body;
     }

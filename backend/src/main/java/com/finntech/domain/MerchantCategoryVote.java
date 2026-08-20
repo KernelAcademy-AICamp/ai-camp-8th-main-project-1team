@@ -48,7 +48,14 @@ public class MerchantCategoryVote {
     @Column(name = "merchant_name", nullable = false, length = 120)
     private String merchantName;
 
-    @Column(name = "user_id", nullable = false)
+    /**
+     * 표를 던진 사람. <b>탈퇴·삭제요청 때 여기만 비운다</b>(V38) — 표 자체는 남긴다.
+     *
+     * <p>한 표는 두 가지를 동시에 담는다: "이 가맹점은 카페/간식이다"(우리 자산)와
+     * "그 사람이 그 가맹점을 안다"(개인정보). 행을 지우면 앞의 것까지 잃고, 남기면 뒤의 것이
+     * 남는다. 사람만 떼어내면 둘 다 지킨다 — 집계는 그대로고 연결만 끊긴다.
+     */
+    @Column(name = "user_id")
     private Long userId;
 
     @Column(name = "category2", nullable = false, length = 30)
