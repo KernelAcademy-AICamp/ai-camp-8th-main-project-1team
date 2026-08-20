@@ -579,6 +579,19 @@ export interface PeerCompare {
   days: number;
 }
 
+/** 챌린지와 무관한 기간 집계 — `/api/report/period`. */
+export interface PeriodSpend {
+  period: 'week' | 'month';
+  start: string;
+  end: string;
+  total: number;
+  count: number;
+  /** 결제가 없는 날도 0으로 들어 있다 — 칸 수가 항상 같아야 막대가 안 밀린다. */
+  days: { date: string; amount: number }[];
+  /** 금액 내림차순, 동점이면 코드순으로 서버가 고정해 준다. */
+  byCategory: { code: string; name: string; amount: number }[];
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    지킴이 Agent (§/api/guardian) — 설계서 06_지킴이_Agent_설계.md
    ══════════════════════════════════════════════════════════════════════ */
@@ -1131,6 +1144,15 @@ export const api = {
    */
   peerCompare: (userId: number, days = 30) =>
     get<PeerCompare | null>(`/api/report/peer?userId=${userId}&days=${days}`),
+  /**
+   * <b>그 기간에 얼마를 썼는가</b> — 챌린지와 무관하다.
+   *
+   * <p>일별 계열을 지킴이 주간 리포트에서만 받던 탓에, 진행 중인 챌린지가 없으면 404 라
+   * 리포트가 통째로 비었다. 이 진입로는 소비만 보므로 챌린지를 한 번도 만들지 않은
+   * 사람에게도 같은 답을 준다.
+   */
+  periodSpend: (userId: number, period: 'week' | 'month', offset = 0) =>
+    get<PeriodSpend>(`/api/report/period?userId=${userId}&period=${period}&offset=${offset}`),
   /**
    * 온보딩이 보는 **하나의 창**(기본 최근 30일). 카테고리 금액·결제 목록·ML 낭비 판정이
    * 전부 같은 구간에서 나오므로, 화면 금액과 서버 기준 지출이 어긋나지 않는다.

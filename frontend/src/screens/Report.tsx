@@ -35,7 +35,7 @@ import { WeekPicker, weekOfMonth, mondayOf, type WeekSel } from '../components/W
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
 import { useAsync } from '../state/useAsync';
-import { api } from '../lib/api';
+import { api, type DayPoint } from '../lib/api';
 import { won, wonNum, shortDate, iconOf } from '../lib/format';
 
 /** "7.20 ~ 7.26" */
@@ -122,7 +122,7 @@ function MonthLine({ points }: { points: { label: string; amount: number }[] }) 
 
 export function Report() {
   const { go, userId } = useSession();
-  const { home } = useGuardian();
+  const { home, loading: guardianLoading } = useGuardian();
   /** 주간이냐 월간이냐 — 0818 이 나눈 두 갈래. */
   const [period, setPeriod] = useState<'week' | 'month'>('week');
   const [weeksAgo, setWeeksAgo] = useState(0);
@@ -142,6 +142,16 @@ export function Report() {
     [userId, weeksAgo],
   );
   const report = useAsync(() => api.report(userId).catch(() => null), [userId]);
+  /**
+   * <b>챌린지와 무관한 기간 집계.</b> 위의 `weekly` 는 지킴이 것이라 챌린지가 없으면 404 이고,
+   * 있어도 시작일 전은 안 센다 — 그건 "약속을 지켰나"를 재는 화면이라 맞는 규칙이다.
+   * 리포트가 답할 질문은 "이 기간에 어떻게 썼나"라서, 소비만 보는 답이 따로 필요하다
+   * (사용자 보고 2026-08-20: 소비 내역엔 결제가 잔뜩인데 리포트가 비었다).
+   */
+  const spend = useAsync(
+    () => api.periodSpend(userId, period, period === 'week' ? weeksAgo : 0).catch(() => null),
+    [userId, period, weeksAgo],
+  );
   /** 또래 비교 — 204 면 `null` 이고 그 절은 안 그린다. */
   const peer = useAsync(() => api.peerCompare(userId, period === 'week' ? 7 : 30)
     .catch(() => null), [userId, period]);
@@ -152,9 +162,13 @@ export function Report() {
   const w = weekly.data;
   const ch = home?.challenge;
   const isCur = weeksAgo === 0;
-  /** 지킴이가 아직 안 왔을 뿐인데 "챌린지를 시작하세요"를 띄우면 <b>있는 챌린지를 없다고
-      말하는 것</b>이다. 홈이 같은 이유로 같은 가드를 갖고 있다. */
-  const waiting = !home && !weekly.error;
+  /**
+   * 지킴이가 아직 안 왔을 뿐인데 본문을 띄우면 <b>있는 챌린지를 없다고 말하는 것</b>이다.
+   * 다만 <b>`!home` 으로 판단하면 안 된다</b> — 챌린지가 없으면 `home` 은 영영 null 이라
+   * 화면이 스켈레톤에 갇힌다(사용자 보고 2026-08-20). 기다리는 것과 없는 것은 다르고,
+   * 그 구분은 문맥의 `loading` 이 갖고 있다.
+   */
+  const waiting = guardianLoading || spend.loading;
 
   /* ── 기간 표시 ─────────────────────────────────────────────────────── */
   const rangeText = period === 'week'
@@ -237,11 +251,33 @@ export function Report() {
   }, [report.data]);
 
   /** 차트 위 한 줄 요약. 모드마다 무엇을 견주는지가 다르다. */
+  /**
+   * <b>기준은 챌린지 유무다.</b> 지킴이 주간 리포트는 챌린지가 없어도 0으로 채운 계열을
+   * 주기 때문에, "`w` 가 있으면 그것을 쓴다"로 판단하면 히어로는 8만원인데 차트는 0원인
+   * 어긋남이 생긴다(실측 2026-08-20). 챌린지가 없으면 <b>소비 집계로 같은 모양을 만든다</b> —
+   * 차트·평균이 그대로 돌아가고, 판정(`kept`/`judged`)만 없다. 판정은 챌린지의 개념이라
+   * 없는 것이 맞고, 있는 척하면 안 된다.
+   */
+  const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+  const days: DayPoint[] = (ch && w?.days?.length ? w.days
+    : (spend.data?.days ?? []).map((d) => ({
+      date: d.date,
+      label: DOW[new Date(`${d.date}T00:00:00`).getDay()] ?? '',
+      amount: d.amount,
+      kept: false,
+      judged: false,
+    })));
+
   const lead = mode === 0
     ? (() => {
       // 오늘은 `judged=false` 라 빠진다 — 쓴 돈이 있으면 오늘도 평균에 넣는다.
-      const shown = w?.days.filter((d) => d.judged || d.amount > 0) ?? [];
-      const avg = shown.length ? Math.round(shown.reduce((a, d) => a + d.amount, 0) / shown.length) : 0;
+      /* 지킴이 계열이 있으면 그것을, 없으면 <b>서버가 준 기간 합계</b>를 쓴다 —
+         후자는 빈 날까지 포함한 칸 수로 나눈다(그 기간의 하루 평균이 그 뜻이다). */
+      const shown = days.filter((d) => d.judged || d.amount > 0);
+      const avg = ch && w?.days?.length
+        ? (shown.length ? Math.round(shown.reduce((a, d) => a + d.amount, 0) / shown.length) : 0)
+        : (spend.data && spend.data.days.length
+          ? Math.round(spend.data.total / spend.data.days.length) : 0);
       return { label: '하루 평균', value: <><b>{won(avg)}</b> 썼어요</> };
     })()
     : (() => {
@@ -265,8 +301,9 @@ export function Report() {
    * 그때 "분석할 소비가 없어요"를 띄우면 <b>지킨 돈이 있는데 없다고 말하는 셈</b>이다
    * (실측으로 그렇게 나왔다). 이번 주는 늘 본문을 세우고, 빈 절은 각자 자리에서 말한다.
    */
-  const showEmpty = period === 'week' && weeksAgo > 0 && w != null
-    && w.days.every((d) => d.amount === 0);
+  /** 그 기간에 결제가 하나라도 있었는가 — 지킴이가 아니라 <b>소비</b>가 기준이다. */
+  const hasSpend = (spend.data?.count ?? 0) > 0 || days.some((d) => d.amount > 0);
+  const showEmpty = period === 'week' && weeksAgo > 0 && !spend.loading && !hasSpend;
 
   return (
     <Screen id="report" title="리포트" hasTabBar>
@@ -308,11 +345,14 @@ export function Report() {
 
         {waiting ? (
           <div className="rp-sec"><Loading label="리포트를 불러오는 중" rows={6} /></div>
-        ) : !ch ? (
+        ) : !ch && !hasSpend ? (
+          /* **챌린지가 아니라 소비가 없을 때만 비운다.** 예전에는 챌린지가 없으면 본문을
+             통째로 감췄는데, 리포트가 답할 질문은 "이 기간에 어떻게 썼나"라 챌린지와
+             무관하다 — 소비 내역엔 결제가 잔뜩인데 리포트만 비었다(사용자 보고 2026-08-20). */
           <div className="rp-sec">
             <div className="rp-emp">
-              <b>아직 보여드릴 리포트가 없어요</b>
-              <p>챌린지를 시작하면 그 주부터 쌓여요</p>
+              <b>이 기간에는 분석할 소비가 없어요</b>
+              <p>결제가 쌓이면 그 주부터 보여드릴게요</p>
               <button type="button" className="btn btn-primary"
                 style={{ marginTop: 16 }} onClick={() => go('ob')}>챌린지 시작하기</button>
             </div>
@@ -328,20 +368,36 @@ export function Report() {
           <>
             {/* ── ① 진행 히어로 ─────────────────────────────────────── */}
             <div className="rp-sec">
+              {/* 챌린지가 있으면 <b>약속 대비</b>를, 없으면 <b>쓴 돈</b>을 말한다.
+                  없는 약속을 0원짜리로 그리면 "지킨 돈 0원"이 되어 사실과 어긋난다. */}
               <div className="rph1">
-                {period === 'week' ? '이번 주' : '이번 달'} 지킨 돈은<br />
-                <em>{wonNum(ch.securedSaving)}원</em>이에요
+                {isCur ? (period === 'week' ? '이번 주' : '이번 달')
+                  : (period === 'week' ? '그 주' : '그 달')}{' '}
+                {ch ? '지킨 돈은' : '쓴 돈은'}<br />
+                <em>{wonNum(ch ? ch.securedSaving : (spend.data?.total ?? 0))}원</em>이에요
               </div>
-              <div className="rp-prog">
-                <i style={{ width: `${Math.round(usedRatio * 100)}%` }} />
-              </div>
-              <div className="rp-leg">
-                <span><i style={{ background: 'var(--t4)' }} />지킬 돈<b>{won(goal)}</b></span>
-                <span><i style={{ background: 'var(--blue)' }} />사용한 돈<b>{won(usedAmount)}</b></span>
-              </div>
+              {ch ? (
+                <>
+                  <div className="rp-prog">
+                    <i style={{ width: `${Math.round(usedRatio * 100)}%` }} />
+                  </div>
+                  <div className="rp-leg">
+                    <span><i style={{ background: 'var(--t4)' }} />지킬 돈<b>{won(goal)}</b></span>
+                    <span><i style={{ background: 'var(--blue)' }} />사용한 돈<b>{won(usedAmount)}</b></span>
+                  </div>
+                </>
+              ) : (
+                <div className="rp-leg">
+                  <span><i style={{ background: 'var(--blue)' }} />결제<b>{spend.data?.count ?? 0}건</b></span>
+                  <span>
+                    <i style={{ background: 'var(--t4)' }} />하루 평균
+                    <b>{won(days.length ? Math.round((spend.data?.total ?? 0) / days.length) : 0)}</b>
+                  </span>
+                </div>
+              )}
               {/* **챌린지 시작 전 소비는 여기 안 들어온다.** 소비 내역에는 잔뜩 보이는데
                   리포트는 0이면 사용자는 화면이 고장난 줄 안다 — 그 사정을 그 자리에서 말한다. */}
-              {w && w.days.some((d) => !d.judged) && w.weekStart < ch.startDate && (
+              {ch && w && w.days.some((d) => !d.judged) && w.weekStart < ch.startDate && (
                 <p className="pv" style={{ margin: '12px 0 0' }}>
                   이 주는 <b>{shortDate(ch.startDate)}에 챌린지를 시작</b>해서, 그전 소비는 세지 않아요.
                 </p>
@@ -363,7 +419,7 @@ export function Report() {
                 </>
               ) : (
                 <>
-                  <WeekChart mode={mode} onMode={setMode} days={w?.days ?? []}
+                  <WeekChart mode={mode} onMode={setMode} days={days}
                     trend={w?.trend ?? []} lead={lead} />
                   <button type="button" className="rp-more" onClick={() => go('transactions')}>
                     전체 내역 보기<span className="chev" aria-hidden="true">›</span>
