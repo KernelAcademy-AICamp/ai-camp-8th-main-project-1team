@@ -134,6 +134,21 @@ public class GuardianNarrative {
     public record Message(String title, String body, List<String> keyPhrases, boolean fallback) {}
 
     /**
+     * <b>모델을 부르지 않고</b> 규칙이 만든 문장만 낸다 — 폴백이 먼저인 구조의 그 폴백이다.
+     *
+     * <p>알림을 <b>먼저 저장하고 나중에 갈아 끼우는</b> 길이 이 메서드를 쓴다
+     * ({@code GuardianSentenceQueue}). 화면이 LLM 을 기다리지 않으려면 지금 당장 보여줄
+     * 문장이 있어야 하고, 그것을 만드는 자리가 여기다.
+     */
+    public Message template(String caseId, Map<String, Object> numbers) {
+        return new Message(
+                GuardianCopy.fallbackTitle(caseId, numbers),
+                GuardianCopy.fallback(caseId, numbers),
+                GuardianCopy.fallbackKeyPhrases(caseId),
+                true);
+    }
+
+    /**
      * 케이스 하나의 문장을 만든다.
      *
      * @param caseId           C1..C14 · W1 · M1
@@ -145,11 +160,7 @@ public class GuardianNarrative {
     public Message compose(String caseId, Tone tone, PhrasingMode phrasingMode,
                            Map<String, Object> numbers, List<String> recentKeyPhrases,
                            boolean formalTone, boolean allowAi) {
-        Message template = new Message(
-                GuardianCopy.fallbackTitle(caseId, numbers),
-                GuardianCopy.fallback(caseId, numbers),
-                GuardianCopy.fallbackKeyPhrases(caseId),
-                true);
+        Message template = template(caseId, numbers);
         // **더미에는 Gemini 를 안 부른다**(사용자 규칙 2026-08-08). 생성기가 만든 결제에 대해
         // 문장을 지어 내는 데 유료 호출을 쓸 이유가 없다 — 실측으로 문장 호출 14건 중 13건이
         // 더미 몫이었다. 폴백이 먼저인 구조라 막아도 화면은 그대로 템플릿 문장이 나간다.
