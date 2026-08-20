@@ -2066,7 +2066,9 @@ textarea.inp{ min-height: 92px; resize: vertical; line-height: 1.5; }
    숫자를 믿을 수 있어서, 결제를 일시·가맹점·금액으로 펼쳐 하나씩 끌 수 있게 한다. */
 .pick-toggle{ width: 100%; border: none; background: none; font-family: inherit; cursor: pointer;
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 8px 0 10px; font-size: 12.5px; color: var(--t3); font-weight: 600; text-align: left; }
+  padding: 8px 0 10px; font-size: 12.5px; color: var(--t3); font-weight: 600; text-align: left;
+  /* 여백만으로는 33px 이라 터치 기준에 미달한다(KWCAG 6.1.3). 줄 자체를 44px 로 세운다. */
+  min-height: 44px; }
 .pick-toggle b{ color: var(--blue-t); }
 .pick-toggle .chev{ font-size: 13px; }
 .pick-list{ list-style: none; margin: 0 0 10px; padding: 0; max-height: 260px; overflow-y: auto;
@@ -3769,7 +3771,8 @@ button.list-item:active{ opacity: .6; }
 #s-report .exp-bn .tx{flex:1;}
 #s-report .exp-bn .tx b{display:block;font-size:15px;font-weight:700;color:var(--t1);}
 #s-report .exp-bn .tx span{font-size:12px;color:var(--t2);font-weight:500;}
-#s-report .exp-bn .go{color:var(--blue);font-weight:700;font-size:16px;}
+/* 화살표도 글자다 — `--blue` 는 이 배너 바탕에서 2.44:1 이라 미달한다(KWCAG 5.4.3). */
+#s-report .exp-bn .go{color:var(--blue-t);font-weight:700;font-size:16px;}
 .screen.active{display:flex;}
 /* 스플래시 (피그마 94-119): 로고만 잠깐, 자동 전환 */
 /* 프로토타입은 `--blue` 를 그대로 깔지만, 그 위의 흰 글자가 2.79:1 이라 검사항목 5.4.3 에
@@ -3939,7 +3942,8 @@ button.list-item:active{ opacity: .6; }
 #s-my .pt-card .pt-go .chev{font-style:normal;margin-left:2px;}
 #s-my .hist .hh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
 #s-my .hist .hh b{font-size:15px;font-weight:600;}
-#s-my .hist .hh span{font-size:14px;font-weight:700;color:var(--blue);letter-spacing:0;}
+/* 달성률 숫자 — 흰 카드 위의 `--blue` 는 2.79:1 로 미달한다(KWCAG 5.4.3). */
+#s-my .hist .hh span{font-size:14px;font-weight:700;color:var(--blue-t);letter-spacing:0;}
 #s-my .hist .hbar{height:8px;background:var(--track);border-radius:8px;overflow:hidden;}
 #s-my .hist .hbar i{display:block;height:100%;background:var(--blue);border-radius:8px;}
 #s-my .hist .hs{margin-top:8px;font-size:12px;color:var(--t3);font-weight:500;}

@@ -1397,6 +1397,14 @@ export const api = {
     /** 마이데이터 투영에서 아직 원장에 없는 결제를 끌어온다. */
     // 새 결제를 훑어 판정까지 하는 자리라 건수에 비례해 늘어난다.
     sync: (userId: number) => post<{ added: number }>(`/api/guardian/sync?userId=${userId}`, SLOW_TIMEOUT_MS),
+    /**
+     * 진행 중인 챌린지를 중단한다 — <b>온보딩을 다시 열기 위한</b> 문.
+     *
+     * <p>온보딩은 진행 중인 챌린지가 있으면 409 로 막힌다. 목표를 통째로 다시 세우려면
+     * 먼저 닫아야 한다. 방·소품·포인트는 그대로다. 진행 중인 것이 없어도 200 이다.
+     */
+    abandonChallenge: (userId: number) =>
+      post<{ abandoned: boolean }>(`/api/guardian/challenges/abandon?userId=${userId}`),
     notifications: (userId: number) =>
       get<{ notifications: GuardianNotification[] }>(`/api/guardian/notifications?userId=${userId}`),
     feedback: (userId: number, id: number, feedback: Feedback, reason?: FeedbackReason) =>
