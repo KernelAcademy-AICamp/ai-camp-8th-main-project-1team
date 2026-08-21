@@ -130,17 +130,72 @@ public class MerchantClassifierService {
      * (2026-08-21 운영 실측)
      */
     private boolean isAgencyName(String name) {
-        String n = bareName(name);
-        if (n.isEmpty()) return false;
-        boolean sawAgency = false;
-        for (String pg : mapper.paymentAgencyNames()) {
-            String p = bareName(pg);
-            if (p.isEmpty() || !n.contains(p)) continue;
-            sawAgency = true;
-            n = n.replace(p, "");
-        }
-        return sawAgency && n.isBlank();
+        return residueOf(name).isEmpty();
     }
+
+    /**
+     * <b>PG 상호와 업태명을 걷어낸 나머지</b> — 이것이 모델에게 물어볼 이름이다.
+     *
+     * <p>비어 있으면 무엇을 샀는지 원리적으로 알 수 없다는 뜻이다.
+     *
+     * <p><b>업태명도 함께 뺀다</b>(2026-08-21 실측). {@code NICE_통신판매} 는 PG 를 빼면
+     * {@code 통신판매} 가 남는데 그것은 <i>업태</i>이지 가맹점이 아니다. 그런데 모델은 거기서
+     * {@code 전자상거래 소매업} 을 답했고, 홍상호의 21건 59,806원이 근거 없이 <b>쇼핑</b>으로
+     * 붙었다. {@code 비인증_스마트로} 는 {@code 비인증} 이 남아 <b>주거/통신</b> 50,000원이
+     * 됐다 — 그 사람 지출의 27%다.
+     */
+    public String residueOf(String name) {
+        String n = bareName(name);
+        if (n.isEmpty()) return "";
+        boolean sawAgency = false;
+        for (String pg : agencyForms()) {
+            if (pg.isEmpty() || !n.contains(pg)) continue;
+            sawAgency = true;
+            n = n.replace(pg, "");
+        }
+        if (!sawAgency) return n;                 // PG 가 안 섞였으면 원문 그대로 물어본다
+        for (String filler : TRADE_WORDS) {
+            n = n.replace(bareName(filler), "");
+        }
+        return n.isBlank() ? "" : n;
+    }
+
+    /**
+     * 상호에서 걷어낼 <b>결제대행사 표기</b> — 대조표의 이름에 <b>별칭</b>을 더한다.
+     *
+     * <p>대조표({@code industry-mid.json})는 <b>사업자번호</b>로 PG 를 가리려고 만든 것이라
+     * 법인명만 있다({@code 네이버파이낸셜}·{@code 나이스페이먼츠}). 그런데 명세서에 찍히는
+     * 것은 서비스명이다({@code 네이버페이}·{@code NICE}). 실측(2026-08-21)에서
+     * {@code 구글_네이버페이} 가 안 깎여 그대로 프롬프트에 갔고 모델이 모름을 답했다.
+     *
+     * <p>대조표를 고치지 않는 이유는 <b>쓰임이 다르기 때문</b>이다 — 저기 이름을 더하면
+     * {@code isPaymentAgency(번호)} 쪽 판정까지 흔들린다. 여기는 이름만 본다.
+     */
+    private java.util.List<String> agencyForms() {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (String pg : mapper.paymentAgencyNames()) out.add(bareName(pg));
+        for (String alias : AGENCY_ALIASES) out.add(bareName(alias));
+        // 긴 것부터 지운다 — `토스페이먼츠` 를 `토스페이` 가 먼저 깎으면 `먼츠` 가 남는다.
+        out.sort((a, b) -> b.length() - a.length());
+        return out;
+    }
+
+    /** 대조표에 없는 결제대행사 표기 — 명세서에 실제로 찍히는 서비스명들. */
+    private static final java.util.List<String> AGENCY_ALIASES = java.util.List.of(
+            "네이버페이", "토스페이", "카카오선물하기", "삼성페이", "애플페이", "페이코", "PAYCO",
+            "스마트로", "KCP", "NICE", "나이스", "KIS", "올더게이트", "세틀뱅크", "다우데이타",
+            "한국신용카드결제", "한국사이버결제", "갤럭시아", "모빌리언스", "스토리페이", "당근페이");
+
+    /**
+     * PG 를 뺀 자리에 남는 <b>업태·안내 문구</b> — 가맹점 이름이 아니다.
+     *
+     * <p>여기 있는 낱말만 남았다면 카드사가 준 정보는 "간편결제로 무언가를 샀다"뿐이다.
+     * 목록을 늘릴 때는 <b>그 낱말만으로 무엇을 샀는지 말할 수 있는가</b>를 물어야 한다 —
+     * {@code 무신사}·{@code 구글} 은 말할 수 있고 {@code 일반}·{@code 통신판매} 는 못 한다.
+     */
+    private static final List<String> TRADE_WORDS = List.of(
+            "통신판매", "비인증", "일반", "오더", "결제", "쇼핑몰", "온라인", "정기결제", "자동이체",
+            "상품권", "충전", "선불", "간편결제", "휴대폰", "계좌이체", "가맹점", "KIOSK", "POS");
 
     /**
      * 상호에서 <b>이름이 아닌 것</b>을 걷어낸다 — 공백·괄호·구분자와 법인격 표기.
