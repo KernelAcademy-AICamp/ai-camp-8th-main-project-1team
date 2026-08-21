@@ -171,7 +171,10 @@ public class TempClassifierService {
         // 자르면 그만큼이 다음 회차(5분 뒤)로 밀려 미분류가 오래 남는다. 유료 통로가 40곳씩
         // 묶는 것과 혼동하기 쉬운데, 그쪽은 프롬프트의 76%가 업종 목록이라 묶어야 이득인 것이고
         // 여기는 그런 이유가 없다.
-        String catalog = catalog();
+        // **한 곳씩 묻는다.** 묶으면 모델이 앞 답에 끌려가고(앞이 카페면 뒤도 카페),
+        // JSON 형식이 깨지면 묶음 전체를 잃었다. 한 곳씩이면 답은 단어 하나이고 실패해도
+        // 그 하나만 잃는다({@code IndustryPrompt} 설계 주석).
+        String catalog = IndustryPrompt.industryList(mapper);
         for (int i = 0; i < ask.size(); i += BATCH) {
             List<String> chunk = ask.subList(i, Math.min(i + BATCH, ask.size()));
             Map<String, String> got = callOnce(catalog, chunk);
@@ -337,29 +340,33 @@ public class TempClassifierService {
      * 하는 셈이라 마스터 §4 원칙 1 과 어긋난다. 업종으로 받으면 모델은 "이 가게가 무엇을
      * 파는가"라는 사실만 말하고 축은 우리 표가 정한다 — 유료 통로와 같은 규칙이다.
      */
-    private Map<String, String> callOnce(String catalog, List<String> names) {
-        StringBuilder listing = new StringBuilder();
-        for (int i = 0; i < names.size(); i++) {
-            listing.append(i + 1).append(". ").append(names.get(i)).append('\n');
+    /**
+     * 묶음을 <b>한 곳씩</b> 물어 모은다.
+     *
+     * <p>이름은 {@code callOnce} 로 두지만 하는 일은 "이 묶음을 처리한다"이다. 안에서는
+     * 가맹점마다 한 번씩 부른다 — 그것이 {@code IndustryPrompt} 가 정한 형태다.
+     * 한 곳이 실패해도 나머지는 계속한다. 다만 <b>모델을 갈아탔으면</b> 그 사실을 살려
+     * 바로 다음 가맹점부터 새 모델로 묻는다.
+     */
+    private Map<String, String> callOnce(String industryList, List<String> names) {
+        Map<String, String> out = new LinkedHashMap<>();
+        int consecutive = 0;
+        for (String name : names) {
+            String answer = askOne(IndustryPrompt.of(name, industryList));
+            if (answer == null) {
+                // 한 묶음이 통째로 죽는 것은 통로가 죽은 것이다 — 다음 회차로 미룬다.
+                if (++consecutive >= 3 && out.isEmpty()) return null;
+                continue;
+            }
+            consecutive = 0;
+            String industry = IndustryPrompt.pickIndustry(answer, mapper);
+            if (industry != null) out.put(name, industry);
         }
-        String prompt = """
-                아래는 한국 카드 명세서에 찍힌 가맹점명입니다. 각 가맹점이 어느 업종인지 고르세요.
+        return out;
+    }
 
-                업종 목록입니다. 대괄호는 그 업종이 속한 소비 분류이고, 답에는 업종 이름만 쓰세요.
-
-                %s
-                - 가맹점이 무엇을 파는지 알겠다면 목록에서 가장 가까운 업종을 고르세요.
-                - 해외 가맹점도 마찬가지입니다. 영문 상호라도 무엇을 파는 곳인지 알겠다면 고르세요.
-                - 결제대행사 상호는 무엇을 샀는지 알 수 없으므로 빼세요.
-                - 다만 한 브랜드의 자체 결제 수단은 그 브랜드로 판단하세요.
-
-                가맹점:
-                %s
-                답은 JSON 하나로만 주세요. 다른 말은 쓰지 마세요.
-                {"1": "업종명", "2": "업종명"}
-                모르는 것은 빼세요.
-                """.formatted(catalog, listing);
-
+    /** 한 번 묻고 답 문자열만 받는다 — 실패는 {@code null}. 사슬이 모델을 정한다. */
+    private String askOne(String prompt) {
         try {
             String body = client.post()
                     .uri(props.getBaseUrl())
@@ -368,14 +375,18 @@ public class TempClassifierService {
                     .body(json.writeValueAsString(Map.of(
                             "model", model(),
                             "messages", List.of(Map.of("role", "user", "content", prompt)),
-                            "max_tokens", 2048,
+                            // 답은 업종 이름 하나다 — 길게 줄 이유가 없고, 짧게 두면
+                            // 모델이 문장을 쓰려다 잘려 군말이 덜 붙는다.
+                            "max_tokens", 32,
                             "temperature", 0)))
                     .retrieve()
                     .body(String.class);
-            Map<String, String> parsed = parse(body, names);
+            if (body == null) return null;
+            String answer = json.readTree(body).path("choices").path(0)
+                    .path("message").path("content").asString();
             failures.set(0);
             if (chain != null) chain.succeeded();
-            return parsed;
+            return answer;
         } catch (RuntimeException e) {
             int n = failures.incrementAndGet();
             // **모델을 갈아탔으면 곧바로 한 번 더 본다.** 다음 회차까지 미루면 그 사이의
@@ -383,7 +394,7 @@ public class TempClassifierService {
             if (chain != null && chain.failed()) {
                 failures.set(0);
                 log.info("모델을 바꿔 곧바로 다시 묻는다 — {}", chain.current());
-                return callOnce(catalog, names);
+                return askOne(prompt);
             }
             log.debug("임시 분류 실패({}회) — {}", n, e.toString());
             return null;

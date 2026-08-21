@@ -307,68 +307,57 @@ public class MerchantClassifierService {
                 .toUpperCase();
     }
 
+    /**
+     * 유료 통로에 <b>한 곳씩</b> 묻는다.
+     *
+     * <p><b>중분류가 아니라 업종을 묻는다.</b> 모델이 우리 축을 직접 고르면 축 배정까지 AI 가
+     * 하는 셈이라 원칙 1 과 어긋나고, 표를 고쳐도 모델의 옛 답은 안 따라온다.
+     * 2026-08-05 전수 대조(실데이터 86종): 중분류를 직접 묻는 방식 36종 → 업종을 묻는 방식
+     * <b>55종</b>이었다.
+     *
+     * <p><b>목록에서 중분류를 뺐다</b>(2026-08-21). 예전에는 {@code [카페/간식] 커피 전문점}
+     * 처럼 축을 함께 보여줬는데, 그러면 모델이 업종이 아니라 축을 보고 답한다 — 실측에서
+     * 상위 모델의 오답 대부분이 거기서 나왔다. 규칙 여섯 줄은 그대로 옮겼다
+     * ({@link IndustryPrompt} 설계 주석에 그 내력이 있다).
+     *
+     * <p><b>묶어 묻지 않는다.</b> 40곳을 번호로 묶으면 모델이 앞 답에 끌려가고, JSON 형식이
+     * 깨지면 묶음 전체를 잃었다. 한 곳씩이면 답은 단어 하나이고 실패해도 그 하나만 잃는다.
+     */
     private Map<String, String> callGemini(List<String> names, Map<String, String> industries) {
-        // **중분류가 아니라 업종을 묻는다.** 모델이 우리 축을 직접 고르면 축 배정까지 AI 가 하는
-        // 셈이라 원칙 1 과 어긋나고, 표를 고쳐도 모델의 옛 답은 안 따라온다. 업종으로 받으면
-        // 모델은 "이 가게가 무엇을 파는가"라는 사실만 말하고 축은 우리 표가 정한다.
-        //
-        // 2026-08-05 전수 대조(실데이터 86종): 중분류를 직접 묻는 방식 36종 → 업종을 묻는 방식
-        // **55종**. 둘 다 답한 6종 중 4종에서 업종 쪽이 우리 표와 일치했다
-        // (올리브영 쇼핑→미용, 교보문고 쇼핑→취미/여가).
-        //
-        // 처음엔 오히려 21종으로 **떨어졌다.** "명백한 것만, 틀리느니 답하지 마라"를 377개
-        // 목록과 함께 주니 모델이 과하게 보수적이 됐다. **"가장 가까운 업종을 고르라"**로
-        // 바꾸자 55종이 됐다 — 규칙 한 줄이 커버리지를 두 배 넘게 갈랐다.
-        StringBuilder catalog = new StringBuilder();
-        mapper.industryNamesByMid().forEach((mid, list) ->
-                catalog.append('[').append(mid).append("] ").append(String.join(" · ", list)).append('\n'));
-
-        StringBuilder list = new StringBuilder();
-        for (int i = 0; i < names.size(); i++) {
-            list.append(i + 1).append(". ").append(names.get(i)).append('\n');
+        String industryList = IndustryPrompt.industryList(mapper);
+        Map<String, String> out = new TreeMap<>();
+        int consecutive = 0;
+        for (String name : names) {
+            String text = askOneRaw(IndustryPrompt.of(name, industryList));
+            if (text == null) {
+                // 연달아 셋이 죽고 하나도 못 얻었으면 통로가 죽은 것이다 — 다음 회차로 미룬다.
+                if (++consecutive >= 3 && out.isEmpty()) return null;
+                continue;
+            }
+            consecutive = 0;
+            String industry = IndustryPrompt.pickIndustry(text, mapper);
+            if (industry == null) continue;
+            industries.put(name, industry);
+            String mid = mapper.midOfIndustryName(industry);
+            if (!IndustryCategoryMapper.isUnknown(mid)) out.put(name, mid);
         }
+        return out;
+    }
 
-        String prompt = """
-                아래는 한국 카드 명세서에 찍힌 가맹점명입니다. 각 가맹점이 어느 업종인지 고르세요.
-
-                업종 목록입니다. 대괄호는 그 업종이 속한 소비 분류이고, 답에는 업종 이름만 쓰세요.
-
-                %s
-                - 가맹점이 무엇을 파는지 알겠다면 **목록에서 가장 가까운 업종**을 고르세요.
-                  딱 맞는 것이 없어도 가장 가까운 것을 고르면 됩니다.
-                - **해외 가맹점도 마찬가지입니다.** 영문·로마자 상호라도 무엇을 파는 곳인지
-                  알겠다면 고르세요(예: 공항 면세점, 해외 호텔, 해외 항공사).
-                - 결제대행사 상호(토스페이먼츠, 나이스페이먼츠, KG이니시스, 네이버페이,
-                  카카오페이 등)는 **여러 가게의 결제를 대신 처리하는 회사**라 무엇을 샀는지
-                  알 수 없으므로 빼세요.
-                - 다만 **한 브랜드의 자체 결제 수단**은 그 브랜드로 판단하세요 — 이름에 '페이'가
-                  붙었다고 빼면 안 됩니다. '컬리페이'는 마켓컬리에서 산 것이고,
-                  '무신사페이먼츠'는 무신사에서 산 것입니다.
-                - 뜻을 알 수 없는 상호, 사람 이름만 있는 것, 숫자뿐인 것은 빼세요.
-                - 목록에 있는 이름을 **글자 그대로** 쓰세요.
-
-                설명·마크다운 없이 JSON만 출력하세요.
-                형식: {"1": "체인화 편의점", "3": "한식 일반 음식점업"}
-
-                가맹점:
-                %s
-                """.formatted(catalog, list);
-
+    /** 한 번 묻고 본문만 받는다 — 실패는 {@code null}. */
+    private String askOneRaw(String prompt) {
         try {
             Map<?, ?> response = restClient.post()
                     .uri("/v1beta/models/{model}:generateContent?key={key}", model, apiKey)
                     .contentType(MediaType.APPLICATION_JSON)
                     // temperature 0 — **같은 명세서를 두 번 넣으면 같은 답이 나와야 한다.**
                     // 기본 표집 온도로 두면 실행마다 39·55·59·61종으로 흔들렸다(2026-08-05 실측).
-                    // 재현성은 이 저장소의 설계 원칙이다(§4-3).
                     .body(Map.of("contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))),
-                                 "generationConfig", Map.of("temperature", 0)))
+                                 "generationConfig", Map.of("temperature", 0,
+                                                            "maxOutputTokens", 32)))
                     .retrieve()
                     .body(Map.class);
-            String text = extractText(response);
-            if (text == null) return null;
-            collectIndustries(text, names, industries);
-            return parseJson(text, names);
+            return extractText(response);
         } catch (Exception e) {
             // 미분류로 남을 뿐 화면이 깨지지는 않는다 — 추정은 부가 정보다.
             return null;
