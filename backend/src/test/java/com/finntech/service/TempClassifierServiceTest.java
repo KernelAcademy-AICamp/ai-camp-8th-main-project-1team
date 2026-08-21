@@ -27,7 +27,10 @@ class TempClassifierServiceTest {
         MerchantClassifierService classifier = mock(MerchantClassifierService.class);
         when(classifier.isPaymentAgencyMerchant(org.mockito.ArgumentMatchers.anyString()))
                 .thenReturn(false);
-        return new TempClassifierService(props, mapper, classifier, json);
+        // 사슬이 날짜로 되돌아가므로 시계를 받는다 — 고정 시계면 시험이 시간에 안 흔들린다.
+        return new TempClassifierService(props, mapper, classifier, json,
+                java.time.Clock.fixed(java.time.Instant.parse("2026-08-21T03:00:00Z"),
+                        java.time.ZoneId.of("Asia/Seoul")));
     }
 
     @Test

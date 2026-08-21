@@ -70,8 +70,16 @@ public class TempClassifierService {
 
     private record Cached(Guess guess, Instant at) {}
 
+    /**
+     * <b>모델 하나에 통로를 걸지 않는다.</b> 앞 모델이 죽으면 다음으로 넘어가고, 날짜가
+     * 바뀌면 처음으로 돌아간다({@link ModelChain}). 운영에서 모델 하나가 무응답이라 로딩이
+     * 40초가 됐던 것이 이 사슬을 만든 이유다(2026-08-20).
+     */
+    private final ModelChain chain;
+
     public TempClassifierService(TempClassifierProperties props, IndustryCategoryMapper mapper,
-                                 MerchantClassifierService classifier, ObjectMapper json) {
+                                 MerchantClassifierService classifier, ObjectMapper json,
+                                 java.time.Clock clock) {
         this.props = props;
         this.mapper = mapper;
         this.classifier = classifier;
@@ -79,11 +87,18 @@ public class TempClassifierService {
         this.client = props.usable()
                 ? RestClient.builder().requestFactory(factory(props.getTimeoutMs())).build()
                 : null;
+        this.chain = props.usable()
+                ? new ModelChain(ModelChain.parse(props.chainSpec(), props.getFailureCutoff()), clock)
+                : null;
         if (props.usable()) {
-            log.info("임시 분류 통로 켜짐 — 모델 {}, 회차당 최대 {}곳",
-                    props.getModel(), props.getMaxPerRun());
+            log.info("임시 분류 통로 켜짐 — 모델 {}종({}), 회차당 최대 {}곳",
+                    ModelChain.parse(props.chainSpec(), props.getFailureCutoff()).size(),
+                    chain.current(), props.getMaxPerRun());
         }
     }
+
+    /** 지금 쓸 모델 — 사슬이 정한다. */
+    private String model() { return chain == null ? props.getModel() : chain.current(); }
 
     private static org.springframework.http.client.ClientHttpRequestFactory factory(int timeoutMs) {
         var f = new org.springframework.http.client.SimpleClientHttpRequestFactory();
@@ -289,7 +304,7 @@ public class TempClassifierService {
                     .header("Authorization", "Bearer " + props.getApiKey())
                     .header("Content-Type", "application/json")
                     .body(json.writeValueAsString(Map.of(
-                            "model", props.getModel(),
+                            "model", model(),
                             "messages", List.of(Map.of("role", "user", "content", prompt)),
                             "max_tokens", maxTokens,
                             "temperature", temperature)))
@@ -297,6 +312,7 @@ public class TempClassifierService {
                     .body(String.class);
             if (body == null) return null;
             failures.set(0);            // 한 번 성공하면 유예가 사라진다
+            if (chain != null) chain.succeeded();
             return json.readTree(body).path("choices").path(0)
                     .path("message").path("content").asString("").trim();
         } catch (RuntimeException e) {
@@ -350,7 +366,7 @@ public class TempClassifierService {
                     .header("Authorization", "Bearer " + props.getApiKey())
                     .header("Content-Type", "application/json")
                     .body(json.writeValueAsString(Map.of(
-                            "model", props.getModel(),
+                            "model", model(),
                             "messages", List.of(Map.of("role", "user", "content", prompt)),
                             "max_tokens", 2048,
                             "temperature", 0)))
@@ -358,14 +374,18 @@ public class TempClassifierService {
                     .body(String.class);
             Map<String, String> parsed = parse(body, names);
             failures.set(0);
+            if (chain != null) chain.succeeded();
             return parsed;
         } catch (RuntimeException e) {
             int n = failures.incrementAndGet();
-            if (n >= props.getFailureCutoff()) {
-                log.warn("임시 분류가 {}회 연속 실패해 이 프로세스에서는 끈다 — {}", n, e.toString());
-            } else {
-                log.debug("임시 분류 실패({}회) — {}", n, e.toString());
+            // **모델을 갈아탔으면 곧바로 한 번 더 본다.** 다음 회차까지 미루면 그 사이의
+            // 요청은 죽은 모델 때문에 여전히 빈손이다.
+            if (chain != null && chain.failed()) {
+                failures.set(0);
+                log.info("모델을 바꿔 곧바로 다시 묻는다 — {}", chain.current());
+                return callOnce(catalog, names);
             }
+            log.debug("임시 분류 실패({}회) — {}", n, e.toString());
             return null;
         }
     }
