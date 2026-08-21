@@ -64,8 +64,17 @@ class GeminiModelsTest {
     @DisplayName("실제 서비스도 빈 값을 받으면 기본 모델을 쓴다 — 배포 상태 그대로")
     void servicesNormaliseBlankModel() {
         // 생성자에 빈 문자열을 주는 것이 곧 '컨테이너가 GEMINI_MODEL= 로 뜬 상태'다.
-        assertEquals(GeminiModels.DEFAULT, modelOf(new NarrativeService("", "", "http://localhost")));
-        assertEquals(GeminiModels.DEFAULT, modelOf(new GuardianNarrative("", "", "http://localhost")));
+        // 관문이 생겼다(2026-08-21) — 무료가 먼저이고 유료는 비상용이다. 이 시험이 보는 것은
+        // **유료 모델 이름의 기본값**이라, 관문은 안 쓰는 것으로 넣어 두면 된다.
+        var noFree = new com.finntech.service.ModelGateway(null, null) {
+            @Override public boolean freeUsable() { return false; }
+            @Override public java.util.Optional<String> askNow(
+                    com.finntech.freechannel.Lane lane, String key, String prompt) {
+                return java.util.Optional.empty();
+            }
+        };
+        assertEquals(GeminiModels.DEFAULT, modelOf(new NarrativeService("", "", "http://localhost", noFree)));
+        assertEquals(GeminiModels.DEFAULT, modelOf(new GuardianNarrative("", "", "http://localhost", noFree)));
     }
 
     /** 모델은 화면에 안 나가는 내부 값이라 접근자가 없다 — 리플렉션으로 확인한다. */
