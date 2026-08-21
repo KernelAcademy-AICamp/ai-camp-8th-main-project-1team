@@ -139,15 +139,40 @@ public final class IndustryPrompt {
      *
      * <p>겹치는 것이 모자라면 <b>앞에서부터 채운다.</b> 빈 목록을 주면 모델이 아무 말이나 한다.
      */
+    /**
+     * 추림이 <b>뜻이 있는가</b> — 상호와 겹치는 업종이 하나라도 있었나.
+     *
+     * <p>{@link #narrow} 는 겹치는 것이 모자라면 알파벳순 앞자리로 채운다. 그 목록으로 2단계를
+     * 물으면 모델이 무관한 30개를 놓고 {@code 모름} 을 뱉고, 그 답이 1단계의 옳은 답을 흐린다
+     * (실측 2026-08-21: {@code CGV_카카오페이} 1단계 <b>영화관 운영업</b> → 2단계 <b>모름</b>).
+     * 겹치는 것이 없으면 2·3단계를 건너뛰는 편이 낫고, 호출도 셋에서 하나로 준다.
+     */
+    public static boolean overlaps(String merchantName, List<String> narrowed) {
+        if (narrowed == null || narrowed.isEmpty()) return false;
+        String n = merchantName == null ? "" : merchantName.replaceAll("\\s+", "");
+        if (n.length() < 2) return false;
+        java.util.Set<String> grams = grams(n);
+        String flat = narrowed.get(0).replaceAll("\\s+", "");
+        for (String g : grams) if (flat.contains(g)) return true;
+        return false;                          // 첫째마저 안 겹치면 전부 채움이다
+    }
+
+    /**
+     * 상호에서 두 글자짜리 조각을 뽑는다. 한 글자는 아무 데나 걸리고(‘사’·‘점’),
+     * 세 글자는 거의 안 걸린다.
+     */
+    private static java.util.Set<String> grams(String flatName) {
+        java.util.Set<String> out = new java.util.LinkedHashSet<>();
+        for (int i = 0; i + 2 <= flatName.length(); i++) out.add(flatName.substring(i, i + 2));
+        return out;
+    }
+
     public static List<String> narrow(String merchantName, IndustryCategoryMapper mapper, int size) {
         List<String> all = new ArrayList<>();
         mapper.industryNamesByMid().values().forEach(all::addAll);
         String n = merchantName == null ? "" : merchantName.replaceAll("\\s+", "");
 
-        // 상호에서 두 글자짜리 조각을 뽑아 업종 이름과 겹치는지 본다. 한 글자는 아무 데나
-        // 걸리고(‘사’·‘점’), 세 글자는 거의 안 걸린다.
-        java.util.Set<String> grams = new java.util.LinkedHashSet<>();
-        for (int i = 0; i + 2 <= n.length(); i++) grams.add(n.substring(i, i + 2));
+        java.util.Set<String> grams = grams(n);
 
         java.util.Map<String, Integer> score = new java.util.LinkedHashMap<>();
         for (String name : all) {

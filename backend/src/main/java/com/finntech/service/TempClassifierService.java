@@ -97,12 +97,14 @@ public class TempClassifierService {
 
     public TempClassifierService(TempClassifierProperties props, IndustryCategoryMapper mapper,
                                  MerchantClassifierService classifier, ObjectMapper json,
-                                 java.time.Clock clock, FreeChannelQueue queue) {
+                                 java.time.Clock clock, FreeChannelQueue queue,
+                                 org.springframework.beans.factory.ObjectProvider<MerchantBrandService> brands) {
         this.props = props;
         this.mapper = mapper;
         this.classifier = classifier;
         this.json = json;
         this.queue = queue;
+        this.brands = brands;
         this.client = props.usable()
                 ? RestClient.builder().requestFactory(factory(props.getTimeoutMs())).build()
                 : null;
@@ -202,7 +204,9 @@ public class TempClassifierService {
         // 차선의 예산 계산이 어긋나고, 하나가 죽으면 묶음이 같이 죽는다.
         String industryList = IndustryPrompt.industryList(mapper);
         for (String name : ask) {
-            queue.submit(lane, "industry:" + name, () -> fill(name, industryList));
+            // 3단계라 호출이 최대 셋이다 — 예산은 작업이 아니라 호출을 센다.
+            queue.submit(lane, "industry:" + name, FreeChannelQueue.MAX_CALLS_PER_JOB,
+                    () -> fill(name, industryList));
         }
         return out;
     }
@@ -438,27 +442,59 @@ public class TempClassifierService {
      * @return 업종 이름, 목록 밖이면 빈 문자열, 통로가 죽었으면 {@code null}
      */
     private String classifyOne(String name, String industryList) {
-        String brand = brandCache.get(name);
-        String a1 = askOne(IndustryPrompt.of(name, brand, industryList));
+        // **PG 상호를 걷어낸 이름으로 묻는다.** 원문을 그대로 주면 프롬프트의 "결제대행사는
+        // 모름" 규칙에 이름이 걸려 모델이 답을 안 한다 — `구글_네이버페이` 를 브랜드를 빼고
+        // 물어도 두 번 다 `모름` 이었다(2026-08-21 실측, 11건 234,544원). 걷어낸 `구글` 로
+        // 물으면 답이 나온다. 비면 물어볼 것이 없다는 뜻이라 부르는 쪽이 이미 걸렀다.
+        String asked = classifier.residueOf(name);
+        if (asked.isBlank()) return "";
+        String brand = knownBrandOf(name);
+        String a1 = askOne(IndustryPrompt.of(asked, brand, industryList));
         if (a1 == null) return null;                       // 통로가 죽었다
         String a = IndustryPrompt.pickIndustry(a1, mapper);
 
+        // **겹치는 후보가 없으면 2단계를 건너뛴다.** `narrow` 는 상호와 겹치는 것이 모자라면
+        // 알파벳순 앞자리로 채우는데, 그러면 모델이 무관한 30개를 놓고 `모름` 을 뱉는다
+        // (실측: `CGV_카카오페이` 1단계 `영화관 운영업` → 2단계 `모름`). 그 답은 판정을 흐리고
+        // 호출만 두 번 더 쓴다.
+        List<String> narrowed = IndustryPrompt.narrow(name, mapper, NARROW);
+        if (!IndustryPrompt.overlaps(name, narrowed)) return a == null ? "" : a;
+
         // 전체 목록과 같은 구분자여야 한다 — 이름에 쉼표가 든 것이 40개다({@code industryList}).
-        String shortList = String.join("\n", IndustryPrompt.narrow(name, mapper, NARROW));
-        String b1 = askOne(IndustryPrompt.of(name, brand, shortList));
+        String b1 = askOne(IndustryPrompt.of(asked, brand, String.join("\n", narrowed)));
         String b = b1 == null ? null : IndustryPrompt.pickIndustry(b1, mapper);
 
         if (b == null || b.equals(a)) return a == null ? "" : a;   // 갈릴 것이 없다
         if (a == null) return b;
 
-        String c1 = askOne(IndustryPrompt.tieBreak(name, a, b));
+        String c1 = askOne(IndustryPrompt.tieBreak(asked, a, b));
         String c = c1 == null ? null : IndustryPrompt.pickIndustry(c1, mapper);
         // **A 아니면 B 만 받는다.** 셋째 것을 답하면 버리고 추림을 안 탄 A 로 돌아간다.
         return (b.equals(c)) ? b : a;
     }
 
-    /** 브랜드를 알면 프롬프트에 함께 준다 — 없으면 {@code null} 이고 그냥 안 준다. */
-    private final Map<String, String> brandCache = new ConcurrentHashMap<>();
+    /**
+     * 브랜드를 알면 프롬프트에 함께 준다 — 없으면 {@code null} 이고 그냥 안 준다.
+     *
+     * <p><b>{@code ObjectProvider} 인 이유는 고리 때문이다.</b> {@code MerchantBrandService} 가
+     * 브랜드를 뽑으려고 이 서비스를 쓰므로 서로를 생성자에서 받으면 기동이 막힌다. 늦게 꺼내면
+     * 고리가 풀리고, 부르는 시점에는 둘 다 이미 서 있다.
+     *
+     * <p>예전에는 여기 {@code Map} 하나가 있었는데 <b>넣는 곳이 없었다</b> — 읽기만 하고
+     * 아무도 채우지 않아 브랜드가 프롬프트에 한 번도 안 나갔다(2026-08-21 발견).
+     */
+    private final org.springframework.beans.factory.ObjectProvider<MerchantBrandService> brands;
+
+    /**
+     * <b>이미 적혀 있는</b> 브랜드 — 쓸 수 있는 것만. 없으면 {@code null}.
+     *
+     * <p>{@link #brandOf} 와 다르다 — 저쪽은 <b>모델에게 묻는다</b>. 여기는 사전·대기표에
+     * 적힌 것을 꺼낼 뿐이라 값이 0 이고, 분류 프롬프트가 참고용으로 쓴다.
+     */
+    private String knownBrandOf(String merchantName) {
+        MerchantBrandService service = brands.getIfAvailable();
+        return service == null ? null : service.usableBrandOf(merchantName).orElse(null);
+    }
 
     /** 2단계가 보는 후보 수. 좁히면 놓치고 넓히면 1단계와 같아진다. */
     private static final int NARROW = 30;
@@ -473,9 +509,15 @@ public class TempClassifierService {
                     .body(json.writeValueAsString(Map.of(
                             "model", model(),
                             "messages", List.of(Map.of("role", "user", "content", prompt)),
-                            // 답은 업종 이름 하나다 — 길게 줄 이유가 없고, 짧게 두면
-                            // 모델이 문장을 쓰려다 잘려 군말이 덜 붙는다.
-                            "max_tokens", 32,
+                            // **답이 잘리면 못 쓴다.** 예전에는 32 였는데, 모델이 단답 대신
+                            // 서식을 흉내 내면(`가맹점명 : … / 업종 : … / 이유 : "넥`) 거기서
+                            // 끊긴다. `pickIndustry` 가 longest-match 라 값은 건지지만 그때
+                            // 집히는 것이 옳은 답이라는 보장이 없다 — 실측에서 `넥슨_카카오페이`
+                            // 가 그렇게 `전자상거래 소매업` 이 됐다(2026-08-21).
+                            //
+                            // 업종 이름 중 가장 긴 것이 40자쯤이라 96 이면 서식이 붙어도 답까지는
+                            // 들어온다. 길게 잡아도 `temperature 0` 이라 값은 그대로다.
+                            "max_tokens", 96,
                             "temperature", 0)))
                     .retrieve()
                     .body(String.class);

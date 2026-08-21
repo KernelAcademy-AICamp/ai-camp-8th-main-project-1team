@@ -92,8 +92,18 @@ public class MerchantCategoryService {
     public Optional<String> guess(String businessNumber, String merchantName) {
         // **추정만** 본다. `!isConfirmed()` 로 두면 시도 이력 행(ATTEMPTED — 분류가 아니라
         // "건드려 봤다"는 기록)까지 걸려 들어 '카테고리없음'이 추정인 양 화면에 나간다.
-        return find(businessNumber, merchantName, MerchantCategory::isGuess)
+        Optional<String> byKey = find(businessNumber, merchantName, MerchantCategory::isGuess)
                 .map(MerchantCategory::getCategory2);
+        if (byKey.isPresent()) return byKey;
+        // **브랜드로 한 번 더 본다.** 사전 키가 (번호, 풀네임)이라 같은 브랜드의 새 지점은
+        // 매번 새 항목이다 — 그 브랜드가 만장일치면 다시 물을 이유가 없다(2026-08-21).
+        return brands.usableBrandOf(merchantName).flatMap(this::byBrand);
+    }
+
+    /** 브랜드가 사전에서 만장일치일 때의 중분류 — 아니면 비어 있다. */
+    public Optional<String> byBrand(String brand) {
+        if (brand == null || brand.isBlank() || NO_BRAND.equals(brand)) return Optional.empty();
+        return snapshot().guessOfBrand(brand);
     }
 
     /**
@@ -538,6 +548,18 @@ public class MerchantCategoryService {
     }
 
     /** 한 시점의 사전 사본. 적재하는 동안만 산다. */
+    /**
+     * 브랜드 추출기가 "브랜드가 없다"를 <b>값으로</b> 적어 둔 것 — 브랜드가 아니다.
+     *
+     * <p>{@code null} 이 아니라 이 문자열이 들어 있는 행이 실제로 있다(2026-08-21 실측:
+     * {@code 사당쌀빵}·{@code 황금마차}·{@code 고향양꼬치}). 브랜드로 취급하면 서로 무관한
+     * 가맹점들이 한 덩어리가 된다.
+     */
+    static final String NO_BRAND = "브랜드없음";
+
+    /** 브랜드로 인정할 최소 지점 수 — 하나뿐이면 브랜드가 아니라 그냥 그 가맹점이다. */
+    static final int BRAND_MIN_BRANCHES = 2;
+
     public static final class Snapshot {
         private final Map<String, String> exact = new HashMap<>();       // key(번호, 풀네임) → 중분류
         private final Map<String, String> byBusiness = new HashMap<>();  // 번호 → 중분류(PG 아닌 것만)
@@ -547,6 +569,17 @@ public class MerchantCategoryService {
         private final Map<String, String> guessExact = new HashMap<>();
         private final Map<String, String> guessByBusiness = new HashMap<>();
         private final Map<String, String> guessByNameOnly = new HashMap<>();
+        /**
+         * 브랜드 → 중분류. <b>그 브랜드의 모든 지점이 같은 답일 때만</b> 담는다.
+         *
+         * <p>사전 키가 {@code (사업자번호, 가맹점명 전체)} 라서 <b>같은 브랜드의 새 지점마다
+         * 처음부터 다시 묻는다</b>. 실측(2026-08-21): 사전에 CU 20지점·세븐일레븐 11지점·
+         * 이마트24 10지점이 전부 {@code 편의점/잡화} 하나로 만장일치인데, 라진우의
+         * {@code 씨유(CU)낙원점} 은 미분류였다. 그 사람 미분류 40종 중 12종이 이 경우였다.
+         *
+         * <p>사용자가 늘수록 빨라져야 하는데, 브랜드 재사용이 없으면 같은 값을 계속 다시 치른다.
+         */
+        private final Map<String, String> guessByBrand = new HashMap<>();
         private final IndustryCategoryMapper mapper;
 
         Snapshot(List<MerchantCategory> rows, IndustryCategoryMapper mapper) {
@@ -560,6 +593,23 @@ public class MerchantCategoryService {
             rows.stream().filter(MerchantCategory::isConfirmed).forEach(m ->
                     confirmedKinds.computeIfAbsent(m.getBusinessNumber(), k -> new java.util.TreeSet<>())
                             .add(m.getCategory2()));
+
+            // **브랜드가 만장일치일 때만 담는다.** 한 브랜드에 두 분류가 섞여 있으면
+            // (실측: GS25 에 쇼핑·식비·편의점/잡화 셋) 그 브랜드로는 아무것도 말할 수 없다.
+            // 지점이 하나뿐인 브랜드도 담지 않는다 — 그것은 그냥 그 가맹점이지 브랜드가 아니다.
+            java.util.Map<String, java.util.Set<String>> brandKinds = new HashMap<>();
+            java.util.Map<String, Integer> brandCounts = new HashMap<>();
+            for (MerchantCategory m : rows) {
+                String brand = m.getBrand();
+                if (brand == null || brand.isBlank() || NO_BRAND.equals(brand)) continue;
+                if (m.getCategory2() == null || IndustryCategoryMapper.isUnknown(m.getCategory2())) continue;
+                brandKinds.computeIfAbsent(brand, k -> new java.util.TreeSet<>()).add(m.getCategory2());
+                brandCounts.merge(brand, 1, Integer::sum);
+            }
+            brandKinds.forEach((brand, kinds) -> {
+                if (kinds.size() != 1 || brandCounts.getOrDefault(brand, 0) < BRAND_MIN_BRANCHES) return;
+                guessByBrand.put(brand, kinds.iterator().next());
+            });
 
             rows.stream().sorted(java.util.Comparator
                             .comparingInt(MerchantCategoryService::sourceRank)
@@ -614,15 +664,32 @@ public class MerchantCategoryService {
          * 사전에는 멀쩡히 남아 있는데도 그렇다(2026-08-05 운영에서 실제로 발생).
          * 복구를 별도 화면 방문에 맡기지 않고 <b>연동할 때 같이 칠한다.</b>
          */
+        /** 브랜드가 만장일치일 때의 중분류. {@link #guessByBrand} 참조. */
+        public Optional<String> guessOfBrand(String brand) {
+            if (brand == null || brand.isBlank() || NO_BRAND.equals(brand)) return Optional.empty();
+            return Optional.ofNullable(guessByBrand.get(brand));
+        }
+
         public Optional<String> guess(String businessNumber, String merchantName) {
+            return guess(businessNumber, merchantName, null);
+        }
+
+        /**
+         * @param brand 이 가맹점의 브랜드. 이름·번호로 못 찾았을 때 <b>마지막으로</b> 본다 —
+         *              같은 브랜드의 지점이 사전에서 만장일치면 그 값을 쓴다.
+         */
+        public Optional<String> guess(String businessNumber, String merchantName, String brand) {
             if (merchantName == null || merchantName.isBlank()) return Optional.empty();
             String biz = MerchantCategory.normalize(businessNumber);
             String hit = guessExact.get(key(biz, merchantName));
             if (hit != null) return Optional.of(hit);
-            if (biz.isEmpty() || mapper.isPaymentAgency(biz)) {
-                return Optional.ofNullable(guessByNameOnly.get(merchantName));
-            }
-            return Optional.ofNullable(guessByBusiness.get(biz));
+            String byKey = (biz.isEmpty() || mapper.isPaymentAgency(biz))
+                    ? guessByNameOnly.get(merchantName)
+                    : guessByBusiness.get(biz);
+            if (byKey != null) return Optional.of(byKey);
+            // **브랜드는 맨 마지막이다.** 이름·번호로 짚이는 것이 있으면 그것이 더 가깝다.
+            if (brand == null || brand.isBlank() || NO_BRAND.equals(brand)) return Optional.empty();
+            return Optional.ofNullable(guessByBrand.get(brand));
         }
 
         /** 사전에 있으면 그 분류를, 없으면 업종코드가 정한 분류를 준다. */
