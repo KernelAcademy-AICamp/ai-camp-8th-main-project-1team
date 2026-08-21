@@ -3,6 +3,8 @@ package com.finntech.service;
 import com.finntech.config.GeminiModels;
 import com.finntech.engine.IndustryCategoryMapper;
 import com.finntech.util.HttpClients;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,8 @@ import java.util.TreeMap;
  */
 @Service
 public class MerchantClassifierService {
+
+    private static final Logger log = LoggerFactory.getLogger(MerchantClassifierService.class);
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -442,8 +446,81 @@ public class MerchantClassifierService {
         return out;
     }
 
+    /**
+     * <b>최초 연동용 일괄 분류</b> — 40곳씩 끊어 유료 통로에 묻는다.
+     *
+     * <h2>왜 이 자리만 예외인가</h2>
+     *
+     * <p>평소에는 무료 통로가 <b>한 곳씩</b> 물어 채운다. 그런데 최초 연동은 <b>사람이 로딩
+     * 화면 앞에서 기다린다</b>. 110종을 한 곳씩 물으면 호출 예산(분당 40)에 걸려 3분이고,
+     * 40곳씩 묶으면 세 번이라 30초다. 그 차이가 첫인상을 가른다.
+     *
+     * <p>대신 <b>이 자리에서만</b> 쓴다. 이후 재분류는 그대로 한 곳씩이고, 여기서 못 맞힌 것도
+     * 무료 통로가 이어받는다 — 이 메서드는 <b>먼저 크게 훑는 것</b>이지 유일한 통로가 아니다.
+     *
+     * @param merchantNames 물어볼 상호들. PG 를 걷어낸 나머지가 비는 것은 부르는 쪽이 이미 뺐다.
+     * @param industries    (선택) 알아낸 <b>업종 이름</b>을 함께 받아 갈 지도 — 업종코드를 되찾는 데 쓴다
+     * @return 가맹점명 → 중분류. 못 맞힌 것은 없다.
+     */
+    public Map<String, String> classifyInBulk(List<String> merchantNames,
+                                              Map<String, String> industries) {
+        Map<String, String> out = new TreeMap<>();
+        if (!aiEnabled() || merchantNames == null || merchantNames.isEmpty()) return out;
+
+        String industryList = IndustryPrompt.industryList(mapper);
+        List<String> distinct = merchantNames.stream()
+                .filter(n -> n != null && !n.isBlank())
+                .distinct().sorted().toList();          // 정렬 고정 — §4 원칙 3 재현성
+
+        int batches = 0;
+        for (int from = 0; from < distinct.size(); from += BULK_BATCH) {
+            if (batches >= MAX_BULK_BATCHES) {
+                log.info("일괄 분류 — 묶음 상한 {}개를 채워 {}곳에서 멈춘다. 남은 것은 무료 통로가 잇는다",
+                        MAX_BULK_BATCHES, from);
+                break;
+            }
+            batches++;
+            List<String> slice = distinct.subList(from, Math.min(from + BULK_BATCH, distinct.size()));
+            // **묻는 이름은 PG 를 걷어낸 것이다.** 원문을 주면 "결제대행사는 모름" 규칙에 걸린다.
+            List<String> asked = slice.stream().map(this::residueOf).toList();
+            String text = askOneRaw(IndustryPrompt.ofMany(asked, industryList), BULK_MAX_TOKENS);
+            if (text == null) continue;                 // 이 묶음만 건너뛴다 — 다음 묶음은 산다
+
+            for (var e : IndustryPrompt.pickMany(text, mapper).entrySet()) {
+                int at = e.getKey();
+                if (at >= slice.size()) continue;       // 모델이 없는 번호를 지어냈다
+                String name = slice.get(at);
+                String industry = e.getValue();
+                String mid = mapper.midOfIndustryName(industry);
+                if (IndustryCategoryMapper.isUnknown(mid)) continue;
+                if (industries != null) industries.put(name, industry);
+                out.put(name, mid);
+            }
+        }
+        log.info("일괄 분류 — 가맹점 {}곳, 묶음 {}개, 붙인 곳 {}", distinct.size(), batches, out.size());
+        return out;
+    }
+
+    /** 한 묶음에 담는 가맹점 수. 늘리면 모델이 중간에서 흘리고, 줄이면 묶는 값이 없다. */
+    private static final int BULK_BATCH = 40;
+
+    /**
+     * 최초 연동 한 번에 낼 <b>묶음 수 상한</b> — 유료 통로라 값이 든다.
+     *
+     * <p>40 × 5 = 200곳이면 실사용자 명세서 한 벌을 거의 덮는다(실측: 가장 많은 사람이 110종).
+     * 넘는 것은 무료 통로가 이어받으므로 잃는 것은 시간뿐이다.
+     */
+    private static final int MAX_BULK_BATCHES = 5;
+
+    /** 40줄 × 한 줄 30자 남짓 — 답이 잘리면 뒤쪽 가맹점이 통째로 날아간다. */
+    private static final int BULK_MAX_TOKENS = 2048;
+
     /** 한 번 묻고 본문만 받는다 — 실패는 {@code null}. */
     private String askOneRaw(String prompt) {
+        return askOneRaw(prompt, 32);
+    }
+
+    private String askOneRaw(String prompt, int maxOutputTokens) {
         try {
             Map<?, ?> response = restClient.post()
                     .uri("/v1beta/models/{model}:generateContent?key={key}", model, apiKey)
@@ -452,7 +529,7 @@ public class MerchantClassifierService {
                     // 기본 표집 온도로 두면 실행마다 39·55·59·61종으로 흔들렸다(2026-08-05 실측).
                     .body(Map.of("contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))),
                                  "generationConfig", Map.of("temperature", 0,
-                                                            "maxOutputTokens", 32)))
+                                                            "maxOutputTokens", maxOutputTokens)))
                     .retrieve()
                     .body(Map.class);
             return extractText(response);

@@ -86,6 +86,87 @@ public final class IndustryPrompt {
     }
 
     /**
+     * <b>여럿을 한 번에 묻는 프롬프트</b> — 최초 연동 때만 쓴다.
+     *
+     * <h2>왜 예외인가</h2>
+     *
+     * <p>평소에는 <b>한 곳씩</b> 묻는다({@link #of}). 묶어 물으면 모델이 목록 중간에서 흘리고,
+     * 답이 하나 깨지면 묶음이 같이 죽는다 — 그래서 그 규칙을 세웠다.
+     *
+     * <p>그런데 <b>최초 연동은 사람이 로딩 화면 앞에서 기다린다.</b> 한 곳씩 물으면
+     * 110종에 3분이 걸리는데(호출 예산 분당 40), 40곳씩 묶으면 세 번이면 끝나 30초다.
+     * 그 한 자리에서만 예외를 둔다 — 이후 재분류는 그대로 한 곳씩이다.
+     *
+     * <h2>축은 여전히 안 보여 준다</h2>
+     *
+     * <p>중분류는 프롬프트에 없다(마스터 §4 원칙 1). 묶었다고 달라지는 것은 <b>몇 곳을
+     * 묻는가</b>뿐이고, 답으로 받는 것은 여전히 업종 이름이며 축은 우리 표가 정한다.
+     *
+     * @param merchantNames 물어볼 상호들 — 부르는 쪽이 이미 PG 를 걷어낸 이름이어야 한다
+     */
+    public static String ofMany(List<String> merchantNames, String industryList) {
+        StringBuilder numbered = new StringBuilder();
+        for (int i = 0; i < merchantNames.size(); i++) {
+            numbered.append(i + 1).append(". ").append(merchantNames.get(i)).append('\n');
+        }
+        return """
+                아래는 한국 카드 명세서에 찍힌 가맹점명 %d개입니다. 각 가맹점이 어느 업종인지 \
+                고르세요.
+
+                가맹점 목록 :
+                %s
+                답은 **한 줄에 하나씩**, 아래 형식 그대로 쓰세요. 다른 설명을 아예 하면 안 되고, \
+                문장이 되어서도 절대 안 됩니다.
+
+                1. 업종이름
+                2. 업종이름
+
+                - 답에는 **아래 업종 목록에 포함된 업종 이름만** 쓰세요. 글자 그대로 쓰세요.
+                - 무엇을 파는지 알겠다면 **목록에서 가장 가까운 업종**을 고르세요. 딱 맞는 것이
+                  없어도 가장 가까운 것을 고르면 됩니다.
+                - **해외 가맹점도 마찬가지입니다.** 영문·로마자 상호라도 무엇을 파는 곳인지
+                  알겠다면 고르세요(예: 공항 면세점, 해외 호텔, 해외 항공사).
+                - 결제대행사 상호(토스페이먼츠, 나이스페이먼츠, KG이니시스, 네이버페이,
+                  카카오페이 등)는 **여러 가게의 결제를 대신 처리하는 회사**라 무엇을 샀는지
+                  알 수 없습니다. 그럴 때는 모름 이라고만 쓰세요.
+                - 다만 **한 브랜드의 자체 결제 수단**은 그 브랜드로 판단하세요 — 이름에 '페이'가
+                  붙었다고 빼면 안 됩니다. '컬리페이'는 마켓컬리에서 산 것이고,
+                  '무신사페이먼츠'는 무신사에서 산 것입니다.
+                - 뜻을 알 수 없는 상호, 사람 이름만 있는 것, 숫자뿐인 것도 모름 입니다.
+                - **번호를 빠뜨리지 마세요.** %d개 전부에 답해야 합니다.
+
+                업종 목록 :
+                %s
+                """.formatted(merchantNames.size(), numbered, merchantNames.size(), industryList);
+    }
+
+    /**
+     * 묶음 답에서 <b>번호 → 업종 이름</b>을 꺼낸다.
+     *
+     * <p>모델이 서식을 흘리거나 번호를 건너뛰어도 <b>있는 것만</b> 받는다. 한 줄이 깨졌다고
+     * 묶음을 통째로 버리면 40곳이 날아간다 — 그것이 묶어 묻기의 위험이라 여기서 막는다.
+     *
+     * @return 0부터 세는 자리 → 업종 이름. 목록 밖의 답은 담기지 않는다.
+     */
+    public static java.util.Map<Integer, String> pickMany(String answer, IndustryCategoryMapper mapper) {
+        java.util.Map<Integer, String> out = new java.util.LinkedHashMap<>();
+        if (answer == null || answer.isBlank()) return out;
+        for (String line : answer.split("\\R")) {
+            java.util.regex.Matcher m = NUMBERED.matcher(line.trim());
+            if (!m.find()) continue;
+            int index = Integer.parseInt(m.group(1)) - 1;
+            if (index < 0) continue;
+            String industry = pickIndustry(m.group(2), mapper);
+            if (industry != null) out.put(index, industry);
+        }
+        return out;
+    }
+
+    /** {@code 12. 커피 전문점} · {@code 12) 커피 전문점} · {@code 12 - 커피 전문점} 을 받는다. */
+    private static final java.util.regex.Pattern NUMBERED =
+            java.util.regex.Pattern.compile("^(\\d{1,3})\\s*[.)\\-:]\\s*(.+)$");
+
+    /**
      * 브랜드를 알면 함께 준다.
      *
      * <p>실패한 답이 <b>전부</b> {@code (주)…} 로 시작했다 — {@code (주)마포애경타운-새틀라이트문구外}
