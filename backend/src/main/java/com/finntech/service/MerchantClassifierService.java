@@ -116,14 +116,47 @@ public class MerchantClassifierService {
         return merchantName != null && !merchantName.isBlank() && isAgencyName(merchantName.trim());
     }
 
+    /**
+     * <b>PG 상호를 걷어낸 뒤에도 무엇이 남는가.</b> 남으면 그것이 진짜 가맹점이다.
+     *
+     * <p>예전에는 {@code contains} 하나였다 — <b>PG 이름이 어딘가 박혀 있기만 하면</b> 통째로
+     * 뺐다. 그런데 실 명세서의 간편결제 상호는 {@code CGV_카카오페이}·{@code KICC(일반)-주식회사 설빙}
+     * 처럼 <b>PG 이름 + 진짜 가맹점</b> 꼴이라, 위 javadoc 이 "상호 자체가 PG 이름인가"라고
+     * 적어 둔 것과 코드가 달랐다. 실사용자 미분류 15종 중 <b>14종</b>이 여기서 빠졌고,
+     * 그중 상당수는 모델이 이름만 보고 맞힌다(실측: {@code CGV_카카오페이} → 영화관 운영업).
+     *
+     * <p>그래서 <b>빼고 남은 것</b>으로 가른다. {@code (주)카카오페이} 는 빼면 아무것도 안 남아
+     * 여전히 걸리고, {@code CGV_카카오페이} 는 {@code CGV} 가 남아 물어볼 값이 있다.
+     * (2026-08-21 운영 실측)
+     */
     private boolean isAgencyName(String name) {
-        String n = name.replaceAll("[\\s()（）주\\-_.]", "").toUpperCase();
+        String n = bareName(name);
+        if (n.isEmpty()) return false;
+        boolean sawAgency = false;
         for (String pg : mapper.paymentAgencyNames()) {
-            String p = pg.replaceAll("[\\s()（）주\\-_.]", "").toUpperCase();
-            if (!p.isEmpty() && n.contains(p)) return true;
+            String p = bareName(pg);
+            if (p.isEmpty() || !n.contains(p)) continue;
+            sawAgency = true;
+            n = n.replace(p, "");
         }
-        return false;
+        return sawAgency && n.isBlank();
     }
+
+    /**
+     * 상호에서 <b>이름이 아닌 것</b>을 걷어낸다 — 공백·괄호·구분자와 법인격 표기.
+     *
+     * <p>법인격은 {@code 주식회사}·{@code ㈜} 처럼 <b>낱말째로</b> 뺀다. 글자 {@code 주}
+     * 하나를 아무 데서나 빼면 {@code 네이버파이낸셜 주식회사} 가 {@code 네이버파이낸셜식회사}
+     * 가 되어 PG 인데도 안 걸린다(옛 코드가 그랬다).
+     *
+     * <p>{@link #squash} 와는 쓰임이 다르다 — 저쪽은 <b>업종명</b> 대조용이라 법인격을 모른다.
+     */
+    private static String bareName(String s) {
+        return s == null ? "" : DECOR.matcher(s).replaceAll("").toUpperCase();
+    }
+
+    private static final java.util.regex.Pattern DECOR = java.util.regex.Pattern.compile(
+            "주식회사|유한회사|㈜|\\(주\\)|[\\s()（）\\[\\]{}·・/\\\\|,\\-_.]");
 
     /**
      * 가맹점명들을 중분류로 추정한다. <b>명백하지 않으면 그 이름은 결과에 없다</b> —
