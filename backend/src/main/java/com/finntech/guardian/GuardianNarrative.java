@@ -107,11 +107,15 @@ public class GuardianNarrative {
     private final String apiKey;
     private final String model;
     private final RestClient restClient;
+    /** 무료가 먼저인 문. 유료는 무료 사슬 다섯이 다 죽었을 때만 쓴다. */
+    private final com.finntech.service.ModelGateway gateway;
 
     public GuardianNarrative(
             @Value("${finntech.gemini.api-key:}") String apiKey,
             @Value("${finntech.gemini.model:}") String model,
-            @Value("${finntech.gemini.base-url:https://generativelanguage.googleapis.com}") String baseUrl) {
+            @Value("${finntech.gemini.base-url:https://generativelanguage.googleapis.com}") String baseUrl,
+            com.finntech.service.ModelGateway gateway) {
+        this.gateway = gateway;
         this.apiKey = apiKey;
         this.model = com.finntech.config.GeminiModels.orDefault(model);
         // **타임아웃이 없으면 배치가 영구히 선다.** 이 호출은 `GuardianService.ingest` 의
@@ -185,7 +189,36 @@ public class GuardianNarrative {
                 recentKeyPhrases == null ? List.of() : recentKeyPhrases,
                 template.body());
 
-        return callGemini(prompt, template);
+        return callModel(prompt, template);
+    }
+
+    /**
+     * <b>무료가 먼저, 유료는 비상용</b>(2026-08-21 사용자 결정).
+     *
+     * <p>이 자리는 {@code GuardianSentenceQueue} 의 배경 일꾼 안에서 돈다 — 화면은 이미
+     * 템플릿 문장을 받아 갔고 여기서 갈아 끼울 뿐이다. 그래서 무료 통로의 순서를 기다려도
+     * 사용자가 기다리는 것이 아니다. 못 받으면 템플릿이 그대로 남는다.
+     */
+    private Message callModel(String prompt, Message fallback) {
+        var free = gateway.askNow(com.finntech.freechannel.Lane.USER_BACKGROUND,
+                "guardian-sentence:" + Integer.toHexString(prompt.hashCode()), prompt);
+        if (free.isPresent()) {
+            Message parsed = accept(free.get(), fallback);
+            if (parsed != null) return parsed;
+        }
+        return callGemini(prompt, fallback);
+    }
+
+    /** 받은 텍스트를 문장으로 받아들인다 — 못 받아들이면 {@code null}(부르는 쪽이 다음으로). */
+    private Message accept(String text, Message fallback) {
+        Message parsed = parseJson(text);
+        if (parsed == null) return null;
+        // 길이 위반은 프롬프트가 아니라 코드가 막는다 — LLM이 지키리라 믿고 두면 화면이 깨진다.
+        if (parsed.title().length() > GuardianCopy.MAX_TITLE_LEN
+                || parsed.body().length() > GuardianCopy.MAX_BODY_LEN) {
+            return null;
+        }
+        return parsed;
     }
 
     private Message callGemini(String prompt, Message fallback) {
