@@ -106,16 +106,41 @@ class IndustryPromptTest {
     void 브랜드를_함께_준다() {
         String prompt = IndustryPrompt.of("(주)스타벅스코리아 포항공대점", "스타벅스", list);
 
-        assertThat(prompt).contains("브랜드 : 스타벅스");
+        assertThat(prompt).contains("브랜드는 **스타벅스**");
         assertThat(prompt).as("원문도 남긴다 — 정제가 잘못 깎았을 때 되돌릴 근거다")
                 .contains("(주)스타벅스코리아 포항공대점");
+    }
+
+    /**
+     * 목록이 5,136자다. 가맹점명이 평문이면 그 사이에서 눈에 안 띈다 — 사용자가 준 원안도
+     * 두 자리 모두 굵게였다(2026-08-21 지적).
+     */
+    @Test
+    @DisplayName("가맹점명을 두 자리 모두 굵게 감싼다")
+    void 가맹점명을_굵게_감싼다() {
+        String prompt = IndustryPrompt.of("올리브영 홍대점", list);
+
+        assertThat(prompt.split("\\*\\*올리브영 홍대점\\*\\*", -1).length - 1)
+                .as("앞·뒤 두 자리 모두").isEqualTo(2);
+    }
+
+    /**
+     * 이름표만 붙이면 모델이 그냥 지나친다 — 그것이 무엇이고 어떻게 쓰라는 말이 있어야 한다.
+     */
+    @Test
+    @DisplayName("브랜드는 이름표가 아니라 문장으로 말한다")
+    void 브랜드를_문장으로_말한다() {
+        String prompt = IndustryPrompt.of("(주)스타벅스코리아 포항공대점", "스타벅스", list);
+
+        assertThat(prompt).contains("이 가맹점의 브랜드는 **스타벅스** 입니다")
+                .contains("업종을 고를 때 참고하세요");
     }
 
     @Test
     @DisplayName("브랜드가 없거나 상호와 같으면 그 줄을 안 넣는다")
     void 브랜드가_없으면_안_넣는다() {
-        assertThat(IndustryPrompt.of("행복한밥상", null, list)).doesNotContain("브랜드 :");
-        assertThat(IndustryPrompt.of("스타벅스", "스타벅스", list)).doesNotContain("브랜드 :");
+        assertThat(IndustryPrompt.of("행복한밥상", null, list)).doesNotContain("브랜드는");
+        assertThat(IndustryPrompt.of("스타벅스", "스타벅스", list)).doesNotContain("브랜드는");
     }
 
     @Test

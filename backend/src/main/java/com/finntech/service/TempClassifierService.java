@@ -325,14 +325,6 @@ public class TempClassifierService {
         }
     }
 
-    /** 중분류로 묶은 업종 목록 — {@code MerchantClassifierService} 와 같은 형식이라야 한다. */
-    private String catalog() {
-        StringBuilder sb = new StringBuilder();
-        mapper.industryNamesByMid().forEach((mid, list) ->
-                sb.append('[').append(mid).append("] ").append(String.join(" · ", list)).append('\n'));
-        return sb.toString();
-    }
-
     /**
      * 한 묶음을 묻는다 — 실패하면 {@code null}(예외를 밖으로 던지지 않는다).
      *
