@@ -34,6 +34,60 @@ class TempClassifierServiceTest {
                 new com.finntech.freechannel.FreeChannelQueue(40, 6, 500));
     }
 
+    /**
+     * <b>못 맞힌 가맹점을 5분마다 영원히 다시 묻던 것을 끊는다.</b>
+     *
+     * <p>예전에는 성공만 기록했다. 그래서 모델이 "모름"이라 한 가맹점은 아무 흔적도 안 남고,
+     * 후속 회차가 5분 뒤 같은 질문을 또 냈다 — 운영에서 {@code PAYCO_NIC NICE정보통신㈜1} 이
+     * 6시간 넘게 그랬다(2026-08-21 실측). 그 자리는 다른 가맹점이 썼어야 할 예산이다.
+     */
+    @Test
+    @DisplayName("모름을 받은 가맹점은 한동안 다시 묻지 않는다")
+    void 모름은_쉬었다_묻는다() {
+        var props = new TempClassifierProperties();
+        props.setEnabled(true);
+        props.setBaseUrl("https://example.invalid/v1/chat/completions");
+        props.setApiKey("k");
+        props.setModel("m");
+        var queue = mock(com.finntech.freechannel.FreeChannelQueue.class);
+        var svc = new TempClassifierService(props, mapper,
+                mock(MerchantClassifierService.class), json,
+                java.time.Clock.systemUTC(), queue);
+
+        svc.noteMiss("PAYCO_NIC NICE정보통신㈜1");
+
+        assertThat(svc.recentlyMissed("PAYCO_NIC NICE정보통신㈜1")).isTrue();
+        assertThat(svc.classify(List.of("PAYCO_NIC NICE정보통신㈜1"),
+                com.finntech.freechannel.Lane.USER_BACKGROUND)).isEmpty();
+        org.mockito.Mockito.verify(queue, org.mockito.Mockito.never()).submit(
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.any());
+    }
+
+    /** 시간이 지나면 다시 본다 — 사전·브랜드가 채워지면 그때는 맞힐 수 있다. */
+    @Test
+    @DisplayName("쉬는 시간이 지나면 다시 묻는다")
+    void 쉬는_시간이_지나면_다시_묻는다() {
+        var props = new TempClassifierProperties();
+        props.setEnabled(true);
+        props.setBaseUrl("https://example.invalid/v1/chat/completions");
+        props.setApiKey("k");
+        props.setModel("m");
+        props.setMissMinutes(0);                       // 곧바로 만료
+        var queue = mock(com.finntech.freechannel.FreeChannelQueue.class);
+        var svc = new TempClassifierService(props, mapper,
+                mock(MerchantClassifierService.class), json,
+                java.time.Clock.systemUTC(), queue);
+
+        svc.noteMiss("어떤 가게");
+
+        assertThat(svc.recentlyMissed("어떤 가게")).isFalse();
+        svc.classify(List.of("어떤 가게"), com.finntech.freechannel.Lane.USER_BACKGROUND);
+        org.mockito.Mockito.verify(queue).submit(
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.any());
+    }
+
     @Test
     @DisplayName("설정을 안 주면 꺼진 채로 있고 아무것도 부르지 않는다")
     void offByDefault() {
