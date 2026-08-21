@@ -44,9 +44,23 @@ public class UserPayment {
     @Column(name = "payment_date", nullable = false)
     private LocalDateTime paymentDate;
 
-/** 제공자가 준 업종코드(KSIC 세분류 4자리). 분류의 원본 근거라 그대로 보관한다. */
+/**
+     * 제공자가 준 업종코드(KSIC 세분류 4자리). 분류의 원본 근거라 그대로 보관한다.
+     *
+     * <p><b>실 명세서에는 이 값이 없다.</b> 그래서 적재기가 자리채움값
+     * {@link #PLACEHOLDER_INDUSTRY} 를 넣는데, 그 코드는 대조표에 아예 없어 카드 혜택 축도
+     * 중분류도 안 나온다. 실측(2026-08-21) 결과 <b>실사용자 결제 1,579건 전부</b>가 그 값을
+     * 들고 있었고, 그래서 카드추천이 실사용자에게는 축 없음으로만 답하고 있었다.
+     * {@link #learnIndustryCode} 가 그 자리를 메운다.
+     */
     @Column(name = "ksic_code", nullable = false, length = 8)
     private String industryCode;
+
+    /**
+     * 실 명세서 적재기가 넣는 자리채움 업종코드({@code RealPersonImportService.UNKNOWN_INDUSTRY}).
+     * 두 곳이 같은 값을 알아야 해서 상수로 둔다 — 한쪽만 고치면 조용히 어긋난다.
+     */
+    public static final String PLACEHOLDER_INDUSTRY = "642004";
 
 /**
      * 우리 소비 중분류 — 업종코드를 대조표로 옮긴 결과.
@@ -173,6 +187,27 @@ public class UserPayment {
      * 확정 분류를 적용한다 — 사전에서 왔거나({@code DICT}) 사람이 확인한 것({@code USER})이다.
      * 이때는 {@code category2} 를 바꾼다. 근거가 사람이라 판정에 참여해도 원칙이 깨지지 않는다.
      */
+    /**
+     * <b>알아낸 업종코드를 자리채움 위에 적는다.</b>
+     *
+     * <p>카드 혜택 축은 중분류가 아니라 <b>업종코드</b>로 정해진다({@code cardAxisOf}).
+     * 실 명세서에는 코드가 없어 그 축이 통째로 죽어 있었다. 무료·유료 통로가 업종을
+     * 알아내면 그 이름에서 나온 코드를 여기 적어 축이 살아나게 한다.
+     *
+     * <p><b>사실을 덮지 않는다.</b> 제공자가 준 진짜 코드가 있으면 그대로 둔다 — 자리채움일
+     * 때만 갈아 끼운다. 그 값이 추정에서 왔다는 사실은 {@code category2Source} 가 이미
+     * 들고 있다(사전에는 안 적는다 — 전역 자산에 추정을 번지게 하지 않는다, V29).
+     *
+     * @return 실제로 바뀌었으면 {@code true}
+     */
+    public boolean learnIndustryCode(String code) {
+        if (code == null || code.isBlank()) return false;
+        if (!PLACEHOLDER_INDUSTRY.equals(this.industryCode)) return false;
+        if (code.equals(this.industryCode)) return false;
+        this.industryCode = code;
+        return true;
+    }
+
     public void confirmCategory2(String category2, String source) {
         // **임시 추정을 함께 치운다.** 무료 통로의 답은 확정이 오기 전까지만 사는 값인데,
         // 남겨 두면 확정이 붙은 뒤에도 옛 추정이 화면에 따라다닌다. 규칙을 여기 한 곳에 두는

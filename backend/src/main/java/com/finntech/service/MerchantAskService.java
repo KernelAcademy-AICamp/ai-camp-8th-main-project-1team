@@ -72,6 +72,8 @@ public class MerchantAskService {
     /** ②-c 임시 분류 — 무료 통로. 답은 메모리에만 살고 DB 에 안 들어간다. */
     private final TempClassifierService temporary;
     private final Clock clock;
+    /** 업종 이름에서 국세청 코드를 되찾는 대조표 — 카드 혜택 축이 그 코드로 정해진다. */
+    private final com.finntech.engine.IndustryCategoryMapper industries;
     /**
      * <b>자기 자신의 프록시.</b> 추리기·입히기만 트랜잭션 안이고 모델 질의는 밖이라야 하는데,
      * {@code @Transactional} 은 프록시가 걸어 주는 것이라 같은 객체 안에서 그냥 부르면 안 걸린다.
@@ -92,6 +94,7 @@ public class MerchantAskService {
                               CategoryRepository categories, MerchantCategoryService dictionary,
                               MerchantClassifierService classifier,
                               TempClassifierService temporary, Clock clock,
+                              com.finntech.engine.IndustryCategoryMapper industries,
                               org.springframework.beans.factory.ObjectProvider<MerchantAskService> selfProvider,
             @org.springframework.beans.factory.annotation.Value(
                     "${finntech.temp-classifier.batch-size:8}") int tempBatchSize) {
@@ -102,6 +105,7 @@ public class MerchantAskService {
         this.classifier = classifier;
         this.temporary = temporary;
         this.clock = clock;
+        this.industries = industries;
         this.selfProvider = selfProvider;
         this.tempBatchSize = Math.max(1, tempBatchSize);
     }
@@ -189,7 +193,7 @@ public class MerchantAskService {
                 paidIndustries, answered);
         fresh = reconcile(fresh, paidIndustries, temp);
 
-        Asked out = self.applyGuesses(userId, plan.remembered(), fresh, temp, answered);
+        Asked out = self.applyGuesses(userId, plan.remembered(), fresh, temp, answered, paidIndustries);
         log.info("가맹점 분류 질의 — userId={} 물어본 곳 {}, 답 얻음 {}, 종결 {}",
                 userId, plan.ask().size(), fresh.size(), out.settled().size());
         return out;
@@ -276,6 +280,19 @@ public class MerchantAskService {
                               Map<String, String> fresh,
                               Map<String, TempClassifierService.Guess> temp,
                               Set<String> answered) {
+        return applyGuesses(userId, remembered, fresh, temp, answered, Map.of());
+    }
+
+    /**
+     * @param paidIndustries 유료 통로가 답한 <b>업종 이름</b>(가맹점명 → 업종명).
+     *                       업종코드를 되찾아 결제에 적는 데 쓴다 — 카드 혜택 축이 그 코드다.
+     */
+    @Transactional
+    public Asked applyGuesses(Long userId, Map<String, String> remembered,
+                              Map<String, String> fresh,
+                              Map<String, TempClassifierService.Guess> temp,
+                              Set<String> answered,
+                              Map<String, String> paidIndustries) {
         List<UserPayment> rows = payments.findByUserIdAndCategory2OrderByPaymentDateDesc(
                 userId, IndustryCategoryMapper.UNCLASSIFIED);
         Set<String> settled = new java.util.LinkedHashSet<>();
@@ -318,7 +335,7 @@ public class MerchantAskService {
 
         Map<String, String> paid = new LinkedHashMap<>(remembered);
         paid.putAll(fresh);
-        paint(rows, paid, temp);
+        paint(rows, paid, temp, paidIndustries);
         Map<String, String> guesses = new LinkedHashMap<>(paid);
         temp.forEach((n, g) -> guesses.putIfAbsent(n, g.category2()));
         return new Asked(rows, guesses, settled);
@@ -379,18 +396,39 @@ public class MerchantAskService {
      * 나오고, 무료 통로의 답({@code TEMP})은 임시라 유료 답이 오면 덮인다. 화면에는 둘 다
      * "AI 추정"으로 똑같이 보이지만, 기록까지 같게 두면 나중에 어느 쪽 값인지 가려낼 수 없다.
      */
-    private static void paint(List<UserPayment> rows, Map<String, String> paid,
-                              Map<String, TempClassifierService.Guess> temp) {
+    private void paint(List<UserPayment> rows, Map<String, String> paid,
+                       Map<String, TempClassifierService.Guess> temp,
+                       Map<String, String> paidIndustries) {
         for (UserPayment p : rows) {
             String name = p.getMerchantName();
             String confirmed = paid.get(name);
             if (confirmed != null) {
                 p.suggestCategory2(confirmed, "LLM");
+                learnCode(p, paidIndustries.get(name));
                 continue;
             }
             TempClassifierService.Guess t = temp.get(name);
-            if (t != null) p.suggestCategory2(t.category2(), "TEMP");
+            if (t != null) {
+                p.suggestCategory2(t.category2(), "TEMP");
+                learnCode(p, t.industryName());
+            }
         }
+    }
+
+    /**
+     * <b>알아낸 업종의 코드를 결제에 적는다</b> — 카드추천의 혜택 축이 그 코드로 정해진다.
+     *
+     * <p>실 명세서에는 업종코드가 없어 적재기가 자리채움값을 넣고, 그 코드는 대조표에 아예
+     * 없다. 그래서 실사용자 결제 <b>1,579건 전부</b>가 카드추천에서 축 없음으로 빠지고 있었다
+     * (2026-08-21 실측). 모델이 업종 이름을 알아냈으면 표에서 코드를 되찾아 그 자리를 메운다.
+     *
+     * <p>코드가 여럿이면 첫 것을 쓴다 — 그때는 그 코드들의 중분류가 만장일치라 어느 것을
+     * 골라도 축이 같다(V29 의 만장일치 규칙).
+     */
+    private void learnCode(UserPayment payment, String industryName) {
+        if (industryName == null || industryName.isBlank()) return;
+        var codes = industries.codesOfFineName(industryName);
+        if (!codes.isEmpty()) payment.learnIndustryCode(codes.get(0));
     }
 
     /**
