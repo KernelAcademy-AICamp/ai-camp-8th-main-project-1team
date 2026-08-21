@@ -5,6 +5,8 @@ import com.finntech.engine.IndustryCategoryMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import com.finntech.freechannel.FreeChannelQueue;
+import com.finntech.freechannel.Lane;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -59,6 +61,8 @@ public class TempClassifierService {
     private final MerchantClassifierService classifier;
     private final ObjectMapper json;
     private final RestClient client;
+    /** 무료 통로로 나가는 <b>유일한 문</b>. 차선이 급한 것을 먼저 내보낸다. */
+    private final FreeChannelQueue queue;
 
     /** 가맹점명 → 답. <b>메모리에만</b> 산다 — 재기동하면 비고, 그래도 무해하다. */
     private final Map<String, Cached> cache = new ConcurrentHashMap<>();
@@ -79,11 +83,12 @@ public class TempClassifierService {
 
     public TempClassifierService(TempClassifierProperties props, IndustryCategoryMapper mapper,
                                  MerchantClassifierService classifier, ObjectMapper json,
-                                 java.time.Clock clock) {
+                                 java.time.Clock clock, FreeChannelQueue queue) {
         this.props = props;
         this.mapper = mapper;
         this.classifier = classifier;
         this.json = json;
+        this.queue = queue;
         this.client = props.usable()
                 ? RestClient.builder().requestFactory(factory(props.getTimeoutMs())).build()
                 : null;
@@ -148,14 +153,24 @@ public class TempClassifierService {
     }
 
     /**
-     * 아직 답이 없는 가맹점들을 묶어서 묻고, 알아낸 것만 돌려준다.
+     * <b>아는 것은 지금 주고, 모르는 것은 큐에 올린다.</b>
      *
-     * <p>이미 캐시에 있는 것은 묻지 않고 그대로 얹어 준다. 물어봐야 소용없는 상호(PG)는
-     * {@link MerchantClassifierService#worthAsking} 이 걸러 낸 뒤 들어오는 것을 전제한다.
+     * <p><b>왜 기다리지 않는가.</b> 예전에는 여기서 통로를 직접 불러 답을 받아 왔다. 그때는
+     * 40곳을 한 프롬프트에 묶어 물어 호출이 한 번이었지만, 지금은 <b>한 곳당 최대 세 번</b>
+     * ({@code IndustryPrompt} 3단계)이라 그대로 두면 결제 적재 흐름이 통로를 통째로 붙잡는다.
+     * 더구나 이 경로는 무료 통로의 <b>유일한 문</b>({@link FreeChannelQueue})을 우회하고 있어
+     * 분당 예산을 큐 밖에서 갉아먹었다 — 문장·브랜드 작업이 그만큼 밀렸다
+     * ({@code OneDoorTest} 가 "다음 차례"라고 적어 둔 그 구멍이다).
      *
-     * @return 가맹점명 → 임시 답. 실패했거나 꺼져 있으면 캐시에 있던 것만.
+     * <p>그래서 {@code NarrativeCacheService} 와 같은 규율을 쓴다 — <b>있으면 주고, 없으면
+     * 올린다.</b> 못 받은 것은 다음 회차가 캐시에서 집어 간다. 이 메서드는 화면을 열 때마다
+     * 다시 불리므로 몇 번 나눠 부르면 결국 다 채워진다.
+     *
+     * @param lane 이 일이 급한가 — 화면을 연 사람이면 {@link Lane#USER_NOW}(지금 '카테고리없음'을
+     *             보고 있다), 배경 적재면 {@link Lane#USER_BACKGROUND}
+     * @return 가맹점명 → <b>이미 알고 있던</b> 임시 답. 새로 올린 것은 여기 없다.
      */
-    public Map<String, Guess> classify(List<String> merchantNames) {
+    public Map<String, Guess> classify(List<String> merchantNames, Lane lane) {
         Map<String, Guess> out = new LinkedHashMap<>();
         if (merchantNames == null || merchantNames.isEmpty()) return out;
 
@@ -167,28 +182,31 @@ public class TempClassifierService {
         }
         if (ask.isEmpty() || !usable()) return out;
 
-        // **남은 것을 전부 훑는다.** 회차당 상한을 두지 않는다 — 무료 통로라 아낄 것이 없고,
-        // 자르면 그만큼이 다음 회차(5분 뒤)로 밀려 미분류가 오래 남는다. 유료 통로가 40곳씩
-        // 묶는 것과 혼동하기 쉬운데, 그쪽은 프롬프트의 76%가 업종 목록이라 묶어야 이득인 것이고
-        // 여기는 그런 이유가 없다.
-        // **한 곳씩 묻는다.** 묶으면 모델이 앞 답에 끌려가고(앞이 카페면 뒤도 카페),
-        // JSON 형식이 깨지면 묶음 전체를 잃었다. 한 곳씩이면 답은 단어 하나이고 실패해도
-        // 그 하나만 잃는다({@code IndustryPrompt} 설계 주석).
-        String catalog = IndustryPrompt.industryList(mapper);
-        for (int i = 0; i < ask.size(); i += BATCH) {
-            List<String> chunk = ask.subList(i, Math.min(i + BATCH, ask.size()));
-            Map<String, String> got = callOnce(catalog, chunk);
-            if (got == null) return out;                 // 실패 — 남은 묶음도 포기한다
-            Instant now = Instant.now();
-            got.forEach((name, industry) -> {
-                String mid = mapper.midOfIndustryName(industry);
-                if (IndustryCategoryMapper.isUnknown(mid)) return;   // 목록 밖 이름은 버린다
-                Guess g = new Guess(industry, mid);
-                cache.put(name, new Cached(g, now));
-                out.put(name, g);
-            });
+        // **가맹점 하나가 일 하나다.** 묶어 올리면 큐가 그 묶음을 통째로 한 자리로 세어
+        // 차선의 예산 계산이 어긋나고, 하나가 죽으면 묶음이 같이 죽는다.
+        String industryList = IndustryPrompt.industryList(mapper);
+        for (String name : ask) {
+            queue.submit(lane, "industry:" + name, () -> fill(name, industryList));
         }
         return out;
+    }
+
+    /** 예전 서명 — 부르는 쪽이 급한 정도를 안 정했으면 배경으로 본다. */
+    public Map<String, Guess> classify(List<String> merchantNames) {
+        return classify(merchantNames, Lane.USER_BACKGROUND);
+    }
+
+    /**
+     * 큐가 부르는 자리 — 한 가맹점을 3단계로 묻고 <b>캐시에 넣는다.</b>
+     *
+     * <p>돌려주지 않는다. 부르는 쪽은 이미 떠났고, 다음 회차가 캐시에서 집어 간다.
+     */
+    private void fill(String name, String industryList) {
+        String industry = classifyOne(name, industryList);
+        if (industry == null || industry.isEmpty()) return;
+        String mid = mapper.midOfIndustryName(industry);
+        if (IndustryCategoryMapper.isUnknown(mid)) return;   // 목록 밖 이름은 버린다
+        cache.put(name, new Cached(new Guess(industry, mid), Instant.now()));
     }
 
     /**

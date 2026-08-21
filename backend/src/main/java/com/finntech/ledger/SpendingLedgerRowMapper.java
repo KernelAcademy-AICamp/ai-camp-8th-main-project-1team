@@ -39,6 +39,13 @@ import java.util.function.Predicate;
 public final class SpendingLedgerRowMapper {
 
     /** {@code suggestCategory2} 가 적는 출처 — 이 둘만 추정이다. */
+    /**
+     * 추정으로 보는 출처.
+     *
+     * <p>{@code TEMP} 는 <b>더 이상 쓰지 않는다</b>(2026-08-21 — 무료·유료를 가르던 두 층을
+     * 없애고 둘 다 {@code LLM} 으로 적는다). 그래도 목록에 남긴다 — 그 이전에 쓰인 줄이 DB 에
+     * 있고, 빼면 그 줄들이 <b>추정이 아니라 확정</b>으로 읽힌다.
+     */
     private static final Set<String> ESTIMATE_SOURCES = Set.of("LLM", "TEMP");
 
     /** 확정 출처를 잃은 줄. 값은 있는데 원장이 그 출처를 덮어써 되찾을 수 없을 때. */

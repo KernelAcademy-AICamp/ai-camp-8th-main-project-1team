@@ -56,10 +56,13 @@ public class MerchantAskService {
     /**
      * <b>백그라운드에서 부를 임계값</b> — 프롬프트 한 번을 꽉 채우는 수.
      *
-     * <p>{@link MerchantClassifierService#BATCH} 를 그대로 쓴다. 다른 수를 적으면 한 번에
-     * 안 떨어져 목록(프롬프트의 76%)을 두 번 보내거나, 채우지도 않고 부르게 된다.
+     * <p><b>왜 40인가.</b> 예전에는 40곳을 한 프롬프트에 묶어 물었고 이 값이 그 묶음 크기였다.
+     * 지금은 한 곳씩 묻지만({@code IndustryPrompt}) 값은 그대로 둔다 — 뜻이 바뀌었을 뿐이다.
+     * 이제는 <b>배경에서 통로를 두드릴 만큼 쌓였는가</b>의 문턱이다. 한두 곳 때문에 배경 작업을
+     * 깨우면 통로 예산만 쓰고 사용자는 아무것도 못 느낀다. 화면을 연 사람은
+     * {@link #ON_DEMAND_MIN} 로 곧바로 처리되므로 기다리게 되는 일도 없다.
      */
-    public static final int BACKGROUND_MIN = MerchantClassifierService.BATCH;
+    public static final int BACKGROUND_MIN = 40;
 
     /** 사용자가 화면을 열었을 때 — 한 곳이라도 있으면 묻는다. 체감 지연이 0 이라야 한다. */
     public static final int ON_DEMAND_MIN = 1;
@@ -180,22 +183,38 @@ public class MerchantAskService {
                     userId, plan.ask().size(), temp.size(), minMerchants);
         }
 
-        // **여기가 임계값이다.** 모자라면 유료 통로를 부르지 않고, 임시 답만 얹어 돌려준다.
-        if (plan.ask().size() < minMerchants) {
-            return self.applyGuesses(userId, plan.remembered(), Map.of(), temp, Set.of());
+        /* **무료와 유료를 가르지 않는다**(2026-08-21 사용자 결정).
+         *
+         * 예전에는 둘을 다르게 다뤘다 — 유료 답만 사전에 올리고(`LLM`), 무료 답은 화면 표시에만
+         * 썼다(`TEMP`, DB 미저장). 두 통로의 품질이 다르다는 전제였는데, 실측으로 그 전제가
+         * 깨졌다: 무료 1위 모델이 <b>72.3%</b> 로 유료 Gemini(<b>70.5%</b>)보다 높았고 실패도 0
+         * 이었다(148건 · 20초 간격 순차 채점).
+         *
+         * 그래서 <b>무료 답을 유료와 같은 자리에 놓는다</b> — 사전에도 올라가고 출처도 `LLM`
+         * 이다. 다르게 다룰 근거가 없어졌고, 두 갈래를 유지하면 같은 일을 두 벌로 관리하게 된다.
+         *
+         * **유료는 비상용으로 남는다.** 무료 사슬 5종이 다 죽었을 때만 부른다 — 큐 앞자리로
+         * 넣어도 시간이 안 되는 경우가 아니면 유료를 쓸 이유가 없다. */
+        Map<String, String> industries = new java.util.TreeMap<>();
+        Map<String, String> fresh = new LinkedHashMap<>();
+        Set<String> answered = new java.util.HashSet<>();
+        temp.forEach((name, g) -> {
+            fresh.put(name, g.category2());
+            industries.put(name, g.industryName());
+            answered.add(name);
+        });
+
+        // 무료가 못 잡았고 임계값을 넘겼을 때만 유료를 부른다 — 마지막 보루다.
+        List<String> stillUnknown = plan.ask().stream().filter(n -> !fresh.containsKey(n)).toList();
+        if (stillUnknown.size() >= minMerchants && classifier.aiEnabled()) {
+            Map<String, String> paid = classifier.classify(stillUnknown, plan.important(),
+                    industries, answered);
+            fresh.putAll(paid);
         }
 
-        // 업종 이름을 함께 받는다 — 재질의 후보를 중분류가 아니라 업종으로 주기 위해서다.
-        Map<String, String> paidIndustries = new java.util.TreeMap<>();
-        // **답을 받은 곳**을 따로 받아 둔다 — '헛물'은 이 안에서만 셀 수 있다.
-        Set<String> answered = new java.util.HashSet<>();
-        Map<String, String> fresh = classifier.classify(plan.ask(), plan.important(),
-                paidIndustries, answered);
-        fresh = reconcile(fresh, paidIndustries, temp);
-
-        Asked out = self.applyGuesses(userId, plan.remembered(), fresh, temp, answered, paidIndustries);
-        log.info("가맹점 분류 질의 — userId={} 물어본 곳 {}, 답 얻음 {}, 종결 {}",
-                userId, plan.ask().size(), fresh.size(), out.settled().size());
+        Asked out = self.applyGuesses(userId, plan.remembered(), fresh, Map.of(), answered, industries);
+        log.info("가맹점 분류 — userId={} 물어본 곳 {}, 무료가 답한 곳 {}, 합계 {}, 종결 {}",
+                userId, plan.ask().size(), temp.size(), fresh.size(), out.settled().size());
         return out;
     }
 
@@ -333,11 +352,9 @@ public class MerchantAskService {
             applySettled(rows, settled);
         }
 
-        Map<String, String> paid = new LinkedHashMap<>(remembered);
-        paid.putAll(fresh);
-        paint(rows, paid, temp, paidIndustries);
-        Map<String, String> guesses = new LinkedHashMap<>(paid);
-        temp.forEach((n, g) -> guesses.putIfAbsent(n, g.category2()));
+        Map<String, String> guesses = new LinkedHashMap<>(remembered);
+        guesses.putAll(fresh);
+        paint(rows, guesses, paidIndustries);
         return new Asked(rows, guesses, settled);
     }
 
@@ -396,22 +413,15 @@ public class MerchantAskService {
      * 나오고, 무료 통로의 답({@code TEMP})은 임시라 유료 답이 오면 덮인다. 화면에는 둘 다
      * "AI 추정"으로 똑같이 보이지만, 기록까지 같게 두면 나중에 어느 쪽 값인지 가려낼 수 없다.
      */
-    private void paint(List<UserPayment> rows, Map<String, String> paid,
-                       Map<String, TempClassifierService.Guess> temp,
-                       Map<String, String> paidIndustries) {
+    private void paint(List<UserPayment> rows, Map<String, String> guesses,
+                       Map<String, String> industries) {
         for (UserPayment p : rows) {
-            String name = p.getMerchantName();
-            String confirmed = paid.get(name);
-            if (confirmed != null) {
-                p.suggestCategory2(confirmed, "LLM");
-                learnCode(p, paidIndustries.get(name));
-                continue;
-            }
-            TempClassifierService.Guess t = temp.get(name);
-            if (t != null) {
-                p.suggestCategory2(t.category2(), "TEMP");
-                learnCode(p, t.industryName());
-            }
+            String guess = guesses.get(p.getMerchantName());
+            if (guess == null) continue;
+            // **출처는 하나뿐이다.** 예전에는 유료를 `LLM`, 무료를 `TEMP` 로 갈랐는데 무료
+            // 1위가 유료보다 정확했다(72.3% 대 70.5%, 148건 실측). 다르게 적을 근거가 없다.
+            p.suggestCategory2(guess, "LLM");
+            learnCode(p, industries.get(p.getMerchantName()));
         }
     }
 

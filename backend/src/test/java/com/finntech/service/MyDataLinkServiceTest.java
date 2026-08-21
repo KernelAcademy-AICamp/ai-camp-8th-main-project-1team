@@ -128,7 +128,7 @@ class MyDataLinkServiceTest {
         return new TempClassifierService(new com.finntech.config.TempClassifierProperties(),
                 new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
                 mock(MerchantClassifierService.class), new tools.jackson.databind.ObjectMapper(),
-                java.time.Clock.systemDefaultZone());
+                java.time.Clock.systemDefaultZone(), new com.finntech.freechannel.FreeChannelQueue(40, 6, 500));
     }
 
     private static MerchantAskService noAsk() {
