@@ -66,6 +66,20 @@ public class TempClassifierService {
 
     /** 가맹점명 → 답. <b>메모리에만</b> 산다 — 재기동하면 비고, 그래도 무해하다. */
     private final Map<String, Cached> cache = new ConcurrentHashMap<>();
+
+    /**
+     * <b>물어봤는데 모른다고 한 것</b> — 한동안 다시 묻지 않는다.
+     *
+     * <p>없으면 성공만 기록에 남는다. 그러면 못 맞히는 가맹점 하나가 <b>후속 회차마다 영원히</b>
+     * 다시 나간다 — 운영에서 실제로 그랬다. {@code PAYCO_NIC NICE정보통신㈜1} 이 5분마다
+     * 6시간 넘게 같은 질문으로 나갔고, 그 자리는 다른 가맹점이 썼어야 할 예산이다
+     * (2026-08-21 실측).
+     *
+     * <p><b>통로 장애와는 구분한다.</b> 모델이 "모름"이라 한 것만 여기 담는다 — 호출 자체가
+     * 실패한 것은 담지 않는다({@code classifyOne} 이 {@code null} 로 갈라 준다). 장애 때
+     * 담으면 통로가 살아난 뒤에도 그 가맹점만 조용히 빠진다.
+     */
+    private final Map<String, Instant> misses = new ConcurrentHashMap<>();
     /** 연속 실패 수. 문턱을 넘으면 이 프로세스가 사는 동안 스스로 끈다. */
     private final AtomicInteger failures = new AtomicInteger();
 
@@ -180,6 +194,8 @@ public class TempClassifierService {
             if (hit.isPresent()) out.put(n, hit.get());
             else ask.add(n);
         }
+        // **모른다고 한 것은 한동안 쉰다.** 안 그러면 후속 회차마다 같은 질문이 나간다.
+        ask.removeIf(this::recentlyMissed);
         if (ask.isEmpty() || !usable()) return out;
 
         // **가맹점 하나가 일 하나다.** 묶어 올리면 큐가 그 묶음을 통째로 한 자리로 세어
@@ -203,10 +219,34 @@ public class TempClassifierService {
      */
     private void fill(String name, String industryList) {
         String industry = classifyOne(name, industryList);
-        if (industry == null || industry.isEmpty()) return;
-        String mid = mapper.midOfIndustryName(industry);
-        if (IndustryCategoryMapper.isUnknown(mid)) return;   // 목록 밖 이름은 버린다
+        if (industry == null) return;                        // 통로가 죽었다 — 다음에 다시
+        String mid = industry.isEmpty() ? null : mapper.midOfIndustryName(industry);
+        if (mid == null || IndustryCategoryMapper.isUnknown(mid)) {
+            noteMiss(name);
+            return;
+        }
+        misses.remove(name);
         cache.put(name, new Cached(new Guess(industry, mid), Instant.now()));
+    }
+
+    /**
+     * <b>못 맞힌 것도 기록이다.</b> 안 남기면 다음 회차가 같은 것을 또 묻는다.
+     *
+     * <p>{@code fill} 이 큐 안에서 부르는 자리라 시험이 닿지 않는다 — 그래서 이 한 줄을
+     * 따로 뒀다. 여기와 {@link #recentlyMissed} 가 짝이고, 그 짝이 재질문 고리를 끊는다.
+     */
+    void noteMiss(String name) {
+        misses.put(name, Instant.now());
+        log.debug("임시 분류 — 모름으로 접는다: {}", name);
+    }
+
+    /** 최근에 "모름"을 받은 가맹점인가 — 그러면 이번 회차는 건너뛴다. */
+    boolean recentlyMissed(String name) {
+        Instant at = misses.get(name);
+        if (at == null) return false;
+        if (at.plus(Duration.ofMinutes(props.getMissMinutes())).isAfter(Instant.now())) return true;
+        misses.remove(name);
+        return false;
     }
 
     /**
@@ -403,7 +443,8 @@ public class TempClassifierService {
         if (a1 == null) return null;                       // 통로가 죽었다
         String a = IndustryPrompt.pickIndustry(a1, mapper);
 
-        String shortList = String.join(", ", IndustryPrompt.narrow(name, mapper, NARROW));
+        // 전체 목록과 같은 구분자여야 한다 — 이름에 쉼표가 든 것이 40개다({@code industryList}).
+        String shortList = String.join("\n", IndustryPrompt.narrow(name, mapper, NARROW));
         String b1 = askOne(IndustryPrompt.of(name, brand, shortList));
         String b = b1 == null ? null : IndustryPrompt.pickIndustry(b1, mapper);
 

@@ -123,7 +123,9 @@ public class MerchantBrandService {
     private Optional<String> fromCatalog(String merchantName) {
         String n = SPACES.matcher(merchantName).replaceAll("");
         for (var e : squashedForms) {
-            if (matches(n, e.getKey())) return Optional.of(e.getValue());
+            // **원문도 함께 넘긴다.** 공백을 지운 형태로만 보면 `토스 결제` 가 `토스결제` 가 되어
+            // 낱말 경계가 사라진다 — 짧은 한글 표기는 그 경계로 판단해야 한다.
+            if (matches(n, merchantName, e.getKey())) return Optional.of(e.getValue());
         }
         return Optional.empty();
     }
@@ -139,8 +141,8 @@ public class MerchantBrandService {
      * <p>글자 앞뒤가 다른 라틴 글자·숫자면 그건 <b>다른 낱말의 일부</b>다 — 인정하지 않는다.
      * 한글·기호·문자열 끝이면 경계로 본다.
      */
-    private static boolean matches(String name, String form) {
-        if (!ASCII_FORM.matcher(form).matches()) return name.contains(form);
+    private static boolean matches(String name, String original, String form) {
+        if (!ASCII_FORM.matcher(form).matches()) return matchesKorean(original, form);
         int from = 0, at;
         while ((at = name.indexOf(form, from)) >= 0) {
             boolean leftOk = at == 0 || !isAsciiWordChar(name.charAt(at - 1));
@@ -150,6 +152,52 @@ public class MerchantBrandService {
             from = at + 1;
         }
         return false;
+    }
+
+    /**
+     * <b>짧은 한글 표기는 뒤에 한글이 이어지면 인정하지 않는다.</b>
+     *
+     * <p>한글에는 낱말 경계가 없어 부분문자열이 유일한 방법이고, 카탈로그를 긴 표기부터
+     * 세워 {@code 세븐일레븐} 이 {@code 세븐} 보다 먼저 걸리게 해 뒀다. 그런데 그 방법은
+     * <b>카탈로그끼리의 충돌만</b> 푼다 — 카탈로그에 없는 낱말 안에 브랜드가 들어 있으면
+     * 못 막는다.
+     *
+     * <p>실제로 그랬다: {@code 토스트커피하우스 센트레} 가 브랜드 <b>토스</b>로 잡혔다
+     * (2026-08-21 운영 실측). 카탈로그에 {@code 이삭토스트} 가 있어도 그 상호에는 {@code 이삭}
+     * 이 없어 안 걸리고, 두 글자 {@code 토스} 가 걸린다. 브랜드는 카드추천의 대조 이름이라
+     * ({@code CardSpend}) 커피집 결제가 토스 혜택으로 간다.
+     *
+     * <p>그래서 <b>세 글자 미만</b>의 한글 표기는 뒤에 한글이 이어지면 다른 낱말로 본다.
+     * 세 글자 이상은 그대로 둔다 — {@code 스타벅스강남} 처럼 브랜드 뒤에 지점명이 붙는 것이
+     * 정상이고, 길수록 우연히 겹칠 일이 없다.
+     *
+     * <p>앞은 안 따진다. {@code (주)공차} 처럼 앞에 법인격이 붙는 것이 흔하기 때문이다.
+     *
+     * <p><b>공백을 지우기 전의 이름</b>으로 본다. 지운 뒤에 보면 {@code 토스 결제} 가
+     * {@code 토스결제} 가 되어 경계가 사라진다.
+     *
+     * <p><b>놓치는 쪽을 고른다.</b> 이 규칙은 {@code 공차강남점} 처럼 지점명이 붙어 오는
+     * 진짜도 함께 막는다. 그래도 그렇게 두는 이유는 <b>틀린 브랜드가 박히는 것이 훨씬 나쁘기</b>
+     * 때문이다 — 카탈로그로 맞은 것은 모델에 안 묻고 바로 적히고, 한 번 적히면 다시 안 묻는다.
+     * 못 맞히면 모델이 답하고, 모델은 지점명 붙은 상호를 잘 푼다.
+     *
+     * <p><b>위험한 두 글자는 실재한다</b> — 공차·던킨·본죽·쏘카·멜론·벅스·옥션·애플·미샤 …
+     * 카탈로그의 두 글자 한글 표기가 그만큼 있다.
+     */
+    private static boolean matchesKorean(String original, String form) {
+        if (form.length() >= 3) return SPACES.matcher(original).replaceAll("").contains(form);
+        int from = 0, at;
+        while ((at = original.indexOf(form, from)) >= 0) {
+            int end = at + form.length();
+            if (end == original.length() || !isHangul(original.charAt(end))) return true;
+            from = at + 1;
+        }
+        return false;
+    }
+
+    private static boolean isHangul(char c) {
+        return (c >= 0xAC00 && c <= 0xD7A3)      // 완성형 음절
+                || (c >= 0x3131 && c <= 0x318E); // 낱자
     }
 
     private static boolean isAsciiWordChar(char c) {

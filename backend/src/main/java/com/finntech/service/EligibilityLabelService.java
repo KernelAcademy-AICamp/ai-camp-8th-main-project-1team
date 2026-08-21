@@ -85,6 +85,8 @@ public class EligibilityLabelService {
     private final String apiKey;
     private final String model;
     private final RestClient restClient;
+    /** 무료가 먼저인 문. 유료는 무료 사슬 다섯이 다 죽었을 때만 쓴다. */
+    private final ModelGateway gateway;
     private final Clock clock;
 
     public EligibilityLabelService(
@@ -92,7 +94,9 @@ public class EligibilityLabelService {
             @Value("${finntech.gemini.api-key:}") String apiKey,
             @Value("${finntech.gemini.model:}") String model,
             @Value("${finntech.gemini.base-url:https://generativelanguage.googleapis.com}") String baseUrl,
-            Clock clock) {
+            Clock clock,
+            ModelGateway gateway) {
+        this.gateway = gateway;
         this.repository = repository;
         this.apiKey = apiKey;
         this.model = com.finntech.config.GeminiModels.orDefault(model);
@@ -254,6 +258,17 @@ public class EligibilityLabelService {
 
                 가입대상: %s
                 """.formatted(joinMember);
+        // **무료가 먼저, 유료는 비상용**(2026-08-21 사용자 결정).
+        //
+        // 이 자리는 화면 요청 안이라 오래 못 기다린다. 관문이 큐에 올리고 짧게(3초) 기다린 뒤,
+        // 못 받으면 비어서 돌아온다 — 그때는 아래 유료로 가고, 그것도 실패하면 부르는 쪽의
+        // **규칙 파서**가 답한다. 세 층 다 있으니 화면이 비는 일은 없다.
+        var free = gateway.askNow(com.finntech.freechannel.Lane.USER_NOW,
+                "eligibility:" + Integer.toHexString(prompt.hashCode()), prompt);
+        if (free.isPresent()) {
+            Eligibility parsedFree = parseJson(free.get());
+            if (parsedFree != null) return parsedFree;
+        }
         try {
             Map<?, ?> response = restClient.post()
                     .uri("/v1beta/models/{model}:generateContent?key={key}", model, apiKey)

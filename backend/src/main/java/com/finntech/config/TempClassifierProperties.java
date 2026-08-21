@@ -71,6 +71,16 @@ public class TempClassifierProperties {
     /** 메모리 캐시 보관 시간(분). 지나면 다시 묻는다. 재기동하면 어차피 비므로 길게 잡지 않는다. */
     private int cacheMinutes = 720;
 
+    /**
+     * <b>"모름"을 받은 가맹점을 쉬게 둘 시간(분).</b>
+     *
+     * <p>성공만 기록하면 못 맞히는 가맹점 하나가 후속 회차마다 <b>영원히</b> 다시 나간다 —
+     * 운영에서 5분마다 6시간 넘게 같은 질문이 나갔다(2026-08-21). 성공 캐시({@link #cacheMinutes})
+     * 보다 짧게 둔다: 못 맞힌 것은 사전·브랜드가 채워지면 다음엔 맞힐 수 있어 아주 오래
+     * 묶어 두면 그 기회를 잃는다.
+     */
+    private int missMinutes = 180;
+
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
@@ -99,6 +109,9 @@ public class TempClassifierProperties {
 
     public int getCacheMinutes() { return cacheMinutes; }
     public void setCacheMinutes(int cacheMinutes) { this.cacheMinutes = cacheMinutes; }
+
+    public int getMissMinutes() { return missMinutes; }
+    public void setMissMinutes(int missMinutes) { this.missMinutes = missMinutes; }
 
     /** 부를 수 있는 상태인가 — 넷 다 있어야 한다. */
     public boolean usable() {

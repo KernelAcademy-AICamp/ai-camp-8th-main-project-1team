@@ -38,6 +38,9 @@ class OneDoorTest {
      *   <li>{@code NarrativeCacheService} — 같음</li>
      *   <li>{@code UsageGlossaryService} — 같음. 통계 용어의 말투 다듬기를 {@link Lane#ADMIN} 으로
      *       올린다(맨 뒤 차선 — 늦어도 사용자는 아무것도 안 나빠지고 원문이 그대로 뜬다)</li>
+     *   <li>{@code ModelGateway} — <b>무료가 먼저인 문</b>. 다섯 서비스가 각자 들고 있던
+     *       Gemini 호출을 여기로 모았다(2026-08-21). {@code submit}·{@code askNow} 둘 다
+     *       {@link FreeChannelQueue} 에 올리고 결과만 받는다 — 직접 HTTP 를 내지 않는다.</li>
      *   <li>{@code MerchantAskService} — 업종 분류. <b>{@code classify} 만 부른다</b>, 그리고
      *       그 메서드는 캐시를 읽고 <b>큐에 올릴 뿐</b> HTTP 를 내지 않는다(2026-08-21).
      *       예전에는 여기서 통로를 직접 불러 큐를 우회했고 — 주석이 "다음 차례"라고 적어 둔
@@ -50,7 +53,8 @@ class OneDoorTest {
             "MerchantBrandService",
             "NarrativeCacheService",
             "UsageGlossaryService",
-            "MerchantAskService");
+            "MerchantAskService",
+            "ModelGateway");
 
     /**
      * 통로에 <b>곧바로 HTTP 를 내는</b> 메서드들. 큐를 거치는 {@code classify} 와 달리 이것들은

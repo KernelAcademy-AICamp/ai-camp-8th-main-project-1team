@@ -5,6 +5,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -39,7 +42,26 @@ class IndustryPromptTest {
     @DisplayName("업종 이름은 그대로 담긴다 — 목록이 비면 모델이 아무 말이나 한다")
     void 업종은_담긴다() {
         assertThat(list).contains("커피 전문점").contains("체인화 편의점").contains("택시 운송업");
-        assertThat(list.split(", ")).hasSizeGreaterThan(300);
+        assertThat(list.split("\n")).hasSizeGreaterThan(300);
+    }
+
+    /**
+     * <b>이름 안에 쉼표가 든 업종이 40개다.</b> 쉼표로 이어 붙이면 모델이 한 항목을 둘로 읽고
+     * 조각만 답하는데, 조각이 목록에 없으면({@code 화장품 소매업}) {@link IndustryPrompt#pickIndustry}
+     * 가 버려서 그 가맹점은 영영 분류되지 않는다. 줄바꿈은 이름에 못 들어가므로 경계가 산다.
+     */
+    @Test
+    @DisplayName("목록의 한 줄은 업종 하나다 — 이름 속 쉼표와 구분자가 겹치면 안 된다")
+    void 한_줄에_업종_하나() {
+        List<String> lines = List.of(list.split("\n"));
+        List<String> all = new ArrayList<>();
+        mapper.industryNamesByMid().values().forEach(all::addAll);
+
+        assertThat(lines).as("줄 수가 업종 수와 같아야 한다").hasSameSizeAs(all);
+        assertThat(lines).as("모든 줄이 진짜 업종 이름이어야 한다").allSatisfy(
+                line -> assertThat(all).contains(line));
+        assertThat(lines).as("쉼표가 든 이름도 한 줄로 온전해야 한다")
+                .contains("화장품, 비누 및 방향제 소매업");
     }
 
     /** 목록이 5,600자라 가맹점명이 한 번만 나오면 그 안에 묻힌다. */

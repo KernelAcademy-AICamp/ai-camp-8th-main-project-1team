@@ -263,6 +263,37 @@ class MerchantBrandServiceTest {
         assertThat(hit.get("고속철도(KTX)서울-포항")).isEqualTo("한국철도공사");
     }
 
+    /**
+     * <b>긴 표기 우선은 카탈로그끼리의 충돌만 푼다.</b>
+     *
+     * <p>{@code 세븐일레븐} 이 {@code 세븐} 을 이기는 것은 둘 다 표에 있기 때문이다. 그런데
+     * <b>표에 없는 낱말 안에</b> 짧은 표기가 들어 있으면 그 규칙이 아무것도 못 한다.
+     *
+     * <p>운영에서 그렇게 났다(2026-08-21) — {@code 토스트커피하우스 센트레} 가 브랜드
+     * <b>토스</b>로 잡혔다. 표에 {@code 이삭토스트} 가 있어도 그 상호에는 {@code 이삭} 이 없어
+     * 안 걸리고, 두 글자 {@code 토스} 가 걸린다. 브랜드는 카드추천의 대조 이름이라
+     * ({@code CardSpend}) 커피집 결제가 토스 혜택으로 간다.
+     *
+     * <p>표의 두 글자 한글 표기는 공차·던킨·본죽·쏘카·멜론·벅스·옥션·애플·미샤 … 로 실재한다.
+     */
+    @Test
+    @DisplayName("짧은 한글 표기가 다른 낱말 안에서 걸리지 않는다")
+    void shortKoreanFormNeedsABoundary() {
+        realNames.addAll(List.of("토스트커피하우스 센트레", "토스 결제"));
+
+        var pending = service.findPending(
+                List.of("토스트커피하우스 센트레", "토스 결제"),
+                askable("토스트커피하우스 센트레", "토스 결제"));
+        var hit = pending.fromCatalog();
+
+        assertThat(hit.get("토스트커피하우스 센트레"))
+                .as("'토스트'는 '토스'가 아니다 — 뒤에 한글이 이어지면 다른 낱말이다")
+                .isNotEqualTo("토스");
+        assertThat(hit.get("토스 결제"))
+                .as("경계가 있으면 그대로 맞아야 한다 — 규칙이 과해서 진짜를 놓치면 안 된다")
+                .isEqualTo("토스");
+    }
+
     @Test
     @DisplayName("카탈로그는 긴 표기부터 맞춘다 — '세븐일레븐'이 '세븐'보다 먼저")
     void catalogPrefersLongerForm() {

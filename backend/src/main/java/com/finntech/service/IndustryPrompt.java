@@ -57,15 +57,22 @@ public final class IndustryPrompt {
     private IndustryPrompt() {}
 
     /**
-     * 업종 이름만 쉼표로 늘어놓는다 — <b>중분류는 넣지 않는다.</b>
+     * 업종 이름만 한 줄에 하나씩 늘어놓는다 — <b>중분류는 넣지 않는다.</b>
      *
      * <p>순서를 고정한다({@code industryNamesByMid} 가 이미 정렬된 것을 그대로 이어 붙인다).
      * 같은 입력에 같은 프롬프트가 나와야 같은 답이 나온다(§4 원칙 3 재현성).
+     *
+     * <p><b>왜 쉼표가 아니라 줄바꿈인가.</b> 국세청 세세분류 이름 385개 중 <b>40개가 이름 안에
+     * 쉼표를 갖고 있다</b>({@code 화장품, 비누 및 방향제 소매업} · {@code 시내버스 운송업, 시외버스 운송업}).
+     * 쉼표로 이어 붙이면 모델이 그것을 <b>두 항목으로 읽고</b> 조각만 답한다. 조각이 그 자체로
+     * 목록에 있으면 살아나지만({@code 시내버스 운송업}) 없으면({@code 화장품 소매업})
+     * {@link #pickIndustry} 가 버려서 <b>그 가맹점은 영영 분류되지 않는다.</b>
+     * 줄바꿈은 이름에 들어갈 수 없으니 경계가 흐려지지 않는다(2026-08-21).
      */
     public static String industryList(IndustryCategoryMapper mapper) {
         List<String> names = new ArrayList<>();
         mapper.industryNamesByMid().values().forEach(names::addAll);
-        return String.join(", ", names);
+        return String.join("\n", names);
     }
 
     /**
