@@ -40,11 +40,15 @@ public class NarrativeService {
     private final String apiKey;
     private final String model;
     private final RestClient restClient;
+    /** 무료가 먼저인 문. 유료는 무료 사슬 다섯이 다 죽었을 때만 쓴다. */
+    private final ModelGateway gateway;
 
     public NarrativeService(
             @Value("${finntech.gemini.api-key:}") String apiKey,
             @Value("${finntech.gemini.model:}") String model,
-            @Value("${finntech.gemini.base-url:https://generativelanguage.googleapis.com}") String baseUrl) {
+            @Value("${finntech.gemini.base-url:https://generativelanguage.googleapis.com}") String baseUrl,
+            ModelGateway gateway) {
+        this.gateway = gateway;
         this.apiKey = apiKey;
         this.model = com.finntech.config.GeminiModels.orDefault(model);
         // 타임아웃을 준다 — `RestClient.builder()` 는 정적 팩터리라 부트 자동구성이 안 붙고,
@@ -101,7 +105,7 @@ public class NarrativeService {
                 판정 근거: %s
                 """.formatted(template);
 
-        return callGemini(prompt, template);
+        return callModel(prompt, template);
     }
 
     /** 절약 후보(⑤) 권유 <b>재료</b>. 개별 결제가 아니라 category2 집계치만 담는다. */
@@ -142,6 +146,19 @@ public class NarrativeService {
 
         return new NarrativeCacheService.Request(
                 userId, com.finntech.domain.NarrativeCache.Kind.PROFILE, "", prompt, template);
+    }
+
+    /**
+     * <b>무료가 먼저, 유료는 비상용</b>(2026-08-21 사용자 결정).
+     *
+     * <p>화면에 걸린 문장 셋은 이미 저장해 두고 무료 통로가 갱신한다(2026-08-08). 여기 남은
+     * 것은 그 밖의 자리라 <b>사용자가 기다리지 않는다</b> — 못 받으면 템플릿이 나간다.
+     */
+    private Narrative callModel(String prompt, String fallback) {
+        var free = gateway.askNow(com.finntech.freechannel.Lane.USER_BACKGROUND,
+                "narrative:" + Integer.toHexString(prompt.hashCode()), prompt);
+        if (free.isPresent()) return new Narrative(free.get().trim(), "AI");
+        return callGemini(prompt, fallback);
     }
 
     private Narrative callGemini(String prompt, String fallback) {
