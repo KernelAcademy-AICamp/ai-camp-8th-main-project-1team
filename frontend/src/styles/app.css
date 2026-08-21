@@ -4309,8 +4309,20 @@ button.list-item:active{ opacity: .6; }
    그 위에 떠 있는 CTA(높이 104px)를 피해 마지막 줄까지 닿게 하는 자리다. */
 .choice-box{align-items:flex-start;padding:4px var(--pad-x) calc(var(--cta-h) + 56px);
   overflow-y:auto;pointer-events:auto;
-  scrollbar-width:none;-ms-overflow-style:none;}
+  scrollbar-width:none;-ms-overflow-style:none;
+  /* **아래가 더 있다는 표시.** 스크롤바를 숨겨 두니(프로토타입에 없는 요소다) 잘린 것이
+     아니라 "그림이 없다"로 읽혔다(사용자 제보 2026-08-21). 스크롤바를 되살리는 대신
+     가장자리를 흐려 알린다 — 넘치지 않으면 아무것도 안 보인다.
+
+     `mask-image` 는 넘침 여부를 모르므로 늘 걸려 있는데, 내용이 짧으면 흐려질 자리가
+     화면 밖이라 눈에 띄지 않는다. 끝까지 내리면 마지막 줄이 흐려 보이는 것은 감수한다 —
+     스크롤바를 늘 띄우는 것보다 조용하다. */
+  --fade: 28px;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--fade)), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--fade)), transparent 100%);}
 #s-ob .choice-box::-webkit-scrollbar{display:none;}
+/* 움직임을 줄여 달라고 한 사람에게는 흐림도 방해가 될 수 있다 — 그때는 걷는다. */
+@media (prefers-reduced-motion: reduce){ #s-ob .choice-box{ mask-image:none; -webkit-mask-image:none; } }
 #s-ob .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 12px;
   /* 개편안은 375px 프레임 기준 316px 고정이고, 그 폭은 좌우 24px 여백을 뺀 327px 을
      거의 채운다. 즉 원래도 '꽉 찬 폭'이었다 — 고정값으로 옮기면 열이 넓어질 때
