@@ -74,10 +74,24 @@ public final class IndustryPrompt {
      * @param industryList {@link #industryList}(부르는 쪽이 한 번 만들어 돌려 쓴다 — 5,600자다)
      */
     public static String of(String merchantName, String industryList) {
+        return of(merchantName, null, industryList);
+    }
+
+    /**
+     * 브랜드를 알면 함께 준다.
+     *
+     * <p>실패한 답이 <b>전부</b> {@code (주)…} 로 시작했다 — {@code (주)마포애경타운-새틀라이트문구外}
+     * 같은 문자열은 모델에게 잡음이다. 법인격·지점명을 떼어 낸 이름과 브랜드를 함께 주면
+     * 모델이 볼 것이 줄어든다. <b>원문도 같이 준다</b> — 정제가 잘못 깎았을 때 원문이 그것을
+     * 되돌릴 근거가 된다.
+     */
+    public static String of(String merchantName, String brand, String industryList) {
+        String hint = (brand == null || brand.isBlank() || brand.equals(merchantName))
+                ? "" : "\n브랜드 : " + brand.trim();
         return """
                 아래는 한국 카드 명세서에 찍힌 가맹점명입니다. 이 가맹점이 어느 업종인지 고르세요.
 
-                가맹점명 : %s
+                가맹점명 : %s%s
 
                 업종 목록입니다. 답에는 **목록에 포함된 업종 이름만** 쓰세요. 답변은 업종 이름 \
                 하나만 단답으로 회신해야 합니다. 다른 설명을 아예 하면 안되고, 문장이 되어서도 \
@@ -101,7 +115,72 @@ public final class IndustryPrompt {
 
                 가맹점명을 다시 알려드리겠습니다. 가맹점명은 %s 입니다. 위의 업종 목록 중에서, \
                 이 가맹점이 어떤 업종인지를 골라서 **단답 단어**로 답변하시기 바랍니다.
-                """.formatted(merchantName, industryList, merchantName);
+                """.formatted(merchantName, hint, industryList, merchantName);
+    }
+
+    /**
+     * <b>후보를 추린다</b> — 2단계가 쓸 짧은 목록.
+     *
+     * <p>385종을 매번 통째로 스캔시키면 모델이 놓친다. 상호와 <b>낱말이 겹치는</b> 업종을
+     * 앞에 세워 30종쯤으로 줄인다. 판단은 여전히 모델이 하고, 여기서 하는 것은 <b>추림</b>이다.
+     *
+     * <p><b>추리다 정답을 흘릴 수 있다.</b> 그래서 2단계 혼자 쓰지 않는다 — 1단계(전체 스캔)와
+     * 견주고 3단계가 고른다. 이 위험을 아는 채로 두는 것이 이 설계의 요점이다.
+     *
+     * <p>겹치는 것이 모자라면 <b>앞에서부터 채운다.</b> 빈 목록을 주면 모델이 아무 말이나 한다.
+     */
+    public static List<String> narrow(String merchantName, IndustryCategoryMapper mapper, int size) {
+        List<String> all = new ArrayList<>();
+        mapper.industryNamesByMid().values().forEach(all::addAll);
+        String n = merchantName == null ? "" : merchantName.replaceAll("\\s+", "");
+
+        // 상호에서 두 글자짜리 조각을 뽑아 업종 이름과 겹치는지 본다. 한 글자는 아무 데나
+        // 걸리고(‘사’·‘점’), 세 글자는 거의 안 걸린다.
+        java.util.Set<String> grams = new java.util.LinkedHashSet<>();
+        for (int i = 0; i + 2 <= n.length(); i++) grams.add(n.substring(i, i + 2));
+
+        java.util.Map<String, Integer> score = new java.util.LinkedHashMap<>();
+        for (String name : all) {
+            String flat = name.replaceAll("\\s+", "");
+            int hit = 0;
+            for (String g : grams) if (flat.contains(g)) hit++;
+            if (hit > 0) score.put(name, hit);
+        }
+        List<String> picked = score.entrySet().stream()
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .map(java.util.Map.Entry::getKey)
+                .limit(size)
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        for (String name : all) {                 // 모자라면 앞에서부터 채운다
+            if (picked.size() >= size) break;
+            if (!picked.contains(name)) picked.add(name);
+        }
+        return picked;
+    }
+
+    /**
+     * <b>3단계 — 둘 중 하나를 고르게 한다.</b>
+     *
+     * <p>1단계(전체 목록)와 2단계(추린 목록)가 다른 답을 냈을 때 부른다. <b>가맹점명만</b>
+     * 준다 — 브랜드도 목록도 주지 않는다. 앞 두 단계가 이미 그것을 보고 답했으므로, 여기서는
+     * 그 둘만 놓고 새 눈으로 견주게 한다.
+     *
+     * <p>이 저장소에 이미 같은 형태가 있다({@code MerchantClassifierService.tieBreak} —
+     * 무료와 유료가 갈렸을 때 하나를 고르게 하는 것). 검증된 모양을 한 통로 안으로 들인다.
+     */
+    public static String tieBreak(String merchantName, String a, String b) {
+        return """
+                한국 카드 명세서에 찍힌 가맹점명 하나와, 그 가맹점의 업종 후보 둘이 있습니다.
+                둘 중 <b>더 가까운 것 하나</b>를 고르세요.
+
+                가맹점명 : %s
+
+                후보 1 : %s
+                후보 2 : %s
+
+                - 두 후보 중 하나를 **글자 그대로** 쓰세요. 설명·기호 없이 한 줄로만.
+                - 새로운 업종을 지어내지 마세요. 반드시 위 둘 중 하나여야 합니다.
+                """.formatted(merchantName, a, b).replace("<b>", "**").replace("</b>", "**");
     }
 
     /**

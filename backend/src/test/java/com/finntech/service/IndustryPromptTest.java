@@ -99,6 +99,54 @@ class IndustryPromptTest {
     }
 
     /** 중분류를 곧장 답해도 받지 않는다 — 축은 우리 표가 정한다. */
+    /* ── 3단계 분류 (2026-08-21) ────────────────────────────────────────── */
+
+    @Test
+    @DisplayName("브랜드를 알면 함께 준다 — 실패한 답이 전부 '(주)…' 로 시작했다")
+    void 브랜드를_함께_준다() {
+        String prompt = IndustryPrompt.of("(주)스타벅스코리아 포항공대점", "스타벅스", list);
+
+        assertThat(prompt).contains("브랜드 : 스타벅스");
+        assertThat(prompt).as("원문도 남긴다 — 정제가 잘못 깎았을 때 되돌릴 근거다")
+                .contains("(주)스타벅스코리아 포항공대점");
+    }
+
+    @Test
+    @DisplayName("브랜드가 없거나 상호와 같으면 그 줄을 안 넣는다")
+    void 브랜드가_없으면_안_넣는다() {
+        assertThat(IndustryPrompt.of("행복한밥상", null, list)).doesNotContain("브랜드 :");
+        assertThat(IndustryPrompt.of("스타벅스", "스타벅스", list)).doesNotContain("브랜드 :");
+    }
+
+    @Test
+    @DisplayName("후보를 추리면 상호와 겹치는 업종이 앞에 온다")
+    void 추리면_겹치는_것이_앞에() {
+        var picked = IndustryPrompt.narrow("서울커피 전문점", mapper, 30);
+
+        assertThat(picked).hasSize(30);
+        assertThat(picked.get(0)).as("'커피'가 겹치는 것이 먼저").contains("커피");
+    }
+
+    /** 겹치는 것이 모자라도 빈 목록을 주면 안 된다 — 모델이 아무 말이나 한다. */
+    @Test
+    @DisplayName("겹치는 것이 없어도 목록을 채운다")
+    void 안_겹쳐도_채운다() {
+        assertThat(IndustryPrompt.narrow("ZZZZ", mapper, 30)).hasSize(30);
+        assertThat(IndustryPrompt.narrow("", mapper, 30)).hasSize(30);
+    }
+
+    @Test
+    @DisplayName("3단계는 가맹점명과 후보 둘만 준다 — 목록도 브랜드도 안 준다")
+    void 삼단계는_둘만_준다() {
+        String prompt = IndustryPrompt.tieBreak("올리브영 홍대점", "화장품 소매업", "그 외 기타 종합 소매업");
+
+        assertThat(prompt).contains("올리브영 홍대점")
+                .contains("화장품 소매업").contains("그 외 기타 종합 소매업");
+        assertThat(prompt).as("업종 목록을 다시 주면 새 답을 지어낸다").doesNotContain(list);
+        assertThat(prompt).doesNotContain("브랜드");
+        assertThat(prompt).doesNotContain("<b>");        // 표시용 태그가 새어 나가면 안 된다
+    }
+
     @Test
     @DisplayName("중분류를 답하면 버린다")
     void 중분류_답은_버린다() {

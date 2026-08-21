@@ -352,18 +352,65 @@ public class TempClassifierService {
         Map<String, String> out = new LinkedHashMap<>();
         int consecutive = 0;
         for (String name : names) {
-            String answer = askOne(IndustryPrompt.of(name, industryList));
-            if (answer == null) {
+            String industry = classifyOne(name, industryList);
+            if (industry == null) {
                 // 한 묶음이 통째로 죽는 것은 통로가 죽은 것이다 — 다음 회차로 미룬다.
                 if (++consecutive >= 3 && out.isEmpty()) return null;
                 continue;
             }
             consecutive = 0;
-            String industry = IndustryPrompt.pickIndustry(answer, mapper);
-            if (industry != null) out.put(name, industry);
+            if (!industry.isEmpty()) out.put(name, industry);
         }
         return out;
     }
+
+    /**
+     * <b>한 가맹점을 세 단계로 분류한다</b>(2026-08-21 사용자 설계).
+     *
+     * <pre>
+     *   1단계  업종 385종을 **통째로** 주고 묻는다        → A
+     *   2단계  상호와 겹치는 것으로 **추린 30종**을 주고 묻는다 → B
+     *   3단계  A·B 와 **가맹점명만** 주고 둘 중 하나를 고르게 한다
+     * </pre>
+     *
+     * <h2>왜 두 번 묻고 또 묻는가</h2>
+     *
+     * <p>추리면 모델이 볼 것이 줄어 정확해지지만 <b>추리다 정답을 흘릴 수 있다.</b>
+     * 그래서 추림 없이 본 답(A)을 옆에 세워 둔다. 둘이 갈리면 3단계가 고르고, <b>3단계가
+     * 엉뚱한 답을 하면 A 를 쓴다</b> — 추림의 위험을 안 지는 쪽이 기본값이다.
+     *
+     * <p><b>A 와 B 가 같으면 3단계를 건너뛴다.</b> 같은 답에 판정을 물을 이유가 없고,
+     * 호출이 세 배가 되는 것을 2.x 배로 줄인다.
+     *
+     * <p>3단계에는 <b>가맹점명만</b> 준다 — 브랜드도 목록도 주지 않는다. 앞 두 단계가 이미
+     * 그것을 보고 답했으므로 여기서는 새 눈으로 둘만 견주게 한다.
+     *
+     * @return 업종 이름, 목록 밖이면 빈 문자열, 통로가 죽었으면 {@code null}
+     */
+    private String classifyOne(String name, String industryList) {
+        String brand = brandCache.get(name);
+        String a1 = askOne(IndustryPrompt.of(name, brand, industryList));
+        if (a1 == null) return null;                       // 통로가 죽었다
+        String a = IndustryPrompt.pickIndustry(a1, mapper);
+
+        String shortList = String.join(", ", IndustryPrompt.narrow(name, mapper, NARROW));
+        String b1 = askOne(IndustryPrompt.of(name, brand, shortList));
+        String b = b1 == null ? null : IndustryPrompt.pickIndustry(b1, mapper);
+
+        if (b == null || b.equals(a)) return a == null ? "" : a;   // 갈릴 것이 없다
+        if (a == null) return b;
+
+        String c1 = askOne(IndustryPrompt.tieBreak(name, a, b));
+        String c = c1 == null ? null : IndustryPrompt.pickIndustry(c1, mapper);
+        // **A 아니면 B 만 받는다.** 셋째 것을 답하면 버리고 추림을 안 탄 A 로 돌아간다.
+        return (b.equals(c)) ? b : a;
+    }
+
+    /** 브랜드를 알면 프롬프트에 함께 준다 — 없으면 {@code null} 이고 그냥 안 준다. */
+    private final Map<String, String> brandCache = new ConcurrentHashMap<>();
+
+    /** 2단계가 보는 후보 수. 좁히면 놓치고 넓히면 1단계와 같아진다. */
+    private static final int NARROW = 30;
 
     /** 한 번 묻고 답 문자열만 받는다 — 실패는 {@code null}. 사슬이 모델을 정한다. */
     private String askOne(String prompt) {
