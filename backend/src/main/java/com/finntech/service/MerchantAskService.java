@@ -3,6 +3,7 @@ package com.finntech.service;
 import com.finntech.domain.Category;
 import com.finntech.domain.Consumption;
 import com.finntech.domain.UserPayment;
+import com.finntech.freechannel.Lane;
 import com.finntech.engine.IndustryCategoryMapper;
 import com.finntech.repository.CategoryRepository;
 import com.finntech.repository.ConsumptionRepository;
@@ -66,6 +67,16 @@ public class MerchantAskService {
 
     /** 사용자가 화면을 열었을 때 — 한 곳이라도 있으면 묻는다. 체감 지연이 0 이라야 한다. */
     public static final int ON_DEMAND_MIN = 1;
+
+    /**
+     * 화면을 연 사람의 것 중 <b>앞 차선으로 보낼 개수</b>.
+     *
+     * <p>앞 두 차선은 토큰이 있는 만큼 다 나가므로(뒤 차선은 회차당 2건) 많이 넣으면
+     * 우선순위가 사라지고 같은 차선의 문장 작업이 굶는다. 한 곳이 최대 3회를 부르니
+     * 셋이면 9회 — 분당 예산 40 의 4분의 1 남짓이다. 나머지는 뒤 차선으로 보내도
+     * 사용자는 스크롤해야 볼 자리라 체감이 없다.
+     */
+    private static final int URGENT_HEAD = 3;
 
     private final UserPaymentRepository payments;
     private final ConsumptionRepository consumptions;
@@ -176,7 +187,26 @@ public class MerchantAskService {
             log.info("임시 분류를 {}곳만 묻는다 — 남은 {}곳은 다음 회차가 잇는다",
                     tempBatch.size(), plan.ask().size() - tempBatch.size());
         }
-        Map<String, TempClassifierService.Guess> temp = temporary.classify(tempBatch);
+        /* **차선을 가른다.** 앞 두 차선(USER_NOW·USER_REFRESH)은 토큰이 있는 만큼 다 나가고,
+         * 그 아래는 한 번에 두 건이다({@code LOW_LANE_PER_TICK}). 그래서 앞 차선에 많이 넣으면
+         * 우선순위가 무의미해지고 같은 차선의 문장 작업이 굶는다.
+         *
+         * 화면을 연 사람은 지금 '카테고리없음'을 보고 있으므로 앞 차선이 맞다 — 다만
+         * <b>맨 앞 몇 곳만</b>이다({@link #URGENT_HEAD}). 그 사람이 지금 보는 것은 목록의
+         * 첫 화면이고, 나머지는 스크롤해야 나온다. 배경 적재는 보는 사람이 없으니 전부 뒤 차선. */
+        // 돌려받는 것은 **이미 아는 것**뿐이다 — 새로 올린 것은 다음 회차가 캐시에서 집어 간다.
+        Map<String, TempClassifierService.Guess> temp = new LinkedHashMap<>();
+        boolean onDemand = minMerchants <= ON_DEMAND_MIN;
+        if (onDemand && !tempBatch.isEmpty()) {
+            int head = Math.min(URGENT_HEAD, tempBatch.size());
+            temp.putAll(temporary.classify(tempBatch.subList(0, head), Lane.USER_NOW));
+            if (head < tempBatch.size()) {
+                temp.putAll(temporary.classify(
+                        tempBatch.subList(head, tempBatch.size()), Lane.USER_BACKGROUND));
+            }
+        } else {
+            temp.putAll(temporary.classify(tempBatch, Lane.USER_BACKGROUND));
+        }
 
         if (!plan.ask().isEmpty() || !temp.isEmpty()) {
             log.info("미분류 최신화 — userId={} 남은 가맹점 {}, 임시 분류 {}, 임계값 {}",

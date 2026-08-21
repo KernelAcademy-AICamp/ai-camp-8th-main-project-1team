@@ -197,7 +197,8 @@ class ExternalCallBoundaryTest {
 
         var temporary = mock(TempClassifierService.class);
         CountDownLatch started = new CountDownLatch(1), release = new CountDownLatch(1);
-        when(temporary.classify(anyList())).thenAnswer(inv -> {
+        // 차선을 받는 서명으로 바뀌었다(2026-08-21) — 부르는 쪽이 급한 정도를 정한다.
+        when(temporary.classify(anyList(), any())).thenAnswer(inv -> {
             started.countDown();
             release.await(5, TimeUnit.SECONDS);
             return java.util.Map.<String, TempClassifierService.Guess>of();
@@ -217,7 +218,7 @@ class ExternalCallBoundaryTest {
         MerchantAskService.Asked second = service.ask(24L, 1);
         assertThat(second).as("빈손으로 돌아가지 않는다 — 화면이 그릴 것은 준다").isNotNull();
         assertThat(second.rows()).hasSize(1);
-        verify(temporary, times(1)).classify(anyList());
+        verify(temporary, times(1)).classify(anyList(), any());
         verify(classifier, never()).classify(anyList(), any(), any());
 
         release.countDown();
