@@ -35,25 +35,30 @@ public class MerchantClassifierService {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     /**
-     * 한 번에 물어보는 가맹점 수. 가맹점명은 짧아 한 요청에 여럿을 담을 수 있고,
-     * 건당 호출하면 명세서 한 장에 수백 번을 부르게 된다.
-     */
-    static final int BATCH = 40;
-
-    /**
-     * 한 요청에서 LLM 을 부를 수 있는 최대 횟수. {@code EligibilityLabelService} 와 같은 장치다 —
-     * 사용자 요청 안에서 불리므로 최악 지연이 유계여야 한다. 남는 것은 다음 요청에서 처리된다.
+     * 한 요청에서 부를 수 있는 <b>최대 가맹점 수</b>. 남는 것은 다음 요청이 잇는다.
+     *
+     * <p><b>이 상수의 뜻이 2026-08-21 에 바뀌었다.</b> 예전에는 40개씩 묶어 물었고 이 값은
+     * <i>묶음</i> 수였다(5묶음 = 200곳). 지금은 {@code IndustryPrompt} 규약대로 <b>한 곳씩</b>
+     * 묻는다 — 묶으면 모델이 앞 답에 끌려가고, 실측에서 넷플릭스를 단독으로는 맞히는데
+     * 40개에 섞으면 빼먹었다(2026-08-05).
+     *
+     * <p>그래서 이 값은 이제 <b>실제 호출 수</b>다. 유료 통로라 이 구분이 곧 비용이고,
+     * 사용자 요청 안에서 불리므로 최악 지연도 이 값이 정한다.
+     *
+     * <p><b>폭을 넓히지 않는다.</b> 묶어 물던 때와 같은 곳 수를 유지하려면 40 을 줘야 하지만,
+     * 그러면 한 요청의 유료 호출이 여덟 배가 된다. 이 통로는 <b>무료가 못 잡은 것만</b> 받는
+     * 자리다 — 앞에서 확정 사전·업종코드·등록 조회·무료 모델이 차례로 걸러 내고, 남는 것은
+     * 대개 몇 곳이다. 못 잡은 나머지는 다음 요청이 잇는다.
      */
     private static final int MAX_LLM_CALLS_PER_REQUEST = 5;
 
     /**
-     * <b>다시 물을 때</b>의 묶음 크기. 첫 판에서 못 잡은 것을 작게 나눠 한 번 더 묻는다.
+     * 첫 판에서 못 잡은 것 중 <b>중요한 것</b>을 다시 물을 때의 추가 예산.
      *
-     * <p>모델은 알고 있는데 <b>큰 묶음에서 흘린다.</b> 2026-08-05 실측 — 넷플릭스를 단독으로
-     * 물으면 곧바로 맞히는데(`영상물 제공 서비스업…`), 40개에 섞으면 답을 빼먹었다.
-     * 묶음이 작으면 그 일이 줄어든다.
+     * <p>같은 곳을 두 번 묻는 것이라 첫 판보다 작게 준다. 무엇이 중요한가는 부르는 쪽이
+     * 정한다 — 1건 200원짜리 카드 수수료를 다시 묻는 데 호출을 쓰지 않기 위한 구분이다.
      */
-    private static final int RETRY_BATCH = 5;
+    private static final int MAX_RETRY_CALLS = 3;
 
     private final IndustryCategoryMapper mapper;
     private final String apiKey;
@@ -205,15 +210,18 @@ public class MerchantClassifierService {
         Map<String, String> byRepresentative = new TreeMap<>();
         // 답을 받은 **대표**를 모은다. 형제로 펼치는 것은 아래 한 곳에서 한꺼번에 한다.
         java.util.Set<String> answeredReps = new java.util.HashSet<>();
+        // **한 곳씩 묻는다.** 계수기도 가맹점마다 오른다 — 묶음을 세던 때의 계수기를 그대로
+        // 두면 상한 5가 실제로는 200회를 허락한다(유료 통로라 그대로 비용이다).
         int calls = 0;
-        for (int i = 0; i < distinct.size() && calls < MAX_LLM_CALLS_PER_REQUEST; i += BATCH, calls++) {
-            List<String> batch = distinct.subList(i, Math.min(i + BATCH, distinct.size()));
-            Map<String, String> got = callGemini(batch, industries);
-            // **null 은 "물어봤다"가 아니다.** 429·타임아웃이면 그 묶음은 프롬프트에 담겼어도
-            // 답이 통째로 없다 — 그것을 가맹점의 침묵으로 세면 통로 장애가 데이터를 종결시킨다.
+        for (String name : distinct) {
+            if (calls >= MAX_LLM_CALLS_PER_REQUEST) break;
+            calls++;
+            Map<String, String> got = callGemini(List.of(name), industries);
+            // **null 은 "물어봤다"가 아니다.** 429·타임아웃이면 프롬프트에 담겼어도 답이 없다 —
+            // 그것을 가맹점의 침묵으로 세면 통로 장애가 데이터를 종결시킨다.
             if (got == null) continue;
             byRepresentative.putAll(got);
-            answeredReps.addAll(batch);
+            answeredReps.add(name);
         }
 
         // 두 번째 판 — 못 잡은 것 중 중요한 것만, 작게.
@@ -226,12 +234,14 @@ public class MerchantClassifierService {
                 retry.add(representative);
             }
         }
-        for (int i = 0; i < retry.size() && calls < MAX_LLM_CALLS_PER_REQUEST; i += RETRY_BATCH, calls++) {
-            List<String> batch = retry.subList(i, Math.min(i + RETRY_BATCH, retry.size()));
-            Map<String, String> got = callGemini(batch, industries);
+        int retryCalls = 0;
+        for (String name : retry) {
+            if (retryCalls >= MAX_RETRY_CALLS) break;
+            retryCalls++;
+            Map<String, String> got = callGemini(List.of(name), industries);
             if (got == null) continue;
             byRepresentative.putAll(got);
-            answeredReps.addAll(batch);
+            answeredReps.add(name);
         }
 
         // 대표가 받은 답을 **표기가 다른 형제 전부**에 돌려준다. '물어봤다'도 같이 펼친다 —
@@ -307,68 +317,57 @@ public class MerchantClassifierService {
                 .toUpperCase();
     }
 
+    /**
+     * 유료 통로에 <b>한 곳씩</b> 묻는다.
+     *
+     * <p><b>중분류가 아니라 업종을 묻는다.</b> 모델이 우리 축을 직접 고르면 축 배정까지 AI 가
+     * 하는 셈이라 원칙 1 과 어긋나고, 표를 고쳐도 모델의 옛 답은 안 따라온다.
+     * 2026-08-05 전수 대조(실데이터 86종): 중분류를 직접 묻는 방식 36종 → 업종을 묻는 방식
+     * <b>55종</b>이었다.
+     *
+     * <p><b>목록에서 중분류를 뺐다</b>(2026-08-21). 예전에는 {@code [카페/간식] 커피 전문점}
+     * 처럼 축을 함께 보여줬는데, 그러면 모델이 업종이 아니라 축을 보고 답한다 — 실측에서
+     * 상위 모델의 오답 대부분이 거기서 나왔다. 규칙 여섯 줄은 그대로 옮겼다
+     * ({@link IndustryPrompt} 설계 주석에 그 내력이 있다).
+     *
+     * <p><b>묶어 묻지 않는다.</b> 40곳을 번호로 묶으면 모델이 앞 답에 끌려가고, JSON 형식이
+     * 깨지면 묶음 전체를 잃었다. 한 곳씩이면 답은 단어 하나이고 실패해도 그 하나만 잃는다.
+     */
     private Map<String, String> callGemini(List<String> names, Map<String, String> industries) {
-        // **중분류가 아니라 업종을 묻는다.** 모델이 우리 축을 직접 고르면 축 배정까지 AI 가 하는
-        // 셈이라 원칙 1 과 어긋나고, 표를 고쳐도 모델의 옛 답은 안 따라온다. 업종으로 받으면
-        // 모델은 "이 가게가 무엇을 파는가"라는 사실만 말하고 축은 우리 표가 정한다.
-        //
-        // 2026-08-05 전수 대조(실데이터 86종): 중분류를 직접 묻는 방식 36종 → 업종을 묻는 방식
-        // **55종**. 둘 다 답한 6종 중 4종에서 업종 쪽이 우리 표와 일치했다
-        // (올리브영 쇼핑→미용, 교보문고 쇼핑→취미/여가).
-        //
-        // 처음엔 오히려 21종으로 **떨어졌다.** "명백한 것만, 틀리느니 답하지 마라"를 377개
-        // 목록과 함께 주니 모델이 과하게 보수적이 됐다. **"가장 가까운 업종을 고르라"**로
-        // 바꾸자 55종이 됐다 — 규칙 한 줄이 커버리지를 두 배 넘게 갈랐다.
-        StringBuilder catalog = new StringBuilder();
-        mapper.industryNamesByMid().forEach((mid, list) ->
-                catalog.append('[').append(mid).append("] ").append(String.join(" · ", list)).append('\n'));
-
-        StringBuilder list = new StringBuilder();
-        for (int i = 0; i < names.size(); i++) {
-            list.append(i + 1).append(". ").append(names.get(i)).append('\n');
+        String industryList = IndustryPrompt.industryList(mapper);
+        Map<String, String> out = new TreeMap<>();
+        int consecutive = 0;
+        for (String name : names) {
+            String text = askOneRaw(IndustryPrompt.of(name, industryList));
+            if (text == null) {
+                // 연달아 셋이 죽고 하나도 못 얻었으면 통로가 죽은 것이다 — 다음 회차로 미룬다.
+                if (++consecutive >= 3 && out.isEmpty()) return null;
+                continue;
+            }
+            consecutive = 0;
+            String industry = IndustryPrompt.pickIndustry(text, mapper);
+            if (industry == null) continue;
+            industries.put(name, industry);
+            String mid = mapper.midOfIndustryName(industry);
+            if (!IndustryCategoryMapper.isUnknown(mid)) out.put(name, mid);
         }
+        return out;
+    }
 
-        String prompt = """
-                아래는 한국 카드 명세서에 찍힌 가맹점명입니다. 각 가맹점이 어느 업종인지 고르세요.
-
-                업종 목록입니다. 대괄호는 그 업종이 속한 소비 분류이고, 답에는 업종 이름만 쓰세요.
-
-                %s
-                - 가맹점이 무엇을 파는지 알겠다면 **목록에서 가장 가까운 업종**을 고르세요.
-                  딱 맞는 것이 없어도 가장 가까운 것을 고르면 됩니다.
-                - **해외 가맹점도 마찬가지입니다.** 영문·로마자 상호라도 무엇을 파는 곳인지
-                  알겠다면 고르세요(예: 공항 면세점, 해외 호텔, 해외 항공사).
-                - 결제대행사 상호(토스페이먼츠, 나이스페이먼츠, KG이니시스, 네이버페이,
-                  카카오페이 등)는 **여러 가게의 결제를 대신 처리하는 회사**라 무엇을 샀는지
-                  알 수 없으므로 빼세요.
-                - 다만 **한 브랜드의 자체 결제 수단**은 그 브랜드로 판단하세요 — 이름에 '페이'가
-                  붙었다고 빼면 안 됩니다. '컬리페이'는 마켓컬리에서 산 것이고,
-                  '무신사페이먼츠'는 무신사에서 산 것입니다.
-                - 뜻을 알 수 없는 상호, 사람 이름만 있는 것, 숫자뿐인 것은 빼세요.
-                - 목록에 있는 이름을 **글자 그대로** 쓰세요.
-
-                설명·마크다운 없이 JSON만 출력하세요.
-                형식: {"1": "체인화 편의점", "3": "한식 일반 음식점업"}
-
-                가맹점:
-                %s
-                """.formatted(catalog, list);
-
+    /** 한 번 묻고 본문만 받는다 — 실패는 {@code null}. */
+    private String askOneRaw(String prompt) {
         try {
             Map<?, ?> response = restClient.post()
                     .uri("/v1beta/models/{model}:generateContent?key={key}", model, apiKey)
                     .contentType(MediaType.APPLICATION_JSON)
                     // temperature 0 — **같은 명세서를 두 번 넣으면 같은 답이 나와야 한다.**
                     // 기본 표집 온도로 두면 실행마다 39·55·59·61종으로 흔들렸다(2026-08-05 실측).
-                    // 재현성은 이 저장소의 설계 원칙이다(§4-3).
                     .body(Map.of("contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))),
-                                 "generationConfig", Map.of("temperature", 0)))
+                                 "generationConfig", Map.of("temperature", 0,
+                                                            "maxOutputTokens", 32)))
                     .retrieve()
                     .body(Map.class);
-            String text = extractText(response);
-            if (text == null) return null;
-            collectIndustries(text, names, industries);
-            return parseJson(text, names);
+            return extractText(response);
         } catch (Exception e) {
             // 미분류로 남을 뿐 화면이 깨지지는 않는다 — 추정은 부가 정보다.
             return null;

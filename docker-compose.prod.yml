@@ -217,6 +217,8 @@ services:
       TEMP_CLASSIFIER_URL: ${TEMP_CLASSIFIER_URL:-}
       TEMP_CLASSIFIER_KEY: ${TEMP_CLASSIFIER_KEY:-}
       TEMP_CLASSIFIER_MODEL: ${TEMP_CLASSIFIER_MODEL:-}
+      # 모델 사슬(앞에서부터 쓰고 실패하면 다음으로). 비면 위의 MODEL 하나만 쓴다.
+      TEMP_CLASSIFIER_MODELS: ${TEMP_CLASSIFIER_MODELS:-}
       # 무료 통로로 나가는 문의 예산·동시성·큐 상한. **컨테이너까지 전달해야** .env 가 효력을 갖는다
       # — 예전에 같은 실수를 한 적이 있다("새 환경변수를 컨테이너까지 전달한다", 2026-08-07).
       FREE_CHANNEL_PER_MINUTE: ${FREE_CHANNEL_PER_MINUTE:-40}

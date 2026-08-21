@@ -1338,8 +1338,13 @@ export const api = {
   },
 
   /* ── 소비 분석(②③④⑤) ── */
+  /**
+   * <b>온보딩 전체가 이 한 번에 걸려 있다.</b> 그래서 기본 15초가 아니라 넉넉히 준다 —
+   * 처음 들어온 사람은 명세서가 통째로 들어와 전 이력을 훑고, 15초에 끊기면 아무것도 못 하고
+   * 오류 화면을 본다. 대신 화면에는 진행 바가 있고(`Loading`) 12초가 넘으면 그렇다고 말한다.
+   */
   analysis: (userId: number, days = 90) =>
-    get<AnalysisSummary>(`/api/analysis?userId=${userId}&days=${days}`),
+    get<AnalysisSummary>(`/api/analysis?userId=${userId}&days=${days}`, SLOW_TIMEOUT_MS),
   profileNarrative: (userId: number, days = 90) =>
     get<Narrative>(`/api/analysis/profile/narrative?userId=${userId}&days=${days}`),
   explainCut: (userId: number, category2: string, days = 90) =>
