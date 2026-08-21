@@ -38,6 +38,16 @@ public class TempClassifierProperties {
      */
     private String model = "";
 
+    /**
+     * <b>모델 사슬</b> — 앞에서부터 쓰고, 그 모델의 문턱만큼 연속 실패하면 다음으로 넘어간다.
+     * {@code "모델A:5, 모델B:5, 모델C:1"} 처럼 콜론 뒤에 그 모델의 문턱을 준다(없으면
+     * {@code failureCutoff}). 비어 있으면 {@link #model} 하나짜리 사슬이 된다.
+     *
+     * <p>순서는 실측으로 정했다 — 카탈로그 103종 중 살아 있는 18종을 운영의 사실 데이터
+     * 148건으로 20초 간격 채점했다({@code ModelChain} 설계 주석에 표가 있다).
+     */
+    private String models = "";
+
     /** 한 번 부르는 데 이만큼 넘게 걸리면 포기한다. 백그라운드라 넉넉히 준다. */
     private int timeoutMs = 90_000;
 
@@ -72,6 +82,11 @@ public class TempClassifierProperties {
 
     public String getModel() { return model; }
     public void setModel(String model) { this.model = model; }
+    public String getModels() { return models; }
+    public void setModels(String models) { this.models = models; }
+
+    /** 사슬 문자열이 비어 있으면 {@link #model} 하나로 된 사슬을 쓴다. */
+    public String chainSpec() { return models.isBlank() ? model : models; }
 
     public int getTimeoutMs() { return timeoutMs; }
     public void setTimeoutMs(int timeoutMs) { this.timeoutMs = timeoutMs; }
@@ -87,6 +102,6 @@ public class TempClassifierProperties {
 
     /** 부를 수 있는 상태인가 — 넷 다 있어야 한다. */
     public boolean usable() {
-        return enabled && !baseUrl.isBlank() && !apiKey.isBlank() && !model.isBlank();
+        return enabled && !baseUrl.isBlank() && !apiKey.isBlank() && !chainSpec().isBlank();
     }
 }

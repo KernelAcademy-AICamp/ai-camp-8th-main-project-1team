@@ -5,6 +5,8 @@ import com.finntech.engine.IndustryCategoryMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import com.finntech.freechannel.FreeChannelQueue;
+import com.finntech.freechannel.Lane;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -59,6 +61,8 @@ public class TempClassifierService {
     private final MerchantClassifierService classifier;
     private final ObjectMapper json;
     private final RestClient client;
+    /** 무료 통로로 나가는 <b>유일한 문</b>. 차선이 급한 것을 먼저 내보낸다. */
+    private final FreeChannelQueue queue;
 
     /** 가맹점명 → 답. <b>메모리에만</b> 산다 — 재기동하면 비고, 그래도 무해하다. */
     private final Map<String, Cached> cache = new ConcurrentHashMap<>();
@@ -70,20 +74,36 @@ public class TempClassifierService {
 
     private record Cached(Guess guess, Instant at) {}
 
+    /**
+     * <b>모델 하나에 통로를 걸지 않는다.</b> 앞 모델이 죽으면 다음으로 넘어가고, 날짜가
+     * 바뀌면 처음으로 돌아간다({@link ModelChain}). 운영에서 모델 하나가 무응답이라 로딩이
+     * 40초가 됐던 것이 이 사슬을 만든 이유다(2026-08-20).
+     */
+    private final ModelChain chain;
+
     public TempClassifierService(TempClassifierProperties props, IndustryCategoryMapper mapper,
-                                 MerchantClassifierService classifier, ObjectMapper json) {
+                                 MerchantClassifierService classifier, ObjectMapper json,
+                                 java.time.Clock clock, FreeChannelQueue queue) {
         this.props = props;
         this.mapper = mapper;
         this.classifier = classifier;
         this.json = json;
+        this.queue = queue;
         this.client = props.usable()
                 ? RestClient.builder().requestFactory(factory(props.getTimeoutMs())).build()
                 : null;
+        this.chain = props.usable()
+                ? new ModelChain(ModelChain.parse(props.chainSpec(), props.getFailureCutoff()), clock)
+                : null;
         if (props.usable()) {
-            log.info("임시 분류 통로 켜짐 — 모델 {}, 회차당 최대 {}곳",
-                    props.getModel(), props.getMaxPerRun());
+            log.info("임시 분류 통로 켜짐 — 모델 {}종({}), 회차당 최대 {}곳",
+                    ModelChain.parse(props.chainSpec(), props.getFailureCutoff()).size(),
+                    chain.current(), props.getMaxPerRun());
         }
     }
+
+    /** 지금 쓸 모델 — 사슬이 정한다. */
+    private String model() { return chain == null ? props.getModel() : chain.current(); }
 
     private static org.springframework.http.client.ClientHttpRequestFactory factory(int timeoutMs) {
         var f = new org.springframework.http.client.SimpleClientHttpRequestFactory();
@@ -133,14 +153,24 @@ public class TempClassifierService {
     }
 
     /**
-     * 아직 답이 없는 가맹점들을 묶어서 묻고, 알아낸 것만 돌려준다.
+     * <b>아는 것은 지금 주고, 모르는 것은 큐에 올린다.</b>
      *
-     * <p>이미 캐시에 있는 것은 묻지 않고 그대로 얹어 준다. 물어봐야 소용없는 상호(PG)는
-     * {@link MerchantClassifierService#worthAsking} 이 걸러 낸 뒤 들어오는 것을 전제한다.
+     * <p><b>왜 기다리지 않는가.</b> 예전에는 여기서 통로를 직접 불러 답을 받아 왔다. 그때는
+     * 40곳을 한 프롬프트에 묶어 물어 호출이 한 번이었지만, 지금은 <b>한 곳당 최대 세 번</b>
+     * ({@code IndustryPrompt} 3단계)이라 그대로 두면 결제 적재 흐름이 통로를 통째로 붙잡는다.
+     * 더구나 이 경로는 무료 통로의 <b>유일한 문</b>({@link FreeChannelQueue})을 우회하고 있어
+     * 분당 예산을 큐 밖에서 갉아먹었다 — 문장·브랜드 작업이 그만큼 밀렸다
+     * ({@code OneDoorTest} 가 "다음 차례"라고 적어 둔 그 구멍이다).
      *
-     * @return 가맹점명 → 임시 답. 실패했거나 꺼져 있으면 캐시에 있던 것만.
+     * <p>그래서 {@code NarrativeCacheService} 와 같은 규율을 쓴다 — <b>있으면 주고, 없으면
+     * 올린다.</b> 못 받은 것은 다음 회차가 캐시에서 집어 간다. 이 메서드는 화면을 열 때마다
+     * 다시 불리므로 몇 번 나눠 부르면 결국 다 채워진다.
+     *
+     * @param lane 이 일이 급한가 — 화면을 연 사람이면 {@link Lane#USER_NOW}(지금 '카테고리없음'을
+     *             보고 있다), 배경 적재면 {@link Lane#USER_BACKGROUND}
+     * @return 가맹점명 → <b>이미 알고 있던</b> 임시 답. 새로 올린 것은 여기 없다.
      */
-    public Map<String, Guess> classify(List<String> merchantNames) {
+    public Map<String, Guess> classify(List<String> merchantNames, Lane lane) {
         Map<String, Guess> out = new LinkedHashMap<>();
         if (merchantNames == null || merchantNames.isEmpty()) return out;
 
@@ -152,25 +182,31 @@ public class TempClassifierService {
         }
         if (ask.isEmpty() || !usable()) return out;
 
-        // **남은 것을 전부 훑는다.** 회차당 상한을 두지 않는다 — 무료 통로라 아낄 것이 없고,
-        // 자르면 그만큼이 다음 회차(5분 뒤)로 밀려 미분류가 오래 남는다. 유료 통로가 40곳씩
-        // 묶는 것과 혼동하기 쉬운데, 그쪽은 프롬프트의 76%가 업종 목록이라 묶어야 이득인 것이고
-        // 여기는 그런 이유가 없다.
-        String catalog = catalog();
-        for (int i = 0; i < ask.size(); i += BATCH) {
-            List<String> chunk = ask.subList(i, Math.min(i + BATCH, ask.size()));
-            Map<String, String> got = callOnce(catalog, chunk);
-            if (got == null) return out;                 // 실패 — 남은 묶음도 포기한다
-            Instant now = Instant.now();
-            got.forEach((name, industry) -> {
-                String mid = mapper.midOfIndustryName(industry);
-                if (IndustryCategoryMapper.isUnknown(mid)) return;   // 목록 밖 이름은 버린다
-                Guess g = new Guess(industry, mid);
-                cache.put(name, new Cached(g, now));
-                out.put(name, g);
-            });
+        // **가맹점 하나가 일 하나다.** 묶어 올리면 큐가 그 묶음을 통째로 한 자리로 세어
+        // 차선의 예산 계산이 어긋나고, 하나가 죽으면 묶음이 같이 죽는다.
+        String industryList = IndustryPrompt.industryList(mapper);
+        for (String name : ask) {
+            queue.submit(lane, "industry:" + name, () -> fill(name, industryList));
         }
         return out;
+    }
+
+    /** 예전 서명 — 부르는 쪽이 급한 정도를 안 정했으면 배경으로 본다. */
+    public Map<String, Guess> classify(List<String> merchantNames) {
+        return classify(merchantNames, Lane.USER_BACKGROUND);
+    }
+
+    /**
+     * 큐가 부르는 자리 — 한 가맹점을 3단계로 묻고 <b>캐시에 넣는다.</b>
+     *
+     * <p>돌려주지 않는다. 부르는 쪽은 이미 떠났고, 다음 회차가 캐시에서 집어 간다.
+     */
+    private void fill(String name, String industryList) {
+        String industry = classifyOne(name, industryList);
+        if (industry == null || industry.isEmpty()) return;
+        String mid = mapper.midOfIndustryName(industry);
+        if (IndustryCategoryMapper.isUnknown(mid)) return;   // 목록 밖 이름은 버린다
+        cache.put(name, new Cached(new Guess(industry, mid), Instant.now()));
     }
 
     /**
@@ -289,7 +325,7 @@ public class TempClassifierService {
                     .header("Authorization", "Bearer " + props.getApiKey())
                     .header("Content-Type", "application/json")
                     .body(json.writeValueAsString(Map.of(
-                            "model", props.getModel(),
+                            "model", model(),
                             "messages", List.of(Map.of("role", "user", "content", prompt)),
                             "max_tokens", maxTokens,
                             "temperature", temperature)))
@@ -297,6 +333,7 @@ public class TempClassifierService {
                     .body(String.class);
             if (body == null) return null;
             failures.set(0);            // 한 번 성공하면 유예가 사라진다
+            if (chain != null) chain.succeeded();
             return json.readTree(body).path("choices").path(0)
                     .path("message").path("content").asString("").trim();
         } catch (RuntimeException e) {
@@ -306,14 +343,6 @@ public class TempClassifierService {
         }
     }
 
-    /** 중분류로 묶은 업종 목록 — {@code MerchantClassifierService} 와 같은 형식이라야 한다. */
-    private String catalog() {
-        StringBuilder sb = new StringBuilder();
-        mapper.industryNamesByMid().forEach((mid, list) ->
-                sb.append('[').append(mid).append("] ").append(String.join(" · ", list)).append('\n'));
-        return sb.toString();
-    }
-
     /**
      * 한 묶음을 묻는다 — 실패하면 {@code null}(예외를 밖으로 던지지 않는다).
      *
@@ -321,51 +350,110 @@ public class TempClassifierService {
      * 하는 셈이라 마스터 §4 원칙 1 과 어긋난다. 업종으로 받으면 모델은 "이 가게가 무엇을
      * 파는가"라는 사실만 말하고 축은 우리 표가 정한다 — 유료 통로와 같은 규칙이다.
      */
-    private Map<String, String> callOnce(String catalog, List<String> names) {
-        StringBuilder listing = new StringBuilder();
-        for (int i = 0; i < names.size(); i++) {
-            listing.append(i + 1).append(". ").append(names.get(i)).append('\n');
+    /**
+     * 묶음을 <b>한 곳씩</b> 물어 모은다.
+     *
+     * <p>이름은 {@code callOnce} 로 두지만 하는 일은 "이 묶음을 처리한다"이다. 안에서는
+     * 가맹점마다 한 번씩 부른다 — 그것이 {@code IndustryPrompt} 가 정한 형태다.
+     * 한 곳이 실패해도 나머지는 계속한다. 다만 <b>모델을 갈아탔으면</b> 그 사실을 살려
+     * 바로 다음 가맹점부터 새 모델로 묻는다.
+     */
+    private Map<String, String> callOnce(String industryList, List<String> names) {
+        Map<String, String> out = new LinkedHashMap<>();
+        int consecutive = 0;
+        for (String name : names) {
+            String industry = classifyOne(name, industryList);
+            if (industry == null) {
+                // 한 묶음이 통째로 죽는 것은 통로가 죽은 것이다 — 다음 회차로 미룬다.
+                if (++consecutive >= 3 && out.isEmpty()) return null;
+                continue;
+            }
+            consecutive = 0;
+            if (!industry.isEmpty()) out.put(name, industry);
         }
-        String prompt = """
-                아래는 한국 카드 명세서에 찍힌 가맹점명입니다. 각 가맹점이 어느 업종인지 고르세요.
+        return out;
+    }
 
-                업종 목록입니다. 대괄호는 그 업종이 속한 소비 분류이고, 답에는 업종 이름만 쓰세요.
+    /**
+     * <b>한 가맹점을 세 단계로 분류한다</b>(2026-08-21 사용자 설계).
+     *
+     * <pre>
+     *   1단계  업종 385종을 **통째로** 주고 묻는다        → A
+     *   2단계  상호와 겹치는 것으로 **추린 30종**을 주고 묻는다 → B
+     *   3단계  A·B 와 **가맹점명만** 주고 둘 중 하나를 고르게 한다
+     * </pre>
+     *
+     * <h2>왜 두 번 묻고 또 묻는가</h2>
+     *
+     * <p>추리면 모델이 볼 것이 줄어 정확해지지만 <b>추리다 정답을 흘릴 수 있다.</b>
+     * 그래서 추림 없이 본 답(A)을 옆에 세워 둔다. 둘이 갈리면 3단계가 고르고, <b>3단계가
+     * 엉뚱한 답을 하면 A 를 쓴다</b> — 추림의 위험을 안 지는 쪽이 기본값이다.
+     *
+     * <p><b>A 와 B 가 같으면 3단계를 건너뛴다.</b> 같은 답에 판정을 물을 이유가 없고,
+     * 호출이 세 배가 되는 것을 2.x 배로 줄인다.
+     *
+     * <p>3단계에는 <b>가맹점명만</b> 준다 — 브랜드도 목록도 주지 않는다. 앞 두 단계가 이미
+     * 그것을 보고 답했으므로 여기서는 새 눈으로 둘만 견주게 한다.
+     *
+     * @return 업종 이름, 목록 밖이면 빈 문자열, 통로가 죽었으면 {@code null}
+     */
+    private String classifyOne(String name, String industryList) {
+        String brand = brandCache.get(name);
+        String a1 = askOne(IndustryPrompt.of(name, brand, industryList));
+        if (a1 == null) return null;                       // 통로가 죽었다
+        String a = IndustryPrompt.pickIndustry(a1, mapper);
 
-                %s
-                - 가맹점이 무엇을 파는지 알겠다면 목록에서 가장 가까운 업종을 고르세요.
-                - 해외 가맹점도 마찬가지입니다. 영문 상호라도 무엇을 파는 곳인지 알겠다면 고르세요.
-                - 결제대행사 상호는 무엇을 샀는지 알 수 없으므로 빼세요.
-                - 다만 한 브랜드의 자체 결제 수단은 그 브랜드로 판단하세요.
+        String shortList = String.join(", ", IndustryPrompt.narrow(name, mapper, NARROW));
+        String b1 = askOne(IndustryPrompt.of(name, brand, shortList));
+        String b = b1 == null ? null : IndustryPrompt.pickIndustry(b1, mapper);
 
-                가맹점:
-                %s
-                답은 JSON 하나로만 주세요. 다른 말은 쓰지 마세요.
-                {"1": "업종명", "2": "업종명"}
-                모르는 것은 빼세요.
-                """.formatted(catalog, listing);
+        if (b == null || b.equals(a)) return a == null ? "" : a;   // 갈릴 것이 없다
+        if (a == null) return b;
 
+        String c1 = askOne(IndustryPrompt.tieBreak(name, a, b));
+        String c = c1 == null ? null : IndustryPrompt.pickIndustry(c1, mapper);
+        // **A 아니면 B 만 받는다.** 셋째 것을 답하면 버리고 추림을 안 탄 A 로 돌아간다.
+        return (b.equals(c)) ? b : a;
+    }
+
+    /** 브랜드를 알면 프롬프트에 함께 준다 — 없으면 {@code null} 이고 그냥 안 준다. */
+    private final Map<String, String> brandCache = new ConcurrentHashMap<>();
+
+    /** 2단계가 보는 후보 수. 좁히면 놓치고 넓히면 1단계와 같아진다. */
+    private static final int NARROW = 30;
+
+    /** 한 번 묻고 답 문자열만 받는다 — 실패는 {@code null}. 사슬이 모델을 정한다. */
+    private String askOne(String prompt) {
         try {
             String body = client.post()
                     .uri(props.getBaseUrl())
                     .header("Authorization", "Bearer " + props.getApiKey())
                     .header("Content-Type", "application/json")
                     .body(json.writeValueAsString(Map.of(
-                            "model", props.getModel(),
+                            "model", model(),
                             "messages", List.of(Map.of("role", "user", "content", prompt)),
-                            "max_tokens", 2048,
+                            // 답은 업종 이름 하나다 — 길게 줄 이유가 없고, 짧게 두면
+                            // 모델이 문장을 쓰려다 잘려 군말이 덜 붙는다.
+                            "max_tokens", 32,
                             "temperature", 0)))
                     .retrieve()
                     .body(String.class);
-            Map<String, String> parsed = parse(body, names);
+            if (body == null) return null;
+            String answer = json.readTree(body).path("choices").path(0)
+                    .path("message").path("content").asString();
             failures.set(0);
-            return parsed;
+            if (chain != null) chain.succeeded();
+            return answer;
         } catch (RuntimeException e) {
             int n = failures.incrementAndGet();
-            if (n >= props.getFailureCutoff()) {
-                log.warn("임시 분류가 {}회 연속 실패해 이 프로세스에서는 끈다 — {}", n, e.toString());
-            } else {
-                log.debug("임시 분류 실패({}회) — {}", n, e.toString());
+            // **모델을 갈아탔으면 곧바로 한 번 더 본다.** 다음 회차까지 미루면 그 사이의
+            // 요청은 죽은 모델 때문에 여전히 빈손이다.
+            if (chain != null && chain.failed()) {
+                failures.set(0);
+                log.info("모델을 바꿔 곧바로 다시 묻는다 — {}", chain.current());
+                return askOne(prompt);
             }
+            log.debug("임시 분류 실패({}회) — {}", n, e.toString());
             return null;
         }
     }

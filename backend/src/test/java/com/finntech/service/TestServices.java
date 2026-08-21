@@ -58,7 +58,9 @@ final class TestServices {
                 mock(com.finntech.repository.ConsumptionRepository.class),
                 mock(com.finntech.repository.CategoryRepository.class),
                 dictionary, classifier, temporary,
-                java.time.Clock.systemDefaultZone(), selfOf(self),
+                java.time.Clock.systemDefaultZone(),
+                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
+                selfOf(self),
                 // 배치 상한은 여기서 재지 않는다 — 시험이 넣은 만큼 다 묻게 넉넉히 준다.
                 1000);
         self.set(service);

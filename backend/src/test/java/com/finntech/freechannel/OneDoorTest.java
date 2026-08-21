@@ -38,8 +38,11 @@ class OneDoorTest {
      *   <li>{@code NarrativeCacheService} — 같음</li>
      *   <li>{@code UsageGlossaryService} — 같음. 통계 용어의 말투 다듬기를 {@link Lane#ADMIN} 으로
      *       올린다(맨 뒤 차선 — 늦어도 사용자는 아무것도 안 나빠지고 원문이 그대로 뜬다)</li>
-     *   <li>{@code MerchantAskService} — ②-c 임시 분류. 결제 적재 흐름에 붙어 있어 아직 큐 밖이다
-     *       (다음 차례다 — 그때 이 줄이 지워진다)</li>
+     *   <li>{@code MerchantAskService} — 업종 분류. <b>{@code classify} 만 부른다</b>, 그리고
+     *       그 메서드는 캐시를 읽고 <b>큐에 올릴 뿐</b> HTTP 를 내지 않는다(2026-08-21).
+     *       예전에는 여기서 통로를 직접 불러 큐를 우회했고 — 주석이 "다음 차례"라고 적어 둔
+     *       그 구멍이다 — 한 곳당 세 번 묻는 3단계로 바뀌며 그 우회가 분당 예산을 크게
+     *       갉아먹게 되어 옮겼다. 아래 {@link #onlyQueueMediatedCalls} 가 그 성질을 잠근다.</li>
      * </ul>
      */
     private static final Set<String> ALLOWED = Set.of(
@@ -49,9 +52,32 @@ class OneDoorTest {
             "UsageGlossaryService",
             "MerchantAskService");
 
+    /**
+     * 통로에 <b>곧바로 HTTP 를 내는</b> 메서드들. 큐를 거치는 {@code classify} 와 달리 이것들은
+     * 부르는 자리에서 바로 나간다 — {@code MerchantAskService} 는 이 중 하나도 부르면 안 된다.
+     */
+    private static final List<String> DIRECT_CALLS =
+            List.of("temporary.brandOf(", "temporary.sameBrand(", "temporary.sentence(");
+
     /** 통로를 쓴다는 표시 — 이 이름이 소스에 보이면 바깥으로 나갈 수 있다는 뜻이다. */
     private static final List<String> MARKERS =
             List.of("TempClassifierService", "temporary.", "free.sentence(");
+
+    /**
+     * {@code MerchantAskService} 는 목록에 있지만 <b>큐를 거치는 호출만</b> 허용된다.
+     * 직접 HTTP 를 내는 메서드를 부르면 예전의 우회가 되살아난다.
+     */
+    @Test
+    @DisplayName("결제 적재 흐름은 통로를 곧바로 부르지 않는다")
+    void onlyQueueMediatedCalls() throws IOException {
+        String src = Files.readString(
+                Path.of("src/main/java/com/finntech/service/MerchantAskService.java"));
+        for (String call : DIRECT_CALLS) {
+            assertThat(src)
+                    .as("%s 는 큐를 거치지 않고 통로로 나간다 — classify 처럼 큐에 올려야 한다", call)
+                    .doesNotContain(call);
+        }
+    }
 
     @Test
     @DisplayName("무료 통로는 큐를 거치지 않고는 못 부른다")

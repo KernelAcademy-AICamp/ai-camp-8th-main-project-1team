@@ -3,6 +3,7 @@ package com.finntech.service;
 import com.finntech.domain.Category;
 import com.finntech.domain.Consumption;
 import com.finntech.domain.UserPayment;
+import com.finntech.freechannel.Lane;
 import com.finntech.engine.IndustryCategoryMapper;
 import com.finntech.repository.CategoryRepository;
 import com.finntech.repository.ConsumptionRepository;
@@ -56,13 +57,26 @@ public class MerchantAskService {
     /**
      * <b>백그라운드에서 부를 임계값</b> — 프롬프트 한 번을 꽉 채우는 수.
      *
-     * <p>{@link MerchantClassifierService#BATCH} 를 그대로 쓴다. 다른 수를 적으면 한 번에
-     * 안 떨어져 목록(프롬프트의 76%)을 두 번 보내거나, 채우지도 않고 부르게 된다.
+     * <p><b>왜 40인가.</b> 예전에는 40곳을 한 프롬프트에 묶어 물었고 이 값이 그 묶음 크기였다.
+     * 지금은 한 곳씩 묻지만({@code IndustryPrompt}) 값은 그대로 둔다 — 뜻이 바뀌었을 뿐이다.
+     * 이제는 <b>배경에서 통로를 두드릴 만큼 쌓였는가</b>의 문턱이다. 한두 곳 때문에 배경 작업을
+     * 깨우면 통로 예산만 쓰고 사용자는 아무것도 못 느낀다. 화면을 연 사람은
+     * {@link #ON_DEMAND_MIN} 로 곧바로 처리되므로 기다리게 되는 일도 없다.
      */
-    public static final int BACKGROUND_MIN = MerchantClassifierService.BATCH;
+    public static final int BACKGROUND_MIN = 40;
 
     /** 사용자가 화면을 열었을 때 — 한 곳이라도 있으면 묻는다. 체감 지연이 0 이라야 한다. */
     public static final int ON_DEMAND_MIN = 1;
+
+    /**
+     * 화면을 연 사람의 것 중 <b>앞 차선으로 보낼 개수</b>.
+     *
+     * <p>앞 두 차선은 토큰이 있는 만큼 다 나가므로(뒤 차선은 회차당 2건) 많이 넣으면
+     * 우선순위가 사라지고 같은 차선의 문장 작업이 굶는다. 한 곳이 최대 3회를 부르니
+     * 셋이면 9회 — 분당 예산 40 의 4분의 1 남짓이다. 나머지는 뒤 차선으로 보내도
+     * 사용자는 스크롤해야 볼 자리라 체감이 없다.
+     */
+    private static final int URGENT_HEAD = 3;
 
     private final UserPaymentRepository payments;
     private final ConsumptionRepository consumptions;
@@ -72,6 +86,8 @@ public class MerchantAskService {
     /** ②-c 임시 분류 — 무료 통로. 답은 메모리에만 살고 DB 에 안 들어간다. */
     private final TempClassifierService temporary;
     private final Clock clock;
+    /** 업종 이름에서 국세청 코드를 되찾는 대조표 — 카드 혜택 축이 그 코드로 정해진다. */
+    private final com.finntech.engine.IndustryCategoryMapper industries;
     /**
      * <b>자기 자신의 프록시.</b> 추리기·입히기만 트랜잭션 안이고 모델 질의는 밖이라야 하는데,
      * {@code @Transactional} 은 프록시가 걸어 주는 것이라 같은 객체 안에서 그냥 부르면 안 걸린다.
@@ -92,6 +108,7 @@ public class MerchantAskService {
                               CategoryRepository categories, MerchantCategoryService dictionary,
                               MerchantClassifierService classifier,
                               TempClassifierService temporary, Clock clock,
+                              com.finntech.engine.IndustryCategoryMapper industries,
                               org.springframework.beans.factory.ObjectProvider<MerchantAskService> selfProvider,
             @org.springframework.beans.factory.annotation.Value(
                     "${finntech.temp-classifier.batch-size:8}") int tempBatchSize) {
@@ -102,6 +119,7 @@ public class MerchantAskService {
         this.classifier = classifier;
         this.temporary = temporary;
         this.clock = clock;
+        this.industries = industries;
         this.selfProvider = selfProvider;
         this.tempBatchSize = Math.max(1, tempBatchSize);
     }
@@ -169,29 +187,64 @@ public class MerchantAskService {
             log.info("임시 분류를 {}곳만 묻는다 — 남은 {}곳은 다음 회차가 잇는다",
                     tempBatch.size(), plan.ask().size() - tempBatch.size());
         }
-        Map<String, TempClassifierService.Guess> temp = temporary.classify(tempBatch);
+        /* **차선을 가른다.** 앞 두 차선(USER_NOW·USER_REFRESH)은 토큰이 있는 만큼 다 나가고,
+         * 그 아래는 한 번에 두 건이다({@code LOW_LANE_PER_TICK}). 그래서 앞 차선에 많이 넣으면
+         * 우선순위가 무의미해지고 같은 차선의 문장 작업이 굶는다.
+         *
+         * 화면을 연 사람은 지금 '카테고리없음'을 보고 있으므로 앞 차선이 맞다 — 다만
+         * <b>맨 앞 몇 곳만</b>이다({@link #URGENT_HEAD}). 그 사람이 지금 보는 것은 목록의
+         * 첫 화면이고, 나머지는 스크롤해야 나온다. 배경 적재는 보는 사람이 없으니 전부 뒤 차선. */
+        // 돌려받는 것은 **이미 아는 것**뿐이다 — 새로 올린 것은 다음 회차가 캐시에서 집어 간다.
+        Map<String, TempClassifierService.Guess> temp = new LinkedHashMap<>();
+        boolean onDemand = minMerchants <= ON_DEMAND_MIN;
+        if (onDemand && !tempBatch.isEmpty()) {
+            int head = Math.min(URGENT_HEAD, tempBatch.size());
+            temp.putAll(temporary.classify(tempBatch.subList(0, head), Lane.USER_NOW));
+            if (head < tempBatch.size()) {
+                temp.putAll(temporary.classify(
+                        tempBatch.subList(head, tempBatch.size()), Lane.USER_BACKGROUND));
+            }
+        } else {
+            temp.putAll(temporary.classify(tempBatch, Lane.USER_BACKGROUND));
+        }
 
         if (!plan.ask().isEmpty() || !temp.isEmpty()) {
             log.info("미분류 최신화 — userId={} 남은 가맹점 {}, 임시 분류 {}, 임계값 {}",
                     userId, plan.ask().size(), temp.size(), minMerchants);
         }
 
-        // **여기가 임계값이다.** 모자라면 유료 통로를 부르지 않고, 임시 답만 얹어 돌려준다.
-        if (plan.ask().size() < minMerchants) {
-            return self.applyGuesses(userId, plan.remembered(), Map.of(), temp, Set.of());
+        /* **무료와 유료를 가르지 않는다**(2026-08-21 사용자 결정).
+         *
+         * 예전에는 둘을 다르게 다뤘다 — 유료 답만 사전에 올리고(`LLM`), 무료 답은 화면 표시에만
+         * 썼다(`TEMP`, DB 미저장). 두 통로의 품질이 다르다는 전제였는데, 실측으로 그 전제가
+         * 깨졌다: 무료 1위 모델이 <b>72.3%</b> 로 유료 Gemini(<b>70.5%</b>)보다 높았고 실패도 0
+         * 이었다(148건 · 20초 간격 순차 채점).
+         *
+         * 그래서 <b>무료 답을 유료와 같은 자리에 놓는다</b> — 사전에도 올라가고 출처도 `LLM`
+         * 이다. 다르게 다룰 근거가 없어졌고, 두 갈래를 유지하면 같은 일을 두 벌로 관리하게 된다.
+         *
+         * **유료는 비상용으로 남는다.** 무료 사슬 5종이 다 죽었을 때만 부른다 — 큐 앞자리로
+         * 넣어도 시간이 안 되는 경우가 아니면 유료를 쓸 이유가 없다. */
+        Map<String, String> industries = new java.util.TreeMap<>();
+        Map<String, String> fresh = new LinkedHashMap<>();
+        Set<String> answered = new java.util.HashSet<>();
+        temp.forEach((name, g) -> {
+            fresh.put(name, g.category2());
+            industries.put(name, g.industryName());
+            answered.add(name);
+        });
+
+        // 무료가 못 잡았고 임계값을 넘겼을 때만 유료를 부른다 — 마지막 보루다.
+        List<String> stillUnknown = plan.ask().stream().filter(n -> !fresh.containsKey(n)).toList();
+        if (stillUnknown.size() >= minMerchants && classifier.aiEnabled()) {
+            Map<String, String> paid = classifier.classify(stillUnknown, plan.important(),
+                    industries, answered);
+            fresh.putAll(paid);
         }
 
-        // 업종 이름을 함께 받는다 — 재질의 후보를 중분류가 아니라 업종으로 주기 위해서다.
-        Map<String, String> paidIndustries = new java.util.TreeMap<>();
-        // **답을 받은 곳**을 따로 받아 둔다 — '헛물'은 이 안에서만 셀 수 있다.
-        Set<String> answered = new java.util.HashSet<>();
-        Map<String, String> fresh = classifier.classify(plan.ask(), plan.important(),
-                paidIndustries, answered);
-        fresh = reconcile(fresh, paidIndustries, temp);
-
-        Asked out = self.applyGuesses(userId, plan.remembered(), fresh, temp, answered);
-        log.info("가맹점 분류 질의 — userId={} 물어본 곳 {}, 답 얻음 {}, 종결 {}",
-                userId, plan.ask().size(), fresh.size(), out.settled().size());
+        Asked out = self.applyGuesses(userId, plan.remembered(), fresh, Map.of(), answered, industries);
+        log.info("가맹점 분류 — userId={} 물어본 곳 {}, 무료가 답한 곳 {}, 합계 {}, 종결 {}",
+                userId, plan.ask().size(), temp.size(), fresh.size(), out.settled().size());
         return out;
     }
 
@@ -276,6 +329,19 @@ public class MerchantAskService {
                               Map<String, String> fresh,
                               Map<String, TempClassifierService.Guess> temp,
                               Set<String> answered) {
+        return applyGuesses(userId, remembered, fresh, temp, answered, Map.of());
+    }
+
+    /**
+     * @param paidIndustries 유료 통로가 답한 <b>업종 이름</b>(가맹점명 → 업종명).
+     *                       업종코드를 되찾아 결제에 적는 데 쓴다 — 카드 혜택 축이 그 코드다.
+     */
+    @Transactional
+    public Asked applyGuesses(Long userId, Map<String, String> remembered,
+                              Map<String, String> fresh,
+                              Map<String, TempClassifierService.Guess> temp,
+                              Set<String> answered,
+                              Map<String, String> paidIndustries) {
         List<UserPayment> rows = payments.findByUserIdAndCategory2OrderByPaymentDateDesc(
                 userId, IndustryCategoryMapper.UNCLASSIFIED);
         Set<String> settled = new java.util.LinkedHashSet<>();
@@ -316,11 +382,9 @@ public class MerchantAskService {
             applySettled(rows, settled);
         }
 
-        Map<String, String> paid = new LinkedHashMap<>(remembered);
-        paid.putAll(fresh);
-        paint(rows, paid, temp);
-        Map<String, String> guesses = new LinkedHashMap<>(paid);
-        temp.forEach((n, g) -> guesses.putIfAbsent(n, g.category2()));
+        Map<String, String> guesses = new LinkedHashMap<>(remembered);
+        guesses.putAll(fresh);
+        paint(rows, guesses, paidIndustries);
         return new Asked(rows, guesses, settled);
     }
 
@@ -379,18 +443,32 @@ public class MerchantAskService {
      * 나오고, 무료 통로의 답({@code TEMP})은 임시라 유료 답이 오면 덮인다. 화면에는 둘 다
      * "AI 추정"으로 똑같이 보이지만, 기록까지 같게 두면 나중에 어느 쪽 값인지 가려낼 수 없다.
      */
-    private static void paint(List<UserPayment> rows, Map<String, String> paid,
-                              Map<String, TempClassifierService.Guess> temp) {
+    private void paint(List<UserPayment> rows, Map<String, String> guesses,
+                       Map<String, String> industries) {
         for (UserPayment p : rows) {
-            String name = p.getMerchantName();
-            String confirmed = paid.get(name);
-            if (confirmed != null) {
-                p.suggestCategory2(confirmed, "LLM");
-                continue;
-            }
-            TempClassifierService.Guess t = temp.get(name);
-            if (t != null) p.suggestCategory2(t.category2(), "TEMP");
+            String guess = guesses.get(p.getMerchantName());
+            if (guess == null) continue;
+            // **출처는 하나뿐이다.** 예전에는 유료를 `LLM`, 무료를 `TEMP` 로 갈랐는데 무료
+            // 1위가 유료보다 정확했다(72.3% 대 70.5%, 148건 실측). 다르게 적을 근거가 없다.
+            p.suggestCategory2(guess, "LLM");
+            learnCode(p, industries.get(p.getMerchantName()));
         }
+    }
+
+    /**
+     * <b>알아낸 업종의 코드를 결제에 적는다</b> — 카드추천의 혜택 축이 그 코드로 정해진다.
+     *
+     * <p>실 명세서에는 업종코드가 없어 적재기가 자리채움값을 넣고, 그 코드는 대조표에 아예
+     * 없다. 그래서 실사용자 결제 <b>1,579건 전부</b>가 카드추천에서 축 없음으로 빠지고 있었다
+     * (2026-08-21 실측). 모델이 업종 이름을 알아냈으면 표에서 코드를 되찾아 그 자리를 메운다.
+     *
+     * <p>코드가 여럿이면 첫 것을 쓴다 — 그때는 그 코드들의 중분류가 만장일치라 어느 것을
+     * 골라도 축이 같다(V29 의 만장일치 규칙).
+     */
+    private void learnCode(UserPayment payment, String industryName) {
+        if (industryName == null || industryName.isBlank()) return;
+        var codes = industries.codesOfFineName(industryName);
+        if (!codes.isEmpty()) payment.learnIndustryCode(codes.get(0));
     }
 
     /**
