@@ -320,6 +320,10 @@ public class MyDataLinkService {
         if (userPaymentRepository.countByUserIdAndCategory2(
                 userId, com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED) > 0) {
             reclassified += lookupUnknownIndustries(userId);
+            // **최초 연동은 크게 한 번 훑는다.** 사람이 로딩 화면 앞에서 기다리는 유일한
+            // 자리라, 여기서만 유료 통로로 40곳씩 묶어 묻는다(2026-08-21 사용자 결정).
+            // 많이 남았을 때만 깨어나고, 못 맞힌 것은 무료 통로가 한 곳씩 이어받는다.
+            reclassified += merchantAskService.askInBulk(userId);
             // **③ LLM 은 40곳이 쌓여야 부른다.** 조회(②-b)와 달리 임계값을 두는 이유는 값이
             // 묶음 크기에 좌우되기 때문이다 — 프롬프트의 76%가 업종 목록(385종)이라 1곳을 묻든
             // 40곳을 묻든 값이 거의 같고, 1곳씩 40번 부르면 40배가 든다. 조회는 번호 하나만

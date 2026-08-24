@@ -267,6 +267,10 @@ public class MerchantBrandService {
         var first = temporary.brandOf(name);
         if (first.isEmpty()) return;      // 답을 못 받았다 — 사실이 아니므로 아무것도 안 적는다
         String brand = first.get();
+        // **PG 를 브랜드로 적지 않는다.** `넥슨_카카오페이` 의 브랜드가 `카카오페이` 로 잡히면
+        // 그 브랜드가 프롬프트에 나가 모델이 "결제대행사는 모름"으로 답한다(2026-08-21 실측).
+        // 브랜드를 모르는 것과 같이 두는 편이 낫다 — 그때는 이름만으로 묻는다.
+        if (!NONE.equals(brand) && !usableBrand(brand)) brand = NONE;
         if (!NONE.equals(brand)) brand = temporary.unify(brand, knownBrands);
         selfProvider.getObject().persist(Map.of(), Map.of(name, brand));
     }
@@ -465,4 +469,51 @@ public class MerchantBrandService {
         if (fromDictionary.isPresent()) return fromDictionary;
         return brands.findByMerchantName(merchantName).map(MerchantBrand::getBrand);
     }
+
+    /**
+     * <b>쓸 수 있는 브랜드만</b> — 프롬프트·브랜드 색인이 쓰는 자리.
+     *
+     * <p>{@link #brandOf} 와 갈라 둔다. 저쪽은 <i>"물어봤는가"</i>를 알리는 계약이라
+     * {@link #NONE} 도 값으로 준다 — 안 그러면 볼 때마다 다시 묻는다. 여기는 <i>"이 값을
+     * 근거로 써도 되는가"</i>라 {@code NONE} 과 결제대행사 이름을 뺀다.
+     */
+    public Optional<String> usableBrandOf(String merchantName) {
+        return brandOf(merchantName).filter(MerchantBrandService::usableBrand);
+    }
+
+    /**
+     * 브랜드로 쓸 수 있는 값인가 — <b>두 가지를 거른다.</b>
+     *
+     * <ul>
+     *   <li><b>{@link #NONE} 리터럴</b> — "브랜드가 없다"는 <i>사실</i>이지 브랜드가 아니다.
+     *       그런데 값으로 저장돼 있어(실측 2026-08-21: {@code 사당쌀빵}·{@code 황금마차})
+     *       그대로 읽으면 프롬프트에 <i>"이 가맹점의 브랜드는 브랜드없음 입니다"</i> 가 나가고,
+     *       브랜드 색인에서는 서로 무관한 가맹점이 한 덩어리가 된다.</li>
+     *   <li><b>결제대행사 이름</b> — {@code 넥슨_카카오페이} 의 브랜드가 {@code 카카오페이} 로
+     *       잡혀 있었다. 그 브랜드를 프롬프트에 넣으면 모델이 "결제대행사는 모름" 규칙에 걸려
+     *       답을 안 한다 — {@code 구글_네이버페이} 11건 234,544원이 그렇게 막혔다.</li>
+     * </ul>
+     */
+    static boolean usableBrand(String brand) {
+        return brand != null && !brand.isBlank() && !NONE.equals(brand) && !isAgency(brand);
+    }
+
+    private static boolean isAgency(String brand) {
+        String flat = brand.replaceAll("[\\s()（）\\-_.]", "");
+        for (String pg : PG_BRANDS) if (flat.equalsIgnoreCase(pg)) return true;
+        return false;
+    }
+
+    /**
+     * 브랜드로 인정하지 않는 결제대행사 상호.
+     *
+     * <p>{@code IndustryCategoryMapper.paymentAgencyNames} 와 겹치지만 여기 따로 두는 이유는
+     * 쓰임이 다르기 때문이다 — 저쪽은 <b>가맹점명</b>이 PG 인지 보고, 여기는 <b>브랜드 칸에
+     * PG 가 들어앉았는지</b> 본다. 저쪽 목록이 바뀌어도 이 판정이 흔들리면 안 된다.
+     */
+    private static final java.util.List<String> PG_BRANDS = java.util.List.of(
+            "카카오페이", "네이버페이", "네이버파이낸셜", "토스페이", "토스페이먼츠", "비바리퍼블리카",
+            "페이코", "PAYCO", "나이스페이먼츠", "NICE", "NICE인프라", "KICC", "KG이니시스", "이니시스",
+            "KG모빌리언스", "KCP", "NHNKCP", "다날", "갤럭시아머니트리", "웰컴페이먼츠", "스마트로",
+            "KSNET", "KPN", "헥토파이낸셜", "이노페이", "페이레터", "코페이", "삼성페이", "애플페이");
 }

@@ -128,7 +128,7 @@ class MyDataLinkServiceTest {
         return new TempClassifierService(new com.finntech.config.TempClassifierProperties(),
                 new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
                 mock(MerchantClassifierService.class), new tools.jackson.databind.ObjectMapper(),
-                java.time.Clock.systemDefaultZone(), new com.finntech.freechannel.FreeChannelQueue(40, 6, 500));
+                java.time.Clock.systemDefaultZone(), new com.finntech.freechannel.FreeChannelQueue(40, 6, 500), brandProvider());
     }
 
     private static MerchantAskService noAsk() {
@@ -168,5 +168,19 @@ class MyDataLinkServiceTest {
                 new MerchantCategoryVoteService(
                         mock(com.finntech.repository.MerchantCategoryVoteRepository.class)),
                 java.time.Clock.systemDefaultZone());
+    }
+
+    /**
+     * 브랜드 조회는 <b>고리를 끊으려고</b> {@code ObjectProvider} 로 받는다
+     * ({@code MerchantBrandService} 가 이 서비스를 쓴다). 시험에서는 아무것도 안 준다 —
+     * 브랜드가 없으면 프롬프트가 그 줄을 빼고 나가므로 여기 관심사가 아니다.
+     */
+    private static org.springframework.beans.factory.ObjectProvider<MerchantBrandService> brandProvider() {
+        return new org.springframework.beans.factory.ObjectProvider<>() {
+            @Override public MerchantBrandService getObject() { return null; }
+            @Override public MerchantBrandService getObject(Object... args) { return null; }
+            @Override public MerchantBrandService getIfAvailable() { return null; }
+            @Override public MerchantBrandService getIfUnique() { return null; }
+        };
     }
 }
