@@ -135,7 +135,7 @@ final class TestServices {
                 mock(CategoryPromotionService.class), followUps,
                 // 소비 원장 표시도 마찬가지 — 표가 원장을 따라오는지는
                 // `SpendingLedgerFactsTest` 가 통합으로 본다.
-                mock(com.finntech.ledger.SpendingLedgerDirtyMarker.class),
+                mock(com.finntech.ledger.SpendingLedgerDirtyMarker.class), mock(com.finntech.service.IndustryCodeBackfill.class),
                 selfOf(self));
         self.set(service);
         return service;
