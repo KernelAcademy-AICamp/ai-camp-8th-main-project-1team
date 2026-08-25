@@ -164,6 +164,9 @@ public class MerchantCategoryService {
 
         final String biz = keyOf(payment.getBusinessNumber());
         List<String> codes = mapper.codesOfSub(sub);
+        // **결제에도 적는다.** 사전에만 넣으면 카드 혜택축이 그대로 죽어 있다 —
+        // cardAxisOf 는 결제의 업종코드를 읽고, 실 명세서에는 그 코드가 없다.
+        if (!codes.isEmpty()) payment.learnIndustryCode(codes.get(0));
         Optional<MerchantCategory> existing = repository.findByBusinessNumberAndMerchantName(biz, merchantName);
         if (existing.isPresent()) {
             MerchantCategory row = existing.get();

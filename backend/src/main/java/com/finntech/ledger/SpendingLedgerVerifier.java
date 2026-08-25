@@ -165,6 +165,8 @@ public class SpendingLedgerVerifier {
         found += check(samples, paymentId, "category2", row.getCategory2(), expected.category2());
         found += check(samples, paymentId, "category2_source", row.getCategory2Source(), expected.category2Source());
         found += check(samples, paymentId, "category2_llm", row.getCategory2Llm(), expected.category2Llm());
+        found += check(samples, paymentId, "nts_industry_code_llm",
+                row.getNtsIndustryCodeLlm(), expected.ntsIndustryCodeLlm());
         found += check(samples, paymentId, "category3", row.getCategory3(), expected.category3());
         return found;
     }

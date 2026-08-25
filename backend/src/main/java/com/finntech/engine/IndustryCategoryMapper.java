@@ -197,6 +197,31 @@ public class IndustryCategoryMapper {
         return codes.size() == 1 ? codes : java.util.List.of();  // 코드도 하나여야 확정이다
     }
 
+    /**
+     * <b>소분류가 가리키는 업종코드 후보를 중분류로 좁힌다</b> — 추정 칸에 쓸 값.
+     *
+     * <p>{@link #codesOfSub} 는 <b>1:1 일 때만</b> 답한다(170개 중 62개). 나머지는 소분류
+     * 하나에 업종이 여럿이거나 코드가 여럿이라 확정이 아니다 — 그런데 <b>추정으로는 쓸 수
+     * 있다</b>. 여기서 중분류가 맞는 것만 남기고 첫 것을 준다.
+     *
+     * <p>정렬이 고정돼 있어 같은 입력에 같은 답이 나온다(§4 원칙 3). 확정이 아니므로
+     * 부르는 쪽은 반드시 <b>추정 칸</b>에 적어야 한다.
+     */
+    public String guessCodeOfSub(String sub, String mid) {
+        if (sub == null || sub.isBlank()) return "";
+        java.util.List<String> names = new java.util.ArrayList<>();
+        subByIndustryName.forEach((name, s) -> { if (s.equals(sub)) names.add(name); });
+        java.util.Collections.sort(names);
+        java.util.List<String> candidates = new java.util.ArrayList<>();
+        for (String name : names) {
+            for (String code : codesOfFineName(name)) {
+                if (mid == null || mid.equals(midOf(code))) candidates.add(code);
+            }
+        }
+        java.util.Collections.sort(candidates);
+        return candidates.isEmpty() ? "" : candidates.get(0);
+    }
+
     /** 그 브랜드에 소분류가 있는가 — 회사명·결제수단은 거짓이다. */
     public boolean hasSub(String brand) {
         return brand != null && subByBrand.containsKey(brand);

@@ -61,6 +61,7 @@ public class SpendingLedgerAdminController {
     private final WasteScoringService wasteScoring;
     private final com.finntech.service.SubCategorySweeper subSweeper;
     private final com.finntech.service.BrandCoverageReport brandCoverage;
+    private final com.finntech.service.IndustryCodeBackfill industryCodes;
 
     public SpendingLedgerAdminController(SpendingLedgerBackfill backfill, SpendingLedgerVerifier verifier,
                                        SpendingLedgerJudgmentRefresher refresher,
@@ -68,7 +69,8 @@ public class SpendingLedgerAdminController {
                                        SpendingLedgerDirtyRepository dirty, UserPaymentRepository payments,
                                        AppUserRepository users, WasteScoringService wasteScoring,
                                        com.finntech.service.SubCategorySweeper subSweeper,
-                                       com.finntech.service.BrandCoverageReport brandCoverage) {
+                                       com.finntech.service.BrandCoverageReport brandCoverage,
+                                       com.finntech.service.IndustryCodeBackfill industryCodes) {
         this.backfill = backfill;
         this.verifier = verifier;
         this.refresher = refresher;
@@ -80,6 +82,22 @@ public class SpendingLedgerAdminController {
         this.wasteScoring = wasteScoring;
         this.subSweeper = subSweeper;
         this.brandCoverage = brandCoverage;
+        this.industryCodes = industryCodes;
+    }
+
+    /**
+     * <b>비어 있는 업종코드를 소분류에서 되찾는다</b> — 기본은 맛보기라 안 고친다.
+     *
+     * <p>카드 혜택축은 중분류가 아니라 업종코드로 정해지는데, 실 명세서에는 그 코드가 없어
+     * 자리채움값이 들어간다 — 실사용자 결제의 <b>77%</b>가 그 상태였다. 소분류가 업종 하나를
+     * 가리키면 확정 칸에, 후보가 여럿이면 중분류로 좁혀 <b>추정 칸</b>에 적는다.
+     *
+     * <p>모델을 부르지 않는다 — 이미 정해진 소분류에서 표로 옮기는 일이다.
+     */
+    @PostMapping("/spending-ledger/industry-code-backfill")
+    public com.finntech.service.IndustryCodeBackfill.Result industryCodeBackfill(
+            @RequestParam(defaultValue = "true") boolean dryRun) {
+        return industryCodes.run(dryRun);
     }
 
     /**
