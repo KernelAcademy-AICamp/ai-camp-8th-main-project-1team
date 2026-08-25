@@ -110,6 +110,42 @@ public interface MerchantCategoryRepository extends JpaRepository<MerchantCatego
             + "where m.source in ('USER_CSV','REGISTRY') order by m.id")
     List<MerchantCategory> findTableDerived(org.springframework.data.domain.Pageable page);
 
+    /**
+     * <b>가맹점명이 없는 사전 행</b> — 번호 하나에 대한 사실이다.
+     *
+     * <p>씨앗의 원천(`realdatas.csv`)은 <b>사업자번호와 업종만</b> 주고 가맹점 풀네임을 안 준다.
+     * 그래서 이 행들은 이름 자리가 빈 채로 들어오고, <i>"이 사업자번호의 업종은 X"</i> 라는
+     * <b>번호 단위 사실</b>이 된다. 이름으로 찾는 지도에는 절대 안 걸린다.
+     *
+     * <p>{@code merchant_name = ''} 로 좁히는 것이 요점이다. 번호로 전부 긁으면 택시처럼
+     * 한 번호에 상호가 38,690종 붙은 곳이 통째로 딸려 온다 — 이 조회는 원장을 꾸미는
+     * 곁일이라 그런 값을 치를 수 없다.
+     *
+     * <p>정렬을 고정한다(§4-3 재현성).
+     */
+    @Query("select m from MerchantCategory m "
+            + "where m.merchantName = '' and m.businessNumber in :numbers order by m.id")
+    List<MerchantCategory> findNamelessByBusinessNumberIn(@Param("numbers") List<String> numbers);
+
+    /**
+     * <b>업종 이름을 아직 하나도 못 얻은 행</b>(V43) — 소분류를 찾을 단서가 없는 곳이다.
+     *
+     * <p>소분류는 브랜드 아니면 업종 이름에서 온다. 브랜드가 안 붙는 개인 상호는 업종 이름이
+     * 유일한 단서인데, {@code rememberGuess} 가 모델의 답에서 이름을 버려 왔다. 그래서 이미
+     * 굳어 버린 행들이 남았다 — 운영에서 <b>260곳</b>, 그중 67곳이 {@code LLM_GUESS} 였다
+     * (2026-08-25 실측). 이 행들은 사전이 답을 아는 것으로 쳐서 <b>다시 묻지도 않는다.</b>
+     *
+     * <p>브랜드 조건은 여기 안 건다. 저장된 {@code brand} 는 무료 통로가 지어낸 이름일 수
+     * 있어서다 — 표기표를 상호에 그 자리에서 맞추는 쪽이 맞고, 그것은 자바에서 한다.
+     *
+     * <p>정렬을 고정한다(§4-3 재현성).
+     */
+    @Query("select m from MerchantCategory m "
+            + "where (m.category3 is null or m.category3 = '') "
+            + "and (m.registryIndustry is null or m.registryIndustry = '') "
+            + "and (m.llmIndustry is null or m.llmIndustry = '') order by m.id")
+    List<MerchantCategory> findWithoutIndustryName(org.springframework.data.domain.Pageable page);
+
     /** 사전에 이미 확정된 브랜드 이름들 — 대기 장소의 것과 합쳐 2차 대조의 후보가 된다. */
     @Query("select distinct m.brand from MerchantCategory m "
             + "where m.brand is not null and m.brand <> :exclude order by m.brand")

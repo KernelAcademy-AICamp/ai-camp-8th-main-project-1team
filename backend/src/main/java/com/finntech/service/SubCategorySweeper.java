@@ -198,7 +198,16 @@ public class SubCategorySweeper {
     private String subOf(MerchantCategory row) {
         String byBrand = industries.subOfBrand(
                 brands.subBrandOf(row.getMerchantName(), industries::hasSub).orElse(""));
-        return byBrand.isEmpty() ? industries.subOfIndustryName(row.getRegistryIndustry()) : byBrand;
+        if (!byBrand.isEmpty()) return byBrand;
+        // 사실(등록 업종)을 먼저 보고 없을 때만 추정(모델의 답)을 본다 — V43.
+        String byName = industries.subOfIndustryName(row.getRegistryIndustry());
+        if (byName.isEmpty()) byName = industries.subOfIndustryName(row.getLlmIndustry());
+        // **어긋나면 안 찍는다.** 업종 이름은 어느 쪽이 틀렸는지를 말해 주지 않는다 —
+        // 그냥 적으면 "식비인데 소분류는 커피" 같은 행이 남는다. 브랜드만이 중분류를 이긴다.
+        if (byName.isEmpty()) return "";
+        String expected = industries.midOfSub(byName);
+        return IndustryCategoryMapper.isUnknown(expected) || expected.equals(row.getCategory2())
+                ? byName : "";
     }
 
     /** 무엇이 몇 개나 어긋나는지 소분류별로 — 고치기 전에 규모를 보는 자리. */
