@@ -55,7 +55,7 @@ class SpendingLedgerOpsTest {
             for (int i = 0; i < 6; i++) {
                 payments.save(new UserPayment(
                         UserPayment.rowId(user.getId(), "real-sub" + i), user.getId(), "S1", 9001L,
-                        start.plusMonths(i).atTime(23, 10), "642004", "취미/여가",
+                        start.plusMonths(i).atTime(23, 10), "000000", "취미/여가",
                         17000, "넷플릭스", "1658700119"));
             }
         });
@@ -107,7 +107,7 @@ class SpendingLedgerOpsTest {
         later.setRealPerson(true);
         later = users.save(later);
         payments.save(new UserPayment(UserPayment.rowId(later.getId(), "real-solo"), later.getId(),
-                "S1", 9001L, LocalDate.of(2026, 8, 9).atTime(12, 41), "642004", "편의점",
+                "S1", 9001L, LocalDate.of(2026, 8, 9).atTime(12, 41), "000000", "편의점",
                 3200, "GS25", "2345678901"));
         factsWriter.write(later.getId());
         payments.deleteById(UserPayment.rowId(later.getId(), "real-solo"));   // 유령 줄을 남긴다

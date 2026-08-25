@@ -183,4 +183,32 @@ class MyDataLinkServiceTest {
             @Override public MerchantBrandService getIfUnique() { return null; }
         };
     }
+
+    /**
+     * <b>제공자가 옛 자리표를 보내도 새 자리표로 저장한다.</b>
+     *
+     * <p>제공자 DB 는 V15 가 옮겼지만 여기가 마지막 방벽이다. 두 모듈의 마이그레이션은
+     * <b>실행 순서가 보장되지 않고</b>, 옛 백업을 복원하거나 제공자가 뒤처지면 옛 값이 다시
+     * 흘러 들어온다. 실제로 백엔드 쪽 V41 만 돌고 제공자가 그대로였을 때
+     * <b>재연동 한 번에 137건이 642004 로 되살아났다</b>(2026-08-25 운영 실측).
+     */
+    @org.junit.jupiter.api.Test
+    @org.junit.jupiter.api.DisplayName("제공자가 준 옛 자리표를 새 자리표로 바꿔 저장한다")
+    void 옛_자리표를_정규화한다() {
+        org.assertj.core.api.Assertions.assertThat(MyDataLinkService.normalizeIndustryCode(
+                com.finntech.domain.UserPayment.LEGACY_PLACEHOLDER_INDUSTRY))
+                .isEqualTo(com.finntech.domain.UserPayment.PLACEHOLDER_INDUSTRY);
+    }
+
+    /** <b>진짜 업종코드는 손대지 않는다.</b> 자리표만 바꾸는 것이지 사실을 고치는 게 아니다. */
+    @org.junit.jupiter.api.Test
+    @org.junit.jupiter.api.DisplayName("진짜 업종코드와 새 자리표는 그대로 지나간다")
+    void 진짜_코드는_안_건드린다() {
+        org.assertj.core.api.Assertions.assertThat(MyDataLinkService.normalizeIndustryCode("552303")).isEqualTo("552303");
+        org.assertj.core.api.Assertions.assertThat(MyDataLinkService.normalizeIndustryCode("521992")).isEqualTo("521992");
+        org.assertj.core.api.Assertions.assertThat(MyDataLinkService.normalizeIndustryCode(
+                com.finntech.domain.UserPayment.PLACEHOLDER_INDUSTRY))
+                .isEqualTo(com.finntech.domain.UserPayment.PLACEHOLDER_INDUSTRY);
+        org.assertj.core.api.Assertions.assertThat(MyDataLinkService.normalizeIndustryCode(null)).isNull();
+    }
 }

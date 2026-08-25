@@ -78,7 +78,7 @@ class SpendingLedgerJudgmentTest {
                             String bizno, String category2) {
         return payments.save(new UserPayment(
                 UserPayment.rowId(user.getId(), "real-" + id), user.getId(), "S1", 9001L,
-                at, "642004", category2, amount, merchant, bizno));
+                at, "000000", category2, amount, merchant, bizno));
     }
 
     /** 매달 22일 넷플릭스 + 어쩌다 한 번 편의점 — 고정지출과 일반 지출이 섞인 원장. */
