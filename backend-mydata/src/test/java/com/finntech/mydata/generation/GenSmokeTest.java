@@ -24,8 +24,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 })
 class GenSmokeTest {
 
-    /** 알 수 없는 결제(간편결제·PG)의 업종코드 — 대조표에 일부러 없다. */
-    private static final String UNKNOWN_INDUSTRY = "642004";
+    /**
+     * <b>무엇을 샀는지 말해 주지 않는 업종코드들</b> — 대조표에 일부러 없다.
+     *
+     * <ul>
+     *   <li>{@code 642004} 포털 및 기타 인터넷 정보 매개 서비스업 — 간편결제·PG 를 거친 결제</li>
+     *   <li>{@code 525101} 전자상거래 소매업 — 배달의민족·넥슨·야놀자가 <b>한 코드에</b> 등록돼
+     *       있다. 판매 방식만 말하고 무엇을 파는지 말하지 않으며, 온라인이라고 단정할 수도 없다
+     *       (같은 업종으로 등록한 사업자가 오프라인 매장을 함께 운영한다). 여기 두면 그 결제가
+     *       전부 '쇼핑'이 되므로 뺐다(모호업종.tsv, §13-12)</li>
+     * </ul>
+     */
+    private static final List<String> UNKNOWN_INDUSTRY = List.of("525101", "642004");
 
     @Autowired MyDataPaymentRepository payments;
     @Autowired IndustryCategoryMap ksicToMid;
@@ -48,7 +58,7 @@ class GenSmokeTest {
         // 그 업종의 소비가 통째로 '카테고리없음'으로 새는데 크래시가 안 나서 알아채기 어렵다.
         List<String> unmapped = codes.stream().filter(c -> ksicToMid.midOf(c) == null).sorted().toList();
         System.out.println("  대조표에 없는 코드: " + unmapped);
-        assertThat(unmapped).containsAnyOf(UNKNOWN_INDUSTRY).isSubsetOf(UNKNOWN_INDUSTRY);
+        assertThat(unmapped).containsAnyElementsOf(UNKNOWN_INDUSTRY).isSubsetOf(UNKNOWN_INDUSTRY);
 
         // ③ 중분류 분포와 미분류 비율
         Map<String, Long> byMid = all.stream().collect(Collectors.groupingBy(
