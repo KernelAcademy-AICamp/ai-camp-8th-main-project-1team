@@ -243,6 +243,112 @@ for (const m of AUTO_MOVES) {
   await ctx.close();
 }
 
+// ── 5. 화면 안의 갈래도 이력에 쌓인다 ──────────────────────────────────
+/* <b>신고된 사고 그대로 재현한다.</b> 홈→주간→월간→소비내역 뒤 뒤로를 누르면 <b>월간</b>이
+   나와야 하는데 <b>주간</b>이 나왔다. 주간·월간이 같은 화면의 `useState` 였기 때문이다 —
+   주소가 둘 다 `#/report` 라 이력에 한 칸도 안 쌓였고, 뒤로 와서 화면이 새로 마운트될 때
+   초기값 `week` 가 다시 잡혔다. 사용자가 밟은 자리가 통째로 사라진 것이다.
+
+   정적 검사로는 못 잡는다 — `go()` 안은 `pushState` 한 줄이라 코드만 읽으면 멀쩡하다.
+   눌러 봐야 보인다. */
+{
+  const ctx = await browser.newContext({ viewport: { width: 375, height: 812 } });
+  await ctx.addInitScript(SEED_LINKED);
+  await stubApi(ctx);
+  const page = await ctx.newPage();
+  page.on('pageerror', () => {});
+
+  await page.goto(`${BASE}/#/home`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(400);
+  await page.goto(`${BASE}/#/report`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(400);
+
+  // 월간 세그먼트를 **실제로 누른다** — 주소로 바로 가면 이 사고가 재현되지 않는다.
+  const monthly = page.getByRole('tab', { name: '월간' });
+  if (await monthly.count() === 0) {
+    no('5. 리포트에 월간 세그먼트가 없다 — 검사가 낡았다', '검사가 낡았다');
+  } else {
+    await monthly.click();
+    await page.waitForTimeout(300);
+    const atMonth = hashOf(page);
+    if (!atMonth.includes('period=month')) {
+      no('5. 월간이 주소에 안 남는다', `기대 '#/report?period=month' · 실제 ${atMonth}`);
+    } else {
+      await page.goto(`${BASE}/#/transactions`, { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(300);
+      await page.goBack();
+      await page.waitForTimeout(400);
+      const back1 = hashOf(page);
+      if (!back1.includes('period=month')) {
+        no('5. 뒤로가기가 월간을 건너뛴다', `기대 '#/report?period=month' · 실제 ${back1}`);
+      } else {
+        ok('5. 화면 안의 갈래도 뒤로가기로 돌아온다', back1);
+        // 한 번 더 뒤로 — 이번엔 주간이어야 한다(월간 이전 칸).
+        await page.goBack();
+        await page.waitForTimeout(400);
+        const back2 = hashOf(page);
+        if (back2.includes('period=month')) {
+          no('5. 갈래 칸이 두 번 쌓였다', `기대 '#/report' · 실제 ${back2}`);
+        } else {
+          ok('5. 갈래 이전 칸으로도 돌아온다', back2);
+        }
+      }
+    }
+  }
+  await ctx.close();
+}
+
+// ── 6. 다른 화면의 갈래도 같은 규약을 지킨다 ────────────────────────────
+/* 리포트만 고치면 같은 사고가 다음 화면에서 또 난다. 세그먼트·필터를 쓰는 화면을 **눌러서**
+   확인한다. 도감·마이룸의 선택은 <b>일부러 뺐다</b> — 꾸미기 중 고른 것이라 이력에 쌓으면
+   뒤로가기가 선택 하나하나를 되짚어 더 나빠진다. */
+{
+  const ctx = await browser.newContext({ viewport: { width: 375, height: 812 } });
+  await ctx.addInitScript(SEED_LINKED);
+  /* 이 두 화면은 <b>데이터가 있어야 갈래가 그려진다</b>. 503 이면 ErrorBox 만 뜨고 버튼이 없어
+     검사가 조용히 지나간다 — "확인했다"가 아니라 "안 봤다"가 된다. stubApi 의 extra 로
+     넘겨야 한다: 나중에 ctx.route 를 걸면 먼저 등록된 와일드카드가 이미 503 으로 받아 버린다. */
+  await stubApi(ctx, {
+    // **실제 응답 모양 그대로여야 한다.** 필드 하나가 없으면 화면이 그리다 죽고(`slice` of
+    // undefined) 본문이 통째로 비어, 검사는 "버튼이 없다"고만 말한다 — 원인이 안 보인다.
+    '/api/mydata/payments': [{ paymentId: 'p1', date: '2026-08-19T12:00:00', category: '식비',
+      category2: '식비', category2Llm: null, amount: 9000, merchantName: '어느 가게',
+      cardName: '검사카드', cardColor: '#888', companyName: '검사카드사', businessNumber: '0000000001' }],
+    '/api/guardian/shop': { points: 100, catSkin: 'cream', items: [
+      { code: 'F1', name: '의자', category: 'FURNITURE', price: 10, owned: false },
+      { code: 'B1', name: '창가', category: 'BACKGROUND', price: 10, owned: false }] },
+  });
+  const page = await ctx.newPage();
+  page.on('pageerror', () => {});
+  // **앱 뿌리를 먼저 연다.** 해시로 바로 들어가면 첫 로드에서 스크립트가 붙기 전이라 빈 화면이 된다.
+  await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(600);
+
+  for (const [screen, label, key] of [['transactions', '재량', 'filter'], ['shop', '배경', 'tab']]) {
+    await page.goto(`${BASE}/#/${screen}`, { waitUntil: 'domcontentloaded' });
+    const btn = page.getByRole('button', { name: label, exact: true }).first();
+    // **기다린다.** 이 화면들은 API 를 받아야 갈래를 그린다 — 고정 대기로는 느린 날 흔들린다.
+    await btn.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+    if (await btn.count() === 0) {
+      no(`6. ${screen} 의 '${label}' 갈래 버튼을 못 찾았다`, '스텁이 부족하거나 라벨이 바뀌었다 — 확인 못 한 것은 통과가 아니다');
+      continue;
+    }
+    await btn.click();
+    await page.waitForTimeout(300);
+    const after = hashOf(page);
+    if (!after.includes(`${key}=`)) {
+      no(`6. ${screen} 의 갈래가 주소에 안 남는다`, `기대 '#/${screen}?${key}=…' · 실제 ${after}`);
+      continue;
+    }
+    await page.goBack();
+    await page.waitForTimeout(300);
+    const back = hashOf(page);
+    if (back.includes(`${key}=`)) no(`6. ${screen} 뒤로가기가 갈래를 안 되돌린다`, `실제 ${back}`);
+    else ok(`6. ${screen} 갈래가 이력에 쌓이고 뒤로 되돌아온다`, `${after} → ${back}`);
+  }
+  await ctx.close();
+}
+
 await browser.close();
 
 console.log(fails.length === 0

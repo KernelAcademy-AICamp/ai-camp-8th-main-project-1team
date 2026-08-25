@@ -24,11 +24,17 @@ import { won, shortDate, monthLabel } from '../lib/format';
 type Filter = 'all' | 'DEPOSIT' | 'WITHDRAWAL';
 
 export function ReportAccount() {
-  const { back, userId, go } = useSession();
+  const { back, userId, go, view, setView } = useSession();
   /** 1 = 이번 달, 7 = 이번 달 + 이전 6개월. 서버가 이 기간의 거래만 계산해 준다. */
   const [months, setMonths] = useState(1);
   const account = useAsync(() => api.account(userId, months), [userId, months]);
-  const [filter, setFilter] = useState<Filter>('all');
+  /**
+   * <b>갈래는 주소가 정본이다</b>(`?filter=…`). `useState` 로 들면 뒤로가기가 이 자리를
+   * 되살리지 못한다 — 리포트의 주간→월간이 그래서 이력에 한 칸도 안 쌓였고, 다른 화면에
+   * 갔다 뒤로 오면 초기값으로 튕겼다(2026-08-25 신고).
+   */
+  const filter = (view.filter ?? 'all') as Filter;
+  const setFilter = (next: Filter) => setView(next === 'all' ? {} : { filter: next });
   /** 월 펼침 상태. 기본은 전부 닫힘 — 한 달에 300건 안팎이라 열어둘 이유가 없다. */
   const [openMonths, setOpenMonths] = useState<Record<string, boolean>>({});
 

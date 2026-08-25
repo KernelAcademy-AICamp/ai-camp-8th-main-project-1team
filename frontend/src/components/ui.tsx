@@ -39,6 +39,31 @@ export function Screen({ title, id, hasTabBar, background, className, children }
   const ref = useRef<HTMLElement>(null);
   // 화면이 바뀌면 새 화면으로 초점을 옮긴다(KWCAG — 보조기술이 화면 전환을 인지).
   useEffect(() => { ref.current?.focus(); window.scrollTo({ top: 0 }); }, [title]);
+
+  /**
+   * <b>화면 진입 연출</b> — 개편안의 `enter` 를 그대로 되살린다.
+   *
+   * <p>스타일시트에는 규칙이 <b>이미 있었다</b>(`#s-home.enter .pad>*` 등). 그런데 그 클래스를
+   * 붙이는 코드가 없어 <b>한 줄도 안 걸리고 있었다</b> — 프로토타입에서는 `tabEnter()` 가
+   * 화면을 바꿀 때마다 붙였는데, React 로 옮기면서 그 자리가 사라졌다.
+   *
+   * <p><b>여기 한 곳에 두는 이유:</b> 모든 화면이 이 컴포넌트를 지난다. 화면마다 붙이면
+   * 새 화면을 만들 때 빠뜨리고, 빠뜨려도 아무 오류가 안 나 조용히 밋밋해진다.
+   *
+   * <p><b>왜 지웠다 다시 붙이나:</b> 같은 클래스가 계속 붙어 있으면 브라우저가 애니메이션을
+   * 다시 재생하지 않는다. 프로토타입의 `void s.offsetWidth` 가 그 목적이었다 — 강제로
+   * 레이아웃을 읽어 애니메이션을 새로 시작시킨다.
+   */
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // **움직임을 줄이겠다고 한 사람에게는 안 한다.** 전정 장애가 있으면 화면이 솟는 연출이
+    // 어지럼을 부른다(KWCAG · prefers-reduced-motion).
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    el.classList.remove('enter');
+    void el.offsetWidth;          // 강제 리플로 — 이게 없으면 두 번째 진입부터 안 논다
+    el.classList.add('enter');
+  }, [title]);
   return (
     <main
       /* 디자인 규칙이 걸리는 자리다. 스킵 링크는 아래 제목(`#screen-title`)이 받는다 —

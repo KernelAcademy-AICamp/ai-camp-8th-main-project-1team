@@ -33,7 +33,10 @@ public final class Catalog {
             Map.entry("602103", List.of("대중교통")),
             Map.entry("642005", List.of("통신비")),
             Map.entry("724000", List.of("스트리밍")),
-            Map.entry("642004", List.of("간편결제")),
+            // 간편결제는 "무엇을 샀는지 모른다" 라 자리표와 뜻이 같다. 예전에는 642004
+            // (포털 및 기타 인터넷 정보 매개 서비스업)를 썼는데, 진짜 코드라 진짜 그 업종인
+            // 가맹점과 글자로 구별되지 않았다(V15 가 옮겼다).
+            Map.entry("000000", List.of("간편결제")),
             Map.entry("921200", List.of("영화")),
             Map.entry("924305", List.of("헬스장")),
             Map.entry("851201", List.of("의원"))
@@ -43,7 +46,7 @@ public final class Catalog {
     public static final List<String> INDUSTRY_CODES = List.of(
             "552101", "552104", "552108", "552119", "552303", "521992", "523131",
             "521912", "521910", "523111", "505001", "602103", "642005", "724000",
-            "642004", "921200", "924305", "851201");
+            "000000", "921200", "924305", "851201");
 
     /** 중분류 → 가맹점 후보. */
     public static final Map<String, List<String>> MERCHANTS = Map.ofEntries(

@@ -69,7 +69,7 @@ class SpendingLedgerFactsTest {
                                     String merchant, String bizno) {
         return payments.save(new UserPayment(
                 UserPayment.rowId(user.getId(), "real-" + id), user.getId(), "S1", 9001L,
-                at, "642004", "카테고리없음", amount, merchant, bizno));
+                at, "000000", "카테고리없음", amount, merchant, bizno));
     }
 
     // ── 표시가 뜨는가 ────────────────────────────────────────────────────────
@@ -127,7 +127,7 @@ class SpendingLedgerFactsTest {
         assertEquals("BIZ:2345678901", first.getMerchantKey());
         assertEquals("점심", first.getDaypart());
         assertEquals("REAL", first.getOrigin());
-        assertEquals("642004", first.getNtsIndustryCode());
+        assertEquals("000000", first.getNtsIndustryCode());
         assertNotNull(first.getFactsUpdatedAt());
 
         // **판정은 아직 안 돌았다.** 표가 계산을 일으키지 않는다는 원칙이 여기서 보인다 —

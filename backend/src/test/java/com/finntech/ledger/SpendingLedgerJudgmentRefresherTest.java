@@ -61,7 +61,7 @@ class SpendingLedgerJudgmentRefresherTest {
             for (int i = 0; i < 6; i++) {
                 payments.save(new UserPayment(
                         UserPayment.rowId(user.getId(), "real-sub" + i), user.getId(), "S1", 9001L,
-                        start.plusMonths(i).atTime(23, 10), "642004", "취미/여가",
+                        start.plusMonths(i).atTime(23, 10), "000000", "취미/여가",
                         17000, "넷플릭스", "1658700119"));
             }
         });

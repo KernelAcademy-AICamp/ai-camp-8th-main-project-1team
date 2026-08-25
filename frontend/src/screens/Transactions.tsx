@@ -69,7 +69,7 @@ const isNone = (c: string | null | undefined) => !c || c === '카테고리없음
 const bizFmt = (b: string) => (b.length === 10 ? `${b.slice(0, 3)}-${b.slice(3, 5)}-${b.slice(5)}` : b);
 
 export function Transactions() {
-  const { back, userId, analysis } = useSession();
+  const { back, userId, analysis, view, setView } = useSession();
   const { home, reload: reloadGuardian } = useGuardian();
   // 12개월 — 6개월로 두면 실데이터(1월부터)의 앞부분이 통째로 안 보인다. 카드 명세서는
   // 보통 1년치를 내려받으므로 창이 그보다 짧으면 넣은 것을 못 보는 일이 생긴다(2026-08-05).
@@ -78,7 +78,13 @@ export function Transactions() {
   const [merchantOf, setMerchantOf] = useState<Record<string, MyMerchant | 'loading'>>({});
   /** 달력에서 고른 날. null이면 전체 기간. */
   const [pickedDate, setPickedDate] = useState<string | null>(null);
-  const [filter, setFilter] = useState<SpendFilter>('all');
+  /**
+   * <b>갈래는 주소가 정본이다</b>(`?filter=…`). `useState` 로 들면 뒤로가기가 이 자리를
+   * 되살리지 못한다 — 리포트의 주간→월간이 그래서 이력에 한 칸도 안 쌓였고, 다른 화면에
+   * 갔다 뒤로 오면 초기값으로 튕겼다(2026-08-25 신고).
+   */
+  const filter = (view.filter ?? 'all') as SpendFilter;
+  const setFilter = (next: SpendFilter) => setView(next === 'all' ? {} : { filter: next });
   /**
    * 가맹점 이름 검색 (프로토타입_0806 `s-spend`). null 이면 검색 모드가 아니다.
    *
