@@ -41,6 +41,9 @@ class OneDoorTest {
      *   <li>{@code ModelGateway} — <b>무료가 먼저인 문</b>. 다섯 서비스가 각자 들고 있던
      *       Gemini 호출을 여기로 모았다(2026-08-21). {@code submit}·{@code askNow} 둘 다
      *       {@link FreeChannelQueue} 에 올리고 결과만 받는다 — 직접 HTTP 를 내지 않는다.</li>
+     *   <li>{@code IndustryNameBackfill} — 업종 이름 되메우기(V43). {@code MerchantAskService} 와
+     *       <b>똑같이 {@code classify} 만 부른다</b> — 캐시를 읽고 큐에 올릴 뿐 HTTP 를 안 낸다.
+     *       아래 {@link #onlyQueueMediatedCalls} 가 이 파일도 같이 잠근다.</li>
      *   <li>{@code MerchantAskService} — 업종 분류. <b>{@code classify} 만 부른다</b>, 그리고
      *       그 메서드는 캐시를 읽고 <b>큐에 올릴 뿐</b> HTTP 를 내지 않는다(2026-08-21).
      *       예전에는 여기서 통로를 직접 불러 큐를 우회했고 — 주석이 "다음 차례"라고 적어 둔
@@ -54,14 +57,24 @@ class OneDoorTest {
             "NarrativeCacheService",
             "UsageGlossaryService",
             "MerchantAskService",
+            "IndustryNameBackfill",
             "ModelGateway");
 
     /**
      * 통로에 <b>곧바로 HTTP 를 내는</b> 메서드들. 큐를 거치는 {@code classify} 와 달리 이것들은
-     * 부르는 자리에서 바로 나간다 — {@code MerchantAskService} 는 이 중 하나도 부르면 안 된다.
+     * 부르는 자리에서 바로 나간다 — 아래 {@link #QUEUE_ONLY} 는 이 중 하나도 부르면 안 된다.
      */
     private static final List<String> DIRECT_CALLS =
             List.of("temporary.brandOf(", "temporary.sameBrand(", "temporary.sentence(");
+
+    /**
+     * <b>{@code classify} 만 부르기로 한 자리들.</b> 목록({@link #ALLOWED})에 이름이 있는 것은
+     * 통로를 마음대로 써도 된다는 뜻이 아니다 — 큐를 거치는 호출만 허용된다는 뜻이다.
+     * 새 자리를 목록에 넣을 때는 여기에도 같이 넣어야 그 성질이 잠긴다.
+     */
+    private static final List<String> QUEUE_ONLY = List.of(
+            "src/main/java/com/finntech/service/MerchantAskService.java",
+            "src/main/java/com/finntech/service/IndustryNameBackfill.java");
 
     /** 통로를 쓴다는 표시 — 이 이름이 소스에 보이면 바깥으로 나갈 수 있다는 뜻이다. */
     private static final List<String> MARKERS =
@@ -74,12 +87,14 @@ class OneDoorTest {
     @Test
     @DisplayName("결제 적재 흐름은 통로를 곧바로 부르지 않는다")
     void onlyQueueMediatedCalls() throws IOException {
-        String src = Files.readString(
-                Path.of("src/main/java/com/finntech/service/MerchantAskService.java"));
-        for (String call : DIRECT_CALLS) {
-            assertThat(src)
-                    .as("%s 는 큐를 거치지 않고 통로로 나간다 — classify 처럼 큐에 올려야 한다", call)
-                    .doesNotContain(call);
+        for (String file : QUEUE_ONLY) {
+            String src = Files.readString(Path.of(file));
+            for (String call : DIRECT_CALLS) {
+                assertThat(src)
+                        .as("%s 의 %s 는 큐를 거치지 않고 통로로 나간다 — classify 처럼 큐에 올려야 한다",
+                                file, call)
+                        .doesNotContain(call);
+            }
         }
     }
 

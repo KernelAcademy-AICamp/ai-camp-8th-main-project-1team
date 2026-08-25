@@ -800,4 +800,69 @@ class MerchantCategoryServiceTest {
         assertThat(again.getSource()).isEqualTo("USER_CONFIRMED");
         assertThat(again.getConfirmedBy()).isEqualTo(7L);
     }
+
+    /**
+     * <b>모델의 답에서 업종 이름을 받아 적는다</b>(V43) — 그래야 소분류가 붙는다.
+     *
+     * <p>예전에는 중분류만 받아 이름을 버렸다. 브랜드가 안 붙는 <b>개인 상호</b>는 업종 이름이
+     * 유일한 단서라, 버리면 소분류도 추정 업종코드도 영영 못 얻는다 — 운영 사전에서 브랜드도
+     * 소분류도 없는 280곳 중 <b>260곳</b>이 그 상태였다(2026-08-25 실측).
+     */
+    @Test
+    @DisplayName("모델이 답한 업종 이름으로 개인 상호에 소분류가 붙는다")
+    void 업종_이름으로_소분류를_얻는다() {
+        var row = service.rememberGuess(
+                realPayment("0000000051", "나복집"), "식비", "한식 일반 음식점업");
+
+        assertThat(row).isPresent();
+        assertThat(row.get().getLlmIndustry()).isEqualTo("한식 일반 음식점업");
+        assertThat(row.get().getCategory3())
+                .as("브랜드가 없어도 업종 이름이 소분류를 준다").isEqualTo("한식");
+        assertThat(row.get().registryAnswered())
+                .as("추정을 사실 칸에 적으면 등록 조회가 영영 막힌다").isFalse();
+    }
+
+    /** 이름을 안 주면 예전 그대로다 — 부르는 쪽을 한꺼번에 안 고쳐도 된다. */
+    @Test
+    @DisplayName("업종 이름 없이 부르면 소분류도 없다")
+    void 이름이_없으면_소분류도_없다() {
+        var row = service.rememberGuess(realPayment("0000000052", "나복집"), "식비");
+
+        assertThat(row).isPresent();
+        assertThat(row.get().getLlmIndustry()).isNull();
+        assertThat(row.get().getCategory3()).isNull();
+    }
+
+    /**
+     * <b>어긋나는 소분류는 안 찍는다.</b> 소분류는 한 중분류에만 속하므로 둘이 다르다는 것은
+     * 하나가 틀렸다는 뜻인데, 업종 이름은 <b>어느 쪽이 틀렸는지를 말해 주지 않는다</b>.
+     * 그냥 적으면 "카페/간식인데 소분류는 한식" 같은 행이 화면에 남는다.
+     */
+    @Test
+    @DisplayName("업종 이름이 준 소분류가 중분류와 어긋나면 안 찍는다")
+    void 어긋나는_소분류는_안_찍는다() {
+        seed("0000000053", "어느 동네 밥집", "카페/간식");        // 사람이 정한 중분류
+        table.get(0).noteLookup("한식 일반 음식점업", LocalDateTime.now());
+
+        service.confirmFrom(realPayment("0000000053", "어느 동네 밥집"), "카페/간식", 7L);
+
+        assertThat(table.get(0).getCategory3())
+                .as("한식(식비)은 카페/간식과 어긋난다 — 사람이 이긴다").isNull();
+    }
+
+    /** 사실이 추정을 이긴다 — 등록 업종이 있으면 모델의 답은 안 본다. */
+    @Test
+    @DisplayName("등록 업종이 있으면 그것으로 소분류를 정한다")
+    void 사실이_추정보다_먼저다() {
+        var row = service.rememberGuess(
+                realPayment("0000000054", "팜스퀘어약국"), "의료", "일반의원");
+        assertThat(row).isPresent();
+        assertThat(row.get().getCategory3()).as("추정만 있으면 추정을 쓴다").isEqualTo("의원");
+
+        row.get().noteLookup("의약품 및 의료용품 소매업", LocalDateTime.now());
+        service.rememberGuess(realPayment("0000000054", "팜스퀘어약국"), "의료", "일반의원");
+
+        assertThat(row.get().getCategory3())
+                .as("등록 업종(사실)이 모델의 답(추정)을 이긴다").isEqualTo("약국");
+    }
 }

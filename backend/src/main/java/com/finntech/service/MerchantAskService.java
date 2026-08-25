@@ -333,15 +333,16 @@ public class MerchantAskService {
     }
 
     /**
-     * @param paidIndustries 유료 통로가 답한 <b>업종 이름</b>(가맹점명 → 업종명).
-     *                       업종코드를 되찾아 결제에 적는 데 쓴다 — 카드 혜택 축이 그 코드다.
+     * @param industries 모델이 답한 <b>업종 이름</b>(가맹점명 → 업종명). <b>무료·유료 양쪽</b>이
+     *                   담긴다 — 둘을 가르지 않기로 한 뒤로 이 지도는 한 벌이다(2026-08-21).
+     *                   업종코드를 되찾아 결제에 적고, 사전에 남겨 소분류의 근거로 쓴다.
      */
     @Transactional
     public Asked applyGuesses(Long userId, Map<String, String> remembered,
                               Map<String, String> fresh,
                               Map<String, TempClassifierService.Guess> temp,
                               Set<String> answered,
-                              Map<String, String> paidIndustries) {
+                              Map<String, String> industries) {
         List<UserPayment> rows = payments.findByUserIdAndCategory2OrderByPaymentDateDesc(
                 userId, IndustryCategoryMapper.UNCLASSIFIED);
         Set<String> settled = new java.util.LinkedHashSet<>();
@@ -351,7 +352,10 @@ public class MerchantAskService {
             // (실제 사람의 결제일 때만 쌓인다. 더미의 사업자번호는 실재하지 않는다.)
             for (UserPayment p : askable) {
                 String g = fresh.get(p.getMerchantName());
-                if (g != null) dictionary.rememberGuess(p, g);
+                // **업종 이름도 같이 넘긴다**(V43). 중분류만 넘기면 사전의 업종 이름 칸이 비어
+                // 소분류를 이름에서 찾는 길이 끊긴다 — 브랜드가 안 붙는 개인 상호가 통째로
+                // 소분류도 추정 업종코드도 못 얻는다.
+                if (g != null) dictionary.rememberGuess(p, g, industries.get(p.getMerchantName()));
             }
             // **헛물켠 질문을 센다** — 물었는데 답이 안 온 가맹점. 세 번째면 '기타'로 종결하고
             // 다음부터는 조회도 질문도 하지 않는다. 이 기록이 없으면 화면을 열 때마다 같은
@@ -384,7 +388,7 @@ public class MerchantAskService {
 
         Map<String, String> guesses = new LinkedHashMap<>(remembered);
         guesses.putAll(fresh);
-        paint(rows, guesses, paidIndustries);
+        paint(rows, guesses, industries);
         return new Asked(rows, guesses, settled);
     }
 
@@ -475,7 +479,7 @@ public class MerchantAskService {
         // 사전에도 남긴다 — 다음 사람의 같은 가맹점은 다시 안 묻는다.
         for (UserPayment p : rows) {
             String guess = got.get(p.getMerchantName());
-            if (guess != null) dictionary.rememberGuess(p, guess);
+            if (guess != null) dictionary.rememberGuess(p, guess, industries.get(p.getMerchantName()));
         }
         log.info("최초 연동 일괄 분류 — userId={} 물어본 곳 {}, 붙인 가맹점 {}",
                 userId, plan.ask().size(), got.size());
