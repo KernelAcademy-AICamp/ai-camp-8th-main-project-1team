@@ -39,7 +39,11 @@ public class UnknownPgPaymentRunner implements ApplicationRunner {
      * <p>대조표에 없으므로 본체의 {@code midOf()} 가 '카테고리없음'을 준다 → ML 판정에서 빠진다.
      * <b>모르는 것을 아는 척 분류하지 않는다.</b> 스키마가 NOT NULL 이라 비워 둘 수는 없다.
      */
-    private static final String UNKNOWN_INDUSTRY = "642004";
+    /**
+     * 무엇을 샀는지 모르는 결제의 업종코드 — <b>{@code 0} 으로 시작한다</b>.
+     * 국세청은 그런 번호를 발급하지 않아 진짜 코드와 겹치지 않는다(V41).
+     */
+    private static final String UNKNOWN_INDUSTRY = "000000";
 
     /**
      * 사업자번호까지 함께 찍는다 — 실제 PG 사업자번호다.

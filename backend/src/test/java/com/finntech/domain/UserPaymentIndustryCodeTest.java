@@ -66,6 +66,36 @@ class UserPaymentIndustryCodeTest {
     @Test
     @DisplayName("자리채움값은 적재기가 넣는 것과 같아야 한다")
     void 자리채움값이_적재기와_같다() {
-        assertThat(UserPayment.PLACEHOLDER_INDUSTRY).isEqualTo("642004");
+        // 적재기(backend-mydata RealPersonImportService.UNKNOWN_INDUSTRY)와 같은 글자여야 한다.
+        // 두 모듈이라 컴파일러가 못 잡는다 — 한쪽만 고치면 조용히 어긋난다.
+        assertThat(UserPayment.PLACEHOLDER_INDUSTRY).isEqualTo("000000");
+    }
+
+    /**
+     * <b>자리표는 진짜 코드여서는 안 된다.</b> 옛 값 {@code 642004} 는 국세청이 실제로 발급한
+     * 코드(포털 및 기타 인터넷 정보 매개 서비스업)라, 진짜 그 업종인 가맹점과 "모른다"는 표시가
+     * 글자로 구별되지 않았다. {@code 0} 으로 시작하면 겹칠 수 없다 — 이 저장소가 사업자번호에
+     * 대해 이미 세워 둔 규칙과 같다({@code check_no_real_numbers.py}).
+     */
+    @Test
+    @DisplayName("자리표는 0 으로 시작한다 — 국세청이 발급하지 않는 번호")
+    void 자리표는_0으로_시작한다() {
+        assertThat(UserPayment.PLACEHOLDER_INDUSTRY).startsWith("0");
+    }
+
+    /**
+     * <b>옛 자리표도 여전히 자리표로 본다.</b> 마이그레이션(V41)이 닿지 않는 곳에서 온 행이
+     * 있을 수 있고, 그것을 "확정이 있다"로 읽으면 그 행은 영영 안 채워진다.
+     */
+    @Test
+    @DisplayName("옛 자리표를 든 결제도 코드를 받아들인다")
+    void 옛_자리표도_채워진다() {
+        UserPayment legacy = new UserPayment("p-legacy", 1L, "card", 1L,
+                java.time.LocalDateTime.of(2026, 8, 1, 12, 0),
+                UserPayment.LEGACY_PLACEHOLDER_INDUSTRY, "식비", 9_000, "어느 밥집", "0000000001");
+
+        assertThat(UserPayment.isPlaceholderIndustry(UserPayment.LEGACY_PLACEHOLDER_INDUSTRY)).isTrue();
+        assertThat(legacy.learnIndustryCode("552101")).isTrue();
+        assertThat(legacy.getKsicCode()).isEqualTo("552101");
     }
 }

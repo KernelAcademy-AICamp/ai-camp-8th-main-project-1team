@@ -28,14 +28,17 @@ class GenSmokeTest {
      * <b>무엇을 샀는지 말해 주지 않는 업종코드들</b> — 대조표에 일부러 없다.
      *
      * <ul>
-     *   <li>{@code 642004} 포털 및 기타 인터넷 정보 매개 서비스업 — 간편결제·PG 를 거친 결제</li>
+     *   <li>{@code 000000} <b>자리표</b> — 무엇을 샀는지 모르는 결제({@code UnknownPgPaymentRunner}).
+     *       {@code 0} 으로 시작하는 번호는 국세청이 발급하지 않아 진짜 코드와 안 겹친다(V41)</li>
+     *   <li>{@code 642004} 포털 및 기타 인터넷 정보 매개 서비스업 — 생성기가 간편결제 가맹점을
+     *       흉내 내는 코드다. <b>자리표가 아니라 시뮬레이션 값</b>이라 그대로 둔다</li>
      *   <li>{@code 525101} 전자상거래 소매업 — 배달의민족·넥슨·야놀자가 <b>한 코드에</b> 등록돼
      *       있다. 판매 방식만 말하고 무엇을 파는지 말하지 않으며, 온라인이라고 단정할 수도 없다
      *       (같은 업종으로 등록한 사업자가 오프라인 매장을 함께 운영한다). 여기 두면 그 결제가
      *       전부 '쇼핑'이 되므로 뺐다(모호업종.tsv, §13-12)</li>
      * </ul>
      */
-    private static final List<String> UNKNOWN_INDUSTRY = List.of("525101", "642004");
+    private static final List<String> UNKNOWN_INDUSTRY = List.of("000000", "525101", "642004");
 
     @Autowired MyDataPaymentRepository payments;
     @Autowired IndustryCategoryMap ksicToMid;

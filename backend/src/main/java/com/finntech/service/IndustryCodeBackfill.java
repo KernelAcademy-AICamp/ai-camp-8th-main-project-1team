@@ -135,7 +135,7 @@ public class IndustryCodeBackfill {
         for (Long userId : realPeople) {
             boolean fixedForUser = false;
             for (UserPayment p : payments.findByUserIdOrderByPaymentDateDesc(userId)) {
-                if (!UserPayment.PLACEHOLDER_INDUSTRY.equals(p.getKsicCode())) continue;  // 확정이 이미 있다
+                if (!UserPayment.isPlaceholderIndustry(p.getKsicCode())) continue;   // 확정이 이미 있다
                 scanned++;
                 String sub = subOf(p, subByName);
                 if (sub.isEmpty()) { unknown++; continue; }
