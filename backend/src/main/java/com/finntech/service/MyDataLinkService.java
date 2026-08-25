@@ -532,7 +532,7 @@ public class MyDataLinkService {
                             () -> industryMapper.midOf(payment.industryCode(), payment.businessNumber()));
                     UserPayment row = new UserPayment(
                             UserPayment.rowId(userId, payment.id()), userId, card.cardId(),
-                            payment.cardCode(), payment.date(), payment.industryCode(), mid,
+                            payment.cardCode(), payment.date(), normalizeIndustryCode(payment.industryCode()), mid,
                             payment.amount(), payment.merchantName(),
                             payment.businessNumber());
                     // 사전에서 붙은 것은 근거가 사람이라 **처음부터 확정**이다(§F 격리 대상이 아니다).
@@ -936,7 +936,7 @@ public class MyDataLinkService {
                             () -> industryMapper.midOf(payment.industryCode(), payment.businessNumber()));
                     UserPayment row = new UserPayment(
                             UserPayment.rowId(userId, payment.id()), userId, card.cardId(),
-                            payment.cardCode(), payment.date(), payment.industryCode(), mid,
+                            payment.cardCode(), payment.date(), normalizeIndustryCode(payment.industryCode()), mid,
                             payment.amount(), payment.merchantName(),
                             payment.businessNumber());
                     if (fromDict.isPresent()) row.confirmCategory2(mid, "DICT");
@@ -1101,6 +1101,23 @@ public class MyDataLinkService {
      * <p>복구를 '분류 정리' 화면 방문에 맡기지 않는다 — 거래내역만 보는 사용자는 영영 못 본다.
      * {@code category2} 는 건드리지 않는다. 추정은 여전히 추정이다(마스터 §4 원칙 1).
      */
+    /**
+     * <b>제공자가 준 업종코드를 저장 전에 다듬는다</b> — 옛 자리표를 새 자리표로.
+     *
+     * <p>제공자 DB 의 자리표는 V15 가 옮겼지만, 여기가 마지막 방벽이다. 두 모듈의
+     * 마이그레이션은 <b>실행 순서가 보장되지 않고</b>, 옛 백업을 복원하거나 제공자가
+     * 뒤처지면 옛 값이 다시 흘러 들어온다. 실제로 그렇게 <b>137건이 되살아났다</b>
+     * (2026-08-25 운영 실측) — 백엔드 쪽 V41 만 돌고 제공자가 그대로였을 때다.
+     *
+     * <p>바꿔도 사실을 잃지 않는다. {@code 642004} 를 든 실사용자 결제의 등록 업종은
+     * 일반의원·연료용 가스·한식·대형 종합 소매였고 <b>진짜 포털 서비스는 한 건도 없었다.</b>
+     * 카드 명세서에 업종코드가 없어 적재기가 넣은 표시일 뿐이다.
+     */
+    static String normalizeIndustryCode(String fromProvider) {
+        return UserPayment.LEGACY_PLACEHOLDER_INDUSTRY.equals(fromProvider)
+                ? UserPayment.PLACEHOLDER_INDUSTRY : fromProvider;
+    }
+
     private static void applyRemembered(MerchantCategoryService.Snapshot dict, UserPayment row) {
         dict.guess(row.getBusinessNumber(), row.getMerchantName())
                 .ifPresent(row::suggestCategory2);

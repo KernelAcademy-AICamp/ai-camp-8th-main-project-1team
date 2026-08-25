@@ -41,7 +41,7 @@ class SpendingLedgerRowMapperTest {
     private static UserPayment realPayment(String id, LocalDateTime at, int amount,
                                            String merchant, String bizno) {
         return new UserPayment(UserPayment.rowId(7L, "real-" + id), 7L, "S1", 9001L,
-                at, "642004", "카페", amount, merchant, bizno);
+                at, "000000", "카페", amount, merchant, bizno);
     }
 
     private static UserPayment syntheticPayment(String id, LocalDateTime at) {
@@ -53,7 +53,7 @@ class SpendingLedgerRowMapperTest {
     private static UserPayment unclassifiedPayment(String id, LocalDateTime at, int amount,
                                                    String merchant, String bizno) {
         return new UserPayment(UserPayment.rowId(7L, "real-" + id), 7L, "S1", 9001L,
-                at, "642004", "카테고리없음", amount, merchant, bizno);
+                at, "000000", "카테고리없음", amount, merchant, bizno);
     }
 
     // ── 유도되는 값 ──────────────────────────────────────────────────────────
