@@ -68,10 +68,28 @@ public class UserPayment {
     private String industryCodeGuess;
 
     /**
-     * 실 명세서 적재기가 넣는 자리채움 업종코드({@code RealPersonImportService.UNKNOWN_INDUSTRY}).
+     * 실 명세서 적재기가 넣는 <b>자리채움 업종코드</b>({@code RealPersonImportService.UNKNOWN_INDUSTRY}).
      * 두 곳이 같은 값을 알아야 해서 상수로 둔다 — 한쪽만 고치면 조용히 어긋난다.
+     *
+     * <p><b>{@code 0} 으로 시작한다.</b> 국세청은 그런 번호를 발급하지 않아 진짜 코드와 겹치지
+     * 않는다 — 이 저장소가 사업자번호에 대해 이미 세워 둔 규칙과 같다
+     * ({@code scripts/industry/check_no_real_numbers.py}).
      */
-    public static final String PLACEHOLDER_INDUSTRY = "642004";
+    public static final String PLACEHOLDER_INDUSTRY = "000000";
+
+    /**
+     * <b>옛 자리표</b> — {@code 642004}(포털 및 기타 인터넷 정보 매개 서비스업).
+     *
+     * <p>진짜 코드를 자리표로 쓰던 시절의 값이다(V41 이 옮겼다). 마이그레이션이 닿지 않는
+     * 곳에서 온 행이 있을 수 있으므로 <b>읽을 때는 여전히 자리표로 본다</b> — 안 그러면
+     * 그 행은 "이미 확정이 있다"로 보여 영영 안 채워진다.
+     */
+    public static final String LEGACY_PLACEHOLDER_INDUSTRY = "642004";
+
+    /** 그 코드가 <b>"모른다"</b>를 뜻하는가 — 새 자리표와 옛 자리표 둘 다. */
+    public static boolean isPlaceholderIndustry(String code) {
+        return PLACEHOLDER_INDUSTRY.equals(code) || LEGACY_PLACEHOLDER_INDUSTRY.equals(code);
+    }
 
 /**
      * 우리 소비 중분류 — 업종코드를 대조표로 옮긴 결과.
@@ -178,7 +196,7 @@ public class UserPayment {
      */
     public boolean guessIndustryCode(String code) {
         if (code == null || code.isBlank()) return false;
-        if (!PLACEHOLDER_INDUSTRY.equals(this.industryCode)) return false;   // 확정이 있다
+        if (!isPlaceholderIndustry(this.industryCode)) return false;          // 확정이 있다
         if (code.equals(this.industryCodeGuess)) return false;
         this.industryCodeGuess = code;
         return true;
@@ -248,7 +266,7 @@ public class UserPayment {
      */
     public boolean learnIndustryCode(String code) {
         if (code == null || code.isBlank()) return false;
-        if (!PLACEHOLDER_INDUSTRY.equals(this.industryCode)) return false;
+        if (!isPlaceholderIndustry(this.industryCode)) return false;
         if (code.equals(this.industryCode)) return false;
         this.industryCode = code;
         return true;

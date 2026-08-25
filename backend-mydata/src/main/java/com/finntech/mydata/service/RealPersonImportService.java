@@ -66,12 +66,17 @@ public class RealPersonImportService {
     /**
      * 업종을 모를 때 쓰는 코드. 카드 명세서에는 업종코드가 없는 것이 보통이다.
      *
-     * <p>{@code 642004}(포털 및 기타 인터넷 정보 매개 서비스업)는 이 저장소가 이미
-     * "알 수 없는 결제"에 쓰는 값이고({@code UnknownPgPaymentRunner}), {@code nts-mid.tsv} 에
-     * 없으므로 본체의 {@code midOf()} 가 <b>카테고리없음</b>을 준다 → ML 판정 대상에서 빠진다.
-     * <b>모르는 것을 아는 척 분류하지 않는다.</b> 스키마가 {@code NOT NULL} 이라 비워 둘 수는 없다.
+     * <p><b>{@code 0} 으로 시작한다.</b> 국세청은 그런 번호를 발급하지 않아 진짜 코드와 겹치지
+     * 않는다 — 이 저장소가 사업자번호에 대해 이미 세워 둔 규칙과 같다
+     * ({@code scripts/industry/check_no_real_numbers.py}). 예전에는 {@code 642004}
+     * (포털 및 기타 인터넷 정보 매개 서비스업)를 썼는데, <b>진짜 코드라 진짜 그 업종인
+     * 가맹점과 글자로 구별되지 않았다</b>(V41 이 옮겼다).
+     *
+     * <p>대조표에 없으므로 본체의 {@code midOf()} 가 <b>카테고리없음</b>을 준다 → ML 판정
+     * 대상에서 빠진다. <b>모르는 것을 아는 척 분류하지 않는다.</b> 스키마가 {@code NOT NULL}
+     * 이라 비워 둘 수는 없다.
      */
-    public static final String UNKNOWN_INDUSTRY = "642004";
+    public static final String UNKNOWN_INDUSTRY = "000000";
     /** 업종을 모를 때의 소비맥락. 제공자 DB에만 남고 본체로는 안 나간다. */
     private static final String UNKNOWN_CATEGORY2 = "미분류";
 
