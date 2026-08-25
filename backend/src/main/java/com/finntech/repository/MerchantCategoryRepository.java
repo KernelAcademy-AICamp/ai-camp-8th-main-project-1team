@@ -111,6 +111,23 @@ public interface MerchantCategoryRepository extends JpaRepository<MerchantCatego
     List<MerchantCategory> findTableDerived(org.springframework.data.domain.Pageable page);
 
     /**
+     * <b>가맹점명이 없는 사전 행</b> — 번호 하나에 대한 사실이다.
+     *
+     * <p>씨앗의 원천(`realdatas.csv`)은 <b>사업자번호와 업종만</b> 주고 가맹점 풀네임을 안 준다.
+     * 그래서 이 행들은 이름 자리가 빈 채로 들어오고, <i>"이 사업자번호의 업종은 X"</i> 라는
+     * <b>번호 단위 사실</b>이 된다. 이름으로 찾는 지도에는 절대 안 걸린다.
+     *
+     * <p>{@code merchant_name = ''} 로 좁히는 것이 요점이다. 번호로 전부 긁으면 택시처럼
+     * 한 번호에 상호가 38,690종 붙은 곳이 통째로 딸려 온다 — 이 조회는 원장을 꾸미는
+     * 곁일이라 그런 값을 치를 수 없다.
+     *
+     * <p>정렬을 고정한다(§4-3 재현성).
+     */
+    @Query("select m from MerchantCategory m "
+            + "where m.merchantName = '' and m.businessNumber in :numbers order by m.id")
+    List<MerchantCategory> findNamelessByBusinessNumberIn(@Param("numbers") List<String> numbers);
+
+    /**
      * <b>업종 이름을 아직 하나도 못 얻은 행</b>(V43) — 소분류를 찾을 단서가 없는 곳이다.
      *
      * <p>소분류는 브랜드 아니면 업종 이름에서 온다. 브랜드가 안 붙는 개인 상호는 업종 이름이
