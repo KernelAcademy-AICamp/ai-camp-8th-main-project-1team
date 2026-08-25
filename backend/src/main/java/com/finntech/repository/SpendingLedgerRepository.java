@@ -13,6 +13,16 @@ import java.util.List;
 /** 정리된 소비 원장 조회·정리 (V34). */
 public interface SpendingLedgerRepository extends JpaRepository<SpendingLedger, String> {
 
+    /**
+     * 그 갈래의 <b>상호 이름들</b>(중복 없이, 정렬 고정). 브랜드가 상호에 제대로 붙는지
+     * 되묻는 진단({@code BrandCoverageReport})이 쓴다 — 줄 전체를 읽을 이유가 없다.
+     */
+    @org.springframework.data.jpa.repository.Query(
+            "select distinct s.merchantName from SpendingLedger s "
+                    + "where s.origin = :origin and s.merchantName is not null order by s.merchantName")
+    java.util.List<String> findDistinctMerchantNamesByOrigin(
+            @org.springframework.data.repository.query.Param("origin") String origin);
+
     /** 한 사용자의 한 달 — 이 표가 존재하는 이유인 조회축. 정렬 고정(마스터 §4 원칙 3). */
     List<SpendingLedger> findByUserIdAndMonthKeyOrderByPaidAtAscPaymentIdAsc(Long userId, String monthKey);
 

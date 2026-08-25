@@ -59,12 +59,16 @@ public class SpendingLedgerAdminController {
     private final UserPaymentRepository payments;
     private final AppUserRepository users;
     private final WasteScoringService wasteScoring;
+    private final com.finntech.service.SubCategorySweeper subSweeper;
+    private final com.finntech.service.BrandCoverageReport brandCoverage;
 
     public SpendingLedgerAdminController(SpendingLedgerBackfill backfill, SpendingLedgerVerifier verifier,
                                        SpendingLedgerJudgmentRefresher refresher,
                                        SpendingLedgerDrainer drainer, SpendingLedgerRepository ledger,
                                        SpendingLedgerDirtyRepository dirty, UserPaymentRepository payments,
-                                       AppUserRepository users, WasteScoringService wasteScoring) {
+                                       AppUserRepository users, WasteScoringService wasteScoring,
+                                       com.finntech.service.SubCategorySweeper subSweeper,
+                                       com.finntech.service.BrandCoverageReport brandCoverage) {
         this.backfill = backfill;
         this.verifier = verifier;
         this.refresher = refresher;
@@ -74,6 +78,50 @@ public class SpendingLedgerAdminController {
         this.payments = payments;
         this.users = users;
         this.wasteScoring = wasteScoring;
+        this.subSweeper = subSweeper;
+        this.brandCoverage = brandCoverage;
+    }
+
+    /**
+     * <b>브랜드가 상호에 제대로 붙는가</b> — 회사명이 서비스를 가린 자리를 찾는다. 값을 안 고친다.
+     *
+     * <p>브랜드 표는 회사명과 서비스명을 갈라 두고 회사명에는 소분류를 안 붙인다. 그래서
+     * 어떤 상호가 <b>회사명에만 걸리면 소분류를 영원히 못 얻는다</b> — {@code 카카오스타일}
+     * (지그재그 운영사)이 {@code 카카오} 에 걸려 그랬다. 회사를 하나 넣을 때마다 그 회사의
+     * 서비스 표기가 같이 들어와야 하는데, 손으로 찾으면 놓친다.
+     *
+     * <p>표를 고친 뒤 이 문을 부르면, 어느 회사명 아래 상호가 쌓였는지가 곧 <b>다음에 넣을
+     * 표기 목록</b>이다.
+     */
+    @GetMapping("/dictionary/brand-coverage")
+    public com.finntech.service.BrandCoverageReport.Result brandCoverage(
+            @RequestParam(defaultValue = "REAL") String origin) {
+        return brandCoverage.scan(origin);
+    }
+
+    /**
+     * <b>소분류와 어긋난 사전 행을 훑는다</b> — 기본은 <b>맛보기</b>라 아무것도 안 고친다.
+     *
+     * <p>표를 고쳐도 이미 확정이 적힌 가맹점은 다시 묻지 않아 옛 답을 든 채로 굳는다.
+     * 여기가 그것을 푸는 자리다. 두 무리를 되돌린다 — 중분류가 소분류와 어긋난 행,
+     * 그리고 모호한 업종(전자상거래 소매업 등)으로 확정돼 근거를 잃은 행.
+     *
+     * <p>사람이 손으로 확인한 것({@code USER_CONFIRMED}·{@code USER_CSV})은 안 건드린다.
+     */
+    @PostMapping("/dictionary/subcategory-sweep")
+    public com.finntech.service.SubCategorySweeper.Result sweepSubCategory(
+            @RequestParam(defaultValue = "true") boolean dryRun) {
+        return subSweeper.sweep(dryRun);
+    }
+
+    /** 어긋남을 <b>중분류 쌍으로 세어</b> 규모만 본다 — 고치기 전에 보는 자리. 값을 안 고친다. */
+    @GetMapping("/dictionary/subcategory-drift")
+    public Map<String, Object> subCategoryDrift() {
+        Map<String, Object> out = new LinkedHashMap<>();
+        Map<String, Integer> byMid = subSweeper.byMid();
+        out.put("byMid", byMid);
+        out.put("total", byMid.values().stream().mapToInt(Integer::intValue).sum());
+        return out;
     }
 
     /** 처음 채우기 — 여기가 표가 계산을 일으키는 유일한 자리다. */

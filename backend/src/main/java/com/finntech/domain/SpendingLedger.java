@@ -131,6 +131,21 @@ public class SpendingLedger {
     @Column(name = "category2_llm_source", length = 12)
     private String category2LlmSource;
 
+    /**
+     * <b>소분류</b> — 중분류보다 작고 브랜드보다 큰 칸(카카오T=브랜드, 택시=여기, 교통/자동차=중분류).
+     *
+     * <p>추정층을 따로 두지 않는다. 소분류는 정확히 한 중분류에만 속하므로
+     * ({@code IndustryCategoryMapper.midOfSub}) <b>이 값이 있으면 중분류가 결정된다</b> —
+     * 즉 소분류를 적을 수 있다는 것 자체가 확정을 뜻한다. 추정에 머무는 답은
+     * {@code category2Llm} 쪽에 있고 소분류를 얻지 못한다.
+     */
+    @Column(name = "category3", length = 30)
+    private String category3;
+
+    /** 소분류를 무엇으로 알아냈나 — {@code NONE}(모름) · {@code NAME}(업종 이름) · {@code BRAND}(브랜드). */
+    @Column(name = "category3_source", nullable = false, length = 12)
+    private String category3Source = "NONE";
+
     // ── 고정지출 ─────────────────────────────────────────────────────────────
 
     @Column(name = "fixed")
@@ -259,7 +274,8 @@ public class SpendingLedger {
             String brand, String merchantAddress, String merchantKey,
             int amount, String ntsIndustryCode, String registryIndustryName,
             String category2, String category2Source,
-            String category2Llm, String category2LlmSource) {}
+            String category2Llm, String category2LlmSource,
+            String category3, String category3Source) {}
 
     /**
      * 고정지출 — {@code RecurringPaymentDetector} 가 낸 묶음에서 나온다.
@@ -343,6 +359,8 @@ public class SpendingLedger {
         this.category2Source = facts.category2Source();
         this.category2Llm = facts.category2Llm();
         this.category2LlmSource = facts.category2LlmSource();
+        this.category3 = facts.category3();
+        this.category3Source = facts.category3Source();
         this.factsUpdatedAt = at;
         return true;
     }
@@ -352,7 +370,8 @@ public class SpendingLedger {
         return new Facts(userId, monthKey, paidAt, paidOn, dayOfMonth, dayOfWeek, daypart, origin,
                 businessNumber, paymentAgency, merchantName, brand, merchantAddress, merchantKey,
                 amount, ntsIndustryCode, registryIndustryName,
-                category2, category2Source, category2Llm, category2LlmSource);
+                category2, category2Source, category2Llm, category2LlmSource,
+                category3, category3Source);
     }
 
     /** 고정지출 칸을 갈아 끼운다. */
@@ -428,6 +447,8 @@ public class SpendingLedger {
     public String getCategory2Source() { return category2Source; }
     public String getCategory2Llm() { return category2Llm; }
     public String getCategory2LlmSource() { return category2LlmSource; }
+    public String getCategory3() { return category3; }
+    public String getCategory3Source() { return category3Source; }
 
     public Boolean getFixed() { return fixed; }
     public String getRecurringType() { return recurringType; }

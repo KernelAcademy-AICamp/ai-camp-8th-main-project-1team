@@ -26,6 +26,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** 소비 원장 한 줄을 만드는 규칙 — 값 하나하나를 붙들고 본다. */
 class SpendingLedgerRowMapperTest {
 
+    /** 소분류는 이 표에서 나온다 — 원장이 사전을 안 거치고도 (브랜드, 업종 이름)으로 채운다. */
+    private static final com.finntech.engine.IndustryCategoryMapper INDUSTRIES =
+            new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper());
+
+
     private final AnalysisProperties.Daypart daypart = new AnalysisProperties.Daypart();
     private final AnalysisProperties.Recurring recurring = new AnalysisProperties.Recurring();
 
@@ -60,7 +65,7 @@ class SpendingLedgerRowMapperTest {
                 "GS25 포스텍학술정보관점", "2345678901");
 
         SpendingLedger.Facts facts = SpendingLedgerRowMapper.factsOf(
-                payment, SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY);
+                payment, SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY, INDUSTRIES);
 
         assertEquals("2026-08", facts.monthKey());
         assertEquals(LocalDate.of(2026, 8, 9), facts.paidOn());
@@ -76,10 +81,10 @@ class SpendingLedgerRowMapperTest {
         var atNoon = LocalDateTime.of(2026, 8, 9, 12, 0);
         assertEquals("REAL", SpendingLedgerRowMapper.factsOf(
                 realPayment("p1", atNoon, 3200, "GS25", "2345678901"),
-                SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY).origin());
+                SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY, INDUSTRIES).origin());
         assertEquals("SYNTHETIC", SpendingLedgerRowMapper.factsOf(
                 syntheticPayment("p2", atNoon),
-                SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY).origin());
+                SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY, INDUSTRIES).origin());
     }
 
     // ── 확정과 추정을 가르는 자리 ────────────────────────────────────────────
@@ -92,7 +97,7 @@ class SpendingLedgerRowMapperTest {
         payment.suggestCategory2("구독·콘텐츠", "TEMP");
 
         SpendingLedger.Facts facts = SpendingLedgerRowMapper.factsOf(
-                payment, SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY);
+                payment, SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY, INDUSTRIES);
 
         assertEquals("구독·콘텐츠", facts.category2Llm(), "추정은 추정 칸에");
         assertEquals("TEMP", facts.category2LlmSource(), "무료 통로의 답임을 남긴다");
@@ -107,7 +112,7 @@ class SpendingLedgerRowMapperTest {
         payment.confirmCategory2("편의점", "DICT");
 
         SpendingLedger.Facts facts = SpendingLedgerRowMapper.factsOf(
-                payment, SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY);
+                payment, SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY, INDUSTRIES);
 
         assertEquals("편의점", facts.category2());
         assertEquals("DICT", facts.category2Source());
@@ -126,7 +131,7 @@ class SpendingLedgerRowMapperTest {
         payment.suggestCategory2("카페·간식", "LLM");
 
         SpendingLedger.Facts facts = SpendingLedgerRowMapper.factsOf(
-                payment, SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY);
+                payment, SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY, INDUSTRIES);
 
         assertEquals("편의점", facts.category2(), "확정 값은 그대로 있다");
         assertEquals("UNKNOWN", facts.category2Source());
@@ -141,7 +146,7 @@ class SpendingLedgerRowMapperTest {
         payment.confirmCategory2("기타", "GIVE_UP");
 
         SpendingLedger.Facts facts = SpendingLedgerRowMapper.factsOf(
-                payment, SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY);
+                payment, SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY, INDUSTRIES);
 
         assertEquals("GIVE_UP", facts.category2Source());
     }
@@ -155,14 +160,14 @@ class SpendingLedgerRowMapperTest {
                 "넷플릭스", "220-81-62517");
 
         SpendingLedger.Facts plain = SpendingLedgerRowMapper.factsOf(
-                payment, SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY);
+                payment, SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, NO_AGENCY, INDUSTRIES);
         assertEquals("2208162517", plain.businessNumber(), "하이픈을 지워 사전과 같은 형태로 맞춘다");
         assertFalse(plain.paymentAgency());
         assertEquals("BIZ:220-81-62517", plain.merchantKey(),
                 "묶음 키는 묶는 함수가 만든다 — 여기서 따로 정규화하지 않는다");
 
         SpendingLedger.Facts viaAgency = SpendingLedgerRowMapper.factsOf(
-                payment, SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, biz -> true);
+                payment, SpendingLedgerRowMapper.MerchantFacts.EMPTY, daypart, biz -> true, INDUSTRIES);
         assertTrue(viaAgency.paymentAgency());
         assertEquals("NAME:넷플릭스", viaAgency.merchantKey(), "PG 번호는 결제처를 말해 주지 않는다");
     }

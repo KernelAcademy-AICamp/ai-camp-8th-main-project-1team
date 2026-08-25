@@ -414,6 +414,109 @@ class MerchantCategoryServiceTest {
         assertThat(table.get(0).getSource()).isEqualTo("USER_CONFIRMED");
     }
 
+    /**
+     * <b>브랜드가 아는 곳은 물어보지 않는다</b>(§13-12 순위 ①-b).
+     *
+     * <p>표기표는 사람이 검수한 확정 지식이다. 그런 곳을 조회하고 물어보는 것은 <b>답을
+     * 아는데 다시 묻는 일</b>이고, 그 답이 되레 틀리게 온다. 호출도 그만큼 낭비된다.
+     */
+    @Test
+    @DisplayName("브랜드가 아는 가맹점은 조회·질문을 시작하지 않는다")
+    void 브랜드가_알면_안_묻는다() {
+        assertThat(service.needsWork("0000000041", "깐부치킨 장위레디언트점"))
+                .as("답을 아는데 또 묻는다").isFalse();
+        assertThat(service.needsWork("0000000041", "카카오택시-서울33바2592")).isFalse();
+        assertThat(service.needsWork("0000000041", "어느 동네 밥집"))
+                .as("모르는 곳은 물어봐야 한다").isTrue();
+        assertThat(service.needsWork("0000000041", "주식회사 카카오"))
+                .as("회사명은 소분류를 안 받으므로 여전히 물어본다").isTrue();
+    }
+
+    /**
+     * <b>브랜드로 바로 확정하고 업종코드도 넣는다.</b> 코드가 들어가야 카드 혜택축이 산다 —
+     * {@code cardAxisOf} 가 업종코드를 읽는데 실 명세서에는 코드가 없다(§13-12 곁가지).
+     */
+    @Test
+    @DisplayName("브랜드로 확정하며 업종코드까지 채운다")
+    void 브랜드로_확정하고_코드도_넣는다() {
+        var row = service.rememberBrand(realPayment("0000000042", "깐부치킨 장위레디언트점"));
+
+        assertThat(row).isPresent();
+        assertThat(row.get().getCategory2()).isEqualTo("식비");
+        assertThat(row.get().getCategory3()).isEqualTo("치킨");
+        assertThat(row.get().ntsCodeList())
+                .as("치킨은 업종이 하나라 코드가 확정이다").containsExactly("552107");
+    }
+
+    /** <b>갈리는 소분류에는 코드를 안 넣는다.</b> 억지로 고르면 없는 사실을 만드는 것이다(V29). */
+    @Test
+    @DisplayName("업종이 갈리는 소분류는 코드를 비운다")
+    void 갈리면_코드를_비운다() {
+        var row = service.rememberBrand(realPayment("0000000043", "본죽 강남점"));
+
+        assertThat(row).isPresent();
+        assertThat(row.get().getCategory3()).isEqualTo("한식");
+        assertThat(row.get().ntsCodeList())
+                .as("한식은 업종이 넷이라 어느 것인지 알 수 없다").isEmpty();
+    }
+
+    @Test
+    @DisplayName("브랜드가 모르는 곳에는 아무것도 안 적는다")
+    void 브랜드가_모르면_안_적는다() {
+        assertThat(service.rememberBrand(realPayment("0000000044", "어느 동네 밥집"))).isEmpty();
+        assertThat(table).isEmpty();
+    }
+
+    /**
+     * <b>브랜드가 중분류를 이긴다</b>(§13-12 순위 ①-b).
+     *
+     * <p>등록 조회는 그 사업자의 <b>등록 업종</b>을 말할 뿐이라 실제 업태와 어긋나는 일이 잦다.
+     * 운영 실측(2026-08-25): {@code 깐부치킨 장위레디언트점} 이 전자상거래로 등록돼 <b>쇼핑</b>이
+     * 됐고, {@code 탐앤탐스성신여대점} 은 <b>술/유흥</b>, {@code 올리브영 의정부대로점} 은
+     * <b>편의점/잡화</b>가 됐다.
+     *
+     * <p>브랜드 표는 사람이 검수한 확정 지식이고 조회·LLM 은 가맹점 한 곳씩의 추론이다.
+     * <b>여기서 안 덮으면 어긋난 채로 굳는다</b> — 확정이 적히면 다시 안 묻기 때문이다.
+     */
+    @Test
+    @DisplayName("조회가 술/유흥이라 해도 브랜드가 깐부치킨이면 식비다")
+    void 브랜드가_조회를_이긴다() {
+        UserPayment real = realPayment("0000000031", "깐부치킨 장위레디언트점");
+
+        service.rememberRegistry(real, "술/유흥", java.util.List.of());
+
+        assertThat(service.lookup("0000000031", "깐부치킨 장위레디언트점"))
+                .as("브랜드가 아는 곳을 조회 답으로 굳히면 안 된다").contains("식비");
+        assertThat(table.get(0).getCategory3()).isEqualTo("치킨");
+    }
+
+    /** 같은 원리를 운영에서 실제로 어긋나 있던 둘로 한 번 더 잠근다. */
+    @Test
+    @DisplayName("탐앤탐스는 술/유흥이 아니고 올리브영은 편의점이 아니다")
+    void 운영에서_어긋나_있던_것들() {
+        service.rememberRegistry(realPayment("0000000032", "탐앤탐스성신여대점"),
+                "술/유흥", java.util.List.of());
+        assertThat(service.lookup("0000000032", "탐앤탐스성신여대점")).contains("카페/간식");
+
+        service.rememberRegistry(realPayment("0000000033", "올리브영 의정부대로점"),
+                "편의점/잡화", java.util.List.of());
+        assertThat(service.lookup("0000000033", "올리브영 의정부대로점")).contains("미용");
+    }
+
+    /** <b>사람이 손으로 정한 것은 표보다 위다.</b> 여기서 덮으면 고쳐 놓은 분류가 사라진다. */
+    @Test
+    @DisplayName("사람이 확인한 분류는 브랜드도 안 덮는다")
+    void 사람의_판단은_안_덮는다() {
+        UserPayment real = realPayment("0000000034", "깐부치킨 장위레디언트점");
+        service.confirm("0000000034", "깐부치킨 장위레디언트점", "취미/여가",
+                MerchantCategory.Source.USER_CONFIRMED, 1L);
+
+        service.rememberRegistry(real, "술/유흥", java.util.List.of());
+
+        assertThat(service.lookup("0000000034", "깐부치킨 장위레디언트점"))
+                .as("사람이 정한 것을 표가 덮었다").contains("취미/여가");
+    }
+
     @Test
     @DisplayName("조회 답을 사전에 남긴다 — 확정으로 들어오고 추정을 덮는다")
     void registryAnswerBecomesConfirmed() {
@@ -505,7 +608,9 @@ class MerchantCategoryServiceTest {
     @Test
     @DisplayName("사람이 확정하면 업종코드를 지운다 — 표에서 유도된 행과 사람이 정한 행이 칸 하나로 갈린다")
     void confirmClearsTableDerivedCodes() {
-        UserPayment real = realPayment("0000000024", "다이소 강남점");
+        // 브랜드 표가 모르는 상호를 쓴다 — 아는 상호면 브랜드가 중분류를 이겨(§13-12 ①-b)
+        // 이 시험이 보려는 것(사람의 확정이 근거를 지운다)과 다른 일이 먼저 일어난다.
+        UserPayment real = realPayment("0000000024", "어느 동네 잡화점");
         service.rememberRegistry(real, "생활", java.util.List.of("523991"));
         assertThat(table.get(0).getNtsCodes()).isEqualTo("523991");
 
