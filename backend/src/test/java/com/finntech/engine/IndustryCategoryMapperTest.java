@@ -88,11 +88,17 @@ class IndustryCategoryMapperTest {
     void mapsFineNameToMid() {
         // 조회처는 KSIC 세대의 이름을 주고 우리 대조표는 국세청 세대라 번호끼리는 안 겹친다.
         // 이어 주는 것은 국세청 업종코드표의 `세세분류` 칸이다 — 같은 글자를 쓴다.
-        assertEquals("쇼핑", mapper.midOfFineName("전자상거래 소매업"));
         assertEquals("편의점/잡화", mapper.midOfFineName("체인화 편의점"));
         assertEquals("식비", mapper.midOfFineName("한식 일반 음식점업"));
         assertEquals("금융/보험", mapper.midOfFineName("기타 금융 투자업"), "카드사 수수료");
         assertEquals("생활", mapper.midOfFineName("기타 목재 가구 제조업"), "가구는 제품이 곧 구매물");
+
+        // **전자상거래 소매업은 이 통로로도 답하지 않는다.** 판매 방식만 말하고 무엇을 파는지
+        // 말하지 않기 때문이다 — 배달의민족·넥슨·야놀자가 한 코드에 함께 등록돼 있고,
+        // 온라인이라고 단정할 수도 없다(오프라인 매장을 함께 운영한다). 답을 얻은 것처럼
+        // 확정층에 올리면 그 가맹점은 다시 안 물어봐서 영원히 쇼핑으로 굳는다.
+        assertTrue(IndustryCategoryMapper.isUnknown(mapper.midOfFineName("전자상거래 소매업")),
+                "모호한 업종은 확정층에 올리지 않는다");
     }
 
     @Test

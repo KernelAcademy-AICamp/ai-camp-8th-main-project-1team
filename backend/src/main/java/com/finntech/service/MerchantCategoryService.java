@@ -28,6 +28,9 @@ import java.util.Optional;
 @Service
 public class MerchantCategoryService {
 
+    private static final org.slf4j.Logger log =
+            org.slf4j.LoggerFactory.getLogger(MerchantCategoryService.class);
+
     private final MerchantCategoryRepository repository;
     private final IndustryCategoryMapper mapper;
     private final BusinessNumberKindService kinds;
@@ -92,8 +95,18 @@ public class MerchantCategoryService {
     public Optional<String> guess(String businessNumber, String merchantName) {
         // **추정만** 본다. `!isConfirmed()` 로 두면 시도 이력 행(ATTEMPTED — 분류가 아니라
         // "건드려 봤다"는 기록)까지 걸려 들어 '카테고리없음'이 추정인 양 화면에 나간다.
-        return find(businessNumber, merchantName, MerchantCategory::isGuess)
+        Optional<String> byKey = find(businessNumber, merchantName, MerchantCategory::isGuess)
                 .map(MerchantCategory::getCategory2);
+        if (byKey.isPresent()) return byKey;
+        // **브랜드로 한 번 더 본다.** 사전 키가 (번호, 풀네임)이라 같은 브랜드의 새 지점은
+        // 매번 새 항목이다 — 그 브랜드가 만장일치면 다시 물을 이유가 없다(2026-08-21).
+        return brands.usableBrandOf(merchantName).flatMap(this::byBrand);
+    }
+
+    /** 브랜드가 사전에서 만장일치일 때의 중분류 — 아니면 비어 있다. */
+    public Optional<String> byBrand(String brand) {
+        if (brand == null || brand.isBlank() || NO_BRAND.equals(brand)) return Optional.empty();
+        return snapshot().guessOfBrand(brand);
     }
 
     /**
@@ -108,9 +121,67 @@ public class MerchantCategoryService {
     @Transactional(readOnly = true)
     public boolean needsWork(String businessNumber, String merchantName) {
         if (merchantName == null || merchantName.isBlank()) return false;
+        // **브랜드가 아는 곳은 물어볼 것이 없다**(§13-12 ①-b). 조회도 질문도 안 나간다.
+        if (!brandAnswer(merchantName).isEmpty()) return false;
         return find(businessNumber, merchantName, m -> true)
                 .map(m -> !m.isConfirmed())     // 확정(사람·조회)도 종결('기타')도 아니면 남았다
                 .orElse(true);                  // 처음 보는 가맹점
+    }
+
+    /**
+     * <b>브랜드가 아는 소분류</b> — 모르면 빈 문자열.
+     *
+     * <p>표기표를 그 자리에서 맞춘다. 사전에 저장된 브랜드는 무료 통로가 지어낸 것일 수
+     * 있어서다(운영 845행 중 269행이 그랬다).
+     */
+    private String brandAnswer(String merchantName) {
+        return mapper.subOfBrand(brands.subBrandOf(merchantName, mapper::hasSub).orElse(""));
+    }
+
+    /**
+     * <b>브랜드로 바로 확정한다</b> — 조회도 질문도 하기 전에.
+     *
+     * <p>브랜드 표는 사람이 검수한 확정 지식이다. 그런 곳을 조회하고 물어보는 것은
+     * <b>답을 아는데 다시 묻는 일</b>이고, 그 답이 되레 틀리게 온다 — 운영 실측(2026-08-25)에서
+     * {@code 깐부치킨 장위레디언트점} 이 전자상거래로 등록돼 쇼핑이 됐고
+     * {@code 탐앤탐스성신여대점} 은 술/유흥이 됐다.
+     *
+     * <p><b>업종코드도 같이 넣는다</b> — 소분류가 업종 하나만 가리킬 때만이다
+     * ({@link IndustryCategoryMapper#codesOfSub}). 그러면 카드 혜택축이 살아난다.
+     * 갈리는 소분류에는 안 넣는다. 억지로 고르면 없는 사실을 만드는 것이다(V29).
+     *
+     * @return 새로 확정한 행. 브랜드가 모르거나 사람이 이미 정했으면 비어 있다
+     */
+    @Transactional
+    public Optional<MerchantCategory> rememberBrand(UserPayment payment) {
+        if (payment == null || !payment.isFromRealPerson()) return Optional.empty();
+        String merchantName = payment.getMerchantName();
+        if (merchantName == null || merchantName.isBlank()) return Optional.empty();
+        String sub = brandAnswer(merchantName);
+        if (sub.isEmpty()) return Optional.empty();
+        String mid = mapper.midOfSub(sub);
+        if (IndustryCategoryMapper.isUnknown(mid)) return Optional.empty();
+
+        final String biz = keyOf(payment.getBusinessNumber());
+        List<String> codes = mapper.codesOfSub(sub);
+        Optional<MerchantCategory> existing = repository.findByBusinessNumberAndMerchantName(biz, merchantName);
+        if (existing.isPresent()) {
+            MerchantCategory row = existing.get();
+            // 사람이 손으로 정한 것은 표보다 위다.
+            if (MerchantCategory.Source.USER_CONFIRMED.name().equals(row.getSource())) {
+                return Optional.empty();
+            }
+            if (mid.equals(row.getCategory2()) && sub.equals(row.getCategory3())) return Optional.empty();
+            row.reclassify(mid, MerchantCategory.Source.USER_CSV, null, codes);
+            brands.promote(row);
+            stampSub(row);
+            return Optional.of(row);
+        }
+        MerchantCategory row = repository.save(new MerchantCategory(
+                biz, merchantName, mid, MerchantCategory.Source.USER_CSV, null, codes));
+        brands.promote(row);
+        stampSub(row);
+        return Optional.of(row);
     }
 
     /**
@@ -184,6 +255,7 @@ public class MerchantCategoryService {
         // **attemptRow·rememberGuess·rememberRegistry 도 confirm 과 같아야 한다** — 한 곳만 옮기면 브랜드가 두 곳에 남아
         // 어느 쪽이 정본인지 알 수 없게 된다(2026-08-07 감사에서 발견).
         brands.promote(row);
+        stampSub(row);
         return Optional.of(row);
     }
 
@@ -297,12 +369,68 @@ public class MerchantCategoryService {
             // 옮김"을 한꺼번에 담아 읽을 수 없게 된다.
             row.reclassify(category2, MerchantCategory.Source.LLM_GUESS, null, null);
             brands.promote(row);
+        stampSub(row);
             return Optional.of(row);
         }
         MerchantCategory row = repository.save(new MerchantCategory(
                 biz, name, category2, MerchantCategory.Source.LLM_GUESS, null, null));
         brands.promote(row);
+        stampSub(row);
         return Optional.of(row);
+    }
+
+    /**
+     * <b>소분류를 찍는다 — 브랜드가 업종 이름보다 먼저다.</b>
+     *
+     * <p>브랜드 표는 <b>사람이 검수한 확정 지식</b>이고 업종 이름은 <b>가맹점 한 곳씩의 추론</b>
+     * (등록 조회거나 LLM)이다. 확정이 추론을 이긴다 — 사전 확정(①)이 업종코드(②)를 이기는
+     * 것과 같은 원리라 순위(§13-12)에 새 원칙이 들어가지 않는다.
+     *
+     * <p>그리고 이 순서가 <b>같은 브랜드가 갈리는 것을 막는다</b>. 사전 키는 (사업자번호,
+     * 가맹점명)이라 같은 브랜드의 두 지점이 서로 다른 통로로 들어온다 — 한 곳은 등록 조회가
+     * {@code 한식 육류 요리 전문점} 을 주고 다른 곳은 LLM 이 {@code 치킨 전문점} 을 준다.
+     * 브랜드가 먼저 답하면 둘 다 같은 소분류가 되고, 소분류는 한 중분류에만 속하므로
+     * 중분류도 자동으로 같아진다.
+     *
+     * <p><b>저장된 브랜드를 안 읽는다.</b> {@code merchant_category.brand} 는 무료 통로가
+     * 답한 추정일 수 있어서다 — 운영 사전 845행 중 <b>269행</b>의 브랜드가 표기표에 없는
+     * 이름이었고, {@code (주)카카오} 는 <b>멜론</b>으로, {@code 주식회사 데이원컴퍼니}(온라인
+     * 교육)는 <b>배달의민족</b>으로 적혀 있었다(2026-08-25 운영 실측). 그 값으로 소분류를
+     * 정하면 <b>브랜드 하나가 통째로</b> 틀린 카테고리로 간다. 그래서 표기표를 그 자리에서
+     * 맞춘다({@code confirmedBrandOf}).
+     */
+    private void stampSub(MerchantCategory row) {
+        String byBrand = mapper.subOfBrand(
+                brands.subBrandOf(row.getMerchantName(), mapper::hasSub).orElse(""));
+        String sub = byBrand.isEmpty()
+                ? mapper.subOfIndustryName(row.getRegistryIndustry()) : byBrand;
+        row.applySub(sub);
+        if (byBrand.isEmpty()) return;      // 업종 이름에서 온 소분류는 중분류와 어긋날 수 없다
+
+        // ── 브랜드가 중분류를 이긴다 (§13-12 순위 ①-b) ────────────────────────────
+        //
+        // **왜 여기서 덮나.** 등록 조회는 그 사업자의 <b>등록 업종</b>을 말할 뿐이고, 그것이
+        // 실제 업태와 어긋나는 일이 잦다 — 운영 실측(2026-08-25)에서 `깐부치킨 장위레디언트점`
+        // 이 전자상거래로 등록돼 <b>쇼핑</b>이 됐고, `탐앤탐스성신여대점` 은 <b>술/유흥</b>,
+        // `올리브영 의정부대로점` 은 <b>편의점/잡화</b>가 됐다.
+        //
+        // 브랜드 표는 <b>사람이 검수한 확정 지식</b>이고 등록 조회·LLM 은 가맹점 한 곳씩의
+        // 추론이다. 확정이 추론을 이긴다 — 사전 확정(①)이 업종코드(②)를 이기는 것과 같은
+        // 원리라 순위에 새 원칙이 들어가지 않는다.
+        //
+        // **여기서 안 덮으면 어긋난 채로 굳는다.** 확정이 적히면 그 가맹점은 다시 안 묻는다.
+        // 훑기(SubCategorySweeper)가 나중에 잡아 주지만 그건 사람이 부르는 배치이고,
+        // 그 사이에 사용자는 틀린 화면을 본다.
+        String expected = mapper.midOfSub(sub);
+        if (IndustryCategoryMapper.isUnknown(expected) || expected.equals(row.getCategory2())) return;
+        // 사람이 손으로 정한 것은 표보다 위다.
+        if (MerchantCategory.Source.USER_CONFIRMED.name().equals(row.getSource())
+                || MerchantCategory.Source.USER_CSV.name().equals(row.getSource())) {
+            return;
+        }
+        log.info("브랜드가 중분류를 고친다 — {} : {} → {} (소분류 {})",
+                row.getMerchantName(), row.getCategory2(), expected, sub);
+        row.reclassify(expected, MerchantCategory.Source.USER_CSV, null, null);
     }
 
     /**
@@ -406,11 +534,13 @@ public class MerchantCategoryService {
             }
             row.reclassify(category2, MerchantCategory.Source.REGISTRY, null, ntsCodes);
             brands.promote(row);
+        stampSub(row);
             return Optional.of(row);
         }
         MerchantCategory row = repository.save(new MerchantCategory(
                 biz, merchantName, category2, MerchantCategory.Source.REGISTRY, null, ntsCodes));
         brands.promote(row);
+        stampSub(row);
         return Optional.of(row);
     }
 
@@ -514,6 +644,7 @@ public class MerchantCategoryService {
         // 이 가맹점이 사전에 들어왔으니 대기 장소의 브랜드를 옮기고 그쪽은 지운다 —
         // 두 곳에 남으면 어느 쪽이 정본인지 알 수 없게 된다.
         brands.promote(row);
+        stampSub(row);
         return row;
     }
 
@@ -538,6 +669,18 @@ public class MerchantCategoryService {
     }
 
     /** 한 시점의 사전 사본. 적재하는 동안만 산다. */
+    /**
+     * 브랜드 추출기가 "브랜드가 없다"를 <b>값으로</b> 적어 둔 것 — 브랜드가 아니다.
+     *
+     * <p>{@code null} 이 아니라 이 문자열이 들어 있는 행이 실제로 있다(2026-08-21 실측:
+     * {@code 사당쌀빵}·{@code 황금마차}·{@code 고향양꼬치}). 브랜드로 취급하면 서로 무관한
+     * 가맹점들이 한 덩어리가 된다.
+     */
+    static final String NO_BRAND = "브랜드없음";
+
+    /** 브랜드로 인정할 최소 지점 수 — 하나뿐이면 브랜드가 아니라 그냥 그 가맹점이다. */
+    static final int BRAND_MIN_BRANCHES = 2;
+
     public static final class Snapshot {
         private final Map<String, String> exact = new HashMap<>();       // key(번호, 풀네임) → 중분류
         private final Map<String, String> byBusiness = new HashMap<>();  // 번호 → 중분류(PG 아닌 것만)
@@ -547,6 +690,17 @@ public class MerchantCategoryService {
         private final Map<String, String> guessExact = new HashMap<>();
         private final Map<String, String> guessByBusiness = new HashMap<>();
         private final Map<String, String> guessByNameOnly = new HashMap<>();
+        /**
+         * 브랜드 → 중분류. <b>그 브랜드의 모든 지점이 같은 답일 때만</b> 담는다.
+         *
+         * <p>사전 키가 {@code (사업자번호, 가맹점명 전체)} 라서 <b>같은 브랜드의 새 지점마다
+         * 처음부터 다시 묻는다</b>. 실측(2026-08-21): 사전에 CU 20지점·세븐일레븐 11지점·
+         * 이마트24 10지점이 전부 {@code 편의점/잡화} 하나로 만장일치인데, 라진우의
+         * {@code 씨유(CU)낙원점} 은 미분류였다. 그 사람 미분류 40종 중 12종이 이 경우였다.
+         *
+         * <p>사용자가 늘수록 빨라져야 하는데, 브랜드 재사용이 없으면 같은 값을 계속 다시 치른다.
+         */
+        private final Map<String, String> guessByBrand = new HashMap<>();
         private final IndustryCategoryMapper mapper;
 
         Snapshot(List<MerchantCategory> rows, IndustryCategoryMapper mapper) {
@@ -560,6 +714,23 @@ public class MerchantCategoryService {
             rows.stream().filter(MerchantCategory::isConfirmed).forEach(m ->
                     confirmedKinds.computeIfAbsent(m.getBusinessNumber(), k -> new java.util.TreeSet<>())
                             .add(m.getCategory2()));
+
+            // **브랜드가 만장일치일 때만 담는다.** 한 브랜드에 두 분류가 섞여 있으면
+            // (실측: GS25 에 쇼핑·식비·편의점/잡화 셋) 그 브랜드로는 아무것도 말할 수 없다.
+            // 지점이 하나뿐인 브랜드도 담지 않는다 — 그것은 그냥 그 가맹점이지 브랜드가 아니다.
+            java.util.Map<String, java.util.Set<String>> brandKinds = new HashMap<>();
+            java.util.Map<String, Integer> brandCounts = new HashMap<>();
+            for (MerchantCategory m : rows) {
+                String brand = m.getBrand();
+                if (brand == null || brand.isBlank() || NO_BRAND.equals(brand)) continue;
+                if (m.getCategory2() == null || IndustryCategoryMapper.isUnknown(m.getCategory2())) continue;
+                brandKinds.computeIfAbsent(brand, k -> new java.util.TreeSet<>()).add(m.getCategory2());
+                brandCounts.merge(brand, 1, Integer::sum);
+            }
+            brandKinds.forEach((brand, kinds) -> {
+                if (kinds.size() != 1 || brandCounts.getOrDefault(brand, 0) < BRAND_MIN_BRANCHES) return;
+                guessByBrand.put(brand, kinds.iterator().next());
+            });
 
             rows.stream().sorted(java.util.Comparator
                             .comparingInt(MerchantCategoryService::sourceRank)
@@ -614,15 +785,32 @@ public class MerchantCategoryService {
          * 사전에는 멀쩡히 남아 있는데도 그렇다(2026-08-05 운영에서 실제로 발생).
          * 복구를 별도 화면 방문에 맡기지 않고 <b>연동할 때 같이 칠한다.</b>
          */
+        /** 브랜드가 만장일치일 때의 중분류. {@link #guessByBrand} 참조. */
+        public Optional<String> guessOfBrand(String brand) {
+            if (brand == null || brand.isBlank() || NO_BRAND.equals(brand)) return Optional.empty();
+            return Optional.ofNullable(guessByBrand.get(brand));
+        }
+
         public Optional<String> guess(String businessNumber, String merchantName) {
+            return guess(businessNumber, merchantName, null);
+        }
+
+        /**
+         * @param brand 이 가맹점의 브랜드. 이름·번호로 못 찾았을 때 <b>마지막으로</b> 본다 —
+         *              같은 브랜드의 지점이 사전에서 만장일치면 그 값을 쓴다.
+         */
+        public Optional<String> guess(String businessNumber, String merchantName, String brand) {
             if (merchantName == null || merchantName.isBlank()) return Optional.empty();
             String biz = MerchantCategory.normalize(businessNumber);
             String hit = guessExact.get(key(biz, merchantName));
             if (hit != null) return Optional.of(hit);
-            if (biz.isEmpty() || mapper.isPaymentAgency(biz)) {
-                return Optional.ofNullable(guessByNameOnly.get(merchantName));
-            }
-            return Optional.ofNullable(guessByBusiness.get(biz));
+            String byKey = (biz.isEmpty() || mapper.isPaymentAgency(biz))
+                    ? guessByNameOnly.get(merchantName)
+                    : guessByBusiness.get(biz);
+            if (byKey != null) return Optional.of(byKey);
+            // **브랜드는 맨 마지막이다.** 이름·번호로 짚이는 것이 있으면 그것이 더 가깝다.
+            if (brand == null || brand.isBlank() || NO_BRAND.equals(brand)) return Optional.empty();
+            return Optional.ofNullable(guessByBrand.get(brand));
         }
 
         /** 사전에 있으면 그 분류를, 없으면 업종코드가 정한 분류를 준다. */

@@ -80,7 +80,16 @@ public class FreeChannelQueue {
 
     /** 남은 토큰 ×1000 — 2초마다 조금씩 차오르므로 정수로는 표현이 안 된다. */
     private final AtomicLong milliTokens = new AtomicLong();
-    private record Job(Lane lane, String key, Runnable work) {}
+    /**
+     * @param calls 이 일이 통로에 낼 <b>HTTP 호출 수</b>. 예산은 작업이 아니라 호출을 센다.
+     */
+    private record Job(Lane lane, String key, Runnable work, int calls) {}
+
+    /**
+     * 한 작업이 낼 수 있는 호출 수의 상한 — 예산 버킷의 천장이 이보다 낮으면 그 일은
+     * <b>영영 못 나간다</b>. {@link #refill} 의 cap 이 이 값을 품는다.
+     */
+    public static final int MAX_CALLS_PER_JOB = 3;
 
     public FreeChannelQueue(@Value("${finntech.free-channel.per-minute:40}") int perMinute,
                             @Value("${finntech.free-channel.concurrency:6}") int concurrency,
@@ -108,10 +117,25 @@ public class FreeChannelQueue {
      * @return 새로 들어갔으면 true, 이미 있어서 접혔으면 false
      */
     public boolean submit(Lane lane, String key, Runnable work) {
+        return submit(lane, key, 1, work);
+    }
+
+    /**
+     * 할 일을 넣는다 — <b>낼 호출 수를 함께 알린다.</b>
+     *
+     * <p>예산은 작업이 아니라 <b>호출</b>을 센다. 업종 분류 한 건은 3단계라 호출이 셋인데
+     * 예전에는 토큰을 하나만 뺐다 — {@code per-minute: 40} 이면 큐는 분당 40이라 믿지만
+     * 통로에는 <b>분당 120</b>이 나갔다(2026-08-21 감사). 차선 배분도 같이 흐려진다:
+     * {@code LOW_LANE_PER_TICK} 이 2 인데 실제로는 6 회였다.
+     *
+     * @param calls 이 일이 낼 HTTP 호출 수. {@link #MAX_CALLS_PER_JOB} 를 넘길 수 없다.
+     */
+    public boolean submit(Lane lane, String key, int calls, Runnable work) {
         if (lane == null || key == null || work == null) return false;
+        int cost = Math.max(1, Math.min(MAX_CALLS_PER_JOB, calls));
         // **대기 중이거나 나가 있는 것은 다시 안 넣는다.** putIfAbsent 하나로 둘 다 걸린다 —
         // 키는 일이 끝날 때 지우기 때문이다.
-        if (known.putIfAbsent(key, new Job(lane, key, work)) != null) return false;
+        if (known.putIfAbsent(key, new Job(lane, key, work, cost)) != null) return false;
         lanes.get(lane).addLast(key);
         trimIfOverCapacity();
         return true;
@@ -144,7 +168,7 @@ public class FreeChannelQueue {
                     Job back = known.get(batch.get(j));
                     if (back == null) continue;
                     lanes.get(back.lane()).addFirst(batch.get(j));
-                    giveBack();
+                    giveBack(back.calls());
                 }
                 return;
             }
@@ -188,12 +212,14 @@ public class FreeChannelQueue {
      */
     private void refill() {
         long perTick = 1000L * perMinute / 30;
-        long cap = perTick + 999L;
+        // **천장은 가장 비싼 일을 품어야 한다.** 3회짜리 일이 있는데 천장이 1회분이면 그 일은
+        // 영영 못 나가고 큐만 찬다 — 예산을 호출 단위로 세면서 같이 올린다(2026-08-21).
+        long cap = perTick + (MAX_CALLS_PER_JOB * 1000L) - 1L;
         milliTokens.updateAndGet(t -> Math.min(cap, t + perTick));
     }
 
-    private void giveBack() {
-        milliTokens.addAndGet(1000L);
+    private void giveBack(int calls) {
+        milliTokens.addAndGet(1000L * Math.max(1, calls));
     }
 
     /**
@@ -212,7 +238,14 @@ public class FreeChannelQueue {
                 if (limited && low >= LOW_LANE_PER_TICK) break;
                 String key = q.pollFirst();
                 if (key == null) break;
-                milliTokens.addAndGet(-1000L);
+                // **값은 호출 수로 낸다.** 3단계짜리 분류 하나가 편지 하나와 같은 값일 수 없다.
+                Job job = known.get(key);
+                long cost = 1000L * (job == null ? 1 : job.calls());
+                if (milliTokens.get() < cost) {   // 이번 회차엔 못 산다 — 앞자리로 되돌린다
+                    q.addFirst(key);
+                    break;
+                }
+                milliTokens.addAndGet(-cost);
                 if (limited) low++;
                 out.add(key);
             }

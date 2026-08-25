@@ -119,8 +119,14 @@ public class MerchantBrandService {
      *
      * <p>긴 표기부터 맞춘다 — {@code 세븐일레븐} 이 {@code 세븐} 보다 먼저 걸려야 한다.
      * 표는 그 순서로 만들어져 있다.
+     *
+     * <p><b>소분류가 이 문만 쓴다</b>({@link #confirmedBrandOf}). 저장된 브랜드는 모델이
+     * 지어낸 것일 수 있어서다 — 운영 사전 845행 중 <b>269행</b>의 브랜드가 표기표에 없는
+     * 이름이었고, 그중 {@code (주)카카오} 는 <b>멜론</b>으로 적혀 있었다(표를 고치기 전에
+     * 붙은 것이 안 고쳐진 채 남았다). 그 값으로 소분류를 정하면 브랜드 하나가 통째로
+     * 틀린 카테고리로 간다.
      */
-    private Optional<String> fromCatalog(String merchantName) {
+    Optional<String> fromCatalog(String merchantName) {
         String n = SPACES.matcher(merchantName).replaceAll("");
         for (var e : squashedForms) {
             // **원문도 함께 넘긴다.** 공백을 지운 형태로만 보면 `토스 결제` 가 `토스결제` 가 되어
@@ -267,6 +273,10 @@ public class MerchantBrandService {
         var first = temporary.brandOf(name);
         if (first.isEmpty()) return;      // 답을 못 받았다 — 사실이 아니므로 아무것도 안 적는다
         String brand = first.get();
+        // **PG 를 브랜드로 적지 않는다.** `넥슨_카카오페이` 의 브랜드가 `카카오페이` 로 잡히면
+        // 그 브랜드가 프롬프트에 나가 모델이 "결제대행사는 모름"으로 답한다(2026-08-21 실측).
+        // 브랜드를 모르는 것과 같이 두는 편이 낫다 — 그때는 이름만으로 묻는다.
+        if (!NONE.equals(brand) && !usableBrand(brand)) brand = NONE;
         if (!NONE.equals(brand)) brand = temporary.unify(brand, knownBrands);
         selfProvider.getObject().persist(Map.of(), Map.of(name, brand));
     }
@@ -456,6 +466,98 @@ public class MerchantBrandService {
 
     /** 이 가맹점의 브랜드 — 사전이 먼저, 없으면 대기 장소. */
     @Transactional(readOnly = true)
+    /**
+     * <b>상호 안에 든 표기표 브랜드들을 등장 순서로</b> — 앞에 나온 것이 먼저다.
+     *
+     * <p>{@link #fromCatalog} 는 <b>긴 표기</b>를 먼저 고르는데, 소분류를 정할 때는 그 규칙이
+     * 진다. 운영 실측(2026-08-25):
+     *
+     * <ul>
+     *   <li>{@code 이마트24 서울어린이대공원정문점} — 편의점인데 <b>어린이대공원</b>(공원)이 됐다.
+     *       두 표기가 여섯 글자로 같아 순서가 갈랐다.</li>
+     *   <li>{@code 노티드 잠실롯데월드몰} — 도넛집인데 <b>롯데월드</b>(테마파크)가 됐다.
+     *       네 글자가 세 글자를 이겼다.</li>
+     * </ul>
+     *
+     * <p>한국 상호는 <b>브랜드가 앞, 지점명이 뒤</b>다. 그래서 등장 순서가 길이보다 낫다.
+     * 같은 자리에서 시작하면 그때는 긴 쪽이 이긴다({@code 노브랜드버거} 가 {@code 노브랜드} 를).
+     *
+     * <p>앞이 결제대행사인 경우는 부르는 쪽이 푼다 — 소분류가 없는 브랜드(결제수단·회사명)를
+     * 건너뛰면 {@code 넥슨_카카오페이} 가 넥슨이 되고 {@code 토스페이_알라딘} 이 알라딘이 된다.
+     */
+    public List<String> brandsInName(String merchantName) {
+        if (merchantName == null || merchantName.isBlank()) return List.of();
+        String n = SPACES.matcher(merchantName).replaceAll("");
+        record Hit(int at, int length, String brand) {}
+        List<Hit> hits = new java.util.ArrayList<>();
+        for (var e : squashedForms) {
+            int at = indexOfForm(n, merchantName, e.getKey());
+            if (at >= 0) hits.add(new Hit(at, e.getKey().length(), e.getValue()));
+        }
+        hits.sort(java.util.Comparator.comparingInt(Hit::at)
+                .thenComparing(java.util.Comparator.comparingInt(Hit::length).reversed()));
+        List<String> out = new java.util.ArrayList<>();
+        for (Hit hit : hits) {
+            // **더 긴 표기 안에 통째로 들어 있는 표기는 버린다.** `웨이브`(OTT)가
+            // `티웨이브`(상품권 판매점) 안에 걸려 구독 결제로 읽히던 자리다.
+            boolean swallowed = hits.stream().anyMatch(other -> other != hit
+                    && other.at() <= hit.at()
+                    && hit.at() + hit.length() <= other.at() + other.length());
+            if (!swallowed && !out.contains(hit.brand())) out.add(hit.brand());
+        }
+        return out;
+    }
+
+    /** 표기가 상호 어디에서 시작하는가 — 없으면 {@code -1}. {@link #matches} 와 같은 규칙을 쓴다. */
+    private static int indexOfForm(String squashed, String original, String form) {
+        if (form.isEmpty() || !matches(squashed, original, form)) return -1;
+        int at = squashed.indexOf(form);
+        if (at >= 0) return at;
+        // 라틴 표기는 대소문자를 가리지 않고 맞았을 수 있다.
+        return squashed.toLowerCase(java.util.Locale.ROOT).indexOf(form.toLowerCase(java.util.Locale.ROOT));
+    }
+
+    /**
+     * <b>표기표가 확정한 브랜드</b> — 모델이 지어낸 것은 여기 안 나온다.
+     *
+     * <p>{@link #brandOf} 는 사전·대기 장소에 <b>저장된</b> 값을 주는데 그것은 무료 통로가
+     * 답한 추정({@code TEMP_MODEL})일 수 있다. 소분류는 확정층이라 그 값을 타면 안 된다.
+     */
+    public Optional<String> confirmedBrandOf(String merchantName) {
+        return merchantName == null || merchantName.isBlank()
+                ? Optional.empty() : fromCatalog(merchantName);
+    }
+
+    /**
+     * <b>소분류를 정할 브랜드</b> — 소분류가 붙는 것 중 상호에 <b>가장 먼저</b> 나온 것.
+     *
+     * <p>소분류가 없는 브랜드를 건너뛰는 것이 <b>결제대행사를 걷어내는 일</b>을 겸한다.
+     * 결제수단(카카오페이·토스)과 회사명(카카오·애플·구글)은 소분류를 안 받으므로
+     * 자동으로 밀려난다 — {@code 넥슨_카카오페이} 가 넥슨이 되고
+     * {@code 토스페이_알라딘-(주)비바리퍼블리카} 가 알라딘이 된다(2026-08-25 운영 실측 9건).
+     *
+     * @param hasSub 그 브랜드에 소분류가 있는가 ({@code IndustryCategoryMapper} 가 안다)
+     */
+    /**
+     * <b>화면에 적을 브랜드</b> — 표기표가 답하면 그것이 정본이다.
+     *
+     * <p>사전에 저장된 브랜드는 무료 통로가 지어낸 것일 수 있다. 운영 실측(2026-08-25)에서
+     * {@code 코레일유통주식회사(의왕역)} 은 <b>한국철도공사</b>로, {@code 코리아세븐 삼성대웅점} 은
+     * <b>CU</b> 로, {@code 돈치킨} 은 <b>KFC</b> 로 적혀 있었다 — 실사용자 원장 <b>50행 208건</b>.
+     *
+     * <p>그리고 <b>한 번 붙은 브랜드는 다시 안 묻고 덮지도 않는다</b>({@link MerchantCategory#adoptBrand}).
+     * 그래서 표를 고쳐도 그 값은 스스로 안 고쳐진다. 분류는 {@link #subBrandOf} 가 표기표를
+     * 그 자리에서 맞춰 이미 피해 가는데, <b>화면의 브랜드 칸만 낡은 채 남으면</b> 같은 줄에서
+     * 브랜드와 카테고리가 어긋나 보인다. 그래서 이 칸도 표기표를 먼저 본다.
+     */
+    public Optional<String> displayBrandOf(String merchantName) {
+        return brandsInName(merchantName).stream().findFirst();
+    }
+
+    public Optional<String> subBrandOf(String merchantName, java.util.function.Predicate<String> hasSub) {
+        return brandsInName(merchantName).stream().filter(hasSub).findFirst();
+    }
+
     public Optional<String> brandOf(String merchantName) {
         if (merchantName == null || merchantName.isBlank()) return Optional.empty();
         Optional<String> fromDictionary = dictionary.findByMerchantName(merchantName).stream()
@@ -465,4 +567,51 @@ public class MerchantBrandService {
         if (fromDictionary.isPresent()) return fromDictionary;
         return brands.findByMerchantName(merchantName).map(MerchantBrand::getBrand);
     }
+
+    /**
+     * <b>쓸 수 있는 브랜드만</b> — 프롬프트·브랜드 색인이 쓰는 자리.
+     *
+     * <p>{@link #brandOf} 와 갈라 둔다. 저쪽은 <i>"물어봤는가"</i>를 알리는 계약이라
+     * {@link #NONE} 도 값으로 준다 — 안 그러면 볼 때마다 다시 묻는다. 여기는 <i>"이 값을
+     * 근거로 써도 되는가"</i>라 {@code NONE} 과 결제대행사 이름을 뺀다.
+     */
+    public Optional<String> usableBrandOf(String merchantName) {
+        return brandOf(merchantName).filter(MerchantBrandService::usableBrand);
+    }
+
+    /**
+     * 브랜드로 쓸 수 있는 값인가 — <b>두 가지를 거른다.</b>
+     *
+     * <ul>
+     *   <li><b>{@link #NONE} 리터럴</b> — "브랜드가 없다"는 <i>사실</i>이지 브랜드가 아니다.
+     *       그런데 값으로 저장돼 있어(실측 2026-08-21: {@code 사당쌀빵}·{@code 황금마차})
+     *       그대로 읽으면 프롬프트에 <i>"이 가맹점의 브랜드는 브랜드없음 입니다"</i> 가 나가고,
+     *       브랜드 색인에서는 서로 무관한 가맹점이 한 덩어리가 된다.</li>
+     *   <li><b>결제대행사 이름</b> — {@code 넥슨_카카오페이} 의 브랜드가 {@code 카카오페이} 로
+     *       잡혀 있었다. 그 브랜드를 프롬프트에 넣으면 모델이 "결제대행사는 모름" 규칙에 걸려
+     *       답을 안 한다 — {@code 구글_네이버페이} 11건 234,544원이 그렇게 막혔다.</li>
+     * </ul>
+     */
+    static boolean usableBrand(String brand) {
+        return brand != null && !brand.isBlank() && !NONE.equals(brand) && !isAgency(brand);
+    }
+
+    private static boolean isAgency(String brand) {
+        String flat = brand.replaceAll("[\\s()（）\\-_.]", "");
+        for (String pg : PG_BRANDS) if (flat.equalsIgnoreCase(pg)) return true;
+        return false;
+    }
+
+    /**
+     * 브랜드로 인정하지 않는 결제대행사 상호.
+     *
+     * <p>{@code IndustryCategoryMapper.paymentAgencyNames} 와 겹치지만 여기 따로 두는 이유는
+     * 쓰임이 다르기 때문이다 — 저쪽은 <b>가맹점명</b>이 PG 인지 보고, 여기는 <b>브랜드 칸에
+     * PG 가 들어앉았는지</b> 본다. 저쪽 목록이 바뀌어도 이 판정이 흔들리면 안 된다.
+     */
+    private static final java.util.List<String> PG_BRANDS = java.util.List.of(
+            "카카오페이", "네이버페이", "네이버파이낸셜", "토스페이", "토스페이먼츠", "비바리퍼블리카",
+            "페이코", "PAYCO", "나이스페이먼츠", "NICE", "NICE인프라", "KICC", "KG이니시스", "이니시스",
+            "KG모빌리언스", "KCP", "NHNKCP", "다날", "갤럭시아머니트리", "웰컴페이먼츠", "스마트로",
+            "KSNET", "KPN", "헥토파이낸셜", "이노페이", "페이레터", "코페이", "삼성페이", "애플페이");
 }

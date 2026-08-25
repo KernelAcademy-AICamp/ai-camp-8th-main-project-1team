@@ -32,18 +32,27 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>이 시험은 그 구멍의 <b>이름 층</b>만 막는다. DB 없이 파일을 글자로 읽으므로 어떤
  * 프로파일에서도 돌고, 칸을 하나 빠뜨리거나 이름을 다르게 적는 순간 걸린다.
  *
+ * <p><b>V34 하나가 아니라 그 뒤의 ALTER 까지 누적해서 본다.</b> 칸은 나중 마이그레이션이
+ * 덧붙이기도 한다(V39 의 {@code category3}). 처음 만든 파일만 보면 그 뒤에 붙은 칸이 전부
+ * "엔티티에만 있는 칸"으로 보여, 정작 막으려던 어긋남과 구별이 안 된다.
+ *
  * <p><b>타입까지는 못 본다.</b> {@code BIT(1)} 대신 {@code BOOLEAN} 을 적는 종류의 사고는
  * 로컬 MySQL 예행({@code docker-compose.prod.local-db.yml} + {@code mysql} 프로파일)이
  * 잡는다. 그 절차를 대신하지 않는다.
  */
 class SpendingLedgerSchemaTest {
 
-    private static final Path MIGRATION =
-            Path.of("src/main/resources/db/migration/V34__spending_ledger.sql");
+    private static final Path MIGRATIONS = Path.of("src/main/resources/db/migration");
+    private static final Path MIGRATION = MIGRATIONS.resolve("V34__spending_ledger.sql");
 
     /** {@code    칸이름   TYPE ...} — 주석과 제약(PRIMARY KEY·KEY)을 걸러낸 뒤 이름만 집는다. */
     private static final Pattern COLUMN = Pattern.compile(
             "^\\s+([a-z][a-z0-9_]*)\\s+(VARCHAR|BIGINT|INT|DATE|DATETIME|DOUBLE|BIT)\\b");
+
+    /** {@code ADD COLUMN 칸이름 TYPE ...} — 나중 마이그레이션이 덧붙인 칸. */
+    private static final Pattern ADDED = Pattern.compile(
+            "ADD\\s+COLUMN\\s+([a-z][a-z0-9_]*)\\s+(VARCHAR|BIGINT|INT|DATE|DATETIME|DOUBLE|BIT)\\b",
+            Pattern.CASE_INSENSITIVE);
 
     @Test
     @DisplayName("spending_ledger — 마이그레이션과 엔티티의 칸이 같다")
@@ -87,7 +96,28 @@ class SpendingLedgerSchemaTest {
             if (matcher.find()) columns.add(matcher.group(1));
         }
         assertThat(columns).as("%s 의 칸을 하나도 못 읽었다 — 파일 형식이 바뀌었나", table).isNotEmpty();
+        columns.addAll(addedColumnsOf(table));
         return columns;
+    }
+
+    /** V34 뒤의 마이그레이션이 이 표에 덧붙인 칸들. 파일 이름 순서로 읽는다(§4-3 재현성). */
+    private static Set<String> addedColumnsOf(String table) throws IOException {
+        Set<String> added = new LinkedHashSet<>();
+        java.util.List<Path> files;
+        try (var walk = Files.list(MIGRATIONS)) {
+            files = walk.filter(f -> f.getFileName().toString().endsWith(".sql")).sorted().toList();
+        }
+        for (Path file : files) {
+            String sql = Files.readString(file, StandardCharsets.UTF_8).replaceAll("--[^\n]*", "");
+            // 한 파일이 여러 표를 고치므로, 이 표를 여는 ALTER 부터 다음 세미콜론까지만 읽는다.
+            Matcher alter = Pattern.compile("ALTER\\s+TABLE\\s+" + table + "\\b([^;]*);",
+                    Pattern.CASE_INSENSITIVE).matcher(sql);
+            while (alter.find()) {
+                Matcher column = ADDED.matcher(alter.group(1));
+                while (column.find()) added.add(column.group(1).toLowerCase());
+            }
+        }
+        return added;
     }
 
     /** 엔티티의 {@code @Column(name=...)} 집합. 이름이 없으면 필드 이름이 곧 칸 이름이다. */

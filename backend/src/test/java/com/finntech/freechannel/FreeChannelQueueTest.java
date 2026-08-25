@@ -98,11 +98,20 @@ class FreeChannelQueueTest {
                 .as("아래 차선은 한 회차에 몰아 나가지 않는다").isEqualTo(2);
     }
 
-    /** 예산이 없으면 통로가 거절하고, 거절이 쌓이면 통로가 통째로 막힌다. */
+    /**
+     * 예산이 없으면 통로가 거절하고, 거절이 쌓이면 통로가 통째로 막힌다.
+     *
+     * <p><b>천장이 예전보다 넓다</b>(2026-08-21). 예산을 <i>작업</i>이 아니라 <i>호출</i>로
+     * 세면서, 가장 비싼 일({@link FreeChannelQueue#MAX_CALLS_PER_JOB} 회)이 한 번에 살 수
+     * 있도록 천장을 그만큼 올렸다. 안 올리면 3회짜리 분류가 <b>영영 못 나가고</b> 큐만 찬다.
+     *
+     * <p>그래서 여기서 잠그는 것은 "회차당 몇 건"이 아니라 <b>회차당 몇 호출</b>이다 —
+     * 장기 처리량이 {@code perMinute} 로 수렴한다는 성질은 그대로다.
+     */
     @Test
     @DisplayName("한 회차에 예산을 넘겨 내보내지 않는다")
     void oneTickNeverExceedsTheBudget() {
-        FreeChannelQueue q = queue(30, 4, 100);       // 30/분 → 2초에 1건
+        FreeChannelQueue q = queue(30, 4, 100);       // 30/분 → 2초치 1호출
         List<String> ran = new CopyOnWriteArrayList<>();
         for (int i = 0; i < 10; i++) {
             String n = "job" + i;
@@ -112,8 +121,27 @@ class FreeChannelQueueTest {
         q.dispatch();
         await(() -> !ran.isEmpty());
 
-        assertThat(ran.size()).as("2초치는 1건이다").isLessThanOrEqualTo(1);
+        // 한 회차치(1) + 쌓아 둘 수 있는 몫(가장 비싼 일 하나) = 최대 네 호출.
+        int ceiling = 1 + FreeChannelQueue.MAX_CALLS_PER_JOB;
+        assertThat(ran.size()).as("천장을 넘겨 몰아 내보내지 않는다").isLessThanOrEqualTo(ceiling);
         assertThat(q.queued()).as("나머지는 큐에 남는다").isGreaterThan(0);
+    }
+
+    /**
+     * <b>비싼 일이 굶으면 안 된다.</b> 천장을 안 올렸을 때 실제로 생기던 일 —
+     * 3회짜리 분류가 큐에 들어가서 나오지 못하고, 그 뒤 같은 키는 {@code submit} 이 접었다.
+     */
+    @Test
+    @DisplayName("가장 비싼 일도 결국 나간다")
+    void theMostExpensiveJobStillGoesOut() {
+        FreeChannelQueue q = queue(30, 4, 100);
+        List<String> ran = new CopyOnWriteArrayList<>();
+        q.submit(Lane.USER_NOW, "three", FreeChannelQueue.MAX_CALLS_PER_JOB, () -> ran.add("three"));
+
+        for (int i = 0; i < 50; i++) q.dispatch();
+        await(() -> !ran.isEmpty());
+
+        assertThat(ran).containsExactly("three");
     }
 
     /**

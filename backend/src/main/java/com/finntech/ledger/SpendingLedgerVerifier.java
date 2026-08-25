@@ -129,7 +129,7 @@ public class SpendingLedgerVerifier {
                 }
                 SpendingLedger.Facts expected = SpendingLedgerRowMapper.factsOf(
                         payment, lookup.merchantFactsOf(payment), props.getDaypart(),
-                        industryMapper::isPaymentAgency);
+                        industryMapper::isPaymentAgency, industryMapper);
                 userMismatches += compare(samples, payment.getPaymentId(), row, expected);
             }
             // 원장에 없는데 표에 남은 줄 — 재연동·파기 뒤 정리가 안 된 경우다.
@@ -165,6 +165,7 @@ public class SpendingLedgerVerifier {
         found += check(samples, paymentId, "category2", row.getCategory2(), expected.category2());
         found += check(samples, paymentId, "category2_source", row.getCategory2Source(), expected.category2Source());
         found += check(samples, paymentId, "category2_llm", row.getCategory2Llm(), expected.category2Llm());
+        found += check(samples, paymentId, "category3", row.getCategory3(), expected.category3());
         return found;
     }
 

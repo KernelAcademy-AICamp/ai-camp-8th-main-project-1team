@@ -175,9 +175,28 @@ public class UserPayment {
      * <p>구분해 두지 않으면 나중에 <i>"무료 통로가 이상하다"</i> 싶을 때 어느 값이 그쪽 것인지
      * 가려낼 방법이 없다. 화면 표시는 같아도 기록은 갈라 둔다.
      *
+     * <p><b>"모름"은 추정이 아니다.</b> 모델이 답을 못 준 것을 {@code 카테고리없음} 이라는
+     * 값으로 적으면 두 가지가 망가진다(2026-08-21 실측).
+     *
+     * <ul>
+     *   <li><b>집계가 부풀려진다</b> — 미분류를 {@code category2_source='NONE'} 으로 세면
+     *       이것이 <i>분류된 것</i>으로 잡힌다. 라진우가 그 기준으로 2건이었는데 실제 미분류는
+     *       19건(372,961원)이었고, 분류율도 92.4%가 아니라 84.3%였다.</li>
+     *   <li><b>화면이 거짓 배지를 단다</b> — {@code OnboardingController} 는
+     *       "확정이 비었는데 추정이 있다"를 <i>AI 추정</i>으로 보여준다. 값이 {@code 카테고리없음}
+     *       인데 "AI가 추정했다"고 표시된다.</li>
+     * </ul>
+     *
+     * <p>그래서 모르는 값은 <b>안 적는다.</b> 못 맞혔다는 사실은 사전의 시도 기록
+     * ({@code llm_attempts}·{@code last_attempt_at})과 무료 통로의 {@code misses} 가 들고 있다.
+     *
      * @param source {@code LLM}(유료) 또는 {@code TEMP}(무료 임시)
      */
     public void suggestCategory2(String llmCategory2, String source) {
+        if (llmCategory2 == null || llmCategory2.isBlank()
+                || com.finntech.engine.IndustryCategoryMapper.isUnknown(llmCategory2)) {
+            return;                       // 모름은 추정이 아니다 — 아무것도 안 적는다
+        }
         this.category2Llm = llmCategory2;
         this.category2Source = source;
     }

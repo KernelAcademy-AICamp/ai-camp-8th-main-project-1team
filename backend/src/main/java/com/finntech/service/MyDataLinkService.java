@@ -320,6 +320,10 @@ public class MyDataLinkService {
         if (userPaymentRepository.countByUserIdAndCategory2(
                 userId, com.finntech.engine.IndustryCategoryMapper.UNCLASSIFIED) > 0) {
             reclassified += lookupUnknownIndustries(userId);
+            // **최초 연동은 크게 한 번 훑는다.** 사람이 로딩 화면 앞에서 기다리는 유일한
+            // 자리라, 여기서만 유료 통로로 40곳씩 묶어 묻는다(2026-08-21 사용자 결정).
+            // 많이 남았을 때만 깨어나고, 못 맞힌 것은 무료 통로가 한 곳씩 이어받는다.
+            reclassified += merchantAskService.askInBulk(userId);
             // **③ LLM 은 40곳이 쌓여야 부른다.** 조회(②-b)와 달리 임계값을 두는 이유는 값이
             // 묶음 크기에 좌우되기 때문이다 — 프롬프트의 76%가 업종 목록(385종)이라 1곳을 묻든
             // 40곳을 묻든 값이 거의 같고, 1곳씩 40번 부르면 40배가 든다. 조회는 번호 하나만
@@ -645,6 +649,14 @@ public class MyDataLinkService {
         for (UserPayment p : targets.values()) {
             if (asked >= industryLookup.maxPerSync()) break;
             String biz = com.finntech.domain.MerchantCategory.normalize(p.getBusinessNumber());
+            // **브랜드가 아는 곳은 조회하지 않는다**(§13-12 ①-b). 표기표는 사람이 검수한
+            // 확정이라 물어볼 것이 없고, 물으면 되레 틀리게 온다 — `깐부치킨 장위레디언트점`
+            // 이 전자상거래로 등록돼 쇼핑이 됐고 `탐앤탐스성신여대점` 은 술/유흥이 됐다.
+            var byBrand = merchantCategoryService.rememberBrand(p);
+            if (byBrand.isPresent()) {
+                found.put(p.getMerchantName(), byBrand.get().getCategory2());
+                continue;
+            }
             var row = merchantCategoryService.attemptRow(p);
             if (row.isPresent() && row.get().registryAnswered()) continue;   // 이미 답을 받아 뒀다
             asked++;
@@ -724,6 +736,18 @@ public class MyDataLinkService {
      */
     @Transactional
     public int applyResolved(Long userId, Map<String, String> found) {
+        return applyResolved(userId, found, "REGISTRY");
+    }
+
+    /**
+     * 같은 일을 하되 <b>출처를 부르는 쪽이 밝힌다</b>.
+     *
+     * <p>이 통로로 오는 것이 등록 조회만은 아니게 됐다 — 소분류 표(사람이 검수한
+     * {@code sub-brand.tsv})가 사전을 고칠 때도 여기를 지난다. 그때 {@code REGISTRY} 를 적으면
+     * 화면이 근거를 잘못 말한다.
+     */
+    @Transactional
+    public int applyResolved(Long userId, Map<String, String> found, String source) {
         if (found.isEmpty()) return 0;
         // **여기서 다시 읽는다.** 조회는 트랜잭션 밖에서 돌므로 그때 손에 든 결제 엔티티는
         // 영속 상태가 아니다 — 거기에 값을 넣어 봐야 아무 데도 안 써진다. 고치는 순간에
@@ -735,7 +759,7 @@ public class MyDataLinkService {
             String mid = found.get(p.getMerchantName());
             if (mid == null || mid.equals(p.getCategory2())) continue;
             if ("USER".equals(p.getCategory2Source())) continue;      // 사람의 판단이 위다
-            p.confirmCategory2(mid, "REGISTRY");
+            p.confirmCategory2(mid, source);
             Category category = categories.computeIfAbsent(mid, code ->
                     categoryRepository.findByCode(code)
                             .orElseGet(() -> categoryRepository.save(new Category(code, code))));

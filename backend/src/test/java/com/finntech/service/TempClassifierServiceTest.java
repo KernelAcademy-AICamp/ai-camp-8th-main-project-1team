@@ -31,7 +31,7 @@ class TempClassifierServiceTest {
         return new TempClassifierService(props, mapper, classifier, json,
                 java.time.Clock.fixed(java.time.Instant.parse("2026-08-21T03:00:00Z"),
                         java.time.ZoneId.of("Asia/Seoul")),
-                new com.finntech.freechannel.FreeChannelQueue(40, 6, 500));
+                new com.finntech.freechannel.FreeChannelQueue(40, 6, 500), brandProvider());
     }
 
     /**
@@ -52,7 +52,7 @@ class TempClassifierServiceTest {
         var queue = mock(com.finntech.freechannel.FreeChannelQueue.class);
         var svc = new TempClassifierService(props, mapper,
                 mock(MerchantClassifierService.class), json,
-                java.time.Clock.systemUTC(), queue);
+                java.time.Clock.systemUTC(), queue, brandProvider());
 
         svc.noteMiss("PAYCO_NIC NICE정보통신㈜1");
 
@@ -61,7 +61,7 @@ class TempClassifierServiceTest {
                 com.finntech.freechannel.Lane.USER_BACKGROUND)).isEmpty();
         org.mockito.Mockito.verify(queue, org.mockito.Mockito.never()).submit(
                 org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyString(),
-                org.mockito.ArgumentMatchers.any());
+                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.any());
     }
 
     /** 시간이 지나면 다시 본다 — 사전·브랜드가 채워지면 그때는 맞힐 수 있다. */
@@ -77,7 +77,7 @@ class TempClassifierServiceTest {
         var queue = mock(com.finntech.freechannel.FreeChannelQueue.class);
         var svc = new TempClassifierService(props, mapper,
                 mock(MerchantClassifierService.class), json,
-                java.time.Clock.systemUTC(), queue);
+                java.time.Clock.systemUTC(), queue, brandProvider());
 
         svc.noteMiss("어떤 가게");
 
@@ -85,7 +85,7 @@ class TempClassifierServiceTest {
         svc.classify(List.of("어떤 가게"), com.finntech.freechannel.Lane.USER_BACKGROUND);
         org.mockito.Mockito.verify(queue).submit(
                 org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyString(),
-                org.mockito.ArgumentMatchers.any());
+                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -164,5 +164,19 @@ class TempClassifierServiceTest {
         p.setApiKey("k");
         p.setModel("some/model");
         return p;
+    }
+
+    /**
+     * 브랜드 조회는 <b>고리를 끊으려고</b> {@code ObjectProvider} 로 받는다
+     * ({@code MerchantBrandService} 가 이 서비스를 쓴다). 시험에서는 아무것도 안 준다 —
+     * 브랜드가 없으면 프롬프트가 그 줄을 빼고 나가므로 여기 관심사가 아니다.
+     */
+    private static org.springframework.beans.factory.ObjectProvider<MerchantBrandService> brandProvider() {
+        return new org.springframework.beans.factory.ObjectProvider<>() {
+            @Override public MerchantBrandService getObject() { return null; }
+            @Override public MerchantBrandService getObject(Object... args) { return null; }
+            @Override public MerchantBrandService getIfAvailable() { return null; }
+            @Override public MerchantBrandService getIfUnique() { return null; }
+        };
     }
 }

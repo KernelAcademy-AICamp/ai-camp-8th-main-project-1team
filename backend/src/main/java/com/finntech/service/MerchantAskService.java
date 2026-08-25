@@ -443,6 +443,53 @@ public class MerchantAskService {
      * 나오고, 무료 통로의 답({@code TEMP})은 임시라 유료 답이 오면 덮인다. 화면에는 둘 다
      * "AI 추정"으로 똑같이 보이지만, 기록까지 같게 두면 나중에 어느 쪽 값인지 가려낼 수 없다.
      */
+    /**
+     * <b>최초 연동 한 번 — 유료 통로로 크게 훑는다.</b>
+     *
+     * <p>평소에는 무료 통로가 한 곳씩 물어 채운다. 그런데 최초 연동은 <b>사람이 로딩 화면
+     * 앞에서 기다린다</b>. 110종을 한 곳씩 물으면 호출 예산(분당 40)에 걸려 3분이고, 40곳씩
+     * 묶으면 세 번이라 30초다({@code MerchantClassifierService#classifyInBulk}).
+     *
+     * <p><b>이 자리에서만 묶는다.</b> 여기서 못 맞힌 것은 무료 통로가 한 곳씩 이어받는다 —
+     * 먼저 크게 훑는 것이지 유일한 통로가 아니다.
+     *
+     * <p>많이 남았을 때만 부른다({@link #BULK_MIN}). 몇 곳 때문에 유료를 깨우면 값만 쓰고
+     * 사용자는 차이를 못 느낀다.
+     *
+     * @return 새로 붙인 결제 수
+     */
+    @Transactional
+    public int askInBulk(Long userId) {
+        if (!classifier.aiEnabled()) return 0;
+        MerchantAskService self = selfProvider.getObject();
+        Plan plan = self.plan(userId);
+        if (plan.ask().size() < BULK_MIN) return 0;
+
+        Map<String, String> industries = new java.util.TreeMap<>();
+        Map<String, String> got = classifier.classifyInBulk(plan.ask(), industries);
+        if (got.isEmpty()) return 0;
+
+        List<UserPayment> rows = payments.findByUserIdAndCategory2OrderByPaymentDateDesc(
+                userId, IndustryCategoryMapper.UNCLASSIFIED);
+        paint(rows, got, industries);
+        // 사전에도 남긴다 — 다음 사람의 같은 가맹점은 다시 안 묻는다.
+        for (UserPayment p : rows) {
+            String guess = got.get(p.getMerchantName());
+            if (guess != null) dictionary.rememberGuess(p, guess);
+        }
+        log.info("최초 연동 일괄 분류 — userId={} 물어본 곳 {}, 붙인 가맹점 {}",
+                userId, plan.ask().size(), got.size());
+        return got.size();
+    }
+
+    /**
+     * 일괄을 깨울 최소 가맹점 수.
+     *
+     * <p>이보다 적으면 무료 통로가 한두 회차에 끝낸다 — 유료를 쓸 이유가 없다. 실측에서
+     * 새 실사용자의 미분류 가맹점이 110종·47종이었으니, 최초 연동은 대개 이 문턱을 넘는다.
+     */
+    private static final int BULK_MIN = 20;
+
     private void paint(List<UserPayment> rows, Map<String, String> guesses,
                        Map<String, String> industries) {
         for (UserPayment p : rows) {
