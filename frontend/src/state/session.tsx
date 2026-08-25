@@ -122,7 +122,16 @@ interface Session {
   linked: boolean;
   setLinked: (v: boolean) => void;
   screen: ScreenId;
-  go: (id: ScreenId) => void;
+  /**
+   * 지금 화면 안에서 보고 있는 갈래 — 주소의 질의(`#/report?period=month`)가 정본이다.
+   *
+   * <p>화면이 자기 `useState` 로 들고 있으면 뒤로가기가 그 자리를 되살리지 못한다.
+   * {@link ScreenView} 참조.
+   */
+  view: ScreenView;
+  /** 지금 화면의 갈래를 바꾼다 — 이력에 한 칸 쌓는다. 세그먼트·필터가 쓴다. */
+  setView: (next: ScreenView) => void;
+  go: (id: ScreenId, view?: ScreenView) => void;
   /**
    * 이력을 쌓지 않고 지금 칸을 덮어쓰며 옮긴다 — <b>사람이 누르지 않은 이동</b> 전용.
    *
@@ -131,7 +140,7 @@ interface Session {
    * `pushState`를 하므로 방금 밟고 온 칸까지 파괴돼 <b>영원히 못 빠져나간다</b>.
    * 사용자가 직접 누른 이동은 이력에 남아야 하므로 그쪽은 {@link go} 그대로다.
    */
-  replace: (id: ScreenId) => void;
+  replace: (id: ScreenId, view?: ScreenView) => void;
   back: () => void;
   /** 최초 온보딩부터 다시 — 연결 상태와 선택을 모두 비운다. */
   resetOnboarding: () => void;
@@ -168,8 +177,48 @@ const remove = (key: string) => {
 export const CEREMONY_SEEN_KEY = 'guardian_ceremony_seen';
 
 const hashScreen = (): ScreenId | null => {
-  const raw = window.location.hash.replace(/^#\/?/, '');
+  const raw = window.location.hash.replace(/^#\/?/, '').split('?')[0];
   return raw && isScreen(raw) ? raw : null;
+};
+
+/**
+ * <b>화면 안의 갈래</b> — 주소의 질의 문자열(`#/report?period=month`)에 실린 값들.
+ *
+ * <h3>왜 주소에 싣나</h3>
+ *
+ * <p>주간·월간 리포트는 <b>같은 화면의 `useState`</b> 였다. 그래서 주간→월간은 주소가 안 바뀌고
+ * ({@link go} 가 같은 화면 재진입을 막는다) 이력에도 안 쌓였다. 소비내역에서 뒤로 누르면
+ * `#/report` 로 돌아오는데 화면이 새로 마운트되며 `useState('week')` 가 초기값을 다시 잡아
+ * <b>월간을 보고 있었다는 사실이 어디에도 안 남았다</b> — 사용자 눈에는 두 칸이 건너뛰어진다.
+ *
+ * <p>갈래를 주소에 실으면 그것이 <b>이력의 한 칸</b>이 된다. 뒤로가기가 브라우저 이력 그대로
+ * 동작하고, 새로고침·링크 공유에도 보던 자리가 유지된다.
+ *
+ * <p><b>화면을 늘리지 않은 이유:</b> `report-week`·`report-month` 로 쪼개면 두 갈래가 코드를
+ * 거의 다 공유하는 껍데기 화면이 생기고, 앞으로 갈래가 생길 때마다 화면 목록이 불어난다.
+ */
+export type ScreenView = Readonly<Record<string, string>>;
+
+const EMPTY_VIEW: ScreenView = Object.freeze({});
+
+const hashView = (): ScreenView => {
+  const q = window.location.hash.replace(/^#\/?/, '').split('?')[1];
+  if (!q) return EMPTY_VIEW;
+  const out: Record<string, string> = {};
+  for (const [k, v] of new URLSearchParams(q)) out[k] = v;
+  return Object.freeze(out);
+};
+
+/** `#/report?period=month` 를 만든다. 갈래가 비면 `?` 를 안 붙인다 — 주소가 깨끗해야 읽힌다. */
+const hashOf = (id: ScreenId, view: ScreenView): string => {
+  const q = new URLSearchParams(view).toString();
+  return q ? `#/${id}?${q}` : `#/${id}`;
+};
+
+/** 두 갈래가 같은가 — 같으면 이력을 쌓지 않는다(같은 자리를 두 번 밟지 않는다). */
+const sameView = (a: ScreenView, b: ScreenView): boolean => {
+  const ka = Object.keys(a); const kb = Object.keys(b);
+  return ka.length === kb.length && ka.every((k) => a[k] === b[k]);
 };
 
 /**
@@ -192,6 +241,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [linked, setLinkedState] = useState<boolean>(() => read('mydata_onboarded') === 'true');
   const [challengeCategory, setChallengeCategory] = useState<string | null>(null);
   const [screen, setScreen] = useState<ScreenId>(() => hashScreen() ?? (read('mydata_onboarded') === 'true' ? 'home' : 'boot'));
+  /** 지금 화면 안에서 보고 있는 갈래(`#/report?period=month`). 주소가 정본이다. */
+  const [view, setView] = useState<ScreenView>(hashView);
   const [draft, setDraft] = useState<ChallengeDraft>(emptyDraft);
   const [analysis, setAnalysis] = useState<AnalysisSummary | null>(null);
 
@@ -213,7 +264,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   // 주소 ↔ 화면 동기화. 뒤로가기/앞으로가기는 브라우저가 맡는다.
   useEffect(() => {
-    const onPop = () => setScreen(hashScreen() ?? 'home');
+    // 뒤로가기·주소 직접 입력 둘 다 여기로 온다. **갈래도 같이 되돌린다** — 화면만 맞추면
+    // 월간을 보다 뒤로 왔을 때 주간으로 튕긴다(그게 이번에 고친 사고다).
+    const onPop = () => { setScreen(hashScreen() ?? 'home'); setView(hashView()); };
     window.addEventListener('popstate', onPop);
     window.addEventListener('hashchange', onPop);
     return () => {
@@ -222,14 +275,41 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const go = useCallback((id: ScreenId) => {
+  /**
+   * 화면(또는 같은 화면의 다른 갈래)으로 옮긴다.
+   *
+   * <p><b>화면과 갈래를 함께 본다.</b> 예전에는 화면 id 만 견줘서, 주간→월간처럼 화면은 같고
+   * 갈래만 달라지는 이동이 이력에 <b>한 칸도 안 쌓였다</b>. 그러면 소비내역에서 뒤로 눌렀을 때
+   * 월간을 건너뛰고 주간으로 간다 — 사용자가 밟은 자리가 사라진 것이다.
+   *
+   * <p>같은 화면 <b>같은 갈래</b>로 다시 가는 것은 여전히 안 쌓는다. 탭을 두 번 눌러 이력이
+   * 부풀지 않게 하는 방어이고, 그건 원래 의도대로 남는다.
+   */
+  const go = useCallback((id: ScreenId, next: ScreenView = EMPTY_VIEW) => {
     setScreen(id);
-    if (hashScreen() !== id) window.history.pushState({ moaDepth: depth() + 1 }, '', `#/${id}`);
+    setView(next);
+    if (hashScreen() !== id || !sameView(hashView(), next)) {
+      window.history.pushState({ moaDepth: depth() + 1 }, '', hashOf(id, next));
+    }
   }, []);
 
-  const replace = useCallback((id: ScreenId) => {
+  const replace = useCallback((id: ScreenId, next: ScreenView = EMPTY_VIEW) => {
     setScreen(id);
-    window.history.replaceState({ moaDepth: depth() }, '', `#/${id}`);
+    setView(next);
+    window.history.replaceState({ moaDepth: depth() }, '', hashOf(id, next));
+  }, []);
+
+  /**
+   * <b>지금 화면의 갈래를 바꾼다</b> — 화면은 그대로 두고 이력에 한 칸을 쌓는다.
+   *
+   * <p>세그먼트·필터를 누르는 자리가 쓴다. `go(screen, …)` 를 직접 불러도 같지만, 부르는 쪽이
+   * 화면 id 를 알 필요가 없어야 화면을 옮겨도 안 깨진다.
+   */
+  const setScreenView = useCallback((next: ScreenView) => {
+    setView(next);
+    if (!sameView(hashView(), next)) {
+      window.history.pushState({ moaDepth: depth() + 1 }, '', hashOf(hashScreen() ?? 'home', next));
+    }
   }, []);
 
   /**
@@ -339,9 +419,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<Session>(() => ({
-    userId, setUserId, linked, setLinked, screen, go, replace, back, resetOnboarding,
+    userId, setUserId, linked, setLinked, screen, view, setView: setScreenView, go, replace, back, resetOnboarding,
     draft, patchDraft, analysis, setAnalysis, challengeCategory, openChallenge,
-  }), [userId, setUserId, linked, setLinked, screen, go, replace, back, resetOnboarding,
+  }), [userId, setUserId, linked, setLinked, screen, view, setScreenView, go, replace, back, resetOnboarding,
        draft, patchDraft, analysis, challengeCategory, openChallenge]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

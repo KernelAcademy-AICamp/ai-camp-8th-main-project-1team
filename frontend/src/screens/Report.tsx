@@ -121,10 +121,17 @@ function MonthLine({ points }: { points: { label: string; amount: number }[] }) 
 }
 
 export function Report() {
-  const { go, userId } = useSession();
+  const { go, userId, view, setView } = useSession();
   const { home, loading: guardianLoading } = useGuardian();
-  /** 주간이냐 월간이냐 — 0818 이 나눈 두 갈래. */
-  const [period, setPeriod] = useState<'week' | 'month'>('week');
+  /**
+   * 주간이냐 월간이냐 — 0818 이 나눈 두 갈래. <b>주소가 정본이다</b>(`#/report?period=month`).
+   *
+   * <p>예전에는 `useState` 였다. 그래서 주간→월간이 이력에 <b>한 칸도 안 쌓였고</b>, 소비내역에서
+   * 뒤로 누르면 월간을 건너뛰고 주간으로 갔다 — 사용자가 밟은 자리가 사라진 것이다.
+   * 갈래를 주소에 실으면 그것이 이력의 한 칸이 되고, 새로고침·링크 공유에도 유지된다.
+   */
+  const period: 'week' | 'month' = view.period === 'month' ? 'month' : 'week';
+  const setPeriod = (next: 'week' | 'month') => setView(next === 'week' ? {} : { period: next });
   const [weeksAgo, setWeeksAgo] = useState(0);
   const [mode, setMode] = useState<0 | 1>(0);
   const [pickOpen, setPickOpen] = useState(false);

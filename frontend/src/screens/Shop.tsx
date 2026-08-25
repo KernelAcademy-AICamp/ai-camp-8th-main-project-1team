@@ -19,10 +19,16 @@ import { api, type GuardianShop } from '../lib/api';
 type Tab = 'FURNITURE' | 'BACKGROUND';
 
 export function Shop() {
-  const { back, userId } = useSession();
+  const { back, userId, view, setView } = useSession();
   const state = useAsync(() => api.guardian.shop(userId), [userId]);
   const [data, setData] = useState<GuardianShop | null>(null);
-  const [tab, setTab] = useState<Tab>('FURNITURE');
+  /**
+   * <b>갈래는 주소가 정본이다</b>(`?tab=…`). `useState` 로 들면 뒤로가기가 이 자리를
+   * 되살리지 못한다 — 리포트의 주간→월간이 그래서 이력에 한 칸도 안 쌓였고, 다른 화면에
+   * 갔다 뒤로 오면 초기값으로 튕겼다(2026-08-25 신고).
+   */
+  const tab = (view.tab ?? 'FURNITURE') as Tab;
+  const setTab = (next: Tab) => setView(next === 'FURNITURE' ? {} : { tab: next });
   const [toast, setToast] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
