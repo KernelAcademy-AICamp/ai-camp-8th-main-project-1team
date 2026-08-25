@@ -60,17 +60,21 @@ public class SubCategorySweeper {
 
     private final MerchantCategoryRepository dictionary;
     private final IndustryCategoryMapper industries;
+    /** 표기표로 브랜드를 확정하는 문 — <b>저장된 브랜드는 못 믿는다</b>({@link #subOf} 참조). */
+    private final MerchantBrandService brands;
     private final com.finntech.repository.AppUserRepository users;
     private final com.finntech.repository.ReportRepository reports;
     /** 사전의 답을 결제에 입히는 유일한 통로. 무거운 서비스라 필요할 때만 꺼낸다. */
     private final org.springframework.beans.factory.ObjectProvider<MyDataLinkService> linkService;
 
     public SubCategorySweeper(MerchantCategoryRepository dictionary, IndustryCategoryMapper industries,
+                              MerchantBrandService brands,
                               com.finntech.repository.AppUserRepository users,
                               com.finntech.repository.ReportRepository reports,
                               org.springframework.beans.factory.ObjectProvider<MyDataLinkService> linkService) {
         this.dictionary = dictionary;
         this.industries = industries;
+        this.brands = brands;
         this.users = users;
         this.reports = reports;
         this.linkService = linkService;
@@ -104,8 +108,7 @@ public class SubCategorySweeper {
 
         for (MerchantCategory row : rows) {
             String before = row.getCategory3();
-            String sub = industries.subOfBrand(row.getBrand());
-            if (sub.isEmpty()) sub = industries.subOfIndustryName(row.getRegistryIndustry());
+            String sub = subOf(row);
             if (!java.util.Objects.equals(emptyToNull(sub), before)) {
                 if (!dryRun) row.applySub(sub);
                 stamped++;
@@ -181,13 +184,29 @@ public class SubCategorySweeper {
         return fixed;
     }
 
+    /**
+     * 그 행의 소분류 — <b>표기표를 상호에 그 자리에서 맞춘다.</b>
+     *
+     * <p><b>저장된 브랜드를 읽으면 안 된다.</b> 그것은 무료 통로가 답한 추정일 수 있다 —
+     * 운영 사전 845행 중 <b>269행</b>의 브랜드가 표기표에 없는 이름이었고, {@code (주)카카오} 는
+     * <b>멜론</b>으로, {@code 주식회사 데이원컴퍼니}(온라인 교육)는 <b>배달의민족</b>으로 적혀
+     * 있었다(2026-08-25 운영 실측).
+     *
+     * <p>훑기는 그 답을 <b>{@code USER_CSV} 확정으로 굳힌다</b>. 지어낸 브랜드를 타면
+     * 틀린 답이 사람이 검수한 것과 같은 자리에 올라가고, 그다음부터는 아무도 다시 안 묻는다.
+     */
+    private String subOf(MerchantCategory row) {
+        String byBrand = industries.subOfBrand(
+                brands.subBrandOf(row.getMerchantName(), industries::hasSub).orElse(""));
+        return byBrand.isEmpty() ? industries.subOfIndustryName(row.getRegistryIndustry()) : byBrand;
+    }
+
     /** 무엇이 몇 개나 어긋나는지 소분류별로 — 고치기 전에 규모를 보는 자리. */
     @Transactional(readOnly = true)
     public java.util.Map<String, Integer> byMid() {
         java.util.Map<String, Integer> counts = new TreeMap<>();
         for (MerchantCategory row : dictionary.findAll()) {
-            String sub = industries.subOfBrand(row.getBrand());
-            if (sub.isEmpty()) sub = industries.subOfIndustryName(row.getRegistryIndustry());
+            String sub = subOf(row);
             if (sub.isEmpty()) continue;
             String expected = industries.midOfSub(sub);
             if (IndustryCategoryMapper.isUnknown(expected) || expected.equals(row.getCategory2())) continue;
