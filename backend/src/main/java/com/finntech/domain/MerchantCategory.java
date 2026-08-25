@@ -128,6 +128,16 @@ public class MerchantCategory {
     @Column(name = "source", nullable = false, length = 20)
     private String source;
 
+    /**
+     * <b>소분류</b> — 중분류보다 작고 브랜드보다 큰 칸.
+     *
+     * <p>사전이 이 값을 들고 있어야 원장 재작성이 싸다. 그리고 <b>{@code category2} 가
+     * {@code midOfSub(category3)} 와 다르면 그 자체가 오분류의 증거다</b> — 소분류가 정확히
+     * 한 중분류에만 속한다는 불변식의 대우라서 따로 판단할 것이 없다.
+     */
+    @Column(name = "category3", length = 30)
+    private String category3;
+
     /** 오입력을 되돌릴 때 근거가 된다. CSV 적재분은 사람이 없어 null 이다. */
     @Column(name = "confirmed_by")
     private Long confirmedBy;
@@ -345,6 +355,35 @@ public class MerchantCategory {
     /** 대기 장소에서 옮겨 올 때. 이미 있으면 덮지 않는다 — 먼저 들어온 것이 사람의 손일 수 있다. */
     public void adoptBrand(String value) {
         if (brand == null || brand.isBlank()) this.brand = value;
+    }
+
+    public String getCategory3() { return category3; }
+
+    /**
+     * <b>소분류를 적는다.</b> 빈 값이면 지운다 — 근거가 없어졌는데 답이 남아 있으면 안 된다.
+     *
+     * <p>값을 정하는 것은 이 엔티티가 아니라 {@code MerchantCategoryService} 다. 소분류는
+     * (브랜드, 업종 이름)에서 표로 나오는데 그 표를 아는 것은 {@code IndustryCategoryMapper}
+     * 이고, 엔티티가 그것을 들면 도메인이 리소스 파일에 매인다.
+     */
+    public void applySub(String sub) {
+        this.category3 = (sub == null || sub.isBlank()) ? null : sub;
+    }
+
+    /**
+     * <b>중분류가 소분류와 어긋나는가</b> — 어긋나면 이 행은 잘못 적힌 것이다.
+     *
+     * <p>소분류는 정확히 한 중분류에만 속하므로, 소분류를 알면 중분류가 결정된다. 그러니
+     * 둘이 다르다는 것은 <b>둘 중 하나가 틀렸다는 뜻</b>이고, 확정 지식인 소분류 쪽을 믿는다.
+     * 새 규칙이 아니라 그 불변식의 대우(對偶)라서 따로 판단할 것이 없다.
+     *
+     * @param midOfSub 소분류 → 중분류 ({@code IndustryCategoryMapper::midOfSub})
+     */
+    public boolean midDisagreesWithSub(java.util.function.UnaryOperator<String> midOfSub) {
+        if (category3 == null || category3.isBlank()) return false;
+        String expected = midOfSub.apply(category3);
+        return !com.finntech.engine.IndustryCategoryMapper.isUnknown(expected)
+                && !expected.equals(category2);
     }
 
     public String getRegistryIndustry() { return registryIndustry; }

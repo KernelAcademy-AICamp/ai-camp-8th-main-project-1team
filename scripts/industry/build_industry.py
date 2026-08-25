@@ -52,6 +52,25 @@ def read_tsv(name):
             yield n, line.split('\t')
 
 
+def load_vague():
+    """**중분류 판정에서 빼는 업종코드.** 원천은 모호업종.tsv.
+
+    판매 방식만 말하고 무엇을 파는지 말하지 않는 업종이다 — '전자상거래 소매업' 하나에
+    배달의민족·넥슨·야놀자가 함께 등록돼 있고, 온라인이라고 단정할 수도 없다(같은 업종으로
+    등록한 사업자가 오프라인 매장을 함께 운영한다).
+
+    **카드혜택 축에서는 안 뺀다.** 소비 중분류는 틀리고 카드축은 맞기 때문이다 —
+    카드사도 온라인 할인을 이 업종코드로 판정한다. 그래서 load_mid 가 이 목록을
+    mid·names 에서만 걷어내고 axes 에는 그대로 남긴다.
+    """
+    vague = {}
+    for n, cols in read_tsv('모호업종.tsv'):
+        if not cols or not cols[0].strip():
+            continue
+        vague[cols[0].strip()] = cols[1].strip() if len(cols) > 1 else ''
+    return vague
+
+
 def load_mid():
     """업종코드 → 중분류. **원천 CSV 에 실재하는 코드인지 검증한다.**
 
@@ -62,7 +81,9 @@ def load_mid():
     with open(SOURCE, encoding='utf-8') as f:
         실재 = {r['업종코드'].strip(): r for r in csv.DictReader(f)}
 
+    vague = load_vague()
     mid, names, axes, bad = {}, {}, {}, []
+    unseen = set(vague)
     for n, cols in read_tsv('nts-mid.tsv'):
         if len(cols) < 2:
             bad.append(f'{n}행: 칸이 2개 미만 — {cols}')
@@ -72,7 +93,11 @@ def load_mid():
             bad.append(f'{n}행: {code} 는 원천에 없는 코드다')
         if code in mid:
             bad.append(f'{n}행: {code} 가 두 번 나온다')
-        mid[code] = m
+        # 모호 업종은 **중분류에만** 안 담는다 — 아래 카드혜택 축에는 그대로 들어간다.
+        if code in vague:
+            unseen.discard(code)
+        else:
+            mid[code] = m
         # 4번째 칸 — 카드혜택 축. 중분류와 다른 축이라 따로 모은다(같은 교통/자동차가
         # 주유·대중교통·택시로 갈린다). 비어 있으면 빌드를 세운다 — 조용히 빠지면
         # 그 업종에 걸리는 카드 혜택이 통째로 계산되지 않는데 아무 표시도 안 난다.
@@ -87,19 +112,117 @@ def load_mid():
         # 답하게 하려면 축이 필요하다 — 6자리 숫자는 불투명해서 모델이 추론하지 못하고
         # 외운 것에 기대는데, 국세청은 구 분류 세대라 그 기억이 맞을 가능성이 낮다.
         # 이름은 원천 CSV 의 세세분류를 정본으로 쓴다(TSV 3번째 칸은 사람이 읽는 사본이다).
-        if code in 실재:
+        if code in 실재 and code not in vague:
             nm = 실재[code]['세세분류'].strip()
             if nm:
                 prev = names.get(nm)
                 if prev is not None and prev != m:
                     bad.append(f'{n}행: 세세분류 "{nm}" 이 {prev} 와 {m} 두 중분류에 걸린다')
                 names[nm] = m
+    # 모호업종.tsv 에 적었는데 nts-mid.tsv 에 없는 코드는 오타다 — 아무 일도 안 일어나
+    # 눈치채기 어려우므로 빌드를 세운다.
+    for code in sorted(unseen):
+        bad.append(f'모호업종.tsv: {code} 가 nts-mid.tsv 에 없다')
     if bad:
         print('대조표에 문제가 있다:', file=sys.stderr)
         for b in bad:
             print(f'  {b}', file=sys.stderr)
         sys.exit(1)
-    return mid, names, axes, 실재
+    return mid, names, axes, 실재, vague
+
+
+def load_sub(names, 실재):
+    """**소분류** 세 표를 읽고 불변식을 검사한다 — 소분류 · 업종이름→소분류 · 브랜드→소분류.
+
+    소분류는 중분류보다 작고 브랜드보다 큰 칸이다(카카오T=브랜드, 택시=소분류,
+    교통/자동차=중분류). 두 곳에서 온다:
+
+      · 업종 이름에서   sub-name.tsv   이미 가진 이름에서 뽑으므로 **새로 물어볼 것이 없다**
+      · 브랜드에서      sub-brand.tsv  업종 이름이 답을 못 주는 자리를 메운다
+
+    **불변식: 소분류는 정확히 한 중분류에만 속한다**(sub-mid.tsv). 그래서 소분류를 알면
+    중분류가 결정되고, 같은 브랜드가 통로(업종코드·등록조회·LLM)에 따라 갈리지 않는다.
+    이 함수가 그 불변식과 아래 넷을 빌드에서 잠근다.
+    """
+    bad = []
+
+    # ① 소분류 → 중분류. 한 낱말이어야 하고 중분류 이름과 같으면 안 된다.
+    mid_of_sub, mids = {}, set(names.values())
+    for n, cols in read_tsv('sub-mid.tsv'):
+        if len(cols) < 2:
+            bad.append(f'sub-mid.tsv {n}행: 칸이 2개 미만 — {cols}')
+            continue
+        sub, m = cols[0].strip(), cols[1].strip()
+        if sub in mid_of_sub:
+            bad.append(f'sub-mid.tsv {n}행: 소분류 "{sub}" 이 두 번 나온다 — {mid_of_sub[sub]} / {m}')
+        if re.search(r'[·/,]', sub):
+            bad.append(f'sub-mid.tsv {n}행: 소분류 "{sub}" 에 둘이 섞였다 — 한 낱말로 적는다')
+        if sub in mids:
+            bad.append(f'sub-mid.tsv {n}행: 소분류 "{sub}" 이 중분류 이름과 같다')
+        mid_of_sub[sub] = m
+    for sub, m in mid_of_sub.items():
+        if m not in mids:
+            bad.append(f'sub-mid.tsv: "{sub}" 의 중분류 "{m}" 은 없는 중분류다')
+
+    # ② 업종 이름 → 소분류. 모호 업종을 뺀 이름 **전부**가 소분류를 얻어야 한다.
+    sub_of_name = {}
+    for n, cols in read_tsv('sub-name.tsv'):
+        if len(cols) < 2:
+            bad.append(f'sub-name.tsv {n}행: 칸이 2개 미만 — {cols}')
+            continue
+        nm, sub = cols[0].strip(), cols[1].strip()
+        if nm not in names:
+            bad.append(f'sub-name.tsv {n}행: "{nm}" 은 중분류가 없는 업종이다')
+        elif sub in mid_of_sub and mid_of_sub[sub] != names[nm]:
+            bad.append(f'sub-name.tsv {n}행: "{nm}"({names[nm]}) 에 다른 중분류의 '
+                       f'소분류 "{sub}"({mid_of_sub[sub]}) 를 붙였다')
+        if sub not in mid_of_sub:
+            bad.append(f'sub-name.tsv {n}행: 소분류 "{sub}" 이 sub-mid.tsv 에 없다')
+        sub_of_name[nm] = sub
+    for nm in sorted(set(names) - set(sub_of_name)):
+        bad.append(f'sub-name.tsv: 업종 "{nm}" 에 소분류가 없다')
+
+    # ③ 브랜드 → 소분류. brand-forms.json 의 브랜드 **전부**가 답을 얻거나 '-' 여야 한다.
+    with open(os.path.join(BACKEND, 'brand-forms.json'), encoding='utf-8') as f:
+        brands = set(json.load(f)['brandByForm'].values())
+    sub_of_brand, skipped = {}, {}
+    for n, cols in read_tsv('sub-brand.tsv'):
+        if len(cols) < 2:
+            bad.append(f'sub-brand.tsv {n}행: 칸이 2개 미만 — {cols}')
+            continue
+        b, sub = cols[0].strip(), cols[1].strip()
+        if b not in brands:
+            bad.append(f'sub-brand.tsv {n}행: "{b}" 는 brand-forms.json 에 없는 브랜드다')
+        if b in sub_of_brand or b in skipped:
+            bad.append(f'sub-brand.tsv {n}행: 브랜드 "{b}" 가 두 번 나온다')
+        if sub == '-':
+            # 회사명·결제수단처럼 **소분류가 정해지지 않는** 브랜드. 붙이지 않는 것이 답이다 —
+            # 대표 업태를 찍으면 그 브랜드 전체가 한꺼번에 틀린다(카카오→멜론 72곳).
+            if len(cols) < 3 or not cols[2].strip():
+                bad.append(f'sub-brand.tsv {n}행: "{b}" 를 빼는 이유를 안 적었다')
+            skipped[b] = cols[2].strip() if len(cols) > 2 else ''
+            continue
+        if sub not in mid_of_sub:
+            bad.append(f'sub-brand.tsv {n}행: 소분류 "{sub}" 이 sub-mid.tsv 에 없다')
+        sub_of_brand[b] = sub
+    for b in sorted(brands - set(sub_of_brand) - set(skipped)):
+        bad.append(f'sub-brand.tsv: 브랜드 "{b}" 에 소분류가 없다')
+
+    # ④ **접두 충돌.** '쿠팡' 만 넣고 '쿠팡이츠' 를 빠뜨리면 배달이 온라인몰로 먹힌다 —
+    #    표기를 긴 것부터 맞추므로(MerchantBrandService), 긴 형제가 표에 없으면 짧은 쪽이
+    #    삼킨다. 실제로 '카카오' 가 멜론의 표기였을 때 카카오택시 72곳이 멜론이 됐다.
+    for b in sorted(sub_of_brand):
+        longer = [o for o in brands if o != b and o.startswith(b)]
+        missing = [o for o in longer if o not in sub_of_brand and o not in skipped]
+        if missing:
+            bad.append(f'sub-brand.tsv: "{b}" 에 소분류를 붙였는데 더 긴 형제 {missing} 가 표에 없다')
+
+    if bad:
+        print('소분류 표에 문제가 있다:', file=sys.stderr)
+        for b in bad:
+            print(f'  {b}', file=sys.stderr)
+        sys.exit(1)
+    return mid_of_sub, sub_of_name, sub_of_brand, skipped
 
 
 def fine_name_index(실재):
@@ -187,7 +310,8 @@ def discretionary_by_mid(mid_of):
 
 
 def main():
-    mid, names, axes, 실재 = load_mid()
+    mid, names, axes, 실재, vague = load_mid()
+    mid_of_sub, sub_of_name, sub_of_brand, skipped = load_sub(names, 실재)
     fine = fine_name_index(실재)
     pg = load_pg()
     multi = load_multi_business()
@@ -226,9 +350,30 @@ def main():
                           '없다는 뜻이고, **전월 실적에는 그대로 들어간다.** '
                           '배달·간편결제는 업종코드로 판정할 수 없어 축에서 뺐다 — 배달은 브랜드로 풀고 '
                           '간편결제는 표시만 한다. 그래서 카드추천 판정은 브랜드가 1순위, 이 표가 2순위다.'),
+        '_subNote': ('**소분류** — 중분류보다 작고 브랜드보다 큰 칸이다(카카오T=브랜드, 택시=소분류, '
+                     '교통/자동차=중분류). 원장의 category3 이 이 값을 든다. '
+                     '**소분류는 정확히 한 중분류에만 속한다**(midBySub) — 그래서 소분류를 알면 중분류가 '
+                     '결정되고, 같은 브랜드가 통로(업종코드·등록조회·LLM)에 따라 갈리지 않는다. '
+                     '이미 적힌 중분류가 midBySub 와 다르면 그 자체가 오분류의 증거다. '
+                     'subByIndustryName 은 이미 가진 업종 이름에서 뽑으므로 **새로 물어볼 것이 없다**. '
+                     'subByBrand 는 업종 이름이 답을 못 주는 자리를 메운다 — 배달 플랫폼은 업종을 '
+                     '전자상거래로 등록해서 "배달" 이라는 업종 이름이 국세청 표에 아예 없다. '
+                     '회사명(카카오·애플·구글)에는 붙이지 않는다: 여러 업태를 겸해 하나로 안 정해지고, '
+                     '대표 업태를 찍으면 그 브랜드 전체가 한꺼번에 틀린다. '
+                     'scripts/industry 의 sub-mid.tsv · sub-name.tsv · sub-brand.tsv 가 원천.'),
+        '_vagueNote': ('**중분류 판정에서 뺀 업종**(모호업종.tsv). 판매 방식만 말하고 무엇을 파는지 '
+                       '말하지 않는다 — 전자상거래 소매업 하나에 배달의민족·넥슨·야놀자가 함께 등록돼 '
+                       '있고, 온라인이라고 단정할 수도 없다(오프라인 매장을 함께 운영한다). '
+                       '여기 있는 코드는 midByIndustry 와 midByIndustryName 에서 빠져 LLM 목록에도 '
+                       '안 나가지만, **cardAxisByIndustry 에는 그대로 남는다** — 소비 중분류는 틀리고 '
+                       '카드축은 맞기 때문이다(카드사도 온라인 할인을 이 업종코드로 판정한다).'),
         'midByIndustry': dict(sorted(mid.items())),
         'cardAxisByIndustry': dict(sorted(axes.items())),
         'midByIndustryName': dict(sorted(names.items())),
+        'midBySub': dict(sorted(mid_of_sub.items())),
+        'subByIndustryName': dict(sorted(sub_of_name.items())),
+        'subByBrand': dict(sorted(sub_of_brand.items())),
+        'vagueIndustries': sorted(vague),
         'ntsByFineName': fine,
         'pgBusinessNumbers': dict(sorted(pg.items())),
         'multiBusinessNumbers': dict(sorted(multi.items())),
@@ -241,6 +386,8 @@ def main():
             json.dump(out, f, ensure_ascii=False, indent=1)
         print(f'  {os.path.relpath(path, ROOT)} — 소비 코드 {len(mid)}개 · 업종명 {len(names)}종 · '
               f'세세분류 색인 {len(fine)}종 · PG {len(pg)}곳 · 복합 {len(multi)}곳 · 필수 {len(essential)}개')
+        print(f'      소분류 {len(mid_of_sub)}개 · 업종명에서 {len(sub_of_name)}종 · '
+              f'브랜드에서 {len(sub_of_brand)}개(안 붙임 {len(skipped)}) · 모호 업종 {len(vague)}코드')
 
     # 맥락이 실제로 존재하는 코드만 담는다 — 없는 중분류에 페르소나 비중을 주면 그만큼 사라진다.
     contexts = json.load(open(CONTEXTS, encoding='utf-8'))['contexts']

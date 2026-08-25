@@ -67,7 +67,13 @@ class SpendingLedgerAdminOnlyTest {
                 "/api/admin/spending-ledger/verify",
                 "/api/admin/spending-ledger/drain",
                 "/api/admin/spending-ledger/refresh",
-                "/api/admin/spending-ledger/health");
+                "/api/admin/spending-ledger/health",
+                // 사전을 훑는 두 문. 표를 고쳐도 이미 확정이 적힌 가맹점은 다시 안 물어보므로,
+                // 되돌릴 자리가 필요하다. 훑기는 **기본이 맛보기**다.
+                "/api/admin/dictionary/subcategory-sweep",
+                "/api/admin/dictionary/subcategory-drift",
+                // 회사명이 서비스를 가린 자리를 되묻는 문 — 표를 고칠 때마다 부른다.
+                "/api/admin/dictionary/brand-coverage");
     }
 
     private static String declaringClassOf(HandlerMethod method) {

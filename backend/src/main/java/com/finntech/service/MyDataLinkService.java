@@ -649,6 +649,14 @@ public class MyDataLinkService {
         for (UserPayment p : targets.values()) {
             if (asked >= industryLookup.maxPerSync()) break;
             String biz = com.finntech.domain.MerchantCategory.normalize(p.getBusinessNumber());
+            // **브랜드가 아는 곳은 조회하지 않는다**(§13-12 ①-b). 표기표는 사람이 검수한
+            // 확정이라 물어볼 것이 없고, 물으면 되레 틀리게 온다 — `깐부치킨 장위레디언트점`
+            // 이 전자상거래로 등록돼 쇼핑이 됐고 `탐앤탐스성신여대점` 은 술/유흥이 됐다.
+            var byBrand = merchantCategoryService.rememberBrand(p);
+            if (byBrand.isPresent()) {
+                found.put(p.getMerchantName(), byBrand.get().getCategory2());
+                continue;
+            }
             var row = merchantCategoryService.attemptRow(p);
             if (row.isPresent() && row.get().registryAnswered()) continue;   // 이미 답을 받아 뒀다
             asked++;
@@ -728,6 +736,18 @@ public class MyDataLinkService {
      */
     @Transactional
     public int applyResolved(Long userId, Map<String, String> found) {
+        return applyResolved(userId, found, "REGISTRY");
+    }
+
+    /**
+     * 같은 일을 하되 <b>출처를 부르는 쪽이 밝힌다</b>.
+     *
+     * <p>이 통로로 오는 것이 등록 조회만은 아니게 됐다 — 소분류 표(사람이 검수한
+     * {@code sub-brand.tsv})가 사전을 고칠 때도 여기를 지난다. 그때 {@code REGISTRY} 를 적으면
+     * 화면이 근거를 잘못 말한다.
+     */
+    @Transactional
+    public int applyResolved(Long userId, Map<String, String> found, String source) {
         if (found.isEmpty()) return 0;
         // **여기서 다시 읽는다.** 조회는 트랜잭션 밖에서 돌므로 그때 손에 든 결제 엔티티는
         // 영속 상태가 아니다 — 거기에 값을 넣어 봐야 아무 데도 안 써진다. 고치는 순간에
@@ -739,7 +759,7 @@ public class MyDataLinkService {
             String mid = found.get(p.getMerchantName());
             if (mid == null || mid.equals(p.getCategory2())) continue;
             if ("USER".equals(p.getCategory2Source())) continue;      // 사람의 판단이 위다
-            p.confirmCategory2(mid, "REGISTRY");
+            p.confirmCategory2(mid, source);
             Category category = categories.computeIfAbsent(mid, code ->
                     categoryRepository.findByCode(code)
                             .orElseGet(() -> categoryRepository.save(new Category(code, code))));

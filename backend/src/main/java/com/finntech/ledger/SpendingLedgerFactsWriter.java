@@ -62,6 +62,8 @@ public class SpendingLedgerFactsWriter {
     private final SpendingLedgerRepository ledger;
     private final MerchantCategoryRepository dictionary;
     private final MerchantBrandRepository brands;
+    /** 표기표로 브랜드를 확정하는 문 — 소분류가 모델의 추측을 타지 않게 한다. */
+    private final com.finntech.service.MerchantBrandService brandService;
     private final AppUserRepository users;
     private final IndustryCategoryMapper industryMapper;
     private final AnalysisProperties props;
@@ -81,6 +83,7 @@ public class SpendingLedgerFactsWriter {
                                      MerchantCategoryRepository dictionary, MerchantBrandRepository brands,
                                      AppUserRepository users, IndustryCategoryMapper industryMapper,
                                      AnalysisProperties props, Clock clock,
+                                     com.finntech.service.MerchantBrandService brandService,
                                      org.springframework.beans.factory.ObjectProvider<SpendingLedgerFactsWriter> selfProvider) {
         this.payments = payments;
         this.ledger = ledger;
@@ -90,6 +93,7 @@ public class SpendingLedgerFactsWriter {
         this.industryMapper = industryMapper;
         this.props = props;
         this.clock = clock;
+        this.brandService = brandService;
         this.selfProvider = selfProvider;
     }
 
@@ -167,7 +171,7 @@ public class SpendingLedgerFactsWriter {
         for (UserPayment payment : monthRows) {
             SpendingLedger.Facts facts = SpendingLedgerRowMapper.factsOf(
                     payment, lookup.merchantFactsOf(payment), props.getDaypart(),
-                    industryMapper::isPaymentAgency);
+                    industryMapper::isPaymentAgency, industryMapper);
             SpendingLedger row = existing.get(payment.getPaymentId());
             if (row != null) {
                 // 달라진 줄만 시각을 새로 찍고, 그 줄만 UPDATE 가 나간다. 안 그러면 분류 한 건을
@@ -237,15 +241,26 @@ public class SpendingLedgerFactsWriter {
         for (MerchantBrand brand : brands.findByMerchantNameIn(names)) {
             pendingBrands.put(brand.getMerchantName(), brand.getBrand());
         }
-        return new Lookup(byCompositeKey, byNameOnly, pendingBrands);
+        // **소분류가 탈 브랜드는 여기서 표기표로 다시 맞춘다.** 위 두 지도의 브랜드는 모델이
+        // 답한 추정일 수 있고, 그 값으로 소분류를 정하면 브랜드 하나가 통째로 틀린다.
+        Map<String, String> confirmedBrands = new LinkedHashMap<>();
+        Map<String, String> formBrands = new LinkedHashMap<>();
+        for (String name : names) {
+            brandService.subBrandOf(name, industryMapper::hasSub)
+                    .ifPresent(b -> confirmedBrands.put(name, b));
+            brandService.displayBrandOf(name).ifPresent(b -> formBrands.put(name, b));
+        }
+        return new Lookup(byCompositeKey, byNameOnly, pendingBrands, confirmedBrands, formBrands);
     }
 
     /** 미리 읽어 둔 가맹점 부가정보. */
     record Lookup(Map<String, MerchantCategory> byCompositeKey,
                   Map<String, MerchantCategory> byNameOnly,
-                  Map<String, String> pendingBrands) {
+                  Map<String, String> pendingBrands,
+                  Map<String, String> confirmedBrands,
+                  Map<String, String> formBrands) {
 
-        static final Lookup EMPTY = new Lookup(Map.of(), Map.of(), Map.of());
+        static final Lookup EMPTY = new Lookup(Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
 
         /**
          * 그 결제의 가맹점 부가정보.
@@ -260,7 +275,10 @@ public class SpendingLedgerFactsWriter {
             String biz = MerchantCategory.normalize(payment.getBusinessNumber());
             MerchantCategory row = byCompositeKey.get(biz + KEY_SEP + name);
             if (row == null) row = byNameOnly.get(name);
-            return SpendingLedgerRowMapper.MerchantFacts.of(row, pendingBrands.get(name));
+            // **소분류가 탈 브랜드는 표기표에서 다시 맞춘다.** 사전에 적힌 브랜드는 모델이
+            // 답한 추정일 수 있고, 그 값으로 소분류를 정하면 브랜드 하나가 통째로 틀린다.
+            return SpendingLedgerRowMapper.MerchantFacts.of(row, pendingBrands.get(name))
+                    .withFormBrands(confirmedBrands.get(name), formBrands.get(name));
         }
     }
 }

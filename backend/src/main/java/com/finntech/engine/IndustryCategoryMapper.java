@@ -76,6 +76,12 @@ public class IndustryCategoryMapper {
     private final Map<String, java.util.List<String>> ntsByFineName;
     /** 업종코드 → <b>카드혜택 축</b>. 중분류와 다른 축이다 — {@link #cardAxisOf} 참조. */
     private final Map<String, String> cardAxisByIndustry;
+    /** 소분류 → 중분류. <b>소분류는 정확히 한 중분류에만 속한다</b> — {@link #midOfSub} 참조. */
+    private final Map<String, String> midBySub;
+    /** 업종 이름 → 소분류. 이미 가진 이름에서 뽑으므로 새로 물어볼 것이 없다. */
+    private final Map<String, String> subByIndustryName;
+    /** 브랜드 → 소분류. 업종 이름이 답을 못 주는 자리를 메운다({@code 배달의민족 → 배달}). */
+    private final Map<String, String> subByBrand;
 
     @SuppressWarnings("unchecked")
     public IndustryCategoryMapper(ObjectMapper objectMapper) {
@@ -98,9 +104,112 @@ public class IndustryCategoryMapper {
             this.ntsByFineName = fine == null ? Map.of() : fine;
             Map<String, String> axes = (Map<String, String>) root.get("cardAxisByIndustry");
             this.cardAxisByIndustry = axes == null ? Map.of() : axes;
+            Map<String, String> subMid = (Map<String, String>) root.get("midBySub");
+            this.midBySub = subMid == null ? Map.of() : subMid;
+            Map<String, String> subName = (Map<String, String>) root.get("subByIndustryName");
+            this.subByIndustryName = subName == null ? Map.of() : subName;
+            Map<String, String> subBrand = (Map<String, String>) root.get("subByBrand");
+            this.subByBrand = subBrand == null ? Map.of() : subBrand;
+            verifySubInvariant();
         } catch (IOException e) {
             throw new UncheckedIOException("업종코드 대조표를 읽지 못했다: " + PATH, e);
         }
+    }
+
+    /**
+     * <b>소분류 표가 스스로 어긋나 있으면 기동을 세운다.</b>
+     *
+     * <p>빌드 스크립트가 이미 검사하지만, JSON 은 손으로도 고쳐지고 다른 브랜치에서 온 파일이
+     * 섞이기도 한다. 이 표가 어긋나면 <b>조용히 틀린다</b> — 소분류가 두 중분류에 걸치면
+     * 같은 브랜드가 통로에 따라 갈리는데, 그건 화면에 그냥 다른 카테고리로 보일 뿐이라
+     * 아무도 눈치채지 못한다. 기동에서 멈추는 편이 낫다.
+     */
+    private void verifySubInvariant() {
+        java.util.List<String> bad = new java.util.ArrayList<>();
+        subByIndustryName.forEach((name, sub) -> {
+            if (!midBySub.containsKey(sub)) bad.add("업종 '" + name + "' 의 소분류 '" + sub + "' 이 midBySub 에 없다");
+            String mid = midByIndustryName.get(name);
+            String bySub = midBySub.get(sub);
+            if (mid != null && bySub != null && !mid.equals(bySub)) {
+                bad.add("업종 '" + name + "' 은 " + mid + " 인데 소분류 '" + sub + "' 은 " + bySub + " 다");
+            }
+        });
+        subByBrand.forEach((brand, sub) -> {
+            if (!midBySub.containsKey(sub)) bad.add("브랜드 '" + brand + "' 의 소분류 '" + sub + "' 이 midBySub 에 없다");
+        });
+        if (!bad.isEmpty()) throw new IllegalStateException("소분류 표가 어긋난다: " + bad);
+    }
+
+    /**
+     * <b>소분류 → 중분류.</b> 모르는 소분류면 {@link #UNCLASSIFIED}.
+     *
+     * <p><b>이 메서드가 소분류 층의 전부다.</b> 소분류는 정확히 한 중분류에만 속하므로
+     * (빌드와 {@link #verifySubInvariant} 가 잠근다) <b>소분류를 알면 중분류가 결정된다</b>.
+     * 그래서 브랜드에 소분류가 붙으면 그 브랜드의 모든 지점이 같은 중분류가 되고,
+     * 통로(업종코드·등록 조회·LLM)가 달라도 갈리지 않는다.
+     *
+     * <p>거꾸로, 사전에 이미 적힌 중분류가 이 값과 다르면 <b>그 자체가 오분류의 증거다</b> —
+     * 새 규칙이 아니라 위 불변식의 대우(對偶)라서 따로 판단할 것이 없다.
+     */
+    public String midOfSub(String sub) {
+        if (sub == null || sub.isBlank()) return UNCLASSIFIED;
+        return midBySub.getOrDefault(sub.trim(), UNCLASSIFIED);
+    }
+
+    /** 업종 <b>이름</b> → 소분류. 모르는 이름이면 빈 문자열. */
+    public String subOfIndustryName(String industryName) {
+        if (industryName == null) return "";
+        return subByIndustryName.getOrDefault(industryName.trim(), "");
+    }
+
+    /**
+     * <b>브랜드 → 소분류.</b> 모르거나 <b>붙이면 안 되는 브랜드</b>면 빈 문자열.
+     *
+     * <p>회사명(카카오·애플·구글·인터파크)과 결제수단(카카오페이·토스)은 표에서 <b>일부러
+     * 빠져 있다</b>. 여러 업태를 겸해 소분류가 하나로 안 정해지는데, 대표 업태를 찍으면
+     * 그 브랜드 전체가 한꺼번에 틀린다 — {@code 카카오} 가 멜론의 표기였을 때 실사용자의
+     * 카카오택시 72곳이 전부 멜론이 된 사고가 그것이다(2026-08-08 운영 실측).
+     */
+    public String subOfBrand(String brand) {
+        if (brand == null) return "";
+        return subByBrand.getOrDefault(brand.trim(), "");
+    }
+
+    /**
+     * <b>소분류가 가리키는 국세청 업종코드</b> — 애매하면 빈 목록.
+     *
+     * <p>소분류를 알면 업종코드도 따라올 때가 있다. {@code 커피} 는 {@code 커피 전문점} 하나뿐이고
+     * 그 이름의 코드가 하나면 <b>역산이 확정</b>이다. 그러면 카드 혜택축이 살아난다 —
+     * {@code cardAxisOf} 가 업종코드를 읽는데, 실 명세서에는 업종코드가 없어 자리채움값이
+     * 들어가고 그래서 카드추천이 죽어 있었다(§13-12 곁가지).
+     *
+     * <p><b>만장일치일 때만 답한다.</b> 소분류 하나에 업종 이름이 여럿이면(예: {@code 한식} 은
+     * 넷) 어느 것인지 알 방법이 없다. 억지로 고르면 <b>없는 사실을 만드는 것</b>이라,
+     * 표에서 유도한 값과 지어낸 값이 한 칸에 섞인다(V29 가 막은 바로 그 일).
+     * 170개 소분류 중 <b>62개</b>만 여기서 답한다.
+     */
+    public java.util.List<String> codesOfSub(String sub) {
+        if (sub == null || sub.isBlank()) return java.util.List.of();
+        java.util.List<String> names = new java.util.ArrayList<>();
+        subByIndustryName.forEach((name, s) -> { if (s.equals(sub)) names.add(name); });
+        if (names.size() != 1) return java.util.List.of();       // 갈리면 답하지 않는다
+        java.util.List<String> codes = codesOfFineName(names.get(0));
+        return codes.size() == 1 ? codes : java.util.List.of();  // 코드도 하나여야 확정이다
+    }
+
+    /** 그 브랜드에 소분류가 있는가 — 회사명·결제수단은 거짓이다. */
+    public boolean hasSub(String brand) {
+        return brand != null && subByBrand.containsKey(brand);
+    }
+
+    /** 소분류가 붙은 브랜드 전부 — 회사명·결제수단은 여기 없다. 정렬 고정(§4-3 재현성). */
+    public java.util.Set<String> brandsWithSub() {
+        return new java.util.TreeSet<>(subByBrand.keySet());
+    }
+
+    /** 소분류 이름 전부 — 시험과 관리자 화면이 쓴다. 정렬 고정(§4-3 재현성). */
+    public java.util.Set<String> subCategories() {
+        return new java.util.TreeSet<>(midBySub.keySet());
     }
 
     /**

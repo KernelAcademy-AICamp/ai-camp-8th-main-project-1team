@@ -69,7 +69,33 @@ public final class SpendingLedgerRowMapper {
      * 바뀌었을 때는 표를 다시 쓰지 않는다 — 그러자고 5분마다 실사용자 전원을 재작성하는 것은
      * 값을 못 한다.
      */
-    public record MerchantFacts(String brand, String address, String registryIndustryName) {
+    /**
+     * @param brand      사전·대기 장소에 저장된 브랜드. <b>모델이 지어낸 것일 수 있다</b>
+     * @param confirmedBrand 표기표가 확정한 브랜드 — <b>소분류는 이것만 쓴다</b>
+     * @param formBrand  표기표가 상호에서 읽어 낸 브랜드 — <b>화면에 적을 때 이것이 먼저다</b>
+     */
+    public record MerchantFacts(String brand, String address, String registryIndustryName,
+                                String confirmedBrand, String formBrand) {
+
+        public MerchantFacts(String brand, String address, String registryIndustryName) {
+            this(brand, address, registryIndustryName, null, null);
+        }
+
+        /** 표기표가 읽어 낸 브랜드를 실어 되돌린다 — 저장된 값은 그대로 둔다. */
+        public MerchantFacts withFormBrands(String forSub, String forDisplay) {
+            return new MerchantFacts(brand, address, registryIndustryName, forSub, forDisplay);
+        }
+
+        /**
+         * <b>원장에 적을 브랜드</b> — 표기표가 답하면 그것이, 아니면 저장된 값이 나간다.
+         *
+         * <p>저장된 값은 모델이 지어낸 것일 수 있고 <b>한 번 붙으면 스스로 안 고쳐진다</b>.
+         * 그래서 표기표가 아는 상호는 표기표를 믿는다. 표기표가 모르는 개인 상호는
+         * 저장된 값이 유일한 답이라 그대로 쓴다.
+         */
+        public String brandForLedger() {
+            return formBrand != null && !formBrand.isBlank() ? formBrand : brand;
+        }
 
         public static final MerchantFacts EMPTY = new MerchantFacts(null, null, null);
 
@@ -88,7 +114,8 @@ public final class SpendingLedgerRowMapper {
     /** 결제 한 건의 사실 칸. 계산은 없고, 유도되는 값(월·요일·시간대)만 여기서 만든다. */
     public static SpendingLedger.Facts factsOf(UserPayment payment, MerchantFacts merchant,
                                                AnalysisProperties.Daypart daypart,
-                                               Predicate<String> isPaymentAgency) {
+                                               Predicate<String> isPaymentAgency,
+                                               IndustryCategoryMapper industries) {
         var paidAt = payment.getPaymentDate();
         String rawSource = payment.getCategory2Source();
         boolean estimate = rawSource != null && ESTIMATE_SOURCES.contains(rawSource);
@@ -107,7 +134,7 @@ public final class SpendingLedgerRowMapper {
                 businessNumber,
                 isPaymentAgency.test(businessNumber),
                 payment.getMerchantName(),
-                merchant.brand(),
+                merchant.brandForLedger(),
                 merchant.address(),
                 // 묶는 쪽과 **같은 함수**를 쓴다. 갈라지면 표의 묶음과 화면의 정기결제가 다른 것을 가리킨다.
                 RecurringPaymentDetector.merchantKeyOf(
@@ -118,8 +145,49 @@ public final class SpendingLedgerRowMapper {
                 payment.getCategory2(),
                 confirmedSourceOf(payment.getCategory2(), rawSource, estimate),
                 payment.getCategory2Llm(),
-                estimate ? rawSource : null);
+                estimate ? rawSource : null,
+                subOf(merchant, industries),
+                subSourceOf(merchant, industries));
     }
+
+    /**
+     * <b>소분류를 정한다 — 브랜드가 업종 이름보다 먼저다.</b>
+     *
+     * <p>브랜드 표는 <b>사람이 검수한 확정 지식</b>이고 업종 이름은 <b>가맹점 한 곳씩의
+     * 추론</b>(등록 조회거나 LLM)이다. 확정이 추론을 이긴다 — 사전 확정(①)이 업종코드(②)를
+     * 이기는 것과 같은 원리라 순위에 새 원칙이 들어가지 않는다.
+     *
+     * <p>그리고 이 순서가 <b>같은 브랜드가 갈리는 것을 막는다</b>. 사전 키는 (사업자번호,
+     * 가맹점명)이라 같은 브랜드의 두 지점이 서로 다른 통로로 들어온다 — 한 곳은 등록 조회가
+     * {@code 한식 육류 요리 전문점} 을 주고 다른 곳은 LLM 이 {@code 치킨 전문점} 을 준다.
+     * 브랜드가 먼저 답하면 둘 다 같은 소분류가 되고, 소분류는 한 중분류에만 속하므로
+     * 중분류도 자동으로 같아진다.
+     *
+     * <p><b>회사명·결제수단에는 표가 답하지 않는다</b>({@code subOfBrand} 가 빈 값을 준다).
+     * 그때는 업종 이름으로 내려간다.
+     *
+     * <p><b>사전에 적힌 브랜드가 아니라 표기표가 확정한 브랜드를 본다</b>({@code confirmedBrand}).
+     * 저장된 값은 무료 통로가 답한 추정일 수 있어서다 — 운영 사전 845행 중 269행이 그랬고,
+     * {@code (주)카카오} 는 <b>멜론</b>으로 적혀 있었다(2026-08-25 실측).
+     */
+    private static String subOf(MerchantFacts merchant, IndustryCategoryMapper industries) {
+        String byBrand = industries.subOfBrand(merchant.confirmedBrand());
+        if (!byBrand.isEmpty()) return byBrand;
+        String byName = industries.subOfIndustryName(merchant.registryIndustryName());
+        return byName.isEmpty() ? null : byName;
+    }
+
+    /** 소분류를 무엇으로 알아냈나. {@link #subOf} 와 같은 순서를 본다. */
+    private static String subSourceOf(MerchantFacts merchant, IndustryCategoryMapper industries) {
+        if (!industries.subOfBrand(merchant.confirmedBrand()).isEmpty()) return SUB_BRAND;
+        if (!industries.subOfIndustryName(merchant.registryIndustryName()).isEmpty()) return SUB_NAME;
+        return SOURCE_NONE;
+    }
+
+    /** 소분류를 브랜드 표에서 얻었다 — 사람이 검수한 확정. */
+    static final String SUB_BRAND = "BRAND";
+    /** 소분류를 업종 이름에서 얻었다. */
+    static final String SUB_NAME = "NAME";
 
     /**
      * 확정 출처를 가려낸다 — 원장의 한 칸에서 두 뜻을 갈라내는 자리.
