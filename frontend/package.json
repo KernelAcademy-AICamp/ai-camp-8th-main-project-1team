@@ -11,7 +11,8 @@
     "check:css": "node scripts/check-css-tokens.mjs",
     "check:a11y": "node scripts/check-a11y.mjs",
     "audit:rendered": "node scripts/audit-rendered.mjs",
-    "check:back": "node scripts/check-back-nav.mjs"
+    "check:back": "node scripts/check-back-nav.mjs",
+    "check:motion": "node scripts/check-screen-motion.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
