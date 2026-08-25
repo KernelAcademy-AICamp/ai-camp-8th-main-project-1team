@@ -150,6 +150,26 @@ class SubBrandResolutionTest {
         assertThat(brands.displayBrandOf("동네개인식당")).as("표기표가 모르면 비운다").isEmpty();
     }
 
+    /**
+     * <b>두 글자 한글 표기는 뒤에 한글이 오면 거부된다</b>({@code matchesKorean}) — {@code 쿠팡}
+     * 이 {@code 쿠팡이츠} 를 삼키지 않게 하는 방어인데, <b>대신할 긴 표기가 없으면 그 상호는
+     * 아무 브랜드도 못 얻는다.</b> 운영 배포 뒤 실측(2026-08-25)에서 6곳 8건이 그랬다.
+     */
+    @Test
+    @DisplayName("두 글자 표기가 막히는 자리에 긴 표기를 세운다")
+    void 두_글자가_막히면_긴_표기로() {
+        assertThat(subOf("컬리페이")).as("'컬리' 가 '컬리페이' 안에서 막힌다").isEqualTo("새벽배송");
+        assertThat(subOf("주식회사 컬리페이")).isEqualTo("새벽배송");
+        assertThat(subOf("(주)러쉬코리아 압구정점")).as("'러쉬' 가 '러쉬코리아' 안에서 막힌다")
+                .isEqualTo("화장품");
+        assertThat(subOf("주식회사러쉬코리아스파")).isEqualTo("화장품");
+        assertThat(subOf("공차경주월드점")).as("'공차' 가 '공차경주' 안에서 막힌다").isEqualTo("디저트");
+        // 방어 자체는 그대로여야 한다 — 긴 형제가 있는 자리는 여전히 긴 쪽이 이긴다.
+        assertThat(subOf("쿠팡이츠_KCP")).isEqualTo("배달");
+        assertThat(subOf("스타벅스코리아")).as("'벅스'(OTT 구독)가 아니다").isEqualTo("커피");
+        assertThat(subOf("투썸플레이스 송파나루역점")).isEqualTo("커피");
+    }
+
     /** 같은 자리에서 시작하면 그때는 긴 쪽이 이긴다. */
     @Test
     @DisplayName("같은 자리면 긴 표기가 이긴다")
