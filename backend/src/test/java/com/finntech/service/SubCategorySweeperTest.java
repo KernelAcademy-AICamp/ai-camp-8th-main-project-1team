@@ -32,6 +32,15 @@ class SubCategorySweeperTest {
 
     private final MyDataLinkService link = mock(MyDataLinkService.class);
 
+    /** <b>표기표를 쓰는 진짜 서비스</b> — 저장된 브랜드가 아니라 상호에서 맞춘다. */
+    private MerchantBrandService brandService() {
+        return new MerchantBrandService(
+                mock(com.finntech.repository.MerchantBrandRepository.class),
+                mock(MerchantCategoryRepository.class), mock(TempClassifierService.class),
+                mock(com.finntech.repository.UserPaymentRepository.class),
+                new ObjectMapper(), null, mock(com.finntech.freechannel.FreeChannelQueue.class));
+    }
+
     private SubCategorySweeper sweeper() {
         MerchantCategoryRepository repository = mock(MerchantCategoryRepository.class);
         when(repository.findAll()).thenReturn(table);
@@ -41,7 +50,7 @@ class SubCategorySweeperTest {
         org.springframework.beans.factory.ObjectProvider<MyDataLinkService> provider =
                 mock(org.springframework.beans.factory.ObjectProvider.class);
         when(provider.getObject()).thenReturn(link);
-        return new SubCategorySweeper(repository, industries, users,
+        return new SubCategorySweeper(repository, industries, brandService(), users,
                 mock(ReportRepository.class), provider);
     }
 
@@ -142,7 +151,7 @@ class SubCategorySweeperTest {
                 org.mockito.ArgumentMatchers.anyMap(),
                 org.mockito.ArgumentMatchers.eq("DICT"))).thenReturn(3);
 
-        var result = new SubCategorySweeper(repository, industries, users,
+        var result = new SubCategorySweeper(repository, industries, brandService(), users,
                 mock(ReportRepository.class), provider).sweep(false);
 
         assertThat(result.payments()).as("결제를 안 고치면 화면은 그대로다").isEqualTo(3);
@@ -154,6 +163,33 @@ class SubCategorySweeperTest {
         row("우아한형제들", "배달의민족", "쇼핑", MerchantCategory.Source.LLM_GUESS);
         assertThat(sweeper().sweep(true).payments()).isZero();
         org.mockito.Mockito.verifyNoInteractions(link);
+    }
+
+    /**
+     * <b>저장된 브랜드를 타면 안 된다.</b> 사전의 브랜드 칸은 무료 통로가 답한 추정일 수 있다 —
+     * 운영 845행 중 <b>269행</b>이 그랬다. 훑기는 그 답을 {@code USER_CSV} 확정으로 굳히므로,
+     * 지어낸 브랜드를 타면 <b>틀린 답이 사람이 검수한 것과 같은 자리에 올라가고</b> 그다음부터는
+     * 아무도 다시 안 묻는다.
+     *
+     * <p>운영 맛보기에서 실제로 걸린 자리 둘로 잠근다.
+     */
+    @Test
+    @DisplayName("사전에 지어낸 브랜드가 적혀 있어도 표기표가 이긴다")
+    void 지어낸_브랜드를_안_탄다() {
+        // 표기표는 '티웨이브'(상품권 판매점)를 알아 소분류를 안 준다. 저장된 '웨이브'(OTT)를
+        // 타면 구독 → 취미/여가로 굳는다.
+        MerchantCategory 상품권 = row("웰컴페이먼츠_상품권-(주)티웨이브 역삼지점", "웨이브",
+                "쇼핑", MerchantCategory.Source.LLM_GUESS);
+        // 표기표는 '카카오'(회사명)라 소분류를 안 준다. 저장된 '멜론'을 타면 구독이 된다.
+        MerchantCategory 카카오 = row("(주)카카오", "멜론", "쇼핑", MerchantCategory.Source.LLM_GUESS);
+
+        var result = sweeper().sweep(false);
+
+        assertThat(result.disagreed()).as("지어낸 브랜드로 고치면 안 된다").isZero();
+        assertThat(상품권.getCategory2()).isEqualTo("쇼핑");
+        assertThat(상품권.getCategory3()).isNull();
+        assertThat(카카오.getCategory2()).isEqualTo("쇼핑");
+        assertThat(카카오.getCategory3()).isNull();
     }
 
     @Test
