@@ -110,6 +110,8 @@ public class MyDataLinkService {
      * 직접 부르는 곳은 <b>벌크 삭제 하나뿐</b>이다 — 그 자리는 콜백이 안 뜬다.
      */
     private final com.finntech.ledger.SpendingLedgerDirtyMarker ledgerDirtyMarker;
+    /** 소분류에서 업종코드를 되찾는 문 — 연동 끝에 그 사용자만 돌린다. */
+    private final IndustryCodeBackfill industryCodeBackfill;
 
     public MyDataLinkService(MyDataClient myDataClient, AppUserRepository userRepository,
                              UserCardRepository userCardRepository, UserPaymentRepository userPaymentRepository,
@@ -129,10 +131,12 @@ public class MyDataLinkService {
                              @org.springframework.beans.factory.annotation.Qualifier(
                                      FollowUpExecutorConfig.BEAN) java.util.concurrent.Executor followUps,
                              com.finntech.ledger.SpendingLedgerDirtyMarker ledgerDirtyMarker,
+                             IndustryCodeBackfill industryCodeBackfill,
                              org.springframework.beans.factory.ObjectProvider<MyDataLinkService> selfProvider) {
         this.categoryPromotion = categoryPromotion;
         this.followUps = followUps;
         this.ledgerDirtyMarker = ledgerDirtyMarker;
+        this.industryCodeBackfill = industryCodeBackfill;
         this.selfProvider = selfProvider;
         this.myDataClient = myDataClient;
         this.userRepository = userRepository;
@@ -682,6 +686,10 @@ public class MyDataLinkService {
             }
         }
         int resolved = selfProvider.getObject().applyResolved(userId, found);
+        // **여기서 업종코드를 되찾는다.** 실 명세서에는 업종코드가 없어 자리채움값이 들어가고,
+        // 그러면 카드 혜택축이 통째로 죽는다(cardAxisOf 가 그 코드를 읽는다). 방금 브랜드·조회로
+        // 소분류가 정해졌으니 그 자리에서 옮긴다 — 모델을 부르지 않아 비용이 없다.
+        industryCodeBackfill.runFor(userId, false);
         // **대상이 있으면 언제나 남긴다.** 예전에는 `asked > 0` 일 때만 찍었는데, 그러면
         // "물어볼 대상이 하나도 안 잡힌다"는 상황이 로그에 흔적을 안 남겨 원인을 못 좁혔다
         // (2026-08-07 운영: 조회가 도는지조차 알 수 없었다). 0 도 정보다.

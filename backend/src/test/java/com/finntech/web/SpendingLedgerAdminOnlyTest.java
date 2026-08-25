@@ -73,7 +73,9 @@ class SpendingLedgerAdminOnlyTest {
                 "/api/admin/dictionary/subcategory-sweep",
                 "/api/admin/dictionary/subcategory-drift",
                 // 회사명이 서비스를 가린 자리를 되묻는 문 — 표를 고칠 때마다 부른다.
-                "/api/admin/dictionary/brand-coverage");
+                "/api/admin/dictionary/brand-coverage",
+                // 업종코드를 소분류에서 되찾는 문 — 카드 혜택축이 여기 달렸다.
+                "/api/admin/spending-ledger/industry-code-backfill");
     }
 
     private static String declaringClassOf(HandlerMethod method) {

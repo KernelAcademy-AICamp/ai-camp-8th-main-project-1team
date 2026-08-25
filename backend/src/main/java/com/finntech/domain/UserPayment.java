@@ -57,6 +57,17 @@ public class UserPayment {
     private String industryCode;
 
     /**
+     * <b>추정 업종코드</b> — 모델이 답한 업종 이름을 표로 옮긴 값.
+     *
+     * <p>{@link #industryCode}(확정)와 갈라 둔다. 한 칸에 섞으면 읽는 쪽이 추정을 사실로 쓴다 —
+     * {@code category2} 와 {@code category2Llm} 을 가른 것과 같은 이치다(마스터 §4 원칙 1).
+     *
+     * <p><b>판정에 참여하지 않는다.</b> 카드 혜택축도 확정 칸만 읽는다.
+     */
+    @Column(name = "ksic_code_llm", length = 8)
+    private String industryCodeGuess;
+
+    /**
      * 실 명세서 적재기가 넣는 자리채움 업종코드({@code RealPersonImportService.UNKNOWN_INDUSTRY}).
      * 두 곳이 같은 값을 알아야 해서 상수로 둔다 — 한쪽만 고치면 조용히 어긋난다.
      */
@@ -157,6 +168,22 @@ public class UserPayment {
     public int getAmount() { return amount; }
     public String getMerchantName() { return merchantName; }
     public String getBusinessNumber() { return businessNumber; }
+    public String getIndustryCodeGuess() { return industryCodeGuess; }
+
+    /**
+     * <b>추정 업종코드를 적는다</b> — 확정 칸은 건드리지 않는다.
+     *
+     * <p>이미 확정이 들어와 있으면 추정을 적지 않는다. 사실이 있는데 추측을 나란히 두면
+     * 읽는 쪽이 무엇을 믿을지 고민하게 된다.
+     */
+    public boolean guessIndustryCode(String code) {
+        if (code == null || code.isBlank()) return false;
+        if (!PLACEHOLDER_INDUSTRY.equals(this.industryCode)) return false;   // 확정이 있다
+        if (code.equals(this.industryCodeGuess)) return false;
+        this.industryCodeGuess = code;
+        return true;
+    }
+
     public String getCategory2Llm() { return category2Llm; }
     public String getCategory2Source() { return category2Source; }
 

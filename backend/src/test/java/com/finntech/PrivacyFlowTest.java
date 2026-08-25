@@ -248,7 +248,7 @@ class PrivacyFlowTest {
                 new com.finntech.domain.SpendingLedger.Facts(uid, "2026-07",
                         NOW.minusDays(1), NOW.minusDays(1).toLocalDate(), 19, 6, "저녁", "REAL",
                         "2088612340", false, "이디야커피", "이디야커피", null, "BIZ:2088612340",
-                        5000, "552301", null, "카페", "DICT", null, null, "커피", "NAME"),
+                        5000, "552301", null, null, "카페", "DICT", null, null, "커피", "NAME"),
                 NOW));
 
         privacyService.eraseUserData(uid, NOW);

@@ -119,6 +119,16 @@ public class SpendingLedger {
     @Column(name = "registry_industry_name", length = 80)
     private String registryIndustryName;
 
+    /**
+     * <b>추정 업종코드</b> — 모델의 답에서 온 값. 확정({@code ntsIndustryCode})과 갈라 둔다.
+     *
+     * <p>실 명세서에는 업종코드가 없어 자리채움값이 들어가고, 그러면 카드 혜택축이 죽는다.
+     * 채울 수 있는 것을 다 채워도 <b>확정은 40%가 한계</b>라(소분류 170개 중 62개만 업종
+     * 하나를 가리킨다) 나머지는 추정할 수밖에 없다. <b>판정에는 안 쓴다.</b>
+     */
+    @Column(name = "nts_industry_code_llm", length = 8)
+    private String ntsIndustryCodeLlm;
+
     @Column(name = "category2", length = 30)
     private String category2;
 
@@ -272,7 +282,7 @@ public class SpendingLedger {
             int dayOfMonth, int dayOfWeek, String daypart, String origin,
             String businessNumber, boolean paymentAgency, String merchantName,
             String brand, String merchantAddress, String merchantKey,
-            int amount, String ntsIndustryCode, String registryIndustryName,
+            int amount, String ntsIndustryCode, String ntsIndustryCodeLlm, String registryIndustryName,
             String category2, String category2Source,
             String category2Llm, String category2LlmSource,
             String category3, String category3Source) {}
@@ -354,6 +364,7 @@ public class SpendingLedger {
         this.merchantKey = facts.merchantKey();
         this.amount = facts.amount();
         this.ntsIndustryCode = facts.ntsIndustryCode();
+        this.ntsIndustryCodeLlm = facts.ntsIndustryCodeLlm();
         this.registryIndustryName = facts.registryIndustryName();
         this.category2 = facts.category2();
         this.category2Source = facts.category2Source();
@@ -369,7 +380,7 @@ public class SpendingLedger {
     private Facts currentFacts() {
         return new Facts(userId, monthKey, paidAt, paidOn, dayOfMonth, dayOfWeek, daypart, origin,
                 businessNumber, paymentAgency, merchantName, brand, merchantAddress, merchantKey,
-                amount, ntsIndustryCode, registryIndustryName,
+                amount, ntsIndustryCode, ntsIndustryCodeLlm, registryIndustryName,
                 category2, category2Source, category2Llm, category2LlmSource,
                 category3, category3Source);
     }
@@ -447,6 +458,7 @@ public class SpendingLedger {
     public String getCategory2Source() { return category2Source; }
     public String getCategory2Llm() { return category2Llm; }
     public String getCategory2LlmSource() { return category2LlmSource; }
+    public String getNtsIndustryCodeLlm() { return ntsIndustryCodeLlm; }
     public String getCategory3() { return category3; }
     public String getCategory3Source() { return category3Source; }
 

@@ -141,6 +141,7 @@ public final class SpendingLedgerRowMapper {
                         payment.getBusinessNumber(), payment.getMerchantName(), isPaymentAgency),
                 payment.getAmount(),
                 payment.getKsicCode(),
+                payment.getIndustryCodeGuess(),
                 merchant.registryIndustryName(),
                 payment.getCategory2(),
                 confirmedSourceOf(payment.getCategory2(), rawSource, estimate),
