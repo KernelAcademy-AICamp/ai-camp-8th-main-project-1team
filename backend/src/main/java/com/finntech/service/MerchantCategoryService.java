@@ -350,6 +350,26 @@ public class MerchantCategoryService {
      */
     @Transactional
     public Optional<MerchantCategory> rememberGuess(UserPayment payment, String category2) {
+        return rememberGuess(payment, category2, null);
+    }
+
+    /**
+     * <b>모델이 답한 업종 이름도 같이 받아 적는다</b>(V43).
+     *
+     * <p>예전에는 이름을 안 받았다. 중분류를 계산하는 데만 쓰고 버렸는데, 그러면
+     * {@link #stampSub} 이 이름으로 소분류를 찾을 수 없다 — <b>브랜드가 안 붙는 개인 상호는
+     * 소분류도 추정 업종코드도 영영 못 얻는다.</b> 운영 사전에서 브랜드도 소분류도 없는
+     * 280곳 중 <b>260곳</b>에 업종 이름이 없었고 그중 67곳이 {@code LLM_GUESS} 였다
+     * (2026-08-25 실측) — 모델은 답했는데 우리가 안 적은 것이다.
+     *
+     * <p>이름은 {@code llm_industry} 에 적는다. {@code registry_industry}(사실)에 섞으면
+     * ③ 추정이 ②-b 등록 조회를 영영 막는다 — {@link MerchantCategory#noteLlmIndustry} 참고.
+     *
+     * @param industry 모델이 답한 업종 이름. 모르면 {@code null}
+     */
+    @Transactional
+    public Optional<MerchantCategory> rememberGuess(UserPayment payment, String category2,
+                                                    String industry) {
         if (payment == null || !payment.isFromRealPerson()
                 || category2 == null || category2.isBlank()) {
             return Optional.empty();
@@ -371,12 +391,14 @@ public class MerchantCategoryService {
             // 코드를 역산하는 것은 되지만, 그러면 그 칸이 "표에서 유도"와 "모델의 말을 표로
             // 옮김"을 한꺼번에 담아 읽을 수 없게 된다.
             row.reclassify(category2, MerchantCategory.Source.LLM_GUESS, null, null);
+            row.noteLlmIndustry(industry);
             brands.promote(row);
-        stampSub(row);
+            stampSub(row);
             return Optional.of(row);
         }
         MerchantCategory row = repository.save(new MerchantCategory(
                 biz, name, category2, MerchantCategory.Source.LLM_GUESS, null, null));
+        row.noteLlmIndustry(industry);
         brands.promote(row);
         stampSub(row);
         return Optional.of(row);
@@ -405,8 +427,7 @@ public class MerchantCategoryService {
     private void stampSub(MerchantCategory row) {
         String byBrand = mapper.subOfBrand(
                 brands.subBrandOf(row.getMerchantName(), mapper::hasSub).orElse(""));
-        String sub = byBrand.isEmpty()
-                ? mapper.subOfIndustryName(row.getRegistryIndustry()) : byBrand;
+        String sub = byBrand.isEmpty() ? byIndustryName(row) : byBrand;
         row.applySub(sub);
         if (byBrand.isEmpty()) return;      // 업종 이름에서 온 소분류는 중분류와 어긋날 수 없다
 
@@ -434,6 +455,46 @@ public class MerchantCategoryService {
         log.info("브랜드가 중분류를 고친다 — {} : {} → {} (소분류 {})",
                 row.getMerchantName(), row.getCategory2(), expected, sub);
         row.reclassify(expected, MerchantCategory.Source.USER_CSV, null, null);
+    }
+
+    /**
+     * 업종 이름으로 소분류를 찾는다 — <b>사실을 먼저 보고 없을 때만 추정을 본다</b>.
+     *
+     * <p>등록 업종({@code registry_industry})은 국세청이 말한 사실이고 모델의 답
+     * ({@code llm_industry})은 추정이다. 둘 다 있으면 사실이 이긴다 — 사전 확정(①)이
+     * 업종코드(②)를 이기고 그것이 추정(③)을 이기는 것과 같은 순서라 §13-12 에 새 원칙이
+     * 들어가지 않는다.
+     *
+     * <p>추정까지 보는 것이 요점이다. 브랜드가 안 붙고 등록 조회도 못 한 <b>개인 상호</b>는
+     * 모델의 답이 유일한 단서다 — 여기서 안 보면 {@code 나복집}·{@code 안녕숯불} 같은
+     * 상호는 중분류만 있고 소분류는 영영 빈칸으로 남는다.
+     */
+    private String byIndustryName(MerchantCategory row) {
+        String byRegistry = mapper.subOfIndustryName(row.getRegistryIndustry());
+        String sub = byRegistry.isEmpty()
+                ? mapper.subOfIndustryName(row.getLlmIndustry()) : byRegistry;
+        return agreesWithMid(sub, row.getCategory2()) ? sub : "";
+    }
+
+    /**
+     * <b>업종 이름에서 온 소분류가 그 행의 중분류와 맞는가</b> — 어긋나면 안 찍는다.
+     *
+     * <p>소분류는 정확히 한 중분류에만 속한다(불변식). 그러니 둘이 다르다는 것은 <b>둘 중
+     * 하나가 틀렸다는 뜻</b>인데, 업종 이름은 <b>어느 쪽이 틀렸는지를 말해 주지 않는다</b> —
+     * 그냥 적으면 불변식을 어기는 행이 하나 생기고, 그 행은 화면에서 "식비인데 소분류는 커피"
+     * 처럼 보인다.
+     *
+     * <p><b>브랜드는 다르다.</b> 브랜드 표는 사람이 검수한 확정 지식이라 어느 쪽이 틀렸는지를
+     * 안다 — 그래서 브랜드가 답하면 중분류 쪽을 고친다({@link #stampSub}). 이 갈림이 §13-12
+     * 순위 ①-b 의 요점이다.
+     *
+     * <p>보통은 걸리지 않는다. 중분류도 같은 업종 이름에서 나오기 때문이다. 걸리는 것은
+     * <b>사람이 중분류를 손으로 바꾼 행</b>이고, 그때는 사람이 이긴다.
+     */
+    private boolean agreesWithMid(String sub, String mid) {
+        if (sub.isEmpty()) return false;
+        String expected = mapper.midOfSub(sub);
+        return IndustryCategoryMapper.isUnknown(expected) || expected.equals(mid);
     }
 
     /**

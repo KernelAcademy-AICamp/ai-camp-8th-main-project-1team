@@ -159,6 +159,20 @@ public class MerchantCategory {
     private String registryIndustry;
 
     /**
+     * 모델이 말한 <b>업종 이름</b>(V43) — 추정이다.
+     *
+     * <p><b>{@link #registryIndustry} 와 갈라 둔다.</b> 그 칸은 국세청 등록 업종, 곧 사실이고
+     * {@link #registryAnswered()} 가 그 칸으로 <i>"조회를 이미 했다"</i>를 판정한다. 추정을
+     * 거기 적으면 순위가 뒤집힌다 — ③ 추정이 ②-b 등록 조회(사실)를 영영 막는다(§13-12).
+     *
+     * <p>이 칸이 없던 동안 {@code rememberGuess} 는 모델의 답에서 중분류만 계산하고 이름을
+     * 버렸다. 그래서 브랜드가 안 붙는 개인 상호는 소분류를 찾을 길이 없었다 — 운영 사전에서
+     * 브랜드도 소분류도 없는 <b>280곳 중 260곳</b>에 업종 이름이 아예 없었다(2026-08-25 실측).
+     */
+    @Column(name = "llm_industry", length = 80)
+    private String llmIndustry;
+
+    /**
      * 등록처가 알려 준 <b>가맹점 주소</b>(V26).
      *
      * <p>업종과 <b>같은 문서</b>에서 뽑는다 — 주소를 따로 부르지 않으므로 바깥 호출이 안 는다.
@@ -324,6 +338,20 @@ public class MerchantCategory {
     }
 
     /**
+     * 모델이 답한 업종 이름을 적는다 — <b>비어 있을 때만</b>.
+     *
+     * <p>덮지 않는 이유는 이 값이 <b>소분류의 근거</b>이기 때문이다. 같은 가맹점을 다시 물으면
+     * 모델은 다른 이름을 줄 수 있고(제과점업 / 빵류 소매업), 그때마다 갈아 끼우면 소분류가
+     * 흔들린다. 먼저 받은 답 하나로 고정한다 — 바꿔야 할 만큼 틀렸다면 사람이 고칠 일이다.
+     */
+    public void noteLlmIndustry(String industryName) {
+        if (industryName == null || industryName.isBlank()) return;
+        if (llmIndustry != null && !llmIndustry.isBlank()) return;
+        this.llmIndustry = industryName.length() > 80
+                ? industryName.substring(0, 80) : industryName;
+    }
+
+    /**
      * LLM 에 한 번 물었다고 적는다. {@link #GIVE_UP_AFTER} 번째부터는 '기타'로 종결한다.
      *
      * <p>세는 것은 <b>답이 없었던 질문</b>이다. 답을 얻으면 그 행은 {@link Source#LLM_GUESS} 가
@@ -387,6 +415,8 @@ public class MerchantCategory {
     }
 
     public String getRegistryIndustry() { return registryIndustry; }
+
+    public String getLlmIndustry() { return llmIndustry; }
     public String getAddress() { return address; }
 
     /**

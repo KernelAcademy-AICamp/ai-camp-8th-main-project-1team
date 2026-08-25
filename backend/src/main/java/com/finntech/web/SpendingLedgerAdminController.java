@@ -62,6 +62,7 @@ public class SpendingLedgerAdminController {
     private final com.finntech.service.SubCategorySweeper subSweeper;
     private final com.finntech.service.BrandCoverageReport brandCoverage;
     private final com.finntech.service.IndustryCodeBackfill industryCodes;
+    private final com.finntech.service.IndustryNameBackfill industryNames;
 
     public SpendingLedgerAdminController(SpendingLedgerBackfill backfill, SpendingLedgerVerifier verifier,
                                        SpendingLedgerJudgmentRefresher refresher,
@@ -70,7 +71,8 @@ public class SpendingLedgerAdminController {
                                        AppUserRepository users, WasteScoringService wasteScoring,
                                        com.finntech.service.SubCategorySweeper subSweeper,
                                        com.finntech.service.BrandCoverageReport brandCoverage,
-                                       com.finntech.service.IndustryCodeBackfill industryCodes) {
+                                       com.finntech.service.IndustryCodeBackfill industryCodes,
+                                       com.finntech.service.IndustryNameBackfill industryNames) {
         this.backfill = backfill;
         this.verifier = verifier;
         this.refresher = refresher;
@@ -83,6 +85,7 @@ public class SpendingLedgerAdminController {
         this.subSweeper = subSweeper;
         this.brandCoverage = brandCoverage;
         this.industryCodes = industryCodes;
+        this.industryNames = industryNames;
     }
 
     /**
@@ -115,6 +118,25 @@ public class SpendingLedgerAdminController {
     public com.finntech.service.BrandCoverageReport.Result brandCoverage(
             @RequestParam(defaultValue = "REAL") String origin) {
         return brandCoverage.scan(origin);
+    }
+
+    /**
+     * <b>업종 이름이 없어 소분류가 빈 행을 되메운다</b>(V43) — 기본은 <b>맛보기</b>다.
+     *
+     * <p>소분류는 브랜드 아니면 업종 이름에서 온다. 브랜드가 안 붙는 개인 상호는 업종 이름이
+     * 유일한 단서인데, {@code rememberGuess} 가 모델의 답에서 이름을 버려 이미 굳은 행이
+     * 남았다 — 운영에서 <b>260곳</b>이다(2026-08-25 실측). 사전이 답을 아는 것으로 쳐서
+     * 다시 묻지도 않으므로, 여기가 그것을 푸는 유일한 자리다.
+     *
+     * <p><b>여러 번 누른다.</b> 무료 통로는 있으면 주고 없으면 큐에 올리므로 첫 호출은 대개
+     * 질문만 올린다. {@code remaining} 이 0이 될 때까지 부른다.
+     *
+     * <p>중분류를 안 건드린다 — 빠진 세부를 채우는 일이지 분류를 다시 하는 일이 아니다.
+     */
+    @PostMapping("/dictionary/industry-name-backfill")
+    public com.finntech.service.IndustryNameBackfill.Result industryNameBackfill(
+            @RequestParam(defaultValue = "true") boolean dryRun) {
+        return industryNames.run(dryRun);
     }
 
     /**

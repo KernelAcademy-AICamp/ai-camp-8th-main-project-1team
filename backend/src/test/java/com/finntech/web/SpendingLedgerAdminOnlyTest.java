@@ -75,7 +75,10 @@ class SpendingLedgerAdminOnlyTest {
                 // 회사명이 서비스를 가린 자리를 되묻는 문 — 표를 고칠 때마다 부른다.
                 "/api/admin/dictionary/brand-coverage",
                 // 업종코드를 소분류에서 되찾는 문 — 카드 혜택축이 여기 달렸다.
-                "/api/admin/spending-ledger/industry-code-backfill");
+                "/api/admin/spending-ledger/industry-code-backfill",
+                // 업종 이름이 없어 소분류가 빈 행을 되메우는 문(V43). 브랜드가 안 붙는 개인
+                // 상호는 업종 이름이 유일한 단서인데, 이미 굳은 행은 다시 묻지도 않는다.
+                "/api/admin/dictionary/industry-name-backfill");
     }
 
     private static String declaringClassOf(HandlerMethod method) {

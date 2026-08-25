@@ -237,6 +237,22 @@ public class SpendingLedgerFactsWriter {
         }
         for (String ambiguous : ambiguousNames) byNameOnly.remove(ambiguous);
 
+        // **번호 단위 사실**(이름 없는 씨앗 행). PG 번호는 담지 않는다 — 한 번호에 업종이
+        // 제각각인 가맹점이 붙어 담는 순간 그 PG 를 거친 모든 결제가 한 업종으로 오염된다.
+        // 적재 쪽 스냅샷(`MerchantCategoryService.Snapshot`)이 거는 방어와 같은 것이고,
+        // 두 곳의 규칙이 갈리면 같은 결제가 경로에 따라 다르게 꾸며진다.
+        List<String> numbers = rows.stream()
+                .map(p -> MerchantCategory.normalize(p.getBusinessNumber()))
+                .filter(biz -> !biz.isEmpty() && !industryMapper.isPaymentAgency(biz))
+                .distinct()
+                .toList();
+        Map<String, MerchantCategory> byBusinessOnly = new HashMap<>();
+        if (!numbers.isEmpty()) {
+            for (MerchantCategory row : dictionary.findNamelessByBusinessNumberIn(numbers)) {
+                byBusinessOnly.putIfAbsent(row.getBusinessNumber(), row);
+            }
+        }
+
         Map<String, String> pendingBrands = new LinkedHashMap<>();
         for (MerchantBrand brand : brands.findByMerchantNameIn(names)) {
             pendingBrands.put(brand.getMerchantName(), brand.getBrand());
@@ -250,17 +266,20 @@ public class SpendingLedgerFactsWriter {
                     .ifPresent(b -> confirmedBrands.put(name, b));
             brandService.displayBrandOf(name).ifPresent(b -> formBrands.put(name, b));
         }
-        return new Lookup(byCompositeKey, byNameOnly, pendingBrands, confirmedBrands, formBrands);
+        return new Lookup(byCompositeKey, byNameOnly, byBusinessOnly,
+                pendingBrands, confirmedBrands, formBrands);
     }
 
     /** 미리 읽어 둔 가맹점 부가정보. */
     record Lookup(Map<String, MerchantCategory> byCompositeKey,
                   Map<String, MerchantCategory> byNameOnly,
+                  Map<String, MerchantCategory> byBusinessOnly,
                   Map<String, String> pendingBrands,
                   Map<String, String> confirmedBrands,
                   Map<String, String> formBrands) {
 
-        static final Lookup EMPTY = new Lookup(Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
+        static final Lookup EMPTY =
+                new Lookup(Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
 
         /**
          * 그 결제의 가맹점 부가정보.
@@ -275,6 +294,13 @@ public class SpendingLedgerFactsWriter {
             String biz = MerchantCategory.normalize(payment.getBusinessNumber());
             MerchantCategory row = byCompositeKey.get(biz + KEY_SEP + name);
             if (row == null) row = byNameOnly.get(name);
+            // **이름이 없는 사전 행은 번호로 읽는다.** 완화가 아니라 그 행의 제 키다 —
+            // 씨앗의 원천이 번호와 업종만 줘서 <i>"이 번호의 업종은 X"</i> 라는 사실로
+            // 들어오기 때문이다. 이름으로 찾는 두 지도에는 영영 안 걸린다.
+            //
+            // **이게 없어서 등록 업종이 원장에 안 닿았다** — 실사용자 원장 557건이 그
+            // 사실을 못 받았고 그중 171건은 소분류가 통째로 비어 있었다(2026-08-25 실측).
+            if (row == null && !biz.isEmpty()) row = byBusinessOnly.get(biz);
             // **소분류가 탈 브랜드는 표기표에서 다시 맞춘다.** 사전에 적힌 브랜드는 모델이
             // 답한 추정일 수 있고, 그 값으로 소분류를 정하면 브랜드 하나가 통째로 틀린다.
             return SpendingLedgerRowMapper.MerchantFacts.of(row, pendingBrands.get(name))
