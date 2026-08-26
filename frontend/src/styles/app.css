@@ -50,6 +50,8 @@
   --line:#E9ECEF;
   --track:#F1F3F5;
   --red:#D03238;
+  /* 모델이 정한 값 — 좋고 나쁨이 아니라 "누가 정했나"를 말하는 색. 4.9:1 (흰 바탕) */
+  --guess-t:#6B4FBB;
   --amber:#E68A2E;
   --amber-weak:#FFF4E5;
   --radius:20px;
@@ -922,10 +924,12 @@ button.card, button.pt-card, button.fut-card, button.tip-card, button.exp-bn{
    (KWCAG 6.1.3. 줄 안에 들어가는 표시라 line-height 를 키우면 목록 줄이 벌어진다). */
 .sp-tag{
   display:inline-flex;
-  font-size:12px;
+  /* **글자가 배경에 꽉 끼지 않게.** 12px/700 에 세로 여백 0 이라 알약이 글자를 조이고 있었다
+     — 11px 로 한 칸 줄이고 줄높이를 20px 로 아주 조금 키웠다(2026-08-26 지적). */
+  font-size:11px;
   font-weight:700;
-  padding:0 8px;
-  line-height:18px;
+  padding:0 9px;
+  line-height:20px;
   border-radius:20px;
   margin-left:8px;
   vertical-align:1px;
@@ -3682,17 +3686,36 @@ textarea.inp{ min-height: 92px; resize: vertical; line-height: 1.5; }
   font-size: 12px; font-weight: 400; color: var(--t3); min-width: 0; }
 .sp-card .list-item .tx .sub .cd{ flex: 0 1 auto; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* 배지는 **줄을 깨지 못한다.** 줄어들 수 있게 두고 폭을 못박는다 —
-   `AI 추정 · 카테고리없음` 이 열두 자로 커져 칸을 통째로 밀어낸 자리다(2026-08-26). */
+/* 배지는 **줄을 깨지 못한다.** 줄어들 수 있게 두고 폭을 못박는다. */
 .sp-card .list-item .tx .sub .sp-tag{ flex: 0 1 auto; max-width: 40%; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* **카테고리·결제처는 알약이 아니라 글자다.** 배경과 안여백을 주면 열두 자짜리 문구가
+   커다란 칸이 되어 보조줄을 통째로 먹는다 — 글자 크기 그대로여야 한다(2026-08-26 지적).
+   색만으로 구별하고, 누를 수 있다는 것은 ✎ 가 말한다. */
+.sp-card .list-item .tx .sub .cat{ flex: 0 1 auto; min-width: 0;
+  border: none; background: none; padding: 0; font: inherit; cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-card .list-item .tx .sub .cat{ color: var(--t3); }
+/* **모델이 정한 카테고리** — 보라다.
+ *
+ * 호박(경고)도 초록(브랜드)도 아니다. 실화면에 네 안을 렌더해 고른 색이다(2026-08-26):
+ *   · 초록은 **성역 배지가 이미 쓴다** — 한 줄에서 초록이 "모델이 정함"과 "줄이지 않음"
+ *     두 뜻을 갖게 된다. 코드에도 근거가 남아 있다 — 초록은 "확인됨·좋음"으로 읽힌다.
+ *   · 호박은 카드사 배지(KB국민카드 노랑)와 부딪히고, **983건(46%)에 붙을 표시**를
+ *     경고색으로 두면 경고가 무의미해진다.
+ *   · 보라는 초록·노랑·회색 어디와도 안 겹치고, **좋고 나쁨을 말하지 않는다** —
+ *     "기계가 정했다"만 뜻한다. 절반에 붙을 표시로는 그것이 맞다.
+ */
+.sp-card .list-item .tx .sub .cat.guess{ color: var(--guess-t); }
 /* 카드사는 색으로만 구별한다. 굵게 하지 않는다 — 보조줄에서 굵은 색 글씨가 되면 줄의
    주인공인 가맹점명보다 눈에 띄어 시선 순서가 뒤집힌다(2026-08-26 화면 확인). */
-.sp-card .list-item .tx .sub .cd{ font-weight: 500;
-  /* **밑줄을 긋지 않는다.** 보조줄에 밑줄이 둘 있으면(카드사·사업자번호) 줄이 링크
-     덩어리로 보인다. 누를 수 있다는 것은 눌러 보면 알고, 화면낭독기에는 aria 로 말한다. */
-  border: none; background: none; padding: 0; font: inherit; cursor: pointer;
-  text-decoration: none; }
+/* 카드사 — **카드 색을 배경으로** 두르고 글자는 일반색이다. 색 글자로 두면 보조줄에
+   색이 둘(카드사·AI 추정)이라 무슨 뜻인지 안 읽힌다.
+   **밑줄을 긋지 않는다.** 누를 수 있다는 것은 눌러 보면 알고, 화면낭독기에는 aria 로 말한다. */
+.sp-card .list-item .tx .sub .cd{ flex: 0 0 auto;
+  border: none; padding: 1px 7px; border-radius: 20px; font: inherit; font-weight: 600;
+  line-height: 18px; cursor: pointer; text-decoration: none; }
 
 /* **자세히 — 평소에는 숨어 있다.** 카드사를 누르면 원문 상호·경유·사업자번호·주소가 뜬다.
    늘 적어 두면 보조줄이 잡동사니가 되고 줄인 이름이 무의미해진다(2026-08-26 화면 확인). */

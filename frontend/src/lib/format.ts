@@ -211,6 +211,23 @@ export function deepen(hex: string | null | undefined, fallback = 'var(--blue-da
   return `#${out.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
 }
 
+/**
+ * 카드 색을 **배경으로 쓸 만큼 연하게** 만든다 — `inkColor` 의 짝이다.
+ *
+ * 저쪽은 흰 바탕에서 읽히도록 색을 **어둡게** 하고, 여기는 그 위에 검은 글자가 얹히도록
+ * **흰색 쪽으로 섞는다.** 카드사를 글자색으로만 구별하면 보조줄에 색 글자가 둘(카드사·추정)이
+ * 되어 어느 쪽이 무슨 뜻인지 알 수 없다 — 하나는 배경으로 내리는 편이 낫다.
+ *
+ * @param ratio 원색이 섞이는 비율. 0.12 면 흰색 88% + 원색 12% 다.
+ */
+export function tintColor(hex: string | null | undefined, ratio = 0.14,
+                          fallback = 'var(--track)'): string {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return fallback;
+  const out = rgb.map((v) => Math.round(255 - (255 - v) * ratio));
+  return `#${out.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
 export function inkColor(hex: string | null | undefined, fallback = 'var(--t3)'): string {
   const rgb = hexToRgb(hex);
   if (!rgb) return fallback;

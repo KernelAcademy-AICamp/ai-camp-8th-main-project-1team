@@ -12,7 +12,7 @@ import { useAsync } from '../state/useAsync';
 import { api, catLabel, type MyMerchant, type MyPaymentHistory } from '../lib/api';
 import { SpendCalendar } from '../components/SpendCalendar';
 import { Icon } from '../components/Icons';
-import { won, iconOf, inkColor } from '../lib/format';
+import { won, iconOf, tintColor } from '../lib/format';
 
 /** 검색 기간 사다리 — 3 · 6 · 9 · 12개월(개편안 `SP_FROMS`). */
 const SPANS = [3, 6, 9, 12];
@@ -56,9 +56,6 @@ function highlight(name: string, q: string) {
 function shownName(p: MyPaymentHistory): string | null {
   return p.displayName ?? p.brand ?? p.merchantName ?? null;
 }
-/** 결제 경로만 아는 줄인가 — 카드사가 준 정보가 "간편결제로 샀다" 뿐인 결제. */
-const viaOnly = (p: MyPaymentHistory) => p.displayNameSource === 'AGENCY_ONLY';
-
 type SpendFilter = 'all' | 'disc' | 'fixed' | 'sanct';
 /** 개편안의 필터 4종. '재량'은 성역·고정지출을 뺀 나머지다 — 줄일 수 있는 것만 남긴다. */
 const SPEND_FILTERS: { key: SpendFilter; label: string }[] = [
@@ -420,7 +417,10 @@ export function Transactions() {
                           목록에서 알아야 할 것은 어디에 썼는가다. */}
                       {(p.companyName ?? p.cardName) && (
                         <button type="button" className="cd"
-                          style={{ color: inkColor(p.cardColor) }}
+                          /* **카드 색은 배경으로 내린다.** 글자색으로 쓰면 보조줄에 색 글자가
+                             둘(카드사·AI 추정)이 되어 어느 쪽이 무슨 뜻인지 알 수 없다.
+                             배경으로 내리고 글자는 일반색이면 카드는 알아보되 조용하다. */
+                          style={{ background: tintColor(p.cardColor), color: 'var(--t2)' }}
                           aria-expanded={!!detailOpen[p.paymentId]}
                           aria-label={`${p.companyName ?? p.cardName} — 원문 가맹점명과 사업자번호 ${detailOpen[p.paymentId] ? '접기' : '보기'}`}
                           onClick={(e) => {
@@ -436,24 +436,44 @@ export function Transactions() {
                           확정이 없고 추정만 있으면 **눌러서 확정**할 수 있게 한다 — 확정 화면을
                           따로 찾아가야만 고칠 수 있으면, 추정은 영영 '카테고리없음'으로 남는다. */}
                       {(() => {
-                        const shown = fixed[p.paymentId] ?? p.category2 ?? p.category;
-                        const guess = !fixed[p.paymentId] && isNone(shown) ? p.category2Llm : null;
-                        const label = guess ?? shown;
+                        const mine = fixed[p.paymentId];        // 방금 사용자가 고친 값
+                        const shown = mine ?? p.category2 ?? p.category;
+                        // 확정이 비었을 때만 추정 칸을 꺼내 본다.
+                        const spare = !mine && isNone(shown) ? p.category2Llm : null;
+                        const label = spare ?? shown;
                         if (!label) return null;
+                        /**
+                         * **모델이 정했는가.**
+                         *
+                         * 확정 칸이 비었을 때만 보면 안 된다 — 추정은 곧바로 원장에 반영되어
+                         * (`CategoryPromotionService`, 출처 `LLM_LOCAL`) 확정 칸이 차기 때문이다.
+                         * 그래서 예전 규칙으로는 <b>운영 983건(46%)이 사람의 확정과 똑같이</b>
+                         * 보였고, 반대로 뜨는 것은 모델도 모른다고 답한 줄뿐이었다
+                         * (`AI 추정 · 카테고리없음`, 2026-08-26 실측).
+                         *
+                         * 값이 어디서 왔는지는 `category2Source` 가 들고 있다. 그것을 본다.
+                         *
+                         * **색과 글자가 같은 말을 해야 한다** — 모델도 모른다고 답한 줄은
+                         * 'AI 추정'을 안 적고 색도 안 쓴다. 색만 말하고 글자가 침묵하면
+                         * 무슨 뜻인지 알 수 없다.
+                         */
+                        const guessed = !mine && !isNone(label)
+                          && (!!spare || p.category2Source === 'LLM_LOCAL');
                         return (
                           <button type="button"
                             onClick={(e) => { e.stopPropagation(); setEditing(editing === p.paymentId ? null : p.paymentId); }}
-                            className="sp-tag"
-                            /* **추정은 호박색이다.** 브랜드색(초록)은 "확인됨·좋음"으로 읽히는데
-                               이 배지의 뜻은 정반대다 — <b>아직 확정이 아니니 봐 달라</b>.
-                               미분류 정리 화면과 같은 조합(#FFF4E5 + --amber-t = .tag-warn)을 쓴다. */
-                            style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                                     background: guess ? '#FFF4E5' : 'var(--bg2)',
-                                     color: guess ? 'var(--amber-t)' : 'var(--t3)' }}>
-                            {/* **추정이라도 카테고리 이름만 적는다.** `AI 추정 · 카테고리없음` 은
-                                열두 자를 먹으면서 아무 말도 안 한다 — 호박색이 이미 "확정이
-                                아니다"를 말하고 있다(2026-08-26 화면 확인). */}
-                            {catLabel(label)} ✎
+                            /* **칸을 두르지 않는다.** 배경과 안여백을 주면 열두 자짜리 문구가
+                               커다란 알약이 되어 보조줄을 통째로 먹는다 — 글자 크기 그대로여야
+                               한다(2026-08-26 화면 확인). 색만으로 충분히 구별된다.
+                               **추정은 호박색이다.** 브랜드색(초록)은 "확인됨·좋음"으로 읽히는데
+                               뜻은 정반대다 — <b>아직 확정이 아니니 봐 달라</b>. */
+                            className={guessed ? 'cat guess' : 'cat'}>
+                            {/* **'AI 추정'을 적는다.** 색만으로는 무슨 색인지 배워야 알고,
+                                색을 못 보는 사람에게는 아무 말도 안 한다.
+                                단, 모델도 모른다고 답했으면 안 적는다 —
+                                `AI 추정 · 카테고리없음` 은 열두 자를 먹으면서
+                                <i>"AI 가 모른다고 추정했다"</i>는 말이 되어 아무 뜻이 없다. */}
+                            {guessed ? `AI 추정 · ${catLabel(label)}` : catLabel(label)} ✎
                           </button>
                         );
                       })()}
@@ -461,9 +481,10 @@ export function Transactions() {
                           목록에서 바로 보여야 사용자가 판정을 의심하지 않는다. */}
                       {p.category && sanctuary.has(p.category) && <span className="sp-tag tag-sanct">성역</span>}
                       {fixedOf(p) && <span className="sp-tag tag-fixed">고정</span>}
-                      {/* **결제수단을 가게처럼 보여 주지 않는다.** 걷어내니 아무것도 안 남은
-                          결제는 카드사가 준 정보가 "간편결제로 샀다" 뿐이다. */}
-                      {viaOnly(p) && <span className="sp-tag" style={{ background: 'var(--bg2)', color: 'var(--t3)' }}>경유</span>}
+                      {/* **결제 경로는 줄에 적지 않는다.** 이름 자리에 이미 결제대행사가 떠
+                          있고(`토스페이먼츠`) 카테고리도 `카테고리없음` 이라, 여기에 한 번 더
+                          적으면 같은 말을 세 번 하는 것이다(2026-08-26 지적).
+                          거쳐 간 곳은 카드사를 눌러 펼치면 `토스페이먼츠 경유` 로 나온다. */}
                     </span>
                     {/* **자세히 — 평소에는 숨어 있다.** 원문 상호는 버리지 않는다. 어느 지점인지가
                         사라지면 안 되고, 표시명이 미심쩍을 때 확인할 자리가 있어야 한다. */}
