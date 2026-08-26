@@ -39,7 +39,10 @@ concurrency:
 env:
   # 운영과 같은 파일을 쓴다. 개발 스택(docker-compose.yml)은 포트·프로파일·메모리 한도가 달라
   # 여기서 통과해도 운영에서 죽을 수 있다.
-  CO: -f docker-compose.prod.yml -f docker-compose.prod.local-db.yml -f docker-compose.prod.large.yml --profile local-db --env-file deploy/ci.env
+  # **운영과 같은 조합이어야 한다.** 2026-08-26 에 운영을 4GB(`t3a.medium`)로 내리면서
+  # `prod.large.yml`(8GB용)을 뺐다 — 여기도 함께 빼야 CI 가 운영이 하는 일을 그대로 한다.
+  # 갈리면 CI 는 통과하는데 운영에서 메모리로 죽는 경로가 생긴다(이 파일 머리말의 취지).
+  CO: -f docker-compose.prod.yml -f docker-compose.prod.local-db.yml --profile local-db --env-file deploy/ci.env
 
 jobs:
   test:
@@ -143,8 +146,10 @@ jobs:
       - name: 환경변수 전달 누락 검사
         run: |
           promised=$(grep -oE '^[A-Z][A-Z0-9_]*' deploy/.env.example | sort -u)
+          # **배포에 실제로 쓰는 파일만 본다.** 안 쓰는 오버레이를 넣으면 거기 적힌 변수가
+          # "전달된다"로 세어져 누락을 가린다. 지금 조합은 base + local-db 다(위 CO 와 같다).
           passed=$(grep -hoE '\$\{[A-Z][A-Z0-9_]*' \
-                     docker-compose.prod.yml docker-compose.prod.local-db.yml docker-compose.prod.large.yml \
+                     docker-compose.prod.yml docker-compose.prod.local-db.yml \
                    | grep -oE '[A-Z][A-Z0-9_]*$' | sort -u)
           missing=$(comm -23 <(echo "$promised") <(echo "$passed"))
           if [ -n "$missing" ]; then
