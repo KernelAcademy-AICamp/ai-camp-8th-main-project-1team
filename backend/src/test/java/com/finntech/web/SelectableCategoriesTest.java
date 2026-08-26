@@ -60,16 +60,29 @@ class SelectableCategoriesTest {
 
     /**
      * <b>목록과 검증이 갈리면 안 된다.</b> 화면이 준 것을 서버가 거절하면 사용자는 이유를 모른다.
+     *
+     * <p>표에 <b>무엇이 더 들어 있든</b> 성립해야 한다. 처음에는 "모르는 칸을 뺀다"로 적었는데
+     * 그것은 <i>아는 쓰레기</i>만 막는다 — 다른 시험이 남긴 가짜 행 하나가 목록에 그대로
+     * 새어 나와 이 시험이 깨졌다(CI, 2026-08-26). 시험 순서에 따라 붙었다 떨어졌다 했다.
+     * 그래서 <b>없는 것을 빼는</b> 대신 <b>있는 것만 넣는</b> 쪽으로 바꿨고, 여기서도 가짜 행을
+     * 직접 심어 그 성질을 못박는다.
      */
     @Test
     @DisplayName("목록에 있는 것은 서버가 받는다")
     void 목록과_검증이_같다() {
         var mapper = new IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper());
 
-        for (Category c : api.categories()) {
+        // 표에 중분류가 아닌 행이 섞여도 목록에 새면 안 된다.
+        String junk = "시험용_없는칸";
+        categories.findByCode(junk).orElseGet(() -> categories.save(new Category(junk, junk)));
+
+        List<String> codes = api.categories().stream().map(Category::getCode).toList();
+        assertThat(codes).as("중분류가 아닌 행이 선택지에 샜다").doesNotContain(junk);
+
+        for (String code : codes) {
             assertThat(mapper.midCategories())
-                    .as("'%s' 는 목록에 있는데 confirm 이 400 을 낸다", c.getCode())
-                    .contains(c.getCode());
+                    .as("'%s' 는 목록에 있는데 confirm 이 400 을 낸다", code)
+                    .contains(code);
         }
     }
 }
