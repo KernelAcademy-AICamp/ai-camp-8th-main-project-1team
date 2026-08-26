@@ -390,6 +390,17 @@ export interface MyPaymentHistory {
    * 결제대행사(토스페이·카카오페이)는 서버가 뺀다. 결제수단은 가게가 아니다.
    */
   brand?: string | null;
+  /**
+   * **소비내역에 적을 이름**(V44). 서버가 결제 행에 적어 둔 값이라 화면이 계산하지 않는다.
+   *
+   * 언제나 **원문의 부분집합**이다 — 지어내지 않는다. 실사용자 결제의 29%가 PG 번호로
+   * 찍혀 `토스페이_일반-(주)비바리퍼블리카` 처럼 결제 경로가 상호를 밀어낸다.
+   */
+  displayName?: string | null;
+  /** `BRAND`·`RESIDUE`·`AGENCY_ONLY`·`RAW` — 화면이 배지와 펼침을 가르는 근거다. */
+  displayNameSource?: string | null;
+  /** 거쳐 간 결제대행사. **사업자번호가 알려 준 사실**이라 상호에서 짐작한 것이 아니다. */
+  viaAgency?: string | null;
 }
 /** 가맹점 조회(번호→주소). */
 export interface MyMerchant {
@@ -1484,3 +1495,19 @@ export const CATEGORY_LABEL: Record<string, string> = {
 };
 export const catLabel = (code: string, displayName?: string) =>
   (displayName && displayName !== code ? displayName : CATEGORY_LABEL[code]) ?? code;
+
+/**
+ * **무엇에 썼는지 모르는 칸** — `카테고리없음`(아직 못 정함)과 `기타`(다 해봤지만 못 정함).
+ *
+ * 둘은 과정이 다를 뿐 사용자에게는 같은 뜻이다: *"이 돈이 어디로 갔는지 우리도 모른다."*
+ *
+ * **챌린지에서는 고를 수 없다.** 모르는 칸에 목표를 걸면 무엇을 줄여야 하는지 말해 줄 수
+ * 없고, 금액만 보여 주면 *"이만큼 줄일 수 있다"* 는 잘못된 확신을 준다. 실사용자 온보딩에서
+ * `기타` 가 늘 후보로 떠 있었다(2026-08-26 제보).
+ *
+ * 판정이 화면마다 흩어지면 한 곳이 빠진다 — 실제로 `카테고리없음` 만 거르고 `기타` 는
+ * 안 거르는 자리가 넷이었다. 그래서 여기 하나로 둔다.
+ */
+export const UNKNOWN_CATEGORIES = ['카테고리없음', '기타'];
+export const isUnknownCategory = (code: string | null | undefined) =>
+  !code || UNKNOWN_CATEGORIES.includes(code);

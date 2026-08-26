@@ -268,6 +268,18 @@ public class IndustryCategoryMapper {
     }
 
     /**
+     * <b>이 번호의 결제대행사가 누구인가</b> — 모르면 빈 문자열.
+     *
+     * <p>{@link #isPaymentAgency} 가 <i>"PG 인가"</i>만 답하는 데 비해 여기는 <b>누구인지</b>를
+     * 답한다. 화면이 <i>"토스페이먼츠 경유"</i> 라고 적으려면 이름이 필요하고, 그 이름은
+     * <b>번호가 알려 준 사실</b>이라 추측이 아니다 — 상호 문자열에서 짐작하는 것과 다르다.
+     */
+    public String paymentAgencyOf(String businessNumber) {
+        if (businessNumber == null) return "";
+        return pgBusinessNumbers.getOrDefault(businessNumber.replaceAll("\\D", ""), "");
+    }
+
+    /**
      * 한 번호에 <b>성격이 다른 사업이 여럿</b> 붙은 곳인가 — 백화점 입점, 배 안의 편의점.
      *
      * <p>PG 와 다르다. PG 는 번호가 <b>남의 것</b>이라 아예 버리지만, 여기는 번호가 그 사업자의
