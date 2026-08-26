@@ -1026,18 +1026,27 @@ public class MyDataLinkService {
         LocalDateTime from = referenceDate().minusMonths(monthsBack).atStartOfDay();
         Map<String, UserCard> bySerial = userCardRepository.findByUserIdOrderByIdAsc(userId).stream()
                 .collect(Collectors.toMap(UserCard::getSerialNumber, c -> c, (a, b) -> a));
+        // **같은 상호는 한 번만 맞춘다.** 표기표 대조는 표기 1,200여 개를 훑는 일이라
+        // 결제마다 하면 한 화면에 수십만 번이 된다. 한 사람의 12개월치에 같은 상호가
+        // 여러 번 나오므로 이름으로 기억해 두면 그만큼 준다.
+        Map<String, String> brandOfName = new java.util.HashMap<>();
         return userPaymentRepository.findByUserIdOrderByPaymentDateDesc(userId).stream()
                 .filter(payment -> !payment.getPaymentDate().isBefore(from))
                 .map(payment -> {
                     UserCard card = bySerial.get(payment.getCardSerial());
+                    String name = payment.getMerchantName();
+                    String brand = name == null || name.isBlank() ? null
+                            : brandOfName.computeIfAbsent(name,
+                                    n -> merchantBrandService.shownBrandOf(n).orElse(""));
                     return new PaymentHistoryRow(payment.getPaymentId(), payment.getPaymentDate(),
                             payment.getCategory2(), payment.getCategory2(), payment.getAmount(),
-                            payment.getMerchantName(),
+                            name,
                             card != null ? card.getCardName() : null,
                             card != null ? card.getCardColor() : null,
                             card != null ? card.getCompanyName() : null,
                             payment.getBusinessNumber(), payment.getCategory2Llm(),
-                            payment.getCategory2Source());
+                            payment.getCategory2Source(),
+                            brand == null || brand.isEmpty() ? null : brand);
                 })
                 .toList();
     }
@@ -1133,5 +1142,14 @@ public class MyDataLinkService {
                                      * 이 칸이 없으면, 추정을 원장에 반영한 순간 화면에서
                                      * 사람의 확정과 똑같아 보인다.
                                      */
-                                    String category2Source) {}
+                                    String category2Source,
+                                    /**
+                                     * 표기표가 확정한 <b>브랜드</b>. 없으면 {@code null}.
+                                     *
+                                     * <p>화면은 이것이 있으면 이것을 앞세우고 가맹점 풀네임은
+                                     * 아래 줄로 내린다 — {@code 주식회사 빅바이트컴퍼니 쉐이크쉑
+                                     * 강남스퀘어} 보다 <b>쉐이크쉑</b> 이 먼저 읽힌다. 풀네임을
+                                     * 버리지는 않는다. 어느 지점인지가 사라지면 안 된다.
+                                     */
+                                    String brand) {}
 }

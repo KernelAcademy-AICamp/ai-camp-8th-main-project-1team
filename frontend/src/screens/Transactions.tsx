@@ -176,7 +176,11 @@ export function Transactions() {
     const rows = all.filter((p) => {
       if (q) {
         if (limit && p.date.slice(0, 10) < limit) return false;
-        return (p.merchantName ?? '').toLowerCase().replace(/\s/g, '').includes(q);
+        // **브랜드도 찾는다.** 상호에 브랜드 글자가 안 들어 있는 결제가 있다 —
+        // `에프알엘코리아 주식회사`(유니클로)·`비지에프리테일`(CU) 처럼 운영사 이름으로
+        // 찍히는 자리다. 보이는 이름으로 검색이 안 되면 사용자는 없는 줄 안다.
+        const hay = `${p.merchantName ?? ''}${p.brand ?? ''}`.toLowerCase().replace(/\s/g, '');
+        return hay.includes(q);
       }
       if (filter === 'all') return true;
       const sanct = p.category ? sanctuary.has(p.category) : false;
@@ -383,9 +387,15 @@ export function Transactions() {
                     </span>
                     <div className="tx">
                     <b>
-                      {p.merchantName
-                        ? highlight(p.merchantName, (query ?? '').trim())
-                        : catLabel(p.category2 ?? p.category)}
+                      {/* **브랜드가 있으면 브랜드를 앞세운다.** `주식회사 빅바이트컴퍼니
+                          쉐이크쉑 강남스퀘어` 는 읽는 사람이 무엇을 샀는지 알기 어렵고,
+                          `카카오T경기33아6084` 는 차량번호가 이름을 밀어낸다. 풀네임은
+                          아래 줄에 그대로 남긴다 — 어느 지점인지가 사라지면 안 된다. */}
+                      {p.brand
+                        ? highlight(p.brand, (query ?? '').trim())
+                        : p.merchantName
+                          ? highlight(p.merchantName, (query ?? '').trim())
+                          : catLabel(p.category2 ?? p.category)}
                       {/* 중분류를 함께 보여준다 — 가맹점명만으로는 이 결제가 어느 카테고리로
                           집계됐는지 알 수 없어, 리포트 숫자와 목록을 맞춰 볼 방법이 없었다.
                           확정이 없고 추정만 있으면 **눌러서 확정**할 수 있게 한다 — 확정 화면을
@@ -419,6 +429,11 @@ export function Transactions() {
                       {fixedOf(p) && <span className="sp-tag tag-fixed">고정</span>}
                     </b>
                     <span className="sub">
+                      {/* 브랜드를 앞세운 줄에서만 풀네임을 여기 적는다. 브랜드가 없으면
+                          위에 이미 풀네임이 있으므로 두 번 쓰지 않는다. */}
+                      {p.brand && p.merchantName && p.merchantName !== p.brand && (
+                        <>{highlight(p.merchantName, (query ?? '').trim())}{' · '}</>
+                      )}
                       {hhmm(p.date)}
                       {p.businessNumber && (
                         <>

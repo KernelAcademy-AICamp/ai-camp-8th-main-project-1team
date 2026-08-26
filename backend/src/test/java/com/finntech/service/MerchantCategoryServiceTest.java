@@ -865,4 +865,50 @@ class MerchantCategoryServiceTest {
         assertThat(row.get().getCategory3())
                 .as("등록 업종(사실)이 모델의 답(추정)을 이긴다").isEqualTo("약국");
     }
+
+    /**
+     * <b>후불교통은 카드사 번호로 찍힌다</b> — 등록 업종이 가맹점이 아니라 카드사의 것이다.
+     *
+     * <p>운영에서 {@code 버스}·{@code 지하철} 두 상호가 카드사 사업자번호({@code 1208154231})
+     * 아래 앉아 등록 업종 {@code 신용카드 및 할부 금융업} 을 받았고, 그대로 <b>금융/보험 ·
+     * 소분류 카드</b>가 됐다(2026-08-25 운영 실측). 화면에 그대로 보이는 오분류다.
+     *
+     * <p><b>상호가 사실을 말하고 있다.</b> 등록 업종은 그 사업자(카드사)의 사실이지만
+     * <i>"이 결제가 무엇에 쓴 돈인가"</i>는 아니다. 그래서 표기표에 올려 브랜드가 답하게 한다 —
+     * 브랜드가 중분류를 이기는 규칙(§13-12 ①-b) 그대로라 새 원칙이 안 들어간다.
+     *
+     * <p>{@code 티머니버스}·{@code 티머니지하철}·{@code 코버스} 가 이미 같은 자리에 있다.
+     */
+    @Test
+    @DisplayName("후불교통 상호는 카드사 업종을 이기고 교통으로 간다")
+    void 후불교통은_교통이다() {
+        var bus = service.rememberBrand(realPayment("0000000061", "버스"));
+        assertThat(bus).isPresent();
+        assertThat(bus.get().getCategory3()).isEqualTo("버스");
+        assertThat(bus.get().getCategory2())
+                .as("카드사 번호로 찍혔다고 금융/보험이 되면 안 된다").isEqualTo("교통/자동차");
+
+        var metro = service.rememberBrand(realPayment("0000000062", "지하철"));
+        assertThat(metro).isPresent();
+        assertThat(metro.get().getCategory3()).isEqualTo("지하철");
+        assertThat(metro.get().getCategory2()).isEqualTo("교통/자동차");
+    }
+
+    /**
+     * <b>두 글자 표기가 남의 상호를 삼키면 안 된다.</b> {@code 버스} 는 두 글자라 뒤에 한글이
+     * 붙으면 안 걸리고({@code matchesKorean}), 더 긴 표기 안에 들어가면 버려진다.
+     */
+    @Test
+    @DisplayName("'버스' 가 놀유니버스·한강버스뚝섬점을 삼키지 않는다")
+    void 버스가_남의_상호를_안_삼킨다() {
+        MerchantBrandService brands = noBrands();
+        assertThat(brands.subBrandOf("주식회사 놀유니버스", mapper::hasSub))
+                .as("더 긴 표기(놀유니버스)가 이긴다").contains("NOL");
+        assertThat(brands.subBrandOf("씨유(CU) 한강버스뚝섬선착장점", mapper::hasSub))
+                .as("뒤에 한글이 붙으면 두 글자 표기는 안 걸린다").contains("CU");
+        assertThat(brands.subBrandOf("03월티머니버스 0001건", mapper::hasSub))
+                .as("티머니버스가 통째로 이긴다").contains("티머니버스");
+        assertThat(brands.subBrandOf("버스_모바일 24 건", mapper::hasSub))
+                .as("뒤가 한글이 아니면 걸린다").contains("버스");
+    }
 }
