@@ -12,7 +12,7 @@ import { useAsync } from '../state/useAsync';
 import { api, catLabel, type MyMerchant, type MyPaymentHistory } from '../lib/api';
 import { SpendCalendar } from '../components/SpendCalendar';
 import { Icon } from '../components/Icons';
-import { won, iconOf, inkColor } from '../lib/format';
+import { won, iconOf, inkColor, tintColor } from '../lib/format';
 
 /** 검색 기간 사다리 — 3 · 6 · 9 · 12개월(개편안 `SP_FROMS`). */
 const SPANS = [3, 6, 9, 12];
@@ -420,7 +420,10 @@ export function Transactions() {
                           목록에서 알아야 할 것은 어디에 썼는가다. */}
                       {(p.companyName ?? p.cardName) && (
                         <button type="button" className="cd"
-                          style={{ color: inkColor(p.cardColor) }}
+                          /* **카드 색은 배경으로 내린다.** 글자색으로 쓰면 보조줄에 색 글자가
+                             둘(카드사·AI 추정)이 되어 어느 쪽이 무슨 뜻인지 알 수 없다.
+                             배경으로 내리고 글자는 일반색이면 카드는 알아보되 조용하다. */
+                          style={{ background: tintColor(p.cardColor), color: 'var(--t2)' }}
                           aria-expanded={!!detailOpen[p.paymentId]}
                           aria-label={`${p.companyName ?? p.cardName} — 원문 가맹점명과 사업자번호 ${detailOpen[p.paymentId] ? '접기' : '보기'}`}
                           onClick={(e) => {
@@ -436,14 +439,29 @@ export function Transactions() {
                           확정이 없고 추정만 있으면 **눌러서 확정**할 수 있게 한다 — 확정 화면을
                           따로 찾아가야만 고칠 수 있으면, 추정은 영영 '카테고리없음'으로 남는다. */}
                       {(() => {
-                        const shown = fixed[p.paymentId] ?? p.category2 ?? p.category;
-                        const guess = !fixed[p.paymentId] && isNone(shown) ? p.category2Llm : null;
-                        const label = guess ?? shown;
+                        const mine = fixed[p.paymentId];        // 방금 사용자가 고친 값
+                        const shown = mine ?? p.category2 ?? p.category;
+                        // 확정이 비었을 때만 추정 칸을 꺼내 본다.
+                        const spare = !mine && isNone(shown) ? p.category2Llm : null;
+                        const label = spare ?? shown;
                         if (!label) return null;
-                        // **색과 글자가 같은 말을 해야 한다.** 모델도 모른다고 답한 줄은
-                        // 'AI 추정'을 안 적으므로 호박색도 쓰지 않는다 — 색만 경고하고
-                        // 글자는 아무 말도 안 하면 무슨 뜻인지 알 수 없다.
-                        const guessed = !!guess && !isNone(guess);
+                        /**
+                         * **모델이 정했는가.**
+                         *
+                         * 확정 칸이 비었을 때만 보면 안 된다 — 추정은 곧바로 원장에 반영되어
+                         * (`CategoryPromotionService`, 출처 `LLM_LOCAL`) 확정 칸이 차기 때문이다.
+                         * 그래서 예전 규칙으로는 <b>운영 983건(46%)이 사람의 확정과 똑같이</b>
+                         * 보였고, 반대로 뜨는 것은 모델도 모른다고 답한 줄뿐이었다
+                         * (`AI 추정 · 카테고리없음`, 2026-08-26 실측).
+                         *
+                         * 값이 어디서 왔는지는 `category2Source` 가 들고 있다. 그것을 본다.
+                         *
+                         * **색과 글자가 같은 말을 해야 한다** — 모델도 모른다고 답한 줄은
+                         * 'AI 추정'을 안 적고 색도 안 쓴다. 색만 말하고 글자가 침묵하면
+                         * 무슨 뜻인지 알 수 없다.
+                         */
+                        const guessed = !mine && !isNone(label)
+                          && (!!spare || p.category2Source === 'LLM_LOCAL');
                         return (
                           <button type="button"
                             onClick={(e) => { e.stopPropagation(); setEditing(editing === p.paymentId ? null : p.paymentId); }}
@@ -452,14 +470,13 @@ export function Transactions() {
                                한다(2026-08-26 화면 확인). 색만으로 충분히 구별된다.
                                **추정은 호박색이다.** 브랜드색(초록)은 "확인됨·좋음"으로 읽히는데
                                뜻은 정반대다 — <b>아직 확정이 아니니 봐 달라</b>. */
-                            className="cat"
-                            style={{ color: guessed ? 'var(--amber-t)' : 'var(--t3)' }}>
+                            className={guessed ? 'cat guess' : 'cat'}>
                             {/* **'AI 추정'을 적는다.** 색만으로는 무슨 색인지 배워야 알고,
                                 색을 못 보는 사람에게는 아무 말도 안 한다.
                                 단, 모델도 모른다고 답했으면 안 적는다 —
                                 `AI 추정 · 카테고리없음` 은 열두 자를 먹으면서
                                 <i>"AI 가 모른다고 추정했다"</i>는 말이 되어 아무 뜻이 없다. */}
-                            {guessed ? `AI 추정 · ${catLabel(guess!)}` : catLabel(label)} ✎
+                            {guessed ? `AI 추정 · ${catLabel(label)}` : catLabel(label)} ✎
                           </button>
                         );
                       })()}
