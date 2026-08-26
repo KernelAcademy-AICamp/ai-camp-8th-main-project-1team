@@ -57,11 +57,13 @@ public class DisplayNameBackfill {
     private final ReportRepository reports;
     private final ConsumptionRepository consumptions;
     private final CategoryRepository categories;
+    private final com.finntech.ledger.SpendingLedgerDirtyMarker ledgerDirty;
 
     public DisplayNameBackfill(AppUserRepository users, UserPaymentRepository payments,
                                MerchantBrandService brands, MerchantDisplayName displayNames,
                                TempClassifierService temporary, ReportRepository reports,
-                               ConsumptionRepository consumptions, CategoryRepository categories) {
+                               ConsumptionRepository consumptions, CategoryRepository categories,
+                               com.finntech.ledger.SpendingLedgerDirtyMarker ledgerDirty) {
         this.users = users;
         this.payments = payments;
         this.brands = brands;
@@ -70,6 +72,7 @@ public class DisplayNameBackfill {
         this.reports = reports;
         this.consumptions = consumptions;
         this.categories = categories;
+        this.ledgerDirty = ledgerDirty;
     }
 
     /**
@@ -123,6 +126,7 @@ public class DisplayNameBackfill {
 
         for (Long userId : realPeople) {
             boolean touched = false;
+            boolean markedSimplePay = false;
             // **같은 상호는 한 번만 푼다.** 한 사람의 12개월치에 같은 가맹점이 여러 번 나온다.
             Map<String, MerchantDisplayName.Shown> memo = new HashMap<>();
             for (UserPayment p : payments.findByUserIdOrderByPaymentDateDesc(userId)) {
@@ -155,6 +159,7 @@ public class DisplayNameBackfill {
                         && p.markSimplePay()) {
                     simplePay++;
                     touched = true;
+                    markedSimplePay = true;
                     // **원장의 짝도 함께 고친다.** 분석·리포트·점수가 읽는 것은 `Consumption`
                     // 이고, 결제만 고치면 화면과 계산이 갈린다.
                     for (Consumption c : consumptions.findBySourcePaymentId(p.getPaymentId())) {
@@ -174,6 +179,13 @@ public class DisplayNameBackfill {
             // **리포트 캐시를 깬다.** 안 깨면 사용자는 옛 이름을 계속 본다 — 결제 행을 고친
             // 모든 자리가 지키는 규칙이다.
             if (touched) reports.deleteByUserId(userId);
+            // **소비 원장에도 알린다.** 분류를 바꿔 놓고 안 알리면 원장이 옛 카테고리를 든
+            // 채로 남고, 낭비 판정도 그대로 산다 — 판정 갱신은 <b>사실이 바뀌었는가</b>
+            // (`wasteRecordedAt < factsUpdatedAt`)를 보는데 그 사실이 안 움직이기 때문이다.
+            // 실제로 그렇게 낭비 5건 92,850원이 남았다(2026-08-26 운영 실측).
+            if (markedSimplePay) {
+                ledgerDirty.mark(userId, com.finntech.domain.SpendingLedgerDirty.Reason.CATEGORY);
+            }
         }
 
         // **줄이기는 마지막에 한 번만 올린다.** 결제마다 올리면 같은 이름이 큐를 채운다.
