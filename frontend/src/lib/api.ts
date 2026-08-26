@@ -382,6 +382,14 @@ export interface MyPaymentHistory {
   cardColor: string | null;
   companyName: string | null;
   businessNumber: string | null;
+  /**
+   * 표기표가 확정한 **브랜드**. 없으면 null.
+   *
+   * 화면은 이것이 있으면 앞세우고 가맹점 풀네임은 아래 줄로 내린다 —
+   * `주식회사 빅바이트컴퍼니 쉐이크쉑 강남스퀘어` 보다 **쉐이크쉑** 이 먼저 읽힌다.
+   * 결제대행사(토스페이·카카오페이)는 서버가 뺀다. 결제수단은 가게가 아니다.
+   */
+  brand?: string | null;
 }
 /** 가맹점 조회(번호→주소). */
 export interface MyMerchant {

@@ -78,7 +78,9 @@ export function Home() {
                 <div className="list-item" key={p.paymentId} style={{ padding: '12px 0', borderBottom: '1px solid var(--bg)' }}>
                   <span className="ic" style={{ background: bg }}><Icon id={icon} /></span>
                   <div className="tx">
-                    <b>{p.merchantName ?? p.category2 ?? p.category}</b>
+                    {/* 소비내역과 같은 이름을 쓴다 — 같은 결제가 화면마다 다르게 보이면
+                        사용자는 다른 결제로 읽는다. 브랜드가 있으면 브랜드가 앞이다. */}
+                    <b>{p.brand ?? p.merchantName ?? p.category2 ?? p.category}</b>
                     <span>{shortDate(p.date)} · {p.category2 ?? p.category}</span>
                   </div>
                   <span className="amt">-{won(p.amount)}</span>
@@ -318,7 +320,7 @@ export function Home() {
               <p className="empty">아직 불러온 결제가 없어요. 마이 &gt; 연결 관리에서 동기화해 보세요.</p>
             )}
             {recent.map((p) => {
-              const name = p.merchantName ?? p.category2 ?? p.category;
+              const name = p.brand ?? p.merchantName ?? p.category2 ?? p.category;
               const { icon, bg } = iconOf(p.category2 ?? p.category);
               return (
                 <div className="list-item" key={p.paymentId} style={{ padding: '12px 0', borderBottom: '1px solid var(--bg)' }}>
