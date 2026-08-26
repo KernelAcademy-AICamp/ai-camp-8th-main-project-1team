@@ -3657,8 +3657,14 @@ textarea.inp{ min-height: 92px; resize: vertical; line-height: 1.5; }
 .sp-card .list-item{ gap: 12px; padding: 12px 0; align-items: center; }
 .sp-card .list-item .ic{ width: 40px; height: 40px; flex: 0 0 40px; }
 .sp-card .list-item .tx{ flex: 1; min-width: 0; }
-.sp-card .list-item .tx b{ display: block; font-size: 15px; font-weight: 700;
-  margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 이름 줄은 **가로 상자**다 — 이름만 줄어들고 배지는 자리를 지킨다. 예전에는 이름과
+   배지가 한 덩어리라, 긴 상호가 배지를 화면 밖으로 밀어냈다. 배지는 눌러서 카테고리를
+   고치는 컨트롤이라 잘리면 기능이 통째로 사라진다(2026-08-26). */
+.sp-card .list-item .tx b{ display: flex; align-items: center; gap: 6px;
+  font-size: 15px; font-weight: 700; margin-bottom: 4px; min-width: 0; }
+.sp-card .list-item .tx b .nm{ flex: 1 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-card .list-item .tx b .sp-tag{ flex: 0 0 auto; }
 /* 시각·사업자번호·주소는 이름 아래 한 줄로. 길어도 줄을 넘기지 않는다. */
 .sp-card .list-item .tx .sub{ display: block; font-size: 12px; font-weight: 400;
   color: var(--t3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

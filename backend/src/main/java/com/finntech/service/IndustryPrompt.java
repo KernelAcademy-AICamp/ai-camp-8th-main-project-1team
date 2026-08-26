@@ -284,6 +284,30 @@ public final class IndustryPrompt {
      * <p>이 저장소에 이미 같은 형태가 있다({@code MerchantClassifierService.tieBreak} —
      * 무료와 유료가 갈렸을 때 하나를 고르게 하는 것). 검증된 모양을 한 통로 안으로 들인다.
      */
+    /**
+     * <b>이름을 줄여 달라</b> — 최후의 수단으로만 쓴다.
+     *
+     * <p><b>업종도 카테고리도 묻지 않는다.</b> 판단은 우리 표가 하고 모델은 <b>글자만</b>
+     * 만진다 — 마스터 §4 원칙 1 이 그어 둔 선 그대로다.
+     *
+     * <p><b>세 번 못박는다</b> — 원문의 낱말만 쓸 것, 지점·법인격·결제수단을 뺄 것,
+     * 못 줄이면 그대로 둘 것. 그래도 지어내면 {@code keepsWords} 가 그 답을 버린다.
+     */
+    public static String shorten(String merchantName, int maxChars) {
+        return """
+                다음은 카드 명세서에 찍힌 가맹점명이다. 목록에서 읽기 쉽게 줄여라.
+
+                규칙
+                - 원문에 있는 낱말만 쓴다. 없는 낱말을 만들지 마라.
+                - 지점명, 법인격(주식회사·(주)), 결제수단 표기를 뺀다.
+                - %d자 이하로 만든다.
+                - 줄일 수 없으면 원문을 그대로 답한다.
+                - 설명하지 말고 이름 한 줄만 답한다.
+
+                가맹점명: %s
+                """.formatted(maxChars, merchantName);
+    }
+
     public static String tieBreak(String merchantName, String a, String b) {
         return """
                 한국 카드 명세서에 찍힌 가맹점명 하나와, 그 가맹점의 업종 후보 둘이 있습니다.

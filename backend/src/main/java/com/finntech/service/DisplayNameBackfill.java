@@ -48,15 +48,17 @@ public class DisplayNameBackfill {
     private final UserPaymentRepository payments;
     private final MerchantBrandService brands;
     private final MerchantDisplayName displayNames;
+    private final TempClassifierService temporary;
     private final ReportRepository reports;
 
     public DisplayNameBackfill(AppUserRepository users, UserPaymentRepository payments,
                                MerchantBrandService brands, MerchantDisplayName displayNames,
-                               ReportRepository reports) {
+                               TempClassifierService temporary, ReportRepository reports) {
         this.users = users;
         this.payments = payments;
         this.brands = brands;
         this.displayNames = displayNames;
+        this.temporary = temporary;
         this.reports = reports;
     }
 
@@ -105,6 +107,8 @@ public class DisplayNameBackfill {
     private Result run(List<Long> realPeople, boolean dryRun) {
         Map<String, Integer> bySource = new TreeMap<>();
         List<String> samples = new ArrayList<>();
+        // 규칙으로 못 줄인 이름 — 이번 회차가 끝나면 큐에 올린다(중복 없이 한 번씩).
+        java.util.Set<String> tooLong = new java.util.LinkedHashSet<>();
         int scanned = 0, fixed = 0;
 
         for (Long userId : realPeople) {
@@ -120,6 +124,18 @@ public class DisplayNameBackfill {
                         ignored -> displayNames.of(name, p.getBusinessNumber(),
                                 brands.shownBrandOf(name).orElse(null)));
                 if (shown.display().isBlank()) continue;
+                // **최후의 수단** — 규칙을 다 거치고도 여전히 길면 모델에게 줄이기를 맡긴다.
+                // 있으면 쓰고 없으면 큐에 올린다 — 이번 회차는 규칙이 정한 이름을 그대로
+                // 쓰고, 답이 오면 다음 회차가 집어 간다. 화면이 빈칸이 되는 일은 없다.
+                if (shown.display().length() > MerchantDisplayName.TOO_LONG
+                        && shown.source() != MerchantDisplayName.Source.BRAND) {
+                    tooLong.add(shown.display());
+                    var cut = temporary.shortened(shown.display());
+                    if (cut.isPresent()) {
+                        shown = new MerchantDisplayName.Shown(cut.get(),
+                                MerchantDisplayName.Source.MODEL_SHORT, shown.viaAgency());
+                    }
+                }
                 bySource.merge(shown.source().name(), 1, Integer::sum);
                 if (samples.size() < SAMPLE_LIMIT && !shown.display().equals(name)) {
                     samples.add("%s -> %s [%s%s]".formatted(name, shown.display(), shown.source(),
@@ -134,6 +150,12 @@ public class DisplayNameBackfill {
             // **리포트 캐시를 깬다.** 안 깨면 사용자는 옛 이름을 계속 본다 — 결제 행을 고친
             // 모든 자리가 지키는 규칙이다.
             if (touched) reports.deleteByUserId(userId);
+        }
+
+        // **줄이기는 마지막에 한 번만 올린다.** 결제마다 올리면 같은 이름이 큐를 채운다.
+        if (!dryRun && !tooLong.isEmpty()) {
+            temporary.shorten(new ArrayList<>(tooLong), MerchantDisplayName.TOO_LONG,
+                    com.finntech.freechannel.Lane.USER_BACKGROUND);
         }
 
         Result result = new Result(dryRun, scanned, fixed, bySource, samples);

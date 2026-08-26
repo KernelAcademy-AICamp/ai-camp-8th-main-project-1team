@@ -63,8 +63,25 @@ public class MerchantDisplayName {
         /** 걷어내니 아무것도 안 남았다 — 카드사가 준 정보가 "간편결제로 샀다" 뿐이다. */
         AGENCY_ONLY,
         /** PG 가 안 섞인 보통의 상호. 원문 그대로다. */
-        RAW
+        RAW,
+        /**
+         * <b>규칙으로는 못 줄여 모델에게 맡긴 이름</b> — 최후의 수단이다.
+         *
+         * <p>모델은 <b>글자만</b> 만진다. 받은 답은 원문에 없는 낱말이 섞이면 무료 통로가
+         * 버린다({@code keepsWords}). 출처를 갈라 두는 것이 요점이다 —
+         * 규칙이 정한 이름과 모델이 줄인 이름을 한 칸에 섞으면 나중에 가려낼 수 없다.
+         */
+        MODEL_SHORT
     }
+
+    /**
+     * 이 길이를 넘으면 <b>목록에서 읽히지 않는다</b> — 최후의 수단을 부르는 문턱.
+     *
+     * <p>운영 실측(2026-08-26): 규칙을 다 거친 뒤 이 길이를 넘는 것은 실사용자 상호
+     * <b>15종</b>뿐이고 그중 대부분이 해외 결제다. 문턱을 낮추면 멀쩡한 상호까지 모델에게
+     * 가고, 높이면 긴 것이 그대로 남는다.
+     */
+    public static final int TOO_LONG = 14;
 
     /**
      * @param display   화면에 적을 이름
@@ -120,8 +137,14 @@ public class MerchantDisplayName {
      */
     String residue(String name, String agency) {
         List<String> kept = new ArrayList<>();
+        List<Boolean> aside = new ArrayList<>();
         Set<String> seen = new LinkedHashSet<>();
+        boolean[] inParen = parenMask(name);
+        int at = 0;
         for (String piece : SPLIT.split(name)) {
+            int found = piece.isEmpty() ? -1 : name.indexOf(piece, at);
+            if (found >= 0) at = found + piece.length();
+            boolean parenthesised = found >= 0 && inParen[found];
             String token = LEGAL.matcher(piece).replaceAll("").trim();
             String key = bare(token);
             if (key.isEmpty() || key.length() < 2 || DIGITS.matcher(key).matches()) continue;
@@ -138,12 +161,72 @@ public class MerchantDisplayName {
             // 네 글자 이상일 때만 본다. 짧게 잡으면 `카카오`(회사)가 `카카오페이`(결제수단)에
             // 먹혀 진짜 회사가 사라진다(2026-08-26 실측: 주식회사 카카오 18건).
             if (rest.length() >= 4 && isAgencyPrefix(rest)) continue;
-            // **앞 토막을 품은 뒷 토막은 버린다** — `무신사-무신사페이먼츠-무신사페이` 가
-            // 세 번 나열되던 자리다. 같은 회사의 결제 조직이 뒤에 붙는 꼴이다.
-            if (kept.stream().anyMatch(prev -> key.contains(bare(prev)))) continue;
-            if (seen.add(key)) kept.add(token);          // `쿠팡-쿠팡` 처럼 겹치는 것은 한 번만
+            // **앞 토막과 겹치는 뒷 토막은 버린다** — `무신사-무신사페이먼츠-무신사페이` 가
+            // 세 번 나열되던 자리다. 품는 쪽·품기는 쪽 <b>양쪽</b>을 본다:
+            // `CJ더마켓 CJ제일제당 더마켓` 의 마지막 `더마켓` 은 앞 토막 안에 들어 있다.
+            if (kept.stream().anyMatch(prev -> {
+                String before = bare(prev);
+                return key.contains(before) || before.contains(key);
+            })) continue;
+            if (seen.add(key)) { kept.add(token); aside.add(parenthesised); }
         }
-        return String.join(" ", kept).trim();
+        // **괄호 안은 부연이다.** 본문이 있으면 화면에서 접는다 —
+        // `핑크고릴라커피(PINK GORILLA COFFEE)` 는 같은 이름을 두 언어로 적은 것이고,
+        // `주식회사 우리들곳간(해피베네핏 성수점)` 은 지점 설명이다. 원문은 눌러서 본다.
+        boolean hasBody = aside.contains(Boolean.FALSE);
+        List<String> shown = new ArrayList<>();
+        for (int i = 0; i < kept.size(); i++) {
+            if (hasBody && aside.get(i)) continue;
+            shown.add(kept.get(i));
+        }
+        return String.join(" ", trim(shown)).trim();
+    }
+
+    /**
+     * <b>핵심만 남긴다</b> — 운영사와 지점명을 접는다.
+     *
+     * <p>둘 다 <b>토막이 여럿일 때만</b> 접는다. 하나뿐이면 그것이 이름 전체라
+     * {@code 친절한정육점}·{@code 쿨링쿨링아이스크림할인점남현점} 이 통째로 사라진다.
+     *
+     * <p>원문은 버리지 않는다 — 화면에서 '원문'을 눌러 본다.
+     */
+    private static List<String> trim(List<String> tokens) {
+        List<String> out = new ArrayList<>(tokens);
+        // ① 앞의 <b>운영사</b> — `에이치디씨현대산업개발 고척아이파크쇼핑센터` 에서
+        //    돈을 쓴 곳은 뒤다. 국세청에 등록된 법인이 앞에 붙어 오는 꼴이다.
+        while (out.size() >= 2 && OPERATOR_TAIL.stream().anyMatch(out.get(0)::endsWith)) {
+            out.remove(0);
+        }
+        // ② 뒤의 <b>지점명</b> — `세븐틴코인노래연습장 성신여대역점` 에서 어느 지점인지는
+        //    목록에서 필요 없다. 같은 가게가 지점마다 다른 줄로 보이는 것을 막는다.
+        while (out.size() >= 2 && out.get(out.size() - 1).endsWith("점")) {
+            out.remove(out.size() - 1);
+        }
+        return out;
+    }
+
+    /**
+     * 앞에 붙는 <b>운영사 이름의 꼬리</b>. 결제대행사는 아니지만 <i>"어디서 썼나"</i>를
+     * 말해 주지 않는다 — 프랜차이즈 본부·유통 법인이 상호 앞에 실려 오는 자리다.
+     *
+     * <p>목록을 늘릴 때 묻는 것은 하나다 — <i>"이 꼬리로 끝나는 이름이 가게 이름일 수 있는가."</i>
+     * {@code 백화점}·{@code 마트} 는 가게라 여기 넣으면 안 된다.
+     */
+    private static final List<String> OPERATOR_TAIL = List.of(
+            "산업개발", "네트웍스", "리테일", "웰푸드", "홀딩스", "파트너스", "커뮤니케이션즈",
+            "타임그룹", "물산", "유통");
+
+    /** 글자마다 <b>괄호 안인가</b>. 여는 괄호를 세어 중첩도 함께 본다. */
+    private static boolean[] parenMask(String name) {
+        boolean[] mask = new boolean[name.length()];
+        int depth = 0;
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (c == '(' || c == '（' || c == '[' || c == '{') { depth++; mask[i] = true; continue; }
+            if (c == ')' || c == '）' || c == ']' || c == '}') { mask[i] = true; if (depth > 0) depth--; continue; }
+            mask[i] = depth > 0;
+        }
+        return mask;
     }
 
     /**

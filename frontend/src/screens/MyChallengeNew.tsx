@@ -17,7 +17,7 @@ import { AppBar, Scroll, Screen, ErrorBox, Loading, Cta } from '../components/ui
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
 import { useAsync } from '../state/useAsync';
-import { api, catLabel } from '../lib/api';
+import { api, catLabel, isUnknownCategory } from '../lib/api';
 import { won, iconOf } from '../lib/format';
 
 export function MyChallengeNew() {
@@ -35,7 +35,8 @@ export function MyChallengeNew() {
   const sanctuary = new Set(home?.challenge?.sanctuaryCategories ?? []);
   // 이미 줄이는 곳과 성역은 후보에서 뺀다 — 고를 수 없는 것을 목록에 두면 왜 안 되는지 묻게 된다.
   const options = (cats.data ?? []).filter(
-    (c) => !doing.has(c.code) && !sanctuary.has(c.code) && c.code !== '카테고리없음');
+    // **모르는 칸은 고를 수 없다.** 목표를 걸어도 무엇을 줄여야 하는지 말해 줄 수 없다.
+    (c) => !doing.has(c.code) && !sanctuary.has(c.code) && !isUnknownCategory(c.code));
 
   async function add() {
     if (!picked) return;

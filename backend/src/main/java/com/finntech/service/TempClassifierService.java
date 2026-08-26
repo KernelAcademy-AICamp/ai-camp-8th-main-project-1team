@@ -66,6 +66,8 @@ public class TempClassifierService {
 
     /** 가맹점명 → 답. <b>메모리에만</b> 산다 — 재기동하면 비고, 그래도 무해하다. */
     private final Map<String, Cached> cache = new ConcurrentHashMap<>();
+    /** 가맹점명 → 줄인 이름. **만료가 없다** — 이름 줄이기는 바뀌지 않는 사실이다. */
+    private final Map<String, String> shortCache = new ConcurrentHashMap<>();
 
     /**
      * <b>물어봤는데 모른다고 한 것</b> — 한동안 다시 묻지 않는다.
@@ -166,6 +168,82 @@ public class TempClassifierService {
             return Optional.empty();
         }
         return Optional.of(c.guess());
+    }
+
+    /**
+     * <b>이름을 줄여 달라고 맡긴다</b> — <b>최후의 수단</b>이다.
+     *
+     * <p>표시명은 원칙적으로 <b>규칙으로</b> 정한다({@code MerchantDisplayName}) — PG·업태·
+     * 법인격·지점명을 걷어내면 대개 짧아진다. 여기 오는 것은 그 규칙을 다 거치고도 여전히
+     * 긴 상호뿐이다. 규칙으로 되는 것을 모델에게 맡기면 <b>값도 쓰고 답도 흔들린다</b>
+     * (같은 이름을 다시 물으면 다르게 답한다).
+     *
+     * <p><b>지어내지 못하게 묶는다.</b> 프롬프트가 <i>"원문에 있는 낱말만"</i>이라고 말하고,
+     * 받은 답은 {@link #keepsWords} 로 검사해 원문에 없는 낱말이 섞이면 <b>버린다</b>.
+     * 모델이 그럴듯한 상호를 만들어 내면 그것이 사실처럼 화면에 앉기 때문이다(마스터 §4 원칙 1).
+     *
+     * <p>규율은 {@link #classify} 와 같다 — <b>있으면 주고, 없으면 큐에 올린다.</b>
+     *
+     * @return 가맹점명 → <b>이미 받아 둔</b> 짧은 이름. 새로 올린 것은 여기 없다.
+     */
+    public Map<String, String> shorten(List<String> merchantNames, int maxChars, Lane lane) {
+        Map<String, String> out = new LinkedHashMap<>();
+        if (merchantNames == null || merchantNames.isEmpty()) return out;
+
+        List<String> ask = new ArrayList<>();
+        for (String n : merchantNames.stream().distinct().toList()) {
+            String hit = shortCache.get(n);
+            if (hit != null) out.put(n, hit);
+            else ask.add(n);
+        }
+        ask.removeIf(this::recentlyMissed);
+        if (ask.isEmpty() || !usable()) return out;
+        for (String name : ask) {
+            // 호출 하나짜리 일이다 — 분류(3단계)와 달리 한 번 물어보고 끝난다.
+            queue.submit(lane, "shorten:" + name, 1, () -> fillShort(name, maxChars));
+        }
+        return out;
+    }
+
+    /** 이미 받아 둔 짧은 이름 — 없으면 비어 있다. */
+    public Optional<String> shortened(String merchantName) {
+        return Optional.ofNullable(shortCache.get(merchantName));
+    }
+
+    /**
+     * 큐가 부르는 자리 — 한 이름을 줄여 <b>검사한 뒤</b> 캐시에 넣는다.
+     *
+     * <p>만료를 두지 않는다. 이름을 줄이는 일은 <b>바뀌지 않는 사실</b>이라 캐시가 아니라
+     * 자산이고, 부르는 쪽이 결제 행에 적어 두면 다시 물을 일이 없다.
+     */
+    private void fillShort(String name, int maxChars) {
+        String answer = askOne(IndustryPrompt.shorten(name, maxChars));
+        if (answer == null) return;                       // 통로가 죽었다 — 다음에 다시
+        String cut = answer.trim().replaceAll("^[\"\u0027`]+|[\"\u0027`.]+$", "").trim();
+        if (cut.isEmpty() || cut.length() > maxChars || cut.length() >= name.length()
+                || !keepsWords(name, cut)) {
+            noteMiss(name);                               // 못 줄였다 — 한동안 다시 안 묻는다
+            return;
+        }
+        misses.remove(name);
+        shortCache.put(name, cut);
+        log.info("이름 줄이기 — {} → {}", name, cut);
+    }
+
+    /**
+     * <b>원문에 없는 낱말이 섞였는가</b> — 섞였으면 그 답은 못 쓴다.
+     *
+     * <p>모델이 요약 대신 <i>추측</i>을 하면 그럴듯한 상호가 나온다. 그것을 화면에 올리면
+     * 지어낸 이름이 사실이 된다. 두 글자 이상 낱말이 전부 원문 안에 있어야 통과다.
+     */
+    static boolean keepsWords(String original, String shortened) {
+        String flat = original.replaceAll("\\s", "").toUpperCase();
+        for (String word : shortened.trim().split("\\s+")) {
+            String w = word.toUpperCase();
+            if (w.length() < 2) continue;
+            if (!flat.contains(w)) return false;
+        }
+        return true;
     }
 
     /**

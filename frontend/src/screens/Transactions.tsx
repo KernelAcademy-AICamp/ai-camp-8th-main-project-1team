@@ -405,9 +405,14 @@ export function Transactions() {
                       {/* **서버가 적어 둔 표시명을 쓴다**(V44). `주식회사 빅바이트컴퍼니
                           쉐이크쉑 강남스퀘어` 는 무엇을 샀는지 알기 어렵고, `카카오T경기
                           33아6084` 는 차량번호가 이름을 밀어낸다. 원문은 '원문' 을 눌러 본다. */}
-                      {shownName(p)
-                        ? highlight(shownName(p)!, (query ?? '').trim())
-                        : catLabel(p.category2 ?? p.category)}
+                      {/* **이름만 말줄임한다.** 이름과 배지가 한 상자에 있으면 긴 이름이
+                          배지를 화면 밖으로 밀어낸다 — 카테고리 배지는 눌러서 고치는
+                          컨트롤이라 잘리면 기능이 사라진다(2026-08-26). */}
+                      <span className="nm">
+                        {shownName(p)
+                          ? highlight(shownName(p)!, (query ?? '').trim())
+                          : catLabel(p.category2 ?? p.category)}
+                      </span>
                       {/* **결제수단을 가게처럼 보여 주지 않는다.** 걷어내니 아무것도 안 남은
                           결제는 카드사가 준 정보가 "간편결제로 샀다" 뿐이다. 이름을 지어내는
                           대신 <b>경유</b> 라고 적어 그 줄이 가맹점이 아님을 말한다. */}

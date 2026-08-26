@@ -33,7 +33,7 @@ import { Cta, Screen, ErrorBox } from '../components/ui';
 import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
 import { useAsync } from '../state/useAsync';
-import { ApiError, api, catLabel } from '../lib/api';
+import { ApiError, api, catLabel, isUnknownCategory } from '../lib/api';
 import { CHALLENGE_DAYS } from '../lib/config';
 import { won, iconOf } from '../lib/format';
 
@@ -180,9 +180,9 @@ export function Onboarding() {
   const win = useAsync(() => api.onboardingWindow(userId), [userId]);
   const allCats = useAsync(() => api.categories().catch(() => []), [userId]);
 
-  /** 창 안의 카테고리 — 쓴 금액 순. '카테고리없음'은 고를 대상이 아니다. */
+  /** 창 안의 카테고리 — 쓴 금액 순. **모르는 칸은 고를 대상이 아니다**({@link isUnknownCategory}). */
   const rows = useMemo(() => (win.data?.categories ?? [])
-    .filter((c) => c.categoryCode !== '카테고리없음')
+    .filter((c) => !isUnknownCategory(c.categoryCode))
     .slice().sort((a, b) => b.amount - a.amount), [win.data]);
 
   /** 한 달 평균 총액 — 히어로의 첫 숫자다. */
@@ -242,7 +242,7 @@ export function Onboarding() {
 
   /** 3단계 타일 — 고를 수 있는 카테고리 전부(이름순). */
   const tiles = useMemo(() => (allCats.data ?? [])
-    .filter((c) => c.code !== '카테고리없음')
+    .filter((c) => !isUnknownCategory(c.code))
     .slice().sort((a, b) => a.code.localeCompare(b.code, 'ko')), [allCats.data]);
 
   /** 4단계 카드 — 성역으로 고른 것은 뺀다. */
