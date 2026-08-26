@@ -376,6 +376,14 @@ export interface MyPaymentHistory {
   category2: string | null;
   /** 확정이 없을 때의 **AI 추정**. 화면이 배지로 보여주고 사용자가 눌러 확정한다. */
   category2Llm?: string | null;
+  /**
+   * **이 카테고리를 누가 정했나** — `DICT`·`REGISTRY`·`LLM_LOCAL`·`LLM`·`NONE`.
+   *
+   * `LLM_LOCAL` 은 **모델의 추정이 그 사람의 원장에 반영된 것**이다(`CategoryPromotionService`).
+   * 값은 `category2` 에 확정처럼 앉아 있지만 **근거는 모델**이다 — 이 칸을 안 보면 화면에서
+   * 사람의 확정과 똑같아 보인다. 운영에 983건(46%)이 그 상태였다(2026-08-26 실측).
+   */
+  category2Source?: string | null;
   amount: number;
   merchantName: string | null;
   cardName: string | null;
