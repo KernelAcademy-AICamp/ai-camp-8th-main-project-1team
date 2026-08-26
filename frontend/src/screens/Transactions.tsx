@@ -12,7 +12,7 @@ import { useAsync } from '../state/useAsync';
 import { api, catLabel, type MyMerchant, type MyPaymentHistory } from '../lib/api';
 import { SpendCalendar } from '../components/SpendCalendar';
 import { Icon } from '../components/Icons';
-import { won, iconOf, inkColor, tintColor } from '../lib/format';
+import { won, iconOf, tintColor } from '../lib/format';
 
 /** 검색 기간 사다리 — 3 · 6 · 9 · 12개월(개편안 `SP_FROMS`). */
 const SPANS = [3, 6, 9, 12];
