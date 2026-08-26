@@ -51,6 +51,28 @@ public class IndustryCategoryMapper {
     public static final String OTHER = "기타";
 
     /**
+     * <b>결제대행사 자신</b> — 무엇을 샀는지 <b>원리적으로</b> 알 수 없는 결제.
+     *
+     * <p>{@link #UNCLASSIFIED}·{@link #OTHER} 와 무엇이 다른가.
+     *
+     * <pre>
+     *   카테고리없음  아직 못 했다        나중에 알 수 있다      총액 O · 정리목록 O
+     *   기타          다 물어봤는데 모른다  실재 가맹점이다        총액 O · 정리목록 X
+     *   간편결제      물어볼 대상이 아니다  영원히 알 수 없다      총액 O · 정리목록 X
+     * </pre>
+     *
+     * <p><b>왜 값을 따로 두나.</b> 셋을 섞으면 <i>"언젠가 줄어들 목록"</i> 에 절대 안 줄어드는
+     * 것이 쌓인다. 그리고 더 나쁜 일이 실제로 벌어졌다 — 결제대행사 179건 중 <b>142건에
+     * 카테고리가 붙어</b> 있었고, {@code NICE_통신판매} 79건이 <b>쇼핑</b>으로 집계돼 낭비
+     * 판정까지 받았다(2026-08-26 운영 실측). 무엇을 샀는지 모르는 돈이 쇼핑 지출이 됐다.
+     *
+     * <p><b>총액에서는 안 뺀다.</b> 실제로 나간 돈이다 — 빼면 <i>"월소득 − 월평균지출"</i> 로
+     * 구하는 가용 여유자금이 부풀려져 <b>없는 여유를 있다고 권하게 된다</b>
+     * ({@code RecommendService}). 소비 <b>분석</b>에서만 뺀다.
+     */
+    public static final String SIMPLE_PAY = "간편결제";
+
+    /**
      * <b>무엇을 샀는지 모르는 분류인가</b> — 낭비 판정·절약 후보에서 빼야 할 값들.
      *
      * <p>둘을 한 자리에서 판정하는 것이 요점이다. '기타'를 새 분류로 들이면서 이 함수를 안 만들면,
@@ -63,7 +85,21 @@ public class IndustryCategoryMapper {
      * 그렇다. 사람이 그 결제를 직접 고쳐 주기 전까지는 판정의 재료가 아니다.
      */
     public static boolean isUnknown(String mid) {
-        return mid == null || mid.isBlank() || UNCLASSIFIED.equals(mid) || OTHER.equals(mid);
+        return mid == null || mid.isBlank() || UNCLASSIFIED.equals(mid)
+                || OTHER.equals(mid) || SIMPLE_PAY.equals(mid);
+    }
+
+    /**
+     * <b>카테고리별 분석에서 빼는가</b> — 도넛·비중·챌린지가 보는 자리.
+     *
+     * <p>{@link #isUnknown} 과 갈라 둔다. 저쪽은 <i>"판정의 재료가 아니다"</i>(낭비·절약 후보)를
+     * 말하고 여기는 <i>"카테고리 합에서 뺀다"</i>를 말한다. {@link #OTHER} 는 판정에서는 빠지지만
+     * <b>실재 가맹점의 소비</b>라 카테고리 합에는 남는다 — 어디에 썼는지만 모를 뿐이다.
+     *
+     * <p><b>총액과 혼동하면 안 된다.</b> 실제로 나간 돈은 무엇이든 총액에 남는다.
+     */
+    public static boolean isOutsideCategories(String mid) {
+        return SIMPLE_PAY.equals(mid);
     }
 
     private final Map<String, String> midByIndustry;
