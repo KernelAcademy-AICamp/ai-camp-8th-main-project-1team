@@ -78,7 +78,10 @@ class SpendingLedgerAdminOnlyTest {
                 "/api/admin/spending-ledger/industry-code-backfill",
                 // 업종 이름이 없어 소분류가 빈 행을 되메우는 문(V43). 브랜드가 안 붙는 개인
                 // 상호는 업종 이름이 유일한 단서인데, 이미 굳은 행은 다시 묻지도 않는다.
-                "/api/admin/dictionary/industry-name-backfill");
+                "/api/admin/dictionary/industry-name-backfill",
+                // 소비내역에 적을 이름을 결제 행에 적는 문(V44). 실사용자 결제의 29%가 PG
+                // 번호로 찍혀 결제 경로가 상호를 밀어낸다.
+                "/api/admin/spending-ledger/display-name-backfill");
     }
 
     private static String declaringClassOf(HandlerMethod method) {

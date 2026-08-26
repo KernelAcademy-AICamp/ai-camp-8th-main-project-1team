@@ -64,6 +64,29 @@ public class UserPayment {
      *
      * <p><b>판정에 참여하지 않는다.</b> 카드 혜택축도 확정 칸만 읽는다.
      */
+    /**
+     * <b>소비내역에 적을 이름</b>(V44) — 원문의 <b>부분집합</b>이다.
+     *
+     * <p>지어내지 않는다. 하는 일은 실제 결제처를 알아내는 것이 아니라 <b>확실히 버려도 되는
+     * 것만 버리는 것</b>이라, 새 사실을 만들지 않으므로 틀릴 수가 없다. 규칙은
+     * {@code MerchantDisplayName} 한 곳에 있다.
+     *
+     * <p><b>계산이 아니라 기록이다.</b> 화면을 열 때마다 표기 1,200여 개를 다시 훑지 않는다 —
+     * {@code category2}·{@code ksic_code} 를 결제 행에 적어 둔 것과 같은 이유다.
+     *
+     * <p>{@link #merchantName} 은 그대로 둔다. 어느 지점인지가 사라지면 안 된다.
+     */
+    @Column(name = "display_name", length = 60)
+    private String displayName;
+
+    /** 표시명을 무엇으로 정했나 — {@code BRAND}·{@code RESIDUE}·{@code AGENCY_ONLY}·{@code RAW}. */
+    @Column(name = "display_name_source", length = 16)
+    private String displayNameSource;
+
+    /** 거쳐 간 결제대행사. <b>사업자번호가 알려 준 사실</b>이라 상호에서 짐작한 것이 아니다. */
+    @Column(name = "via_agency", length = 40)
+    private String viaAgency;
+
     @Column(name = "ksic_code_llm", length = 8)
     private String industryCodeGuess;
 
@@ -271,6 +294,35 @@ public class UserPayment {
         this.industryCode = code;
         return true;
     }
+
+    /**
+     * 표시명을 적는다 — <b>바뀔 때만</b>.
+     *
+     * <p>{@code true} 를 돌려주는 것이 요점이다. 부르는 쪽이 <i>"이번에 실제로 고쳤나"</i>를
+     * 알아야 리포트 캐시를 깰지 말지 정한다 — {@link #learnIndustryCode} 와 같은 계약이다.
+     *
+     * @return 실제로 바뀌었으면 {@code true}
+     */
+    public boolean learnDisplayName(String display, String source, String agency) {
+        if (display == null || display.isBlank() || source == null) return false;
+        String cut = display.length() > 60 ? display.substring(0, 60) : display;
+        String via = agency == null || agency.isBlank() ? null
+                : (agency.length() > 40 ? agency.substring(0, 40) : agency);
+        if (cut.equals(this.displayName) && source.equals(this.displayNameSource)
+                && java.util.Objects.equals(via, this.viaAgency)) {
+            return false;
+        }
+        this.displayName = cut;
+        this.displayNameSource = source;
+        this.viaAgency = via;
+        return true;
+    }
+
+    public String getDisplayName() { return displayName; }
+
+    public String getDisplayNameSource() { return displayNameSource; }
+
+    public String getViaAgency() { return viaAgency; }
 
     public void confirmCategory2(String category2, String source) {
         // **임시 추정을 함께 치운다.** 무료 통로의 답은 확정이 오기 전까지만 사는 값인데,

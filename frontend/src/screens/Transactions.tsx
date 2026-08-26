@@ -9,7 +9,7 @@ import { useSession } from '../state/session';
 import { useGuardian } from '../state/guardian';
 import { autoSyncMyData, POLL_MS } from '../state/autoSync';
 import { useAsync } from '../state/useAsync';
-import { api, catLabel, type MyMerchant } from '../lib/api';
+import { api, catLabel, type MyMerchant, type MyPaymentHistory } from '../lib/api';
 import { SpendCalendar } from '../components/SpendCalendar';
 import { Icon } from '../components/Icons';
 import { won, iconOf, inkColor } from '../lib/format';
@@ -49,6 +49,18 @@ function highlight(name: string, q: string) {
   );
 }
 
+/**
+ * 줄에 굵게 적을 이름 — **서버가 결제 행에 적어 둔 값**을 그대로 쓴다(V44).
+ *
+ * 화면이 다시 계산하지 않는다. 표시명은 언제나 원문의 부분집합이라 지어낸 것이 아니고,
+ * 그 판단은 `MerchantDisplayName` 한 곳에만 있다.
+ */
+function shownName(p: MyPaymentHistory): string | null {
+  return p.displayName ?? p.brand ?? p.merchantName ?? null;
+}
+/** 결제 경로만 아는 줄인가 — 카드사가 준 정보가 "간편결제로 샀다" 뿐인 결제. */
+const viaOnly = (p: MyPaymentHistory) => p.displayNameSource === 'AGENCY_ONLY';
+
 type SpendFilter = 'all' | 'disc' | 'fixed' | 'sanct';
 /** 개편안의 필터 4종. '재량'은 성역·고정지출을 뺀 나머지다 — 줄일 수 있는 것만 남긴다. */
 const SPEND_FILTERS: { key: SpendFilter; label: string }[] = [
@@ -76,6 +88,8 @@ export function Transactions() {
   const payments = useAsync(() => api.allPayments(userId, 12), [userId]);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
   const [merchantOf, setMerchantOf] = useState<Record<string, MyMerchant | 'loading'>>({});
+  /** '원문'을 눌러 펼친 줄. 표시명이 원문과 다를 때만 누를 수 있다. */
+  const [rawOpen, setRawOpen] = useState<Record<string, boolean>>({});
   /** 달력에서 고른 날. null이면 전체 기간. */
   const [pickedDate, setPickedDate] = useState<string | null>(null);
   /**
@@ -179,7 +193,8 @@ export function Transactions() {
         // **브랜드도 찾는다.** 상호에 브랜드 글자가 안 들어 있는 결제가 있다 —
         // `에프알엘코리아 주식회사`(유니클로)·`비지에프리테일`(CU) 처럼 운영사 이름으로
         // 찍히는 자리다. 보이는 이름으로 검색이 안 되면 사용자는 없는 줄 안다.
-        const hay = `${p.merchantName ?? ''}${p.brand ?? ''}`.toLowerCase().replace(/\s/g, '');
+        const hay = `${p.merchantName ?? ''}${p.brand ?? ''}${p.displayName ?? ''}`
+          .toLowerCase().replace(/\s/g, '');
         return hay.includes(q);
       }
       if (filter === 'all') return true;
@@ -387,15 +402,16 @@ export function Transactions() {
                     </span>
                     <div className="tx">
                     <b>
-                      {/* **브랜드가 있으면 브랜드를 앞세운다.** `주식회사 빅바이트컴퍼니
-                          쉐이크쉑 강남스퀘어` 는 읽는 사람이 무엇을 샀는지 알기 어렵고,
-                          `카카오T경기33아6084` 는 차량번호가 이름을 밀어낸다. 풀네임은
-                          아래 줄에 그대로 남긴다 — 어느 지점인지가 사라지면 안 된다. */}
-                      {p.brand
-                        ? highlight(p.brand, (query ?? '').trim())
-                        : p.merchantName
-                          ? highlight(p.merchantName, (query ?? '').trim())
-                          : catLabel(p.category2 ?? p.category)}
+                      {/* **서버가 적어 둔 표시명을 쓴다**(V44). `주식회사 빅바이트컴퍼니
+                          쉐이크쉑 강남스퀘어` 는 무엇을 샀는지 알기 어렵고, `카카오T경기
+                          33아6084` 는 차량번호가 이름을 밀어낸다. 원문은 '원문' 을 눌러 본다. */}
+                      {shownName(p)
+                        ? highlight(shownName(p)!, (query ?? '').trim())
+                        : catLabel(p.category2 ?? p.category)}
+                      {/* **결제수단을 가게처럼 보여 주지 않는다.** 걷어내니 아무것도 안 남은
+                          결제는 카드사가 준 정보가 "간편결제로 샀다" 뿐이다. 이름을 지어내는
+                          대신 <b>경유</b> 라고 적어 그 줄이 가맹점이 아님을 말한다. */}
+                      {viaOnly(p) && <span className="sp-tag" style={{ background: 'var(--bg2)', color: 'var(--t3)' }}>경유</span>}
                       {/* 중분류를 함께 보여준다 — 가맹점명만으로는 이 결제가 어느 카테고리로
                           집계됐는지 알 수 없어, 리포트 숫자와 목록을 맞춰 볼 방법이 없었다.
                           확정이 없고 추정만 있으면 **눌러서 확정**할 수 있게 한다 — 확정 화면을
@@ -429,11 +445,22 @@ export function Transactions() {
                       {fixedOf(p) && <span className="sp-tag tag-fixed">고정</span>}
                     </b>
                     <span className="sub">
-                      {/* 브랜드를 앞세운 줄에서만 풀네임을 여기 적는다. 브랜드가 없으면
-                          위에 이미 풀네임이 있으므로 두 번 쓰지 않는다. */}
-                      {p.brand && p.merchantName && p.merchantName !== p.brand && (
-                        <>{highlight(p.merchantName, (query ?? '').trim())}{' · '}</>
+                      {/* **원문을 버리지 않는다 — 눌러서 본다.** 어느 지점인지가 사라지면
+                          안 되지만, 늘 펼쳐 두면 줄인 이름이 다시 길어져 의미가 없다.
+                          표시명이 원문과 다를 때만 누를 거리가 있다. */}
+                      {p.merchantName && shownName(p) !== p.merchantName && (
+                        <>
+                          <button type="button" className="biz-link"
+                            onClick={() => setRawOpen((o) => ({ ...o, [p.paymentId]: !o[p.paymentId] }))}
+                            aria-expanded={!!rawOpen[p.paymentId]}
+                            aria-label={`원문 가맹점명 ${rawOpen[p.paymentId] ? '접기' : '보기'}`}>
+                            원문 {rawOpen[p.paymentId] ? '▴' : '▾'}
+                          </button>
+                          {' · '}
+                        </>
                       )}
+                      {/* 결제 경로는 사업자번호가 알려 준 사실이다 — 짐작이 아니다. */}
+                      {p.viaAgency && <>{p.viaAgency} 경유{' · '}</>}
                       {hhmm(p.date)}
                       {p.businessNumber && (
                         <>
@@ -453,6 +480,14 @@ export function Transactions() {
                         if (f) return <> · 📍 {f.address}{f.online ? ' (본사)' : ''}</>;
                         return null;
                       })()}
+                      {rawOpen[p.paymentId] && p.merchantName && (
+                        <>
+                          <br />
+                          <span style={{ wordBreak: 'break-all' }}>
+                            {highlight(p.merchantName, (query ?? '').trim())}
+                          </span>
+                        </>
+                      )}
                     </span>
                     </div>
                     {/* 테두리는 브랜드 원색, 글자는 흰 바탕에서 읽히도록 눌러 쓴다.
