@@ -1022,7 +1022,11 @@ public class MyDataLinkService {
         return userPaymentRepository.findByUserIdAndCardSerialOrderByPaymentDateDesc(userId, cardSerial).stream()
                 .map(payment -> new PaymentRow(payment.getPaymentId(), payment.getPaymentDate(),
                         payment.getCategory2(), payment.getCategory2(), payment.getAmount(),
-                        payment.getMerchantName(), payment.getBusinessNumber()))
+                        // **여기도 표시명을 낸다.** 적혀 있는 값을 그대로 쓴다 — 한 결제가
+                        // 화면마다 다른 이름으로 보이면 사용자는 다른 결제로 읽는다.
+                        payment.getDisplayName() != null && !payment.getDisplayName().isBlank()
+                                ? payment.getDisplayName() : payment.getMerchantName(),
+                        payment.getBusinessNumber()))
                 .toList();
     }
 

@@ -450,6 +450,15 @@ export function Transactions() {
                       {fixedOf(p) && <span className="sp-tag tag-fixed">고정</span>}
                     </b>
                     <span className="sub">
+                      {/* **카드사만 적는다.** 상품명(`신한 Deep Dream`)은 13자를 먹는데
+                          목록에서 알아야 할 것은 어디에 썼는가다. 어느 카드인지는 색과
+                          카드사로 충분하고, 상세는 '내 카드'가 말한다. */}
+                      {(p.companyName ?? p.cardName) && (
+                        <span className="cd" style={{ color: inkColor(p.cardColor) }}>
+                          {p.companyName ?? p.cardName}
+                        </span>
+                      )}
+                      {(p.companyName ?? p.cardName) && ' · '}
                       {/* **원문을 버리지 않는다 — 눌러서 본다.** 어느 지점인지가 사라지면
                           안 되지만, 늘 펼쳐 두면 줄인 이름이 다시 길어져 의미가 없다.
                           표시명이 원문과 다를 때만 누를 거리가 있다. */}
@@ -497,11 +506,10 @@ export function Transactions() {
                     </div>
                     {/* 테두리는 브랜드 원색, 글자는 흰 바탕에서 읽히도록 눌러 쓴다.
                         KB국민 노랑을 글자에 그대로 쓰면 1.69:1 이라 안 보인다(KWCAG 5.4.3). */}
-                    {p.cardName && (
-                      <span className="c" style={{ border: `1px solid ${p.cardColor || 'var(--line)'}`, color: inkColor(p.cardColor), background: 'transparent' }}>
-                        {p.cardName}
-                      </span>
-                    )}
+                    {/* **카드 이름은 보조줄에 있다.** 여기 두었더니 배지가 93px 을 먹어
+                        가맹점명에 48px(한글 세 자)밖에 안 남았다 — 줄의 주인공이 가장 좁았다.
+                        개편안 줄 구조에도 카드 배지는 없다(파일 머리 주석). 색은 보조줄의
+                        글자색으로 남아 어느 카드인지는 그대로 보인다. */}
                     <span className="amt">{won(p.amount)}</span>
                   </div>
                   {editing === p.paymentId && (
