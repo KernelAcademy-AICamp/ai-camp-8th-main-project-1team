@@ -15,14 +15,134 @@
  * 값은 **운영의 실제 표시명 중 가장 긴 것들**이다(scripts 밖 fixture 로 준다).
  *
  * 서버가 떠 있어야 한다:  npm run dev
- *   node scripts/check-name-clip.mjs [fixture.json]
+ *   node scripts/check-name-clip.mjs
  */
 import { chromium } from 'playwright';
-import { readFileSync } from 'node:fs';
 
 const BASE = (process.env.BASE ?? 'http://localhost:5173').replace(/\/$/, '');
-const FIXTURE = process.argv[2] ?? '/tmp/dnfixture.json';
-const rows = JSON.parse(readFileSync(FIXTURE, 'utf8'));
+/**
+ * **운영에서 실제로 가장 긴 표시명들**(2026-08-26). 값을 저장소 안에 둬야 누구나 돌릴 수 있다.
+ *
+ * 여기 있는 것은 <b>가맹점명</b>이지 사람의 정보가 아니다 — 상호는 카드 명세서의 공개 표기이고,
+ * 사용자·금액·일시는 담지 않는다.
+ */
+const NAMES = [
+  [
+    "Vatfree FRVA Netherland",
+    "RESIDUE"
+  ],
+  [
+    "ALP*shanghaishihuangpu",
+    "RAW"
+  ],
+  [
+    "LinkedInPreA *45461616",
+    "RAW"
+  ],
+  [
+    "ALP*shanghaidiandoude",
+    "RAW"
+  ],
+  [
+    "ALP*shanghaishihuangp",
+    "RAW"
+  ],
+  [
+    "사우 커피바 SAU Coffee bar",
+    "RAW"
+  ],
+  [
+    "DPP Tramv*PH0s002211",
+    "RAW"
+  ],
+  [
+    "Basics Coffee Pallad",
+    "RESIDUE"
+  ],
+  [
+    "ALP*PersonalServices",
+    "RAW"
+  ],
+  [
+    "BREAD&CO HLAVNI NAD",
+    "RESIDUE"
+  ],
+  [
+    "프렌즈 야드 Friends&Yard",
+    "RESIDUE"
+  ],
+  [
+    "ALP*Shanghai Disney",
+    "RAW"
+  ],
+  [
+    "ALP*SH Transit Card",
+    "RAW"
+  ],
+  [
+    "NAVAJO INVESTMENT",
+    "RAW"
+  ],
+  [
+    "마포애경타운 새틀라이트문구外",
+    "RESIDUE"
+  ],
+  [
+    "SLICE BABY SRO",
+    "RESIDUE"
+  ],
+  [
+    "아람스제이 요리하는 남자",
+    "RESIDUE"
+  ],
+  [
+    "화인피부과 비뇨기과 의원",
+    "RESIDUE"
+  ],
+  [
+    "미니말레 커피뢰스터 과천",
+    "RESIDUE"
+  ],
+  [
+    "LOKAL COFFEE",
+    "RESIDUE"
+  ],
+  [
+    "빈스미스 커피 로스터스",
+    "RESIDUE"
+  ],
+  [
+    "신세계 본점 에키노마에",
+    "RESIDUE"
+  ],
+  [
+    "CJ더마켓 CJ제일제당",
+    "RESIDUE"
+  ],
+  [
+    "공제제외 KCT티플러스",
+    "RESIDUE"
+  ],
+  [
+    "토스페이먼츠",
+    "AGENCY_ONLY"
+  ],
+  [
+    "고척아이파크쇼핑센터",
+    "RESIDUE"
+  ],
+  [
+    "세븐틴코인노래연습장",
+    "RAW"
+  ]
+];
+const rows = NAMES.map(([name, source], i) => ({
+  paymentId: `p${i}`, date: '2026-08-19T12:00:00', category: '식비', category2: '식비',
+  category2Llm: null, amount: 12345, merchantName: `${name} 원문꼬리`,
+  cardName: 'KB국민 My WE:SH', cardColor: '#FFB800', companyName: 'KB국민카드',
+  businessNumber: '0000000011', brand: null, displayName: name,
+  displayNameSource: source, viaAgency: null,
+}));
 
 const SEED = () => {
   localStorage.setItem('mydata_onboarded', 'true');
