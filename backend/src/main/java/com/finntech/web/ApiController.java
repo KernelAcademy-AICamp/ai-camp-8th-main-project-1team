@@ -49,6 +49,7 @@ public class ApiController {
     private final com.finntech.service.PeerCompareService peerCompare;
     private final AlertRepository alertRepository;
     private final Clock clock;
+    private final IndustryCategoryMapper industryMapper;
 
     public ApiController(AnalysisEngine engine, ReportService reportService, AlertService alertService,
                          ScoreService scoreService, NarrativeService narrativeService,
@@ -59,7 +60,9 @@ public class ApiController {
                          AlertRepository alertRepository, CardRecommendService cardRecommendService,
                          Clock clock,
                          com.finntech.service.PeerCompareService peerCompare,
-                         com.finntech.service.PeriodSpendService periodSpend) {
+                         com.finntech.service.PeriodSpendService periodSpend,
+                         IndustryCategoryMapper industryMapper) {
+        this.industryMapper = industryMapper;
         this.peerCompare = peerCompare;
         this.periodSpend = periodSpend;
         this.engine = engine;
@@ -314,12 +317,20 @@ public class ApiController {
      * 400 이 났다 — 그런데 <b>목록에 보이는데 눌리지 않는 것</b>은 고쳐진 것이 아니다.
      * 화면이 고르는 목록과 서버가 받는 목록은 <b>같아야 한다.</b>
      *
-     * <p>이름을 코드에 박지 않는다({@code isUnknown} 한 곳이 판정한다, 마스터 §4 원칙 4).
+     * <p><b>거르는 기준은 서버가 받는 목록 그 자체다.</b> 처음에는 {@code isUnknown} 으로
+     * <i>빼는</i> 쪽을 적었는데, 그러면 "표에 있는 다른 무엇"이 새로 생겼을 때 그것이 그대로
+     * 새어 나온다 — 실제로 시험이 남긴 가짜 행 하나가 목록에 끼어 {@code confirm} 이 400 을
+     * 내는 조합이 나왔다(2026-08-26). 그래서 {@code midCategories()} 에 <b>있는 것만</b>
+     * 내보낸다. 목록과 검증이 같은 원천을 보므로 <b>어긋날 자리가 없다.</b>
+     * 운영 {@code category} 표는 15 중분류 + 모르는 칸 셋이라 화면이 잃는 칸은 없다.
+     *
+     * <p>이름을 코드에 박지 않는다(마스터 §4 원칙 4).
      */
     @GetMapping("/categories")
     public List<Category> categories() {
+        java.util.Set<String> selectable = industryMapper.midCategories();
         return categoryRepository.findAllByOrderByCodeAsc().stream()
-                .filter(c -> !IndustryCategoryMapper.isUnknown(c.getCode()))
+                .filter(c -> selectable.contains(c.getCode()))
                 .toList();
     }
 
