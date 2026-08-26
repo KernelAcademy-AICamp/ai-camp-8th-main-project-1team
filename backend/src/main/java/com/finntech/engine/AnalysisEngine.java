@@ -72,7 +72,20 @@ public class AnalysisEngine {
         }
 
         // ---- 카테고리별 집계 --------------------------------------------------
+        /**
+         * <b>실제로 나간 돈.</b> 무엇을 샀는지 몰라도 여기엔 남는다 — 이 값으로
+         * <i>"월소득 − 월평균지출"</i> 을 구해 가용 여유자금을 낸다({@code RecommendService}).
+         * 빼면 <b>없는 여유를 있다고 권하게 된다.</b>
+         */
         BigDecimal total = BigDecimal.ZERO;
+        /**
+         * <b>카테고리로 갈린 돈</b> — 비중의 분모다.
+         *
+         * <p>간편결제(결제대행사 자신)는 여기서 뺀다. 무엇을 샀는지 원리적으로 모르는 돈이라
+         * 어느 칸에도 못 넣는데, 총액을 분모로 쓰면 <b>도넛이 100%가 안 된다.</b>
+         * 총액과 갈라 두는 이유가 그것이다.
+         */
+        BigDecimal categorised = BigDecimal.ZERO;
         BigDecimal planned = BigDecimal.ZERO;
         Map<String, List<Consumption>> byCategory = new TreeMap<>();
         Map<String, String> displayNames = new TreeMap<>();
@@ -86,10 +99,14 @@ public class AnalysisEngine {
             if (c.isPlanned()) planned = planned.add(c.getAmount());
             String code = c.getCategory().getCode();
             String month = c.getOccurredAt().format(MONTH);
+            monthly.merge(month, c.getAmount(), BigDecimal::add);
+            // **간편결제는 카테고리 집계에서만 뺀다.** 총액과 월별에는 남는다 — 실제로 나간
+            // 돈이고, 그 값으로 여유자금과 변동성을 구하기 때문이다.
+            if (IndustryCategoryMapper.isOutsideCategories(code)) continue;
+            categorised = categorised.add(c.getAmount());
             byCategory.computeIfAbsent(code, k -> new ArrayList<>()).add(c);
             displayNames.putIfAbsent(code, c.getCategory().getDisplayName());
             monthsByCategory.computeIfAbsent(code, k -> new TreeSet<>()).add(month);
-            monthly.merge(month, c.getAmount(), BigDecimal::add);
         }
 
         Map<String, AnalysisResult.CategoryStat> stats = new TreeMap<>();
@@ -97,8 +114,10 @@ public class AnalysisEngine {
         for (Map.Entry<String, List<Consumption>> e : byCategory.entrySet()) {
             BigDecimal sum = e.getValue().stream()
                     .map(Consumption::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-            double ratio = total.signum() == 0 ? 0.0
-                    : sum.divide(total, 10, RoundingMode.HALF_UP).doubleValue();
+            // 비중의 분모는 **카테고리로 갈린 돈**이다. 총액을 쓰면 간편결제만큼 모자라
+            // 도넛이 100%가 안 된다.
+            double ratio = categorised.signum() == 0 ? 0.0
+                    : sum.divide(categorised, 10, RoundingMode.HALF_UP).doubleValue();
             // 건수는 <b>실제 소비 건만</b> 센다 — 취소 한 줄이 "이 카테고리를 한 번 더 썼다"로
             // 세어지면 표본이 부풀고, 그 표본으로 충분·불충분을 가르면 판정 근거가 흔들린다.
             // 금액(sum)은 취소를 포함해 상쇄시킨다 — 세는 것과 더하는 것은 목적이 다르다.

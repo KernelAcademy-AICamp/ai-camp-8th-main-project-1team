@@ -160,8 +160,12 @@ public class MerchantCategoryController {
             moved++;
         }
 
-        boolean storedInDictionary =
-                dictionary.confirmFrom(payment, request.category2(), userId).isPresent();
+        // **결제대행사는 사전에 안 쌓는다.** 사전은 전역 자산이라 여기 들어가면 <b>모든
+        // 사용자</b>의 `토스페이먼츠` 결제가 한 카테고리가 된다 — 무엇을 샀는지 모르는 돈이
+        // 통째로 한 칸에 쌓인다. 그 사람의 결제 한 건만 고치고 끝낸다.
+        boolean agency = classifier.isPaymentAgencyMerchant(payment.getMerchantName());
+        boolean storedInDictionary = !agency
+                && dictionary.confirmFrom(payment, request.category2(), userId).isPresent();
 
         // **판정을 다시 본다**(V16). 사람이 다르게 확정했다는 것은 그 번호가 갈렸다는 증거일 수
         // 있다. 다만 굳은 판정은 한 번의 교정으로 뒤집지 않는다 — 그 문턱은 판정 서비스가 갖는다.
@@ -178,6 +182,10 @@ public class MerchantCategoryController {
                 if (other.getPaymentId().equals(paymentId)) continue;
                 // 사람이 이미 확정한 결제는 건드리지 않는다 — 남의 판단을 덮으면 안 된다.
                 if ("USER".equals(other.getCategory2Source())) continue;
+                // **간편결제는 휩쓸리지 않는다.** 상호가 결제대행사 자신이라 무엇을 샀는지
+                // 원리적으로 모르는 결제다 — 한 건을 고쳤다고 나머지 수십 건이 같은
+                // 카테고리가 되면, 모르는 돈이 통째로 한 칸에 쌓인다.
+                if (IndustryCategoryMapper.SIMPLE_PAY.equals(other.getCategory2())) continue;
                 // **본인의 표가 사전보다 먼저다**(V30). 사전의 값은 이제 전역 다수결이라,
                 // 내 표가 졌을 때 그대로 밀어 넣으면 **남의 다수결이 내 결제를 덮는다** —
                 // "본인에게만 적용"이라는 약속이 여기서 깨진다. 전역은 내가 아직 표를 안 던진

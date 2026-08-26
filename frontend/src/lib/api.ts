@@ -1513,9 +1513,13 @@ export const catLabel = (code: string, displayName?: string) =>
  * 없고, 금액만 보여 주면 *"이만큼 줄일 수 있다"* 는 잘못된 확신을 준다. 실사용자 온보딩에서
  * `기타` 가 늘 후보로 떠 있었다(2026-08-26 제보).
  *
+ * `간편결제` 는 셋 중에서도 특별하다 — **원리적으로** 알 수 없다. 상호가 결제대행사
+ * 자신이라(`토스페이먼츠`) 무엇을 샀는지 카드사도 말해 주지 않는다. 여기에 목표를 걸면
+ * 영원히 줄일 수 없는 것을 줄이라고 말하는 셈이다.
+ *
  * 판정이 화면마다 흩어지면 한 곳이 빠진다 — 실제로 `카테고리없음` 만 거르고 `기타` 는
  * 안 거르는 자리가 넷이었다. 그래서 여기 하나로 둔다.
  */
-export const UNKNOWN_CATEGORIES = ['카테고리없음', '기타'];
+export const UNKNOWN_CATEGORIES = ['카테고리없음', '기타', '간편결제'];
 export const isUnknownCategory = (code: string | null | undefined) =>
   !code || UNKNOWN_CATEGORIES.includes(code);
