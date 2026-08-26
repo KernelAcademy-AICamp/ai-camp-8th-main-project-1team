@@ -21,7 +21,11 @@ import { chromium } from 'playwright';
 
 const BASE = (process.env.BASE ?? 'http://localhost:5173').replace(/\/$/, '');
 /**
- * **운영에서 실제로 가장 긴 표시명들**(2026-08-26). 값을 저장소 안에 둬야 누구나 돌릴 수 있다.
+ * **운영에 지금 살아 있는 가장 긴 표시명들**(2026-08-26 실측, 13자 이상 전부).
+ * 값을 저장소 안에 둬야 누구나 돌릴 수 있다 — 임시 파일을 읽으면 남이 돌릴 때 그냥 빈다.
+ *
+ * <b>표시명 규칙을 고치면 이 목록도 다시 뽑는다.</b> 옛 이름으로 통과하는 검사는
+ * 통과가 아니다 — 지금 화면에 뜨는 것이 안 잘려야 한다.
  *
  * 여기 있는 것은 <b>가맹점명</b>이지 사람의 정보가 아니다 — 상호는 카드 명세서의 공개 표기이고,
  * 사용자·금액·일시는 담지 않는다.
@@ -32,11 +36,15 @@ const NAMES = [
     "RESIDUE"
   ],
   [
+    "LinkedInPreA *45461616",
+    "RAW"
+  ],
+  [
     "ALP*shanghaishihuangpu",
     "RAW"
   ],
   [
-    "LinkedInPreA *45461616",
+    "사우 커피바 SAU Coffee bar",
     "RAW"
   ],
   [
@@ -45,10 +53,6 @@ const NAMES = [
   ],
   [
     "ALP*shanghaishihuangp",
-    "RAW"
-  ],
-  [
-    "사우 커피바 SAU Coffee bar",
     "RAW"
   ],
   [
@@ -68,10 +72,6 @@ const NAMES = [
     "RESIDUE"
   ],
   [
-    "프렌즈 야드 Friends&Yard",
-    "RESIDUE"
-  ],
-  [
     "ALP*Shanghai Disney",
     "RAW"
   ],
@@ -84,56 +84,68 @@ const NAMES = [
     "RAW"
   ],
   [
+    "01월카드사용알림서비스이용료",
+    "RAW"
+  ],
+  [
+    "HIGGSFIELD INC.",
+    "RAW"
+  ],
+  [
     "마포애경타운 새틀라이트문구外",
     "RESIDUE"
+  ],
+  [
+    "07월카드사용알림서비스이용료",
+    "RAW"
+  ],
+  [
+    "06월카드사용알림서비스이용료",
+    "RAW"
+  ],
+  [
+    "ALP*Restaurants",
+    "RAW"
+  ],
+  [
+    "ALP*OtherRetail",
+    "RAW"
+  ],
+  [
+    "03월카드사용알림서비스이용료",
+    "RAW"
+  ],
+  [
+    "02월카드사용알림서비스이용료",
+    "RAW"
+  ],
+  [
+    "PRODEJNA ZIAJA",
+    "RAW"
   ],
   [
     "SLICE BABY SRO",
     "RESIDUE"
   ],
   [
-    "아람스제이 요리하는 남자",
-    "RESIDUE"
+    "ALP*Pain Chaud",
+    "RAW"
   ],
   [
     "화인피부과 비뇨기과 의원",
     "RESIDUE"
   ],
   [
-    "미니말레 커피뢰스터 과천",
-    "RESIDUE"
-  ],
-  [
-    "LOKAL COFFEE",
-    "RESIDUE"
-  ],
-  [
-    "빈스미스 커피 로스터스",
-    "RESIDUE"
-  ],
-  [
-    "신세계 본점 에키노마에",
-    "RESIDUE"
-  ],
-  [
-    "CJ더마켓 CJ제일제당",
-    "RESIDUE"
-  ],
-  [
-    "공제제외 KCT티플러스",
-    "RESIDUE"
-  ],
-  [
-    "토스페이먼츠",
-    "AGENCY_ONLY"
-  ],
-  [
-    "고척아이파크쇼핑센터",
-    "RESIDUE"
-  ],
-  [
-    "세븐틴코인노래연습장",
+    "ALP*DIDI Taxi",
     "RAW"
+  ],
+  [
+    "아람스제이 요리하는 남자",
+    "RESIDUE"
+  ],
+  [
+    "코오롱인더스트리 FnC부",
+    "RESIDUE"
   ]
 ];
 const rows = NAMES.map(([name, source], i) => ({
