@@ -3682,10 +3682,17 @@ textarea.inp{ min-height: 92px; resize: vertical; line-height: 1.5; }
   font-size: 12px; font-weight: 400; color: var(--t3); min-width: 0; }
 .sp-card .list-item .tx .sub .cd{ flex: 0 1 auto; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* 배지는 **줄을 깨지 못한다.** 줄어들 수 있게 두고 폭을 못박는다 —
-   `AI 추정 · 카테고리없음` 이 열두 자로 커져 칸을 통째로 밀어낸 자리다(2026-08-26). */
+/* 배지는 **줄을 깨지 못한다.** 줄어들 수 있게 두고 폭을 못박는다. */
 .sp-card .list-item .tx .sub .sp-tag{ flex: 0 1 auto; max-width: 40%; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* **카테고리·결제처는 알약이 아니라 글자다.** 배경과 안여백을 주면 열두 자짜리 문구가
+   커다란 칸이 되어 보조줄을 통째로 먹는다 — 글자 크기 그대로여야 한다(2026-08-26 지적).
+   색만으로 구별하고, 누를 수 있다는 것은 ✎ 가 말한다. */
+.sp-card .list-item .tx .sub .cat{ flex: 0 1 auto; min-width: 0;
+  border: none; background: none; padding: 0; font: inherit; cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-card .list-item .tx .sub span.cat{ color: var(--t3); cursor: default; }
 /* 카드사는 색으로만 구별한다. 굵게 하지 않는다 — 보조줄에서 굵은 색 글씨가 되면 줄의
    주인공인 가맹점명보다 눈에 띄어 시선 순서가 뒤집힌다(2026-08-26 화면 확인). */
 .sp-card .list-item .tx .sub .cd{ font-weight: 500;

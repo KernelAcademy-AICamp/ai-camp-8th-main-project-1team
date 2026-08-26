@@ -440,20 +440,26 @@ export function Transactions() {
                         const guess = !fixed[p.paymentId] && isNone(shown) ? p.category2Llm : null;
                         const label = guess ?? shown;
                         if (!label) return null;
+                        // **색과 글자가 같은 말을 해야 한다.** 모델도 모른다고 답한 줄은
+                        // 'AI 추정'을 안 적으므로 호박색도 쓰지 않는다 — 색만 경고하고
+                        // 글자는 아무 말도 안 하면 무슨 뜻인지 알 수 없다.
+                        const guessed = !!guess && !isNone(guess);
                         return (
                           <button type="button"
                             onClick={(e) => { e.stopPropagation(); setEditing(editing === p.paymentId ? null : p.paymentId); }}
-                            className="sp-tag"
-                            /* **추정은 호박색이다.** 브랜드색(초록)은 "확인됨·좋음"으로 읽히는데
-                               이 배지의 뜻은 정반대다 — <b>아직 확정이 아니니 봐 달라</b>.
-                               미분류 정리 화면과 같은 조합(#FFF4E5 + --amber-t = .tag-warn)을 쓴다. */
-                            style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                                     background: guess ? '#FFF4E5' : 'var(--bg2)',
-                                     color: guess ? 'var(--amber-t)' : 'var(--t3)' }}>
-                            {/* **추정이라도 카테고리 이름만 적는다.** `AI 추정 · 카테고리없음` 은
-                                열두 자를 먹으면서 아무 말도 안 한다 — 호박색이 이미 "확정이
-                                아니다"를 말하고 있다(2026-08-26 화면 확인). */}
-                            {catLabel(label)} ✎
+                            /* **칸을 두르지 않는다.** 배경과 안여백을 주면 열두 자짜리 문구가
+                               커다란 알약이 되어 보조줄을 통째로 먹는다 — 글자 크기 그대로여야
+                               한다(2026-08-26 화면 확인). 색만으로 충분히 구별된다.
+                               **추정은 호박색이다.** 브랜드색(초록)은 "확인됨·좋음"으로 읽히는데
+                               뜻은 정반대다 — <b>아직 확정이 아니니 봐 달라</b>. */
+                            className="cat"
+                            style={{ color: guessed ? 'var(--amber-t)' : 'var(--t3)' }}>
+                            {/* **'AI 추정'을 적는다.** 색만으로는 무슨 색인지 배워야 알고,
+                                색을 못 보는 사람에게는 아무 말도 안 한다.
+                                단, 모델도 모른다고 답했으면 안 적는다 —
+                                `AI 추정 · 카테고리없음` 은 열두 자를 먹으면서
+                                <i>"AI 가 모른다고 추정했다"</i>는 말이 되어 아무 뜻이 없다. */}
+                            {guessed ? `AI 추정 · ${catLabel(guess!)}` : catLabel(label)} ✎
                           </button>
                         );
                       })()}
@@ -462,8 +468,10 @@ export function Transactions() {
                       {p.category && sanctuary.has(p.category) && <span className="sp-tag tag-sanct">성역</span>}
                       {fixedOf(p) && <span className="sp-tag tag-fixed">고정</span>}
                       {/* **결제수단을 가게처럼 보여 주지 않는다.** 걷어내니 아무것도 안 남은
-                          결제는 카드사가 준 정보가 "간편결제로 샀다" 뿐이다. */}
-                      {viaOnly(p) && <span className="sp-tag" style={{ background: 'var(--bg2)', color: 'var(--t3)' }}>경유</span>}
+                          결제는 카드사가 준 정보가 "간편결제로 샀다" 뿐이다.
+                          `경유` 라고만 적었더니 <b>무슨 뜻인지 알 수 없다</b>는 지적을 받았다
+                          (2026-08-26) — 무엇을 모른다는 것인지 말해야 한다. */}
+                      {viaOnly(p) && <span className="cat">결제처 미확인</span>}
                     </span>
                     {/* **자세히 — 평소에는 숨어 있다.** 원문 상호는 버리지 않는다. 어느 지점인지가
                         사라지면 안 되고, 표시명이 미심쩍을 때 확인할 자리가 있어야 한다. */}
