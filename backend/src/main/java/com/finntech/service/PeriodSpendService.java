@@ -1,6 +1,7 @@
 package com.finntech.service;
 
 import com.finntech.domain.Consumption;
+import com.finntech.engine.IndustryCategoryMapper;
 import com.finntech.repository.ConsumptionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,9 +62,16 @@ public class PeriodSpendService {
     /** 카테고리별 합계. {@code code} 는 판정에 쓰는 값, {@code name} 은 화면에 쓰는 말이다. */
     public record CatSpend(String code, String name, long amount) {}
 
+    /**
+     * @param total        <b>실제 나간 돈.</b> 무엇을 샀는지 몰라도 여기엔 남는다
+     * @param byCategory   카테고리로 갈린 것만. 간편결제는 빠진다 — 어느 칸에도 못 넣는다
+     * @param uncategorised 카테고리 합에서 빠진 금액. <b>화면이 이 값을 적어야 돈이 안 사라진다</b> —
+     *                      빼 놓고 안 알리면 막대 합과 총액이 달라 보이고 사용자는 숫자를 못 믿는다
+     */
     public record PeriodSpend(String period, LocalDate start, LocalDate end,
                               long total, int count,
-                              List<DaySpend> days, List<CatSpend> byCategory) {}
+                              List<DaySpend> days, List<CatSpend> byCategory,
+                              long uncategorised) {}
 
     /**
      * @param period {@code "week"} 또는 {@code "month"}
@@ -94,12 +102,19 @@ public class PeriodSpendService {
         Map<String, String> catName = new TreeMap<>();
 
         long total = 0L;
+        long uncategorised = 0L;
         for (Consumption c : rows) {
             long amount = c.getAmount() == null ? 0L : c.getAmount().longValue();
             total += amount;
             LocalDate d = c.getOccurredAt().toLocalDate();
             byDay.merge(d, amount, Long::sum);
             String code = c.getCategory() == null ? "기타" : c.getCategory().getCode();
+            // **간편결제는 카테고리 막대에서 뺀다.** 결제대행사 자신이라 무엇을 샀는지
+            // 원리적으로 모르는 돈이다 — 총액에는 남기고 따로 적는다.
+            if (IndustryCategoryMapper.isOutsideCategories(code)) {
+                uncategorised += amount;
+                continue;
+            }
             byCatAmount.merge(code, amount, Long::sum);
             catName.putIfAbsent(code,
                     c.getCategory() == null ? "기타" : c.getCategory().getDisplayName());
@@ -115,6 +130,6 @@ public class PeriodSpendService {
                 .thenComparing(CatSpend::code));
 
         return new PeriodSpend(monthly ? "month" : "week", start, end,
-                total, rows.size(), days, cats);
+                total, rows.size(), days, cats, uncategorised);
     }
 }

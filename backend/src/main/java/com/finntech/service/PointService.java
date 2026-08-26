@@ -584,6 +584,10 @@ public class PointService {
         for (Consumption c : consumptionRepository.findAllForUser(userId)) {
             if (c.isPlanned()) continue;
             String code = c.getCategory().getCode();
+            // **모르는 칸은 줄이라고 권하지 않는다.** "카테고리없음을 줄이세요"는 실행할 수
+            // 없는 조언이고, `간편결제` 는 원리적으로 무엇을 샀는지 모르는 돈이라 더 그렇다 —
+            // 실사용자 한 명은 그 금액이 290,642원이라 제안 1위로 올라올 수 있었다.
+            if (com.finntech.engine.IndustryCategoryMapper.isUnknown(code)) continue;
             sumByCat.merge(code, c.getAmount(), BigDecimal::add);
             countByCat.merge(code, 1L, Long::sum);
             names.putIfAbsent(code, c.getCategory().getDisplayName());
