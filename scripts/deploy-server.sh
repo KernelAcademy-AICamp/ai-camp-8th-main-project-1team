@@ -36,10 +36,17 @@ git clean -qfd                                    # 추적 밖 잔재도 지운�
 git checkout -q -B "$BRANCH" "origin/$BRANCH"
 git log --oneline -1
 
+# **크기 오버레이는 인스턴스에 맞춘다.** base(`docker-compose.prod.yml`)의 한도 합계는
+# 주석대로 **t3.medium(4GB) 기준**이고, `prod.large.yml` 은 8GB 인스턴스용으로 그것을 덮는다.
+#
+# 2026-08-26 에 `m7i-flex.large`(8GB) → `t3a.medium`(4GB) 로 내리면서 large 를 뺐다.
+# 크레딧이 $110 남았는데 월 $94 로 9월 말이면 끊겼다 — 인스턴스가 비용의 81% 인데
+# 자원은 8GB 중 3GB, 2코어에 부하 0.26 이었다. 내려서 월 $42 로 11월 중순까지 늘렸다.
+#
+# **8GB 로 되돌릴 때는 `-f docker-compose.prod.large.yml` 한 줄을 되살린다.**
 CO=(docker compose
     -f docker-compose.prod.yml
     -f docker-compose.prod.local-db.yml
-    -f docker-compose.prod.large.yml
     --profile local-db --env-file "$ENVFILE")
 
 # 4서비스가 healthy가 될 때까지 기다린다. 성공 0 / 실패 1 — **판정을 호출자에게 넘긴다.**
