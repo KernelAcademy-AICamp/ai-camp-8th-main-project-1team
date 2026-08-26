@@ -144,4 +144,49 @@ class MerchantDisplayNameTest {
             }
         }
     }
+
+    /**
+     * <b>지점명과 운영사를 접는다.</b> 목록에서 어느 지점인지는 필요 없고, 상호 앞에 붙는
+     * 법인은 <i>"어디서 썼나"</i>를 말해 주지 않는다. 원문은 눌러서 본다.
+     */
+    @Test
+    @DisplayName("지점명과 앞의 운영사를 접는다")
+    void 핵심만_남긴다() {
+        assertThat(names.of("세븐틴코인노래연습장 성신여대역점", NOT_PG, null).display())
+                .isEqualTo("세븐틴코인노래연습장");
+        assertThat(names.of("미니말레 커피뢰스터 과천 지식정보타운점", NOT_PG, null).display())
+                .isEqualTo("미니말레 커피뢰스터 과천");
+        assertThat(names.of("에이치디씨현대산업개발(주)고척아이파크쇼핑센터", NOT_PG, null).display())
+                .as("돈을 쓴 곳은 뒤다 — 앞은 법인이다").isEqualTo("고척아이파크쇼핑센터");
+    }
+
+    /**
+     * <b>토막이 하나뿐이면 접지 않는다.</b> 그것이 이름 전체라 접으면 통째로 사라진다 —
+     * {@code 친절한정육점} 은 지점이 아니라 정육점이다.
+     */
+    @Test
+    @DisplayName("이름이 '점'으로 끝나도 그것뿐이면 남긴다")
+    void 하나뿐이면_안_접는다() {
+        assertThat(names.of("친절한정육점", NOT_PG, null).display()).isEqualTo("친절한정육점");
+        assertThat(names.of("쿨링쿨링아이스크림할인점남현점", NOT_PG, null).display())
+                .isEqualTo("쿨링쿨링아이스크림할인점남현점");
+    }
+
+    /** <b>괄호 안은 부연이다.</b> 본문이 있으면 접는다 — 같은 이름을 두 언어로 적은 꼴이 흔하다. */
+    @Test
+    @DisplayName("괄호 안 병기를 접는다")
+    void 괄호는_부연이다() {
+        assertThat(names.of("핑크고릴라커피(PINK GORILLA COFFEE)", NOT_PG, null).display())
+                .isEqualTo("핑크고릴라커피");
+        assertThat(names.of("주식회사 우리들곳간(해피베네핏 성수점)", NOT_PG, null).display())
+                .isEqualTo("우리들곳간");
+        assertThat(names.of("주식회사 와그(WAUG)", "5278800686", null).display()).isEqualTo("와그");
+    }
+
+    /** 괄호밖에 없으면 접을 본문이 없다 — 그때는 괄호 안이 이름이다. */
+    @Test
+    @DisplayName("본문이 없으면 괄호 안을 쓴다")
+    void 본문이_없으면_괄호를_쓴다() {
+        assertThat(names.of("(청춘닭발)", NOT_PG, null).display()).isEqualTo("청춘닭발");
+    }
 }

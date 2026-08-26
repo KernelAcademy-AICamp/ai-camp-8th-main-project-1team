@@ -1495,3 +1495,19 @@ export const CATEGORY_LABEL: Record<string, string> = {
 };
 export const catLabel = (code: string, displayName?: string) =>
   (displayName && displayName !== code ? displayName : CATEGORY_LABEL[code]) ?? code;
+
+/**
+ * **무엇에 썼는지 모르는 칸** — `카테고리없음`(아직 못 정함)과 `기타`(다 해봤지만 못 정함).
+ *
+ * 둘은 과정이 다를 뿐 사용자에게는 같은 뜻이다: *"이 돈이 어디로 갔는지 우리도 모른다."*
+ *
+ * **챌린지에서는 고를 수 없다.** 모르는 칸에 목표를 걸면 무엇을 줄여야 하는지 말해 줄 수
+ * 없고, 금액만 보여 주면 *"이만큼 줄일 수 있다"* 는 잘못된 확신을 준다. 실사용자 온보딩에서
+ * `기타` 가 늘 후보로 떠 있었다(2026-08-26 제보).
+ *
+ * 판정이 화면마다 흩어지면 한 곳이 빠진다 — 실제로 `카테고리없음` 만 거르고 `기타` 는
+ * 안 거르는 자리가 넷이었다. 그래서 여기 하나로 둔다.
+ */
+export const UNKNOWN_CATEGORIES = ['카테고리없음', '기타'];
+export const isUnknownCategory = (code: string | null | undefined) =>
+  !code || UNKNOWN_CATEGORIES.includes(code);

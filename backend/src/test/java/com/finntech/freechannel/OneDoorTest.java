@@ -41,6 +41,8 @@ class OneDoorTest {
      *   <li>{@code ModelGateway} — <b>무료가 먼저인 문</b>. 다섯 서비스가 각자 들고 있던
      *       Gemini 호출을 여기로 모았다(2026-08-21). {@code submit}·{@code askNow} 둘 다
      *       {@link FreeChannelQueue} 에 올리고 결과만 받는다 — 직접 HTTP 를 내지 않는다.</li>
+     *   <li>{@code DisplayNameBackfill} — 표시명 되메우기(V44). 규칙으로 못 줄인 이름만
+     *       {@code shorten} 에 맡기는데, 그 메서드도 <b>캐시를 읽고 큐에 올릴 뿐</b>이다.</li>
      *   <li>{@code IndustryNameBackfill} — 업종 이름 되메우기(V43). {@code MerchantAskService} 와
      *       <b>똑같이 {@code classify} 만 부른다</b> — 캐시를 읽고 큐에 올릴 뿐 HTTP 를 안 낸다.
      *       아래 {@link #onlyQueueMediatedCalls} 가 이 파일도 같이 잠근다.</li>
@@ -58,6 +60,7 @@ class OneDoorTest {
             "UsageGlossaryService",
             "MerchantAskService",
             "IndustryNameBackfill",
+            "DisplayNameBackfill",
             "ModelGateway");
 
     /**
@@ -74,7 +77,8 @@ class OneDoorTest {
      */
     private static final List<String> QUEUE_ONLY = List.of(
             "src/main/java/com/finntech/service/MerchantAskService.java",
-            "src/main/java/com/finntech/service/IndustryNameBackfill.java");
+            "src/main/java/com/finntech/service/IndustryNameBackfill.java",
+            "src/main/java/com/finntech/service/DisplayNameBackfill.java");
 
     /** 통로를 쓴다는 표시 — 이 이름이 소스에 보이면 바깥으로 나갈 수 있다는 뜻이다. */
     private static final List<String> MARKERS =
