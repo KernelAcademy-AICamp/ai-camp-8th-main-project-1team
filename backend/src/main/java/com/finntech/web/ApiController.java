@@ -4,6 +4,7 @@ import com.finntech.audit.AuditService;
 import com.finntech.domain.Alert;
 import com.finntech.domain.AppUser;
 import com.finntech.domain.Category;
+import com.finntech.engine.IndustryCategoryMapper;
 import com.finntech.domain.Consumption;
 import com.finntech.domain.Enums;
 import com.finntech.engine.AnalysisEngine;
@@ -48,6 +49,7 @@ public class ApiController {
     private final com.finntech.service.PeerCompareService peerCompare;
     private final AlertRepository alertRepository;
     private final Clock clock;
+    private final IndustryCategoryMapper industryMapper;
 
     public ApiController(AnalysisEngine engine, ReportService reportService, AlertService alertService,
                          ScoreService scoreService, NarrativeService narrativeService,
@@ -58,7 +60,9 @@ public class ApiController {
                          AlertRepository alertRepository, CardRecommendService cardRecommendService,
                          Clock clock,
                          com.finntech.service.PeerCompareService peerCompare,
-                         com.finntech.service.PeriodSpendService periodSpend) {
+                         com.finntech.service.PeriodSpendService periodSpend,
+                         IndustryCategoryMapper industryMapper) {
+        this.industryMapper = industryMapper;
         this.peerCompare = peerCompare;
         this.periodSpend = periodSpend;
         this.engine = engine;
@@ -300,9 +304,34 @@ public class ApiController {
         return auditService.anchorPendingBatches();
     }
 
+    /**
+     * <b>사용자가 고를 수 있는 카테고리</b> — 화면 다섯이 이 목록으로 선택지를 그린다
+     * (소비 기록·소비내역 편집·목표·챌린지·순위).
+     *
+     * <p><b>표를 그대로 내보내면 안 된다.</b> {@code category} 표에는 <i>모르는 칸</i>도 행으로
+     * 들어 있다 — {@code 카테고리없음}·{@code 기타}·{@code 간편결제}. 그것을 그대로 주면
+     * 사용자가 <b>멀쩡한 소비를 "모름"으로 바꿀 수 있다.</b> 실제로 편집 시트에 셋이 다
+     * 떠 있었고, {@code 간편결제} 행을 만들자 그 자리에 하나 더 늘었다(2026-08-26 화면 확인).
+     *
+     * <p>서버가 {@code confirm} 에서 {@code midCategories()} 로 검증하고 있었으므로 눌러도
+     * 400 이 났다 — 그런데 <b>목록에 보이는데 눌리지 않는 것</b>은 고쳐진 것이 아니다.
+     * 화면이 고르는 목록과 서버가 받는 목록은 <b>같아야 한다.</b>
+     *
+     * <p><b>거르는 기준은 서버가 받는 목록 그 자체다.</b> 처음에는 {@code isUnknown} 으로
+     * <i>빼는</i> 쪽을 적었는데, 그러면 "표에 있는 다른 무엇"이 새로 생겼을 때 그것이 그대로
+     * 새어 나온다 — 실제로 시험이 남긴 가짜 행 하나가 목록에 끼어 {@code confirm} 이 400 을
+     * 내는 조합이 나왔다(2026-08-26). 그래서 {@code midCategories()} 에 <b>있는 것만</b>
+     * 내보낸다. 목록과 검증이 같은 원천을 보므로 <b>어긋날 자리가 없다.</b>
+     * 운영 {@code category} 표는 15 중분류 + 모르는 칸 셋이라 화면이 잃는 칸은 없다.
+     *
+     * <p>이름을 코드에 박지 않는다(마스터 §4 원칙 4).
+     */
     @GetMapping("/categories")
     public List<Category> categories() {
-        return categoryRepository.findAllByOrderByCodeAsc();
+        java.util.Set<String> selectable = industryMapper.midCategories();
+        return categoryRepository.findAllByOrderByCodeAsc().stream()
+                .filter(c -> selectable.contains(c.getCode()))
+                .toList();
     }
 
     private static double round(double v) { return Math.round(v * 10000.0) / 10000.0; }

@@ -36,10 +36,17 @@ git clean -qfd                                    # 추적 밖 잔재도 지운�
 git checkout -q -B "$BRANCH" "origin/$BRANCH"
 git log --oneline -1
 
+# **크기 오버레이는 인스턴스에 맞춘다.** base(`docker-compose.prod.yml`)의 한도 합계는
+# 주석대로 **t3.medium(4GB) 기준**이고, `prod.large.yml` 은 8GB 인스턴스용으로 그것을 덮는다.
+#
+# 2026-08-26 에 `m7i-flex.large`(8GB) → `t3a.medium`(4GB) 로 내리면서 large 를 뺐다.
+# 크레딧이 $110 남았는데 월 $94 로 9월 말이면 끊겼다 — 인스턴스가 비용의 81% 인데
+# 자원은 8GB 중 3GB, 2코어에 부하 0.26 이었다. 내려서 월 $42 로 11월 중순까지 늘렸다.
+#
+# **8GB 로 되돌릴 때는 `-f docker-compose.prod.large.yml` 한 줄을 되살린다.**
 CO=(docker compose
     -f docker-compose.prod.yml
     -f docker-compose.prod.local-db.yml
-    -f docker-compose.prod.large.yml
     --profile local-db --env-file "$ENVFILE")
 
 # 4서비스가 healthy가 될 때까지 기다린다. 성공 0 / 실패 1 — **판정을 호출자에게 넘긴다.**
@@ -136,6 +143,19 @@ fi
 #
 # 만들어진 컨테이너는 환경변수를 자기 안에 들고 있어, 재부팅으로 다시 떠도 이 파일이 필요 없다.
 # 손으로 compose 를 돌려야 할 때는 `scripts/env-from-ssm.sh` 를 먼저 실행한다.
+# **디스크는 배포가 채운다.** 매 배포가 이미지 셋을 새로 굽고, 밀려난 옛 이미지와 빌드
+# 캐시는 아무도 안 치운다. 런북에 손으로 하라고 적어 두었지만 손은 잊는다 — 8/26 에
+# 39GB 중 32GB(81%)까지 차 있었고 10.1GB 를 회수했다. **디스크가 차면 MySQL 이 쓰기를
+# 멈추고 서비스가 죽는다.** 배포가 만든 것은 배포가 치운다.
+#
+# 스모크까지 통과한 뒤에 한다 — 그 전에 지우면 되돌릴 자리를 스스로 없앤다.
+# `until=48h` 로 이틀치는 남긴다: 롤백은 소스에서 다시 굽는데(`up -d --build`) 캐시가
+# 있어야 몇 분 안에 끝난다. 캐시까지 지우면 되돌리는 데 십수 분이 걸린다.
+echo "=== 디스크 정리 ==="
+docker image prune -af --filter "until=48h" 2>/dev/null | tail -1
+docker builder prune -af --filter "until=48h" 2>/dev/null | tail -1
+df -h / | awk 'NR==2 {print "  루트 " $5 " 사용 (" $4 " 남음)"}'
+
 echo "=== 설정 파일 지우기 ==="
 sudo shred -u /opt/finntech/.env 2>/dev/null || sudo rm -f /opt/finntech/.env
 sudo rm -f /opt/finntech/.env.bak.* 2>/dev/null || true

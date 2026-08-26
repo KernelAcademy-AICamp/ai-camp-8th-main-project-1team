@@ -26,6 +26,7 @@ services:
     command: >
       --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
       --innodb-buffer-pool-size=256M
+      --temptable-max-ram=64M
       --performance-schema=OFF
       --binlog-expire-logs-seconds=259200
     mem_limit: 640m
