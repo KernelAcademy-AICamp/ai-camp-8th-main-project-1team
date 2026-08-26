@@ -30,8 +30,6 @@ function dayLabel(ymd: string): string {
   const d = new Date(`${ymd}T00:00:00`);
   return `${d.getMonth() + 1}월 ${d.getDate()}일 ${DOW[d.getDay()]}`;
 }
-/** "14:32" — 줄에 붙는 결제 시각. 날짜는 묶음 머리가 이미 말한다. */
-const hhmm = (iso: string) => iso.slice(11, 16);
 
 /**
  * 찾은 글자만 파랗게(개편안 `.hl`).
@@ -75,9 +73,9 @@ const SPEND_FILTERS: { key: SpendFilter; label: string }[] = [
 // 매달 같은 날 같은 금액이 나가도 영영 '고정'이 안 붙는다(2026-08-05 실사용자에서 확인).
 // 카테고리 이름을 화면에 박지 않는다 — 마스터 §4 원칙 4.
 
-/** 사업자등록번호 10자리 → XXX-YY-ZZZZZ 표시. */
 /** '카테고리없음'인가 — 이름을 코드에 박지 않기 위해 한 곳에 둔다. */
 const isNone = (c: string | null | undefined) => !c || c === '카테고리없음';
+/** 사업자등록번호 10자리 → XXX-YY-ZZZZZ 표시. */
 const bizFmt = (b: string) => (b.length === 10 ? `${b.slice(0, 3)}-${b.slice(3, 5)}-${b.slice(5)}` : b);
 
 export function Transactions() {
@@ -88,8 +86,14 @@ export function Transactions() {
   const payments = useAsync(() => api.allPayments(userId, 12), [userId]);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
   const [merchantOf, setMerchantOf] = useState<Record<string, MyMerchant | 'loading'>>({});
-  /** '원문'을 눌러 펼친 줄. 표시명이 원문과 다를 때만 누를 수 있다. */
-  const [rawOpen, setRawOpen] = useState<Record<string, boolean>>({});
+  /**
+   * 자세히를 펼친 줄.
+   *
+   * **평소에는 숨긴다.** 원문 상호·사업자번호·주소는 <b>따져 볼 때만</b> 필요한 값인데
+   * 늘 적어 두면 보조줄이 잡동사니가 되고 줄인 이름이 무의미해진다(2026-08-26 화면 확인).
+   * 여는 손잡이는 **카드사 이름**이다 — 새 버튼을 만들면 줄이 또 하나 늘어난다.
+   */
+  const [detailOpen, setDetailOpen] = useState<Record<string, boolean>>({});
   /** 달력에서 고른 날. null이면 전체 기간. */
   const [pickedDate, setPickedDate] = useState<string | null>(null);
   /**
@@ -182,6 +186,21 @@ export function Transactions() {
    * 없는 건지 필터에 걸린 건지 알 수가 없다. 검색어를 안 적었으면 <b>아무것도 안 보인다</b> —
    * 전체 목록을 다시 보여 주면 검색에 들어온 것인지 아닌지가 흐려진다.
    */
+  async function lookupMerchant(bizno: string) {
+    if (merchantOf[bizno]) return;
+    setMerchantOf((prev) => ({ ...prev, [bizno]: 'loading' }));
+    try {
+      const m = await api.merchant(bizno);
+      setMerchantOf((prev) => {
+        const next = { ...prev };
+        if (m) next[bizno] = m; else delete next[bizno];
+        return next;
+      });
+    } catch {
+      setMerchantOf((prev) => { const next = { ...prev }; delete next[bizno]; return next; });
+    }
+  }
+
   const days = useMemo(() => {
     const all = payments.data ?? [];
     const q = (query ?? '').trim().toLowerCase().replace(/\s/g, '');
@@ -251,21 +270,6 @@ export function Transactions() {
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, [userId]);
-
-  async function lookupMerchant(bizno: string) {
-    if (merchantOf[bizno]) return;
-    setMerchantOf((prev) => ({ ...prev, [bizno]: 'loading' }));
-    try {
-      const m = await api.merchant(bizno);
-      setMerchantOf((prev) => {
-        const next = { ...prev };
-        if (m) next[bizno] = m; else delete next[bizno];
-        return next;
-      });
-    } catch {
-      setMerchantOf((prev) => { const next = { ...prev }; delete next[bizno]; return next; });
-    }
-  }
 
   /**
    * 달력에서 날짜를 누르면 <b>그 날짜 줄로 굴러간다</b>.
@@ -401,22 +405,32 @@ export function Transactions() {
                       <Icon id={iconOf(catLabel(p.category2 ?? p.category)).icon} />
                     </span>
                     <div className="tx">
+                    {/* **이름 줄은 이름만 갖는다.** 배지를 나란히 두면 긴 상호가 밀려 잘린다 —
+                        줄의 주인공이 가장 좁아지는 자리였다(2026-08-26 실측: 이름 48px).
+                        카테고리·성역·고정·경유는 아래 줄, 카드사 오른쪽으로 내렸다. */}
                     <b>
-                      {/* **서버가 적어 둔 표시명을 쓴다**(V44). `주식회사 빅바이트컴퍼니
-                          쉐이크쉑 강남스퀘어` 는 무엇을 샀는지 알기 어렵고, `카카오T경기
-                          33아6084` 는 차량번호가 이름을 밀어낸다. 원문은 '원문' 을 눌러 본다. */}
-                      {/* **이름만 말줄임한다.** 이름과 배지가 한 상자에 있으면 긴 이름이
-                          배지를 화면 밖으로 밀어낸다 — 카테고리 배지는 눌러서 고치는
-                          컨트롤이라 잘리면 기능이 사라진다(2026-08-26). */}
                       <span className="nm">
                         {shownName(p)
                           ? highlight(shownName(p)!, (query ?? '').trim())
                           : catLabel(p.category2 ?? p.category)}
                       </span>
-                      {/* **결제수단을 가게처럼 보여 주지 않는다.** 걷어내니 아무것도 안 남은
-                          결제는 카드사가 준 정보가 "간편결제로 샀다" 뿐이다. 이름을 지어내는
-                          대신 <b>경유</b> 라고 적어 그 줄이 가맹점이 아님을 말한다. */}
-                      {viaOnly(p) && <span className="sp-tag" style={{ background: 'var(--bg2)', color: 'var(--t3)' }}>경유</span>}
+                    </b>
+                    <span className="sub">
+                      {/* **카드사만 적는다.** 상품명(`신한 Deep Dream`)은 13자를 먹는데
+                          목록에서 알아야 할 것은 어디에 썼는가다. */}
+                      {(p.companyName ?? p.cardName) && (
+                        <button type="button" className="cd"
+                          style={{ color: inkColor(p.cardColor) }}
+                          aria-expanded={!!detailOpen[p.paymentId]}
+                          aria-label={`${p.companyName ?? p.cardName} — 원문 가맹점명과 사업자번호 ${detailOpen[p.paymentId] ? '접기' : '보기'}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDetailOpen((o) => ({ ...o, [p.paymentId]: !o[p.paymentId] }));
+                            if (p.businessNumber) void lookupMerchant(p.businessNumber);
+                          }}>
+                          {p.companyName ?? p.cardName}
+                        </button>
+                      )}
                       {/* 중분류를 함께 보여준다 — 가맹점명만으로는 이 결제가 어느 카테고리로
                           집계됐는지 알 수 없어, 리포트 숫자와 목록을 맞춰 볼 방법이 없었다.
                           확정이 없고 추정만 있으면 **눌러서 확정**할 수 있게 한다 — 확정 화면을
@@ -431,78 +445,43 @@ export function Transactions() {
                             onClick={(e) => { e.stopPropagation(); setEditing(editing === p.paymentId ? null : p.paymentId); }}
                             className="sp-tag"
                             /* **추정은 호박색이다.** 브랜드색(초록)은 "확인됨·좋음"으로 읽히는데
-                               이 배지의 뜻은 정반대다 — <b>아직 확정이 아니니 봐 달라</b>. 주목을
-                               끌어야 할 것이 안심시키는 색이면 신호가 뒤집힌다(2026-08-08).
-                               미분류 정리 화면과 같은 조합(#FFF4E5 + --amber-t = .tag-warn)을 쓴다.
-                               **무료·유료 통로를 색으로 가르지 않는다.** 실측 정확도가 73% 대 75% 로
-                               사실상 같아 전할 신뢰도 차이가 없고, 사용자가 할 일도 같다(보고 확정한다).
-                               어느 통로가 답했는지는 category2_source 에 남아 관측으로 답한다. */
+                               이 배지의 뜻은 정반대다 — <b>아직 확정이 아니니 봐 달라</b>.
+                               미분류 정리 화면과 같은 조합(#FFF4E5 + --amber-t = .tag-warn)을 쓴다. */
                             style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit',
                                      background: guess ? '#FFF4E5' : 'var(--bg2)',
                                      color: guess ? 'var(--amber-t)' : 'var(--t3)' }}>
-                            {guess ? `AI 추정 · ${catLabel(guess)}` : catLabel(label)} ✎
+                            {/* **추정이라도 카테고리 이름만 적는다.** `AI 추정 · 카테고리없음` 은
+                                열두 자를 먹으면서 아무 말도 안 한다 — 호박색이 이미 "확정이
+                                아니다"를 말하고 있다(2026-08-26 화면 확인). */}
+                            {catLabel(label)} ✎
                           </button>
                         );
                       })()}
-                      {/* 성역·고정지출은 표시해 준다(개편안 `.sp-tag`) — 왜 이 결제가 챌린지에서
-                          빠지는지 목록에서 바로 보여야 사용자가 판정을 의심하지 않는다. */}
+                      {/* 성역·고정지출은 표시해 준다 — 왜 이 결제가 챌린지에서 빠지는지
+                          목록에서 바로 보여야 사용자가 판정을 의심하지 않는다. */}
                       {p.category && sanctuary.has(p.category) && <span className="sp-tag tag-sanct">성역</span>}
                       {fixedOf(p) && <span className="sp-tag tag-fixed">고정</span>}
-                    </b>
-                    <span className="sub">
-                      {/* **카드사만 적는다.** 상품명(`신한 Deep Dream`)은 13자를 먹는데
-                          목록에서 알아야 할 것은 어디에 썼는가다. 어느 카드인지는 색과
-                          카드사로 충분하고, 상세는 '내 카드'가 말한다. */}
-                      {(p.companyName ?? p.cardName) && (
-                        <span className="cd" style={{ color: inkColor(p.cardColor) }}>
-                          {p.companyName ?? p.cardName}
-                        </span>
-                      )}
-                      {(p.companyName ?? p.cardName) && ' · '}
-                      {/* **원문을 버리지 않는다 — 눌러서 본다.** 어느 지점인지가 사라지면
-                          안 되지만, 늘 펼쳐 두면 줄인 이름이 다시 길어져 의미가 없다.
-                          표시명이 원문과 다를 때만 누를 거리가 있다. */}
-                      {p.merchantName && shownName(p) !== p.merchantName && (
-                        <>
-                          <button type="button" className="biz-link"
-                            onClick={() => setRawOpen((o) => ({ ...o, [p.paymentId]: !o[p.paymentId] }))}
-                            aria-expanded={!!rawOpen[p.paymentId]}
-                            aria-label={`원문 가맹점명 ${rawOpen[p.paymentId] ? '접기' : '보기'}`}>
-                            원문 {rawOpen[p.paymentId] ? '▴' : '▾'}
-                          </button>
-                          {' · '}
-                        </>
-                      )}
-                      {/* 결제 경로는 사업자번호가 알려 준 사실이다 — 짐작이 아니다. */}
-                      {p.viaAgency && <>{p.viaAgency} 경유{' · '}</>}
-                      {hhmm(p.date)}
-                      {p.businessNumber && (
-                        <>
-                          {' · '}
-                          {/* 보이는 글자는 번호뿐이지만 눌러서 주소를 조회하는 컨트롤이라
-                              화면낭독기에는 무엇을 하는 버튼인지 알려준다. */}
-                          <button type="button" className="biz-link"
-                            onClick={() => void lookupMerchant(p.businessNumber!)}
-                            aria-label={`사업자등록번호 ${bizFmt(p.businessNumber)} — 가맹점 주소 조회`}>
-                            {bizFmt(p.businessNumber)}
-                          </button>
-                        </>
-                      )}
-                      {(() => {
-                        const f = p.businessNumber ? merchantOf[p.businessNumber] : undefined;
-                        if (f === 'loading') return <> · 주소 조회중…</>;
-                        if (f) return <> · 📍 {f.address}{f.online ? ' (본사)' : ''}</>;
-                        return null;
-                      })()}
-                      {rawOpen[p.paymentId] && p.merchantName && (
-                        <>
-                          <br />
-                          <span style={{ wordBreak: 'break-all' }}>
-                            {highlight(p.merchantName, (query ?? '').trim())}
-                          </span>
-                        </>
-                      )}
+                      {/* **결제수단을 가게처럼 보여 주지 않는다.** 걷어내니 아무것도 안 남은
+                          결제는 카드사가 준 정보가 "간편결제로 샀다" 뿐이다. */}
+                      {viaOnly(p) && <span className="sp-tag" style={{ background: 'var(--bg2)', color: 'var(--t3)' }}>경유</span>}
                     </span>
+                    {/* **자세히 — 평소에는 숨어 있다.** 원문 상호는 버리지 않는다. 어느 지점인지가
+                        사라지면 안 되고, 표시명이 미심쩍을 때 확인할 자리가 있어야 한다. */}
+                    {detailOpen[p.paymentId] && (
+                      <span className="det">
+                        {p.merchantName && (
+                          <>{highlight(p.merchantName, (query ?? '').trim())}</>
+                        )}
+                        {p.viaAgency && <> · {p.viaAgency} 경유</>}
+                        {p.businessNumber && <> · {bizFmt(p.businessNumber)}</>}
+                        {(() => {
+                          const f = p.businessNumber ? merchantOf[p.businessNumber] : undefined;
+                          if (f === 'loading') return <> · 주소 조회중…</>;
+                          if (f?.address) return <> · 📍 {f.address}{f.online ? ' (본사)' : ''}</>;
+                          return null;
+                        })()}
+                      </span>
+                    )}
                     </div>
                     {/* 테두리는 브랜드 원색, 글자는 흰 바탕에서 읽히도록 눌러 쓴다.
                         KB국민 노랑을 글자에 그대로 쓰면 1.69:1 이라 안 보인다(KWCAG 5.4.3). */}
