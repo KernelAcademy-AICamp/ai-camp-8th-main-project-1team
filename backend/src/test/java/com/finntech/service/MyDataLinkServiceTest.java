@@ -39,6 +39,36 @@ class MyDataLinkServiceTest {
                 product, new UserView("ci", "홍길동"), payments);
     }
 
+    @Test
+    void 소비내역은_확정된_브랜드를_함께_보낸다() {
+        UserCardRepository cards = mock(UserCardRepository.class);
+        UserPaymentRepository payments = mock(UserPaymentRepository.class);
+        MerchantBrandService brands = mock(MerchantBrandService.class);
+        String merchant = "주식회사 빅바이트컴퍼니 쉐이크쉑 강남스퀘어";
+        var first = new com.finntech.domain.UserPayment("1:p1", 1L, "card-1", 10L,
+                LocalDateTime.of(2026, 8, 25, 12, 0), "5611", "외식",
+                18_000, merchant, "1234567890");
+        var second = new com.finntech.domain.UserPayment("1:p2", 1L, "card-1", 10L,
+                LocalDateTime.of(2026, 8, 24, 12, 0), "5611", "외식",
+                21_000, merchant, "1234567890");
+        when(cards.findByUserIdOrderByIdAsc(1L)).thenReturn(List.of());
+        when(payments.findByUserIdOrderByPaymentDateDesc(1L)).thenReturn(List.of(first, second));
+        when(brands.shownBrandOf(merchant)).thenReturn(Optional.of("쉐이크쉑"));
+
+        var service = TestServices.linkService(mock(MyDataClient.class), mock(AppUserRepository.class),
+                cards, payments, mock(ConsumptionRepository.class), mock(CategoryRepository.class),
+                new com.finntech.engine.IndustryCategoryMapper(new tools.jackson.databind.ObjectMapper()),
+                emptyDictionary(), emptyKinds(), offLookup(), noAsk(), brands,
+                mock(UserCardCompanyRepository.class), mock(UserBankRepository.class),
+                mock(ReportRepository.class), Clock.systemDefaultZone(), "2026-08-26");
+
+        var history = service.allPayments(1L, 12);
+
+        assertEquals(List.of("쉐이크쉑", "쉐이크쉑"),
+                history.stream().map(MyDataLinkService.PaymentHistoryRow::brand).toList());
+        verify(brands, times(1)).shownBrandOf(merchant);
+    }
+
     /** 연동 당일 오전에 연결하고, 그날 남은 시간의 결제가 아직 안 왔을 때의 기준선. */
     @Test
     void 증분_기준선은_실제로_받아온_마지막_결제_시각이다() {

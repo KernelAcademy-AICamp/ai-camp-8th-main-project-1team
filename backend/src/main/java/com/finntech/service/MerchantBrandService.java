@@ -554,6 +554,28 @@ public class MerchantBrandService {
         return brandsInName(merchantName).stream().findFirst();
     }
 
+    /**
+     * <b>화면에 보여 줄 브랜드</b> — 표기표가 확정한 것만, 결제대행사는 뺀다.
+     *
+     * <p>{@link #displayBrandOf} 를 그대로 쓰면 안 된다. 그 자리는 <i>"이 상호에 어떤 표기가
+     * 들어 있나"</i>를 답할 뿐이라 <b>결제대행사도 돌려준다</b> — {@code 토스페이_일반-(주)비바
+     * 리퍼블리카} 가 '토스페이'로 보이면 사용자는 <i>어디서 썼는지</i>를 잃는다. 결제수단은
+     * 가게가 아니다. {@link #usableBrand} 가 그 둘({@link #NONE}·PG)을 거른다.
+     *
+     * <p><b>저장된 브랜드를 안 읽는다.</b> {@code merchant_category.brand} 는 모델이 답한
+     * 추정일 수 있어 화면에 그대로 내면 <i>지어낸 이름</i>이 사실처럼 보인다 — 운영 사전
+     * 845행 중 269행이 표기표에 없는 이름이었고 {@code (주)카카오} 가 <b>멜론</b>으로 적혀
+     * 있었다(2026-08-25 실측). 소분류가 저장된 브랜드를 안 읽는 것과 같은 이유다.
+     */
+    public Optional<String> shownBrandOf(String merchantName) {
+        // PG 이름 안의 짧은 표기까지 먼저 걷어낸다. `토스페이`에는 카탈로그 표기 `토스`가
+        // 들어 있어 결과를 고른 뒤 `isAgency("토스")`만 물으면 PG를 브랜드로 내보낸다.
+        String shopName = withoutAgencyMentions(merchantName);
+        return brandsInName(shopName).stream()
+                .filter(MerchantBrandService::usableBrand)
+                .findFirst();
+    }
+
     public Optional<String> subBrandOf(String merchantName, java.util.function.Predicate<String> hasSub) {
         return brandsInName(merchantName).stream().filter(hasSub).findFirst();
     }
@@ -614,4 +636,26 @@ public class MerchantBrandService {
             "페이코", "PAYCO", "나이스페이먼츠", "NICE", "NICE인프라", "KICC", "KG이니시스", "이니시스",
             "KG모빌리언스", "KCP", "NHNKCP", "다날", "갤럭시아머니트리", "웰컴페이먼츠", "스마트로",
             "KSNET", "KPN", "헥토파이낸셜", "이노페이", "페이레터", "코페이", "삼성페이", "애플페이");
+
+    /** 공백·괄호·구분자가 끼어도 PG 이름을 한 덩어리로 지운다({@code 토스 페이} 등). */
+    private static final java.util.List<java.util.regex.Pattern> PG_MENTION_PATTERNS = PG_BRANDS.stream()
+            .map(MerchantBrandService::agencyMentionPattern)
+            .toList();
+
+    private static java.util.regex.Pattern agencyMentionPattern(String agency) {
+        String flat = agency.replaceAll("[\\s()（）\\-_.]", "");
+        String between = "[\\s()（）\\-_.]*";
+        String regex = flat.codePoints()
+                .mapToObj(c -> java.util.regex.Pattern.quote(new String(Character.toChars(c))))
+                .collect(java.util.stream.Collectors.joining(between));
+        return java.util.regex.Pattern.compile(regex,
+                java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.UNICODE_CASE);
+    }
+
+    private static String withoutAgencyMentions(String merchantName) {
+        if (merchantName == null || merchantName.isBlank()) return merchantName;
+        String out = merchantName;
+        for (var pattern : PG_MENTION_PATTERNS) out = pattern.matcher(out).replaceAll("");
+        return out;
+    }
 }

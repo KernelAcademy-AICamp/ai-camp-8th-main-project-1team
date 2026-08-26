@@ -345,4 +345,47 @@ class MerchantBrandServiceTest {
         assertThat(service.label(java.util.Arrays.asList("", "  "), java.util.Set.of(), 10)).isZero();
         assertThat(Optional.ofNullable(staging.isEmpty() ? null : staging.get(0))).isEmpty();
     }
+
+    /**
+     * <b>화면에 보여 줄 브랜드는 결제수단을 빼야 한다.</b>
+     *
+     * <p>소비내역은 브랜드가 있으면 브랜드를 앞세운다. 그런데 표기표 대조는 <i>"이 상호에
+     * 어떤 표기가 들어 있나"</i>를 답할 뿐이라 결제대행사도 돌려준다 —
+     * {@code 토스페이_일반-(주)비바리퍼블리카} 가 화면에 <b>'토스페이'</b> 로 뜨면
+     * 사용자는 <i>어디서 썼는지</i>를 잃는다. <b>결제수단은 가게가 아니다.</b>
+     */
+    @Test
+    @DisplayName("결제대행사는 화면 브랜드가 되지 않는다")
+    void 결제수단은_가게가_아니다() {
+        assertThat(service.shownBrandOf("토스페이_일반-(주)비바리퍼블리카"))
+                .as("결제수단을 가맹점으로 보여 주면 어디서 썼는지가 사라진다").isEmpty();
+        assertThat(service.shownBrandOf("상품권_네이버페이")).isEmpty();
+
+        // 결제대행사를 **거쳐도** 진짜 가게가 있으면 그것이 답이다. PG가 상호의 앞에
+        // 있어도 건너뛰어야 한다 — 첫 표기를 고른 뒤 PG인지 검사하면 스타벅스까지 잃는다.
+        assertThat(service.shownBrandOf("넥슨_카카오페이")).contains("넥슨");
+        assertThat(service.shownBrandOf("카카오페이_스타벅스 강남점")).contains("스타벅스");
+    }
+
+    /**
+     * 브랜드가 상호 <b>안에 없어도</b> 운영사 이름으로 찾아낸다 — 화면이 읽을 이름을 얻는 자리다.
+     */
+    @Test
+    @DisplayName("운영사 이름으로 찍힌 결제도 브랜드를 얻는다")
+    void 운영사_이름도_브랜드가_된다() {
+        assertThat(service.shownBrandOf("에프알엘코리아 주식회사")).contains("유니클로");
+        assertThat(service.shownBrandOf("비지에프리테일(씨유성북로데오점)")).contains("CU");
+        assertThat(service.shownBrandOf("주식회사 빅바이트컴퍼니 쉐이크쉑 강남스퀘어"))
+                .contains("쉐이크쉑");
+    }
+
+    /** 모르는 상호에는 아무것도 안 붙인다 — 없는 브랜드를 지어내면 화면이 거짓을 말한다. */
+    @Test
+    @DisplayName("표기표가 모르는 개인 상호는 브랜드가 없다")
+    void 모르는_상호는_브랜드가_없다() {
+        assertThat(service.shownBrandOf("그냥찌개집")).isEmpty();
+        assertThat(service.shownBrandOf("엄지칼국수")).isEmpty();
+        assertThat(service.shownBrandOf(null)).isEmpty();
+        assertThat(service.shownBrandOf("   ")).isEmpty();
+    }
 }
