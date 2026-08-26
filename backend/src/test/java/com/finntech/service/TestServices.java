@@ -136,6 +136,9 @@ final class TestServices {
                 // 소비 원장 표시도 마찬가지 — 표가 원장을 따라오는지는
                 // `SpendingLedgerFactsTest` 가 통합으로 본다.
                 mock(com.finntech.ledger.SpendingLedgerDirtyMarker.class), mock(com.finntech.service.IndustryCodeBackfill.class),
+                // 표시명은 **진짜 규칙**을 쓴다 — 대역을 주면 결제 목록이 이름을 잃고,
+                // 그 사실이 시험에 안 잡힌다. 규칙 자체는 `MerchantDisplayNameTest` 가 본다.
+                new MerchantDisplayName(mapper), mock(DisplayNameBackfill.class),
                 selfOf(self));
         self.set(service);
         return service;

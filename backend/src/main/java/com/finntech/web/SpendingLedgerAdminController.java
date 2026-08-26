@@ -63,6 +63,7 @@ public class SpendingLedgerAdminController {
     private final com.finntech.service.BrandCoverageReport brandCoverage;
     private final com.finntech.service.IndustryCodeBackfill industryCodes;
     private final com.finntech.service.IndustryNameBackfill industryNames;
+    private final com.finntech.service.DisplayNameBackfill displayNames;
 
     public SpendingLedgerAdminController(SpendingLedgerBackfill backfill, SpendingLedgerVerifier verifier,
                                        SpendingLedgerJudgmentRefresher refresher,
@@ -72,7 +73,8 @@ public class SpendingLedgerAdminController {
                                        com.finntech.service.SubCategorySweeper subSweeper,
                                        com.finntech.service.BrandCoverageReport brandCoverage,
                                        com.finntech.service.IndustryCodeBackfill industryCodes,
-                                       com.finntech.service.IndustryNameBackfill industryNames) {
+                                       com.finntech.service.IndustryNameBackfill industryNames,
+                                       com.finntech.service.DisplayNameBackfill displayNames) {
         this.backfill = backfill;
         this.verifier = verifier;
         this.refresher = refresher;
@@ -86,6 +88,7 @@ public class SpendingLedgerAdminController {
         this.brandCoverage = brandCoverage;
         this.industryCodes = industryCodes;
         this.industryNames = industryNames;
+        this.displayNames = displayNames;
     }
 
     /**
@@ -118,6 +121,21 @@ public class SpendingLedgerAdminController {
     public com.finntech.service.BrandCoverageReport.Result brandCoverage(
             @RequestParam(defaultValue = "REAL") String origin) {
         return brandCoverage.scan(origin);
+    }
+
+    /**
+     * <b>소비내역에 적을 이름을 결제 행에 적는다</b>(V44) — 기본은 <b>맛보기</b>다.
+     *
+     * <p>실사용자 결제의 <b>29%</b>가 PG 사업자번호로 찍히고, 그 상호는
+     * {@code 토스페이_일반-(주)비바리퍼블리카} 처럼 결제 경로가 이름을 밀어낸 꼴이다.
+     * 표시명은 <b>원문의 부분집합</b>이라 지어낸 것이 아니다.
+     *
+     * <p>표기표·PG 목록을 고친 뒤 부르면 옛 결제의 이름이 따라 움직인다. 밤에도 한 번 돈다.
+     */
+    @PostMapping("/spending-ledger/display-name-backfill")
+    public com.finntech.service.DisplayNameBackfill.Result displayNameBackfill(
+            @RequestParam(defaultValue = "true") boolean dryRun) {
+        return displayNames.run(dryRun);
     }
 
     /**

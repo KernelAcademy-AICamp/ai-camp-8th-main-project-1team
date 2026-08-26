@@ -112,6 +112,8 @@ public class MyDataLinkService {
     private final com.finntech.ledger.SpendingLedgerDirtyMarker ledgerDirtyMarker;
     /** 소분류에서 업종코드를 되찾는 문 — 연동 끝에 그 사용자만 돌린다. */
     private final IndustryCodeBackfill industryCodeBackfill;
+    private final MerchantDisplayName displayNames;
+    private final DisplayNameBackfill displayNameBackfill;
 
     public MyDataLinkService(MyDataClient myDataClient, AppUserRepository userRepository,
                              UserCardRepository userCardRepository, UserPaymentRepository userPaymentRepository,
@@ -132,11 +134,15 @@ public class MyDataLinkService {
                                      FollowUpExecutorConfig.BEAN) java.util.concurrent.Executor followUps,
                              com.finntech.ledger.SpendingLedgerDirtyMarker ledgerDirtyMarker,
                              IndustryCodeBackfill industryCodeBackfill,
+                             MerchantDisplayName displayNames,
+                             DisplayNameBackfill displayNameBackfill,
                              org.springframework.beans.factory.ObjectProvider<MyDataLinkService> selfProvider) {
         this.categoryPromotion = categoryPromotion;
         this.followUps = followUps;
         this.ledgerDirtyMarker = ledgerDirtyMarker;
         this.industryCodeBackfill = industryCodeBackfill;
+        this.displayNames = displayNames;
+        this.displayNameBackfill = displayNameBackfill;
         this.selfProvider = selfProvider;
         this.myDataClient = myDataClient;
         this.userRepository = userRepository;
@@ -690,6 +696,9 @@ public class MyDataLinkService {
         // 그러면 카드 혜택축이 통째로 죽는다(cardAxisOf 가 그 코드를 읽는다). 방금 브랜드·조회로
         // 소분류가 정해졌으니 그 자리에서 옮긴다 — 모델을 부르지 않아 비용이 없다.
         industryCodeBackfill.runFor(userId, false);
+        // **표시명도 여기서 적는다**(V44). 이 자리가 없으면 새 사용자는 긴 PG 상호를
+        // 그대로 본다 — 밤 배치가 돌 때까지 하루를 기다려야 한다.
+        displayNameBackfill.runFor(userId, false);
         // **대상이 있으면 언제나 남긴다.** 예전에는 `asked > 0` 일 때만 찍었는데, 그러면
         // "물어볼 대상이 하나도 안 잡힌다"는 상황이 로그에 흔적을 안 남겨 원인을 못 좁혔다
         // (2026-08-07 운영: 조회가 도는지조차 알 수 없었다). 0 도 정보다.
@@ -1038,6 +1047,19 @@ public class MyDataLinkService {
                     String brand = name == null || name.isBlank() ? null
                             : brandOfName.computeIfAbsent(name,
                                     n -> merchantBrandService.shownBrandOf(n).orElse(""));
+                    // **적혀 있으면 그대로 낸다**(V44). 없을 때만 푼다 — 옛 결제·방금 들어온
+                    // 결제가 그렇고, 밤 배치가 곧 적어 준다.
+                    String shown = payment.getDisplayName();
+                    String shownSource = payment.getDisplayNameSource();
+                    String via = payment.getViaAgency();
+                    if (shown == null || shown.isBlank()) {
+                        MerchantDisplayName.Shown made = displayNames.of(
+                                name, payment.getBusinessNumber(),
+                                brand == null || brand.isEmpty() ? null : brand);
+                        shown = made.display().isBlank() ? null : made.display();
+                        shownSource = shown == null ? null : made.source().name();
+                        via = made.viaAgency();
+                    }
                     return new PaymentHistoryRow(payment.getPaymentId(), payment.getPaymentDate(),
                             payment.getCategory2(), payment.getCategory2(), payment.getAmount(),
                             name,
@@ -1046,7 +1068,8 @@ public class MyDataLinkService {
                             card != null ? card.getCompanyName() : null,
                             payment.getBusinessNumber(), payment.getCategory2Llm(),
                             payment.getCategory2Source(),
-                            brand == null || brand.isEmpty() ? null : brand);
+                            brand == null || brand.isEmpty() ? null : brand,
+                            shown, shownSource, via);
                 })
                 .toList();
     }
@@ -1151,5 +1174,16 @@ public class MyDataLinkService {
                                      * 강남스퀘어} 보다 <b>쉐이크쉑</b> 이 먼저 읽힌다. 풀네임을
                                      * 버리지는 않는다. 어느 지점인지가 사라지면 안 된다.
                                      */
-                                    String brand) {}
+                                    String brand,
+                                    /**
+                                     * <b>소비내역에 적을 이름</b>(V44) — 결제 행에 <b>적혀 있는</b> 값이다.
+                                     *
+                                     * <p>화면에서 계산하지 않는다. 표기 1,200여 개를 훑는 일이라
+                                     * 목록을 열 때마다 같은 상호를 수백 번 다시 푼다.
+                                     */
+                                    String displayName,
+                                    /** {@code BRAND}·{@code RESIDUE}·{@code AGENCY_ONLY}·{@code RAW}. */
+                                    String displayNameSource,
+                                    /** 거쳐 간 결제대행사 — 사업자번호가 알려 준 사실이다. */
+                                    String viaAgency) {}
 }
