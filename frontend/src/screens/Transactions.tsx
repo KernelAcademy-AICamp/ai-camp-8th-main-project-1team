@@ -56,9 +56,6 @@ function highlight(name: string, q: string) {
 function shownName(p: MyPaymentHistory): string | null {
   return p.displayName ?? p.brand ?? p.merchantName ?? null;
 }
-/** 결제 경로만 아는 줄인가 — 카드사가 준 정보가 "간편결제로 샀다" 뿐인 결제. */
-const viaOnly = (p: MyPaymentHistory) => p.displayNameSource === 'AGENCY_ONLY';
-
 type SpendFilter = 'all' | 'disc' | 'fixed' | 'sanct';
 /** 개편안의 필터 4종. '재량'은 성역·고정지출을 뺀 나머지다 — 줄일 수 있는 것만 남긴다. */
 const SPEND_FILTERS: { key: SpendFilter; label: string }[] = [
@@ -484,11 +481,10 @@ export function Transactions() {
                           목록에서 바로 보여야 사용자가 판정을 의심하지 않는다. */}
                       {p.category && sanctuary.has(p.category) && <span className="sp-tag tag-sanct">성역</span>}
                       {fixedOf(p) && <span className="sp-tag tag-fixed">고정</span>}
-                      {/* **결제수단을 가게처럼 보여 주지 않는다.** 걷어내니 아무것도 안 남은
-                          결제는 카드사가 준 정보가 "간편결제로 샀다" 뿐이다.
-                          `경유` 라고만 적었더니 <b>무슨 뜻인지 알 수 없다</b>는 지적을 받았다
-                          (2026-08-26) — 무엇을 모른다는 것인지 말해야 한다. */}
-                      {viaOnly(p) && <span className="cat">결제처 미확인</span>}
+                      {/* **결제 경로는 줄에 적지 않는다.** 이름 자리에 이미 결제대행사가 떠
+                          있고(`토스페이먼츠`) 카테고리도 `카테고리없음` 이라, 여기에 한 번 더
+                          적으면 같은 말을 세 번 하는 것이다(2026-08-26 지적).
+                          거쳐 간 곳은 카드사를 눌러 펼치면 `토스페이먼츠 경유` 로 나온다. */}
                     </span>
                     {/* **자세히 — 평소에는 숨어 있다.** 원문 상호는 버리지 않는다. 어느 지점인지가
                         사라지면 안 되고, 표시명이 미심쩍을 때 확인할 자리가 있어야 한다. */}

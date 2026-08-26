@@ -3697,7 +3697,6 @@ textarea.inp{ min-height: 92px; resize: vertical; line-height: 1.5; }
   border: none; background: none; padding: 0; font: inherit; cursor: pointer;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sp-card .list-item .tx .sub .cat{ color: var(--t3); }
-.sp-card .list-item .tx .sub span.cat{ cursor: default; }
 /* **모델이 정한 카테고리** — 보라다.
  *
  * 호박(경고)도 초록(브랜드)도 아니다. 실화면에 네 안을 렌더해 고른 색이다(2026-08-26):
