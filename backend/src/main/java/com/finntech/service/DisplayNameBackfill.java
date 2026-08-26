@@ -1,7 +1,12 @@
 package com.finntech.service;
 
 import com.finntech.domain.AppUser;
+import com.finntech.domain.Category;
+import com.finntech.domain.Consumption;
 import com.finntech.domain.UserPayment;
+import com.finntech.engine.IndustryCategoryMapper;
+import com.finntech.repository.CategoryRepository;
+import com.finntech.repository.ConsumptionRepository;
 import com.finntech.repository.AppUserRepository;
 import com.finntech.repository.ReportRepository;
 import com.finntech.repository.UserPaymentRepository;
@@ -50,16 +55,21 @@ public class DisplayNameBackfill {
     private final MerchantDisplayName displayNames;
     private final TempClassifierService temporary;
     private final ReportRepository reports;
+    private final ConsumptionRepository consumptions;
+    private final CategoryRepository categories;
 
     public DisplayNameBackfill(AppUserRepository users, UserPaymentRepository payments,
                                MerchantBrandService brands, MerchantDisplayName displayNames,
-                               TempClassifierService temporary, ReportRepository reports) {
+                               TempClassifierService temporary, ReportRepository reports,
+                               ConsumptionRepository consumptions, CategoryRepository categories) {
         this.users = users;
         this.payments = payments;
         this.brands = brands;
         this.displayNames = displayNames;
         this.temporary = temporary;
         this.reports = reports;
+        this.consumptions = consumptions;
+        this.categories = categories;
     }
 
     /**
@@ -67,7 +77,7 @@ public class DisplayNameBackfill {
      * @param fixed    표시명을 새로 적거나 고친 결제
      * @param bySource 무엇으로 정했는지의 분포 — 경유만 아는 행이 몇인지 보는 자리다
      */
-    public record Result(boolean dryRun, int scanned, int fixed,
+    public record Result(boolean dryRun, int scanned, int fixed, int simplePay,
                          Map<String, Integer> bySource, List<String> samples) {}
 
     /** 표본으로 남길 최대 줄 수. 다 남기면 응답이 로그가 된다. */
@@ -109,7 +119,7 @@ public class DisplayNameBackfill {
         List<String> samples = new ArrayList<>();
         // 규칙으로 못 줄인 이름 — 이번 회차가 끝나면 큐에 올린다(중복 없이 한 번씩).
         java.util.Set<String> tooLong = new java.util.LinkedHashSet<>();
-        int scanned = 0, fixed = 0;
+        int scanned = 0, fixed = 0, simplePay = 0;
 
         for (Long userId : realPeople) {
             boolean touched = false;
@@ -137,6 +147,20 @@ public class DisplayNameBackfill {
                     }
                 }
                 bySource.merge(shown.source().name(), 1, Integer::sum);
+                // **결제대행사 자신이면 카테고리도 그렇게 적는다.** 걷어내니 아무것도 안 남은
+                // 결제는 무엇을 샀는지 원리적으로 알 수 없다 — 그런데 운영에서 179건 중
+                // 142건에 카테고리가 붙어 있었고 `NICE_통신판매` 79건이 <b>쇼핑</b>이었다
+                // (2026-08-26 실측). 여기가 그 길을 막는 자리다.
+                if (shown.source() == MerchantDisplayName.Source.AGENCY_ONLY && !dryRun
+                        && p.markSimplePay()) {
+                    simplePay++;
+                    touched = true;
+                    // **원장의 짝도 함께 고친다.** 분석·리포트·점수가 읽는 것은 `Consumption`
+                    // 이고, 결제만 고치면 화면과 계산이 갈린다.
+                    for (Consumption c : consumptions.findBySourcePaymentId(p.getPaymentId())) {
+                        c.reclassify(simplePayCategory());
+                    }
+                }
                 if (samples.size() < SAMPLE_LIMIT && !shown.display().equals(name)) {
                     samples.add("%s -> %s [%s%s]".formatted(name, shown.display(), shown.source(),
                             shown.viaAgency() == null ? "" : " / " + shown.viaAgency()));
@@ -158,11 +182,18 @@ public class DisplayNameBackfill {
                     com.finntech.freechannel.Lane.USER_BACKGROUND);
         }
 
-        Result result = new Result(dryRun, scanned, fixed, bySource, samples);
+        Result result = new Result(dryRun, scanned, fixed, simplePay, bySource, samples);
         // **0 도 정보다.** 대상이 없으면 없다고 남겨야 "왜 안 붙나"를 좁힐 수 있다.
-        log.info("표시명 적기{} - 사람 {} / 본 결제 {} / 고친 결제 {} / 출처 {}",
-                dryRun ? "(맛보기)" : "", realPeople.size(), scanned, fixed, bySource);
+        log.info("표시명 적기{} - 사람 {} / 본 결제 {} / 고친 결제 {} / 간편결제 {} / 출처 {}",
+                dryRun ? "(맛보기)" : "", realPeople.size(), scanned, fixed, simplePay, bySource);
         return result;
+    }
+
+    /** `간편결제` 분류 행 — 없으면 만든다({@code CategoryPromotionService} 와 같은 방식). */
+    private Category simplePayCategory() {
+        return categories.findByCode(IndustryCategoryMapper.SIMPLE_PAY)
+                .orElseGet(() -> categories.save(new Category(
+                        IndustryCategoryMapper.SIMPLE_PAY, IndustryCategoryMapper.SIMPLE_PAY)));
     }
 
     /** 표시명은 상호와 <b>사업자번호</b>가 함께 정한다 — 같은 상호라도 PG 를 타면 답이 다르다. */

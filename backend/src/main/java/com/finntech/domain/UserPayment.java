@@ -324,6 +324,25 @@ public class UserPayment {
 
     public String getViaAgency() { return viaAgency; }
 
+    /**
+     * <b>결제대행사 자신이라 무엇을 샀는지 알 수 없다고 적는다</b> — `간편결제`.
+     *
+     * <p><b>사람이 정한 것은 안 덮는다.</b> 우리 PG 목록이 틀려 진짜 가맹점이 잘못 걸릴 수
+     * 있고, 그때 사용자가 고쳐 둔 답을 배치가 매일 밤 되돌리면 고칠 방법이 없어진다.
+     *
+     * @return 실제로 바뀌었으면 {@code true}
+     */
+    public boolean markSimplePay() {
+        if ("USER".equals(this.category2Source)) return false;
+        String simplePay = com.finntech.engine.IndustryCategoryMapper.SIMPLE_PAY;
+        if (simplePay.equals(this.category2)) return false;
+        // 추정은 함께 치운다 — 무엇을 샀는지 모른다고 적으면서 추정을 남기면 화면이 갈린다.
+        this.category2Llm = null;
+        this.category2 = simplePay;
+        this.category2Source = "AGENCY";
+        return true;
+    }
+
     public void confirmCategory2(String category2, String source) {
         // **임시 추정을 함께 치운다.** 무료 통로의 답은 확정이 오기 전까지만 사는 값인데,
         // 남겨 두면 확정이 붙은 뒤에도 옛 추정이 화면에 따라다닌다. 규칙을 여기 한 곳에 두는
