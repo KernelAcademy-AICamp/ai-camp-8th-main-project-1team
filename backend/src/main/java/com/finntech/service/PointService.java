@@ -121,6 +121,11 @@ public class PointService {
         Map<String, BigDecimal> monthlyByCat = new TreeMap<>();
         for (CutOption o : cutOptions) monthlyByCat.put(o.categoryCode(), o.monthlyAmount());
 
+        // 월별 재료는 **루프 밖에서 한 번만** 읽는다 — 목표마다 읽으면 같은 표를 N 번 훑는다.
+        List<PointEvent> deposits = pointEventRepository.findByTypeSince(
+                userId, Enums.PointEventType.DEPOSIT, monthStart.minusMonths(HISTORY_MONTHS));
+        BigDecimal avgSaved = monthlyAverageSaved(deposits, now);
+
         List<GoalView> goals = new ArrayList<>();
         BigDecimal totalSavings = BigDecimal.ZERO;
         BigDecimal totalTarget = BigDecimal.ZERO;
@@ -135,11 +140,16 @@ public class PointService {
             List<String> cuts = parseCsv(g.getPlanCutCategories());
             BigDecimal monthlySaving = cutsMonthlySaving(cuts, monthlyByCat);
             int planMonths = monthsToGoal(g.getTargetAmount(), monthlySaving);
+            // 기한 안에 맞추려면 매달 얼마인가 — 목표 세우기(s-goalD)가 이 값으로 페이스를 보여준다.
+            BigDecimal monthlyRequired = monthlyRequired(g.getTargetAmount(), g.getDeadlineDays());
+            List<MonthlySaving> history = monthlyHistory(deposits, g.getId());
             goals.add(new GoalView(g.getId(), g.getName(), g.getEmoji(), scale(g.getTargetAmount()),
                     scale(balance), progress, g.isPriority(),
                     milestoneViews(g.getId(), balance), g.getDeadlineDays(), fundedDays,
                     cuts, scale(monthlySaving), planMonths,
-                    g.getAccountBank(), g.getAccountProduct(), g.getAccountNumber()));
+                    g.getAccountBank(), g.getAccountProduct(), g.getAccountNumber(),
+                    g.getRewardCode(), monthlyRequired, scale(avgSaved),
+                    projectedDate(g.getTargetAmount(), balance, avgSaved, now), history));
             totalSavings = totalSavings.add(balance);
             totalTarget = totalTarget.add(g.getTargetAmount());
         }
@@ -177,7 +187,7 @@ public class PointService {
                 lastAction, scale(lastAmount), forced, coupon,
                 goals, suggestions(userId), recentEvents(userId),
                 wishlist, scale(savedByNotBuying),
-                sc.score(), sc.grade(), streak, behaviorAlerts, gain, cutOptions);
+                sc.score(), sc.grade(), streak, behaviorAlerts, gain, cutOptions, scale(avgSaved));
     }
 
     // ======================================================================
@@ -280,9 +290,24 @@ public class PointService {
 
     @Transactional
     public PointSnapshot createGoal(AppUser user, String name, String emoji, BigDecimal target, LocalDateTime now) {
+        return createGoal(user, name, emoji, target, null, null, now);
+    }
+
+    /**
+     * 목표 만들기 — 기간과 보상까지 받는다(프로토타입_0825 목표 세우기 4단계).
+     *
+     * <p>{@code months} 와 {@code rewardCode} 는 <b>둘 다 없어도 된다.</b> 예전 호출부(위의
+     * 4-인자 판)와 시험이 그대로 돌아야 하고, 기간을 안 고른 목표는 기존 기본값(90일)을 쓴다.
+     */
+    @Transactional
+    public PointSnapshot createGoal(AppUser user, String name, String emoji, BigDecimal target,
+                                    Integer months, String rewardCode, LocalDateTime now) {
         int order = (int) goalRepository.countByUserId(user.getId());
         SavingsGoal g = new SavingsGoal(user.getId(), name, emoji == null ? "🎯" : emoji,
                 target == null ? BigDecimal.ZERO : target, order, false);
+        // 기간은 달로 고르고 날로 저장한다 — 칼럼(deadline_days)이 이미 날이라 그대로 쓴다.
+        if (months != null && months > 0) g.setDeadlineDays(months * 30);
+        if (rewardCode != null && !rewardCode.isBlank()) g.setRewardCode(rewardCode.trim());
         // 이 목표를 위한 자유입출금통장 발급(§13-11) — 목표에 모으는 돈을 담는 계좌.
         AccountCatalog.Account acct = AccountCatalog.random();
         g.setAccount(acct.bank(), acct.product(), acct.accountNumber());
@@ -293,11 +318,21 @@ public class PointService {
     @Transactional
     public PointSnapshot updateGoal(AppUser user, Long goalId, String name, String emoji,
                                     BigDecimal target, Boolean priority, LocalDateTime now) {
+        return updateGoal(user, goalId, name, emoji, target, priority, null, null, now);
+    }
+
+    /** 목표 고치기 — 기간·보상까지. 넘기지 않은 값은 건드리지 않는다('목표 다시 설정하기'). */
+    @Transactional
+    public PointSnapshot updateGoal(AppUser user, Long goalId, String name, String emoji,
+                                    BigDecimal target, Boolean priority,
+                                    Integer months, String rewardCode, LocalDateTime now) {
         SavingsGoal g = ownedGoal(user.getId(), goalId);
         if (name != null) g.setName(name);
         if (emoji != null) g.setEmoji(emoji);
         if (target != null) g.setTargetAmount(target);
         if (priority != null) g.setPriority(priority);
+        if (months != null && months > 0) g.setDeadlineDays(months * 30);
+        if (rewardCode != null && !rewardCode.isBlank()) g.setRewardCode(rewardCode.trim());
         goalRepository.save(g);
         return build(user, now, null, BigDecimal.ZERO, null);
     }
@@ -642,6 +677,85 @@ public class PointService {
     }
 
     // ======================================================================
+    //  페이스 — "매달 얼마" 와 "실제로 매달 얼마" 를 나란히 놓는다
+    //
+    //  목표 세우기(프로토타입_0825 s-goalD)는 기간을 고르면 **매달 넣어야 할 돈**을 보여주고
+    //  그것을 **이 사람이 실제로 지켜 온 돈**과 견준다. 지금까지의 계산은 방향이 반대였다 —
+    //  '줄일 카테고리'에서 절약액을 구해 개월수를 냈다(planMonths). 그 길은 그대로 두고,
+    //  기간에서 금액을 내는 길을 하나 더 낸다. 둘은 서로를 대체하지 않는다.
+    // ======================================================================
+
+    /** 평균을 낼 때 거슬러 보는 달 수. 이보다 오래된 기록은 지금 속도를 말해 주지 않는다. */
+    private static final int HISTORY_MONTHS = 6;
+
+    /** 기한 안에 맞추려면 매달 넣어야 하는 돈 = 목표액 ÷ 기한개월. 기한이 없으면 0. */
+    static BigDecimal monthlyRequired(BigDecimal target, int deadlineDays) {
+        if (target == null || target.signum() <= 0 || deadlineDays <= 0) return BigDecimal.ZERO;
+        // 기한은 날로 저장돼 있다(기존 칼럼). 달로 바꾸되 **최소 1달**이다 — 0 으로 나눌 수 없고,
+        // "한 달 안에 다 모은다"가 가장 빡센 계획이라 그보다 더 빡셀 수는 없다.
+        int months = Math.max(1, Math.round(deadlineDays / 30.0f));
+        return target.divide(BigDecimal.valueOf(months), 0, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * 이 사람이 매달 지켜 온 돈의 평균.
+     *
+     * <p><b>이번 달은 세지 않는다.</b> 아직 안 끝난 달을 평균에 넣으면 매달 1일마다 평균이
+     * 바닥을 치고 말일에 회복한다 — 사람이 보기에 숫자가 널뛰고, 그 널뜀은 사실이 아니다.
+     * 완결된 달이 하나도 없으면(가입 첫 달) 이번 달 실적을 그대로 쓴다 — 0 을 보여 주면
+     * "지금 속도로는 영원히 못 모은다"가 되어 더 틀린다.
+     */
+    static BigDecimal monthlyAverageSaved(List<PointEvent> deposits, LocalDateTime now) {
+        java.time.YearMonth thisMonth = java.time.YearMonth.from(now);
+        Map<java.time.YearMonth, BigDecimal> byMonth = new TreeMap<>();
+        for (PointEvent e : deposits) {
+            if (e.getAmount() == null || e.getOccurredAt() == null) continue;
+            byMonth.merge(java.time.YearMonth.from(e.getOccurredAt()), e.getAmount(), BigDecimal::add);
+        }
+        List<BigDecimal> closed = new ArrayList<>();
+        for (Map.Entry<java.time.YearMonth, BigDecimal> e : byMonth.entrySet()) {
+            if (e.getKey().isBefore(thisMonth)) closed.add(e.getValue());
+        }
+        if (closed.isEmpty()) {
+            BigDecimal cur = byMonth.get(thisMonth);
+            return cur == null ? BigDecimal.ZERO : cur;
+        }
+        BigDecimal sum = BigDecimal.ZERO;
+        for (BigDecimal v : closed) sum = sum.add(v);
+        return sum.divide(BigDecimal.valueOf(closed.size()), 0, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * 지금 속도로 갔을 때의 달성일.
+     *
+     * <p>속도가 0 이면 <b>날짜를 만들지 않고 null 을 준다.</b> "2126년"처럼 형식만 맞는 답을
+     * 내놓으면 화면은 그것을 사실처럼 그린다 — 모르는 것은 모른다고 해야 한다.
+     */
+    static String projectedDate(BigDecimal target, BigDecimal balance,
+                                        BigDecimal monthlyAverage, LocalDateTime now) {
+        if (target == null || monthlyAverage == null || monthlyAverage.signum() <= 0) return null;
+        BigDecimal remaining = target.subtract(balance == null ? BigDecimal.ZERO : balance);
+        if (remaining.signum() <= 0) return now.toLocalDate().toString();   // 이미 다 모았다
+        int months = remaining.divide(monthlyAverage, 0, RoundingMode.CEILING).intValue();
+        // 100년 뒤는 답이 아니라 잡음이다. 그 이상은 "모른다"로 둔다.
+        if (months > 1200) return null;
+        return now.toLocalDate().plusMonths(months).toString();
+    }
+
+    /** 이 목표에 매달 쌓인 돈 — 오래된 달이 앞이다. */
+    static List<MonthlySaving> monthlyHistory(List<PointEvent> deposits, Long goalId) {
+        Map<java.time.YearMonth, BigDecimal> byMonth = new TreeMap<>();
+        for (PointEvent e : deposits) {
+            if (!java.util.Objects.equals(e.getGoalId(), goalId)) continue;
+            if (e.getAmount() == null || e.getOccurredAt() == null) continue;
+            byMonth.merge(java.time.YearMonth.from(e.getOccurredAt()), e.getAmount(), BigDecimal::add);
+        }
+        List<MonthlySaving> out = new ArrayList<>();
+        byMonth.forEach((m, v) -> out.add(new MonthlySaving(m.toString(), scale(v))));
+        return out;
+    }
+
+    // ======================================================================
     //  DTO
     // ======================================================================
 
@@ -655,7 +769,24 @@ public class PointService {
                            /** 그 절약액으로 이 목표를 달성하는 개월수 (계획 없으면 0) */
                            int planMonths,
                            /** 이 목표의 자유입출금통장(§13-11) — 은행·통장명·계좌번호 */
-                           String accountBank, String accountProduct, String accountNumber) {}
+                           String accountBank, String accountProduct, String accountNumber,
+                           /** 이루면 마이룸에 도착할 소품 코드. 안 골랐으면 null */
+                           String rewardCode,
+                           /** 기한 안에 맞추려면 <b>매달 넣어야 하는 돈</b> = 목표액 ÷ 기한개월 */
+                           BigDecimal monthlyRequired,
+                           /** 이 사람이 <b>실제로</b> 매달 지켜 온 돈 — 위와 견주라고 함께 준다 */
+                           BigDecimal monthlyAverageSaved,
+                           /** 지금 속도로 갔을 때의 달성일(yyyy-MM-dd). 속도가 0이면 null */
+                           String projectedDate,
+                           /** 매달 쌓인 기록 — 오래된 달이 앞이다 */
+                           List<MonthlySaving> monthlyHistory) {}
+
+    /**
+     * 한 달에 이 목표로 들어온 돈.
+     *
+     * @param month  {@code yyyy-MM}
+     */
+    public record MonthlySaving(String month, BigDecimal amount) {}
 
     /** 계획에서 '줄일 수 있는' 습관 소비 후보 — 카테고리별 월평균. */
     public record CutOption(String categoryCode, String displayName, BigDecimal monthlyAmount) {}
@@ -718,6 +849,15 @@ public class PointService {
             /** 직전 '살 뻔했다/안 샀어요'가 어느 목표를 얼마나 진척시켰는가 (획득 프레이밍, 없으면 null) */
             GoalGain gain,
             /** 저축 계획에서 줄일 수 있는 습관 소비 후보 (카테고리별 월평균) */
-            List<CutOption> cutOptions
+            List<CutOption> cutOptions,
+            /**
+             * 이 사람이 <b>실제로</b> 매달 지켜 온 돈.
+             *
+             * <p>목표 안({@link GoalView#monthlyAverageSaved})에도 같은 값이 있지만 <b>여기가
+             * 제자리다</b> — 사람 단위 값이지 목표 단위가 아니다. 목표 세우기(4걸음)는
+             * <b>첫 목표를 만드는 순간</b> 이 값이 필요한데, 그때는 꺼내 볼 목표가 없다.
+             * 목표 안의 사본은 상세 화면이 한 번 더 조회하지 않게 하려고 남긴다.
+             */
+            BigDecimal monthlyAverageSaved
     ) {}
 }
