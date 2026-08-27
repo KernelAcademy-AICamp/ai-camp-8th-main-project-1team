@@ -28,7 +28,7 @@ function gainText(g: GoalGain | null): string {
 }
 
 export function MyGoals() {
-  const { back, userId } = useSession();
+  const { back, go, userId } = useSession();
   const snap = useAsync(() => api.points(userId), [userId]);
   const [cats, setCats] = useState<CategoryView[]>([]);
   const [error, setError] = useState<unknown>(null);
@@ -226,14 +226,18 @@ export function MyGoals() {
             )}
 
             {/* 목표 */}
-            <SectionTitle aux="아낀 돈이 자동으로 쌓여요">내 목표</SectionTitle>
+            {/* 만들기는 **네 걸음 화면**(`m-goal-new`)으로 보낸다 — 아래 인라인 폼은 이름과
+                금액만 받아 기간·보상을 물을 자리가 없다. 폼은 그대로 둔다(빠른 추가용). */}
+            <SectionTitle onAux={() => go('m-goal-new')} auxLabel="＋ 새 목표">내 목표</SectionTitle>
             {s.goals.length === 0 && <div className="card"><Empty>아직 목표가 없어요. 아래에서 하나 만들어 볼까요?</Empty></div>}
             {s.goals.map((g) => {
               return (
                 <div className="goal-item" key={g.id}>
                   <div className="goal-head">
                     <span className="goal-emoji" aria-hidden="true">{g.emoji}</span>
-                    <span className="goal-name">{g.name}</span>
+                    {/* 이름을 누르면 그 목표 하나만 보는 화면으로 — 속도·예상 달성일은 거기 있다. */}
+                    <button type="button" className="goal-name as-link"
+                      onClick={() => go('m-goal', { goal: String(g.id) })}>{g.name}</button>
                     <button type="button" className={`icon-btn${g.priority ? ' on' : ''}`}
                       aria-label={`${g.name} 우선 채우기 ${g.priority ? '해제' : '설정'}`}
                       onClick={() => void run(api.updateGoal(userId, g.id, { priority: !g.priority }))}>★</button>

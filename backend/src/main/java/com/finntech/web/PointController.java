@@ -70,13 +70,13 @@ public class PointController {
     @PostMapping("/goals")
     public PointService.PointSnapshot createGoal(@RequestBody GoalRequest req) {
         return guard(() -> pointService.createGoal(user(req.userId()), req.name(), req.emoji(),
-                req.targetAmount(), now()));
+                req.targetAmount(), req.months(), req.rewardCode(), now()));
     }
 
     @PutMapping("/goals/{goalId}")
     public PointService.PointSnapshot updateGoal(@PathVariable Long goalId, @RequestBody GoalRequest req) {
         return guard(() -> pointService.updateGoal(user(req.userId()), goalId, req.name(), req.emoji(),
-                req.targetAmount(), req.priority(), now()));
+                req.targetAmount(), req.priority(), req.months(), req.rewardCode(), now()));
     }
 
     @DeleteMapping("/goals/{goalId}")
@@ -121,7 +121,14 @@ public class PointController {
 
     public record AvoidRequest(Long userId, String categoryCode, BigDecimal amount) {}
     public record SpendRequest(Long userId, String categoryCode, BigDecimal amount, boolean necessary) {}
-    public record GoalRequest(Long userId, String name, String emoji, BigDecimal targetAmount, Boolean priority) {}
+    /**
+     * 목표 만들기·고치기.
+     *
+     * <p>{@code months}(기한, 달)와 {@code rewardCode}(이루면 받을 소품)는 <b>없어도 된다</b> —
+     * 예전 화면이 보내던 몸통이 그대로 통해야 한다. 없으면 기존 기본값이 그대로 간다.
+     */
+    public record GoalRequest(Long userId, String name, String emoji, BigDecimal targetAmount,
+                              Boolean priority, Integer months, String rewardCode) {}
     public record MilestoneRequest(Long userId, String name, String emoji, BigDecimal cost) {}
     public record PlanRequest(Long userId, java.util.List<String> cutCategories) {}
 }

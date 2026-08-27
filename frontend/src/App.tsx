@@ -48,6 +48,8 @@ import { ReportSavings } from './screens/ReportSavings';
 import { My } from './screens/My';
 import { MyImpulse } from './screens/MyImpulse';
 import { MyGoals } from './screens/MyGoals';
+import { MyGoalNew } from './screens/MyGoalNew';
+import { MyGoal } from './screens/MyGoal';
 import { MyConnections } from './screens/MyConnections';
 import { MyRecord } from './screens/MyRecord';
 import { MyPolicy } from './screens/MyPolicy';
@@ -89,6 +91,7 @@ const SCREENS: Record<ScreenId, ComponentType> = {
   'm-stances': MyStances,
   'm-unclassified': MyUnclassified,
   'm-parked': MyParked,
+  'm-goal-new': MyGoalNew, 'm-goal': MyGoal,
 };
 
 function ScreenHost() {

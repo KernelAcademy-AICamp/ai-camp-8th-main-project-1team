@@ -36,6 +36,20 @@ public interface PointEventRepository extends JpaRepository<PointEvent, Long> {
     BigDecimal sumByTypeAndGoal(@Param("userId") Long userId, @Param("type") Enums.PointEventType type,
                                @Param("goalId") Long goalId);
 
+    /**
+     * 월별 집계용 — 한 종류의 이벤트를 시각순으로 준다.
+     *
+     * <p><b>합계를 DB 에 시키지 않는다.</b> 달로 묶으려면 날짜 함수를 써야 하는데 그 이름과
+     * 결과가 H2(시험)와 MySQL(운영)에서 다르다 — 시험은 통과하고 운영만 깨지는, 이 저장소가
+     * 이미 여러 번 밟은 자리다. 포인트 이벤트는 <b>사람이 손으로 만드는 기록</b>이라 한 사람
+     * 몫이 수백 건을 넘지 않으므로, 가져와서 자바에서 묶는 편이 싸고 안전하다.
+     */
+    @Query("select p from PointEvent p where p.userId = :userId and p.type = :type "
+            + "and p.occurredAt >= :from order by p.occurredAt asc")
+    List<PointEvent> findByTypeSince(@Param("userId") Long userId,
+                                     @Param("type") Enums.PointEventType type,
+                                     @Param("from") LocalDateTime from);
+
     /** 개인정보 파기 대상 — 사용자 삭제 시 포인트 이벤트도 함께 지운다(파생 데이터 잔재 방지, §5-3). */
     void deleteByUserId(Long userId);
 
