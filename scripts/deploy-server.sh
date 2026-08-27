@@ -115,6 +115,23 @@ fi
 #
 # 규칙은 `DOCKER-USER` 에 들어가 컨테이너가 오르내려도 남지만, **재부팅으로는 사라진다.**
 # 그래서 배포마다 다시 건다(멱등). 부팅 직후의 빈 구간은 아래 systemd 유닛이 메운다.
+# **유닛도 배포가 옮긴다.** 예전에는 손으로 설치하게 돼 있었는데, 그러면 고친 유닛이
+# 저장소에만 있고 기계에는 영영 안 간다 — 2026-08-27 재부팅에서 방화벽이 통째로 안 걸린 뒤
+# 유닛을 고쳤지만, 배포가 옮기지 않으면 다음 재부팅에도 똑같이 뚫린다. 멱등이라 매번 돌려도
+# 된다: 내용이 같으면 아무 일도 안 일어난다.
+echo "=== 부팅 유닛 갱신 ==="
+for U in kms-egress-guard.service finntech-backup.service finntech-backup.timer; do
+  if [ -f "deploy/$U" ] && ! sudo cmp -s "deploy/$U" "/etc/systemd/system/$U"; then
+    sudo cp "deploy/$U" "/etc/systemd/system/$U" && echo "  갱신 $U"
+    NEED_RELOAD=1
+  fi
+done
+if [ "${NEED_RELOAD:-0}" = "1" ]; then
+  sudo systemctl daemon-reload
+  sudo systemctl enable kms-egress-guard.service finntech-backup.timer >/dev/null 2>&1 || true
+  echo "  daemon-reload 완료"
+fi
+
 echo "=== KMS egress 방화벽 ==="
 if ! sudo bash scripts/kms-egress-guard.sh; then
   echo "  방화벽을 못 걸었다 — 격리가 없는 채로 띄우지 않는다"
