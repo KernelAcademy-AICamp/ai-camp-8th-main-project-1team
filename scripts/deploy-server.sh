@@ -115,6 +115,23 @@ fi
 #
 # 규칙은 `DOCKER-USER` 에 들어가 컨테이너가 오르내려도 남지만, **재부팅으로는 사라진다.**
 # 그래서 배포마다 다시 건다(멱등). 부팅 직후의 빈 구간은 아래 systemd 유닛이 메운다.
+# **유닛도 배포가 옮긴다.** 예전에는 손으로 설치하게 돼 있었는데, 그러면 고친 유닛이
+# 저장소에만 있고 기계에는 영영 안 간다 — 2026-08-27 재부팅에서 방화벽이 통째로 안 걸린 뒤
+# 유닛을 고쳤지만, 배포가 옮기지 않으면 다음 재부팅에도 똑같이 뚫린다. 멱등이라 매번 돌려도
+# 된다: 내용이 같으면 아무 일도 안 일어난다.
+echo "=== 부팅 유닛 갱신 ==="
+for U in kms-egress-guard.service finntech-backup.service finntech-backup.timer; do
+  if [ -f "deploy/$U" ] && ! sudo cmp -s "deploy/$U" "/etc/systemd/system/$U"; then
+    sudo cp "deploy/$U" "/etc/systemd/system/$U" && echo "  갱신 $U"
+    NEED_RELOAD=1
+  fi
+done
+if [ "${NEED_RELOAD:-0}" = "1" ]; then
+  sudo systemctl daemon-reload
+  sudo systemctl enable kms-egress-guard.service finntech-backup.timer >/dev/null 2>&1 || true
+  echo "  daemon-reload 완료"
+fi
+
 echo "=== KMS egress 방화벽 ==="
 if ! sudo bash scripts/kms-egress-guard.sh; then
   echo "  방화벽을 못 걸었다 — 격리가 없는 채로 띄우지 않는다"
@@ -149,10 +166,18 @@ fi
 # 멈추고 서비스가 죽는다.** 배포가 만든 것은 배포가 치운다.
 #
 # 스모크까지 통과한 뒤에 한다 — 그 전에 지우면 되돌릴 자리를 스스로 없앤다.
-# `until=48h` 로 이틀치는 남긴다: 롤백은 소스에서 다시 굽는데(`up -d --build`) 캐시가
-# 있어야 몇 분 안에 끝난다. 캐시까지 지우면 되돌리는 데 십수 분이 걸린다.
+#
+# **이미지와 빌드 캐시를 다르게 다룬다.** 처음에는 둘 다 `until=48h` 로 뒀다가 실측하고
+# 고쳤다(8/27): 되돌리기를 빠르게 하는 것은 **빌드 캐시**이지 밀려난 이미지가 아니다.
+# 롤백은 소스에서 다시 굽는데(`up -d --build`) 그때 쓰는 것이 캐시다. 태그를 잃은 옛
+# 이미지는 아무도 안 본다 — 그저 자리만 차지한다. 하루에 배포가 여섯 번이던 날
+# 이틀치가 12GB 로 불어 여유 15GB 를 위협했다.
+#
+# `-a` 를 **빼는** 것이 핵심이다. `-a` 는 태그가 붙어 있어도 안 쓰이면 지우는데, 그러면
+# 백업이 매일 쓰는 `amazon/aws-cli` 가 사라져 날마다 400MB 를 다시 받는다. `-f` 만 주면
+# **태그를 잃은 것(배포 쓰레기)만** 지운다.
 echo "=== 디스크 정리 ==="
-docker image prune -af --filter "until=48h" 2>/dev/null | tail -1
+docker image prune -f 2>/dev/null | tail -1
 docker builder prune -af --filter "until=48h" 2>/dev/null | tail -1
 df -h / | awk 'NR==2 {print "  루트 " $5 " 사용 (" $4 " 남음)"}'
 

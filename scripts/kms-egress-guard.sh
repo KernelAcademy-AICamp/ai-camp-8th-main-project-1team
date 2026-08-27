@@ -52,6 +52,26 @@ case "$IP" in
     *) echo "KMS 가 공인 IP($IP)로 풀린다 — VPC 엔드포인트의 프라이빗 DNS 를 켜라" >&2; exit 1 ;;
 esac
 
+# **체인이 있어야 걸 수 있다.** `DOCKER-USER` 를 만드는 것은 dockerd 다 — 우리가 아니다.
+# 2026-08-27 재부팅에서 이것 때문에 규칙이 통째로 안 걸렸다. 유닛이 `Before=docker.service`
+# 로 서 있어 체인이 아직 없었고, `iptables -I` 가 "No chain/target/match by that name" 으로
+# 죽었다. 부팅은 계속됐고 아무도 몰랐다 — **13일 만의 첫 재부팅에서야 드러났다.**
+#
+# 유닛을 `After=docker.service` 로 옮겼지만 그것만으로는 부족하다. systemd 가 도커를
+# "시작됨"으로 보는 시점과 dockerd 가 체인을 만드는 시점은 다르다. 그래서 여기서 기다린다.
+for _ in $(seq 1 30); do
+    iptables -S "$CHAIN" >/dev/null 2>&1 && break
+    sleep 2
+done
+if ! iptables -S "$CHAIN" >/dev/null 2>&1; then
+    # 도커가 끝내 안 만들면 우리가 만든다. 도커는 이미 있는 DOCKER-USER 를 비우지 않는다.
+    iptables -N "$CHAIN" 2>/dev/null || true
+fi
+iptables -S "$CHAIN" >/dev/null 2>&1 || {
+    echo "$CHAIN 체인이 없다 — 도커가 떴는지 확인하라. 규칙 없이 끝내지 않는다" >&2
+    exit 1
+}
+
 # **먼저 지운다.** 두 번 돌려도 규칙이 쌓이지 않아야 한다 — 쌓이면 순서가 뒤엉키고,
 # 무엇이 실제로 적용 중인지 아무도 모르게 된다.
 while iptables -L "$CHAIN" -n --line-numbers | grep -q "finntech-kms-egress"; do
