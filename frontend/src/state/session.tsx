@@ -37,6 +37,9 @@ export type ScreenId =
   // 마이 하위
   | 'm-impulse' | 'm-goals' | 'm-connections' | 'm-record' | 'm-policy' | 'm-survey' | 'm-demo'
   | 'm-stances' | 'm-unclassified'
+  // 0825 신설 — 목표 세우기와 내 목표 (프로토타입 s-goal1~3·s-goalD / s-goalv).
+  // 프로토타입은 화면 넷이지만 **한 화면 네 걸음**으로 합쳤다 — `ob` 와 같은 이유다(위 참조).
+  | 'm-goal-new' | 'm-goal'
   // 임시 — 프로토타입_0806 이 자리를 안 정한 화면들을 모아 둔 곳. 정해지면 없앤다.
   | 'm-parked' | 'm-products' | 'm-sanctuary' | 'm-voice'
   | 'm-challenge' | 'm-challenge-new';
@@ -60,7 +63,7 @@ const ALL_SCREENS = [
   'r-compare', 'r-analysis', 'r-spending', 'r-cards', 'r-account', 'r-waste', 'r-savings', 'r-rank',
   'm-impulse', 'm-goals', 'm-connections', 'm-record', 'm-policy', 'm-survey', 'm-demo',
   'm-stances', 'm-unclassified', 'm-parked', 'm-products', 'm-sanctuary', 'm-voice',
-  'm-challenge', 'm-challenge-new',
+  'm-challenge', 'm-challenge-new', 'm-goal-new', 'm-goal',
 ] as const;
 
 // 하나라도 빠지면 여기서 타입 오류가 난다(빠진 ScreenId가 never에 배정되지 못한다).

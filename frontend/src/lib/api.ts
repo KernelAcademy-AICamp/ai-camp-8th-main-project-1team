@@ -138,6 +138,12 @@ export interface MilestoneView {
   progress: number;
   remaining: number;
 }
+/** 한 달에 이 목표로 들어온 돈. month 는 `yyyy-MM`. */
+export interface MonthlySaving {
+  month: string;
+  amount: number;
+}
+
 export interface GoalView {
   id: number;
   name: string;
@@ -156,6 +162,16 @@ export interface GoalView {
   planMonthlySaving: number;
   /** 그 절약액으로 이 목표 달성 개월수 (계획 없으면 0) */
   planMonths: number;
+  /** 이루면 마이룸에 도착할 소품 코드. 안 골랐으면 null */
+  rewardCode: string | null;
+  /** 기한 안에 맞추려면 매달 넣어야 하는 돈 = 목표액 ÷ 기한개월 */
+  monthlyRequired: number;
+  /** 이 사람이 실제로 매달 지켜 온 돈 — 위와 견주라고 함께 온다 */
+  monthlyAverageSaved: number;
+  /** 지금 속도로 갔을 때의 달성일(yyyy-MM-dd). 속도가 0이면 null — 모르면 모른다고 온다 */
+  projectedDate: string | null;
+  /** 매달 쌓인 기록 — 오래된 달이 앞이다 */
+  monthlyHistory: MonthlySaving[];
   /** 이 목표의 자유입출금통장(§13-11) */
   accountBank: string | null;
   accountProduct: string | null;
@@ -230,6 +246,11 @@ export interface PointSnapshot {
   unnecessaryStreak: number;
   behaviorAlerts: string[];
   gain: GoalGain | null;
+  /**
+   * 이 사람이 실제로 매달 지켜 온 돈.
+   * **첫 목표를 만들 때는 목표가 없어 `goals[0]` 에서 꺼낼 수 없으므로 여기서 읽는다.**
+   */
+  monthlyAverageSaved: number;
   cutOptions: CutOption[];
 }
 
@@ -1265,10 +1286,13 @@ export const api = {
   spend: (userId: number, categoryCode: string, amount: number, necessary: boolean) =>
     post<PointSnapshot>('/api/points/spend', { userId, categoryCode, amount, necessary }),
 
-  createGoal: (userId: number, name: string, emoji: string, targetAmount: number) =>
-    post<PointSnapshot>('/api/points/goals', { userId, name, emoji, targetAmount }),
+  /** `months`·`rewardCode` 는 선택이다 — 안 보내면 서버가 기존 기본값을 쓴다. */
+  createGoal: (userId: number, name: string, emoji: string, targetAmount: number,
+    opts?: { months?: number; rewardCode?: string }) =>
+    post<PointSnapshot>('/api/points/goals', { userId, name, emoji, targetAmount, ...opts }),
   updateGoal: (userId: number, goalId: number,
-    patch: { name?: string; emoji?: string; targetAmount?: number; priority?: boolean }) =>
+    patch: { name?: string; emoji?: string; targetAmount?: number; priority?: boolean;
+      months?: number; rewardCode?: string }) =>
     put<PointSnapshot>(`/api/points/goals/${goalId}`, { userId, ...patch }),
   deleteGoal: (userId: number, goalId: number) =>
     del<PointSnapshot>(`/api/points/goals/${goalId}?userId=${userId}`),

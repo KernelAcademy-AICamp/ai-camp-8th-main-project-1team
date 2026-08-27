@@ -28,12 +28,26 @@
  * 접근성·반응형 기반(:focus-visible·@media·명도 대비 토큰)은 styles/tokens.css 가 정본이다.
  */
 
-/* ── 디자인 토큰 — 개편안(MOA_UI_0729(2).html)의 :root 그대로.
+/* ── 디자인 토큰 — 프로토타입의 :root 그대로.
       브랜드=세이지 그린, 배경=웜 크림. 변수명은 이전 팔레트와 호환을 위해 유지한다
-      (--blue 가 초록인 이유). 값을 임의로 바꾸지 않는다 — 바꾸려면 원본 html부터 고친다. ── */
+      (--blue 가 초록인 이유). 값을 임의로 바꾸지 않는다 — 바꾸려면 원본 html부터 고친다.
+
+      2026-08-27: 원본을 `프로토타입_0825.html` 로 올리며 맞췄다. **하나는 따르고 하나는 안 따랐다.**
+
+        --blue-dark  #0A5B3A → #163300   따름 (배경 대비 7.75:1 → 13.21:1, 더 진해진다)
+        --t3         #6B6E6B  그대로       **안 따름** (프로토타입은 #868685)
+
+      `--t3` 를 프로토타입 값으로 두면 배경 대비가 4.90:1 → **3.46:1** 이 되어 KWCAG 2.2
+      검사항목 5.4.3(4.5:1) 아래로 떨어진다. 이 토큰은 보조 텍스트 287곳에 걸린다.
+      `check-a11y.mjs` 가 `.tag-ctx` 를 3.28:1 로 잡아 **빌드가 실제로 멈췄다.**
+
+      그 한 줄만 고쳐 통과시킬 수도 있었지만 하지 않았다 — 검사기는 조작 요소만 재고,
+      **재지 않는 본문 텍스트가 훨씬 많다.** 게이트를 넘기려고 게이트가 보는 곳만 고치면
+      숫자는 초록인데 화면은 더 안 보이게 된다. 색은 원본이 정본이지만, 원본이 접근성
+      기준을 못 넘으면 그때는 기준이 이긴다. ── */
 :root{
   --blue:#00B173;
-  --blue-dark:#0A5B3A;
+  --blue-dark:#163300;
   --blue-weak:#E2F6D5;
   --brand:#00B173;
   --brand-strong:#00915E;
@@ -4599,3 +4613,91 @@ button.list-item:active{ opacity: .6; }
    버튼으로 그린다. 그러면 44px 규정을 받으므로 세로 여백으로 넓힌다(글자 크기는 그대로). */
 .my-foot button{border:none;background:none;font-family:inherit;font-size:inherit;color:inherit;
   cursor:pointer;min-height:44px;padding:0 8px;}
+
+/* ══════════════════════════════════════════════════════════════════════
+   목표 세우기·내 목표 (프로토타입_0825 s-goal1~3 · s-goalD · s-goalv)
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── 1걸음: 이름 ─────────────────────────────────────────────────── */
+.gs-field{display:flex;gap:10px;align-items:center;margin:16px 0 12px}
+/* 이모지는 눌러서 돌린다 — 목록을 띄울 만큼 무거운 선택이 아니다. */
+.gs-emoji{width:52px;height:52px;flex:0 0 auto;border:1px solid var(--line);border-radius:var(--radius-sm);
+  background:var(--card);font-size:24px;line-height:1;cursor:pointer}
+.gs-chips{display:flex;flex-wrap:wrap;gap:8px}
+.gs-chips button{border:1px solid var(--line);background:var(--card);color:var(--t2);
+  border-radius:999px;padding:8px 14px;font-size:13px;cursor:pointer}
+.gs-chips button.on{border-color:var(--blue);background:var(--blue-weak);color:var(--blue-dark);font-weight:700}
+
+/* ── 2걸음: 금액 ─────────────────────────────────────────────────── */
+/* 금액은 이 화면에서 가장 큰 글자다 — 자리수가 곧 뜻이라 한눈에 읽혀야 한다. */
+.gs-amt{position:relative;margin:20px 0 16px;font-size:32px;font-weight:800;color:var(--t1);
+  letter-spacing:-.5px;font-variant-numeric:tabular-nums;min-height:44px;display:flex;align-items:center}
+.gs-amt.empty{color:var(--t4)}
+.gs-amt .clr{position:absolute;right:0;top:50%;transform:translateY(-50%);width:28px;height:28px;
+  border:0;border-radius:50%;background:var(--track);color:var(--t3);font-size:13px;cursor:pointer}
+.gs-plus{display:flex;gap:8px;margin-bottom:14px}
+.gs-plus button{flex:1;border:1px solid var(--line);background:var(--card);color:var(--t2);
+  border-radius:var(--radius-sm);padding:10px 0;font-size:13px;font-weight:600;cursor:pointer}
+.gs-kp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gs-kp button{border:0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:16px 0;font-size:20px;font-weight:700;color:var(--t1);font-variant-numeric:tabular-nums;cursor:pointer}
+.gs-kp button:active{background:var(--track)}
+.gs-kp .kp-del{color:var(--t3);font-size:17px}
+
+/* ── 3걸음: 기간과 페이스 ────────────────────────────────────────── */
+.gd-stepper{display:flex;align-items:center;justify-content:center;gap:24px;margin:24px 0}
+.gd-btn{width:44px;height:44px;border:1px solid var(--line);border-radius:50%;background:var(--card);
+  font-size:22px;color:var(--t1);cursor:pointer}
+.gd-btn:disabled{color:var(--t4);cursor:default}
+.gd-val{font-size:17px;color:var(--t2);min-width:88px;text-align:center}
+.gd-val b{font-size:30px;font-weight:800;color:var(--t1);margin-right:4px;font-variant-numeric:tabular-nums}
+.gd-res{background:var(--bg);border-radius:var(--radius);padding:18px 16px}
+.gd-r1{display:flex;justify-content:space-between;align-items:baseline}
+.gd-r1 span{font-size:13px;color:var(--t2)}
+.gd-r1 b{font-size:22px;font-weight:800;color:var(--t1);font-variant-numeric:tabular-nums}
+/* 막대는 "내 평균 대비 얼마나 빡센가"를 한눈에 준다 — 짧을수록 빡세다. */
+.gd-meter{position:relative;height:8px;border-radius:999px;background:var(--track);margin:12px 0 8px}
+.gd-meter i{display:block;height:100%;border-radius:999px;background:var(--blue)}
+.gd-meter span{position:absolute;right:0;top:12px;font-size:11px;color:var(--t3)}
+.gd-r2{margin:14px 0 0;font-size:13px;line-height:1.5;color:var(--t2)}
+
+/* ── 4걸음: 보상 ─────────────────────────────────────────────────── */
+.gs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.gs-obj{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;
+  border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);cursor:pointer}
+.gs-obj span{font-size:11px;color:var(--t2);text-align:center;word-break:keep-all}
+.gs-obj.on{border-color:var(--blue);background:var(--blue-weak)}
+.gs-obj.on span{color:var(--blue-dark);font-weight:700}
+
+/* ── 내 목표 ─────────────────────────────────────────────────────── */
+.gv-hl-row{display:flex;gap:14px;align-items:center;margin:8px 0 18px}
+.gv-obj{width:56px;height:56px;flex:0 0 auto;border-radius:var(--radius-sm);background:var(--blue-weak);
+  display:flex;align-items:center;justify-content:center;font-size:28px}
+.gv-hl{display:block;font-size:18px;font-weight:800;color:var(--t1)}
+.gv-sub{display:block;margin-top:3px;font-size:13px;color:var(--t2);font-variant-numeric:tabular-nums}
+.gv-pb{height:10px;border-radius:999px;background:var(--track);overflow:hidden}
+.gv-pb i{display:block;height:100%;border-radius:999px;background:var(--blue)}
+.gv-leg{display:flex;gap:16px;margin:10px 0 20px;font-size:12px;color:var(--t2)}
+.gv-leg span{display:flex;align-items:center;gap:5px}
+.gv-dot{width:8px;height:8px;border-radius:50%;background:var(--track);display:inline-block}
+.gv-dot.on{background:var(--blue)}
+.gv-stat2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gv-st{background:var(--bg);border-radius:var(--radius-sm);padding:14px}
+.gv-st span{display:block;font-size:12px;color:var(--t2)}
+.gv-st b{display:block;margin-top:6px;font-size:17px;font-weight:800;color:var(--t1)}
+/* 달마다 얼마씩 쌓였는지. 값은 막대 높이로만 말하고 숫자는 툴팁에 둔다 — 축이 좁다. */
+.gv-bars{display:flex;align-items:flex-end;gap:8px;height:120px;padding:8px 2px 0}
+.gv-bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.gv-bar i{display:block;width:100%;max-width:28px;border-radius:6px 6px 0 0;background:var(--blue)}
+.gv-bar span{margin-top:6px;font-size:11px;color:var(--t3)}
+.gv-actions{margin-top:24px;border-top:1px solid var(--line)}
+.gv-ar{display:flex;width:100%;align-items:center;justify-content:space-between;
+  border:0;border-bottom:1px solid var(--line);background:transparent;
+  padding:16px 2px;font-size:14px;color:var(--t1);cursor:pointer}
+.gv-ar.quiet{color:var(--t3)}
+.gv-chev{color:var(--t4)}
+.sheet-cta{display:flex;gap:10px;margin-top:18px}
+.sheet-cta .btn{flex:1}
+
+/* 목록에서 이름을 눌러 들어가므로 버튼인데 글자처럼 보여야 한다. */
+.goal-name.as-link{border:0;background:transparent;padding:0;text-align:left;cursor:pointer;font:inherit;color:inherit}

@@ -51,6 +51,16 @@ public class SavingsGoal {
     private String planCutCategories;
 
     // 이 목표를 위한 '자유입출금통장'(§13-11) — 목표에 모으는 돈을 담는 계좌(은행·통장명·계좌번호). 생성 시 발급.
+    /**
+     * 목표를 이루면 마이룸에 도착할 소품({@code GuardianCatalog.Item#code}).
+     *
+     * <p>카탈로그를 표로 두지 않았으므로 <b>가리키기만 한다</b>. 코드가 카탈로그에서 사라져도
+     * 화면이 기본 그림으로 되돌아갈 뿐이고, 판정·금액에는 쓰이지 않는다.
+     * 보상을 고르지 않고 만든 목표는 {@code null} 이다.
+     */
+    @Column(name = "reward_code", length = 40)
+    private String rewardCode;
+
     @Column(name = "account_bank", length = 40)
     private String accountBank;
     @Column(name = "account_product", length = 60)
@@ -86,6 +96,8 @@ public class SavingsGoal {
     public void setDeadlineDays(int v) { this.deadlineDays = v; }
     public String getPlanCutCategories() { return planCutCategories; }
     public void setPlanCutCategories(String v) { this.planCutCategories = v; }
+    public String getRewardCode() { return rewardCode; }
+    public void setRewardCode(String v) { this.rewardCode = v; }
     public String getAccountBank() { return accountBank; }
     public String getAccountProduct() { return accountProduct; }
     public String getAccountNumber() { return accountNumber; }
