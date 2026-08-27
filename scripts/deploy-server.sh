@@ -22,8 +22,10 @@ git config --global --add safe.directory "$APP" 2>/dev/null || true
 echo "=== 이전 상태 ==="
 git log --oneline -1
 # 되돌아갈 곳을 **정렬 전에** 잡아 둔다. reset --hard 뒤에는 이 값을 알 방법이 없다.
-PREV=$(git rev-parse HEAD)
-DRIFT=$(git status --porcelain | head -20)
+# 아래에서 스크립트를 다시 태우므로, 그때는 첫 번째 실행이 넘겨준 값을 그대로 쓴다 —
+# 다시 재면 이미 정렬된 뒤라 "되돌아갈 곳"이 아니라 "지금 자리"가 나온다.
+PREV="${FINNTECH_DEPLOY_PREV:-$(git rev-parse HEAD)}"
+DRIFT="${FINNTECH_DEPLOY_DRIFT:-$(git status --porcelain | head -20)}"
 [ -n "$DRIFT" ] && { echo "  버려질 서버 로컬 변경:"; echo "$DRIFT" | sed 's/^/    /'; } || echo "  드리프트 없음"
 
 echo "=== $BRANCH 로 정렬 ==="
@@ -36,14 +38,39 @@ git clean -qfd                                    # 추적 밖 잔재도 지운�
 git checkout -q -B "$BRANCH" "origin/$BRANCH"
 git log --oneline -1
 
+# **정렬이 이 스크립트 자신을 갈아엎었을 수 있다 — 그러면 새것으로 다시 태운다.**
+#
+# bash 는 스크립트를 통째로 읽어 두고 실행한다. 그래서 위의 `reset --hard` 가 이 파일을
+# 바꿔도 **이미 읽어 둔 옛 내용**이 끝까지 돈다. 새 저장소 파일과 옛 실행 논리가 섞이는데,
+# 그 조합은 아무 데도 없는 상태라 무슨 일이 날지 정해져 있지 않다.
+#
+# 실제로 두 번 밟았다(2026-08-26·27). 배포는 "성공"이라 하는데 바뀐 것이 안 보였고,
+# 한 번 더 돌려야 반영됐다 — **모르면 "배포했는데 왜 그대로지"가 된다.** 두 번 돌리는 것을
+# 규칙으로 삼을 수는 없다. 여기서 한 번만 갈아타면 그 뒤는 전부 새 논리다.
+#
+# 환경변수 하나로 무한 재귀를 막는다. 두 번째 실행에서는 위의 fetch·reset 이 다시 돌지만
+# 이미 FETCH_HEAD 자리라 아무 일도 안 한다.
+if [ -z "${FINNTECH_DEPLOY_REEXEC:-}" ]; then
+    echo "  스크립트를 새 판으로 갈아타고 다시 시작한다"
+    export FINNTECH_DEPLOY_REEXEC=1
+    export FINNTECH_DEPLOY_PREV="$PREV"
+    export FINNTECH_DEPLOY_DRIFT="$DRIFT"
+    exec bash "$0" "$@"
+fi
+
 # **크기 오버레이는 인스턴스에 맞춘다.** base(`docker-compose.prod.yml`)의 한도 합계는
 # 주석대로 **t3.medium(4GB) 기준**이고, `prod.large.yml` 은 8GB 인스턴스용으로 그것을 덮는다.
 #
-# 2026-08-26 에 `m7i-flex.large`(8GB) → `t3a.medium`(4GB) 로 내리면서 large 를 뺐다.
-# 크레딧이 $110 남았는데 월 $94 로 9월 말이면 끊겼다 — 인스턴스가 비용의 81% 인데
-# 자원은 8GB 중 3GB, 2코어에 부하 0.26 이었다. 내려서 월 $42 로 11월 중순까지 늘렸다.
+# 2026-08-26 에 비용을 줄이려고 large 를 뺐다. **인스턴스는 결국 못 내렸다** — 계정이
+# 프리 플랜이라 `ModifyInstanceAttribute` 가 `FreeTierRestrictionError` 로 막히고, 신규
+# 기동도 프리티어 6종으로 제한된다. 그중 4GB 인 `c7i-flex.large` 는 `ap-northeast-2a` 에
+# 없고 벌어야 닷새라 접었다(2026-08-27).
 #
-# **8GB 로 되돌릴 때는 `-f docker-compose.prod.large.yml` 한 줄을 되살린다.**
+# 그래서 지금은 **8GB 인스턴스에서 4GB용 한도로 돈다.** 손해가 아니다 — 한도는 실측으로
+# 잡혀 있고(base 주석 참조) 남는 메모리는 페이지 캐시가 쓴다. 밤 배치 실측도 넉넉했다:
+# backend 507/1,280 · mydata 379/768 · mysql 591/1,408, OOM 0 건.
+#
+# **8GB 한도로 되돌리고 싶으면 `-f docker-compose.prod.large.yml` 한 줄을 되살린다.**
 CO=(docker compose
     -f docker-compose.prod.yml
     -f docker-compose.prod.local-db.yml
