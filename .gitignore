@@ -4,6 +4,17 @@ backend-mydata/target/
 frontend/dist/
 frontend/node_modules/
 
+# 토스 미니앱 — frontend 와 같은 규칙
+frontend-toss/dist/
+frontend-toss/node_modules/
+frontend-toss/test-dist/
+frontend-toss/demo-dist/
+frontend-toss/demo-preview.html
+frontend-toss/shots/
+frontend-toss/*.ait
+frontend-toss/.ait/
+frontend-toss/tsconfig.tsbuildinfo
+
 # ── 로컬 DB (H2 파일) ──
 backend/data/
 backend-mydata/data/

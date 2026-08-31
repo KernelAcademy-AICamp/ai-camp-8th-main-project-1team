@@ -1,0 +1,353 @@
+/*
+ * 토스 미니앱에만 필요한 것 — <b>여기 있는 것이 적을수록 좋다.</b>
+ *
+ * 색·타이포·컴포넌트는 `moa.css`(디자인 정본)와 `tokens.css`(접근성·반응형 정본)가 정한다.
+ * 이 파일은 그 둘에 없는 자리만 메운다. 새 컴포넌트를 여기서 만들기 시작하면
+ * 두 앱의 생김새가 갈라진다.
+ */
+
+/* 하단 탭이 다섯이다. 본 서비스는 셋이라 열 너비를 3으로 나눠 뒀다. */
+.tabbar > * { max-width: calc(var(--col) / 4); }
+
+
+/* ── 되묻기 덱 ─────────────────────────────────────
+   프로토타입_0828 온보딩의 `#deck` 을 그대로 옮겼다. 그 규칙은 온보딩 화면 id(`#s-ob`)에
+   매여 있어 다른 화면에서는 안 걸리므로 선언을 여기로 가져왔다 — 값은 원본 그대로다.
+   고칠 일이 생기면 프로토타입부터 고치고 여기로 다시 옮긴다. ── */
+.deck{ display:flex; flex-direction:column; margin-bottom:16px; }
+
+.dk-head{ display:flex; align-items:center; height:14px; margin-bottom:clamp(12px,3vh,24px); }
+.dk-head .idx{ font-size:12px; font-weight:700; color:#454745; letter-spacing:-.64px; }
+.dk-head .idx em{ font-style:normal; color:var(--green); }
+.dk-undo{
+  margin-left:auto; display:flex; align-items:center; gap:4px; background:none; border:none;
+  font-family:inherit; font-size:12px; font-weight:600; color:#6A6A6A; letter-spacing:-.64px;
+  cursor:pointer; padding:0;
+}
+.dk-undo:disabled{ opacity:.35; cursor:default; }
+.dk-undo svg{ width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2;
+  stroke-linecap:round; stroke-linejoin:round; }
+
+/* 코치마크가 카드 위로 46px 벗어나므로 여기서 자르지 않는다. */
+.dk-stack{ position:relative; height:330px; margin-right:6px; overflow:visible; }
+
+.dk-ghost{
+  position:absolute; inset:0; background:#fff; border:1px solid var(--line); border-radius:24px;
+  box-shadow:0 10px 24px rgba(27,36,45,.06); transform-origin:50% 50%;
+}
+.dk-ghost.g1{ transform:rotate(1.8deg); }
+.dk-ghost.g2{ transform:rotate(3.6deg); }
+
+.dk-card{
+  position:absolute; inset:0; background:#fff; border:1px solid var(--bd,var(--line));
+  border-radius:24px; padding:23px; display:flex; flex-direction:column;
+  filter:drop-shadow(0 14px 18px rgba(27,36,45,.09));
+  touch-action:none; user-select:none; -webkit-user-select:none; cursor:grab;
+  animation:dkIn .38s cubic-bezier(.2,.8,.2,1);
+}
+.dk-card.drag{ transition:none; cursor:grabbing; }
+.dk-card.snap{ transition:transform .28s cubic-bezier(.2,.8,.2,1); }
+.dk-card.will-keep{ border-color:#9AA1AA; }
+.dk-card.will-cut{ border-color:var(--green); }
+.dk-card.out-keep{ animation:dkOutL .28s cubic-bezier(.2,.8,.2,1) forwards; }
+.dk-card.out-cut{ animation:dkOutR .28s cubic-bezier(.2,.8,.2,1) forwards; }
+.dk-card.nudge{ animation:dkNudge 2.2s cubic-bezier(.2,.8,.2,1) .5s 2; }
+
+.dk-stamp{
+  position:absolute; top:128px; left:50%; padding:9px 14px; border-radius:12px;
+  font-size:14px; font-weight:700; letter-spacing:-.4px; white-space:nowrap;
+  opacity:0; pointer-events:none; z-index:2;
+  transition:opacity .12s linear, transform .16s cubic-bezier(.2,.8,.2,1);
+  transform:translateX(-50%) scale(.9);
+}
+.dk-stamp.keep{ background:#EDEFF2; color:#3D4148; }
+.dk-stamp.cut{ background:#CDEEDB; color:#0A5B3A; }
+.dk-card.will .dk-stamp{ transform:translateX(-50%) scale(1); }
+
+.dk-hint{
+  position:absolute; left:50%; top:-46px; transform:translateX(-50%) translateY(4px);
+  background:#2B2E33; color:#fff; border-radius:12px; padding:9px 14px;
+  font-size:13px; font-weight:600; letter-spacing:-.4px; white-space:nowrap;
+  opacity:0; pointer-events:none; z-index:3;
+  transition:opacity .3s cubic-bezier(.2,.8,.2,1), transform .3s cubic-bezier(.2,.8,.2,1);
+}
+.dk-hint::after{
+  content:''; position:absolute; left:50%; bottom:-6px; width:12px; height:12px;
+  background:#2B2E33; transform:translateX(-50%) rotate(45deg); border-radius:2px;
+}
+.dk-hint.in{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+.dk-meta{ display:flex; align-items:center; gap:8px; height:40px; flex:0 0 auto; }
+.dk-meta .tg{
+  display:flex; align-items:center; height:24px; padding:0 8px; border-radius:999px;
+  font-size:12px; font-weight:600; line-height:11px; white-space:nowrap;
+}
+.dk-meta .tg.time{ background:#F2F2F2; color:#4F4F4F; }
+.dk-ic{
+  margin-left:auto; width:40px; height:40px; border-radius:12px; flex:0 0 auto;
+  display:flex; align-items:center; justify-content:center;
+}
+.dk-ic svg{ width:24px; height:24px; }
+.dk-nm{
+  margin-top:14px; font-size:24px; font-weight:700; color:var(--t1);
+  letter-spacing:-.88px; line-height:29.7px; flex:0 0 auto;
+}
+.dk-spacer{ flex:1 1 auto; min-height:8px; }
+.dk-avg{ flex:0 0 auto; }
+.dk-avg span{ display:block; font-size:14px; font-weight:500; color:#868685;
+  letter-spacing:-.64px; line-height:14px; }
+.dk-avg b{ display:block; margin-top:8px; font-size:22px; font-weight:700; color:var(--t1); line-height:1; }
+.dk-why{
+  margin-top:16px; flex:0 0 auto; background:#F8F9FA; border-radius:14px; padding:13px 14px;
+  font-size:13px; font-weight:500; color:#454745; line-height:19.5px; letter-spacing:-.64px;
+}
+
+.dk-btns{ display:flex; gap:8px; margin-top:clamp(16px,4vh,34px); flex:0 0 auto; }
+.dk-btns button{
+  flex:1 1 0; min-width:0; height:50px; border:none; border-radius:14px;
+  font-family:inherit; font-size:14px; font-weight:700; letter-spacing:-.56px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:4px;
+  transition:transform .12s cubic-bezier(.2,.8,.2,1);
+}
+.dk-btns button:active{ transform:scale(.97); }
+.dk-btns svg{ width:16px; height:16px; flex:0 0 auto; fill:none; stroke:currentColor;
+  stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.dk-keep{ background:#F1F3F5; color:#292326; }
+.dk-cut{ background:#E2F6D5; color:#0A5B3A; }
+
+.dk-done{
+  position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; gap:10px;
+  animation:dkIn .34s cubic-bezier(.2,.8,.2,1);
+}
+.dk-done .dd-row{
+  display:flex; align-items:center; gap:10px; background:#fff;
+  border:1px solid var(--line); border-radius:16px; padding:16px;
+}
+.dk-done .dd-row .k{ font-size:14px; font-weight:600; color:var(--t2); }
+.dk-done .dd-row .v{ margin-left:auto; font-size:15px; font-weight:700; color:var(--t1); }
+.dk-done .dd-row.cut .v{ color:var(--green); }
+
+@keyframes dkIn{ from{ opacity:0; transform:translateX(34px) rotate(2.5deg); } to{ opacity:1; transform:none; } }
+@keyframes dkNudge{
+  0%,100%{ transform:none; }
+  12%{ transform:translateX(-16px) rotate(-1.4deg); }
+  28%{ transform:translateX(14px) rotate(1.2deg); }
+  40%{ transform:none; }
+}
+@keyframes dkOutL{ to{ opacity:0; transform:translateX(-56px) rotate(-5deg); } }
+@keyframes dkOutR{ to{ opacity:0; transform:translateX(56px) rotate(5deg); } }
+
+/* ── 흰 바탕 화면 ───────────────────────────────────
+   프로토타입에서 걸음을 밟는 화면(`.gs` 목표 정하기)과 소비내역(`#s-spend`)은 흰 바탕이다.
+   본문만 희게 하면 <b>앱바와 하단 버튼에 회색 띠가 남는다</b> — 둘 다 `var(--bg)` 를 칠하기
+   때문이다. 한 화면은 한 가지 바탕이어야 한다. ── */
+.screen.white,
+.screen.white .appbar{ background:#fff; }
+.screen.white .cta-fixed{ background:linear-gradient(to top,#fff 72%,transparent); }
+
+/* 폰 폭에서 탭바는 `84px + safe` 로 커지는데 `--tabbar-h` 는 76px 로 남아 있다.
+   그 8px 차이만큼 하단 버튼이 가리고 본문 끝이 잘린다. 토큰을 실제 높이에 맞춘다. */
+@media (max-width:540px), (max-height:700px) and (pointer:coarse){
+  :root{ --tabbar-h: 84px; }
+}
+
+/* ── 하단 버튼과 탭바 ───────────────────────────────
+   `.cta-fixed` 는 `position:absolute; bottom:0` 이라 <b>패딩 상자의 바닥</b>에 붙는다.
+   `.screen.has-tabbar` 가 탭바 높이만큼 아래를 비워 두는데, 그 여백은 패딩이라
+   버튼이 그 안이 아니라 <b>맨 밑</b>으로 내려가 탭바에 가린다.
+
+   본 서비스에서는 드러나지 않던 자리다 — 걸음을 밟는 화면(목표 정하기)은 탭바가 없고,
+   탭 뿌리 화면에는 하단 버튼이 없어 둘이 한 화면에 선 적이 없다. 이 앱은 '추가'가
+   탭이면서 걸음을 밟는 화면이라 처음 겹쳤다. 탭바 높이만큼 띄운다. ── */
+.screen.has-tabbar .cta-fixed{
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── 금액 입력 ─────────────────────────────────────
+   `.gs-amt` 는 본 서비스에서 <b>보여주기만</b> 하는 자리였다(키패드로만 고쳤다).
+   여기서는 눌러서 자판으로도 치게 하므로 그 안에 진짜 입력칸을 넣고, 겉모습은 그대로 둔다. ── */
+/* 늘리지 않는다 — `size` 가 글자 수만큼 폭을 잡고, `원` 이 바로 뒤에 붙는다. */
+.gs-amt-in{
+  flex:0 0 auto; width:auto; min-width:1ch; border:0; background:none; outline:none; padding:0;
+  font:inherit; color:inherit; letter-spacing:inherit;
+}
+.gs-amt-in::placeholder{ color:var(--t4); }
+.gs-amt-won{ flex:0 0 auto; }
+/* 폭을 재는 자리 — 같은 글꼴·같은 크기로 그리되 자리를 차지하지 않는다. */
+.gs-amt-ghost{
+  position:absolute; visibility:hidden; pointer-events:none;
+  white-space:pre; font:inherit; letter-spacing:inherit;
+}
+.gs-amt.empty .gs-amt-won{ color:var(--t4); }
+
+/* ── 소비에 라벨 붙이기 ─────────────────────────────
+   프로토타입 `.ctx3` 를 값 그대로 옮겼다. 홈의 최근 소비와 소비내역에서 결제 한 건에
+   <b>필요했어요 / 새는 돈이었어요</b>를 붙이는 자리다. 고르면 검게 칠해지고, 250ms 뒤
+   위로 접히며 사라지고, 이름 옆에 태그로 남는다. 태그를 누르면 다시 펼쳐진다. ── */
+.ctx3{
+  display:flex; gap:8px; margin:0 0 12px 52px; flex-wrap:wrap; align-items:center;
+  max-height:32px; transition:max-height .3s ease, opacity .25s ease, margin-bottom .3s ease;
+}
+.ctx3 button{
+  border:1px solid var(--line); background:#fff; border-radius:20px;
+  height:24px; min-width:60px; padding:4px 8px;
+  font-size:12px; font-weight:500; color:var(--t2);
+  cursor:pointer; font-family:inherit; transition:.15s; position:relative;
+}
+.ctx3 button.on{ background:var(--t1); color:#fff; border-color:var(--t1); }
+.ctx3.fold{ overflow:hidden; max-height:0; opacity:0; margin-bottom:0; }
+
+/* ── 금액 걸음의 바닥 ───────────────────────────────
+   프로토타입 `s-goal2` 는 빠른 증액·키패드·버튼을 `.gs-bottom` 으로 <b>화면 바닥에</b> 붙이고,
+   위쪽에는 금액만 남긴다. 스크롤 안에 넣으면 화면이 짧은 기기에서 아래 줄이 잘린다. ── */
+.amt-bottom{
+  position:absolute; left:0; right:0;
+  bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
+  padding:10px var(--pad-x) 14px;
+  background:#fff; z-index:6;
+}
+/* 화면이 짧으면 키를 낮춘다 — 잘리는 것보다 낮은 편이 낫다(터치 44px 은 지킨다). */
+.amt-bottom .gs-kp button{ padding:12px 0; }
+@media (max-height:720px){
+  .amt-bottom .gs-kp button{ padding:9px 0; font-size:18px; }
+  .amt-bottom .gs-plus button{ padding:7px 0; }
+}
+
+/* ── 금액 걸음을 프로토타입 값으로 ───────────────────
+   본 서비스의 `.gs-*` 는 이 화면을 위해 만든 것이 아니라 목표 정하기용으로 다시 그린 것이라,
+   금액이 32px 이고 키가 흰 카드 열둘이다. 실기기에서 보니 <b>여백이 너무 크고 키가 무겁다.</b>
+   프로토타입 `s-goal2` 의 값으로 되돌린다.
+
+     금액   22px · 밑줄 1.5px · 위아래 14px      (32px · 밑줄 없음 이었다)
+     증액   배경 #F1F3F5 · 테두리 없음           (흰 카드 + 테두리 였다)
+     키패드 높이 60 · 테두리 없음 · 바탕 #F5F6F7  (흰 카드 + 테두리 + gap 8 이었다)
+   ── */
+.screen.white .h-title{ font-size:22px; line-height:1.4; letter-spacing:-.5px; margin:28px 0 14px; }
+
+.screen.white .gs-amt{
+  margin:0; padding:14px 0; font-size:22px; font-weight:700; letter-spacing:-.02em;
+  border-bottom:1.5px solid var(--line);
+}
+.screen.white .gs-amt .clr{
+  position:static; margin-left:auto; width:20px; height:20px;
+  background:#B0B8C1; color:#fff; font-size:11px; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+}
+
+.amt-bottom{ background:#F5F6F7; padding:14px var(--pad-x) 16px; }
+.amt-bottom .gs-plus{ gap:8px; margin-bottom:14px; }
+.amt-bottom .gs-plus button{
+  flex:1; border:none; background:#F1F3F5; border-radius:12px; padding:10px 0;
+  font-size:13px; font-weight:600; color:var(--t2);
+}
+.amt-bottom .gs-kp{ gap:0; }
+.amt-bottom .gs-kp button{
+  height:60px; padding:0; border:none; background:none; border-radius:12px;
+  font-size:22px; font-weight:500; color:var(--t1);
+}
+.amt-bottom .gs-kp button:active{ background:#E6E8EB; }
+.amt-bottom .btn{ margin-top:6px; height:auto; padding:18px; font-size:16px; }
+@media (max-height:720px){
+  .amt-bottom .gs-kp button{ height:50px; font-size:20px; }
+  .amt-bottom .btn{ padding:15px; }
+}
+
+/* ── 위아래 공백 ────────────────────────────────────
+   <b>`safe-area` 를 두 번 먹고 있었다.</b> 프로토타입은 375×812 폰 프레임 안이라 위에
+   아무것도 없고, 실기기 브라우저를 위해 `.screen` 에 `env(safe-area-inset-top)` 를 더해 뒀다.
+   그런데 토스 웹뷰는 <b>위에 토스 헤더가 이미 있다</b> — 노치 자리는 그 바가 덮는데 우리가
+   또 비우니 헤더 아래에 50px 짜리 빈 띠가 생겼다. 실기기에서 앱이 작아 보이던 것이 이것이다.
+
+   아래도 같다. 탭바가 `84px + safe` 라 안드로이드 제스처 바까지 더해지면 110px 을 넘는다.
+   글자와 아이콘이 차지하는 것은 그중 절반이다. ── */
+.screen{ padding-top:12px; }
+@media (max-width:540px), (max-height:700px) and (pointer:coarse){
+  /* 폰 규칙이 `env(safe-area-inset-top)` 를 다시 더하므로 여기서 한 번 더 눌러 준다. */
+  .screen{ padding-top:8px; }
+  /*
+   * 아래 여백은 <b>인셋만큼만</b> 비운다. 원본은 `height:84+inset` 에 `padding-bottom:16+inset`
+   * 이라 고정값 16px 이 인셋 위에 한 번 더 얹혔다 — 안드로이드 3버튼 기기에서 라벨 아래로
+   * 흰 띠가 그만큼 남는다. 인셋이 0인 기기에서는 최소 8px 만 둔다.
+   */
+  :root{ --tabbar-h:60px; }
+  /*
+   * <b>`calc()` 안에 `max()` 를 넣지 않는다.</b> 그렇게 썼더니 실기기에서 아무 변화가 없었다 —
+   * 웹뷰가 그 선언을 통째로 버리고 앞의 옛 규칙(`84px + inset`)으로 되돌아갔기 때문이다.
+   * 값이 안 바뀐 게 아니라 <b>규칙이 사라진</b> 것이라 눈으로는 구별이 안 된다.
+   *
+   * 인셋은 시스템 내비게이션 바 자리다. 그만큼은 비워야 라벨이 버튼에 안 깔린다.
+   */
+  /*
+   * <b>`env(safe-area-inset-bottom)` 을 믿지 않는다.</b>
+   *
+   * 기기가 잰 값이 이렇게 나왔다 — 창 704 · 보이는 704 · <b>탭바 아래 남은 칸 0</b> ·
+   * 인셋 48px. 웹뷰는 이미 내비게이션 바 <b>위에서</b> 끝나는데(내비 바는 704 밖이다)
+   * 기기는 인셋 48px 을 보고한다. 그 말을 믿고 비운 48px 이 라벨 아래 흰 띠였다.
+   *
+   * 탭바가 뷰포트 바닥에 닿아 있으므로 그 바닥이 곧 안전한 자리다. 숨 쉴 4px 만 둔다.
+   */
+  .screen ~ .tabbar,
+  .tabbar{ height:60px; padding-bottom:4px; }
+}
+.appbar{ height:44px; }
+.pad{ padding-top:4px; }
+
+/* ── 지나온 걸음 ────────────────────────────────────
+   `‹` 를 못 쓰므로(토스 바의 뒤로가기와 겹친다) 적어 둔 값을 눌러 그 걸음으로 간다.
+   어디로 가는지 글자가 말하니 화살표보다 오히려 분명하다. ── */
+.steps-done{ display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 0; }
+.steps-done button{
+  border:1px solid var(--line); background:var(--card); border-radius:999px;
+  padding:5px 11px; font-family:inherit; font-size:12.5px; font-weight:600;
+  color:var(--t2); cursor:pointer; max-width:60%;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.steps-done button:active{ background:var(--track); }
+
+
+/* ── 밀어서 지우기 ──────────────────────────────────
+   소비 내역은 그 사람의 휴대폰에만 있다. 서버에도 토스 콘솔에도 지울 것이 없으므로
+   <b>지우는 길이 앱 안에 없으면 아무도 못 지운다.</b>
+
+   길게 눌러야 채비가 되는 이유는 목록이 세로로 훑는 자리이기 때문이다 — 곧바로 밀리면
+   훑다가 지워진다. ── */
+/*
+ * <b>`touch-action` 은 손가락이 닿는 순간 확정된다.</b> 처음에는 `.armed` 에만 걸었는데,
+ * 채비는 400ms 뒤에 되므로 그때 값을 바꿔도 이미 늦다 — 브라우저가 그 사이 제스처를
+ * 가져가 버려서 실기기에서 <b>밀어도 아무 일이 없었다</b>(2026-08-30).
+ *
+ * 처음부터 `pan-y` 로 둔다. 세로 훑기는 브라우저가 그대로 맡고, 가로만 우리가 받는다.
+ * 길게 누를 때 글자가 선택되거나 안드로이드 말풍선이 뜨는 것도 함께 막는다 —
+ * 그것들도 제스처를 끊는다.
+ */
+.sw{
+  position:relative; overflow:hidden;
+  touch-action:pan-y;
+  user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
+}
+/*
+ * <b>평소에는 보이지 않는다.</b> 처음에는 늘 깔아 두고 몸통으로 덮었는데, 몸통이 자식의
+ * 아래 여백만큼 짧아져 그 틈으로 빨강이 새어 나왔다 — 목록 한가운데에 빨간 띠가 그어졌다
+ * (실기기 확인 2026-08-30). 밀 때만 드러내면 자리가 어긋나도 새지 않는다.
+ */
+.sw-del{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-end;
+  padding-right:22px; background:var(--red); color:#fff;
+  opacity:0; transition:opacity .12s linear;
+}
+.sw.armed .sw-del, .sw.gone .sw-del{ opacity:1; }
+.sw-del svg{ width:22px; height:22px; }
+/*
+ * `display:flow-root` 로 자식의 바깥 여백을 안에 가둔다. 안 그러면 `.ctx3` 의 아래 여백이
+ * 밖으로 새어 몸통이 그만큼 짧아지고, 뒤에 깔린 빨강이 그 틈으로 보인다.
+ */
+.sw-body{
+  position:relative; background:var(--card); display:flow-root;
+  transition:transform .22s cubic-bezier(.2,.8,.2,1);
+}
+/* 채비가 되면 살짝 들린다 — 손가락 아래에서 무엇이 달라졌는지 보여야 한다. */
+.sw.armed .sw-body{
+  transition:none; box-shadow:0 2px 10px rgba(27,36,45,.14);
+}
+.sw.gone .sw-body{ transform:translateX(-100%); transition:transform .26s cubic-bezier(.2,.8,.2,1); }
+.sw.gone{ opacity:0; transition:opacity .26s linear .1s; }
