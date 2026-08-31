@@ -1,0 +1,13 @@
+/*
+ * 본 서비스의 디자인 시스템을 <b>그대로 쓴다.</b>
+ *
+ * 처음에는 색 토큰만 옮기고 컴포넌트를 새로 지었는데, 그러면 같은 서비스로 안 보인다.
+ * 두 파일 다 사본이고 원본이 정본이다 — 생김새를 고칠 일이 생기면 `frontend/` 를 고치고
+ * 여기로 다시 복사한다.
+ *
+ *   tokens.css  접근성·반응형 정본 (KWCAG 대비 토큰 · 44px 터치 · @media · Pretendard)
+ *   moa.css     디자인 정본 (frontend/src/styles/app.css 사본)
+ *   toss.css    이 앱에만 필요한 몇 줄
+ */
+@import './moa.css';
+@import './toss.css';
